@@ -20,7 +20,6 @@
 #include <string>
 
 #include "core/ProcessSession.h"
-#include "core/Resource.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/ContentRepositoryDependentTests.h"
@@ -34,13 +33,13 @@ class Fixture {
  public:
   explicit Fixture(TestController::PlanConfig config = {}): plan_config_(std::move(config)) {}
 
-  minifi::core::ProcessSession &processSession() { return *process_session_; }
+  [[nodiscard]] minifi::core::ProcessSession& processSession() const { return *process_session_; }
 
  private:
   TestController test_controller_;
   TestController::PlanConfig plan_config_;
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan(plan_config_);
-  minifi::core::Processor* dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
+  [[maybe_unused]] minifi::core::Processor* dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
   std::shared_ptr<minifi::core::ProcessContext> context_ = [this] { test_plan_->runNextProcessor(); return test_plan_->getCurrentContext(); }();
   std::unique_ptr<minifi::core::ProcessSession> process_session_ = std::make_unique<core::ProcessSessionImpl>(context_);
 };
@@ -126,4 +125,14 @@ TEST_CASE("ProcessSession::append should append to the flowfile and set its size
 TEST_CASE("ProcessSession::read can read zero length flowfiles without crash", "[zerolengthread]") {
   ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::VolatileContentRepository>());
   ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::FileSystemRepository>());
+}
+
+TEST_CASE("Test ProcessSession::write's possible outcomes") {
+  ContentRepositoryDependentTests::testOkWrite(std::make_shared<core::repository::VolatileContentRepository>());
+  ContentRepositoryDependentTests::testErrWrite(std::make_shared<core::repository::VolatileContentRepository>());
+  ContentRepositoryDependentTests::testCancelWrite(std::make_shared<core::repository::VolatileContentRepository>());
+
+  ContentRepositoryDependentTests::testOkWrite(std::make_shared<core::repository::FileSystemRepository>());
+  ContentRepositoryDependentTests::testErrWrite(std::make_shared<core::repository::FileSystemRepository>());
+  ContentRepositoryDependentTests::testCancelWrite(std::make_shared<core::repository::FileSystemRepository>());
 }

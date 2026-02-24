@@ -51,6 +51,12 @@ std::shared_ptr<io::BaseStream> ForwardingContentSession::append(const std::shar
   return repository_->write(*resource_id, true);
 }
 
+void ForwardingContentSession::remove(const std::shared_ptr<ResourceClaim>& resource_id) {
+  created_claims_.erase(resource_id);
+  append_state_.erase(resource_id);
+  repository_->remove(*resource_id);
+}
+
 void ForwardingContentSession::commit() {
   created_claims_.clear();
   append_state_.clear();

@@ -16,19 +16,19 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <array>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "catch2/catch_test_macros.hpp"
-#include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Resource.h"
-#include "unit/TestBase.h"
-#include "unit/Catch.h"
-#include "unit/DummyProcessor.h"
+#include "core/Processor.h"
 #include "io/StreamPipe.h"
+#include "minifi-c/minifi-c.h"
+#include "unit/DummyProcessor.h"
+#include "unit/TestBase.h"
 
 #pragma once
 
@@ -42,11 +42,11 @@ struct ReadUntilItCan {
     std::array<std::byte, 1024> buffer{};
     size_t bytes_read = 0;
     while (true) {
-      size_t read_result = stream->read(buffer);
+      const size_t read_result = stream->read(buffer);
       if (minifi::io::isError(read_result))
         return -1;
       if (read_result == 0)
-        return bytes_read;
+        return gsl::narrow<int64_t>(bytes_read);
       bytes_read += read_result;
       const auto char_view = gsl::make_span(buffer).subspan(0, read_result).as_span<const char>();
       value_.append(std::begin(char_view), std::end(char_view));
@@ -69,18 +69,18 @@ class Fixture {
     process_session_ = std::make_unique<core::ProcessSessionImpl>(context_);
   }
 
-  core::ProcessSession &processSession() { return *process_session_; }
+  [[nodiscard]] core::ProcessSession& processSession() const { return *process_session_; }
 
-  void transferAndCommit(const std::shared_ptr<core::FlowFile>& flow_file) {
+  void transferAndCommit(const std::shared_ptr<core::FlowFile>& flow_file) const {
     process_session_->transfer(flow_file, Success);
     process_session_->commit();
   }
 
-  void writeToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string content) {
+  void writeToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string_view content) const {
     process_session_->writeBuffer(flow_file, content);
   }
 
-  void appendToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string content_to_append) {
+  void appendToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string_view content_to_append) const {
     process_session_->add(flow_file);
     process_session_->appendBuffer(flow_file, content_to_append);
   }
@@ -94,8 +94,8 @@ class Fixture {
   std::unique_ptr<core::ProcessSession> process_session_;
 };
 
-void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> content_repo) {
-  Fixture fixture = Fixture(std::move(content_repo));
+inline void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> content_repo) {
+  auto fixture = Fixture(std::move(content_repo));
   core::ProcessSession& process_session = fixture.processSession();
   const auto original_ff = process_session.create();
   fixture.writeToFlowFile(original_ff, "foobar");
@@ -123,8 +123,8 @@ void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> c
   CHECK(read_until_it_can_callback.value_ == "bar");
 }
 
-void testAppendToUnmanagedFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
-  Fixture fixture = Fixture(std::move(content_repo));
+inline void testAppendToUnmanagedFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
+  auto fixture = Fixture(std::move(content_repo));
   core::ProcessSession& process_session = fixture.processSession();
   const auto flow_file = process_session.create();
   REQUIRE(flow_file);
@@ -142,8 +142,8 @@ void testAppendToUnmanagedFlowFile(std::shared_ptr<core::ContentRepository> cont
   CHECK(read_until_it_can_callback.value_ == "myfoobar");
 }
 
-void testAppendToManagedFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
-  Fixture fixture = Fixture(std::move(content_repo));
+inline void testAppendToManagedFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
+  auto fixture = Fixture(std::move(content_repo));
   core::ProcessSession& process_session = fixture.processSession();
   const auto flow_file = process_session.create();
   REQUIRE(flow_file);
@@ -160,8 +160,8 @@ void testAppendToManagedFlowFile(std::shared_ptr<core::ContentRepository> conten
   CHECK(read_until_it_can_callback.value_ == "myfoobar");
 }
 
-void testReadFromZeroLengthFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
-  Fixture fixture = Fixture(std::move(content_repo));
+inline void testReadFromZeroLengthFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
+  const auto fixture = Fixture(std::move(content_repo));
   core::ProcessSession& process_session = fixture.processSession();
   const auto flow_file = process_session.create();
   REQUIRE(flow_file);
@@ -170,5 +170,70 @@ void testReadFromZeroLengthFlowFile(std::shared_ptr<core::ContentRepository> con
   CHECK(flow_file->getSize() == 0);
   REQUIRE_NOTHROW(process_session.readBuffer(flow_file));
   REQUIRE_NOTHROW(process_session.read(flow_file, ReadUntilItCan{}));
+}
+
+inline void testErrWrite(std::shared_ptr<core::ContentRepository> content_repo) {
+  const auto fixture = Fixture(std::move(content_repo));
+  core::ProcessSession& process_session = fixture.processSession();
+  const auto flow_file = process_session.create();
+  fixture.writeToFlowFile(flow_file, "original_content");
+
+  REQUIRE_THROWS(
+  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
+    std::string str = "new_content";
+    output_stream->write(as_bytes(std::span(str)));
+    return MinifiIoStatus::MINIFI_IO_ERROR;
+  }));
+
+  fixture.transferAndCommit(flow_file);
+
+  CHECK(flow_file->getSize() == 16);
+  ReadUntilItCan read_until_it_can_callback;
+  const auto read_result = process_session.readBuffer(flow_file);
+  process_session.read(flow_file, std::ref(read_until_it_can_callback));
+  CHECK(to_string(read_result) == "original_content");
+}
+
+inline void testOkWrite(std::shared_ptr<core::ContentRepository> content_repo) {
+  const auto fixture = Fixture(std::move(content_repo));
+  core::ProcessSession& process_session = fixture.processSession();
+  const auto flow_file = process_session.create();
+  fixture.writeToFlowFile(flow_file, "original_content");
+
+  CHECK(flow_file->getSize() == 16);
+
+  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
+    std::string str = "new_content";
+    return output_stream->write(as_bytes(std::span(str)));
+  });
+
+  fixture.transferAndCommit(flow_file);
+
+  CHECK(flow_file->getSize() == 11);
+  ReadUntilItCan read_until_it_can_callback;
+  const auto read_result = process_session.readBuffer(flow_file);
+  process_session.read(flow_file, std::ref(read_until_it_can_callback));
+  CHECK(to_string(read_result) == "new_content");
+}
+
+inline void testCancelWrite(std::shared_ptr<core::ContentRepository> content_repo) {
+  const auto fixture = Fixture(std::move(content_repo));
+  core::ProcessSession& process_session = fixture.processSession();
+  const auto flow_file = process_session.create();
+  fixture.writeToFlowFile(flow_file, "original_content");
+
+  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
+    std::string str = "new_content";
+    output_stream->write(as_bytes(std::span(str)));
+    return MinifiIoStatus::MINIFI_IO_CANCEL;
+  });
+
+  fixture.transferAndCommit(flow_file);
+
+  CHECK(flow_file->getSize() == 16);
+  ReadUntilItCan read_until_it_can_callback;
+  const auto read_result = process_session.readBuffer(flow_file);
+  process_session.read(flow_file, std::ref(read_until_it_can_callback));
+  CHECK(to_string(read_result) == "original_content");
 }
 }  // namespace ContentRepositoryDependentTests
