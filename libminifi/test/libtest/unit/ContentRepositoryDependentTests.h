@@ -177,13 +177,15 @@ inline void testErrWrite(std::shared_ptr<core::ContentRepository> content_repo) 
   core::ProcessSession& process_session = fixture.processSession();
   const auto flow_file = process_session.create();
   fixture.writeToFlowFile(flow_file, "original_content");
-  fixture.transferAndCommit(flow_file);
 
   REQUIRE_THROWS(
   process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
-    output_stream->write("new_content");
+    std::string str = "new_content";
+    output_stream->write(as_bytes(std::span(str)));
     return MinifiIoStatus::MINIFI_IO_ERROR;
   }));
+
+  fixture.transferAndCommit(flow_file);
 
   CHECK(flow_file->getSize() == 16);
   ReadUntilItCan read_until_it_can_callback;
@@ -197,14 +199,15 @@ inline void testOkWrite(std::shared_ptr<core::ContentRepository> content_repo) {
   core::ProcessSession& process_session = fixture.processSession();
   const auto flow_file = process_session.create();
   fixture.writeToFlowFile(flow_file, "original_content");
-  fixture.transferAndCommit(flow_file);
 
   CHECK(flow_file->getSize() == 16);
 
   process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
-    constexpr std::string str = "new_content";
+    std::string str = "new_content";
     return output_stream->write(as_bytes(std::span(str)));
   });
+
+  fixture.transferAndCommit(flow_file);
 
   CHECK(flow_file->getSize() == 11);
   ReadUntilItCan read_until_it_can_callback;
@@ -218,12 +221,14 @@ inline void testCancelWrite(std::shared_ptr<core::ContentRepository> content_rep
   core::ProcessSession& process_session = fixture.processSession();
   const auto flow_file = process_session.create();
   fixture.writeToFlowFile(flow_file, "original_content");
-  fixture.transferAndCommit(flow_file);
 
   process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
-    output_stream->write("new_content");
+    std::string str = "new_content";
+    output_stream->write(as_bytes(std::span(str)));
     return MinifiIoStatus::MINIFI_IO_CANCEL;
   });
+
+  fixture.transferAndCommit(flow_file);
 
   CHECK(flow_file->getSize() == 16);
   ReadUntilItCan read_until_it_can_callback;
