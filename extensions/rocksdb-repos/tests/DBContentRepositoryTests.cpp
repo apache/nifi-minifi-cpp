@@ -317,6 +317,12 @@ TEST_CASE("ProcessSession::read can read zero length flowfiles without crash (Ro
   ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());
 }
 
+TEST_CASE("ProcessSession::write can be cancelled") {
+  ContentRepositoryDependentTests::testOkWrite(std::make_shared<core::repository::DatabaseContentRepository>());
+  ContentRepositoryDependentTests::testErrWrite(std::make_shared<core::repository::DatabaseContentRepository>());
+  ContentRepositoryDependentTests::testCancelWrite(std::make_shared<core::repository::DatabaseContentRepository>());
+}
+
 size_t getDbSize(const std::filesystem::path& dir) {
   auto db = minifi::internal::RocksDatabase::create({}, {}, dir.string(), {});
   auto opendb = db->open();
