@@ -87,11 +87,4 @@ ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): lo
   }
 }
 
-ExtensionManager::~ExtensionManager() {
-  // Clear the class description registry to avoid dangling pointers
-  // to validator objects that live in extension DLLs to be unloaded.
-  minifi::ClassDescriptionRegistry::clearClassDescriptions();
-  extensions_.clear();
-}
-
 }  // namespace org::apache::nifi::minifi::core::extension
