@@ -31,8 +31,7 @@ macro(register_extension extension-name extension-display-name extension-guard d
         target_sources(${extension-name} PRIVATE ${CMAKE_SOURCE_DIR}/extensions/ExtensionInitializer.cpp)
     endif()
     target_compile_definitions(${extension-name}
-        PRIVATE "MODULE_NAME=${extension-name}"
-        PRIVATE "BUILD_ID_VARIABLE_NAME=${build-id-variable-name}")
+        PRIVATE "MODULE_NAME=${extension-name}")
     set_target_properties(${extension-name} PROPERTIES
         ENABLE_EXPORTS True
         POSITION_INDEPENDENT_CODE ON)

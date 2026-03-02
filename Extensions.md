@@ -82,7 +82,7 @@ extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* /*config*/) {
     .processors_count = 0,
     .processors_ptr = nullptr
   };
-  return MinifiCreateCppExtension(&ext_create_info);
+  return minifi::utils::MinifiCreateCppExtension(&ext_create_info);
 }
 ```
 

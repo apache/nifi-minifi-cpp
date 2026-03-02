@@ -45,6 +45,7 @@ namespace org::apache::nifi::minifi::core::extension {
 Extension::Extension(std::string name, std::filesystem::path library_path)
   : name_(std::move(name)),
     library_path_(std::move(library_path)),
+    api_version_(getAgentApiVersion()),
     logger_(logging::LoggerFactory<Extension>::getLogger()) {
 }
 
@@ -65,7 +66,7 @@ bool Extension::load(bool global) {
     return true;
   }
   if (!findSymbol("MinifiInitExtension")) {
-    logger_->log_error("Failed to load c extension '{}' at '{}': No initializer found", name_, library_path_);
+    logger_->log_error("Failed to load as c extension '{}' at '{}': No initializer found", name_, library_path_);
     return false;
   }
   auto api_version = reinterpret_cast<const char* const*>(findSymbol("MinifiApiVersion"));
@@ -79,21 +80,21 @@ bool Extension::load(bool global) {
     return false;
   }
   gsl_Assert(match.size() == 4);
-  version_.major = std::stoi(match[1]);
-  version_.minor = std::stoi(match[2]);
-  version_.patch = std::stoi(match[3]);
-  if (version_.major != MINIFI_API_MAJOR_VERSION) {
+  api_version_.major = std::stoi(match[1]);
+  api_version_.minor = std::stoi(match[2]);
+  api_version_.patch = std::stoi(match[3]);
+  if (api_version_.major != getAgentApiVersion().major) {
     logger_->log_error("Failed to load c extension '{}' at '{}': Api major version mismatch, application is '{}' while extension is '{}'",
-        name_, library_path_, MINIFI_API_VERSION, *api_version);
+        name_, library_path_, getAgentApiVersion().str(), *api_version);
     return false;
   }
-  if (version_.minor > MINIFI_API_MINOR_VERSION) {
+  if (api_version_.minor > getAgentApiVersion().minor) {
     logger_->log_error("Failed to load c extension '{}' at '{}': Extension is built for a newer version, application is '{}' while extension is '{}'",
-        name_, library_path_, MINIFI_API_VERSION, *api_version);
+        name_, library_path_, getAgentApiVersion().str(), *api_version);
     return false;
   }
   logger_->log_debug("Loaded c extension '{}' at '{}': Application version is '{}', extension version is '{}'",
-        name_, library_path_, MINIFI_API_VERSION, *api_version);
+        name_, library_path_, getAgentApiVersion().str(), *api_version);
   return true;
 }
 
@@ -163,6 +164,7 @@ bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) 
     logger_->log_error("Failed to initialize extension '{}'", name_);
     return false;
   }
+  logger_->log_debug("Initialized extension '{}'", name_);
   return true;
 }
 
