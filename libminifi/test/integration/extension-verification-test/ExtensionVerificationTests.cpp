@@ -32,7 +32,8 @@ class ExtensionLoadingTestController {
     LogTestController::getInstance().clear();
     LogTestController::getInstance().setTrace<core::extension::ExtensionManager>();
     LogTestController::getInstance().setTrace<core::extension::Extension>();
-    minifi::core::extension::setAgentApiVersion({.major = 1, .minor = 1, .patch = 1});
+    minifi::core::extension::test_setAgentApiVersion(10);
+    minifi::core::extension::test_setMinSupportedApiVersion(5);
     auto config = minifi::Configure::create();
     config->set(minifi::Configuration::nifi_extension_path, pattern);
     return config;
@@ -46,9 +47,9 @@ TEST_CASE("Can load cpp-api extensions with same build id") {
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Loaded cpp extension 'test-extension-loading-valid-build-id-cpp'"));
 }
 
-TEST_CASE("Can load c-api extensions with same version") {
-  ExtensionLoadingTestController controller{"*test-extension-loading-same-version*"};
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Loaded c extension 'test-extension-loading-same-version'"));
+TEST_CASE("Can load c-api extensions with max version") {
+  ExtensionLoadingTestController controller{"*test-extension-loading-max-version*"};
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Loaded c extension 'test-extension-loading-max-version'"));
 }
 
 TEST_CASE("Can't load cpp-api extensions with different build id") {
@@ -56,35 +57,35 @@ TEST_CASE("Can't load cpp-api extensions with different build id") {
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load extension 'test-extension-loading-invalid-build-id-cpp'"));
 }
 
-TEST_CASE("Can't load c-api extensions with greater major version") {
-  ExtensionLoadingTestController controller{"*test-extension-loading-greater-major-version*"};
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load c extension 'test-extension-loading-greater-major-version'"));
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Api major version mismatch, application is '1.1.1' while extension is '2.0.0'"));
+TEST_CASE("Can load c-api extensions with min version") {
+  ExtensionLoadingTestController controller{"*test-extension-loading-min-version*"};
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Loaded c extension 'test-extension-loading-min-version'"));
 }
 
-TEST_CASE("Can't load c-api extensions with smaller major version") {
-  ExtensionLoadingTestController controller{"*test-extension-loading-smaller-major-version*"};
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load c extension 'test-extension-loading-smaller-major-version'"));
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Api major version mismatch, application is '1.1.1' while extension is '0.1.0'"));
+TEST_CASE("Can load c-api extensions with valid version") {
+  ExtensionLoadingTestController controller{"*test-extension-loading-valid-version*"};
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Loaded c extension 'test-extension-loading-valid-version'"));
 }
 
-TEST_CASE("Can't load c-api extensions with greater minor version") {
-  ExtensionLoadingTestController controller{"*test-extension-loading-greater-minor-version*"};
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load c extension 'test-extension-loading-greater-minor-version'"));
+TEST_CASE("Can't load c-api extensions with greater version") {
+  ExtensionLoadingTestController controller{"*test-extension-loading-greater-version*"};
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load c extension 'test-extension-loading-greater-version'"));
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Extension is built for a newer version"));
 }
 
-TEST_CASE("Can load c-api extensions with smaller minor version") {
-  ExtensionLoadingTestController controller{"*test-extension-loading-smaller-minor-version*"};
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Loaded c extension 'test-extension-loading-smaller-minor-version'"));
+TEST_CASE("Can't load c-api extensions with smaller version") {
+  ExtensionLoadingTestController controller{"*test-extension-loading-smaller-version*"};
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load c extension 'test-extension-loading-smaller-version'"));
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Api version is no longer supported, application supports 5-10 while extension is 4"));
 }
 
-TEST_CASE("Can load c-api extensions with greater patch version") {
-  ExtensionLoadingTestController controller{"*test-extension-loading-greater-patch-version*"};
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Loaded c extension 'test-extension-loading-greater-patch-version'"));
+TEST_CASE("Can't load c-api extensions with no MinifiInitExtension function") {
+  ExtensionLoadingTestController controller{"*test-extension-loading-missing-init*"};
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load as c extension 'test-extension-loading-missing-init'"));
 }
 
-TEST_CASE("Can load c-api extensions with smaller patch version") {
-  ExtensionLoadingTestController controller{"*test-extension-loading-smaller-patch-version*"};
-  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Loaded c extension 'test-extension-loading-smaller-patch-version'"));
+TEST_CASE("Can't load c-api extensions with no MinifiCreateExtension call") {
+  ExtensionLoadingTestController controller{"*test-extension-loading-create-not-called*"};
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to initialize extension 'test-extension-loading-create-not-called'"));
 }
+

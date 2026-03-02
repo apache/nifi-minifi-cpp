@@ -24,9 +24,9 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" const char* const MinifiApiVersion = MINIFI_TEST_API_VERSION;
+extern "C" const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
 
-extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
+extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   MinifiExtensionCreateInfo ext_create_info{
     .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
     .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
@@ -35,5 +35,5 @@ extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
     .processors_count = 0,
     .processors_ptr = nullptr,
   };
-  return MinifiCreateExtension(&ext_create_info);
+  MinifiCreateExtension(extension, &ext_create_info);
 }

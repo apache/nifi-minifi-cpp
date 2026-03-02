@@ -225,10 +225,9 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
 
 extern "C" {
 
-MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extension_create_info) {
+MinifiStatus MinifiCreateExtension(MinifiExtension* extension, const MinifiExtensionCreateInfo* extension_create_info) {
+  gsl_Assert(extension);
   gsl_Assert(extension_create_info);
-  auto current_extension = minifi::core::extension::ExtensionManager::getExtensionBeingInitialized();
-  gsl_Assert(current_extension);
   auto extension_name = toString(extension_create_info->name);
   minifi::BundleIdentifier bundle{
     .name = extension_name,
@@ -243,16 +242,20 @@ MinifiExtension* MinifiCreateExtension(const MinifiExtensionCreateInfo* extensio
       bundle_components.processors.emplace_back(description);
     });
   }
-  return reinterpret_cast<MinifiExtension*>(new org::apache::nifi::minifi::core::extension::Extension::Info{
+  bool success = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension*>(extension)->setInfo(org::apache::nifi::minifi::core::extension::Extension::Info{
     .name = toString(extension_create_info->name),
     .version = toString(extension_create_info->version),
     .deinit = extension_create_info->deinit,
     .user_data = extension_create_info->user_data
   });
+  if (success) {
+    return MINIFI_STATUS_SUCCESS;
+  }
+  return MINIFI_STATUS_UNKNOWN_ERROR;
 }
 
-MinifiExtension* MINIFI_CREATE_EXTENSION_FN(const MinifiExtensionCreateInfo* extension_create_info) {
-  return MinifiCreateExtension(extension_create_info);
+MinifiStatus MINIFI_CREATE_EXTENSION_FN(MinifiExtension* extension, const MinifiExtensionCreateInfo* extension_create_info) {
+  return MinifiCreateExtension(extension, extension_create_info);
 }
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flowfile,

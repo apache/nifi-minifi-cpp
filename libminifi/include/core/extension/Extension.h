@@ -51,7 +51,7 @@ class Extension {
 
   bool initialize(const std::shared_ptr<minifi::Configure>& configure);
 
-  [[nodiscard]] ApiVersion apiVersion() const {return api_version_;}
+  bool setInfo(Info info);
 
  private:
 #ifdef WIN32
@@ -71,12 +71,12 @@ class Extension {
   bool unload();
   void* findSymbol(const char* name);
 
-  std::string name_;
+  std::string library_name_;
   std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
 
-  ApiVersion api_version_;
-  std::unique_ptr<Info> info_;
+  std::optional<Info> info_;
+  uint32_t api_version_{0};
 
   const std::shared_ptr<logging::Logger> logger_;
 };
