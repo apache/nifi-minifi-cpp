@@ -33,7 +33,7 @@ static minifi::extensions::python::PythonCreator& getPythonCreator() {
 // the symbols of the python library
 extern "C" const int LOAD_MODULE_AS_GLOBAL = 1;
 
-extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* config) {
+extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* config) {
   getPythonCreator().configure([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
     MinifiConfigGet(config, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
@@ -51,5 +51,5 @@ extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* config) {
     .controller_services_count = 0,
     .controller_services_ptr = nullptr,
   };
-  return minifi::utils::MinifiCreateCppExtension( &ext_create_info);
+  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
 }

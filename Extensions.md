@@ -30,8 +30,7 @@ One possible example of this is:
 ```C++
 extern "C" const char* const MinifiApiVersion = MINIFI_API_VERSION;
 
-extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
-  MinifiExtension* extension = nullptr;
+extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& description) {
     MinifiExtensionCreateInfo ext_create_info{
       .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
@@ -41,9 +40,8 @@ extern "C" MinifiExtension* MinifiInitExtension(MinifiConfig* /*config*/) {
       .processors_count = 1,
       .processors_ptr = &description,
     };
-    extension = MinifiCreateExtension(&ext_create_info);
+    MinifiCreateExtension(extension, &ext_create_info);
   });
-  return extension;
 }
 ```
 
@@ -69,7 +67,7 @@ Some extensions (e.g. `OpenCVExtension`) require initialization before use.
 You need to define an `MinifiInitCppExtension` function of type `MinifiExtension*(MinifiConfig*)` to be called.
 
 ```C++
-extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* /*config*/) {
+extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   const auto success = org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
   if (!success) {
     return nullptr;
@@ -84,7 +82,7 @@ extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* /*config*/) {
     .controller_services_count = 0,
     .controller_services_ptr = nullptr,
   };
-  return MinifiCreateCppExtension(&ext_create_info);
+  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
 }
 ```
 

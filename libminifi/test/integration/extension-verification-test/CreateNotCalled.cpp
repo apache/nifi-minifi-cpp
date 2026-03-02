@@ -1,5 +1,5 @@
 /**
- *
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,23 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "minifi-c/minifi-c.h"
-#include "utils/ExtensionInitUtils.h"
-#include "minifi-cpp/agent/agent_version.h"
-#include "core/Resource.h"
 
-namespace minifi = org::apache::nifi::minifi;
+#include "minifi-c.h"
 
-extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
-  MinifiExtensionCreateInfo ext_create_info{
-    .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
-    .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
-    .deinit = nullptr,
-    .user_data = nullptr,
-    .processors_count = 0,
-    .processors_ptr = nullptr,
-    .controller_services_count = 0,
-    .controller_services_ptr = nullptr,
-  };
-  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
+extern "C" const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
+
+extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+  // NOT CALLING CREATE
 }

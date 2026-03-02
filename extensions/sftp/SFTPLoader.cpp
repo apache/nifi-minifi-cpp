@@ -25,13 +25,13 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* /*config*/) {
+extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   if (libssh2_init(0) != 0) {
-    return nullptr;
+    return;
   }
   if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
     libssh2_exit();
-    return nullptr;
+    return;
   }
   MinifiExtensionCreateInfo ext_create_info{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
@@ -46,5 +46,5 @@ extern "C" MinifiExtension* MinifiInitCppExtension(MinifiConfig* /*config*/) {
     .controller_services_count = 0,
     .controller_services_ptr = nullptr,
   };
-  return minifi::utils::MinifiCreateCppExtension(&ext_create_info);
+  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
 }

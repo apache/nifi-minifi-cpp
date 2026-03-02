@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -14,24 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include <string>
-#include <string_view>
-#include <optional>
-#include <functional>
-#include "minifi-c/minifi-c.h"
+#include <cstdint>
+#include  <string>
 
-namespace org::apache::nifi::minifi::utils {
+namespace org::apache::nifi::minifi::core::extension {
 
-inline MinifiStringView toStringView(std::string_view str) {
-  return MinifiStringView{.data = str.data(), .length = str.length()};
-}
+uint32_t getAgentApiVersion();
+uint32_t getMinSupportedApiVersion();
+void test_setAgentApiVersion(uint32_t api_version);
+void test_setMinSupportedApiVersion(uint32_t min_api_version);
 
-using ConfigReader = std::function<std::optional<std::string>(std::string_view key)>;
-
-static inline void MinifiCreateCppExtension(MinifiExtension* extension, const MinifiExtensionCreateInfo* create_info) {
-  MINIFI_CREATE_EXTENSION_FN(extension, create_info);
-}
-
-}  // namespace org::apache::nifi::minifi::utils
+}  // namespace org::apache::nifi::minifi::core::extension

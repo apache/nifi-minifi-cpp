@@ -1,5 +1,5 @@
 /**
- *
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,23 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "minifi-c/minifi-c.h"
-#include "utils/ExtensionInitUtils.h"
-#include "minifi-cpp/agent/agent_version.h"
-#include "core/Resource.h"
+
+#include "api/core/Resource.h"
+#include "api/utils/minifi-c-utils.h"
+
+#define MKSOC(x) #x
+#define MAKESTRING(x) MKSOC(x)  // NOLINT(cppcoreguidelines-macro-usage)
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+extern "C" const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
+
+extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   MinifiExtensionCreateInfo ext_create_info{
-    .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
-    .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
+    .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
+    .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
     .deinit = nullptr,
     .user_data = nullptr,
     .processors_count = 0,
     .processors_ptr = nullptr,
-    .controller_services_count = 0,
-    .controller_services_ptr = nullptr,
   };
-  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
+  MinifiCreateExtension(extension, &ext_create_info);
 }

@@ -34,17 +34,16 @@ extern "C" {
 #define MINIFI_PRIVATE_JOIN_HELPER(X, Y) X ## _ ## Y
 #define MINIFI_PRIVATE_JOIN(X, Y) MINIFI_PRIVATE_JOIN_HELPER(X, Y)
 
-#define MINIFI_API_MAJOR_VERSION 0
-#define MINIFI_API_MINOR_VERSION 1
-#define MINIFI_API_PATCH_VERSION 0
-#define MINIFI_API_VERSION MINIFI_PRIVATE_STRINGIFY(MINIFI_API_MAJOR_VERSION) "." MINIFI_PRIVATE_STRINGIFY(MINIFI_API_MINOR_VERSION) "." MINIFI_PRIVATE_STRINGIFY(MINIFI_API_PATCH_VERSION)
-
 #define MINIFI_NULL nullptr
 #define MINIFI_OWNED
 
 #ifndef MINIFI_CREATE_EXTENSION_FN
 #define MINIFI_CREATE_EXTENSION_FN MinifiCreateExtension
 #endif
+
+enum : uint32_t {
+  MINIFI_API_VERSION = 1
+};
 
 typedef bool MinifiBool;
 
@@ -221,7 +220,7 @@ typedef struct MinifiExtensionCreateInfo {
   const MinifiControllerServiceClassDefinition* controller_services_ptr;
 } MinifiExtensionCreateInfo;
 
-MinifiExtension* MINIFI_CREATE_EXTENSION_FN(const MinifiExtensionCreateInfo* create_info);
+MinifiStatus MINIFI_CREATE_EXTENSION_FN(MinifiExtension* extension, const MinifiExtensionCreateInfo* create_info);
 
 MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, const MinifiStringView* metric_names, const double* metric_values);
 
