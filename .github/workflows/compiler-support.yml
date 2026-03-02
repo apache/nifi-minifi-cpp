@@ -2,7 +2,10 @@
 
 name: 'Check supported Compilers'
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 1 * * 1'
 
 jobs:
   gcc-build:
