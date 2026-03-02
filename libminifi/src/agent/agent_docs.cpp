@@ -34,8 +34,10 @@ std::map<BundleIdentifier, Components>& ClassDescriptionRegistry::getMutableClas
   return getAgentDocsClassMappings();
 }
 
-void ClassDescriptionRegistry::clearClassDescriptions() {
-  getAgentDocsClassMappings().clear();
+void ClassDescriptionRegistry::clearClassDescriptionsForBundle(const std::string& bundle_name) {
+  std::erase_if(getAgentDocsClassMappings(), [&bundle_name](const auto& entry) {
+    return entry.first.name == bundle_name;
+  });
 }
 
 }  // namespace org::apache::nifi::minifi

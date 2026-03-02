@@ -30,11 +30,11 @@ namespace org::apache::nifi::minifi::core::extension {
 class ExtensionManager {
  public:
   explicit ExtensionManager(const std::shared_ptr<Configure>& config);
-  ~ExtensionManager();
+  ~ExtensionManager() = default;
 
   ExtensionManager(const ExtensionManager&) = delete;
-  ExtensionManager& operator=(const ExtensionManager&) = delete;
   ExtensionManager(ExtensionManager&&) = delete;
+  ExtensionManager& operator=(const ExtensionManager&) = delete;
   ExtensionManager& operator=(ExtensionManager&&) = delete;
 
  private:
