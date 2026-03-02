@@ -21,17 +21,9 @@
 
 namespace org::apache::nifi::minifi::core::extension {
 
-struct ApiVersion {
-  int major;
-  int minor;
-  int patch;
-
-  std::string str() const {
-    return std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
-  }
-};
-
-ApiVersion getAgentApiVersion();
-void setAgentApiVersion(ApiVersion api_version);
+uint32_t getAgentApiVersion();
+uint32_t getMinSupportedApiVersion();
+void test_setAgentApiVersion(uint32_t api_version);
+void test_setMinSupportedApiVersion(uint32_t min_api_version);
 
 }  // namespace org::apache::nifi::minifi::core::extension

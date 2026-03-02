@@ -1,5 +1,6 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,28 +16,10 @@
  * limitations under the License.
  */
 
-#include "core/extension/ApiVersion.h"
-#include "minifi-c/minifi-c.h"
+#include "minifi-c.h"
 
-namespace org::apache::nifi::minifi::core::extension {
+extern "C" const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
 
-static uint32_t agent_api_version{MINIFI_API_VERSION};
-static uint32_t min_supported_api_version{MINIFI_API_VERSION};
-
-uint32_t getAgentApiVersion() {
-  return agent_api_version;
+extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+  // NOT CALLING CREATE
 }
-
-void test_setAgentApiVersion(uint32_t api_version) {
-  agent_api_version = api_version;
-}
-
-uint32_t getMinSupportedApiVersion() {
-  return min_supported_api_version;
-}
-
-void test_setMinSupportedApiVersion(uint32_t min_api_version) {
-  min_supported_api_version = min_api_version;
-}
-
-}  // namespace org::apache::nifi::minifi::core::extension
