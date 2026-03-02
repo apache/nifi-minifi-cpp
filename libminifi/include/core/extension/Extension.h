@@ -25,6 +25,7 @@
 #include "minifi-c/minifi-c.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/properties/Configure.h"
+#include "ApiVersion.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
@@ -39,12 +40,6 @@ class Extension {
     void* user_data;
   };
 
-  struct Version {
-    int major{MINIFI_API_MAJOR_VERSION};
-    int minor{MINIFI_API_MINOR_VERSION};
-    int patch{MINIFI_API_PATCH_VERSION};
-  };
-
   Extension(std::string name, std::filesystem::path library_path);
 
   Extension(const Extension&) = delete;
@@ -56,7 +51,7 @@ class Extension {
 
   bool initialize(const std::shared_ptr<minifi::Configure>& configure);
 
-  Version version() const {return version_;}
+  [[nodiscard]] ApiVersion apiVersion() const {return api_version_;}
 
  private:
 #ifdef WIN32
@@ -80,7 +75,7 @@ class Extension {
   std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
 
-  Version version_{};
+  ApiVersion api_version_;
   std::unique_ptr<Info> info_;
 
   const std::shared_ptr<logging::Logger> logger_;

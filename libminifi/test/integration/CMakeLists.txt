@@ -45,3 +45,5 @@ ENDFOREACH()
 target_link_libraries(OnScheduleErrorHandlingTests minifi-test-processors)
 
 message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
+
+add_subdirectory(extension-verification-test)
