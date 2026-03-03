@@ -246,7 +246,7 @@ void StructuredConfiguration::parseParameterProvidersNode(const Node& parameter_
         parsePropertiesNode(propertiesNode, *parameter_provider, name, nullptr);
       }
     } else {
-      logger_->log_debug("Could not locate {}", type);
+      logger_->log_warn("Could not locate {}", type);
     }
     parameter_provider->setName(name);
     auto parameter_contexts = parameter_provider->createParameterContexts();
@@ -671,7 +671,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
       parent_group->addControllerService(controller_service_node->getName(), controller_service_node);
       parent_group->addControllerService(controller_service_node->getUUIDStr(), controller_service_node);
     } else {
-      logger_->log_debug("Could not locate {}", type);
+      logger_->log_warn("Could not locate {}", type);
     }
   }
 }
