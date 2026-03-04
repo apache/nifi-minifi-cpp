@@ -17,6 +17,7 @@
 import os
 import docker
 import types
+import logging
 from pathlib import Path
 
 from behave.model import Scenario
@@ -56,6 +57,7 @@ def common_before_scenario(context: Context, scenario: Scenario):
         if not hasattr(context, attr):
             setattr(context, attr, types.MethodType(method, context))
 
+    logging.info("Running scenario: %s", scenario)
     context.scenario_id = scenario.filename.rsplit("/", 1)[1].split(".")[0] + "-" + str(
         scenario.parent.scenarios.index(scenario))
     network_name = f"{context.scenario_id}-net"
@@ -63,6 +65,7 @@ def common_before_scenario(context: Context, scenario: Scenario):
 
     try:
         existing_network = docker_client.networks.get(network_name)
+        logging.warning(f"Found existing network '{network_name}'. Removing it first.")
         existing_network.remove()
     except docker.errors.NotFound:
         pass  # No existing network found, which is good.
