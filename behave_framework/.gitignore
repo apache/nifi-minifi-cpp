@@ -1,5 +1,7 @@
 venv
+dist
 output
 .venv
 .idea
 src/minifi_test_framework.egg-info
+src/minifi_behave.egg-info

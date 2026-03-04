@@ -17,7 +17,7 @@
 
 from behave import step
 
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 @step('MiNiFi configuration "{config_key}" is set to "{config_value}"')

@@ -19,14 +19,14 @@ import logging
 import uuid
 from behave import given, step
 
-from minifi_test_framework.containers.directory import Directory
-from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
-from minifi_test_framework.minifi.connection import Connection
-from minifi_test_framework.minifi.controller_service import ControllerService
-from minifi_test_framework.minifi.funnel import Funnel
-from minifi_test_framework.minifi.parameter import Parameter
-from minifi_test_framework.minifi.parameter_context import ParameterContext
-from minifi_test_framework.minifi.processor import Processor
+from minifi_behave.containers.directory import Directory
+from minifi_behave.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
+from minifi_behave.minifi.connection import Connection
+from minifi_behave.minifi.controller_service import ControllerService
+from minifi_behave.minifi.funnel import Funnel
+from minifi_behave.minifi.parameter import Parameter
+from minifi_behave.minifi.parameter_context import ParameterContext
+from minifi_behave.minifi.processor import Processor
 
 
 @given("a MiNiFi CPP server with yaml config")

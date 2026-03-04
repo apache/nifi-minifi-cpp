@@ -28,7 +28,7 @@ namespace minifi = org::apache::nifi::minifi;
 
 class ExtensionLoadingTestController {
  public:
-  ExtensionLoadingTestController(std::string pattern): extension_manager_{[&] () {
+  explicit ExtensionLoadingTestController(std::string pattern): extension_manager_{[&] () {
     LogTestController::getInstance().clear();
     LogTestController::getInstance().setTrace<core::extension::ExtensionManager>();
     LogTestController::getInstance().setTrace<core::extension::Extension>();

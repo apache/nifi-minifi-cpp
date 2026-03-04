@@ -23,8 +23,8 @@ import docker
 from behave.runner import Context
 from docker.models.networks import Network
 
-from minifi_test_framework.containers.container_protocol import ContainerProtocol
-from minifi_test_framework.containers.minifi_protocol import MinifiProtocol
+from minifi_behave.containers.container_protocol import ContainerProtocol
+from minifi_behave.containers.minifi_protocol import MinifiProtocol
 
 
 DEFAULT_MINIFI_CONTAINER_NAME = "minifi-primary"
@@ -46,13 +46,13 @@ class MinifiTestContext(Context):
     def get_or_create_minifi_container(self, container_name: str) -> MinifiContainer:
         if container_name not in self.containers:
             if os.name == 'nt':
-                from minifi_test_framework.containers.minifi_win_container import MinifiWindowsContainer
+                from minifi_behave.containers.minifi_win_container import MinifiWindowsContainer
                 minifi_container = MinifiWindowsContainer(container_name, self)
             elif 'MINIFI_INSTALLATION_TYPE=FHS' in str(docker.from_env().images.get(self.minifi_container_image).history()):
-                from minifi_test_framework.containers.minifi_fhs_container import MinifiFhsContainer
+                from minifi_behave.containers.minifi_fhs_container import MinifiFhsContainer
                 minifi_container = MinifiFhsContainer(container_name, self)
             else:
-                from minifi_test_framework.containers.minifi_linux_container import MinifiLinuxContainer
+                from minifi_behave.containers.minifi_linux_container import MinifiLinuxContainer
                 minifi_container = MinifiLinuxContainer(container_name, self)
             self.containers[container_name] = minifi_container
         return self.containers[container_name]

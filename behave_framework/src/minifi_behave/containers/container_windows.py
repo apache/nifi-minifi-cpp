@@ -27,13 +27,13 @@ import docker
 from docker.models.networks import Network
 from docker.models.containers import Container
 
-from minifi_test_framework.containers.container_protocol import ContainerProtocol
-from minifi_test_framework.containers.directory import Directory
-from minifi_test_framework.containers.file import File
-from minifi_test_framework.containers.host_file import HostFile
+from minifi_behave.containers.container_protocol import ContainerProtocol
+from minifi_behave.containers.directory import Directory
+from minifi_behave.containers.file import File
+from minifi_behave.containers.host_file import HostFile
 
 if TYPE_CHECKING:
-    from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+    from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class WindowsContainer(ContainerProtocol):

@@ -290,7 +290,7 @@ void useCControllerServiceClassDescription(const MinifiControllerServiceClassDef
 
 extern "C" {
 
-MinifiStatus MinifiCreateExtension(MinifiExtension* extension, const MinifiExtensionCreateInfo* extension_create_info) {
+MinifiStatus MinifiCreateExtension(MinifiExtension* extension, const  MinifiExtensionCreateInfo* extension_create_info) {
   gsl_Assert(extension);
   gsl_Assert(extension_create_info);
   auto extension_name = toString(extension_create_info->name);

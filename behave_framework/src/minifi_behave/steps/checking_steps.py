@@ -22,9 +22,9 @@ import re
 import humanfriendly
 from behave import then, step
 
-from minifi_test_framework.containers.http_proxy_container import HttpProxy
-from minifi_test_framework.core.helpers import wait_for_condition, check_condition_after_wait
-from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
+from minifi_behave.containers.http_proxy_container import HttpProxy
+from minifi_behave.core.helpers import wait_for_condition, check_condition_after_wait
+from minifi_behave.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
 
 
 @then('a file with the content "{content}" is placed on the path "{path}" in less than {duration}')

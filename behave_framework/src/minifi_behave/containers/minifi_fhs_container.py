@@ -21,24 +21,24 @@ from pathlib import Path
 
 from .container_linux import LinuxContainer
 
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.containers.file import File
-from minifi_test_framework.containers.host_file import HostFile
-from minifi_test_framework.minifi.minifi_flow_definition import MinifiFlowDefinition
-from minifi_test_framework.core.ssl_utils import make_cert_without_extended_usage, make_client_cert, make_server_cert, dump_cert, dump_key
-from minifi_test_framework.core.helpers import wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.containers.file import File
+from minifi_behave.containers.host_file import HostFile
+from minifi_behave.minifi.minifi_flow_definition import MinifiFlowDefinition
+from minifi_behave.core.ssl_utils import make_cert_without_extended_usage, make_client_cert, make_server_cert, dump_cert, dump_key
+from minifi_behave.core.helpers import wait_for_condition
 
 from .minifi_protocol import MinifiProtocol
 from .minifi_controller import MinifiController
 
 
-class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
+class MinifiFhsContainer(LinuxContainer, MinifiProtocol):
     def __init__(self, container_name: str, test_context: MinifiTestContext):
         super().__init__(test_context.minifi_container_image, f"{container_name}-{test_context.scenario_id}", test_context.network)
         self.flow_definition = MinifiFlowDefinition()
         self.properties: dict[str, str] = {}
         self.log_properties: dict[str, str] = {}
-        self.controller = MinifiController(self, "/opt/minifi/minifi-current/conf/config.yml")
+        self.controller = MinifiController(self, "/etc/nifi-minifi-cpp/config.yml")
 
         minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=self.container_name, ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
         self.files.append(File("/usr/local/share/certs/ca-root-nss.crt", dump_cert(test_context.root_ca_cert)))
@@ -52,9 +52,9 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
 
         minifi_server_cert, minifi_server_key = make_server_cert(common_name=f"server-{test_context.scenario_id}", ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
         self.files.append(File("/tmp/resources/minifi_server.crt",
-                               dump_cert(cert=minifi_server_cert) + dump_key(minifi_server_key)))
+                               dump_cert(minifi_server_cert) + dump_key(minifi_server_key)))
 
-        self.minifi_controller_path = '/opt/minifi/minifi-current/bin/minifi-controller'
+        self.minifi_controller_path = '/usr/bin/minifi-controller'
 
         self._fill_default_properties()
         self._fill_default_log_properties()
@@ -62,9 +62,9 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
     def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_yaml()
         logging.info(f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
-        self.files.append(File("/opt/minifi/minifi-current/conf/config.yml", flow_config))
-        self.files.append(File("/opt/minifi/minifi-current/conf/minifi.properties", self._get_properties_file_content()))
-        self.files.append(File("/opt/minifi/minifi-current/conf/minifi-log.properties", self._get_log_properties_file_content()))
+        self.files.append(File("/etc/nifi-minifi-cpp/config.yml", flow_config))
+        self.files.append(File("/etc/nifi-minifi-cpp/minifi.properties", self._get_properties_file_content()))
+        self.files.append(File("/etc/nifi-minifi-cpp/minifi-log.properties", self._get_log_properties_file_content()))
         resource_dir = Path(__file__).resolve().parent / "resources" / "minifi-controller"
         self.host_files.append(HostFile("/tmp/resources/minifi-controller/config.yml", os.path.join(resource_dir, "config.yml")))
 
@@ -88,8 +88,8 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         self.properties["nifi.openssl.fips.support.enable"] = "true"
 
     def _fill_default_properties(self):
-        self.properties["nifi.flow.configuration.file"] = "./conf/config.yml"
-        self.properties["nifi.extension.path"] = "../extensions/*"
+        self.properties["nifi.flow.configuration.file"] = "/etc/nifi-minifi-cpp/config.yml"
+        self.properties["nifi.extension.path"] = "/usr/lib64/nifi-minifi-cpp/extensions/*"
         self.properties["nifi.administrative.yield.duration"] = "1 sec"
         self.properties["nifi.bored.yield.duration"] = "100 millis"
         self.properties["nifi.openssl.fips.support.enable"] = "false"
