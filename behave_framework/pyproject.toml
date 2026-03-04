@@ -14,4 +14,7 @@ dependencies = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["minifi_behave"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["minifi_behave*"] # Wildcards are only supported here
