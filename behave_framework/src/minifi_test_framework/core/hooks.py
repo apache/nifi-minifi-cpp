@@ -14,11 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import logging
 import os
 import docker
 import types
+from pathlib import Path
 
 from behave.model import Scenario
 from behave.runner import Context
@@ -57,7 +56,6 @@ def common_before_scenario(context: Context, scenario: Scenario):
         if not hasattr(context, attr):
             setattr(context, attr, types.MethodType(method, context))
 
-    logging.info("Running scenario: %s", scenario)
     context.scenario_id = scenario.filename.rsplit("/", 1)[1].split(".")[0] + "-" + str(
         scenario.parent.scenarios.index(scenario))
     network_name = f"{context.scenario_id}-net"
@@ -65,7 +63,6 @@ def common_before_scenario(context: Context, scenario: Scenario):
 
     try:
         existing_network = docker_client.networks.get(network_name)
-        logging.warning(f"Found existing network '{network_name}'. Removing it first.")
         existing_network.remove()
     except docker.errors.NotFound:
         pass  # No existing network found, which is good.
@@ -80,6 +77,19 @@ def common_before_scenario(context: Context, scenario: Scenario):
 
 
 def common_after_scenario(context: MinifiTestContext, scenario: Scenario):
+    if hasattr(context, "evidence_path") and os.environ.get("LOGS"):
+        header = (
+            f"FEATURE  : {scenario.feature.name}\n"
+            f"SCENARIO : {scenario.name}\n"
+            f"FILE     : {scenario.feature.filename}\n"
+            f"LINE     : {scenario.line}\n"
+        )
+
+        log_dir_path = Path(os.environ.get("LOGS")) / Path(context.evidence_path)
+        scenario_info_path = log_dir_path / "scenario_info.txt"
+        with open(scenario_info_path, "w") as f:
+            f.write(header)
+
     for container in context.containers.values():
         container.clean_up()
     context.network.remove()
