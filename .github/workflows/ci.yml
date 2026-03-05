@@ -284,6 +284,11 @@ jobs:
           echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy main" | sudo tee -a /etc/apt/sources.list
           echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main" | sudo tee -a /etc/apt/sources.list
+          sudo tee /etc/apt/preferences.d/llvm-20 <<'EOF'
+          Package: libc++1 libc++abi1
+          Pin: version 1:20.*
+          Pin-Priority: 1001
+          EOF
           sudo apt update
           sudo apt install -y ccache libfl-dev clang-20 clang-tidy-20 libc++-20-dev libc++abi-20-dev libsqliteodbc parallel
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
