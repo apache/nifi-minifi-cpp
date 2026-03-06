@@ -1,42 +1,53 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index d0e9d75e2..bbf1b4c9a 100644
+index e9baae1ec..954909854 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -11,7 +11,7 @@ endif()
+@@ -18,7 +18,7 @@ endif()
  
- string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_LOWER_CASE)
+ # set(CMAKE_VERBOSE_MAKEFILE ON)
  
 -set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
 +list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
- if(${CMAKE_VERSION} VERSION_LESS 3.12)
-     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/tools/cmake3.12")
- endif()
-@@ -642,17 +642,17 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
  
-         # IPO requires too much memory for unit tests
-         # GCC docu recommends to compile all files with the same options, therefore ignore it completely
--        if(NOT UA_BUILD_UNIT_TESTS AND NOT DEFINED CMAKE_INTERPROCEDURAL_OPTIMIZATION)
--            # needed to check if IPO is supported (check needs cmake > 3.9)
--            if("${CMAKE_VERSION}" VERSION_GREATER 3.9)
--                cmake_policy(SET CMP0069 NEW) # needed as long as required cmake < 3.9
--                include(CheckIPOSupported)
--                check_ipo_supported(RESULT CC_HAS_IPO) # Inter Procedural Optimization / Link Time Optimization (should be same as -flto)
--                if(CC_HAS_IPO)
--                    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
--                endif()
--            endif()
--        endif()
-+	# if(NOT UA_BUILD_UNIT_TESTS AND NOT DEFINED CMAKE_INTERPROCEDURAL_OPTIMIZATION)
-+	#     # needed to check if IPO is supported (check needs cmake > 3.9)
-+	#     if("${CMAKE_VERSION}" VERSION_GREATER 3.9)
-+	#         cmake_policy(SET CMP0069 NEW) # needed as long as required cmake < 3.9
-+	#         include(CheckIPOSupported)
-+	#         check_ipo_supported(RESULT CC_HAS_IPO) # Inter Procedural Optimization / Link Time Optimization (should be same as -flto)
-+	#         if(CC_HAS_IPO)
-+	#             set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-+	#         endif()
-+	#     endif()
-+	# endif()
+ find_package(Python3 REQUIRED)
+ find_package(Git)
+@@ -669,7 +669,6 @@ if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang") AND
+     # Threading support
+     if(UA_MULTITHREADING GREATER_EQUAL 100 AND NOT WIN32)
+         check_add_cc_flag("-pthread")
+-        check_add_cc_flag("-ftls-model=initial-exec") # Enable thread-local variables in the .so shared object
      endif()
  
-     if(UA_ENABLE_AMALGAMATION)
+     # Force 32bit build
+@@ -691,17 +690,6 @@ if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang") AND
+         endif()
+     endif()
+ 
+-    # Inter Procedural Optimization / Link Time Optimization (should be same as -flto)
+-    # IPO requires too much memory for unit tests
+-    # GCC docu recommends to compile all files with the same options, therefore ignore it completely
+-    if(NOT UA_BUILD_UNIT_TESTS AND NOT DEFINED CMAKE_INTERPROCEDURAL_OPTIMIZATION)
+-        include(CheckIPOSupported)
+-        check_ipo_supported(RESULT CC_HAS_IPO)
+-        if(CC_HAS_IPO)
+-            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+-        endif()
+-    endif()
+-
+     # Linker
+     set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "") # cmake sets -rdynamic by default
+     if(APPLE)
+diff --git a/arch/posix/eventloop_posix.h b/arch/posix/eventloop_posix.h
+index a5f51383e..0d8b78418 100644
+--- a/arch/posix/eventloop_posix.h
++++ b/arch/posix/eventloop_posix.h
+@@ -277,7 +277,9 @@ typedef int SOCKET;
+ 
+ #ifndef __ANDROID__
+ #ifndef __APPLE__
++#ifdef __GLIBC__
+ #include <bits/stdio_lim.h>
++#endif
+ #endif /* !__APPLE__ */
+ #endif /* !__ANDROID__ */
+ 

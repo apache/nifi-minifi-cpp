@@ -115,10 +115,8 @@ Feature: Putting and fetching data to OPC UA server
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
     And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
     And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node" flow
-    And a host resource file "opcua_client_cert.der" is bound to the "/tmp/resources/opcua/opcua_client_cert.der" path in the MiNiFi container "create-opc-ua-node"
-    And a host resource file "opcua_client_key.der" is bound to the "/tmp/resources/opcua/opcua_client_key.der" path in the MiNiFi container "create-opc-ua-node"
-    And a host resource file "opcua_client_cert.der" is bound to the "/tmp/resources/opcua/opcua_client_cert.der" path in the MiNiFi container "fetch-opc-ua-node"
-    And a host resource file "opcua_client_key.der" is bound to the "/tmp/resources/opcua/opcua_client_key.der" path in the MiNiFi container "fetch-opc-ua-node"
+    And the OPC UA server certificate files are placed in the "/tmp/resources/opcua/" directory in the MiNiFi container "create-opc-ua-node"
+    And the OPC UA server certificate files are placed in the "/tmp/resources/opcua/" directory in the MiNiFi container "fetch-opc-ua-node"
     And these processor properties are set in the "create-opc-ua-node" flow
       | processor name    | property name                   | property value                                    |
       | PutOPCProcessor   | Parent node ID                  | 85                                                |
@@ -132,7 +130,7 @@ Feature: Putting and fetching data to OPC UA server
       | PutOPCProcessor   | Certificate path                | /tmp/resources/opcua/opcua_client_cert.der        |
       | PutOPCProcessor   | Key path                        | /tmp/resources/opcua/opcua_client_key.der         |
       | PutOPCProcessor   | Trusted server certificate path | /tmp/resources/opcua/opcua_client_cert.der        |
-      | PutOPCProcessor   | Application URI                 | urn:open62541.server.application                  |
+      | PutOPCProcessor   | Application URI                 | urn:open62541.unconfigured.application                  |
     And these processor properties are set in the "fetch-opc-ua-node" flow
       | processor name    | property name                   | property value                                    |
       | FetchOPCProcessor | Node ID                         | 9999                                              |
@@ -143,7 +141,7 @@ Feature: Putting and fetching data to OPC UA server
       | FetchOPCProcessor | Certificate path                | /tmp/resources/opcua/opcua_client_cert.der        |
       | FetchOPCProcessor | Key path                        | /tmp/resources/opcua/opcua_client_key.der         |
       | FetchOPCProcessor | Trusted server certificate path | /tmp/resources/opcua/opcua_client_cert.der        |
-      | FetchOPCProcessor | Application URI                 | urn:open62541.server.application                  |
+      | FetchOPCProcessor | Application URI                 | urn:open62541.unconfigured.application                  |
 
     And in the "create-opc-ua-node" flow the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And in the "fetch-opc-ua-node" flow the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
@@ -153,7 +151,7 @@ Feature: Putting and fetching data to OPC UA server
     When all instances start up
 
     Then in the "fetch-opc-ua-node" container at least one file with the content "Test" is placed in the "/tmp/output" directory in less than 60 seconds
-    And the OPC UA server logs contain the following message: "SecureChannel opened with SecurityPolicy http://opcfoundation.org/UA/SecurityPolicy#Aes128_Sha256_RsaOaep" in less than 5 seconds
+    And the OPC UA server logs contain the following message: "Channel opened with SecurityMode SignAndEncrypt for SecurityPolicy http://opcfoundation.org/UA/SecurityPolicy#Aes256_Sha256_RsaPss" in less than 5 seconds
 
   Scenario: Create and fetch data from an OPC UA node through username and password authenticated connection
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "create-opc-ua-node" flow
@@ -193,3 +191,56 @@ Feature: Putting and fetching data to OPC UA server
 
     When all instances start up
     Then in the "fetch-opc-ua-node" container at least one file with the content "Test" is placed in the "/tmp/output" directory in less than 60 seconds
+    And the logs of the "fetch-opc-ua-node" container contain the following message: "Username/password authentication is used without encryption, which is not secure. Please consider configuring encryption for better security." in less than 1 second
+    And the logs of the "create-opc-ua-node" container contain the following message: "Username/password authentication is used without encryption, which is not secure. Please consider configuring encryption for better security." in less than 1 second
+
+  Scenario: Create and fetch data from an OPC UA node through username and password authenticated connection with encryption
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "create-opc-ua-node" flow
+    And a directory at "/tmp/input" has a file with the content "Test" in the "create-opc-ua-node" flow
+    And a PutOPCProcessor processor in the "create-opc-ua-node" flow
+    And PutOPCProcessor is EVENT_DRIVEN in the "create-opc-ua-node" flow
+    And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
+    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node" flow
+    And the OPC UA server certificate files are placed in the "/tmp/resources/opcua/" directory in the MiNiFi container "create-opc-ua-node"
+    And the OPC UA server certificate files are placed in the "/tmp/resources/opcua/" directory in the MiNiFi container "fetch-opc-ua-node"
+    And these processor properties are set in the "create-opc-ua-node" flow
+      | processor name    | property name                   | property value                                    |
+      | PutOPCProcessor   | Parent node ID                  | 85                                                |
+      | PutOPCProcessor   | Parent node ID type             | Int                                               |
+      | PutOPCProcessor   | Target node ID                  | 9999                                              |
+      | PutOPCProcessor   | Target node ID type             | Int                                               |
+      | PutOPCProcessor   | Target node namespace index     | 1                                                 |
+      | PutOPCProcessor   | Value type                      | String                                            |
+      | PutOPCProcessor   | OPC server endpoint             | opc.tcp://opcua-server-${scenario_id}:4840/       |
+      | PutOPCProcessor   | Target node browse name         | testnodename                                      |
+      | PutOPCProcessor   | Username                        | admin                                             |
+      | PutOPCProcessor   | Password                        | admin                                             |
+      | PutOPCProcessor   | Certificate path                | /tmp/resources/opcua/opcua_client_cert.der        |
+      | PutOPCProcessor   | Key path                        | /tmp/resources/opcua/opcua_client_key.der         |
+      | PutOPCProcessor   | Trusted server certificate path | /tmp/resources/opcua/opcua_client_cert.der        |
+      | PutOPCProcessor   | Application URI                 | urn:open62541.unconfigured.application            |
+    And these processor properties are set in the "fetch-opc-ua-node" flow
+      | processor name    | property name                   | property value                                    |
+      | FetchOPCProcessor | Node ID                         | 9999                                              |
+      | FetchOPCProcessor | Node ID type                    | Int                                               |
+      | FetchOPCProcessor | Namespace index                 | 1                                                 |
+      | FetchOPCProcessor | OPC server endpoint             | opc.tcp://opcua-server-${scenario_id}:4840/       |
+      | FetchOPCProcessor | Max depth                       | 1                                                 |
+      | FetchOPCProcessor | Username                        | admin                                             |
+      | FetchOPCProcessor | Password                        | admin                                             |
+      | FetchOPCProcessor | Certificate path                | /tmp/resources/opcua/opcua_client_cert.der        |
+      | FetchOPCProcessor | Key path                        | /tmp/resources/opcua/opcua_client_key.der         |
+      | FetchOPCProcessor | Trusted server certificate path | /tmp/resources/opcua/opcua_client_cert.der        |
+      | FetchOPCProcessor | Application URI                 | urn:open62541.unconfigured.application            |
+
+    And in the "create-opc-ua-node" flow the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
+    And in the "fetch-opc-ua-node" flow the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
+
+    And an OPC UA server is set up
+
+    When all instances start up
+    Then in the "fetch-opc-ua-node" container at least one file with the content "Test" is placed in the "/tmp/output" directory in less than 60 seconds
+    And the logs of the "fetch-opc-ua-node" container do not contain the following message: "Username/password authentication is used without encryption, which is not secure. Please consider configuring encryption for better security." after 0 seconds
+    And the logs of the "create-opc-ua-node" container do not contain the following message: "Username/password authentication is used without encryption, which is not secure. Please consider configuring encryption for better security." after 0 seconds

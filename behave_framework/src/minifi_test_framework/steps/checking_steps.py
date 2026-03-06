@@ -63,11 +63,17 @@ def step_impl(context: MinifiTestContext, content: str, directory: str, duration
     context.execute_steps(f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container at least one file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
 
 
-@then('the Minifi logs do not contain the following message: "{message}" after {duration}')
-def step_impl(context: MinifiTestContext, message: str, duration: str):
+@then("the logs of the '{container}' container do not contain the following message: '{message}' after {duration}")
+@then('the logs of the "{container}" container do not contain the following message: "{message}" after {duration}')
+def step_impl(context: MinifiTestContext, container: str, message: str, duration: str):
     duration_seconds = humanfriendly.parse_timespan(duration)
     time.sleep(duration_seconds)
-    assert message not in context.containers[DEFAULT_MINIFI_CONTAINER_NAME].get_logs() or log_due_to_failure(context)
+    assert message not in context.containers[container].get_logs() or log_due_to_failure(context)
+
+
+@then('the Minifi logs do not contain the following message: "{message}" after {duration}')
+def step_impl(context: MinifiTestContext, message: str, duration: str):
+    context.execute_steps(f'then the logs of the "{DEFAULT_MINIFI_CONTAINER_NAME}" container do not contain the following message: "{message}" after {duration}')
 
 
 @then("the Minifi logs do not contain errors")
@@ -80,13 +86,19 @@ def step_impl(context: MinifiTestContext):
     assert "[warning]" not in context.containers[DEFAULT_MINIFI_CONTAINER_NAME].get_logs() or log_due_to_failure(context)
 
 
+@then("the logs of the '{container}' container contain the following message: '{message}' in less than {duration}")
+@then('the logs of the "{container}" container contain the following message: "{message}" in less than {duration}')
+def step_impl(context: MinifiTestContext, container: str, message: str, duration: str):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    assert wait_for_condition(condition=lambda: message in context.containers[container].get_logs(),
+                              timeout_seconds=duration_seconds, bail_condition=lambda: context.containers[container].exited,
+                              context=context)
+
+
 @then("the Minifi logs contain the following message: '{message}' in less than {duration}")
 @then('the Minifi logs contain the following message: "{message}" in less than {duration}')
 def step_impl(context: MinifiTestContext, message: str, duration: str):
-    duration_seconds = humanfriendly.parse_timespan(duration)
-    assert wait_for_condition(condition=lambda: message in context.containers[DEFAULT_MINIFI_CONTAINER_NAME].get_logs(),
-                              timeout_seconds=duration_seconds, bail_condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].exited,
-                              context=context)
+    context.execute_steps(f'then the logs of the "{DEFAULT_MINIFI_CONTAINER_NAME}" container contain the following message: "{message}" in less than {duration}')
 
 
 @then("the Minifi logs contain the following message: \"{log_message}\" {count:d} times after {duration}")

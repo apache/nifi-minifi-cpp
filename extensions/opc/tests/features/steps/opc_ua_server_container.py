@@ -20,8 +20,10 @@ from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
 class OPCUAServerContainer(Container):
+    OPC_SERVER_IMAGE = "lordgamez/open62541:1.5.2"
+
     def __init__(self, test_context: MinifiTestContext, command: Optional[List[str]] = None):
-        super().__init__("lordgamez/open62541:1.4.10", f"opcua-server-{test_context.scenario_id}", test_context.network, command=command)
+        super().__init__(self.OPC_SERVER_IMAGE, f"opcua-server-{test_context.scenario_id}", test_context.network, command=command)
 
     def deploy(self):
         super().deploy()

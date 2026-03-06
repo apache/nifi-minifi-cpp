@@ -33,6 +33,8 @@
 #include "open62541/client_highlevel.h"
 #include "open62541/client_config_default.h"
 
+extern "C" int mp_vsnprintf(char* s, size_t count, const char* format, va_list arg);
+
 namespace org::apache::nifi::minifi::opc {
 
 /*
@@ -112,8 +114,9 @@ core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
 Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
                const std::vector<std::vector<char>>& trust_buffers)
-    : client_(UA_Client_new()) {
-  if (cert_buffer.empty()) {
+    : client_(UA_Client_new()),
+      use_encryption_(!cert_buffer.empty()) {
+  if (!use_encryption_) {
     UA_ClientConfig_setDefault(UA_Client_getConfig(client_));
   } else {
     UA_ClientConfig *cc = UA_Client_getConfig(client_);
@@ -159,6 +162,7 @@ Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::
 
   UA_ClientConfig *config_ptr = UA_Client_getConfig(client_);
   config_ptr->logging = &minifi_ua_logger_;
+  config_ptr->allowNonePolicyPassword = true;
 
   if (!application_uri.empty()) {
     UA_String_clear(&config_ptr->clientDescription.applicationUri);
@@ -198,6 +202,9 @@ UA_StatusCode Client::connect(const std::string& url, const std::string& usernam
   if (username.empty()) {
     return UA_Client_connect(client_, url.c_str());
   } else {
+    if (!use_encryption_) {
+      logger_->log_warn("Username/password authentication is used without encryption, which is not secure. Please consider configuring encryption for better security.");
+    }
     return UA_Client_connectUsername(client_, url.c_str(), username.c_str(), password.c_str());
   }
 }
@@ -586,7 +593,7 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {
   std::array<char, 1024> buffer{};
-  (void)vsnprintf(buffer.data(), buffer.size(), msg, args);
+  (void)mp_vsnprintf(buffer.data(), buffer.size(), msg, args);
   auto loggerPtr = reinterpret_cast<core::logging::Logger*>(context);
   loggerPtr->log_string(MapOPCLogLevel(level), buffer.data());
 }
