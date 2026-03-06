@@ -160,10 +160,6 @@ std::string extractClassName(const std::string& full_class_name) {
   return minifi::utils::string::split(full_class_name, ".").back();
 }
 
-std::string lowercaseFirst(const std::pair<std::string, minifi::ClassDescription>& key_value) {
-  return minifi::utils::string::toLower(key_value.first);
-}
-
 void writeProcessor(std::ostream& os, const std::string_view name, const minifi::ClassDescription& documentation) {
   writeName(os, name);
   writeDescription(os, documentation);
@@ -188,8 +184,8 @@ void writeParameterProvider(std::ostream& os, const std::string_view name, const
 class MonolithDocumentation {
  public:
   explicit MonolithDocumentation() {
-    for (const auto& [bundle_id, component] : minifi::ClassDescriptionRegistry::getClassDescriptions()) {
-      addComponents(component);
+    for (const auto& [bundle_id, components] : minifi::ClassDescriptionRegistry::getClassDescriptions()) {
+      addComponents(components);
     }
     sort();
   }
@@ -219,9 +215,10 @@ class MonolithDocumentation {
   }
 
   void sort() {
-    std::ranges::sort(controller_services, std::less(), lowercaseFirst);
-    std::ranges::sort(processors, std::less(), lowercaseFirst);
-    std::ranges::sort(parameter_providers, std::less(), lowercaseFirst);
+    auto lower_case_first = [](const auto& kv) { return minifi::utils::string::toLower(kv.first); };
+    std::ranges::sort(controller_services, std::less(), lower_case_first);
+    std::ranges::sort(processors, std::less(), lower_case_first);
+    std::ranges::sort(parameter_providers, std::less(), lower_case_first);
   }
 
   void writeControllers(std::ostream& os) {
@@ -253,18 +250,19 @@ class MonolithDocumentation {
 class ModularDocumentation {
  public:
   static void write(const std::filesystem::path& docs_dir) {
-    for (auto& [bundle_id, component] : minifi::ClassDescriptionRegistry::getMutableClassDescriptions()) {
-      if (component.empty()) { continue; }
-      sortComponents(component);
-      writeModule(docs_dir, bundle_id.name, component);
+    for (auto& [bundle_id, components] : minifi::ClassDescriptionRegistry::getMutableClassDescriptions()) {
+      if (components.empty()) { continue; }
+      sortComponents(components);
+      writeModule(docs_dir, bundle_id.name, components);
     }
   }
 
  private:
   static void sortComponents(minifi::Components& components) {
-    std::ranges::sort(components.processors, {}, &minifi::ClassDescription::short_name_);
-    std::ranges::sort(components.controller_services, {}, &minifi::ClassDescription::short_name_);
-    std::ranges::sort(components.parameter_providers, {}, &minifi::ClassDescription::short_name_);
+    auto lower_case_short_name = [](const auto& b) { return minifi::utils::string::toLower(b.short_name_); };
+    std::ranges::sort(components.processors, {}, lower_case_short_name);
+    std::ranges::sort(components.controller_services, {}, lower_case_short_name);
+    std::ranges::sort(components.parameter_providers, {}, lower_case_short_name);
   }
 
   static void writeComponentParts(std::ostream& os, const std::vector<minifi::ClassDescription>& class_descriptions, const std::string_view h3) {
