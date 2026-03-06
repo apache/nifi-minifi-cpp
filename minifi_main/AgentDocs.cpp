@@ -95,7 +95,7 @@ void writeHeader(std::ostream& docs, const std::vector<std::pair<std::string, mi
   docs << APACHE_LICENSE;
 
   docs << "\n\n## Table of Contents\n\n";
-  for (const auto& [name, documentation]: class_descriptions) {
+  for (const auto& [name, documentation] : class_descriptions) {
     docs << "- [" << name << "](#" << name << ")\n";
   }
 }
@@ -114,7 +114,7 @@ void writeProperties(std::ostream& docs, const minifi::ClassDescription& documen
   docs << "\n\nIn the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. "
        << "The table also indicates any default values, and whether a property supports the NiFi Expression Language.";
   minifi::docs::Table properties{{"Name", "Default Value", "Allowable Values", "Description"}};
-  for (const auto& property: documentation.class_properties_) {
+  for (const auto& property : documentation.class_properties_) {
     properties.addRow({formatName(property.getName(), property.getRequired()),
         property.getDefaultValue().value_or(""),
         formatAllowedValues(property),
@@ -128,7 +128,7 @@ void writeDynamicProperties(std::ostream& docs, const minifi::ClassDescription& 
 
   docs << "\n### Dynamic Properties\n\n";
   minifi::docs::Table dynamic_properties{{"Name", "Value", "Description"}};
-  for (const auto& dynamic_property: documentation.dynamic_properties_) {
+  for (const auto& dynamic_property : documentation.dynamic_properties_) {
     dynamic_properties.addRow({formatName(dynamic_property.name, false), std::string(dynamic_property.value), formatDescription(dynamic_property)});
   }
   docs << dynamic_properties.toString();
@@ -137,7 +137,7 @@ void writeDynamicProperties(std::ostream& docs, const minifi::ClassDescription& 
 void writeRelationships(std::ostream& docs, const minifi::ClassDescription& documentation) {
   docs << "\n### Relationships\n\n";
   minifi::docs::Table relationships{{"Name", "Description"}};
-  for (const auto& rel: documentation.class_relationships_) {
+  for (const auto& rel : documentation.class_relationships_) {
     relationships.addRow({rel.getName(), formatDescription(rel.getDescription())});
   }
   docs << relationships.toString();
@@ -148,7 +148,7 @@ void writeOutputAttributes(std::ostream& docs, const minifi::ClassDescription& d
 
   docs << "\n### Output Attributes";
   minifi::docs::Table output_attributes{{"Attribute", "Relationship", "Description"}};
-  for (const auto& output_attribute: documentation.output_attributes_) {
+  for (const auto& output_attribute : documentation.output_attributes_) {
     output_attributes.addRow({std::string(output_attribute.name),
         formatListOfRelationships(output_attribute.relationships),
         formatDescription(output_attribute.description)});
@@ -188,7 +188,7 @@ void writeParameterProvider(std::ostream& os, const std::string_view name, const
 class MonolithDocumentation {
  public:
   explicit MonolithDocumentation() {
-    for (const auto& [bundle_id, component]: minifi::ClassDescriptionRegistry::getClassDescriptions()) {
+    for (const auto& [bundle_id, component] : minifi::ClassDescriptionRegistry::getClassDescriptions()) {
       addComponents(component);
     }
     sort();
@@ -207,13 +207,13 @@ class MonolithDocumentation {
 
  private:
   void addComponents(const minifi::Components& components) {
-    for (const auto& controller_service_description: components.controller_services) {
+    for (const auto& controller_service_description : components.controller_services) {
       controller_services.emplace_back(extractClassName(controller_service_description.full_name_), controller_service_description);
     }
-    for (const auto& processor_description: components.processors) {
+    for (const auto& processor_description : components.processors) {
       processors.emplace_back(extractClassName(processor_description.full_name_), processor_description);
     }
-    for (const auto& parameter_provider_description: components.parameter_providers) {
+    for (const auto& parameter_provider_description : components.parameter_providers) {
       parameter_providers.emplace_back(extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
     }
   }
@@ -226,21 +226,21 @@ class MonolithDocumentation {
 
   void writeControllers(std::ostream& os) {
     writeHeader(os, controller_services);
-    for (const auto& [name, documentation]: controller_services) {
+    for (const auto& [name, documentation] : controller_services) {
       writeControllerService(os, name, documentation);
     }
   }
 
   void writeProcessors(std::ostream& os) {
     writeHeader(os, processors);
-    for (const auto& [name, documentation]: processors) {
+    for (const auto& [name, documentation] : processors) {
       writeProcessor(os, name, documentation);
     }
   }
 
   void writeParameterProviders(std::ostream& os) {
     writeHeader(os, parameter_providers);
-    for (const auto& [name, documentation]: parameter_providers) {
+    for (const auto& [name, documentation] : parameter_providers) {
       writeParameterProvider(os, name, documentation);
     }
   }
@@ -253,10 +253,8 @@ class MonolithDocumentation {
 class ModularDocumentation {
  public:
   static void write(const std::filesystem::path& docs_dir) {
-    for (auto& [bundle_id, component]: minifi::ClassDescriptionRegistry::getMutableClassDescriptions()) {
-      if (component.empty()) {
-        continue;
-      }
+    for (auto& [bundle_id, component] : minifi::ClassDescriptionRegistry::getMutableClassDescriptions()) {
+      if (component.empty()) { continue; }
       sortComponents(component);
       writeModule(docs_dir, bundle_id.name, component);
     }
@@ -272,7 +270,7 @@ class ModularDocumentation {
   static void writeComponentParts(std::ostream& os, const std::vector<minifi::ClassDescription>& class_descriptions, const std::string_view h3) {
     if (!class_descriptions.empty()) {
       os << fmt::format("### {}\n\n", h3);
-      for (const auto& class_description: class_descriptions) {
+      for (const auto& class_description : class_descriptions) {
         const auto name = extractClassName(class_description.full_name_);
         os << "- [" << name << "](#" << name << ")\n";
       }
@@ -295,15 +293,15 @@ class ModularDocumentation {
 
     writeToC(os, components);
 
-    for (const auto& processor: components.processors) {
+    for (const auto& processor : components.processors) {
       writeProcessor(os, extractClassName(processor.full_name_), processor);
     }
 
-    for (const auto& controller_service: components.controller_services) {
+    for (const auto& controller_service : components.controller_services) {
       writeControllerService(os, extractClassName(controller_service.full_name_), controller_service);
     }
 
-    for (const auto& parameter_provider_description: components.parameter_providers) {
+    for (const auto& parameter_provider_description : components.parameter_providers) {
       writeParameterProvider(os, extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
     }
   }
