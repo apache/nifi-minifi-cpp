@@ -34,7 +34,7 @@
 
 namespace org::apache::nifi::minifi::extensions::smb {
 
-class SmbConnectionControllerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
+class SmbConnectionControllerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
  public:
   EXTENSIONAPI static constexpr const char* Description = "SMB Connection Controller Service";
 
@@ -78,7 +78,7 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   void onEnable() override;
   void notifyStop() override;
 
-  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
 
   virtual std::error_code validateConnection();
   virtual std::filesystem::path getPath() const { return server_path_; }

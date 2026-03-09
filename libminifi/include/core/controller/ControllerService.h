@@ -96,9 +96,9 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
    */
   void onEnable() {
     ControllerServiceContextImpl context{*this};
-    std::vector<std::shared_ptr<ControllerServiceInterface>> service_interfaces;
+    std::vector<std::shared_ptr<ControllerServiceHandle>> service_interfaces;
     for (auto& service : linked_services_) {
-      service_interfaces.emplace_back(std::shared_ptr<ControllerServiceInterface>(service, service->impl_->getControllerServiceInterface()));
+      service_interfaces.emplace_back(std::shared_ptr<ControllerServiceHandle>(service, service->impl_->getControllerServiceInterface()));
     }
     impl_->onEnable(context, configuration_, service_interfaces);
   }
@@ -121,7 +121,7 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
     linked_services_ = services;
   }
 
-  template<typename T = ControllerServiceInterface>
+  template<typename T = ControllerServiceHandle>
   gsl::not_null<T*> getImplementation() {
     return gsl::make_not_null(dynamic_cast<T*>(impl_->getControllerServiceInterface()));
   }

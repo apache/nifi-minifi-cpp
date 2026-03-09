@@ -30,7 +30,7 @@
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
 
-class ElasticsearchCredentialsControllerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
+class ElasticsearchCredentialsControllerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Elasticsearch/Opensearch Credentials Controller Service";
 
@@ -64,7 +64,7 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
 
   void onEnable() override;
 
-  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
 
   void authenticateClient(http::HTTPClient& client);
 

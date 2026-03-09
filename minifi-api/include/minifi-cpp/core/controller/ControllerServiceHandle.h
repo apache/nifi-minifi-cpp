@@ -19,9 +19,9 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
-class ControllerServiceInterface {
+class ControllerServiceHandle {
  public:
-  virtual ~ControllerServiceInterface() = default;
+  virtual ~ControllerServiceHandle() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

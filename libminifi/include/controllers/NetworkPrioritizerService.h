@@ -39,7 +39,7 @@ namespace org::apache::nifi::minifi::controllers {
 /**
  * Purpose: Network prioritizer for selecting network interfaces through the flow configuration.
  */
-class NetworkPrioritizerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
+class NetworkPrioritizerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
   class StandardNetworkPrioritizer : public io::NetworkPrioritizer {
    public:
     void reduce_tokens(uint32_t size) override;
@@ -103,7 +103,7 @@ class NetworkPrioritizerService : public core::controller::ControllerServiceBase
 
   void onEnable() override;
 
-  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
 
   io::NetworkInterface getInterface(uint32_t size);
 

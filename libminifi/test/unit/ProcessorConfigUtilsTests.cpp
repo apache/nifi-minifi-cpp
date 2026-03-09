@@ -92,10 +92,10 @@ TEST_CASE("Parse enum property") {
 }
 
 namespace {
-class TestControllerService : public controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
+class TestControllerService : public controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
  public:
   using ControllerServiceBase::ControllerServiceBase;
-  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
   bool supportsDynamicProperties() const override {return false;}
 };
 

@@ -27,7 +27,7 @@
 #include "core/ConfigurableComponentImpl.h"
 #include "core/Connectable.h"
 #include "minifi-cpp/core/controller/ControllerServiceApi.h"
-#include "minifi-cpp/core/controller/ControllerServiceInterface.h"
+#include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 #include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/controller/ControllerServiceMetadata.h"
 
@@ -61,7 +61,7 @@ class ControllerServiceBase : public ControllerServiceApi {
 
   virtual void onEnable() {}
 
-  void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceInterface>>& linked_services) final {
+  void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceHandle>>& linked_services) final {
     configuration_ = configuration;
     linked_services_ = linked_services;
     gsl_Expects(!context_);
@@ -96,7 +96,7 @@ class ControllerServiceBase : public ControllerServiceApi {
  protected:
   std::string name_;
   utils::Identifier uuid_;
-  std::vector<std::shared_ptr<controller::ControllerServiceInterface> > linked_services_;
+  std::vector<std::shared_ptr<controller::ControllerServiceHandle> > linked_services_;
   std::shared_ptr<Configure> configuration_;
   // valid during initialize, sink for supported properties
   ControllerServiceDescriptor* descriptor_{nullptr};

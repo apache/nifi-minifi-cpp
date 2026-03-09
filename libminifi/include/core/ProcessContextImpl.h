@@ -101,7 +101,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
   // controller services
 
-  std::shared_ptr<core::controller::ControllerServiceInterface> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override {
+  std::shared_ptr<core::controller::ControllerServiceHandle> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override {
     auto controller_service = controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier, processor_uuid);
     if (!controller_service || controller_service->getState() != core::controller::ControllerServiceState::ENABLED) {
       return nullptr;
