@@ -31,9 +31,11 @@
 #include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/controller/ControllerServiceMetadata.h"
 
+#define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES \
+  bool supportsDynamicProperties() const override { return SupportsDynamicProperties; }
+
 namespace org::apache::nifi::minifi::core::controller {
 
-// A base class that helps with controller service development, contains common functionalities.
 class ControllerServiceBase : public ControllerServiceApi {
  public:
   explicit ControllerServiceBase(ControllerServiceMetadata metadata)
@@ -59,9 +61,6 @@ class ControllerServiceBase : public ControllerServiceApi {
 
   virtual void onEnable() {}
 
-  /**
-   * Function is called when Controller Services are enabled and being run
-   */
   void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceInterface>>& linked_services) final {
     configuration_ = configuration;
     linked_services_ = linked_services;
@@ -81,9 +80,6 @@ class ControllerServiceBase : public ControllerServiceApi {
     return context_->getAllPropertyValues(name);
   }
 
-  /**
-   * Function is called when Controller Services are disabled
-   */
   void notifyStop() override {}
 
   std::string getName() const {

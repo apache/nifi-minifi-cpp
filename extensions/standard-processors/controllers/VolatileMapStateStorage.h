@@ -44,6 +44,7 @@ class VolatileMapStateStorage : virtual public KeyValueStateStorage {
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({LinkedServices});
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 

@@ -56,6 +56,7 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   using ControllerServiceBase::ControllerServiceBase;
 

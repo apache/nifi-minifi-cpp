@@ -72,6 +72,7 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
                                                                                       });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 

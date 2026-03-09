@@ -73,7 +73,7 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
   }
 
   bool supportsDynamicRelationships() const final {
-    return false;
+    return impl_->supportsDynamicProperties();
   }
 
   ~ControllerService() override {

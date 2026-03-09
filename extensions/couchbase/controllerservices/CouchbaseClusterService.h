@@ -127,6 +127,7 @@ class CouchbaseClusterService : public core::controller::ControllerServiceBase, 
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 

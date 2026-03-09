@@ -42,6 +42,7 @@ class JsonTreeReader final : public core::RecordSetReaderImpl {
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr auto ImplementsApis = std::array{ RecordSetReader::ProvidesApi };
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   nonstd::expected<core::RecordSet, std::error_code> read(io::InputStream& input_stream) override;
 
