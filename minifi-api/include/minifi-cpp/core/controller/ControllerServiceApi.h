@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-#include "ControllerServiceInterface.h"
+#include "ControllerServiceHandle.h"
 #include "ControllerServiceContext.h"
 #include "ControllerServiceDescriptor.h"
 #include "minifi-cpp/properties/Configure.h"
@@ -33,9 +33,9 @@ class ControllerServiceApi {
   [[nodiscard]] virtual bool supportsDynamicProperties() const = 0;
 
   virtual void initialize(ControllerServiceDescriptor& descriptor) = 0;
-  virtual void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceInterface>>& linked_services) = 0;
+  virtual void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceHandle>>& linked_services) = 0;
   virtual void notifyStop() = 0;
-  virtual ControllerServiceInterface* getControllerServiceInterface() = 0;
+  virtual ControllerServiceHandle* getControllerServiceInterface() = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

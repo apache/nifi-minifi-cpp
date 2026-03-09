@@ -35,7 +35,7 @@ std::mutex control_mutex;
 std::atomic<bool> subprocess_controller_service_found_correctly{false};
 std::atomic<bool> subprocess_controller_service_not_found_correctly{false};
 
-class MockControllerService : public minifi::core::controller::ControllerServiceBase, public core::controller::ControllerServiceInterface {
+class MockControllerService : public minifi::core::controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
  public:
   using ControllerServiceBase::ControllerServiceBase;
   MockControllerService()
@@ -61,7 +61,7 @@ class MockControllerService : public minifi::core::controller::ControllerService
     str = "pushitrealgood";
   }
 
-  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
 
  protected:
   std::string str;
@@ -103,7 +103,7 @@ class MockProcessor : public minifi::core::ProcessorImpl {
     }
     std::string linked_service = context.getProperty("linkedService").value_or("");
     if (!IsNullOrEmpty(linked_service)) {
-      std::shared_ptr<minifi::core::controller::ControllerServiceInterface> service = context.getControllerService(linked_service, getUUID());
+      std::shared_ptr<minifi::core::controller::ControllerServiceHandle> service = context.getControllerService(linked_service, getUUID());
       std::lock_guard<std::mutex> lock(control_mutex);
       REQUIRE(nullptr != service);
       REQUIRE("pushitrealgood" == std::dynamic_pointer_cast<MockControllerService>(service)->doSomething());

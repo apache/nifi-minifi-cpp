@@ -30,7 +30,7 @@ class AttributeProviderServiceImpl : public core::controller::ControllerServiceB
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
-  ControllerServiceInterface* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

@@ -16,7 +16,7 @@
  */
 #pragma once
 
-#include "minifi-cpp/core/controller/ControllerServiceInterface.h"
+#include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 
 #include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/core/FlowFile.h"
@@ -26,7 +26,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class RecordSetWriter : public controller::ControllerServiceInterface {
+class RecordSetWriter : public controller::ControllerServiceHandle {
  public:
   static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
     .artifact = "minifi-system",
