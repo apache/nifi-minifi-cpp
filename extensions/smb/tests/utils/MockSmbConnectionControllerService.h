@@ -56,6 +56,7 @@ class MockSmbConnectionControllerService : public SmbConnectionControllerService
  public:
   using SmbConnectionControllerService::SmbConnectionControllerService;
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void onEnable() override {}
   void notifyStop() override {}

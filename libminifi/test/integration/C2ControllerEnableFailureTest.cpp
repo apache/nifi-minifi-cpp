@@ -43,6 +43,7 @@ class DummyController : public core::controller::ControllerServiceBase, public c
 
   static constexpr auto Properties = std::to_array<core::PropertyReference>({DummyControllerProperty});
   static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override {
     setSupportedProperties(Properties);

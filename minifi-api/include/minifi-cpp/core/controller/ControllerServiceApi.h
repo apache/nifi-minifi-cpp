@@ -30,6 +30,8 @@ class ControllerServiceApi {
  public:
   virtual ~ControllerServiceApi() = default;
 
+  [[nodiscard]] virtual bool supportsDynamicProperties() const = 0;
+
   virtual void initialize(ControllerServiceDescriptor& descriptor) = 0;
   virtual void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceInterface>>& linked_services) = 0;
   virtual void notifyStop() = 0;

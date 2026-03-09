@@ -49,6 +49,7 @@ class ExampleService : public core::controller::ControllerServiceBase, public co
   static constexpr const char* Description = "An example service";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 };
 
 REGISTER_RESOURCE(ExampleService, ControllerService);

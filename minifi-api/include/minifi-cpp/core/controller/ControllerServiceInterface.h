@@ -17,23 +17,8 @@
  */
 #pragma once
 
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include "minifi-cpp/properties/Configure.h"
-#include "minifi-cpp/core/ConfigurableComponent.h"
-#include "minifi-cpp/core/Connectable.h"
-
 namespace org::apache::nifi::minifi::core::controller {
 
-/**
- * Controller Service base class that contains some pure virtual methods.
- *
- * Design: OnEnable is executed when the controller service is being enabled.
- * Note that keeping state here must be protected  in this function.
- */
 class ControllerServiceInterface {
  public:
   virtual ~ControllerServiceInterface() = default;

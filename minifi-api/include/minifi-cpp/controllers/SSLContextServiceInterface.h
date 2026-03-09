@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <filesystem>
 
 #include "minifi-cpp/core/ControllerServiceApiDefinition.h"
 #include "minifi-cpp/agent/agent_version.h"

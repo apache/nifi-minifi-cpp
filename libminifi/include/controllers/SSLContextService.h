@@ -172,6 +172,7 @@ class SSLContextService : public core::controller::ControllerServiceBase, public
                                              });
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
  protected:
   virtual void initializeProperties();
