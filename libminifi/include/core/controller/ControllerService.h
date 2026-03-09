@@ -73,7 +73,7 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
   }
 
   bool supportsDynamicRelationships() const final {
-    return impl_->supportsDynamicProperties();
+    return false;
   }
 
   ~ControllerService() override {
@@ -127,7 +127,7 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
   }
 
   bool supportsDynamicProperties() const final {
-    return false;
+    return impl_->supportsDynamicProperties();
   }
 
   static constexpr auto ImplementsApis = std::array<ControllerServiceApiDefinition, 0>{};
