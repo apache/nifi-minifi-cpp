@@ -82,7 +82,7 @@ class NetworkPrioritizerService : public core::controller::ControllerServiceBase
       .withDefaultValue("true")
       .build();
   MINIFIAPI static constexpr auto DefaultPrioritizer = core::PropertyDefinitionBuilder<>::createProperty("Default Prioritizer")
-      .withDescription("Sets this controller service as the default prioritizer for all comms")
+      .withDescription("DEPRECATED, does not do anything")
       .isRequired(false)
       .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
