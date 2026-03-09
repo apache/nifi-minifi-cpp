@@ -209,7 +209,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Max Throughput**    | 1 MB          |                  | Max throughput ( per second ) for these network controllers                           |
 | **Max Payload**       | 1 GB          |                  | Maximum payload for these network controllers                                         |
 | **Verify Interfaces** | true          | true<br/>false   | Verify that interfaces are operational                                                |
-| Default Prioritizer   | false         | true<br/>false   | Sets this controller service as the default prioritizer for all comms                 |
+| Default Prioritizer   | false         | true<br/>false   | DEPRECATED, does not do anything                                                      |
 
 
 ## ODBCService
