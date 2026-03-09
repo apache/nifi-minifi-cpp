@@ -250,7 +250,7 @@ class MonolithDocumentation {
 class ModularDocumentation {
  public:
   static void write(const std::filesystem::path& docs_dir) {
-    for (auto& [bundle_id, components] : minifi::ClassDescriptionRegistry::getMutableClassDescriptions()) {
+    for (auto [bundle_id, components] : minifi::ClassDescriptionRegistry::getClassDescriptions()) {
       if (components.empty()) { continue; }
       sortComponents(components);
       writeModule(docs_dir, bundle_id.name, components);
