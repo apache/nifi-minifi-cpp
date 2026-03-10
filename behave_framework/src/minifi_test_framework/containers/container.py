@@ -202,10 +202,10 @@ class Container:
         command = (f"find {safe_dir_path} -maxdepth 1 -type f -print0 | "
                    f"xargs -0 -r grep -l -E -- {safe_regex_str}")
 
-        exit_code, output = self.exec_run(f"sh -c \"{command}\"")
+        exit_code, output = self.exec_run("sh -c {}".format(shlex.quote(command)))
 
         if exit_code != 0:
-            logging.warning(f"directory_contains_file_with_regex {output}")
+            logging.debug("While looking for regex %s in directory %s, grep returned exit code %d, output: %s", regex_str, directory_path, exit_code, output)
         return exit_code == 0
 
     def path_with_content_exists(self, path: str, content: str) -> bool:

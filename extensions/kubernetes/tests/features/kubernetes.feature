@@ -13,13 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@requires.kubernetes.cluster
 @ENABLE_KUBERNETES
-@SKIP_RPM
-Feature: TailFile can collect logs from Kubernetes pods
-
-  Background:
-    Given the content of "/tmp/output" is monitored
+Feature: MiNiFi can get logs and metrics from Kubernetes pods
 
   Scenario: Collect all logs from the default namespace
     Given a TailFile processor in a Kubernetes cluster
@@ -30,9 +25,12 @@ Feature: TailFile can collect logs from Kubernetes pods
     And the TailFile processor has an Attribute Provider Service which is a Kubernetes Controller Service
     And a PutFile processor in the Kubernetes cluster
     And the "Directory" property of the PutFile processor is set to "/tmp/output"
+    And the "Conflict Resolution Strategy" property of the PutFile processor is set to "ignore"
     And the "success" relationship of the TailFile processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is auto-terminated
     When the MiNiFi instance starts up
-    Then two flowfiles with the contents "Hello World!" and "Hello again, World!" are placed in the monitored directory in less than 30 seconds
+    Then the content of at least one file in the "/tmp/output" directory matches the '[0-9TZ:.-]+ stdout F Hello World!' regex in less than 30 seconds
+    And the content of at least one file in the "/tmp/output" directory matches the '[0-9TZ:.-]+ stdout F Hello again, World!' regex in less than 30 seconds
 
   Scenario: Collect logs from selected pods
     Given a TailFile processor in a Kubernetes cluster
@@ -43,9 +41,11 @@ Feature: TailFile can collect logs from Kubernetes pods
     And the TailFile processor has an Attribute Provider Service which is a Kubernetes Controller Service with the "Pod Name Filter" property set to ".*one"
     And a PutFile processor in the Kubernetes cluster
     And the "Directory" property of the PutFile processor is set to "/tmp/output"
+    And the "Conflict Resolution Strategy" property of the PutFile processor is set to "ignore"
     And the "success" relationship of the TailFile processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is auto-terminated
     When the MiNiFi instance starts up
-    Then one flowfile with the contents "Hello World!" is placed in the monitored directory in less than 30 seconds
+    Then the content of at least one file in the "/tmp/output" directory matches the '[0-9TZ:.-]+ stdout F Hello World!' regex in less than 30 seconds
 
   Scenario: Collect logs from selected containers
     Given a TailFile processor in a Kubernetes cluster
@@ -56,9 +56,11 @@ Feature: TailFile can collect logs from Kubernetes pods
     And the TailFile processor has an Attribute Provider Service which is a Kubernetes Controller Service with the "Container Name Filter" property set to "echo-[^o].."
     And a PutFile processor in the Kubernetes cluster
     And the "Directory" property of the PutFile processor is set to "/tmp/output"
+    And the "Conflict Resolution Strategy" property of the PutFile processor is set to "ignore"
     And the "success" relationship of the TailFile processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is auto-terminated
     When the MiNiFi instance starts up
-    Then one flowfile with the contents "Hello again, World!" is placed in the monitored directory in less than 30 seconds
+    Then the content of at least one file in the "/tmp/output" directory matches the '[0-9TZ:.-]+ stdout F Hello again, World!' regex in less than 30 seconds
 
   Scenario: Pod name etc are added as flow file attributes
     Given a TailFile processor in a Kubernetes cluster
@@ -69,6 +71,7 @@ Feature: TailFile can collect logs from Kubernetes pods
     And the TailFile processor has an Attribute Provider Service which is a Kubernetes Controller Service with the "Pod Name Filter" property set to ".*one"
     And a LogAttribute processor in the Kubernetes cluster
     And the "success" relationship of the TailFile processor is connected to the LogAttribute
+    And the "success" relationship of the LogAttribute processor is auto-terminated
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "key:kubernetes.namespace value:default" in less than 30 seconds
     And the Minifi logs contain the following message: "key:kubernetes.pod value:hello-world-one" in less than 1 second
@@ -81,8 +84,9 @@ Feature: TailFile can collect logs from Kubernetes pods
     And a PutFile processor in the Kubernetes cluster
     And the "Directory" property of the PutFile processor is set to "/tmp/output"
     And the "success" relationship of the CollectKubernetesPodMetrics processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is auto-terminated
     When the MiNiFi instance starts up
-    Then at least one flowfile with the content '"kind":"PodMetricsList","apiVersion":"metrics.k8s.io/v1beta1"' is placed in the monitored directory in less than 2 minutes
+    Then the content of at least one file in the "/tmp/output" directory matches the '"kind":"PodMetricsList","apiVersion":"metrics.k8s.io/v1beta1"' regex in less than 2 minutes
 
   Scenario: Collect metrics from selected pods
     Given a CollectKubernetesPodMetrics processor in a Kubernetes cluster
@@ -90,8 +94,9 @@ Feature: TailFile can collect logs from Kubernetes pods
     And a PutFile processor in the Kubernetes cluster
     And the "Directory" property of the PutFile processor is set to "/tmp/output"
     And the "success" relationship of the CollectKubernetesPodMetrics processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is auto-terminated
     When the MiNiFi instance starts up
-    Then at least one flowfile with the content '"metadata":{"name":"hello-world-one","namespace":"default"' is placed in the monitored directory in less than 2 minutes
+    Then the content of at least one file in the "/tmp/output" directory matches the '"metadata":{"name":"hello-world-one","namespace":"default"' regex in less than 2 minutes
 
   Scenario: Collect metrics from selected containers
     Given a CollectKubernetesPodMetrics processor in a Kubernetes cluster
@@ -99,5 +104,6 @@ Feature: TailFile can collect logs from Kubernetes pods
     And a PutFile processor in the Kubernetes cluster
     And the "Directory" property of the PutFile processor is set to "/tmp/output"
     And the "success" relationship of the CollectKubernetesPodMetrics processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is auto-terminated
     When the MiNiFi instance starts up
-    Then at least one flowfile with the content '"containers":[{"name":"echo-two","usage":{"cpu":"0","memory":' is placed in the monitored directory in less than 2 minutes
+    Then the content of at least one file in the "/tmp/output" directory matches the '"containers":\[{"name":"echo-two","usage":{"cpu":"0","memory":' regex in less than 2 minutes
