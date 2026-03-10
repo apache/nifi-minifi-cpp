@@ -20,7 +20,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
   Scenario: A MiNiFi instance transfers data to a Splunk HEC
     Given a Splunk HEC is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "foobar" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "foobar"
     And a PutSplunkHTTP processor
     And PutSplunkHTTP is EVENT_DRIVEN
     And a QuerySplunkIndexingStatus processor
@@ -51,7 +51,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
   Scenario: A MiNiFi instance transfers data to a Splunk HEC with SSL enabled
     Given a Splunk HEC is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "foobar" is present in "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "foobar"
     And a PutSplunkHTTP processor
     And PutSplunkHTTP is EVENT_DRIVEN
     And a QuerySplunkIndexingStatus processor

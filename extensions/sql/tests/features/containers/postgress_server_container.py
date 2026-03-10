@@ -53,7 +53,7 @@ class PostgresContainer(Container):
         finished_str = "database system is ready to accept connections"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
-            timeout_seconds=5,
+            timeout_seconds=60,
             bail_condition=lambda: self.exited,
             context=None)
 

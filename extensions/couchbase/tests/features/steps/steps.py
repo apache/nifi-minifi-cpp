@@ -22,7 +22,7 @@ from minifi_test_framework.steps.flow_building_steps import add_ssl_context_serv
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.core.helpers import log_due_to_failure
 from minifi_test_framework.minifi.controller_service import ControllerService
-from couchbase_server_container import CouchbaseServerContainer
+from containers.couchbase_server_container import CouchbaseServerContainer
 
 
 @step("a Couchbase server is started")

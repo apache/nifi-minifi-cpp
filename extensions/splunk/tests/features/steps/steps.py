@@ -20,7 +20,7 @@ from minifi_test_framework.steps import core_steps            # noqa: F401
 from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.helpers import log_due_to_failure
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from splunk_container import SplunkContainer
+from containers.splunk_container import SplunkContainer
 
 
 @step("a Splunk HEC is set up and running")

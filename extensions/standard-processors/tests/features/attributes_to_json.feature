@@ -18,7 +18,7 @@ Feature: Writing attribute data using AttributesToJSON processor
 
   Scenario: Write selected attribute data to file
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a directory at "/tmp/input" has a file ("test_file.log") with the content "test_data"
+    And a directory at "/tmp/input" has a file "test_file.log" with the content "test_data"
     And a AttributesToJSON processor with the "Attributes List" property set to "filename,invalid"
     And the "Destination" property of the AttributesToJSON processor is set to "flowfile-content"
     And the "Null Value" property of the AttributesToJSON processor is set to "true"

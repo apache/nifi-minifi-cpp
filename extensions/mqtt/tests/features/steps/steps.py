@@ -24,7 +24,7 @@ from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAI
 from minifi_test_framework.minifi.processor import Processor
 from minifi_test_framework.core.helpers import wait_for_condition
 
-from mqtt_broker_container import MqttBrokerContainer
+from containers.mqtt_broker_container import MqttBrokerContainer
 
 
 @given("a {processor_name} processor set up to communicate with an MQTT broker instance in the \"{container_name}\" flow")

@@ -20,7 +20,7 @@ from minifi_test_framework.steps import core_steps            # noqa: F401
 from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from prometheus_container import PrometheusContainer
+from containers.prometheus_container import PrometheusContainer
 
 
 @step('a Prometheus server is set up')

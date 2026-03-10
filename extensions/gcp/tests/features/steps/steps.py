@@ -20,7 +20,7 @@ from minifi_test_framework.steps import core_steps            # noqa: F401
 from minifi_test_framework.steps import flow_building_steps   # noqa: F401
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.core.helpers import log_due_to_failure
-from fake_gcs_server_container import FakeGcsServerContainer
+from containers.fake_gcs_server_container import FakeGcsServerContainer
 
 
 @step("a Google Cloud storage server is set up")

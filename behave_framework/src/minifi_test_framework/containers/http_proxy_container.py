@@ -52,7 +52,7 @@ class HttpProxy(Container):
         finished_str = "Accepting HTTP Socket connections at"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
-            timeout_seconds=5,
+            timeout_seconds=30,
             bail_condition=lambda: self.exited,
             context=None
         )
