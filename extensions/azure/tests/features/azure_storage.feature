@@ -118,6 +118,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "success" relationship of the GetFile processor is connected to the PutAzureBlobStorage
     And the "success" relationship of the PutAzureBlobStorage processor is connected to the PutFile
     And the "failure" relationship of the PutAzureBlobStorage processor is connected to the PutAzureBlobStorage
+    And PutFile's success relationship is auto-terminated
     And a ProxyConfigurationService controller service is set up with <proxy type> proxy configuration
 
     And an Azure storage server is set up
@@ -140,6 +141,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "Blob" property of the DeleteAzureBlobStorage processor is set to "test"
     And the "Proxy Configuration Service" property of the DeleteAzureBlobStorage processor is set to "ProxyConfigurationService"
     And the "success" relationship of the GenerateFlowFile processor is connected to the DeleteAzureBlobStorage
+    And DeleteAzureBlobStorage's success relationship is auto-terminated
     And a ProxyConfigurationService controller service is set up with HTTP proxy configuration
 
     And an Azure storage server is set up
@@ -163,6 +165,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the FetchAzureBlobStorage
     And the "success" relationship of the FetchAzureBlobStorage processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
     And a ProxyConfigurationService controller service is set up with HTTP proxy configuration
 
     And an Azure storage server is set up
@@ -180,6 +183,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "Proxy Configuration Service" property of the ListAzureBlobStorage processor is set to "ProxyConfigurationService"
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "success" relationship of the ListAzureBlobStorage processor is connected to the LogAttribute
+    And LogAttribute's success relationship is auto-terminated
     And a ProxyConfigurationService controller service is set up with HTTP proxy configuration
 
     And an Azure storage server is set up
