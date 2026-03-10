@@ -31,6 +31,10 @@ void PythonProcessor::setSupportsDynamicProperties() {
   processor_->setSupportsDynamicProperties();
 }
 
+void PythonProcessor::setSingleThreaded() {
+  processor_->setSingleThreaded();
+}
+
 void PythonProcessor::setDescription(const std::string& desc) {
   processor_->setDescription(desc);
 }
