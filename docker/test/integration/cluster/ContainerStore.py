@@ -24,7 +24,6 @@ from .containers.PostgreSQLServerContainer import PostgreSQLServerContainer
 from .containers.SyslogUdpClientContainer import SyslogUdpClientContainer
 from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
 from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
-from .containers.PrometheusContainer import PrometheusContainer
 from .FeatureContext import FeatureContext
 
 
@@ -145,23 +144,6 @@ class ContainerStore:
                                                   network=self.network,
                                                   image_store=self.image_store,
                                                   command=command))
-        elif engine == "prometheus":
-            return self.containers.setdefault(container_name,
-                                              PrometheusContainer(feature_context=feature_context,
-                                                                  name=container_name,
-                                                                  vols=self.vols,
-                                                                  network=self.network,
-                                                                  image_store=self.image_store,
-                                                                  command=command))
-        elif engine == "prometheus-ssl":
-            return self.containers.setdefault(container_name,
-                                              PrometheusContainer(feature_context=feature_context,
-                                                                  name=container_name,
-                                                                  vols=self.vols,
-                                                                  network=self.network,
-                                                                  image_store=self.image_store,
-                                                                  command=command,
-                                                                  ssl=True))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
@@ -205,12 +187,6 @@ class ContainerStore:
 
     def set_ssl_context_properties_in_minifi(self):
         self.minifi_options.set_ssl_context_properties = True
-
-    def enable_prometheus_in_minifi(self):
-        self.minifi_options.enable_prometheus = True
-
-    def enable_prometheus_with_ssl_in_minifi(self):
-        self.minifi_options.enable_prometheus_with_ssl = True
 
     def enable_sql_in_minifi(self):
         self.minifi_options.enable_sql = True

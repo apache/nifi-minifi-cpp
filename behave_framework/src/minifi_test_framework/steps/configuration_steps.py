@@ -15,7 +15,7 @@
 #  limitations under the License.
 #
 
-from behave import step
+from behave import step, given
 
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
@@ -26,12 +26,20 @@ def step_impl(context: MinifiTestContext, config_key: str, config_value: str):
 
 
 @step("log metrics publisher is enabled in MiNiFi")
-def step_impl(context):
-    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.LogMetricsPublisher.metrics", "RepositoryMetrics")
-    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.LogMetricsPublisher.logging.interval", "1s")
-    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.class", "LogMetricsPublisher")
+def step_impl(context: MinifiTestContext):
+    context.get_or_create_default_minifi_container().enable_log_metrics_publisher()
 
 
 @step('log property "{log_property_key}" is set to "{log_property_value}"')
 def step_impl(context: MinifiTestContext, log_property_key: str, log_property_value: str):
     context.get_or_create_default_minifi_container().set_log_property(log_property_key, log_property_value)
+
+
+@given("OpenSSL FIPS mode is enabled in MiNiFi")
+def step_impl(context: MinifiTestContext):
+    context.get_or_create_default_minifi_container().enable_openssl_fips_mode()
+
+
+@given("flow configuration path is set up in flow url property")
+def step_impl(context: MinifiTestContext):
+    context.get_or_create_default_minifi_container().fetch_flow_config_from_flow_url()

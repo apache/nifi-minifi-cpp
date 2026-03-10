@@ -7,6 +7,5 @@ m2crypto==0.46.2
 watchdog==6.0.0
 pyopenssl==25.0.0
 azure-storage-blob==12.24.1
-prometheus-api-client==0.5.5
 humanfriendly==10.0
 requests<2.29  # https://github.com/docker/docker-py/issues/3113
