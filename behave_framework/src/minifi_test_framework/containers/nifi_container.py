@@ -15,22 +15,27 @@
 
 import io
 import gzip
-from typing import List, Optional
+import logging
+import os
+from pathlib import Path
+from OpenSSL import crypto
+
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.container import Container
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.minifi.nifi_flow_definition import NifiFlowDefinition
+from minifi_test_framework.containers.host_file import HostFile
+from minifi_test_framework.core.ssl_utils import make_server_cert
 
 
 class NifiContainer(Container):
-    NIFI_VERSION = '2.7.2'
-
-    def __init__(self, test_context: MinifiTestContext, command: Optional[List[str]] = None, use_ssl: bool = False):
+    def __init__(self, test_context: MinifiTestContext, command: list[str] | None = None, use_ssl: bool = False):
         self.flow_definition = NifiFlowDefinition()
         name = f"nifi-{test_context.scenario_id}"
         if use_ssl:
-            entry_command = (r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' "
+            entry_command = (r"/scripts/convert_cert_to_jks.sh /tmp/resources /tmp/resources/nifi_client.key /tmp/resources/nifi_client.crt /tmp/resources/root_ca.crt &&"
+                             r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' "
                              r"-e 's/^\(nifi.remote.input.secure\)=.*/\1=true/' "
                              r"-e 's/^\(nifi.sensitive.props.key\)=.*/\1=secret_key_12345/' "
                              r"-e 's/^\(nifi.web.https.port\)=.*/\1=8443/' "
@@ -68,10 +73,18 @@ class NifiContainer(Container):
         if not command:
             command = ["/bin/sh", "-c", entry_command]
 
-        super().__init__("apache/nifi:" + self.NIFI_VERSION, name, test_context.network, entrypoint=command)
+        super().__init__("apache/nifi:" + NifiFlowDefinition.NIFI_VERSION, name, test_context.network, entrypoint=command)
+        resource_dir = Path(__file__).resolve().parent / "resources" / "nifi"
+        self.host_files.append(HostFile("/scripts/convert_cert_to_jks.sh", os.path.join(resource_dir, "convert_cert_to_jks.sh")))
+
+        nifi_client_cert, nifi_client_key = make_server_cert(common_name=f"nifi-{test_context.scenario_id}", ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
+        self.files.append(File("/tmp/resources/root_ca.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)))
+        self.files.append(File("/tmp/resources/nifi_client.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=nifi_client_cert)))
+        self.files.append(File("/tmp/resources/nifi_client.key", crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=nifi_client_key)))
 
     def deploy(self):
         flow_config = self.flow_definition.to_json()
+        logging.info(f"Deploying NiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
         buffer = io.BytesIO()
 
         with gzip.GzipFile(fileobj=buffer, mode='wb') as gz_file:

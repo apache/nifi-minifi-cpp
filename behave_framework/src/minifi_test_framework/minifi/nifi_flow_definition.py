@@ -21,7 +21,7 @@ from .flow_definition import FlowDefinition
 
 
 class NifiFlowDefinition(FlowDefinition):
-    NIFI_VERSION: str = '2.2.0'
+    NIFI_VERSION: str = '2.7.2'
 
     def __init__(self, flow_name: str = "NiFi Flow"):
         super().__init__(flow_name)
@@ -113,9 +113,22 @@ class NifiFlowDefinition(FlowDefinition):
 
         connections_node = config["rootGroup"]["connections"]
 
+        processors_by_name = {p.name: p for p in self.processors}
+        input_ports_by_name = {port.name: port for port in self.input_ports}
+        output_ports_by_name = {port.name: port for port in self.output_ports}
+
         for conn in self.connections:
+            source_type = "PROCESSOR"
             source_proc = processors_by_name.get(conn.source_name)
+            if not source_proc:
+                source_proc = input_ports_by_name.get(conn.source_name)
+                source_type = "INPUT_PORT"
+                conn.source_relationship = ""
+            dest_type = "PROCESSOR"
             dest_proc = processors_by_name.get(conn.target_name)
+            if not dest_proc:
+                dest_proc = output_ports_by_name.get(conn.target_name)
+                dest_type = "OUTPUT_PORT"
             if not source_proc or not dest_proc:
                 raise ValueError(
                     f"Could not find processors for connection from '{conn.source_name}' to '{conn.target_name}'")
@@ -126,7 +139,7 @@ class NifiFlowDefinition(FlowDefinition):
                 "name": f"{conn.source_name}/{conn.source_relationship}/{conn.target_name}",
                 "source": {
                     "id": source_proc.id,
-                    "type": "PROCESSOR",
+                    "type": source_type,
                     "groupId": "9802c873-3322-3b60-a71d-732d02bd60f8",
                     "name": conn.source_name,
                     "comments": "",
@@ -134,7 +147,7 @@ class NifiFlowDefinition(FlowDefinition):
                 },
                 "destination": {
                     "id": dest_proc.id,
-                    "type": "PROCESSOR",
+                    "type": dest_type,
                     "groupId": "9802c873-3322-3b60-a71d-732d02bd60f8",
                     "name": dest_proc.name,
                     "comments": "",
@@ -154,5 +167,8 @@ class NifiFlowDefinition(FlowDefinition):
                 "componentType": "CONNECTION",
                 "groupIdentifier": "9802c873-3322-3b60-a71d-732d02bd60f8"
             })
+
+        config["rootGroup"]["inputPorts"] = [input_port.to_json_dict() for input_port in self.input_ports]
+        config["rootGroup"]["outputPorts"] = [output_port.to_json_dict() for output_port in self.output_ports]
 
         return json.dumps(config)
