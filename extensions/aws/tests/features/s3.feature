@@ -78,8 +78,9 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
     And the "success" relationship of the PutS3Object processor is connected to the PutFile
     And a ProxyConfigurationService controller service is set up with <proxy type> proxy configuration
+    And PutFile's success relationship is auto-terminated
 
-    And a s3 server is set up in correspondence with the PutS3Object
+    And the s3 server starts up
     And the http proxy server is set up
     When all instances start up
 
@@ -179,8 +180,9 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
       | PutS3Object    | success           | DeleteS3Object   |
       | DeleteS3Object | success           | PutFile          |
     And a ProxyConfigurationService controller service is set up with <proxy type> proxy configuration
+    And PutFile's success relationship is auto-terminated
 
-    And a s3 server is set up in correspondence with the PutS3Object
+    And the s3 server starts up
     And the http proxy server is set up
 
     When all instances start up
@@ -256,6 +258,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a file with the content "test" is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
+    And PutS3Object's success relationship is auto-terminated
 
     Given a GenerateFlowFile processor with the "File Size" property set to "1 kB"
     And a FetchS3Object processor set up to communicate with the same s3 server
@@ -266,8 +269,9 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
       | GenerateFlowFile | success           | FetchS3Object    |
       | FetchS3Object    | success           | PutFile          |
     And a ProxyConfigurationService controller service is set up with <proxy type> proxy configuration
+    And PutFile's success relationship is auto-terminated
 
-    And a s3 server is set up in correspondence with the PutS3Object
+    And the s3 server starts up
     And the http proxy server is set up
 
     When all instances start up
@@ -335,14 +339,16 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a file with the content "test" is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
+    And PutS3Object's success relationship is auto-terminated
 
     Given a ListS3 processor set up to communicate with the same s3 server
     And the "Proxy Configuration Service" property of the ListS3 processor is set to "ProxyConfigurationService"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the ListS3 processor is connected to the PutFile
     And a ProxyConfigurationService controller service is set up with <proxy type> proxy configuration
+    And PutFile's success relationship is auto-terminated
 
-    And a s3 server is set up in correspondence with the PutS3Object
+    And the s3 server starts up
     And the http proxy server is set up
 
     When all instances start up
