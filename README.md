@@ -402,22 +402,16 @@ $ cmake -DDOCKER_BUILD_ONLY=ON ..
 $ make docker-minimal
 ```
 
-#### Executing integration tests with your docker image
-You can execute system integration tests using a minifi docker image.</br>
-Currently, there are two types of docker integration tests:
-##### Monolith legacy tests (features locates in docker/test/integration/features)
-(we are in the process of migrating these)
-  ```
-  ~/Development/code/apache/nifi-minifi-cpp/build
-  $ make docker-verify
-  ```
-##### Modular tests located near the tested extension (e.g. extensions/aws/tests/features)
+### Executing integration tests with a docker image
+System integration tests can be executed using a MiNiFi Docker image.</br>
+Test scenarios are defined in Behave framework feature files located near the extension they test, typically under the extension's `tests/features` directory (for example: `extensions/aws/tests/features`).</br>
+A `make` target is available to execute all system integration tests in parallel:
   ```
   ~/Development/code/apache/nifi-minifi-cpp/build
   $ make docker-verify-modular
   ```
-You can also run these tests individually. You need to install the minifi behave framework and call behavex.
-This will use the apacheminificpp:behave docker image
+These tests can also be executed individually. For this you need to install the MiNiFi behave framework and call `behave` or `behavex`.</br>
+This will use the `apacheminificpp:behave` docker image:
   ```
   python -m venv .venv
   source .venv/bin/activate
