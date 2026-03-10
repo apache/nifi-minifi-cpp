@@ -44,6 +44,7 @@ def step_impl(context: MinifiTestContext, container_name: str, content: str, dir
 
 
 @then('a single file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
+@then("a single file with the content '{content}' is placed in the '{directory}' directory in less than {duration}")
 def step_impl(context: MinifiTestContext, content: str, directory: str, duration: str):
     context.execute_steps(f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container a single file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
 
@@ -57,6 +58,7 @@ def step_impl(context: MinifiTestContext, container_name: str, content: str, dir
 
 
 @then('at least one file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
+@then("at least one file with the content '{content}' is placed in the '{directory}' directory in less than {duration}")
 def step_impl(context: MinifiTestContext, content: str, directory: str, duration: str):
     context.execute_steps(f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container at least one file with the content "{content}" is placed in the "{directory}" directory in less than {duration}')
 
@@ -167,6 +169,16 @@ def step_impl(context: MinifiTestContext, directory: str, timeout: str, contents
     new_contents = contents.replace("\\n", "\n")
     contents_arr = new_contents.split(",")
     assert wait_for_condition(condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].verify_file_contents(directory, contents_arr),
+                              timeout_seconds=timeout_seconds, bail_condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].exited,
+                              context=context)
+
+
+@then('files with at least these contents "{contents}" are placed in the "{directory}" directory in less than {timeout}')
+def step_impl(context: MinifiTestContext, directory: str, timeout: str, contents: str):
+    timeout_seconds = humanfriendly.parse_timespan(timeout)
+    new_contents = contents.replace("\\n", "\n")
+    contents_arr = new_contents.split(",")
+    assert wait_for_condition(condition=lambda: all([context.containers[DEFAULT_MINIFI_CONTAINER_NAME].directory_contains_file_with_content(directory, content) for content in contents_arr]),
                               timeout_seconds=timeout_seconds, bail_condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].exited,
                               context=context)
 

@@ -159,3 +159,8 @@ def step_impl(context):
 @step("{duration} later")
 def step_impl(context: MinifiTestContext, duration: str):
     time.sleep(humanfriendly.parse_timespan(duration))
+
+
+@step("the MiNiFi deployment timeout is set to {timeout_seconds:d} seconds")
+def step_impl(context: MinifiTestContext, timeout_seconds: int):
+    context.get_or_create_default_minifi_container().set_deploy_timeout_seconds(timeout_seconds)

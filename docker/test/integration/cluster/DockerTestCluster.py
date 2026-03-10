@@ -86,21 +86,6 @@ class DockerTestCluster:
     def enable_sql_in_minifi(self):
         self.container_store.enable_sql_in_minifi()
 
-    def use_nifi_python_processors_with_system_python_packages_installed_in_minifi(self):
-        self.container_store.use_nifi_python_processors_with_system_python_packages_installed_in_minifi()
-
-    def use_nifi_python_processors_with_virtualenv_in_minifi(self):
-        self.container_store.use_nifi_python_processors_with_virtualenv_in_minifi()
-
-    def use_nifi_python_processors_with_virtualenv_packages_installed_in_minifi(self):
-        self.container_store.use_nifi_python_processors_with_virtualenv_packages_installed_in_minifi()
-
-    def remove_python_requirements_txt_in_minifi(self):
-        self.container_store.remove_python_requirements_txt_in_minifi()
-
-    def use_nifi_python_processors_without_dependencies_in_minifi(self):
-        self.container_store.use_nifi_python_processors_without_dependencies_in_minifi()
-
     def set_yaml_in_minifi(self):
         self.container_store.set_yaml_in_minifi()
 
@@ -109,9 +94,6 @@ class DockerTestCluster:
 
     def enable_log_metrics_publisher_in_minifi(self):
         self.container_store.enable_log_metrics_publisher_in_minifi()
-
-    def enable_example_minifi_python_processors(self):
-        self.container_store.enable_example_minifi_python_processors()
 
     def llama_model_is_downloaded_in_minifi(self):
         self.container_store.llama_model_is_downloaded_in_minifi()
