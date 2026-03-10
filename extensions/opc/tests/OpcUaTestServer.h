@@ -24,6 +24,8 @@
 #include "unit/TestUtils.h"
 #include "unit/Catch.h"
 
+extern "C" int mp_vsnprintf(char* s, size_t count, const char* format, va_list arg);
+
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
@@ -37,7 +39,7 @@ class OpcUaTestServer {
     UA_ServerConfig_setMinimal(config, port, nullptr);
     config->logging->log = [] (void *log_context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {
       char buffer[1024];
-      vsnprintf(buffer, sizeof(buffer), msg, args);
+      mp_vsnprintf(buffer, sizeof(buffer), msg, args);
 
       std::string level_str;
       switch (level) {

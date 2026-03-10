@@ -94,6 +94,7 @@ class Client {
   UA_Client *client_;
   std::shared_ptr<core::logging::Logger> logger_;
   UA_Logger minifi_ua_logger_{};
+  bool use_encryption_{false};
 };
 
 using ClientPtr = std::unique_ptr<Client>;
