@@ -222,6 +222,13 @@ class VaderSentiment(object):
     return len(self.content)
 ```
 
+By default the MiNiFi C++ style native python processors are executed with multiple threads in parallel, but it is possible to set the processor to be single threaded by calling the `setSingleThreaded()` method in the processor while initializing. When a processor is set to be single threaded, only one thread will execute the processor, and setting the max concurrent tasks to more than 1 in the flow configuration will not have any effect.
+
+```python
+def onInitialize(processor):
+  processor.setSingleThreaded()
+```
+
 ## Using NiFi Python Processors
 
 MiNiFi C++ supports the use of NiFi Python processors, that are inherited from the FlowFileTransform, RecordTransform or the FlowFileSource base class. To use these processors, copy the Python processor module to the nifi_python_processors subdirectory of the python directory. By default, the python directory is ${minifi_root}/minifi-python. To see how to write NiFi Python processors, please refer to the Python Developer Guide under the [Apache NiFi documentation](https://nifi.apache.org/nifi-docs/python-developer-guide.html).
@@ -242,6 +249,27 @@ Due to some differences between the NiFi and MiNiFi C++ processors and implement
 - Success relationship is always present in all Python processors even if custom relationships are defined in the Python processor with the `getRelationships` method.
 - MiNiFi C++ uses a single embedded Python interpreter for all Python processors, so the Python processors share the same Python interpreter. This means that the Python processors cannot have different Python versions or use different Python packages. The Python packages are installed on the system or in a single virtualenv that is shared by all Python processors.
 - State manager API is available with the same interface as in NiFi, but MiNiFi C++ uses transactional state management, due to this when a state is changed in a processor trigger the state cannot be read due to the dirty read protection. The state can be read in the next trigger after the state is committed at the end of a session. Also MiNiFi C++ does not use clustering, so the scope parameter for the state operations is ignored as it is always local.
+
+### Setting processor to be single threaded
+
+One feature that is currently only available in MiNiFi C++ is the ability to set a python processor to be single threaded. This is not yet available in NiFi's API, but similarly to Nifi's `@TriggerSerially` annotation, in MiNiFi C++ the `@trigger_serially` decorator can be used to make a processor single threaded. Setting this will make sure that only one thread executes the processor, and setting the max concurrent tasks to more than 1 in the flow configuration will not have any effect.
+
+```python
+from nifiapi.flowfilesource import FlowFileSource, FlowFileSourceResult
+from nifiapi.processorutils import trigger_serially
+
+
+@trigger_serially
+class SingleThreadedProcessor(FlowFileSource):
+    class Java:
+        implements = ['org.apache.nifi.python.processor.FlowFileSource']
+
+    def __init__(self, **kwargs):
+        pass
+
+    def create(self, context):
+        return FlowFileSourceResult(relationship='success', contents="result")
+```
 
 ## Use Python processors from virtualenv
 
