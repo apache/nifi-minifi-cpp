@@ -359,13 +359,14 @@ class WindowsContainer(ContainerProtocol):
         if not self.container:
             return False
 
-        command = (
-            f"powershell -Command \"if ((Test-Path -LiteralPath '{directory_path}' -PathType Container) "
-            f"-and (Get-ChildItem -LiteralPath '{directory_path}' -Force | Select-Object -First 1)) "
-            f"{{ exit 0 }} else {{ exit 1 }}\""
+        win_path = self._normalize_path(directory_path)
+        ps_script = (
+            f"if ((Test-Path -LiteralPath '{win_path}' -PathType Container) "
+            f"-and (Get-ChildItem -LiteralPath '{win_path}' -Force | Select-Object -First 1)) "
+            f"{{ exit 0 }} else {{ exit 1 }}"
         )
 
-        exit_code, _ = self.exec_run(command)
+        exit_code, _ = self._run_powershell(ps_script)
 
         return exit_code == 0
 
@@ -373,12 +374,13 @@ class WindowsContainer(ContainerProtocol):
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
-        command = (
-            f"powershell -Command \"Get-ChildItem -LiteralPath '{directory_path}' -File "
-            f"| Where-Object {{ $_.Length -gt {expected_size} }}\""
+        win_path = self._normalize_path(directory_path)
+        ps_script = (
+            f"Get-ChildItem -LiteralPath '{win_path}' -File "
+            f"| Where-Object {{ $_.Length -gt {expected_size} }}"
         )
 
-        exit_code, output = self.exec_run(command)
+        exit_code, output = self._run_powershell(ps_script)
 
         if exit_code != 0:
             logging.error(f"Error running command to get file sizes: {output}")
