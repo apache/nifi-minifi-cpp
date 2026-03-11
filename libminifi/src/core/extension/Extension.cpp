@@ -118,6 +118,8 @@ Extension::~Extension() {
   }
   unload();
 
+  const std::string bundle_name = info_ ? info_->name : library_name_;
+
   // Check if library was truly unloaded and clear class descriptions if it was.
   // On Linux/GCC, STB_GNU_UNIQUE symbols can prevent dlclose from actually unloading the library.
   // Some libraries could prevent unloading like RocksDB where Env::Default() creates a global singleton where background threads hold references which prevents unloading
@@ -127,12 +129,12 @@ Extension::~Extension() {
     // Keep class descriptions if library is still in memory
     dlclose(check);
   } else {
-    ClassDescriptionRegistry::clearClassDescriptionsForBundle(name_);
+    ClassDescriptionRegistry::clearClassDescriptionsForBundle(bundle_name);
   }
 #else
-  HMODULE handle = GetModuleHandleA(name_.c_str());
+  HMODULE handle = GetModuleHandleA(library_name_.c_str());
   if (handle == nullptr) {
-    ClassDescriptionRegistry::clearClassDescriptionsForBundle(name_);
+    ClassDescriptionRegistry::clearClassDescriptionsForBundle(bundle_name);
   }
 #endif
 }
