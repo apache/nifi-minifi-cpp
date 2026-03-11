@@ -61,7 +61,7 @@ class MockControllerService : public minifi::core::controller::ControllerService
     str = "pushitrealgood";
   }
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
  protected:
   std::string str;

@@ -78,7 +78,7 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   void onEnable() override;
   void notifyStop() override;
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   virtual std::error_code validateConnection();
   virtual std::filesystem::path getPath() const { return server_path_; }

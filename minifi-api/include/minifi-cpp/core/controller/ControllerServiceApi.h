@@ -35,7 +35,7 @@ class ControllerServiceApi {
   virtual void initialize(ControllerServiceDescriptor& descriptor) = 0;
   virtual void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceHandle>>& linked_services) = 0;
   virtual void notifyStop() = 0;
-  virtual ControllerServiceHandle* getControllerServiceInterface() = 0;
+  virtual ControllerServiceHandle* getControllerServiceHandle() = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller

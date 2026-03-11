@@ -92,7 +92,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
 
   void onEnable() override;
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   storage::AzureStorageCredentials getCredentials() const {
     return credentials_;

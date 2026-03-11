@@ -52,7 +52,7 @@ class DatabaseService : public core::controller::ControllerServiceBase, public c
 
   void onEnable() override;
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   virtual std::unique_ptr<sql::Connection> getConnection() const = 0;
 
