@@ -138,7 +138,7 @@ class CouchbaseClusterService : public core::controller::ControllerServiceBase, 
     }
   }
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   virtual nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type,
       const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {

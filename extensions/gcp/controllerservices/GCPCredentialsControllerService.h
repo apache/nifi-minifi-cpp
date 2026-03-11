@@ -99,7 +99,7 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
 
   void onEnable() override;
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   [[nodiscard]] const auto& getCredentials() const { return credentials_; }
 

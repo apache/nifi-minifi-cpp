@@ -26,7 +26,7 @@ class RecordSetReaderImpl : public controller::ControllerServiceBase, public Rec
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 };
 
 }  // namespace org::apache::nifi::minifi::core

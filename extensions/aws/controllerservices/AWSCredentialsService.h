@@ -76,7 +76,7 @@ class AWSCredentialsService : public core::controller::ControllerServiceBase, pu
 
   void onEnable() override;
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 

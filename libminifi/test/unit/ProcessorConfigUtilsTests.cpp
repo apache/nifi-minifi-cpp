@@ -95,7 +95,7 @@ namespace {
 class TestControllerService : public controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
  public:
   using ControllerServiceBase::ControllerServiceBase;
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
   bool supportsDynamicProperties() const override {return false;}
 };
 

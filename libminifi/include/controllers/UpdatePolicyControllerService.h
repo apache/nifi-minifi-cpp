@@ -78,7 +78,7 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
 
   void onEnable() override;
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   bool canUpdate(const std::string &property) const {
     return policy_->canUpdate(property);

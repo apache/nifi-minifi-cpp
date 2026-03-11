@@ -103,7 +103,7 @@ class NetworkPrioritizerService : public core::controller::ControllerServiceBase
 
   void onEnable() override;
 
-  ControllerServiceHandle* getControllerServiceInterface() override {return this;}
+  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   io::NetworkInterface getInterface(uint32_t size);
 
