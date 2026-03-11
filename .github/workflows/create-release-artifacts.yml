@@ -40,3 +40,65 @@ jobs:
         with:
           name: ${{ matrix.platform.rpm-artifact }}
           path: build/nifi-minifi-cpp-*.rpm
+  windows_VS2022:
+    name: "Windows Server 2025 x86_64"
+    runs-on: windows-2025
+    timeout-minutes: 240
+    steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Set up Python
+        run: choco -y install python & refreshenv
+        shell: cmd
+      - name: Install sqliteodbc driver
+        run: |
+          Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
+          if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "a4804e4f54f42c721df1323c5fcac101a8c7a577e7f20979227324ceab572d51") {Write "Hash mismatch"; Exit 1}
+          Start-Process -FilePath ".\sqliteodbc_w64.exe" -ArgumentList "/S" -Wait
+        shell: powershell
+      - name: build
+        run: |
+          python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --noninteractive --skip-compiler-install --minifi-options="-DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF"
+        shell: cmd
+        working-directory: bootstrap
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: minifi-x86_64-msi
+          path: build/nifi-minifi-cpp.msi
+  extension-sdk:
+    name: "Extension SDK"
+    runs-on: 'ubuntu-24.04-arm'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Build Python Wheel
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+          cd behave_framework
+          python -m build
+
+      - name: Bundle SDK Artifacts into ZIP
+        run: |
+          mkdir minifi-native-sdk
+          
+          cp behave_framework/dist/*.whl minifi-native-sdk/
+          cp minifi-api/minifi-c-api.def minifi-native-sdk/
+          cp minifi-api/include/minifi-c/minifi-c.h minifi-native-sdk/
+          
+          zip -r minifi-native-sdk.zip minifi-native-sdk/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: minifi-native-sdk
+          path: minifi-native-sdk.zip
