@@ -65,7 +65,7 @@ class CouchbaseServerContainer(LinuxContainer):
 
         return True
 
-    @retry_check(12, 5)
+    @retry_check(max_tries=12, retry_interval_seconds=5)
     def _run_couchbase_cli_command(self, command):
         (code, output) = self.exec_run(command)
         if code != 0:
@@ -89,7 +89,7 @@ class CouchbaseServerContainer(LinuxContainer):
             logging.error(f"Unexpected error while running python command '{command}' in couchbase helper docker: '{e}'")
             return False
 
-    @retry_check(15, 2)
+    @retry_check(max_tries=15, retry_interval_seconds=2)
     def _load_couchbase_certs(self):
         python_command = f"""
 import requests

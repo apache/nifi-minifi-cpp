@@ -65,7 +65,7 @@ def step_impl(context: MinifiTestContext, connection_count: int):
     assert context.get_or_create_default_minifi_container().controller.get_full_connection_count() == connection_count
 
 
-@retry_check(10, 1)
+@retry_check(max_tries=5, retry_interval_seconds=1)
 def check_connection_size_through_controller(context: MinifiTestContext, connection: str, size: int, max_size: int) -> bool:
     return context.get_or_create_default_minifi_container().controller.get_connection_size(connection) == (size, max_size)
 
@@ -75,7 +75,7 @@ def step_impl(context: MinifiTestContext, connection: str, size: int, max_size: 
     assert check_connection_size_through_controller(context, connection, size, max_size)
 
 
-@retry_check(10, 1)
+@retry_check(max_tries=10, retry_interval_seconds=1)
 def manifest_can_be_retrieved_through_minifi_controller(context: MinifiTestContext) -> bool:
     manifest = context.get_or_create_default_minifi_container().controller.get_manifest()
     return '"agentManifest": {' in manifest and '"componentManifest": {' in manifest and '"agentType": "cpp"' in manifest
