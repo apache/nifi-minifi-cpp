@@ -24,9 +24,9 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
+CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
 
-extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+CEXTENSIONAPI void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   MinifiExtensionCreateInfo ext_create_info{
     .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
     .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),

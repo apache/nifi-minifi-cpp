@@ -77,5 +77,5 @@ create_c_test_extension(smaller-version 4)
 create_loading_test_extension(test-extension-loading-missing-init InvalidMissingInitExtension.cpp)
 
 create_loading_test_extension(test-extension-loading-create-not-called CreateNotCalled.cpp)
-target_link_libraries(test-extension-loading-create-not-called minifi-c-api)
+target_link_libraries(test-extension-loading-create-not-called minifi-cpp-extension-lib)
 target_compile_definitions(test-extension-loading-create-not-called PRIVATE MINIFI_TEST_API_VERSION=10)
