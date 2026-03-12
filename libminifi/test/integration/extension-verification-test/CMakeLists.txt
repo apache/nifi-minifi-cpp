@@ -19,7 +19,7 @@
 
 add_minifi_executable(ExtensionVerificationTests ExtensionVerificationTests.cpp)
 createIntegrationTests(ExtensionVerificationTests)
-target_link_libraries(${testfilename} core-minifi Catch2WithMain Threads::Threads)
+target_link_libraries(ExtensionVerificationTests core-minifi Catch2WithMain Threads::Threads)
 add_test(NAME ExtensionVerificationTests COMMAND ExtensionVerificationTests)
 
 function(create_loading_test_extension extension-name extension-main)
@@ -66,8 +66,8 @@ target_link_libraries(test-extension-loading-invalid-build-id-cpp dummy-core-min
 target_compile_definitions(test-extension-loading-invalid-build-id-cpp PRIVATE MINIFI_CREATE_EXTENSION_FN=MinifiCreateCppExtension_NonMatchingBuildId)
 
 create_loading_test_extension(test-extension-loading-valid-build-id-cpp CppApiExtension.cpp)
-target_link_libraries(test-extension-loading-valid-build-id-cpp minifi-c-api dummy-core-minifi)
-target_compile_definitions(test-extension-loading-valid-build-id-cpp PRIVATE MINIFI_CREATE_EXTENSION_FN=MinifiCreateCppExtension_${BUILD_IDENTIFIER})
+target_link_libraries(test-extension-loading-valid-build-id-cpp dummy-core-minifi)
+target_compile_definitions(test-extension-loading-valid-build-id-cpp PRIVATE MINIFI_CREATE_EXTENSION_FN=MinifiCreateCppExtension_MatchingBuildId)
 
 create_c_test_extension(max-version 10)
 create_c_test_extension(valid-version 7)
