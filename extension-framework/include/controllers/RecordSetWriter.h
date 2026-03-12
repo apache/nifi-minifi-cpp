@@ -25,7 +25,7 @@ class RecordSetWriterImpl : public controller::ControllerServiceBase, public Rec
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
-  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 };
 
 }  // namespace org::apache::nifi::minifi::core

@@ -64,7 +64,7 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
 
   void onEnable() override;
 
-  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   void authenticateClient(http::HTTPClient& client);
 

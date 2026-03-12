@@ -95,8 +95,8 @@ namespace {
 class TestControllerService : public controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
  public:
   using ControllerServiceBase::ControllerServiceBase;
-  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
-  bool supportsDynamicProperties() const override {return false;}
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
+  [[nodiscard]] bool supportsDynamicProperties() const override {return false;}
 };
 
 const std::shared_ptr test_controller_service = []() {

@@ -19,6 +19,9 @@
 
 namespace org::apache::nifi::minifi::core::controller {
 
+// Represents the usage side of the controller service.
+// It should be dynamic_cast to whatever actual interface we expect from the
+// service, e.g. RecordSetReader.
 class ControllerServiceHandle {
  public:
   virtual ~ControllerServiceHandle() = default;
