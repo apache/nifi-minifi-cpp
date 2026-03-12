@@ -99,7 +99,7 @@ bool check_exact_metrics_value(const rapidjson::Value& repo_metrics, const std::
 
 bool isExpectedRepositoryMetricsLogMessage(const utils::LogMessageView& message_view, std::string_view log_level) {
   if (message_view.log_level != log_level) { return false; }
-  if (message_view.logger_class != "[org::apache::nifi::minifi::state::LogMetricsPublisher]") { return false; }
+  if (message_view.logger_class != "org::apache::nifi::minifi::state::LogMetricsPublisher") { return false; }
   rapidjson::Document document;
   if (const rapidjson::ParseResult res = document.Parse(message_view.payload.data(), message_view.payload.length()); !res) { return false; }
   if (!document.HasMember("LogMetrics")) { return false; }
