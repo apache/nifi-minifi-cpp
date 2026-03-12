@@ -58,10 +58,14 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
 
   setCompactionPeriod(configuration);
 
-  const auto cache_size = configuration->get(Configure::nifi_dbcontent_optimize_for_small_db_cache_size).or_else([] { return std::make_optional<std::string>("8 MB"); })
-    | utils::andThen([](const auto& cache_size_str) -> std::optional<uint64_t> {
-      return parsing::parseDataSize(cache_size_str) | utils::toOptional();
-    });
+  const auto cache_size = configuration->get(Configure::nifi_dbcontent_optimize_for_small_db_cache_size)
+      | utils::orElse([] { return std::make_optional<std::string>("8 MB"); })
+      | utils::andThen([](const auto& cache_size_str) -> std::optional<uint64_t> {
+        if (cache_size_str.empty()) {
+          return std::nullopt;
+        }
+        return parsing::parseDataSize(cache_size_str) | utils::orThrow(fmt::format("{} has invalid format {}", Configure::nifi_dbcontent_optimize_for_small_db_cache_size, cache_size_str));
+      });
 
   std::shared_ptr<rocksdb::Cache> cache = nullptr;
   std::shared_ptr<rocksdb::WriteBufferManager> wbm = nullptr;

@@ -387,3 +387,12 @@ TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size disable") {
 
   CHECK(LogTestController::getInstance().contains("Cache limitation disabled for DatabaseContentRepository"));
 }
+
+TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size invalid") {
+  LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
+
+  const auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set("nifi.database.content.repository.optimize.for.small.db.cache.size", "two million bytes");
+  const auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+  REQUIRE_THROWS(content_repo->initialize(configuration));
+}
