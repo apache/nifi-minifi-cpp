@@ -30,7 +30,7 @@ class MinifiController:
     def start_component_through_controller(self, component: str):
         self.minifi_container.exec_run([f"{self.bin_path}/minifi-controller", "--start", component])
 
-    @retry_check(10, 1)
+    @retry_check(max_tries=10, retry_interval_seconds=1)
     def is_component_running(self, component: str) -> bool:
         (code, output) = self.minifi_container.exec_run([f"{self.bin_path}/minifi-controller", "--list", "components"])
         return code == 0 and component + ", running: true" in output
@@ -43,7 +43,7 @@ class MinifiController:
                 connections.append(line)
         return connections
 
-    @retry_check(10, 1)
+    @retry_check(max_tries=10, retry_interval_seconds=1)
     def connection_found_through_controller(self, connection: str) -> bool:
         return connection in self.get_connections()
 
