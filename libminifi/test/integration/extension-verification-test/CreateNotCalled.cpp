@@ -17,9 +17,10 @@
  */
 
 #include "minifi-c.h"
+#include "api/utils/minifi-c-utils.h"
 
-extern "C" const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
+CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
 
-extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+CEXTENSIONAPI void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   // NOT CALLING CREATE
 }
