@@ -262,7 +262,7 @@ std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents
 
 std::vector<LogMessageView> extractLogMessageViews(const std::string& log_str) {
   std::vector<LogMessageView> messages;
-  const std::regex header_pattern(R"((\[[\d\-\s\:\.]+\]) (\s*\[[^\]]+\]) \[(.*)\])");
+  const std::regex header_pattern(R"(\[([\d\-\s\:\.]+)\]\s+\[(.*?)\]\s+\[(.*?)\])");
   struct HeaderMarker {
     size_t start;
     std::string_view timestamp;
