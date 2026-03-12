@@ -49,7 +49,7 @@ class DummyController : public core::controller::ControllerServiceBase, public c
     setSupportedProperties(Properties);
   }
 
-  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   void onEnable() override {
     auto dummy_controller_property = getProperty(DummyControllerProperty.name);

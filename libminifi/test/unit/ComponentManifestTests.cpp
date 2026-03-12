@@ -44,7 +44,7 @@ class ExampleService : public core::controller::ControllerServiceBase, public co
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
-  ControllerServiceHandle* getControllerServiceHandle() override {return this;}
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   static constexpr const char* Description = "An example service";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
