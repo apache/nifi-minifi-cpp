@@ -25,7 +25,7 @@
 #include "minifi-cpp/core/PropertyDefinition.h"
 
 #ifdef WIN32
-  #define CEXTENSIONAPI __declspec(dllexport) extern "C"
+  #define CEXTENSIONAPI extern "C" __declspec(dllexport)
 #else
   #define CEXTENSIONAPI extern "C"
 #endif
