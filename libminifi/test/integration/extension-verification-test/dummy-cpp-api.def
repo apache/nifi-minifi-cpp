@@ -1,3 +1,4 @@
 LIBRARY core-minifi.dll
 EXPORTS
   MinifiCreateCppExtension_NonMatchingBuildId
+  MinifiCreateCppExtension_MatchingBuildId

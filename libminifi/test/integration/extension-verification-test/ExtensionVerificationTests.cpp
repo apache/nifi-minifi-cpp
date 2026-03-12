@@ -18,11 +18,20 @@
 
 #define CUSTOM_EXTENSION_INIT
 
+#undef MINIFI_CREATE_EXTENSION_FN
+
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "unit/TestUtils.h"
 #include "core/extension/ExtensionManager.h"
 #include "core/extension/ApiVersion.h"
+
+
+extern "C" {
+MinifiStatus MinifiCreateCppExtension_MatchingBuildId(MinifiExtension* extension, const MinifiExtensionCreateInfo* extension_create_info) {
+  return MinifiCreateExtension(extension, extension_create_info);
+}
+}  // extern "C"
 
 namespace minifi = org::apache::nifi::minifi;
 
