@@ -28,7 +28,7 @@ namespace minifi = org::apache::nifi::minifi;
 
 class ExtensionLoadingTestController {
  public:
-  ExtensionLoadingTestController(std::string pattern): extension_manager_{[&] () {
+  explicit ExtensionLoadingTestController(std::string pattern): extension_manager_{[&] () {
     LogTestController::getInstance().clear();
     LogTestController::getInstance().setTrace<core::extension::ExtensionManager>();
     LogTestController::getInstance().setTrace<core::extension::Extension>();
@@ -39,7 +39,7 @@ class ExtensionLoadingTestController {
     return config;
   }()} {}
 
- core::extension::ExtensionManager extension_manager_;
+  core::extension::ExtensionManager extension_manager_;
 };
 
 TEST_CASE("Can load cpp-api extensions with same build id") {

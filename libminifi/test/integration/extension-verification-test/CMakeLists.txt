@@ -51,12 +51,12 @@ target_include_directories(dummy-core-minifi INTERFACE $<TARGET_PROPERTY:minifi-
 if (WIN32)
     set(DUMMY_IMPORT_LIB_FILE ${CMAKE_CURRENT_BINARY_DIR}/dummy-cpp-api.lib)
     add_custom_target(dummy_cpp_api_import_lib
-            COMMAND lib.exe /def:${CMAKE_CURRENT_SOURCE_DIR}/dummy-cpp-api.def /out:${IMPORT_LIB_FILE} /machine:x64
-            BYPRODUCTS ${IMPORT_LIB_FILE}
+            COMMAND lib.exe /def:${CMAKE_CURRENT_SOURCE_DIR}/dummy-cpp-api.def /out:${DUMMY_IMPORT_LIB_FILE} /machine:x64
+            BYPRODUCTS ${DUMMY_IMPORT_LIB_FILE}
     )
 
     add_dependencies(dummy-core-minifi dummy_cpp_api_import_lib)
-    target_link_libraries(dummy-core-minifi INTERFACE ${IMPORT_LIB_FILE})
+    target_link_libraries(dummy-core-minifi INTERFACE ${DUMMY_IMPORT_LIB_FILE})
 elseif (APPLE)
     target_link_options(dummy-core-minifi INTERFACE -undefined dynamic_lookup)
 endif()
