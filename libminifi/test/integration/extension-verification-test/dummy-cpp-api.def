@@ -1,4 +1,4 @@
-LIBRARY core-minifi.dll
+LIBRARY ExtensionVerificationTests.exe
 EXPORTS
   MinifiCreateCppExtension_NonMatchingBuildId
   MinifiCreateCppExtension_MatchingBuildId
