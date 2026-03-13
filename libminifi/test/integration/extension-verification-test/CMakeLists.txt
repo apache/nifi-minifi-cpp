@@ -19,6 +19,10 @@
 
 add_minifi_executable(ExtensionVerificationTests ExtensionVerificationTests.cpp)
 createIntegrationTests(ExtensionVerificationTests)
+set_target_properties(ExtensionVerificationTests PROPERTIES ENABLE_EXPORTS True POSITION_INDEPENDENT_CODE ON)
+if(WIN32)
+    set_target_properties(ExtensionVerificationTests PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+endif()
 target_link_libraries(ExtensionVerificationTests core-minifi Catch2WithMain Threads::Threads)
 add_test(NAME ExtensionVerificationTests COMMAND ExtensionVerificationTests)
 
@@ -46,8 +50,8 @@ function(create_c_test_extension extension-name custom_api_version)
             PRIVATE "EXTENSION_NAME=${extension-name}" "EXTENSION_VERSION=${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 endfunction()
 
-add_library(dummy-core-minifi INTERFACE)
-target_include_directories(dummy-core-minifi INTERFACE $<TARGET_PROPERTY:minifi-extension-framework,INTERFACE_INCLUDE_DIRECTORIES>)
+add_library(dummy-cpp-api INTERFACE)
+target_include_directories(dummy-cpp-api INTERFACE $<TARGET_PROPERTY:minifi-extension-framework,INTERFACE_INCLUDE_DIRECTORIES>)
 if (WIN32)
     set(DUMMY_IMPORT_LIB_FILE ${CMAKE_CURRENT_BINARY_DIR}/dummy-cpp-api.lib)
     add_custom_target(dummy_cpp_api_import_lib
@@ -55,18 +59,18 @@ if (WIN32)
             BYPRODUCTS ${DUMMY_IMPORT_LIB_FILE}
     )
 
-    add_dependencies(dummy-core-minifi dummy_cpp_api_import_lib)
-    target_link_libraries(dummy-core-minifi INTERFACE ${DUMMY_IMPORT_LIB_FILE})
+    add_dependencies(dummy-cpp-api dummy_cpp_api_import_lib)
+    target_link_libraries(dummy-cpp-api INTERFACE ${DUMMY_IMPORT_LIB_FILE})
 elseif (APPLE)
-    target_link_options(dummy-core-minifi INTERFACE -undefined dynamic_lookup)
+    target_link_options(dummy-cpp-api INTERFACE -undefined dynamic_lookup)
 endif()
 
 create_loading_test_extension(test-extension-loading-invalid-build-id-cpp CppApiExtension.cpp)
-target_link_libraries(test-extension-loading-invalid-build-id-cpp dummy-core-minifi)
+target_link_libraries(test-extension-loading-invalid-build-id-cpp dummy-cpp-api)
 target_compile_definitions(test-extension-loading-invalid-build-id-cpp PRIVATE MINIFI_CREATE_EXTENSION_FN=MinifiCreateCppExtension_NonMatchingBuildId)
 
 create_loading_test_extension(test-extension-loading-valid-build-id-cpp CppApiExtension.cpp)
-target_link_libraries(test-extension-loading-valid-build-id-cpp dummy-core-minifi)
+target_link_libraries(test-extension-loading-valid-build-id-cpp dummy-cpp-api)
 target_compile_definitions(test-extension-loading-valid-build-id-cpp PRIVATE MINIFI_CREATE_EXTENSION_FN=MinifiCreateCppExtension_MatchingBuildId)
 
 create_c_test_extension(max-version 10)
