@@ -35,7 +35,7 @@ class FirstDummyMetricsPublisher : public minifi::state::MetricsPublisherImpl {
   static constexpr const char* Description = "FirstDummyMetricsPublisher";
 
   void clearMetricNodes() override {}
-  void loadMetricNodes() override {}
+  void loadMetricNodes(core::ProcessGroup*) override {}
 };
 
 class SecondDummyMetricsPublisher : public minifi::state::MetricsPublisherImpl {
@@ -45,7 +45,7 @@ class SecondDummyMetricsPublisher : public minifi::state::MetricsPublisherImpl {
   static constexpr const char* Description = "SecondDummyMetricsPublisher";
 
   void clearMetricNodes() override {}
-  void loadMetricNodes() override {}
+  void loadMetricNodes(core::ProcessGroup*) override {}
 };
 
 REGISTER_RESOURCE(FirstDummyMetricsPublisher, DescriptionOnly);

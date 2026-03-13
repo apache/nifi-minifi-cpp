@@ -42,7 +42,7 @@ class ResponseNodeLoader {
   virtual void clearConfigRoot() = 0;
   virtual void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) = 0;
   virtual void setStateMonitor(state::StateMonitor* update_sink) = 0;
-  virtual std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz) = 0;
+  virtual std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) = 0;
   virtual state::response::NodeReporter::ReportedNode getAgentManifest() const = 0;
 
   virtual ~ResponseNodeLoader() = default;

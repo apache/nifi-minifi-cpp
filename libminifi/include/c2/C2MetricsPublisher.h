@@ -49,7 +49,7 @@ class C2MetricsPublisher : public state::response::NodeReporter, public state::M
   state::response::NodeReporter::ReportedNode getAgentManifest() override;
 
   void clearMetricNodes() override;
-  void loadMetricNodes() override;
+  void loadMetricNodes(core::ProcessGroup* root) override;
 
  private:
   void loadC2ResponseConfiguration(const std::string &prefix);

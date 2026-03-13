@@ -69,6 +69,8 @@ Feature: Core flow functionalities
     And the Minifi logs contain the following message: '                "size": "0"' in less than 2 seconds
     And the Minifi logs contain the following message: '            },' in less than 2 seconds
     And the Minifi logs contain the following message: '            "provenance": {' in less than 2 seconds
+    And the Minifi logs do not contain errors
+    And the Minifi logs do not contain warnings
 
   Scenario: MiNiFi uses parameter contexts correctly
     Given parameter context name is set to 'my-context'

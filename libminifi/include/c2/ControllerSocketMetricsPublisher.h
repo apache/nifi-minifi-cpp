@@ -36,7 +36,7 @@ class ControllerSocketMetricsPublisher : public state::MetricsPublisherImpl, pub
   MINIFIAPI static constexpr const char* Description = "Provides the response nodes for c2 operations through localized environment through a simple TCP socket.";
 
   void clearMetricNodes() override;
-  void loadMetricNodes() override;
+  void loadMetricNodes(core::ProcessGroup* root) override;
 
   std::unordered_map<std::string, QueueSize> getQueueSizes() override;
   std::unordered_set<std::string> getFullConnections() override;
