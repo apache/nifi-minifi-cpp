@@ -39,11 +39,11 @@ class PrometheusMetricsPublisher : public state::MetricsPublisherImpl {
 
   void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) override;
   void clearMetricNodes() override;
-  void loadMetricNodes() override;
+  void loadMetricNodes(core::ProcessGroup* root) override;
 
  private:
   PrometheusExposerConfig readExposerConfig() const;
-  std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> getMetricProviders() const;
+  std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> getMetricProviders(core::ProcessGroup* root) const;
   void loadAgentIdentifier();
 
   std::mutex registered_metrics_mutex_;

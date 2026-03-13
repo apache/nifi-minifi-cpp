@@ -92,7 +92,7 @@ void LogMetricsPublisher::clearMetricNodes() {
   }
 }
 
-void LogMetricsPublisher::loadMetricNodes() {
+void LogMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
   gsl_Expects(response_node_loader_ && configuration_);
   auto metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_log_metrics_publisher_metrics);
   if (!metric_classes_str || metric_classes_str->empty()) {
@@ -103,15 +103,17 @@ void LogMetricsPublisher::loadMetricNodes() {
     std::unordered_set<std::string> unique_metric_classes{metric_classes.begin(), metric_classes.end()};
     std::lock_guard<std::mutex> lock(response_nodes_mutex_);
     for (const std::string& clazz : unique_metric_classes) {
-      auto loaded_response_nodes = response_node_loader_->loadResponseNodes(clazz);
+      auto loaded_response_nodes = response_node_loader_->loadResponseNodes(clazz, root);
       if (loaded_response_nodes.empty()) {
-        logger_->log_warn("Metric class '{}' could not be loaded.", clazz);
-        continue;
+        if (root) {
+          logger_->log_warn("Metric class '{}' could not be loaded.", clazz);
+        }
+      } else {
+        response_nodes_.insert(response_nodes_.end(), loaded_response_nodes.begin(), loaded_response_nodes.end());
       }
-      response_nodes_.insert(response_nodes_.end(), loaded_response_nodes.begin(), loaded_response_nodes.end());
     }
   }
-  if (response_nodes_.empty()) {
+  if (root && response_nodes_.empty()) {
     logger_->log_warn("LogMetricsPublisher is configured without any valid metrics!");
   }
   if (response_nodes_.empty() && metrics_logger_thread_) {

@@ -30,7 +30,7 @@ class MetricsPublisher : public virtual core::CoreComponent {
   using CoreComponent::CoreComponent;
   virtual void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) = 0;
   virtual void clearMetricNodes() = 0;
-  virtual void loadMetricNodes() = 0;
+  virtual void loadMetricNodes(core::ProcessGroup* root) = 0;
   virtual ~MetricsPublisher() = default;
 };
 

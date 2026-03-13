@@ -80,10 +80,10 @@ void ControllerSocketMetricsPublisher::clearMetricNodes() {
   queue_metrics_node_.reset();
 }
 
-void ControllerSocketMetricsPublisher::loadMetricNodes() {
+void ControllerSocketMetricsPublisher::loadMetricNodes(core::ProcessGroup*) {
   std::lock_guard<std::mutex> guard(queue_metrics_node_mutex_);
   gsl_Expects(response_node_loader_);
-  auto nodes = response_node_loader_->loadResponseNodes("QueueMetrics");
+  auto nodes = response_node_loader_->loadResponseNodes("QueueMetrics", nullptr);
   if (!nodes.empty()) {
     queue_metrics_node_ = nodes[0];
   }
