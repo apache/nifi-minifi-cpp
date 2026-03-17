@@ -9,7 +9,7 @@ dependencies = [
     "PyYAML==6.0.3",
     "humanfriendly==10.0",
     "m2crypto==0.46.2",
-    "pyopenssl==25.0.0",
+    "pyopenssl==26.0.0",
     "pyjks==20.0.0"
 ]
 
