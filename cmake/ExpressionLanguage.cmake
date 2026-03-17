@@ -20,10 +20,16 @@ if(WIN32)
 
     set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
+    set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/winflexbison/minimum_cmake_version.patch")
+
+    set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+
     FetchContent_Declare(
         winflexbison
         URL "https://github.com/lexxmark/winflexbison/archive/refs/tags/v2.5.25.tar.gz"
         URL_HASH "SHA256=8e1b71e037b524ba3f576babb0cf59182061df1f19cd86112f085a882560f60b"
+        PATCH_COMMAND "${PC}"
         SYSTEM
     )
     FetchContent_GetProperties("winflexbison")
@@ -38,6 +44,10 @@ if(WIN32)
         ERROR_VARIABLE bisonbuildE
         )
 
+        if(NOT result EQUAL 0)
+            message(FATAL_ERROR "configuration failed for winflexbison:\n${bisonbuildE}")
+        endif()
+
         execute_process(
         COMMAND ${CMAKE_COMMAND} --build . --config RelWithDebInfo
         WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
@@ -45,6 +55,10 @@ if(WIN32)
         OUTPUT_VARIABLE bisonbuild
         ERROR_VARIABLE bisonbuildE
         )
+
+        if(NOT result EQUAL 0)
+            message(FATAL_ERROR "winflexbison build failed:\n${bisonbuildE}")
+        endif()
 
         file(COPY ${winflexbison_SOURCE_DIR}/bison/Data DESTINATION ${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/)
     endif()
