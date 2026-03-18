@@ -24,29 +24,29 @@
 #include "aws/core/auth/AWSCredentials.h"
 #include "aws/core/client/ClientConfiguration.h"
 #include "aws/core/utils/xml/XmlSerializer.h"
-#include "aws/s3/model/PutObjectRequest.h"
-#include "aws/s3/model/PutObjectResult.h"
-#include "aws/s3/model/DeleteObjectRequest.h"
-#include "aws/s3/model/GetObjectRequest.h"
-#include "aws/s3/model/GetObjectResult.h"
-#include "aws/s3/model/ListObjectsV2Request.h"
-#include "aws/s3/model/ListObjectsV2Result.h"
-#include "aws/s3/model/ListObjectVersionsRequest.h"
-#include "aws/s3/model/ListObjectVersionsResult.h"
-#include "aws/s3/model/GetObjectTaggingRequest.h"
-#include "aws/s3/model/GetObjectTaggingResult.h"
-#include "aws/s3/model/HeadObjectRequest.h"
-#include "aws/s3/model/HeadObjectResult.h"
-#include "aws/s3/model/CreateMultipartUploadRequest.h"
-#include "aws/s3/model/CreateMultipartUploadResult.h"
-#include "aws/s3/model/UploadPartRequest.h"
-#include "aws/s3/model/UploadPartResult.h"
-#include "aws/s3/model/CompleteMultipartUploadRequest.h"
-#include "aws/s3/model/CompleteMultipartUploadResult.h"
-#include "aws/s3/model/ListMultipartUploadsRequest.h"
-#include "aws/s3/model/ListMultipartUploadsResult.h"
-#include "aws/s3/model/AbortMultipartUploadRequest.h"
-#include "aws/s3/model/AbortMultipartUploadResult.h"
+#include "aws/s3-crt/model/PutObjectRequest.h"
+#include "aws/s3-crt/model/PutObjectResult.h"
+#include "aws/s3-crt/model/DeleteObjectRequest.h"
+#include "aws/s3-crt/model/GetObjectRequest.h"
+#include "aws/s3-crt/model/GetObjectResult.h"
+#include "aws/s3-crt/model/ListObjectsV2Request.h"
+#include "aws/s3-crt/model/ListObjectsV2Result.h"
+#include "aws/s3-crt/model/ListObjectVersionsRequest.h"
+#include "aws/s3-crt/model/ListObjectVersionsResult.h"
+#include "aws/s3-crt/model/GetObjectTaggingRequest.h"
+#include "aws/s3-crt/model/GetObjectTaggingResult.h"
+#include "aws/s3-crt/model/HeadObjectRequest.h"
+#include "aws/s3-crt/model/HeadObjectResult.h"
+#include "aws/s3-crt/model/CreateMultipartUploadRequest.h"
+#include "aws/s3-crt/model/CreateMultipartUploadResult.h"
+#include "aws/s3-crt/model/UploadPartRequest.h"
+#include "aws/s3-crt/model/UploadPartResult.h"
+#include "aws/s3-crt/model/CompleteMultipartUploadRequest.h"
+#include "aws/s3-crt/model/CompleteMultipartUploadResult.h"
+#include "aws/s3-crt/model/ListMultipartUploadsRequest.h"
+#include "aws/s3-crt/model/ListMultipartUploadsResult.h"
+#include "aws/s3-crt/model/AbortMultipartUploadRequest.h"
+#include "aws/s3-crt/model/AbortMultipartUploadResult.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/AWSInitializer.h"
@@ -55,57 +55,57 @@ namespace org::apache::nifi::minifi::aws::s3 {
 
 class S3RequestSender {
  public:
-  virtual std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
-    const Aws::S3::Model::PutObjectRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(
+    const Aws::S3Crt::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) = 0;
   virtual bool sendDeleteObjectRequest(
-    const Aws::S3::Model::DeleteObjectRequest& request,
+    const Aws::S3Crt::Model::DeleteObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
-    const Aws::S3::Model::GetObjectRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::GetObjectResult> sendGetObjectRequest(
+    const Aws::S3Crt::Model::GetObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
-    const Aws::S3::Model::ListObjectsV2Request& request,
+  virtual std::optional<Aws::S3Crt::Model::ListObjectsV2Result> sendListObjectsRequest(
+    const Aws::S3Crt::Model::ListObjectsV2Request& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
-    const Aws::S3::Model::ListObjectVersionsRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> sendListVersionsRequest(
+    const Aws::S3Crt::Model::ListObjectVersionsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
-    const Aws::S3::Model::GetObjectTaggingRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
+    const Aws::S3Crt::Model::GetObjectTaggingRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
-    const Aws::S3::Model::HeadObjectRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::HeadObjectResult> sendHeadObjectRequest(
+    const Aws::S3Crt::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(
-    const Aws::S3::Model::CreateMultipartUploadRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(
+    const Aws::S3Crt::Model::CreateMultipartUploadRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) = 0;
-  virtual std::optional<Aws::S3::Model::UploadPartResult> sendUploadPartRequest(
-    const Aws::S3::Model::UploadPartRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::UploadPartResult> sendUploadPartRequest(
+    const Aws::S3Crt::Model::UploadPartRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) = 0;
-  virtual std::optional<Aws::S3::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
-    const Aws::S3::Model::CompleteMultipartUploadRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
+    const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) = 0;
-  virtual std::optional<Aws::S3::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(
-    const Aws::S3::Model::ListMultipartUploadsRequest& request,
+  virtual std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(
+    const Aws::S3Crt::Model::ListMultipartUploadsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) = 0;
   virtual bool sendAbortMultipartUploadRequest(
-    const Aws::S3::Model::AbortMultipartUploadRequest& request,
+    const Aws::S3Crt::Model::AbortMultipartUploadRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) = 0;

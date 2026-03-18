@@ -36,7 +36,7 @@ std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentialsFromCont
   if (auto service = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID())) {
     return service->getAWSCredentials();
   }
-  logger_->log_error("AWS credentials service could not be found");
+  logger_->log_debug("AWS credentials service could not be found");
   return std::nullopt;
 }
 
@@ -89,6 +89,7 @@ void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
   if (auto communications_timeout = minifi::utils::parseOptionalDurationProperty(context, CommunicationsTimeout)) {
     logger_->log_debug("AwsProcessor: Communications Timeout {}", *communications_timeout);
     client_config_->connectTimeoutMs = gsl::narrow<long>(communications_timeout->count());  // NOLINT(runtime/int,google-runtime-int)
+    client_config_->requestTimeoutMs = gsl::narrow<long>(communications_timeout->count());  // NOLINT(runtime/int,google-runtime-int)
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
