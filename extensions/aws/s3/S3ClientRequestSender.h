@@ -17,7 +17,15 @@
  */
 #pragma once
 
+#include <memory>
+#include <mutex>
 #include <optional>
+
+#include <aws/core/auth/AWSCredentials.h>
+#include <aws/crt/io/Bootstrap.h>
+#include <aws/crt/io/EventLoopGroup.h>
+#include <aws/crt/io/HostResolver.h>
+#include <aws/s3-crt/S3CrtClient.h>
 
 #include "S3RequestSender.h"
 
@@ -25,60 +33,82 @@ namespace org::apache::nifi::minifi::aws::s3 {
 
 class S3ClientRequestSender : public S3RequestSender {
  public:
-  std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
-    const Aws::S3::Model::PutObjectRequest& request,
+  ~S3ClientRequestSender() override;
+
+  std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(
+    const Aws::S3Crt::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) override;
   bool sendDeleteObjectRequest(
-    const Aws::S3::Model::DeleteObjectRequest& request,
+    const Aws::S3Crt::Model::DeleteObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
-    const Aws::S3::Model::GetObjectRequest& request,
+  std::optional<Aws::S3Crt::Model::GetObjectResult> sendGetObjectRequest(
+    const Aws::S3Crt::Model::GetObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
-    const Aws::S3::Model::ListObjectsV2Request& request,
+  std::optional<Aws::S3Crt::Model::ListObjectsV2Result> sendListObjectsRequest(
+    const Aws::S3Crt::Model::ListObjectsV2Request& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
-    const Aws::S3::Model::ListObjectVersionsRequest& request,
+  std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> sendListVersionsRequest(
+    const Aws::S3Crt::Model::ListObjectVersionsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
-    const Aws::S3::Model::GetObjectTaggingRequest& request,
+  std::optional<Aws::S3Crt::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
+    const Aws::S3Crt::Model::GetObjectTaggingRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
-    const Aws::S3::Model::HeadObjectRequest& request,
+  std::optional<Aws::S3Crt::Model::HeadObjectResult> sendHeadObjectRequest(
+    const Aws::S3Crt::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  std::optional<Aws::S3::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(
-    const Aws::S3::Model::CreateMultipartUploadRequest& request,
+  std::optional<Aws::S3Crt::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(
+    const Aws::S3Crt::Model::CreateMultipartUploadRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) override;
-  std::optional<Aws::S3::Model::UploadPartResult> sendUploadPartRequest(
-    const Aws::S3::Model::UploadPartRequest& request,
+  std::optional<Aws::S3Crt::Model::UploadPartResult> sendUploadPartRequest(
+    const Aws::S3Crt::Model::UploadPartRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) override;
-  std::optional<Aws::S3::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
-    const Aws::S3::Model::CompleteMultipartUploadRequest& request,
+  std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
+    const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) override;
-  std::optional<Aws::S3::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(
-    const Aws::S3::Model::ListMultipartUploadsRequest& request,
+  std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(
+    const Aws::S3Crt::Model::ListMultipartUploadsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) override;
   bool sendAbortMultipartUploadRequest(
-    const Aws::S3::Model::AbortMultipartUploadRequest& request,
+    const Aws::S3Crt::Model::AbortMultipartUploadRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) override;
+
+ private:
+  std::shared_ptr<Aws::S3Crt::S3CrtClient> getOrCreateClient(
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing = true);
+
+  // Destruction order matters: s3_client_ must be destroyed before the bootstrap/event loop.
+  // Members are destroyed in reverse declaration order, so declare infrastructure first.
+  std::shared_ptr<Aws::Crt::Io::EventLoopGroup> event_loop_group_;
+  std::shared_ptr<Aws::Crt::Io::DefaultHostResolver> host_resolver_;
+  std::shared_ptr<Aws::Crt::Io::ClientBootstrap> client_bootstrap_;
+  std::shared_ptr<Aws::S3Crt::S3CrtClient> s3_client_;
+  std::mutex client_mutex_;
+  Aws::String cached_access_key_id_;
+  Aws::String cached_secret_key_;
+  Aws::String cached_session_token_;
+  Aws::String cached_region_;
+  Aws::String cached_endpoint_;
+  bool cached_use_virtual_addressing_ = true;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::s3

@@ -233,7 +233,7 @@ class PutS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-me
   std::chrono::milliseconds multipart_upload_max_age_threshold_;
   std::mutex last_ageoff_mutex_;
   std::chrono::time_point<std::chrono::system_clock> last_ageoff_time_;
-  Aws::S3::Model::ChecksumAlgorithm checksum_algorithm_{Aws::S3::Model::ChecksumAlgorithm::CRC64NVME};
+  Aws::S3Crt::Model::ChecksumAlgorithm checksum_algorithm_{Aws::S3Crt::Model::ChecksumAlgorithm::CRC64NVME};
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors
