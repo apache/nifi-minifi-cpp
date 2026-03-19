@@ -403,21 +403,6 @@ int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, const char* data, si
   return gsl::narrow<int64_t>(reinterpret_cast<minifi::io::OutputStream*>(stream)->write(as_bytes(std::span(data, size))));
 }
 
-void MinifiStatusToString(MinifiStatus status, void(*cb)(void* user_ctx, MinifiStringView str), void* user_ctx) {
-  std::string message = [&] () -> std::string {
-    switch (status) {
-      case MINIFI_STATUS_SUCCESS: return "Success";
-      case MINIFI_STATUS_UNKNOWN_ERROR: return "Unknown error";
-      case MINIFI_STATUS_NOT_SUPPORTED_PROPERTY: return minifi::core::PropertyErrorCategory{}.message(static_cast<int>(minifi::core::PropertyErrorCode::NotSupportedProperty));
-      case MINIFI_STATUS_DYNAMIC_PROPERTIES_NOT_SUPPORTED: return minifi::core::PropertyErrorCategory{}.message(static_cast<int>(minifi::core::PropertyErrorCode::DynamicPropertiesNotSupported));
-      case MINIFI_STATUS_PROPERTY_NOT_SET: return minifi::core::PropertyErrorCategory{}.message(static_cast<int>(minifi::core::PropertyErrorCode::PropertyNotSet));
-      case MINIFI_STATUS_VALIDATION_FAILED: return minifi::core::PropertyErrorCategory{}.message(static_cast<int>(minifi::core::PropertyErrorCode::ValidationFailed));
-      default: return "Unknown error";
-    }
-  }();
-  cb(user_ctx, MinifiStringView{.data = message.data(), .length = message.size()});
-}
-
 MinifiStatus MinifiFlowFileSetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name, const MinifiStringView* attribute_value) {
   gsl_Assert(session != MINIFI_NULL);
   gsl_Assert(flowfile != MINIFI_NULL);

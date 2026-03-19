@@ -213,8 +213,6 @@ size_t MinifiInputStreamSize(MinifiInputStream*);
 int64_t MinifiInputStreamRead(MinifiInputStream* stream, char* buffer, size_t size);
 int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, const char* data, size_t size);
 
-void MinifiStatusToString(MinifiStatus, void(*cb)(void* user_ctx, MinifiStringView str), void* user_ctx);
-
 MinifiStatus MinifiFlowFileSetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name, const MinifiStringView* attribute_value);
 MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name,
                                       void(*cb)(void* user_ctx, MinifiStringView attribute_value), void* user_ctx);
