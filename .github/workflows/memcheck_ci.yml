@@ -18,9 +18,9 @@ jobs:
     timeout-minutes: 120
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: cache restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: memcheck-ccache-${{github.ref}}-${{github.sha}}
@@ -40,7 +40,7 @@ jobs:
             && python main.py --noninteractive --minifi-options="${CMAKE_FLAGS}"
         working-directory: bootstrap
       - name: cache save
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
