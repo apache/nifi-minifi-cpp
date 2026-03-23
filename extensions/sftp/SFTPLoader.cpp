@@ -25,7 +25,7 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
   if (libssh2_init(0) != 0) {
     return;
   }
@@ -40,9 +40,7 @@ extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig*
       curl_global_cleanup();
       libssh2_exit();
     },
-    .user_data = nullptr,
-    .processors_count = 0,
-    .processors_ptr = nullptr
+    .user_data = nullptr
   };
-  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
+  minifi::utils::MinifiCreateCppExtension(extension_context, &ext_create_info);
 }

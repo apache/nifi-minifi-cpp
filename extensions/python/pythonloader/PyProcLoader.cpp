@@ -33,10 +33,10 @@ static minifi::extensions::python::PythonCreator& getPythonCreator() {
 // the symbols of the python library
 extern "C" const int LOAD_MODULE_AS_GLOBAL = 1;
 
-extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* config) {
+extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
   getPythonCreator().configure([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
-    MinifiConfigGet(config, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
+    MinifiConfigGet(extension_context, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
       *static_cast<std::optional<std::string>*>(user_data) = std::string{value.data, value.length};
     }, &result);
     return result;
@@ -45,9 +45,7 @@ extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig*
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
-    .user_data = nullptr,
-    .processors_count = 0,
-    .processors_ptr = nullptr
+    .user_data = nullptr
   };
-  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
+  minifi::utils::MinifiCreateCppExtension(extension_context, &ext_create_info);
 }
