@@ -33,7 +33,6 @@ RocksDbStateStorage::~RocksDbStateStorage() {
 }
 
 void RocksDbStateStorage::initialize() {
-  ControllerServiceBase::initialize();
   setSupportedProperties(Properties);
 }
 

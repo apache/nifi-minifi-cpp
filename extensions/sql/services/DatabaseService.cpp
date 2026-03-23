@@ -33,8 +33,6 @@ void DatabaseService::initialize() {
     return;
   }
 
-  ControllerServiceBase::initialize();
-
   initializeProperties();
 
   initialized_ = true;

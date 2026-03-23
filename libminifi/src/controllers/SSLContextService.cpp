@@ -79,8 +79,6 @@ void SSLContextService::initialize() {
     return;
   }
 
-  ControllerServiceBase::initialize();
-
   initializeProperties();
 
   initialized_ = true;
