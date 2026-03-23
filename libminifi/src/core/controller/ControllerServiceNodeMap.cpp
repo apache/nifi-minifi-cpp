@@ -54,7 +54,7 @@ ControllerServiceNode* ControllerServiceNodeMap::get(const std::string &id, cons
 bool ControllerServiceNodeMap::put(std::string id, std::shared_ptr<ControllerServiceNode> controller_service_node,
     ProcessGroup* parent_group) {
   std::scoped_lock lock(mutex_);
-  if (id.empty() || controller_service_node == nullptr || alternative_keys.contains(id)) {
+  if (id.empty() || controller_service_node == nullptr || alternative_keys_.contains(id)) {
     return false;
   }
   auto [_it, success] = services_.emplace(std::move(id), ServiceEntry{.controller_service_node = std::move(controller_service_node), .parent_group = parent_group});
@@ -64,11 +64,11 @@ bool ControllerServiceNodeMap::put(std::string id, std::shared_ptr<ControllerSer
 
 void ControllerServiceNodeMap::clear() {
   std::scoped_lock lock(mutex_);
-  for (const auto& node: services_ | std::views::values) {
-    node.controller_service_node->disable();
+  for (const auto& service_entry : services_ | std::views::values) {
+    service_entry.controller_service_node->disable();
   }
   services_.clear();
-  alternative_keys.clear();
+  alternative_keys_.clear();
 }
 
 std::vector<std::shared_ptr<ControllerServiceNode>> ControllerServiceNodeMap::getAllControllerServices() const {
@@ -86,8 +86,8 @@ const ControllerServiceNodeMap::ServiceEntry* ControllerServiceNodeMap::getEntry
   if (it != services_.end()) {
     return &it->second;
   }
-  const auto primary_key_it = alternative_keys.find(key);
-  if (primary_key_it == alternative_keys.end()) {
+  const auto primary_key_it = alternative_keys_.find(key);
+  if (primary_key_it == alternative_keys_.end()) {
     return nullptr;
   }
   const auto it_from_primary = services_.find(primary_key_it->second);
@@ -98,11 +98,11 @@ const ControllerServiceNodeMap::ServiceEntry* ControllerServiceNodeMap::getEntry
 
 bool ControllerServiceNodeMap::registerAlternativeKey(std::string primary_key, std::string alternative_key) {
   std::scoped_lock lock(mutex_);
-  if (!services_.contains(primary_key) || services_.contains(alternative_key) || alternative_keys.contains(alternative_key)) {
+  if (!services_.contains(primary_key) || services_.contains(alternative_key) || alternative_keys_.contains(alternative_key)) {
     return false;
   }
 
-  auto [_it, success] = alternative_keys.emplace(std::move(alternative_key), std::move(primary_key));
+  auto [_it, success] = alternative_keys_.emplace(std::move(alternative_key), std::move(primary_key));
   return success;
 }
 

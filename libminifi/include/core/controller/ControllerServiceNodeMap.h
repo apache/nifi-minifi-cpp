@@ -61,7 +61,7 @@ class ControllerServiceNodeMap {
   const ServiceEntry* getEntry(std::string_view primary_key, const std::scoped_lock<std::mutex>& mutex) const;
 
   std::map<std::string, ServiceEntry, std::less<>> services_;
-  std::map<std::string, std::string, std::less<>> alternative_keys;
+  std::map<std::string, std::string, std::less<>> alternative_keys_;
 };
 
 }  // namespace controller
