@@ -47,6 +47,7 @@ class VolatileMapStateStorage : virtual public KeyValueStateStorage {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
+  void onEnable() override {}
 
   bool set(const std::string& key, const std::string& value) override;
   bool get(const std::string& key, std::string& value) override;

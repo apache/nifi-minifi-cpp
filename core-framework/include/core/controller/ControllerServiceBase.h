@@ -43,7 +43,7 @@ class ControllerServiceBase : public ControllerServiceApi {
         uuid_(metadata.uuid),
         logger_(std::move(metadata.logger)) {}
 
-  virtual void initialize() {}
+  virtual void initialize() = 0;
 
   void initialize(ControllerServiceDescriptor& descriptor) final {
     gsl_Expects(!descriptor_);
@@ -57,9 +57,14 @@ class ControllerServiceBase : public ControllerServiceApi {
     descriptor_->setSupportedProperties(properties);
   }
 
-  ~ControllerServiceBase() override {}
+  ControllerServiceBase(const ControllerServiceBase&) = delete;
+  ControllerServiceBase(ControllerServiceBase&&) = delete;
+  ControllerServiceBase& operator=(const ControllerServiceBase&) = delete;
+  ControllerServiceBase& operator=(ControllerServiceBase&&) = delete;
 
-  virtual void onEnable() {}
+  ~ControllerServiceBase() noexcept override = default;
+
+  virtual void onEnable() = 0;
 
   void onEnable(ControllerServiceContext& context, const std::shared_ptr<Configure>& configuration, const std::vector<std::shared_ptr<ControllerServiceHandle>>& linked_services) final {
     configuration_ = configuration;

@@ -113,8 +113,6 @@ bool PersistentMapStateStorage::parseLine(const std::string& line, std::string& 
 }
 
 void PersistentMapStateStorage::initialize() {
-  // VolatileMapStateStorage::initialize() also calls setSupportedProperties, and we don't want that
-  ControllerServiceBase::initialize();  // NOLINT(bugprone-parent-virtual-call)
   setSupportedProperties(Properties);
 }
 

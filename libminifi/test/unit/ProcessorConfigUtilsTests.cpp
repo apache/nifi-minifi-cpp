@@ -97,6 +97,8 @@ class TestControllerService : public controller::ControllerServiceBase, public c
   using ControllerServiceBase::ControllerServiceBase;
   [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
   [[nodiscard]] bool supportsDynamicProperties() const override {return false;}
+  void initialize() override {}
+  void onEnable() override {}
 };
 
 const std::shared_ptr test_controller_service = []() {

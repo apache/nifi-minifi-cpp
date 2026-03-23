@@ -44,6 +44,9 @@ class ExampleService : public core::controller::ControllerServiceBase, public co
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
+  void initialize() override {}
+  void onEnable() override {}
+
   [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   static constexpr const char* Description = "An example service";

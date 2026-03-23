@@ -21,7 +21,6 @@
 namespace org::apache::nifi::minifi::controllers {
 
 void VolatileMapStateStorage::initialize() {
-  ControllerServiceBase::initialize();
   setSupportedProperties(Properties);
 }
 
