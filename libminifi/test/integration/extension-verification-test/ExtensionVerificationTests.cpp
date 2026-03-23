@@ -28,8 +28,8 @@
 
 
 extern "C" {
-MinifiStatus MinifiCreateCppExtension_MatchingBuildId(MinifiExtension* extension, const MinifiExtensionCreateInfo* extension_create_info) {
-  return MinifiCreateExtension(extension, extension_create_info);
+MinifiExtension* MinifiCreateCppExtension_MatchingBuildId(MinifiExtensionContext* extension_context, const MinifiExtensionCreateInfo* extension_create_info) {
+  return MinifiCreateExtension(extension_context, extension_create_info);
 }
 }  // extern "C"
 
