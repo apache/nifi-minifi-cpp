@@ -106,9 +106,6 @@ void useProcessorClassDescription(Fn&& fn) {
       .isWorkAvailable = [] (void* self) -> MinifiBool {
         return static_cast<Class*>(self)->isWorkAvailable();
       },
-      .restore = [] (void* self, MINIFI_OWNED MinifiFlowFile* ff) -> void {
-        static_cast<Class*>(self)->restore(std::make_shared<FlowFile>(ff));
-      },
       .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
         return static_cast<Class*>(self)->getTriggerWhenEmpty();
       },
