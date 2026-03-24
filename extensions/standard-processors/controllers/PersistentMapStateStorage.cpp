@@ -52,15 +52,6 @@ namespace {
 
 namespace org::apache::nifi::minifi::controllers {
 
-PersistentMapStateStorage::PersistentMapStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : KeyValueStateStorage(name, uuid) {
-}
-
-PersistentMapStateStorage::PersistentMapStateStorage(const std::string& name, const std::shared_ptr<Configure> &configuration)
-    : KeyValueStateStorage(name) {
-  setConfiguration(configuration);
-}
-
 PersistentMapStateStorage::~PersistentMapStateStorage() {
   auto_persistor_.stop();
   persistNonVirtual();
@@ -122,8 +113,6 @@ bool PersistentMapStateStorage::parseLine(const std::string& line, std::string& 
 }
 
 void PersistentMapStateStorage::initialize() {
-  // VolatileMapStateStorage::initialize() also calls setSupportedProperties, and we don't want that
-  ControllerServiceImpl::initialize();  // NOLINT(bugprone-parent-virtual-call)
   setSupportedProperties(Properties);
 }
 

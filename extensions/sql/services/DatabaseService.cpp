@@ -19,7 +19,7 @@
 #include <set>
 
 #include "core/logging/LoggerFactory.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "DatabaseService.h"
 #include "io/validation.h"
 #include "minifi-cpp/properties/Configure.h"
@@ -32,8 +32,6 @@ void DatabaseService::initialize() {
   if (initialized_) {
     return;
   }
-
-  ControllerServiceImpl::initialize();
 
   initializeProperties();
 

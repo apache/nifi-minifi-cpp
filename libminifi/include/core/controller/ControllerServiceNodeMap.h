@@ -22,7 +22,7 @@
 #include <vector>
 #include <map>
 #include <string>
-#include "minifi-cpp/core/controller/ControllerServiceNode.h"
+#include "ControllerServiceNode.h"
 #include "io/validation.h"
 
 namespace org::apache::nifi::minifi::core {

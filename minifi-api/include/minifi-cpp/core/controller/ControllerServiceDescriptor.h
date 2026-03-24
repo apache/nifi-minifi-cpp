@@ -1,6 +1,5 @@
 /**
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,19 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "core/controller/ControllerServiceNode.h"
-#include <memory>
-#include <vector>
+#include <span>
+#include "minifi-cpp/core/PropertyDefinition.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerService> ControllerServiceNode::getControllerServiceImplementation() const {
-  return controller_service_;
-}
+class ControllerServiceDescriptor {
+ public:
+  virtual ~ControllerServiceDescriptor() = default;
 
-const std::vector<ControllerServiceNode*>& ControllerServiceNode::getLinkedControllerServices() const {
-  return linked_controller_services_;
-}
+  virtual void setSupportedProperties(std::span<const PropertyReference> properties) = 0;
+};
 
 }  // namespace org::apache::nifi::minifi::core::controller

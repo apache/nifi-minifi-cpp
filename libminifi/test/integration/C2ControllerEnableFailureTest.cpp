@@ -23,7 +23,7 @@
 #include "integration/HTTPHandlers.h"
 #include "unit/Catch.h"
 #include "core/Processor.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 
@@ -31,9 +31,9 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-class DummyController : public core::controller::ControllerServiceImpl {
+class DummyController : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
  public:
-  explicit DummyController(std::string_view name, const minifi::utils::Identifier &uuid = {}) : ControllerServiceImpl(name, uuid) {}
+  using ControllerServiceBase::ControllerServiceBase;
 
   static constexpr const char* Description = "Dummy Controller";
 
@@ -49,16 +49,7 @@ class DummyController : public core::controller::ControllerServiceImpl {
     setSupportedProperties(Properties);
   }
 
-  void yield() override {
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   void onEnable() override {
     auto dummy_controller_property = getProperty(DummyControllerProperty.name);
@@ -66,9 +57,6 @@ class DummyController : public core::controller::ControllerServiceImpl {
       throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing dummy property");
     }
   }
-
- private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DummyController>::getLogger(uuid_);
 };
 
 REGISTER_RESOURCE(DummyController, ControllerService);

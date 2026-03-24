@@ -29,7 +29,7 @@ struct SmbConnectionControllerServiceFixture {
   TestController test_controller_{};
   std::shared_ptr<TestPlan> plan_ = test_controller_.createPlan();
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  smb_connection_node_ = plan_->addController("SmbConnectionControllerService", "smb_connection_controller_service");
-  std::shared_ptr<SmbConnectionControllerService> smb_connection_ = std::dynamic_pointer_cast<SmbConnectionControllerService>(smb_connection_node_->getControllerServiceImplementation());
+  std::shared_ptr<SmbConnectionControllerService> smb_connection_ = smb_connection_node_->getControllerServiceImplementation<SmbConnectionControllerService>();
 };
 
 

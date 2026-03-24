@@ -45,6 +45,7 @@
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
 #include "utils/ByteArrayCallback.h"
 
 namespace org::apache::nifi::minifi::http {

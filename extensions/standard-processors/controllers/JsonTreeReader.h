@@ -22,7 +22,7 @@ namespace org::apache::nifi::minifi::standard {
 
 class JsonTreeReader final : public core::RecordSetReaderImpl {
  public:
-  explicit JsonTreeReader(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetReaderImpl(name, uuid) {}
+  using RecordSetReaderImpl::RecordSetReaderImpl;
 
   JsonTreeReader(JsonTreeReader&&) = delete;
   JsonTreeReader(const JsonTreeReader&) = delete;
@@ -50,9 +50,6 @@ class JsonTreeReader final : public core::RecordSetReaderImpl {
     setSupportedProperties(Properties);
   }
   void onEnable() override {}
-  void yield() override {}
-  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
-  bool isWorkAvailable() override { return false; }
 };
 
 }  // namespace org::apache::nifi::minifi::standard

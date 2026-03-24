@@ -32,6 +32,7 @@
 #include "sitetosite/HttpSiteToSiteClient.h"
 #include "utils/StringUtils.h"
 #include "utils/net/DNS.h"
+#include "io/validation.h"
 
 namespace org::apache::nifi::minifi::test {
 

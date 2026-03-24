@@ -52,7 +52,7 @@ TEST_CASE("BT2", "[TPT2]") {
 
   constexpr std::string_view thread_pool_name = "Winnie the pool";
   constexpr size_t number_of_worker_threads = 3;
-  utils::ThreadPool pool(number_of_worker_threads, nullptr, std::string{thread_pool_name});
+  utils::ThreadPool pool(number_of_worker_threads, std::string{thread_pool_name});
   utils::Worker worker([&]() -> utils::TaskRescheduleInfo {
     outer_function(ready_for_checking, done_with_checking);
     return utils::TaskRescheduleInfo::Done();

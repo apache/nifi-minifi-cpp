@@ -37,8 +37,7 @@ namespace org::apache::nifi::minifi::controllers {
 
 class PersistentMapStateStorage : public KeyValueStateStorage {
  public:
-  explicit PersistentMapStateStorage(const std::string& name, const utils::Identifier& uuid = {});
-  explicit PersistentMapStateStorage(const std::string& name, const std::shared_ptr<Configure>& configuration);
+  using KeyValueStateStorage::KeyValueStateStorage;
 
   ~PersistentMapStateStorage() override;
 
@@ -99,7 +98,6 @@ class PersistentMapStateStorage : public KeyValueStateStorage {
   std::string file_;
   InMemoryKeyValueStorage storage_;
   AutoPersistor auto_persistor_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PersistentMapStateStorage>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

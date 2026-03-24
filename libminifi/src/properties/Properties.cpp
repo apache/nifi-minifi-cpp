@@ -22,6 +22,7 @@
 #include <string>
 
 #include "core/logging/LoggerConfiguration.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 #include "properties/Configuration.h"
 #include "properties/PropertiesFile.h"
 #include "utils/StringUtils.h"

@@ -20,9 +20,11 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <filesystem>
 
 #include "minifi-cpp/core/ControllerServiceApiDefinition.h"
-#include "minifi-cpp/core/controller/ControllerService.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -34,12 +36,13 @@ namespace org::apache::nifi::minifi::controllers {
  * Justification: Abstracts SSL support out of processors into a
  * configurable controller service.
  */
-class SSLContextServiceInterface : public virtual core::controller::ControllerService {
+class SSLContextServiceInterface : public core::controller::ControllerServiceHandle {
  public:
   static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition{
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.controllers.SSLContextServiceInterface",
+    .version = MINIFI_VERSION_STR
   };
 
   virtual const std::filesystem::path& getCertificateFile() const = 0;

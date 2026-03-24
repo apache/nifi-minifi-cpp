@@ -51,7 +51,7 @@ namespace org::apache::nifi::minifi::standard {
 
 class XMLRecordSetWriter final : public core::RecordSetWriterImpl {
  public:
-  explicit XMLRecordSetWriter(const std::string_view name, const utils::Identifier& uuid = {}) : RecordSetWriterImpl(name, uuid) {}
+  using RecordSetWriterImpl::RecordSetWriterImpl;
 
   XMLRecordSetWriter(XMLRecordSetWriter&&) = delete;
   XMLRecordSetWriter(const XMLRecordSetWriter&) = delete;
@@ -111,9 +111,6 @@ class XMLRecordSetWriter final : public core::RecordSetWriterImpl {
     setSupportedProperties(Properties);
   }
   void onEnable() override;
-  void yield() override {}
-  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
-  bool isWorkAvailable() override { return false; }
 
  private:
   std::string formatXmlOutput(pugi::xml_document& xml_doc) const;
@@ -127,7 +124,6 @@ class XMLRecordSetWriter final : public core::RecordSetWriterImpl {
   bool pretty_print_xml_ = false;
   std::string name_of_record_tag_;
   std::string name_of_root_tag_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<XMLRecordSetWriter>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::standard

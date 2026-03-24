@@ -15,19 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "core/controller/ControllerServiceNode.h"
-#include <memory>
-#include <vector>
+#pragma once
 
 namespace org::apache::nifi::minifi::core::controller {
 
-std::shared_ptr<ControllerService> ControllerServiceNode::getControllerServiceImplementation() const {
-  return controller_service_;
-}
-
-const std::vector<ControllerServiceNode*>& ControllerServiceNode::getLinkedControllerServices() const {
-  return linked_controller_services_;
-}
+// Represents the usage side of the controller service.
+// It should be dynamic_cast to whatever actual interface we expect from the
+// service, e.g. RecordSetReader.
+class ControllerServiceHandle {
+ public:
+  virtual ~ControllerServiceHandle() = default;
+};
 
 }  // namespace org::apache::nifi::minifi::core::controller
