@@ -668,8 +668,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
         }
       }
 
-      parent_group->addControllerService(controller_service_node->getName(), controller_service_node);
-      parent_group->addControllerService(controller_service_node->getUUIDStr(), controller_service_node);
+      parent_group->addControllerService(controller_service_node->getName(), controller_service_node, controller_service_node->getUUIDStr());
     } else {
       logger_->log_debug("Could not locate {}", type);
     }

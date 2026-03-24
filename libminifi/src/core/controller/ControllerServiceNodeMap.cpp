@@ -99,6 +99,7 @@ const ControllerServiceNodeMap::ServiceEntry* ControllerServiceNodeMap::getEntry
 bool ControllerServiceNodeMap::registerAlternativeKey(std::string primary_key, std::string alternative_key) {
   std::scoped_lock lock(mutex_);
   if (!services_.contains(primary_key) || services_.contains(alternative_key) || alternative_keys_.contains(alternative_key)) {
+    gsl_AssertAudit(false);
     return false;
   }
 

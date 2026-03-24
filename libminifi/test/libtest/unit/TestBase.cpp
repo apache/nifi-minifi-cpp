@@ -368,7 +368,7 @@ std::shared_ptr<minifi::core::controller::ControllerServiceNode> TestPlan::addCo
   minifi::utils::Identifier uuid = minifi::utils::IdGenerator::getIdGenerator()->generate();
 
   std::shared_ptr<minifi::core::controller::ControllerServiceNode> controller_service_node =
-      controller_services_provider_->createControllerService(controller_name, uuid.to_string(), root_process_group_.get(), name);
+      controller_services_provider_->createControllerService(controller_name, name, root_process_group_.get(), uuid.to_string());
   if (controller_service_node == nullptr) {
     return nullptr;
   }
@@ -379,7 +379,7 @@ std::shared_ptr<minifi::core::controller::ControllerServiceNode> TestPlan::addCo
   controller_service_node->setUUID(uuid);
   controller_service_node->setName(name);
 
-  root_process_group_->addControllerService(uuid.to_string(), controller_service_node);
+  root_process_group_->addControllerService(name, controller_service_node, uuid.to_string());
 
   return controller_service_node;
 }
