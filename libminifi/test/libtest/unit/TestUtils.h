@@ -37,9 +37,8 @@
 #include "asio.hpp"
 #include "asio/ssl.hpp"
 #include "utils/net/Ssl.h"
-#include "range/v3/algorithm/any_of.hpp"
 #include "core/Processor.h"
-#include "core/logging/LoggerFactory.h"
+#include <range/v3/all.hpp>
 #include "./ProcessorUtils.h"
 
 using namespace std::literals::chrono_literals;
@@ -124,6 +123,12 @@ bool verifyLogLineVariantPresenceInPollTime(const std::chrono::duration<Rep, Per
     const std::string logs = LogTestController::getInstance().getLogs();
     return ((logs.find(patterns) != std::string::npos) || ...);
   };
+  return verifyEventHappenedInPollTime(wait_duration, check);
+}
+
+template<class Rep, class Period>
+bool verifyLogMatchesRegexInPollTime(const std::chrono::duration<Rep, Period>& wait_duration, const std::string& regex) {
+  auto check = [&regex] { return LogTestController::getInstance().matchesRegex(regex); };
   return verifyEventHappenedInPollTime(wait_duration, check);
 }
 
@@ -233,6 +238,15 @@ inline bool runningAsUnixRoot() {
   return geteuid() == 0;
 #endif
 }
+
+struct LogMessageView {
+  std::string_view timestamp;
+  std::string_view logger_class;
+  std::string_view log_level;
+  std::string_view payload;
+};
+
+std::vector<LogMessageView> extractLogMessageViews(const std::string& log_str);
 
 }  // namespace org::apache::nifi::minifi::test::utils
 

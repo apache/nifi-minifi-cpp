@@ -54,6 +54,7 @@ const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyVal
   {Configuration::nifi_flowfile_repository_rocksdb_read_verify_checksums, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},
   {Configuration::nifi_provenance_repository_rocksdb_read_verify_checksums, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},
   {Configuration::nifi_rocksdb_state_storage_read_verify_checksums, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},
+  {Configuration::nifi_dbcontent_optimize_for_small_db_cache_size, gsl::make_not_null(&core::StandardPropertyValidators::DATA_SIZE_VALIDATOR)},
   {Configuration::nifi_dbcontent_repository_purge_period, gsl::make_not_null(&core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)},
   {Configuration::nifi_remote_input_secure, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},
   {Configuration::nifi_security_need_ClientAuth, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},

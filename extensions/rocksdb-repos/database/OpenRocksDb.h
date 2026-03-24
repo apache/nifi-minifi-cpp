@@ -81,6 +81,8 @@ class OpenRocksDb {
   void handleResult(const rocksdb::Status& result);
   void handleResult(const std::vector<rocksdb::Status>& results);
 
+  void fillU64FromProperty(uint64_t& member, std::string_view property_name);
+
   gsl::not_null<RocksDbInstance*> db_;
   gsl::not_null<std::shared_ptr<rocksdb::DB>> impl_;
   gsl::not_null<std::shared_ptr<ColumnHandle>> column_;

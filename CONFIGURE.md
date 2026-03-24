@@ -41,6 +41,7 @@
   - [Configuring Repositories](#configuring-repositories)
   - [Configuring Volatile Repositories](#configuring-volatile-repositories)
   - [Configuring Repository storage locations](#configuring-repository-storage-locations)
+  - [Configuring cache size for rocksdb content repository](#configuring-cache-size-for-rocksdb-content-repository)
   - [Configuring compression for rocksdb database](#configuring-compression-for-rocksdb-database)
   - [Configuring compaction for rocksdb database](#configuring-compaction-for-rocksdb-database)
   - [Configuring synchronous or asynchronous writes for RocksDB content repository](#configuring-synchronous-or-asynchronous-writes-for-rocksdb-content-repository)
@@ -673,6 +674,19 @@ In a Filesystem Hierarchy Standard (FHS) installation (from an RPM package), the
     nifi.provenance.repository.directory.default=/var/lib/nifi-minifi-cpp/provenance_repository
     nifi.flowfile.repository.directory.default=/var/lib/nifi-minifi-cpp/flowfile_repository
     nifi.database.content.repository.directory.default=/var/lib/nifi-minifi-cpp/content_repository
+
+### Configuring cache size for rocksdb content repository
+
+The RocksDB content repository uses a cache to limit memory usage. The cache size can be configured using the following property.
+This should limit the memory usage but may cause minimal processing overhead.
+
+    # in minifi.properties
+    nifi.database.content.repository.optimize.for.small.db.cache.size=8 MB
+
+You can disable this cache by setting it to an empty value.
+
+    # in minifi.properties
+    nifi.database.content.repository.optimize.for.small.db.cache.size=
 
 
 ### Configuring compression for rocksdb database
