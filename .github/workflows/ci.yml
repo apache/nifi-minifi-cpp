@@ -8,8 +8,8 @@ env:
   CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
   macos_xcode:
-    name: "macOS 15 aarch64"
-    runs-on: macos-15
+    name: "macOS 14 aarch64"
+    runs-on: macos-14
     timeout-minutes: 240
     env:
       MACOS_MINIFI_OPTIONS: >-

@@ -44,8 +44,8 @@ else()
     # Build project
     ExternalProject_Add(
         iodbc-external
-        URL "https://github.com/openlink/iODBC/archive/v3.52.14.tar.gz"
-        URL_HASH "SHA256=896d7e16b283cf9a6f5b5f46e8e9549aef21a11935726b0170987cd4c59d16db"
+        URL "https://github.com/openlink/iODBC/archive/v3.52.16.tar.gz"
+        URL_HASH "SHA256=a0cf0375b462f98c0081c2ceae5ef78276003e57cdf1eb86bd04508fb62a0660"
         BUILD_IN_SOURCE true
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-src"
         PATCH_COMMAND "${IODBC_PC}"
