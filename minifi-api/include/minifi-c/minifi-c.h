@@ -145,7 +145,6 @@ typedef struct MinifiProcessorCallbacks {
   MINIFI_OWNED void*(*create)(MinifiProcessorMetadata);
   void(*destroy)(MINIFI_OWNED void*);
   MinifiBool(*isWorkAvailable)(void*);
-  void(*restore)(void*, MINIFI_OWNED MinifiFlowFile*);
   MinifiBool(*getTriggerWhenEmpty)(void*);
   MinifiStatus(*onTrigger)(void*, MinifiProcessContext*, MinifiProcessSession*);
   MinifiStatus(*onSchedule)(void*, MinifiProcessContext*);

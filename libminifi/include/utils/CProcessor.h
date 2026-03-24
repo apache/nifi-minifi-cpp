@@ -84,8 +84,8 @@ class CProcessor : public minifi::core::ProcessorApi {
     return static_cast<bool>(class_description_.callbacks.isWorkAvailable(impl_));
   }
 
-  void restore(const std::shared_ptr<minifi::core::FlowFile>& file) override {
-    class_description_.callbacks.restore(impl_, reinterpret_cast<MINIFI_OWNED MinifiFlowFile*>(new std::shared_ptr<minifi::core::FlowFile>(file)));
+  void restore(const std::shared_ptr<minifi::core::FlowFile>& /*file*/) override {
+    gsl_Assert(false && "Not implemented");
   }
 
   bool supportsDynamicProperties() const override {

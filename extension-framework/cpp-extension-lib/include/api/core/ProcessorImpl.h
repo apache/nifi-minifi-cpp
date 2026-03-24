@@ -73,8 +73,6 @@ class ProcessorImpl {
 
   static constexpr auto OutputAttributes = std::array<minifi::core::OutputAttributeReference, 0>{};
 
-  virtual void restore(const std::shared_ptr<FlowFile>& file);
-
   std::string getName() const;
   utils::Identifier getUUID() const;
   utils::SmallString<36> getUUIDStr() const;

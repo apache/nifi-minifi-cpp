@@ -44,10 +44,6 @@ bool ProcessorImpl::isWorkAvailable() {
   return false;
 }
 
-void ProcessorImpl::restore(const std::shared_ptr<FlowFile>& /*file*/) {
-  gsl_Assert(false && "Not implemented");
-}
-
 std::string ProcessorImpl::getName() const {
   return metadata_.name;
 }
