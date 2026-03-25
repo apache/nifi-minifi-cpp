@@ -39,6 +39,8 @@ class ContentSession {
 
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
 
+  virtual void remove(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
+
   virtual void commit() = 0;
 
   virtual void rollback() = 0;

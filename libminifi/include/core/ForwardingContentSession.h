@@ -43,6 +43,8 @@ class ForwardingContentSession : public ContentSessionImpl {
 
   std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
+  void remove(const std::shared_ptr<ResourceClaim>& resource_id) override;
+
   void commit() override;
 
   void rollback() override;
