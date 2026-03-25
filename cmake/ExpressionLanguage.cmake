@@ -37,28 +37,16 @@ if(WIN32)
     if(NOT winflexbison_POPULATED)
         FetchContent_Populate("winflexbison")
         execute_process(
-        COMMAND ${CMAKE_COMMAND} .
-        WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
-        RESULT_VARIABLE result
-        OUTPUT_VARIABLE bisonbuild
-        ERROR_VARIABLE bisonbuildE
+            COMMAND ${CMAKE_COMMAND} .
+            WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
+            COMMAND_ERROR_IS_FATAL ANY
         )
-
-        if(NOT result EQUAL 0)
-            message(FATAL_ERROR "configuration failed for winflexbison:\n${bisonbuildE}")
-        endif()
 
         execute_process(
-        COMMAND ${CMAKE_COMMAND} --build . --config RelWithDebInfo
-        WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
-        RESULT_VARIABLE result
-        OUTPUT_VARIABLE bisonbuild
-        ERROR_VARIABLE bisonbuildE
+            COMMAND ${CMAKE_COMMAND} --build . --config RelWithDebInfo
+            WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
+            COMMAND_ERROR_IS_FATAL ANY
         )
-
-        if(NOT result EQUAL 0)
-            message(FATAL_ERROR "winflexbison build failed:\n${bisonbuildE}")
-        endif()
 
         file(COPY ${winflexbison_SOURCE_DIR}/bison/Data DESTINATION ${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/)
     endif()
