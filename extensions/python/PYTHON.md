@@ -252,7 +252,7 @@ Due to some differences between the NiFi and MiNiFi C++ processors and implement
 
 ### Setting processor to be single threaded
 
-One feature that is currently only available in MiNiFi C++ is the ability to set a python processor to be single threaded. This is not yet available in NiFi's API, but similarly to Nifi's `@TriggerSerially` annotation, in MiNiFi C++ the `@trigger_serially` decorator can be used to make a processor single threaded. Setting this will make sure that only one thread executes the processor, and setting the max concurrent tasks to more than 1 in the flow configuration will not have any effect.
+One feature that is currently only available in MiNiFi C++ is the ability to set a python processor to be single threaded. This is not yet available in NiFi's Python API, but similarly to Nifi's `@TriggerSerially` Java API annotation, in MiNiFi C++ the `@trigger_serially` decorator can be used to make a processor single threaded. Setting this will make sure that only one thread executes the processor, and setting the max concurrent tasks to more than 1 in the flow configuration will not have any effect.
 
 ```python
 from nifiapi.flowfilesource import FlowFileSource, FlowFileSourceResult
