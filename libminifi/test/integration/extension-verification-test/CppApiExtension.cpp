@@ -1,4 +1,5 @@
 /**
+*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,24 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include <string>
 #include <string_view>
-#include <optional>
-#include <functional>
-#include "minifi-c/minifi-c.h"
+#include "utils/ExtensionInitUtils.h"
 
-namespace org::apache::nifi::minifi::utils {
+#define MKSOC(x) #x
+#define MAKESTRING(x) MKSOC(x)  // NOLINT(cppcoreguidelines-macro-usage)
 
-inline MinifiStringView toStringView(std::string_view str) {
-  return MinifiStringView{.data = str.data(), .length = str.length()};
+namespace minifi = org::apache::nifi::minifi;
+
+extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+  MinifiExtensionCreateInfo ext_create_info{
+    .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
+    .version = minifi::utils::toStringView("1.0.0"),
+    .deinit = nullptr,
+    .user_data = nullptr,
+    .processors_count = 0,
+    .processors_ptr = nullptr
+  };
+  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
 }
-
-using ConfigReader = std::function<std::optional<std::string>(std::string_view key)>;
-
-static inline void MinifiCreateCppExtension(MinifiExtension* extension, const MinifiExtensionCreateInfo* create_info) {
-  MINIFI_CREATE_EXTENSION_FN(extension, create_info);
-}
-
-}  // namespace org::apache::nifi::minifi::utils

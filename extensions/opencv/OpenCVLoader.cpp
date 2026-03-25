@@ -24,7 +24,7 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
+extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   // By default in OpenCV, ffmpeg capture is hardcoded to use TCP and this is a workaround
   // also if UDP timeout, ffmpeg will retry with TCP
   // Note:
@@ -32,7 +32,7 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
   // 2. The command will not overwrite value if "OPENCV_FFMPEG_CAPTURE_OPTIONS" already exists.
   const auto success = org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
   if (!success) {
-    return nullptr;
+    return;
   }
   MinifiExtensionCreateInfo ext_create_info{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
@@ -42,5 +42,5 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
     .processors_count = 0,
     .processors_ptr = nullptr
   };
-  return MinifiCreateExtension(minifi::utils::toStringView(MINIFI_API_VERSION), &ext_create_info);
+  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
 }
