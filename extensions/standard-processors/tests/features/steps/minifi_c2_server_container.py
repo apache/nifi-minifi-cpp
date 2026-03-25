@@ -22,8 +22,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography import x509
 from pathlib import Path
 
-from cryptography.hazmat.primitives._serialization import BestAvailableEncryption
-from cryptography.hazmat.primitives.serialization import load_pem_private_key, pkcs12
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, pkcs12, BestAvailableEncryption
 from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
