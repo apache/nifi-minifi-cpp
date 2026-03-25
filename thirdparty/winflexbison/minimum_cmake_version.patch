@@ -1,0 +1,40 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index cf657a6..8757b14 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+ 
+ project (winflexbison)
+ 
+diff --git a/bison/CMakeLists.txt b/bison/CMakeLists.txt
+index 55de8a1..24bbdcd 100644
+--- a/bison/CMakeLists.txt
++++ b/bison/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+ 
+ set(PROJECT_NAME win_bison)
+ 
+diff --git a/common/CMakeLists.txt b/common/CMakeLists.txt
+index 4b57c62..6a292fa 100644
+--- a/common/CMakeLists.txt
++++ b/common/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+ 
+ set(PROJECT_NAME winflexbison_common)
+ 
+diff --git a/flex/CMakeLists.txt b/flex/CMakeLists.txt
+index f634f81..02ba17a 100644
+--- a/flex/CMakeLists.txt
++++ b/flex/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+ 
+ set(PROJECT_NAME win_flex)
+ 
