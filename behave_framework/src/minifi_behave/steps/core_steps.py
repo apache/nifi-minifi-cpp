@@ -25,11 +25,11 @@ import uuid
 import humanfriendly
 from behave import when, step, given
 
-from minifi_test_framework.containers.http_proxy_container import HttpProxy
-from minifi_test_framework.containers.nifi_container import NifiContainer
-from minifi_test_framework.containers.directory import Directory
-from minifi_test_framework.containers.file import File
-from minifi_test_framework.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
+from minifi_behave.containers.http_proxy_container import HttpProxy
+from minifi_behave.containers.nifi_container import NifiContainer
+from minifi_behave.containers.directory import Directory
+from minifi_behave.containers.file import File
+from minifi_behave.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
 
 
 @when("both instances start up")

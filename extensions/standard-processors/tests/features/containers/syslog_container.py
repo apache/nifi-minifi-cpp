@@ -15,7 +15,7 @@
 #  limitations under the License.
 #
 
-from minifi_test_framework.containers.container_linux import LinuxContainer
+from minifi_behave.containers.container_linux import LinuxContainer
 
 
 class SyslogContainer(LinuxContainer):

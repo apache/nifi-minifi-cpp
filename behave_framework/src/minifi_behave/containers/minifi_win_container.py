@@ -1,8 +1,8 @@
 from typing import Dict
 
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.minifi.minifi_flow_definition import MinifiFlowDefinition
-from minifi_test_framework.containers.directory import Directory
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.minifi.minifi_flow_definition import MinifiFlowDefinition
+from minifi_behave.containers.directory import Directory
 from .container_windows import WindowsContainer
 from .minifi_protocol import MinifiProtocol
 import logging

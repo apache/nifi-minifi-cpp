@@ -18,12 +18,12 @@ import time
 
 from behave import step, when, given
 
-from minifi_test_framework.steps import checking_steps        # noqa: F401
-from minifi_test_framework.steps import configuration_steps   # noqa: F401
-from minifi_test_framework.steps import core_steps            # noqa: F401
-from minifi_test_framework.steps import flow_building_steps   # noqa: F401
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.minifi.processor import Processor
+from minifi_behave.steps import checking_steps        # noqa: F401
+from minifi_behave.steps import configuration_steps   # noqa: F401
+from minifi_behave.steps import core_steps            # noqa: F401
+from minifi_behave.steps import flow_building_steps   # noqa: F401
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.minifi.processor import Processor
 from containers.kafka_server_container import KafkaServer
 
 
