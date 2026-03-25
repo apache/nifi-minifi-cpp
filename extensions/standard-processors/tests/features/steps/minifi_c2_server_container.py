@@ -24,13 +24,13 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives._serialization import BestAvailableEncryption
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, pkcs12
-from minifi_test_framework.containers.container_linux import LinuxContainer
-from minifi_test_framework.core.helpers import wait_for_condition
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.core.ssl_utils import make_server_cert
-from minifi_test_framework.containers.file import File
-from minifi_test_framework.containers.host_file import HostFile
-from minifi_test_framework.core.ssl_utils import dump_key, dump_cert
+from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.core.helpers import wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import make_server_cert
+from minifi_behave.containers.file import File
+from minifi_behave.containers.host_file import HostFile
+from minifi_behave.core.ssl_utils import dump_key, dump_cert
 
 
 class MinifiC2Server(LinuxContainer):

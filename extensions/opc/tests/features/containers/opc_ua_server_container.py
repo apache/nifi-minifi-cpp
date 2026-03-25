@@ -14,9 +14,9 @@
 # limitations under the License.
 
 from typing import List, Optional
-from minifi_test_framework.containers.container_linux import LinuxContainer
-from minifi_test_framework.core.helpers import wait_for_condition
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.core.helpers import wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class OPCUAServerContainer(LinuxContainer):
