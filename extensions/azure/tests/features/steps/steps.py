@@ -29,7 +29,7 @@ from containers.azure_server_container import AzureServerContainer
 
 
 @step("a {processor_name} processor set up to communicate with an Azure blob storage")
-def step_impl(context: MinifiTestContext, processor_name: str):
+def setup_azure_blob_storage_processor(context: MinifiTestContext, processor_name: str):
     processor = Processor(processor_name, processor_name)
     hostname = f"http://azure-storage-server-{context.scenario_id}"
     processor.add_property('Container Name', 'test-container')
@@ -41,41 +41,41 @@ def step_impl(context: MinifiTestContext, processor_name: str):
 
 
 @step("an Azure storage server is set up")
-def step_impl(context):
+def setup_azure_storage_server(context):
     context.containers["azure-storage-server"] = AzureServerContainer(context)
     assert context.containers["azure-storage-server"].deploy(context)
 
 
 @then('the object on the Azure storage server is "{object_data}"')
-def step_impl(context: MinifiTestContext, object_data: str):
+def verify_azure_storage_server_data(context: MinifiTestContext, object_data: str):
     azure_server_container = context.containers["azure-storage-server"]
     assert isinstance(azure_server_container, AzureServerContainer)
     assert azure_server_container.check_azure_storage_server_data(object_data)
 
 
 @step('test blob "{blob_name}" with the content "{data}" is created on Azure blob storage')
-def step_impl(context: MinifiTestContext, blob_name: str, data: str):
+def create_test_blob_with_content(context: MinifiTestContext, blob_name: str, data: str):
     azure_server_container = context.containers["azure-storage-server"]
     assert isinstance(azure_server_container, AzureServerContainer)
     assert azure_server_container.add_test_blob(blob_name, content=data)
 
 
 @step('test blob "{blob_name}" is created on Azure blob storage')
-def step_impl(context: MinifiTestContext, blob_name: str):
+def create_test_blob(context: MinifiTestContext, blob_name: str):
     azure_server_container = context.containers["azure-storage-server"]
     assert isinstance(azure_server_container, AzureServerContainer)
     assert azure_server_container.add_test_blob(blob_name)
 
 
 @step('test blob "{blob_name}" is created on Azure blob storage with a snapshot')
-def step_impl(context: MinifiTestContext, blob_name: str):
+def create_test_blob_with_snapshot(context: MinifiTestContext, blob_name: str):
     azure_server_container = context.containers["azure-storage-server"]
     assert isinstance(azure_server_container, AzureServerContainer)
     assert azure_server_container.add_test_blob(blob_name, with_snapshot=True)
 
 
 @then("the Azure blob storage becomes empty in {timeout_str}")
-def step_impl(context: MinifiTestContext, timeout_str: str):
+def verify_azure_blob_storage_is_empty(context: MinifiTestContext, timeout_str: str):
     timeout_in_seconds = humanfriendly.parse_timespan(timeout_str)
     azure_server_container = context.containers["azure-storage-server"]
     assert isinstance(azure_server_container, AzureServerContainer)
@@ -87,7 +87,7 @@ def step_impl(context: MinifiTestContext, timeout_str: str):
 
 
 @then("the blob and snapshot count becomes 1 in {timeout_str}")
-def step_impl(context: MinifiTestContext, timeout_str: str):
+def verify_blob_and_snapshot_count(context: MinifiTestContext, timeout_str: str):
     timeout_in_seconds = humanfriendly.parse_timespan(timeout_str)
     azure_server_container = context.containers["azure-storage-server"]
     assert isinstance(azure_server_container, AzureServerContainer)

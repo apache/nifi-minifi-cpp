@@ -24,23 +24,23 @@ from containers.splunk_container import SplunkContainer
 
 
 @step("a Splunk HEC is set up and running")
-def step_impl(context: MinifiTestContext):
+def setup_splunk_hec(context: MinifiTestContext):
     context.containers["splunk"] = SplunkContainer(context)
     assert context.containers["splunk"].deploy(context)
     assert context.containers["splunk"].enable_splunk_hec_indexer('splunk_hec_token') or context.containers["splunk"].log_app_output()
 
 
 @then('an event is registered in Splunk HEC with the content \"{content}\"')
-def step_imp(context, content):
+def verify_splunk_event_content(context, content):
     assert context.containers["splunk"].check_splunk_event(content) or log_due_to_failure(context)
 
 
 @then('an event is registered in Splunk HEC with the content \"{content}\" with \"{source}\" set as source and \"{source_type}\" set as sourcetype and \"{host}\" set as host')
-def step_imp(context, content, source, source_type, host):
+def verify_splunk_event_with_attributes(context, content, source, source_type, host):
     attr = {"source": source, "sourcetype": source_type, "host": host}
     assert context.containers["splunk"].check_splunk_event_with_attributes(content, attr) or log_due_to_failure(context)
 
 
 @step("SSL is enabled for the Splunk HEC and the SSL context service is set up for PutSplunkHTTP and QuerySplunkIndexingStatus")
-def step_impl(context):
+def enable_splunk_hec_ssl(context):
     assert context.containers["splunk"].enable_splunk_hec_ssl() or context.containers["splunk"].log_app_output()

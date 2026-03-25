@@ -32,17 +32,17 @@ from containers.opc_ua_server_container import OPCUAServerContainer
 
 
 @step("an OPC UA server is set up")
-def step_impl(context: MinifiTestContext):
+def setup_opcua_server(context: MinifiTestContext):
     context.containers["opcua-server"] = OPCUAServerContainer(context)
 
 
 @step("an OPC UA server is set up with access control")
-def step_impl(context: MinifiTestContext):
+def setup_opcua_server_with_access_control(context: MinifiTestContext):
     context.containers["opcua-server-access"] = OPCUAServerContainer(context, command=["/opt/open62541/examples/access_control_server"])
 
 
 @then("the OPC UA server logs contain the following message: \"{log_message}\" in less than {duration}")
-def step_impl(context, log_message, duration):
+def verify_opcua_server_logs_contain_message(context, log_message, duration):
     timeout_seconds = humanfriendly.parse_timespan(duration)
     opcua_container = context.containers["opcua-server"]
     assert isinstance(opcua_container, OPCUAServerContainer)
@@ -76,7 +76,7 @@ def _copy_file_from_docker_image(image_name: str, file_path: str, output_path: s
 
 
 @given('the OPC UA server certificate files are placed in the "{directory}" directory in the MiNiFi container "{container_name}"')
-def step_impl(context: MinifiTestContext, directory: str, container_name: str):
+def place_opcua_certificate_files_in_minifi_container(context: MinifiTestContext, directory: str, container_name: str):
     if not hasattr(context, "opcua_cert_temp_dir"):
         context.opcua_cert_temp_dir = tempfile.TemporaryDirectory()
         _copy_file_from_docker_image(OPCUAServerContainer.OPC_SERVER_IMAGE, "/opt/open62541/pki/created/server_cert.der", os.path.join(context.opcua_cert_temp_dir.name, "server_cert.der"))

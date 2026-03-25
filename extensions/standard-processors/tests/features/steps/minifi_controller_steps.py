@@ -21,47 +21,47 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 @given('controller socket properties are set up')
-def step_impl(context: MinifiTestContext):
+def setup_controller_socket_properties(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().controller.set_controller_socket_properties()
 
 
 @when('MiNiFi config is updated through MiNiFi controller')
-def step_impl(context: MinifiTestContext):
+def update_minifi_config_via_controller(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().controller.update_flow_config_through_controller()
 
 
 @then('the updated config is persisted')
-def step_impl(context: MinifiTestContext):
+def verify_updated_config_is_persisted(context: MinifiTestContext):
     assert context.get_or_create_default_minifi_container().controller.updated_config_is_persisted()
 
 
 @when('the {component} component is stopped through MiNiFi controller')
-def step_impl(context: MinifiTestContext, component: str):
+def stop_component_via_controller(context: MinifiTestContext, component: str):
     context.get_or_create_default_minifi_container().controller.stop_component_through_controller(component)
 
 
 @when('the {component} component is started through MiNiFi controller')
-def step_impl(context: MinifiTestContext, component: str):
+def start_component_via_controller(context: MinifiTestContext, component: str):
     context.get_or_create_default_minifi_container().controller.start_component_through_controller(component)
 
 
 @then('the {component} component is not running')
-def step_impl(context: MinifiTestContext, component: str):
+def verify_component_not_running(context: MinifiTestContext, component: str):
     assert not context.get_or_create_default_minifi_container().controller.is_component_running(component)
 
 
 @then('the {component} component is running')
-def step_impl(context: MinifiTestContext, component: str):
+def verify_component_is_running(context: MinifiTestContext, component: str):
     assert context.get_or_create_default_minifi_container().controller.is_component_running(component)
 
 
 @then('connection \"{connection}\" can be seen through MiNiFi controller')
-def step_impl(context: MinifiTestContext, connection: str):
+def verify_connection_seen_via_controller(context: MinifiTestContext, connection: str):
     assert context.get_or_create_default_minifi_container().controller.connection_found_through_controller(connection)
 
 
 @then('{connection_count:d} connections can be seen full through MiNiFi controller')
-def step_impl(context: MinifiTestContext, connection_count: int):
+def verify_full_connection_count(context: MinifiTestContext, connection_count: int):
     assert context.get_or_create_default_minifi_container().controller.get_full_connection_count() == connection_count
 
 
@@ -71,7 +71,7 @@ def check_connection_size_through_controller(context: MinifiTestContext, connect
 
 
 @then('connection \"{connection}\" has {size:d} size and {max_size:d} max size through MiNiFi controller')
-def step_impl(context: MinifiTestContext, connection: str, size: int, max_size: int):
+def verify_connection_size_via_controller(context: MinifiTestContext, connection: str, size: int, max_size: int):
     assert check_connection_size_through_controller(context, connection, size, max_size)
 
 
@@ -82,10 +82,10 @@ def manifest_can_be_retrieved_through_minifi_controller(context: MinifiTestConte
 
 
 @then('manifest can be retrieved through MiNiFi controller')
-def step_impl(context: MinifiTestContext):
+def verify_manifest_retrieval_via_controller(context: MinifiTestContext):
     assert manifest_can_be_retrieved_through_minifi_controller(context)
 
 
 @then('debug bundle can be retrieved through MiNiFi controller')
-def step_impl(context: MinifiTestContext):
+def verify_debug_bundle_retrieval_via_controller(context: MinifiTestContext):
     assert context.get_or_create_default_minifi_container().controller.create_debug_bundle()

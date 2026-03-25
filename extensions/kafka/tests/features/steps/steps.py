@@ -28,12 +28,12 @@ from containers.kafka_server_container import KafkaServer
 
 
 @step("a Kafka server is set up")
-def step_impl(context):
+def setup_kafka_server(context):
     context.containers["kafka-server"] = KafkaServer(context)
 
 
 @step("ConsumeKafka processor is set up to communicate with that server")
-def step_impl(context):
+def setup_consume_kafka_processor(context):
     consume_kafka = Processor("ConsumeKafka", "ConsumeKafka")
     consume_kafka.add_property("Kafka Brokers", f"kafka-server-{context.scenario_id}:9092")
     consume_kafka.add_property("Topic Names", "ConsumeKafkaTest")
@@ -49,7 +49,7 @@ def step_impl(context):
 
 
 @step("PublishKafka processor is set up to communicate with that server")
-def step_impl(context):
+def setup_publish_kafka_processor(context):
     publish_kafka = Processor("PublishKafka", "PublishKafka")
     publish_kafka.add_property("Known Brokers", f"kafka-server-{context.scenario_id}:9092")
     publish_kafka.add_property("Client Name", "minifi-client")
@@ -63,28 +63,28 @@ def step_impl(context):
 
 
 @step("the Kafka server is started")
-def step_impl(context: MinifiTestContext):
+def start_kafka_server(context: MinifiTestContext):
     kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
     assert kafka_server_container.deploy(context)
 
 
 @step('the topic "{topic_name}" is initialized on the kafka broker')
-def step_impl(context: MinifiTestContext, topic_name: str):
+def initialize_kafka_topic(context: MinifiTestContext, topic_name: str):
     kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
     assert kafka_server_container.create_topic(topic_name=topic_name) or kafka_server_container.log_app_output()
 
 
 @when('a message with content "{message}" is published to the "{topic_name}" topic')
-def step_impl(context: MinifiTestContext, message: str, topic_name: str):
+def publish_message_to_topic(context: MinifiTestContext, message: str, topic_name: str):
     kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
     assert kafka_server_container.produce_message(topic_name=topic_name, message=message) or kafka_server_container.log_app_output()
 
 
 @step('a message with content "{message}" is published to the "{topic_name}" topic with key "{key}"')
-def step_impl(context: MinifiTestContext, message: str, topic_name: str, key: str):
+def publish_message_with_key_to_topic(context: MinifiTestContext, message: str, topic_name: str, key: str):
     kafka_server_container = context.containers["kafka-server"]
     assert isinstance(kafka_server_container, KafkaServer)
     assert kafka_server_container.produce_message_with_key(topic_name=topic_name, message=message, message_key=key) or kafka_server_container.log_app_output()
@@ -207,7 +207,7 @@ def wait_for_consumer_registration(context):
 
 
 @when("the Kafka consumer is reregistered in kafka broker")
-def wait_for_consumer_registration(context):
+def wait_for_consumer_reregistration(context):
     assert context.containers["kafka-server"].wait_for_kafka_consumer_to_be_registered(2) or context.containers["kafka-server"].log_app_output()
     # After the consumer is registered there is still some time needed for consumer-broker synchronization
     # Unfortunately there are no additional log messages that could be checked for this

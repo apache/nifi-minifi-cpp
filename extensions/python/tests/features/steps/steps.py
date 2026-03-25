@@ -94,12 +94,12 @@ RUN wget {parse_document_url} --directory-prefix={minifi_python_dir}/nifi_python
 
 
 @given("the example MiNiFi python processors are present")
-def step_impl(context: MinifiTestContext):
+def add_example_minifi_python_processors(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().add_example_python_processors()
 
 
 @given("python with langchain is installed on the MiNiFi agent {install_mode}")
-def step_impl(context, install_mode):
+def install_python_with_langchain(context, install_mode):
     client: docker.DockerClient = docker.from_env()
     is_fhs = 'MINIFI_INSTALLATION_TYPE=FHS' in str(client.images.get(context.minifi_container_image).history())
     minifi_python_venv_parent = '/var/lib/nifi-minifi-cpp' if is_fhs else '/opt/minifi/minifi-current'

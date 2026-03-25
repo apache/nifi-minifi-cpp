@@ -35,7 +35,7 @@ from containers.kinesis_server_container import KinesisServerContainer
 
 @step('a {processor_name} processor set up to communicate with an s3 server')
 @step('a {processor_name} processor set up to communicate with the same s3 server')
-def step_impl(context: MinifiTestContext, processor_name: str):
+def setup_s3_processor(context: MinifiTestContext, processor_name: str):
     processor = Processor(processor_name, processor_name)
     processor.add_property('Object Key', 'test_object_key')
     processor.add_property('Bucket', 'test_bucket')
@@ -51,27 +51,27 @@ def step_impl(context: MinifiTestContext, processor_name: str):
 
 
 @step('the s3 server starts up')
-def step_impl(context: MinifiTestContext):
+def start_s3_server(context: MinifiTestContext):
     context.containers["s3-server"] = S3ServerContainer(context)
     assert context.containers["s3-server"].deploy(context)
 
 
 @step('the object on the s3 server is "{object_data}"')
-def step_impl(context: MinifiTestContext, object_data: str):
+def verify_s3_object_data(context: MinifiTestContext, object_data: str):
     s3_server_container = context.containers["s3-server"]
     assert isinstance(s3_server_container, S3ServerContainer)
     assert s3_server_container.check_s3_server_object_data(object_data)
 
 
 @step('the object content type on the s3 server is "{content_type}" and the object metadata matches use metadata')
-def step_impl(context: MinifiTestContext, content_type: str):
+def verify_s3_object_content_type_and_metadata(context: MinifiTestContext, content_type: str):
     s3_server_container = context.containers["s3-server"]
     assert isinstance(s3_server_container, S3ServerContainer)
     assert s3_server_container.check_s3_server_object_metadata(content_type)
 
 
 @step("the object bucket on the s3 server is empty in less than 10 seconds")
-def step_impl(context):
+def verify_s3_bucket_empty(context):
     s3_server_container = context.containers["s3-server"]
     assert isinstance(s3_server_container, S3ServerContainer)
     assert wait_for_condition(
@@ -80,7 +80,7 @@ def step_impl(context):
 
 
 @step("the object on the s3 server is present and matches the original hash")
-def step_impl(context):
+def verify_s3_object_hash_matches(context):
     s3_server_container = context.containers["s3-server"]
 
     assert isinstance(s3_server_container, S3ServerContainer)
@@ -94,7 +94,7 @@ def computeMD5hash(my_string):
 
 
 @step('there is a 6MB file at the "/tmp/input" directory and we keep track of the hash of that')
-def step_impl(context):
+def create_6mb_file_and_track_hash(context):
     size = humanfriendly.parse_size("6MB")
     content = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(size))
     new_dir = Directory("/tmp/input")
@@ -104,10 +104,10 @@ def step_impl(context):
 
 
 @step("a kinesis server is set up in correspondence with the PutKinesisStream")
-def step_impl(context):
+def setup_kinesis_server(context):
     context.containers["kinesis-server"] = KinesisServerContainer(context)
 
 
 @then("there is a record on the kinesis server with \"{record_data}\"")
-def step_impl(context, record_data):
+def verify_kinesis_record_data(context, record_data):
     assert context.containers["kinesis-server"].check_kinesis_server_record_data(record_data) or log_due_to_failure(context)
