@@ -14,11 +14,11 @@
 # limitations under the License.
 from textwrap import dedent
 
-from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
-from minifi_test_framework.core.hooks import common_before_scenario
-from minifi_test_framework.core.hooks import common_after_scenario
-from minifi_test_framework.core.hooks import get_minifi_container_image
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_behave.containers.docker_image_builder import DockerImageBuilder
+from minifi_behave.core.hooks import common_before_scenario
+from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import get_minifi_container_image
+from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 # These hooks are executed by behave before and after each scenario
 # The common_before_scenario and common_after_scenario must be called for proper setup and tear down

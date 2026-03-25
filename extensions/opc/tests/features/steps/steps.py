@@ -22,12 +22,12 @@ import tarfile
 import humanfriendly
 
 from behave import given, step, then
-from minifi_test_framework.steps import checking_steps        # noqa: F401
-from minifi_test_framework.steps import configuration_steps   # noqa: F401
-from minifi_test_framework.steps import core_steps            # noqa: F401
-from minifi_test_framework.steps import flow_building_steps   # noqa: F401
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.core.helpers import wait_for_condition
+from minifi_behave.steps import checking_steps        # noqa: F401
+from minifi_behave.steps import configuration_steps   # noqa: F401
+from minifi_behave.steps import core_steps            # noqa: F401
+from minifi_behave.steps import flow_building_steps   # noqa: F401
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.helpers import wait_for_condition
 from containers.opc_ua_server_container import OPCUAServerContainer
 
 
