@@ -44,36 +44,10 @@ class Timer {
   Callback cb_;
 };
 
-enum LibraryType {
-  Cpp,
-  CApi,
-  Invalid
-};
-
 struct LibraryDescriptor {
   std::string name;
   std::filesystem::path dir;
   std::string filename;
-
-
-  [[nodiscard]] bool verify_as_cpp_extension() const;
-
-  [[nodiscard]] bool verify_as_c_extension(const std::shared_ptr<logging::Logger>& logger) const;
-
-  [[nodiscard]]
-  LibraryType verify(const std::shared_ptr<logging::Logger>& logger) const {
-    const auto path = getFullPath();
-    const Timer timer{[&](const std::chrono::milliseconds elapsed) {
-      logger->log_debug("Verification for '{}' took {}", path, elapsed);
-    }};
-    if (verify_as_cpp_extension()) {
-      return Cpp;
-    }
-    if (verify_as_c_extension(logger)) {
-      return CApi;
-    }
-    return Invalid;
-  }
 
   [[nodiscard]]
   std::filesystem::path getFullPath() const {
