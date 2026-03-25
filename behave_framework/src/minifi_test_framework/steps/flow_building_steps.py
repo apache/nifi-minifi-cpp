@@ -206,7 +206,7 @@ def set_scheduling_period_in_minifi_flow(context: MinifiTestContext, processor_n
 
 
 @step('the scheduling period of the {processor_name} processor is set to "{duration_str}" in the NiFi flow')
-def set_scheduling_period_in_nifi_flow(context: MinifiTestContext, processor_name: str, duration_str: str, minifi_container_name: str):
+def set_scheduling_period_in_nifi_flow(context: MinifiTestContext, processor_name: str, duration_str: str):
     context.containers["nifi"].flow_definition.get_processor(processor_name).scheduling_period = duration_str
 
 
