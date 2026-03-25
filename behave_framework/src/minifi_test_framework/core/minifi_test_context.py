@@ -41,8 +41,8 @@ class MinifiTestContext(Context):
     network: Network
     minifi_container_image: str
     resource_dir: str | None
-    root_ca_key: Certificate
-    root_ca_cert: RSAPrivateKey
+    root_ca_key: RSAPrivateKey
+    root_ca_cert: Certificate
 
     def get_or_create_minifi_container(self, container_name: str) -> MinifiContainer:
         if container_name not in self.containers:

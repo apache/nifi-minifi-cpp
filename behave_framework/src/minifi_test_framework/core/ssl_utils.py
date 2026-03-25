@@ -21,7 +21,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from cryptography.x509 import Certificate, ExtendedKeyUsage
-from cryptography.x509.oid import NameOID
+from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 
 
 def gen_cert() -> tuple[Certificate, RSAPrivateKey]:
@@ -30,8 +30,8 @@ def gen_cert() -> tuple[Certificate, RSAPrivateKey]:
     subject = issuer = x509.Name([x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"), x509.NameAttribute(NameOID.COMMON_NAME, u"minifi-listen"), ])
 
     cert = x509.CertificateBuilder().subject_name(subject).issuer_name(issuer).public_key(key.public_key()).serial_number(
-        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.UTC)).not_valid_after(
-        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=365)).sign(key, hashes.SHA256())
+        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.timezone.utc)).not_valid_after(
+        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365)).sign(key, hashes.SHA256())
 
     return cert, key
 
@@ -42,8 +42,8 @@ def make_self_signed_cert(common_name: str) -> tuple[Certificate, RSAPrivateKey]
     subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name), ])
 
     cert = x509.CertificateBuilder().subject_name(subject).issuer_name(issuer).public_key(key.public_key()).serial_number(
-        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.UTC)).not_valid_after(
-        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=3650)).add_extension(
+        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.timezone.utc)).not_valid_after(
+        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3650)).add_extension(
         x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False, ).add_extension(x509.BasicConstraints(ca=True, path_length=None),
                                                                                                      critical=True, ).sign(key, hashes.SHA256())
 
@@ -57,9 +57,9 @@ def _make_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey, ex
     subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name), ])
 
     builder = x509.CertificateBuilder().subject_name(subject).issuer_name(ca_cert.subject).public_key(key.public_key()).serial_number(
-        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.UTC)).not_valid_after(
-        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=3650)).add_extension(x509.BasicConstraints(ca=False, path_length=None),
-                                                                                           critical=True, ).add_extension(
+        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.timezone.utc)).not_valid_after(
+        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3650)).add_extension(x509.BasicConstraints(ca=False, path_length=None),
+                                                                                                    critical=True, ).add_extension(
         x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False, ).add_extension(
         x509.SubjectAlternativeName([x509.DNSName(common_name)]), critical=False, )
 
@@ -71,11 +71,11 @@ def _make_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey, ex
 
 
 def make_client_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
-    return _make_cert(common_name, ca_cert, ca_key, x509.ExtendedKeyUsage([x509.OID_CLIENT_AUTH]))
+    return _make_cert(common_name, ca_cert, ca_key, x509.ExtendedKeyUsage([ExtendedKeyUsageOID.CLIENT_AUTH]))
 
 
 def make_server_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
-    return _make_cert(common_name, ca_cert, ca_key, x509.ExtendedKeyUsage(([x509.OID_SERVER_AUTH])))
+    return _make_cert(common_name, ca_cert, ca_key, x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]))
 
 
 def make_cert_without_extended_usage(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
