@@ -11,7 +11,11 @@ on:
         type: string
         description: The id of the create-release-artifacts workflow to download artifacts from
         required: true
-
+  workflow_run:
+    workflows: ["Create Release Artifacts"]
+    types:
+      - completed
+    branches: [main]
 
 env:
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
@@ -19,8 +23,20 @@ env:
     -DENABLE_ELASTICSEARCH=OFF -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DDOCKER_BUILD_ONLY=ON
 
 jobs:
+  check-artifacts-workflow:
+    name: "Check Create Release Artifacts status"
+    if: github.event_name == 'workflow_run'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check workflow conclusion
+        if: github.event.workflow_run.conclusion != 'success'
+        run: |
+          echo "Create Release Artifacts workflow failed with conclusion: ${{ github.event.workflow_run.conclusion }}"
+          exit 1
   docker-test-modular:
-    name: "${{ matrix.platform.name }} (${{ matrix.arch }}) Modular${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
+    name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ (github.event_name != 'workflow_dispatch' || inputs.enable_fips) && ' (FIPS Mode)' || '' }}"
+    needs: [check-artifacts-workflow]
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ${{ matrix.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 240
     strategy:
@@ -45,14 +61,14 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          run-id: ${{ inputs.artifacts_workflow_id }}
+          run-id: ${{ inputs.artifacts_workflow_id || github.event.workflow_run.id }}
           name: minifi-${{ matrix.arch }}-tar
           path: build
           github-token: ${{ github.token }}
 
       - uses: actions/download-artifact@v4
         with:
-          run-id: ${{ inputs.artifacts_workflow_id }}
+          run-id: ${{ inputs.artifacts_workflow_id || github.event.workflow_run.id }}
           name: minifi-${{ matrix.arch }}-rpm
           path: build
           github-token: ${{ github.token }}
@@ -74,7 +90,7 @@ jobs:
         if: always()
         uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
         with:
-          name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ inputs.enable_fips && ' (FIPS Mode)' || '' }}"
+          name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ (github.event_name != 'workflow_dispatch' || inputs.enable_fips) && ' (FIPS Mode)' || '' }}"
           path: build/behavex_output_modular/behave/*.xml
           reporter: java-junit
           output-to: 'step-summary'
@@ -85,5 +101,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform.id }}_${{ matrix.arch }}_behavex_output_modular${{ inputs.enable_fips && '_fips' || '' }}
+          name: ${{ matrix.platform.id }}_${{ matrix.arch }}_behavex_output_modular${{ (github.event_name != 'workflow_dispatch' || inputs.enable_fips) && '_fips' || '' }}
           path: build/behavex_output_modular

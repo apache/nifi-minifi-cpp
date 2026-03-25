@@ -1,6 +1,9 @@
 name: "Create Release Artifacts"
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: '0 1 * * 1'
 env:
   CMAKE_FLAGS: -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DDOCKER_BUILD_ONLY=ON
 
