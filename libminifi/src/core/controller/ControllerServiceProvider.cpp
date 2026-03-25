@@ -43,10 +43,15 @@ std::shared_ptr<ControllerService> ControllerServiceProvider::getControllerServi
   }
 }
 
-void ControllerServiceProvider::putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node, ProcessGroup* process_group) {
+void ControllerServiceProvider::putControllerServiceNode(const std::string& primary_key,
+    const std::shared_ptr<ControllerServiceNode>& controller_service_node,
+    ProcessGroup* process_group,
+    const std::optional<std::string>& alternative_key) {
   gsl_Expects(controller_map_);
-  controller_map_->put(identifier, controller_service_node);
-  controller_map_->put(identifier, process_group);
+  controller_map_->put(primary_key, controller_service_node, process_group);
+  if (alternative_key) {
+    controller_map_->registerAlternativeKey(primary_key, *alternative_key);
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::core::controller

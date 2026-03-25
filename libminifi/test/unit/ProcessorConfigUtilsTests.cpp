@@ -114,7 +114,7 @@ class WrongTestControllerService : public TestControllerService {};
 class TestControllerServiceProvider : public controller::ControllerServiceProvider {
  public:
   using ControllerServiceProvider::ControllerServiceProvider;
-  std::shared_ptr<controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&) override { return nullptr; }
+  std::shared_ptr<controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&, ProcessGroup*, const std::optional<std::string>&) override { return nullptr; }
   void clearControllerServices() override {}
   void enableAllControllerServices() override {}
   void disableAllControllerServices() override {}
@@ -166,16 +166,16 @@ TEST_CASE("Parse controller service property") {
   SECTION("Optional controller service property") {
     SECTION("... is valid") {
       REQUIRE(processor->setProperty(property.name, "TestControllerService"));
-      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());;
+      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());
       CHECK(value.get() == test_controller_service->getImplementation<TestControllerService>());
     }
     SECTION("... is missing") {
-      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());;
+      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());
       CHECK(value == nullptr);
     }
     SECTION("... is blank") {
       REQUIRE(processor->setProperty(property.name, ""));
-      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());;
+      const auto value = utils::parseOptionalControllerService<TestControllerService>(context, property, processor->getUUID());
       CHECK(value == nullptr);
     }
     SECTION("... is invalid") {
