@@ -17,32 +17,34 @@
 
 import jks
 import os
-from OpenSSL import crypto
-from cryptography.hazmat.primitives.serialization import pkcs12, BestAvailableEncryption, load_pem_private_key
+
+from cryptography.hazmat.primitives import serialization
 from cryptography import x509
 from pathlib import Path
 
-from minifi_test_framework.containers.container import Container
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, pkcs12, BestAvailableEncryption
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.core.ssl_utils import make_server_cert
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
+from minifi_test_framework.core.ssl_utils import dump_key, dump_cert
 
 
-class MinifiC2Server(Container):
+class MinifiC2Server(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext, ssl: bool = False):
         super().__init__("apache/nifi-minifi-c2:1.27.0", f"minifi-c2-server-{test_context.scenario_id}", test_context.network)
         if ssl:
             c2_cert, c2_key = make_server_cert(f"minifi-c2-server-{test_context.scenario_id}", test_context.root_ca_cert, test_context.root_ca_key)
-            pke = jks.PrivateKeyEntry.new('c2-server-cert', [crypto.dump_certificate(crypto.FILETYPE_ASN1, c2_cert)], crypto.dump_privatekey(crypto.FILETYPE_ASN1, c2_key), 'rsa_raw')
+            pke = jks.PrivateKeyEntry.new('c2-server-cert', [dump_cert(c2_cert, encoding_type=serialization.Encoding.DER)], dump_key(c2_key, encoding_type=serialization.Encoding.DER), 'rsa_raw')
             server_keystore = jks.KeyStore.new('jks', [pke])
             server_keystore_content = server_keystore.saves('abcdefgh')
             self.files.append(File("/opt/minifi-c2/minifi-c2-current/certs/minifi-c2-server-keystore.jks", server_keystore_content, permissions=0o644))
 
-            private_key_pem = crypto.dump_privatekey(crypto.FILETYPE_PEM, test_context.root_ca_key)
+            private_key_pem = dump_key(test_context.root_ca_key)
             private_key = load_pem_private_key(private_key_pem, password=None)
-            certificate_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, test_context.root_ca_cert)
+            certificate_pem = dump_cert(test_context.root_ca_cert)
             certificate = x509.load_pem_x509_certificate(certificate_pem)
             pkcs12_data = pkcs12.serialize_key_and_certificates(
                 name=None,

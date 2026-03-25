@@ -18,18 +18,19 @@ import gzip
 import logging
 import os
 from pathlib import Path
-from OpenSSL import crypto
 
 from minifi_test_framework.containers.file import File
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.minifi.nifi_flow_definition import NifiFlowDefinition
 from minifi_test_framework.containers.host_file import HostFile
 from minifi_test_framework.core.ssl_utils import make_server_cert
 
+from minifi_test_framework.core.ssl_utils import dump_cert, dump_key
 
-class NifiContainer(Container):
+
+class NifiContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext, command: list[str] | None = None, use_ssl: bool = False):
         self.flow_definition = NifiFlowDefinition()
         name = f"nifi-{test_context.scenario_id}"
@@ -78,9 +79,9 @@ class NifiContainer(Container):
         self.host_files.append(HostFile("/scripts/convert_cert_to_jks.sh", os.path.join(resource_dir, "convert_cert_to_jks.sh")))
 
         nifi_client_cert, nifi_client_key = make_server_cert(common_name=f"nifi-{test_context.scenario_id}", ca_cert=test_context.root_ca_cert, ca_key=test_context.root_ca_key)
-        self.files.append(File("/tmp/resources/root_ca.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)))
-        self.files.append(File("/tmp/resources/nifi_client.crt", crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=nifi_client_cert)))
-        self.files.append(File("/tmp/resources/nifi_client.key", crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=nifi_client_key)))
+        self.files.append(File("/tmp/resources/root_ca.crt", dump_cert(test_context.root_ca_cert)))
+        self.files.append(File("/tmp/resources/nifi_client.crt", dump_cert(nifi_client_cert)))
+        self.files.append(File("/tmp/resources/nifi_client.key", dump_key(nifi_client_key)))
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_json()

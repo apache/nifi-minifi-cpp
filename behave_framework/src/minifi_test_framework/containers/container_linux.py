@@ -15,29 +15,31 @@
 #  limitations under the License.
 #
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import json
 import logging
 import os
 import shlex
-import tempfile
 import tarfile
+import tempfile
 import uuid
-
-import docker
 from docker.models.networks import Network
-
+from minifi_test_framework.containers.container_protocol import ContainerProtocol
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
+from typing import TYPE_CHECKING
+
+import docker
 
 if TYPE_CHECKING:
     from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class Container:
-    def __init__(self, image_name: str, container_name: str, network: Network, command: str | None = None, entrypoint: str | None = None):
+class LinuxContainer(ContainerProtocol):
+    def __init__(self, image_name: str, container_name: str, network: Network, command: str | None = None,
+                 entrypoint: str | None = None):
+        super().__init__()
         self.image_name: str = image_name
         self.container_name: str = container_name
         self.network: Network = network
@@ -121,10 +123,11 @@ class Container:
             pass
         try:
             logging.info(f"Creating and starting container '{self.container_name}'...")
-            self.container = self.client.containers.run(
-                image=self.image_name, name=self.container_name, ports=self.ports,
-                environment=self.environment, volumes=self.volumes, network=self.network.name,
-                command=self.command, entrypoint=self.entrypoint, user=self.user, detach=True)
+            self.container = self.client.containers.run(image=self.image_name, name=self.container_name,
+                                                        ports=self.ports, environment=self.environment,
+                                                        volumes=self.volumes, network=self.network.name,
+                                                        command=self.command, entrypoint=self.entrypoint,
+                                                        user=self.user, detach=True)
         except Exception as e:
             logging.error(f"Error starting container: {e}")
             raise
@@ -212,7 +215,8 @@ class Container:
         exit_code, output = self.exec_run("sh -c {}".format(shlex.quote(command)))
 
         if exit_code != 0:
-            logging.debug("While looking for regex %s in directory %s, grep returned exit code %d, output: %s", regex_str, directory_path, exit_code, output)
+            logging.debug("While looking for regex %s in directory %s, grep returned exit code %d, output: %s",
+                          regex_str, directory_path, exit_code, output)
         return exit_code == 0
 
     def path_with_content_exists(self, path: str, content: str) -> bool:
@@ -376,7 +380,8 @@ class Container:
 
             return os.path.join(temp_dir, os.path.basename(directory_path.strip('/')))
         except Exception as e:
-            logging.error(f"Error extracting files from directory path '{directory_path}' from container '{self.container_name}': {e}")
+            logging.error(
+                f"Error extracting files from directory path '{directory_path}' from container '{self.container_name}': {e}")
             return None
 
     def _read_files_from_directory(self, directory_path: str) -> list[str] | None:
@@ -479,3 +484,11 @@ class Container:
             return True
 
         return False
+
+    def get_memory_usage(self) -> int | None:
+        exit_code, output = self.exec_run(["awk", "/VmRSS/ { printf \"%d\\n\", $2 }", "/proc/1/status"])
+        if exit_code != 0:
+            return None
+        memory_usage_in_bytes = int(output.strip()) * 1024
+        logging.info(f"{self.container_name} memory usage: {memory_usage_in_bytes} bytes")
+        return memory_usage_in_bytes
