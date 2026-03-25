@@ -43,7 +43,7 @@ void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, c
   auto classes = utils::string::splitAndTrimRemovingEmpty(class_definitions, ",");
   std::unordered_set<std::string> unique_classes{classes.begin(), classes.end()};
   for (const std::string& clazz : unique_classes) {
-    auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
+    auto response_nodes = response_node_loader_->loadResponseNodes(clazz, nullptr);
     if (response_nodes.empty()) {
       continue;
     }
@@ -153,7 +153,7 @@ std::optional<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::g
   };
 
   if (!metrics_class.empty()) {
-    auto metrics_nodes = response_node_loader_->loadResponseNodes(metrics_class);
+    auto metrics_nodes = response_node_loader_->loadResponseNodes(metrics_class, nullptr);
     if (!metrics_nodes.empty()) {
       return createReportedNode(metrics_nodes);
     }
@@ -193,7 +193,7 @@ std::vector<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::get
   return reported_nodes;
 }
 
-void C2MetricsPublisher::loadMetricNodes() {
+void C2MetricsPublisher::loadMetricNodes(core::ProcessGroup*) {
   gsl_Expects(response_node_loader_ && configuration_);
   if (!root_response_nodes_.empty()) {
     return;
@@ -205,7 +205,7 @@ void C2MetricsPublisher::loadMetricNodes() {
     std::unordered_set<std::string> unique_classes{classes.begin(), classes.end()};
 
     for (const std::string& clazz : unique_classes) {
-      auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
+      auto response_nodes = response_node_loader_->loadResponseNodes(clazz, nullptr);
       if (response_nodes.empty()) {
         continue;
       }

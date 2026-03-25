@@ -54,7 +54,7 @@ void MetricsPublisherStore::initialize(core::controller::ControllerServiceProvid
 void MetricsPublisherStore::loadMetricNodes(core::ProcessGroup* root) {
   response_node_loader_->setNewConfigRoot(root);
   for (const auto& [name, publisher]: metrics_publishers_) {
-    publisher->loadMetricNodes();
+    publisher->loadMetricNodes(root);
   }
 }
 

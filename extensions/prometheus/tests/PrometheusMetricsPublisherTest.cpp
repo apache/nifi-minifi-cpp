@@ -111,7 +111,7 @@ TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithDummyExposer, "Test adding me
   }
   configuration_->set(Configure::nifi_metrics_publisher_agent_identifier, "AgentId-1");
   publisher_->initialize(configuration_, response_node_loader_);
-  publisher_->loadMetricNodes();
+  publisher_->loadMetricNodes(nullptr);
   auto stored_metrics = exposer_->getMetrics();
   std::vector<std::string> valid_metrics_without_flow = {"QueueMetrics", "RepositoryMetrics", "DeviceInfoNode", "FlowInformation", "AgentInformation"};
   REQUIRE(stored_metrics);

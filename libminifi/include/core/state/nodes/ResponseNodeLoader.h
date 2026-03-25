@@ -49,7 +49,7 @@ class ResponseNodeLoaderImpl : public ResponseNodeLoader {
   void clearConfigRoot() override;
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) override;
   void setStateMonitor(state::StateMonitor* update_sink) override;
-  std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz) override;
+  std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) override;
   state::response::NodeReporter::ReportedNode getAgentManifest() const override;
 
  private:

@@ -121,7 +121,6 @@ std::vector<SharedResponseNode> ResponseNodeLoaderImpl::getResponseNodes(const s
   }
   auto response_node = getSystemMetricsNode(clazz);
   if (!response_node) {
-    logger_->log_error("{}", response_node.error());
     return {};
   }
   return {*response_node};
@@ -245,10 +244,12 @@ void ResponseNodeLoaderImpl::initializeFlowInformation(const SharedResponseNode&
   }
 }
 
-std::vector<SharedResponseNode> ResponseNodeLoaderImpl::loadResponseNodes(const std::string& clazz) {
+std::vector<SharedResponseNode> ResponseNodeLoaderImpl::loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) {
   auto response_nodes = getResponseNodes(clazz);
   if (response_nodes.empty()) {
-    logger_->log_error("No metric defined for {}", clazz);
+    if (root) {
+      logger_->log_error("No metric defined for {}", clazz);
+    }
     return {};
   }
 
