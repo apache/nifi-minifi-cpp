@@ -16,7 +16,7 @@
 import docker
 import os
 
-from minifi_test_framework.core.hooks import common_after_scenario, common_before_scenario, get_minifi_container_image
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario, get_minifi_container_image
 from steps.kubernetes_proxy import KubernetesProxy
 
 

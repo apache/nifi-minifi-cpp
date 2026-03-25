@@ -15,7 +15,7 @@
 
 from typing import Protocol
 
-from minifi_test_framework.minifi.flow_definition import FlowDefinition
+from minifi_behave.minifi.flow_definition import FlowDefinition
 
 
 class MinifiProtocol(Protocol):

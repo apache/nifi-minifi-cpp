@@ -12,8 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from minifi_test_framework.core.hooks import common_before_scenario
-from minifi_test_framework.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_before_scenario
+from minifi_behave.core.hooks import common_after_scenario
 
 
 def before_scenario(context, scenario):
