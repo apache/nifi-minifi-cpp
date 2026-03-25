@@ -138,10 +138,10 @@ bool SFTPTestServer::stop() {
     logger_->log_debug("Deleting port file {}", port_file_path_);
     ::unlink(port_file_path_.c_str());
   }
-#endif
   server_pid_ = -1;
   started_ = false;
   port_file_path_ = "";
+#endif
   return true;
 }
 
