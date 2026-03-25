@@ -55,14 +55,14 @@ class ListAzureBlobStorageTestsFixture {
 
     plan_->addProcessor(std::move(list_azure_blob_storage_unique_ptr), "ListAzureBlobStorage", { {"success", "d"} });
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
-    plan_->setProperty(logattribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
+    CHECK(plan_->setProperty(logattribute, minifi::processors::LogAttribute::FlowFilesToLog, "0"));
 
     azure_storage_cred_service_ = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
   }
 
   void setDefaultCredentials() {
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
   }
 
   ListAzureBlobStorageTestsFixture(ListAzureBlobStorageTestsFixture&&) = delete;
@@ -87,82 +87,80 @@ namespace {
 using namespace std::literals::chrono_literals;
 
 TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Test credentials settings", "[azureStorageCredentials]") {
-  plan_->setProperty(list_azure_blob_storage_, "Container Name", CONTAINER_NAME);
+  CHECK(plan_->setProperty(list_azure_blob_storage_, "Container Name", CONTAINER_NAME));
 
   SECTION("No credentials are set") {
     REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
   }
 
   SECTION("No account key or SAS is set") {
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
     REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
   }
 
   SECTION("Credentials set in Azure Storage Credentials Service") {
-    auto azure_storage_cred_service = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService"));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
   SECTION("Overriding credentials set in Azure Storage Credentials Service with connection string") {
-    auto azure_storage_cred_service = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(azure_storage_cred_service, "Connection String", CONNECTION_STRING);
-    plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Connection String", CONNECTION_STRING));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService"));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   }
 
   SECTION("Account name and key set in properties") {
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
   SECTION("Account name and SAS token set in properties") {
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "SAS Token", SAS_TOKEN);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "SAS Token", SAS_TOKEN));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
   }
 
   SECTION("Account name and SAS token with question mark set in properties") {
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "SAS Token", "?" + SAS_TOKEN);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "SAS Token", "?" + SAS_TOKEN));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
   }
 
   SECTION("Endpoint suffix overriden") {
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(list_azure_blob_storage_, "Common Storage Account Endpoint Suffix", ENDPOINT_SUFFIX);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Common Storage Account Endpoint Suffix", ENDPOINT_SUFFIX));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY + ";EndpointSuffix=" + ENDPOINT_SUFFIX);
   }
 
   SECTION("Use connection string") {
-    plan_->setProperty(list_azure_blob_storage_, "Connection String", CONNECTION_STRING);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Connection String", CONNECTION_STRING));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   }
 
   SECTION("Overriding credentials with connection string") {
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(list_azure_blob_storage_, "Connection String", CONNECTION_STRING);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Connection String", CONNECTION_STRING));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
@@ -186,9 +184,9 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Test credentials settings", 
       credential_configuration_strategy_string = "Workload Identity";
     }
 
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Credential Configuration Strategy", credential_configuration_strategy_string);
-    plan_->setProperty(list_azure_blob_storage_, "Managed Identity Client ID", managed_identity_client_id);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Credential Configuration Strategy", credential_configuration_strategy_string));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Managed Identity Client ID", managed_identity_client_id));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     CHECK(passed_params.credentials.buildConnectionString().empty());
@@ -217,12 +215,11 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Test credentials settings", 
       credential_configuration_strategy_string = "Workload Identity";
     }
 
-    auto azure_storage_cred_service = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(azure_storage_cred_service, "Credential Configuration Strategy", credential_configuration_strategy_string);
-    plan_->setProperty(azure_storage_cred_service, "Common Storage Account Endpoint Suffix", "core.chinacloudapi.cn");
-    plan_->setProperty(azure_storage_cred_service, "Managed Identity Client ID", managed_identity_client_id);
-    plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Credential Configuration Strategy", credential_configuration_strategy_string));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Common Storage Account Endpoint Suffix", "core.chinacloudapi.cn"));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Managed Identity Client ID", managed_identity_client_id));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService"));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     CHECK(passed_params.credentials.buildConnectionString().empty());
@@ -234,59 +231,55 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Test credentials settings", 
   }
 
   SECTION("Azure Storage Credentials Service overrides properties") {
-    auto azure_storage_cred_service = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(list_azure_blob_storage_, "Connection String", CONNECTION_STRING);
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService"));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Connection String", CONNECTION_STRING));
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
   SECTION("Azure Storage Credentials Service is set with invalid parameters") {
-    auto azure_storage_cred_service = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService"));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
     REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
   }
 
   SECTION("Azure Storage Credentials Service name is invalid") {
-    auto azure_storage_cred_service = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "invalid_name");
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "invalid_name"));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
     REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
   }
 
   SECTION("Both SAS Token and Storage Account Key cannot be set in credentials service") {
-    auto azure_storage_cred_service = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(azure_storage_cred_service, "SAS Token", SAS_TOKEN);
-    plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(azure_storage_cred_service_, "SAS Token", SAS_TOKEN));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Azure Storage Credentials Service", "AzureStorageCredentialsService"));
     REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
   }
 
   SECTION("Both SAS Token and Storage Account Key cannot be set in properties") {
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
-    plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
-    plan_->setProperty(list_azure_blob_storage_, "SAS Token", SAS_TOKEN);
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Name", STORAGE_ACCOUNT_NAME));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY));
+    CHECK(plan_->setProperty(list_azure_blob_storage_, "SAS Token", SAS_TOKEN));
     REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
   }
 }
 
 TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", "[ListAzureBlobStorage]") {
   setDefaultCredentials();
-  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName, CONTAINER_NAME);
-  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX);
-  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::none));
+  CHECK(plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName, CONTAINER_NAME));
+  CHECK(plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX));
+  CHECK(plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::none)));
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto run_assertions = [this]() {
@@ -319,9 +312,9 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", 
 
 TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Do not list same files the second time when timestamps are tracked", "[ListAzureBlobStorage]") {
   setDefaultCredentials();
-  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName, CONTAINER_NAME);
-  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX);
-  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::timestamps));
+  CHECK(plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName, CONTAINER_NAME));
+  CHECK(plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX));
+  CHECK(plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::timestamps)));
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_blob_storage_ptr_->getPassedListParams();

@@ -48,7 +48,10 @@ class StandardControllerServiceProvider : public ControllerServiceProvider  {
     stopEnableRetryThread();
   }
 
-  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string& type, const std::string& id) override;
+  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string& type,
+      const std::string& id,
+      ProcessGroup* parent_group,
+      const std::optional<std::string>& alternative_key) override;
   void enableAllControllerServices() override;
   void disableAllControllerServices() override;
   void clearControllerServices() override;
