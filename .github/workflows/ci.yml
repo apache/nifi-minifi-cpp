@@ -166,6 +166,7 @@ jobs:
         -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=ON
         -DUSE_SHARED_LIBS=OFF
         -DMINIFI_PERFORMANCE_TESTS=ON
+      SCCACHE_GHA_ENABLED: "true"
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
@@ -210,6 +211,9 @@ jobs:
         with:
           name: cpack_error
           path: D:/a/nifi-minifi-cpp/nifi-minifi-cpp/build/_CPack_Packages/win64/WIX/wix.log
+      - name: Run sccache stat for check
+        shell: bash
+        run: sccache --show-stats
   ubuntu_22_04_clang_arm:
     name: "Ubuntu 22.04 clang aarch64"
     runs-on: ubuntu-22.04-arm
