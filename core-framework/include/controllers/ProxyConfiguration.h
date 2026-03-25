@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,16 +17,18 @@
 #pragma once
 
 #include <string>
-#include <cstdint>
+#include <optional>
 
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 
-namespace org::apache::nifi::minifi::aws {
+namespace org::apache::nifi::minifi::controllers {
 
-struct ProxyOptions {
-  std::string host;
-  uint32_t port = 0;
-  std::string username;
-  std::string password;
+struct ProxyConfiguration {
+  ProxyType proxy_type;
+  std::string proxy_host;
+  std::optional<uint16_t> proxy_port;
+  std::optional<std::string> proxy_user;
+  std::optional<std::string> proxy_password;
 };
 
-}  // namespace org::apache::nifi::minifi::aws
+}  // namespace org::apache::nifi::minifi::controllers

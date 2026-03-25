@@ -43,7 +43,8 @@ class AzureBlobStorageClient : public BlobStorageClient {
   std::vector<Azure::Storage::Blobs::Models::BlobItem> listContainer(const ListAzureBlobStorageParameters& params) override;
 
  private:
-  static Azure::Storage::Blobs::BlobContainerClient createClient(const AzureStorageCredentials& credentials, const std::string &container_name);
+  static Azure::Storage::Blobs::BlobContainerClient createClient(const AzureStorageCredentials& credentials, const std::string &container_name,
+    const std::optional<minifi::controllers::ProxyConfiguration>& proxy_configuration);
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureBlobStorageClient>::getLogger()};
 };
