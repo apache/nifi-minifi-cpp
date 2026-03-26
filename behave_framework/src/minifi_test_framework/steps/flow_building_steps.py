@@ -216,7 +216,7 @@ def set_scheduling_period(context: MinifiTestContext, processor_name: str, durat
 
 
 @given("parameter context name is set to '{context_name}'")
-def set_parameter_context_name(context: MinifiTestContext, context_name: str):
+def add_parameter_context(context: MinifiTestContext, context_name: str):
     context.get_or_create_default_minifi_container().flow_definition.parameter_contexts.append(ParameterContext(context_name))
 
 
@@ -392,5 +392,5 @@ def nifi_send_to_rpg_output_port(context: MinifiTestContext, port_name: str, rpg
 
 
 @given("the connection going to {destination} has \"drop empty\" set")
-def set_drop_empty_for_connection(context: MinifiTestContext, destination: str):
+def set_drop_empty_flag_for_connection(context: MinifiTestContext, destination: str):
     context.get_or_create_default_minifi_container().flow_definition.set_drop_empty_for_destination(destination)

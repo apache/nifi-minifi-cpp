@@ -41,7 +41,7 @@ def setup_syslog_udp_client(context: MinifiTestContext):
 
 
 @step('there is an accessible PLC with modbus enabled')
-def setup_accessible_plc_with_modbus(context: MinifiTestContext):
+def setup_plc_with_modbus(context: MinifiTestContext):
     modbus_container = context.containers["diag-slave-tcp"] = DiagSlave(context)
     assert modbus_container.deploy(context)
 

@@ -245,7 +245,7 @@ def verify_exact_files_in_directory(context: MinifiTestContext, directory: str, 
 
 
 @then('exactly these files are in the "{directory}" directory in less than {duration}: ""')
-def verify_empty_files_string_in_directory(context, directory, duration):
+def verify_no_files_in_directory(context, directory, duration):
     context.execute_steps(f'then no files are placed in the "{directory}" directory in {duration} of running time')
 
 
