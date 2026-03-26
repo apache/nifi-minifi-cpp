@@ -39,10 +39,10 @@ To write additional tests, create a `features` folder within your extension's di
 ### Example Feature
 
 ```gherkin
-Feature: File system operations are handled by the GetFile, PutFile, ListFile, and FetchFile processors
+Feature: File system operations are handled by the GetFile and PutFile processors
   In order to store and access data on the local file system
   As a user of MiNiFi
-  I need to have GetFile, PutFile, ListFile, and FetchFile processors
+  I need to have GetFile and PutFile processors
 
   Scenario: Get and put operations run in a simple flow
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
