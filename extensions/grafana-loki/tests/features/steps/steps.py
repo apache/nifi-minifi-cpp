@@ -25,39 +25,39 @@ from containers.reverse_proxy_container import ReverseProxyContainer
 
 
 @step("a Grafana Loki server is set up")
-def step_impl(context: MinifiTestContext):
+def setup_grafana_loki_server(context: MinifiTestContext):
     context.containers["grafana-loki-server"] = GrafanaLokiContainer(context, GrafanaLokiOptions())
 
 
 @step("a Grafana Loki server is set up with multi-tenancy enabled")
-def step_impl(context: MinifiTestContext):
+def setup_grafana_loki_server_multitenant(context: MinifiTestContext):
     context.containers["grafana-loki-server"] = GrafanaLokiContainer(context, GrafanaLokiOptions(enable_multi_tenancy=True))
 
 
 @step("a Grafana Loki server with SSL is set up")
-def step_impl(context: MinifiTestContext):
+def setup_grafana_loki_server_ssl(context: MinifiTestContext):
     context.containers["grafana-loki-server"] = GrafanaLokiContainer(context, GrafanaLokiOptions(enable_ssl=True))
 
 
 @then("\"{lines}\" lines are published to the Grafana Loki server in less than {timeout_seconds:d} seconds")
 @then("\"{lines}\" line is published to the Grafana Loki server in less than {timeout_seconds:d} seconds")
-def step_impl(context, lines: str, timeout_seconds: int):
+def verify_lines_published_to_loki(context, lines: str, timeout_seconds: int):
     assert context.containers["grafana-loki-server"].are_lines_present(lines, timeout_seconds, ssl=False) or log_due_to_failure(context)
 
 
 @then("\"{lines}\" lines are published to the \"{tenant_id}\" tenant on the Grafana Loki server in less than {timeout_seconds:d} seconds")
 @then("\"{lines}\" line is published to the \"{tenant_id}\" tenant on the Grafana Loki server in less than {timeout_seconds:d} seconds")
-def step_impl(context, lines: str, timeout_seconds: int, tenant_id: str):
+def verify_lines_published_to_loki_tenant(context, lines: str, timeout_seconds: int, tenant_id: str):
     assert context.containers["grafana-loki-server"].are_lines_present(lines, timeout_seconds, ssl=False, tenant_id=tenant_id) or log_due_to_failure(context)
 
 
 @then("\"{lines}\" lines are published using SSL to the Grafana Loki server in less than {timeout_seconds:d} seconds")
 @then("\"{lines}\" line is published using SSL to the Grafana Loki server in less than {timeout_seconds:d} seconds")
-def step_impl(context, lines: str, timeout_seconds: int):
+def verify_lines_published_to_loki_ssl(context, lines: str, timeout_seconds: int):
     assert context.containers["grafana-loki-server"].are_lines_present(lines, timeout_seconds, ssl=True) or log_due_to_failure(context)
 
 
 # Nginx reverse proxy
 @step('a reverse proxy is set up to forward requests to the Grafana Loki server')
-def step_impl(context):
+def setup_reverse_proxy_for_loki(context):
     context.containers["reverse-proxy"] = ReverseProxyContainer(context)

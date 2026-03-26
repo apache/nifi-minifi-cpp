@@ -27,7 +27,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
     And the Minifi logs do not contain the following message: "Failed to parse json response: The document is empty. at 0" after 0 seconds
 
   Scenario: MiNiFi can get flow config from C2 server through flow url when it is not available at start
-    Given flow configuration path is set up in flow url property
+    Given the C2 flow URL property is configured
     And C2 is enabled in MiNiFi
     And a directory at "/tmp/input" has a file with the content "test"
     And a MiNiFi C2 server is started
