@@ -40,9 +40,9 @@ def enable_minifi_openssl_fips_mode(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().enable_openssl_fips_mode()
 
 
-@given("flow configuration path is set up in flow url property")
-def setup_flow_config_path_in_url(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().fetch_flow_config_from_flow_url()
+@given("the C2 flow URL property is configured")
+def configure_c2_flow_url(context: MinifiTestContext):
+    context.get_or_create_default_minifi_container().configure_c2_flow_url()
 
 
 @given("SSL properties are set in MiNiFi")

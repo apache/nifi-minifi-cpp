@@ -134,6 +134,7 @@ def bind_host_resource_file_to_container_path(context: MinifiTestContext, filena
 
 @step("after {duration} have passed")
 @step("after {duration} has passed")
+@step("{duration} later")
 def wait_duration(context: MinifiTestContext, duration: str):
     time.sleep(humanfriendly.parse_timespan(duration))
 
@@ -186,11 +187,6 @@ def setup_nifi_container_with_ssl(context: MinifiTestContext):
 @when('NiFi is started')
 def start_nifi(context):
     assert context.containers["nifi"].deploy(context) or context.containers["nifi"].log_app_output()
-
-
-@step("{duration} later")
-def wait_duration_later(context: MinifiTestContext, duration: str):
-    time.sleep(humanfriendly.parse_timespan(duration))
 
 
 @step("the MiNiFi deployment timeout is set to {timeout_seconds:d} seconds")
