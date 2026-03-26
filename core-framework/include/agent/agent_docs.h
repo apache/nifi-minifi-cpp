@@ -16,18 +16,17 @@
  */
 #pragma once
 
-#include "minifi-cpp/agent/agent_docs.h"
-
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "utils/StringUtils.h"
 #include "core/ClassName.h"
-#include "minifi-cpp/core/OutputAttribute.h"
-#include "minifi-cpp/core/ControllerServiceApi.h"
+#include "minifi-cpp/agent/agent_docs.h"
+#include "minifi-cpp/core/ControllerServiceType.h"
 #include "minifi-cpp/core/DynamicProperty.h"
+#include "minifi-cpp/core/OutputAttribute.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -44,8 +43,8 @@ inline auto toVector(std::span<const core::OutputAttributeReference> attributes)
   return std::vector<core::OutputAttribute>(attributes.begin(), attributes.end());
 }
 
-inline auto toVector(std::span<const core::ControllerServiceApiDefinition> apis) {
-  return std::vector<core::ControllerServiceApi>(apis.begin(), apis.end());
+inline auto toVector(std::span<const core::ControllerServiceTypeDefinition> apis) {
+  return std::vector<core::ControllerServiceType>(apis.begin(), apis.end());
 }
 
 inline auto toVector(std::span<const core::DynamicPropertyDefinition> properties) {

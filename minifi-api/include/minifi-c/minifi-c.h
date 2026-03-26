@@ -95,6 +95,8 @@ typedef struct MinifiExtension MinifiExtension;
 typedef struct MinifiPublishedMetrics MinifiPublishedMetrics;
 typedef struct MinifiAgent MinifiAgent;
 
+typedef struct MinifiControllerServiceContext MinifiControllerServiceContext;
+
 typedef enum MinifiStatus : uint32_t {
   MINIFI_STATUS_SUCCESS = 0,
   MINIFI_STATUS_UNKNOWN_ERROR = 1,
@@ -148,6 +150,12 @@ typedef struct MinifiProcessorMetadata {
   MinifiLogger* logger;  // borrowed reference, live until the processor is live
 } MinifiProcessorMetadata;
 
+typedef struct MinifiControllerServiceMetadata {
+  MinifiStringView uuid;
+  MinifiStringView name;
+  MinifiLogger* logger;  // borrowed reference, live until the controller service is live
+} MinifiControllerServiceMetadata;
+
 typedef struct MinifiProcessorCallbacks {
   MINIFI_OWNED void*(*create)(MinifiProcessorMetadata);
   void(*destroy)(MINIFI_OWNED void*);
@@ -158,6 +166,13 @@ typedef struct MinifiProcessorCallbacks {
   void(*onUnSchedule)(void*);
   MINIFI_OWNED MinifiPublishedMetrics*(*calculateMetrics)(void*);
 } MinifiProcessorCallbacks;
+
+typedef struct MinifiControllerServiceCallbacks {
+  MINIFI_OWNED void*(*create)(MinifiControllerServiceMetadata);
+  void(*destroy)(MINIFI_OWNED void*);
+  MinifiStatus(*enable)(void*, MinifiControllerServiceContext*);
+  void(*notifyStop)(void*);
+} MinifiControllerServiceCallbacks;
 
 typedef struct MinifiProcessorClassDefinition {
   MinifiStringView full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::GenerateFlowFile'
@@ -178,6 +193,16 @@ typedef struct MinifiProcessorClassDefinition {
   MinifiProcessorCallbacks callbacks;
 } MinifiProcessorClassDefinition;
 
+typedef struct MinifiControllerServiceClassDefinition {
+  MinifiStringView full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService
+  MinifiStringView description;
+  size_t class_properties_count;
+  const MinifiPropertyDefinition* class_properties_ptr;
+
+  MinifiControllerServiceCallbacks callbacks;
+} MinifiControllerServiceClassDefinition;
+
+
 typedef struct MinifiExtensionCreateInfo {
   MinifiStringView name;
   MinifiStringView version;
@@ -185,6 +210,8 @@ typedef struct MinifiExtensionCreateInfo {
   void* user_data;
   size_t processors_count;
   const MinifiProcessorClassDefinition* processors_ptr;
+  size_t controller_services_count;
+  const MinifiControllerServiceClassDefinition* controller_services_ptr;
 } MinifiExtensionCreateInfo;
 
 MinifiStatus MINIFI_CREATE_EXTENSION_FN(MinifiExtension* extension, const MinifiExtensionCreateInfo* create_info);
@@ -194,6 +221,9 @@ MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flowfile,
                                              void(*cb)(void* user_ctx, MinifiStringView property_value), void* user_ctx);
 MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext* context, MinifiStringView property_name);
+
+MinifiStatus MinifiProcessContextGetControllerService(MinifiProcessContext*, MinifiStringView controller_service_name,
+    MinifiStatus(*cb)(void* user_ctx, void* service, MinifiStringView type, MinifiStringView group, MinifiStringView version), void* user_ctx);
 
 void MinifiLoggerSetMaxLogSize(MinifiLogger*, int32_t);
 void MinifiLoggerLogString(MinifiLogger*, MinifiLogLevel, MinifiStringView);
@@ -220,6 +250,11 @@ MinifiStatus MinifiFlowFileSetAttribute(MinifiProcessSession* session, MinifiFlo
 MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name,
                                       void(*cb)(void* user_ctx, MinifiStringView attribute_value), void* user_ctx);
 void MinifiFlowFileGetAttributes(MinifiProcessSession* session, MinifiFlowFile* flowfile, void(*cb)(void* user_ctx, MinifiStringView attribute_name, MinifiStringView attribute_value), void* user_ctx);
+
+MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceContext* context,
+    MinifiStringView property_name,
+    void(*cb)(void* user_ctx, MinifiStringView property_value),
+    void* user_ctx);
 
 #ifdef __cplusplus
 }  // extern "C"

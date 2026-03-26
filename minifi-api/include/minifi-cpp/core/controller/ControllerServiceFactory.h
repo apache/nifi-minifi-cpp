@@ -17,10 +17,11 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 #include <utility>
-#include "minifi-cpp/core/controller/ControllerServiceMetadata.h"
+
+#include "minifi-cpp/core/ControllerServiceMetadata.h"
 
 namespace org::apache::nifi::minifi::core::controller {
 

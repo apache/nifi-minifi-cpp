@@ -21,21 +21,22 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-#include <set>
-#include <unordered_map>
 
-#include "civetweb.h"
 #include "CivetServer.h"
-#include "concurrentqueue.h"
-#include "rapidjson/document.h"
-#include "utils/HTTPUtils.h"
 #include "ServerAwareHandler.h"
 #include "c2/C2Payload.h"
+#include "civetweb.h"
+#include "concurrentqueue.h"
+#include "minifi-cpp/properties/Configure.h"
 #include "properties/Configure.h"
+#include "rapidjson/document.h"
 #include "unit/Catch.h"
+#include "utils/HTTPUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
