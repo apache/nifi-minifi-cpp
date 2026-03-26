@@ -14,12 +14,12 @@
 # limitations under the License.
 from behave import step, then
 
-from minifi_test_framework.steps import checking_steps        # noqa: F401
-from minifi_test_framework.steps import configuration_steps   # noqa: F401
-from minifi_test_framework.steps import core_steps            # noqa: F401
-from minifi_test_framework.steps import flow_building_steps   # noqa: F401
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.core.helpers import log_due_to_failure
+from minifi_behave.steps import checking_steps        # noqa: F401
+from minifi_behave.steps import configuration_steps   # noqa: F401
+from minifi_behave.steps import core_steps            # noqa: F401
+from minifi_behave.steps import flow_building_steps   # noqa: F401
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.helpers import log_due_to_failure
 from containers.grafana_loki_container import GrafanaLokiContainer, GrafanaLokiOptions
 from containers.reverse_proxy_container import ReverseProxyContainer
 

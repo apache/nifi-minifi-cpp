@@ -16,8 +16,8 @@
 #
 
 from behave import given, when, then
-from minifi_test_framework.core.helpers import retry_check
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.helpers import retry_check
+from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 @given('controller socket properties are set up')

@@ -23,7 +23,7 @@ import functools
 from collections.abc import Callable
 
 import docker
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 def log_due_to_failure(context: MinifiTestContext | None):

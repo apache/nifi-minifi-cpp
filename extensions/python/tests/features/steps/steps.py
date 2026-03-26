@@ -16,12 +16,12 @@ import os
 import docker
 from behave import given
 
-from minifi_test_framework.steps import checking_steps        # noqa: F401
-from minifi_test_framework.steps import configuration_steps   # noqa: F401
-from minifi_test_framework.steps import core_steps            # noqa: F401
-from minifi_test_framework.steps import flow_building_steps   # noqa: F401
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
+from minifi_behave.steps import checking_steps        # noqa: F401
+from minifi_behave.steps import configuration_steps   # noqa: F401
+from minifi_behave.steps import core_steps            # noqa: F401
+from minifi_behave.steps import flow_building_steps   # noqa: F401
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 
 
 class PythonWithDependenciesOptions:

@@ -20,14 +20,14 @@ import string
 import humanfriendly
 from behave import step, then
 
-from minifi_test_framework.containers.directory import Directory
-from minifi_test_framework.steps import checking_steps        # noqa: F401
-from minifi_test_framework.steps import configuration_steps   # noqa: F401
-from minifi_test_framework.steps import core_steps            # noqa: F401
-from minifi_test_framework.steps import flow_building_steps   # noqa: F401
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.minifi.processor import Processor
-from minifi_test_framework.core.helpers import wait_for_condition, log_due_to_failure
+from minifi_behave.containers.directory import Directory
+from minifi_behave.steps import checking_steps        # noqa: F401
+from minifi_behave.steps import configuration_steps   # noqa: F401
+from minifi_behave.steps import core_steps            # noqa: F401
+from minifi_behave.steps import flow_building_steps   # noqa: F401
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.minifi.processor import Processor
+from minifi_behave.core.helpers import wait_for_condition, log_due_to_failure
 
 from containers.s3_server_container import S3ServerContainer
 from containers.kinesis_server_container import KinesisServerContainer

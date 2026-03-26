@@ -15,8 +15,8 @@
 
 import logging
 
-from minifi_test_framework.containers.minifi_container import MinifiContainer
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_behave.containers.minifi_container import MinifiContainer
+from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class MinifiAsPodInKubernetesCluster(MinifiContainer):

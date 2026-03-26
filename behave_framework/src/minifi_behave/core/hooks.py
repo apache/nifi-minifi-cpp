@@ -23,8 +23,8 @@ from pathlib import Path
 from behave.model import Scenario
 from behave.runner import Context
 
-from minifi_test_framework.core.ssl_utils import make_self_signed_cert
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import make_self_signed_cert
+from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 def get_minifi_container_image():
