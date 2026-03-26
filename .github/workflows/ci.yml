@@ -182,7 +182,7 @@ jobs:
             ${{ runner.os }}-2022-sccache-refs/heads/main
             ${{ runner.os }}-2022-sccache
       - name: Set up Python
-        run: choco install -y python sccache & refreshenv
+        run: choco install -y python sccache && refreshenv
         shell: cmd
       - name: Install sqliteodbc driver
         run: |
