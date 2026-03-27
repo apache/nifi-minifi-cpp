@@ -4,7 +4,6 @@ env:
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
     -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DENABLE_LLAMACPP=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON
-  SCCACHE_GHA_ENABLE: true
   CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
   macos_xcode:
@@ -59,9 +58,9 @@ jobs:
         -DMINIFI_PERFORMANCE_TESTS=ON
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: cache restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: macos-arm-xcode-ccache-${{github.ref}}-${{github.sha}}
@@ -71,7 +70,7 @@ jobs:
       - id: install_dependencies
         run: |
           brew update
-          brew install ossp-uuid bison flex ccache sqliteodbc automake autoconf ninja
+          brew install ossp-uuid bison flex ccache sqliteodbc automake autoconf
       - id: setup_env
         name: setup enviroment
         run: |
@@ -83,7 +82,7 @@ jobs:
           python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python main.py --noninteractive --skip-compiler-install --cmake-options="-DCMAKE_C_FLAGS=${CPPFLAGS} ${CFLAGS} -DCMAKE_CXX_FLAGS=${CPPFLAGS} ${CXXFLAGS}" --minifi-options="${MACOS_MINIFI_OPTIONS}"
         working-directory: bootstrap
       - name: cache save
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -99,12 +98,12 @@ jobs:
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
           if [ "$(ls -A /cores)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: macos-coredumps
           path: /cores
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: macos-binaries
@@ -170,20 +169,16 @@ jobs:
       - name: Support longpaths
         run: git config --system core.longpaths true
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Restore cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
-          key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
+          key: ${{ runner.os }}-2022-sccache-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-2022-sccache-${{ github.ref }}
-            ${{ runner.os }}-2022-sccache-refs/heads/main
-            ${{ runner.os }}-2022-sccache
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad  # v0.0.9
+            ${{ runner.os }}-2022-sccache-
       - name: Set up Python
-        run: choco -y install python & refreshenv
+        run: choco install -y python sccache && refreshenv
         shell: cmd
       - name: Install sqliteodbc driver
         run: |
@@ -191,16 +186,16 @@ jobs:
           if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "a4804e4f54f42c721df1323c5fcac101a8c7a577e7f20979227324ceab572d51") {Write "Hash mismatch"; Exit 1}
           Start-Process -FilePath ".\sqliteodbc_w64.exe" -ArgumentList "/S" -Wait
         shell: powershell
-      - name: Add sccache to path
-        run: '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";" + (Split-Path -Path $env:SCCACHE_PATH -Parent), [EnvironmentVariableTarget]::Machine);'
-        shell: powershell
+      - name: Zero sccache stats
+        run: sccache --zero-stats
+        shell: bash
       - name: build
         run: |
           python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --noninteractive --skip-compiler-install --minifi-options="%WINDOWS_MINIFI_OPTIONS%" --cmake-options="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
         shell: cmd
         working-directory: bootstrap
       - name: Save cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
@@ -211,10 +206,13 @@ jobs:
         working-directory: ./build
       - name: Upload artifact
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cpack_error
           path: D:/a/nifi-minifi-cpp/nifi-minifi-cpp/build/_CPack_Packages/win64/WIX/wix.log
+      - name: Run sccache stat for check
+        shell: bash
+        run: sccache --show-stats
   ubuntu_22_04_clang_arm:
     name: "Ubuntu 22.04 clang aarch64"
     runs-on: ubuntu-22.04-arm
@@ -268,9 +266,9 @@ jobs:
         -DMINIFI_PERFORMANCE_TESTS=ON
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: cache restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ubuntu-22.04-arm-all-clang-ccache-${{github.ref}}-${{github.sha}}
@@ -307,7 +305,7 @@ jobs:
             && python main.py --noninteractive --skip-compiler-install --cmake-options="-DSTRICT_GSL_CHECKS=AUDIT -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" --minifi-options="${UBUNTU_CLANG_MINIFI_OPTIONS}"
         working-directory: bootstrap
       - id: cache_save
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -349,12 +347,12 @@ jobs:
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
           if [ "$(ls -A /var/lib/apport/coredump/)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: ubuntu-clang-coredumps
           path: /var/lib/apport/coredump/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: ubuntu-clang-binaries
@@ -365,9 +363,9 @@ jobs:
     timeout-minutes: 180
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: cache restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: rocky-ccache-${{github.ref}}-${{github.sha}}
@@ -397,7 +395,7 @@ jobs:
               -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON \
               -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_LLAMACPP=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make rocky-test
       - name: cache save
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -418,12 +416,12 @@ jobs:
             docker cp rocky-test:/opt/minifi/build/bin /tmp
             sudo chmod -R 777 /cores
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: rocky-crashes
           path: /cores
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: rocky-binaries
@@ -434,9 +432,9 @@ jobs:
     timeout-minutes: 180
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: cache restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: docker-ccache-${{github.ref}}-${{github.sha}}
@@ -460,7 +458,7 @@ jobs:
           cmake ${DOCKER_CMAKE_FLAGS} -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} ..
           make docker
       - name: cache save
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -468,7 +466,7 @@ jobs:
       - name: Save docker image
         run: cd build && docker save -o minifi_docker.tar apacheminificpp:$(grep CMAKE_PROJECT_VERSION:STATIC CMakeCache.txt | cut -d "=" -f2)
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: minifi_docker
           path: build/minifi_docker.tar
@@ -479,7 +477,7 @@ jobs:
     timeout-minutes: 180
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - id: run_cmake
         name: Run CMake
         run: |
@@ -487,7 +485,7 @@ jobs:
           cd build
           cmake ${DOCKER_CMAKE_FLAGS} ..
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: minifi_docker
           path: build
@@ -515,18 +513,17 @@ jobs:
         run: make docker-verify-modular
       - name: Test Reporter
         if: always()
-        uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3
         with:
           name: Docker integration tests
           path: build/behavex_output_modular/behave/*.xml
           reporter: java-junit
-          output-to: 'step-summary'
           only-summary: 'true'
           list-tests: 'failed'
           list-suites: 'failed'
       - name: Upload artifact
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: behavex_output_modular
           path: build/behavex_output_modular
@@ -536,7 +533,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - id: install_deps
         run: sudo apt update && sudo apt install -y flake8
