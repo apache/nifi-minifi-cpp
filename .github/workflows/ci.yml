@@ -165,7 +165,7 @@ jobs:
         -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=ON
         -DUSE_SHARED_LIBS=OFF
         -DMINIFI_PERFORMANCE_TESTS=ON
-      SCCACHE_GHA_ENABLED: "false"
+      SCCACHE_DIR: ${{ env.LOCALAPPDATA }}\Mozilla\sccache\cache
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
@@ -174,12 +174,10 @@ jobs:
       - name: Restore cache
         uses: actions/cache/restore@v5
         with:
-          path: ~/AppData/Local/Mozilla/sccache/cache
-          key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
+          path: ${{ env.LOCALAPPDATA }}\Mozilla\sccache\cache
+          key: ${{ runner.os }}-2022-sccache-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-2022-sccache-${{ github.ref }}
-            ${{ runner.os }}-2022-sccache-refs/heads/main
-            ${{ runner.os }}-2022-sccache
+            ${{ runner.os }}-2022-sccache-
       - name: Set up Python
         run: choco install -y python sccache && refreshenv
         shell: cmd
@@ -189,6 +187,9 @@ jobs:
           if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "a4804e4f54f42c721df1323c5fcac101a8c7a577e7f20979227324ceab572d51") {Write "Hash mismatch"; Exit 1}
           Start-Process -FilePath ".\sqliteodbc_w64.exe" -ArgumentList "/S" -Wait
         shell: powershell
+      - name: Zero sccache stats
+        run: sccache --zero-stats
+        shell: bash
       - name: build
         run: |
           python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --noninteractive --skip-compiler-install --minifi-options="%WINDOWS_MINIFI_OPTIONS%" --cmake-options="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
@@ -198,7 +199,7 @@ jobs:
         uses: actions/cache/save@v5
         if: always()
         with:
-          path: ~/AppData/Local/Mozilla/sccache/cache
+          path: ${{ env.LOCALAPPDATA }}\Mozilla\sccache\cache
           key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
       - name: Run tests
         run: ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure -LE performance
