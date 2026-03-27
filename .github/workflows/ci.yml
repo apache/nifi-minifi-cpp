@@ -165,7 +165,6 @@ jobs:
         -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=ON
         -DUSE_SHARED_LIBS=OFF
         -DMINIFI_PERFORMANCE_TESTS=ON
-      SCCACHE_DIR: ${{ env.LOCALAPPDATA }}\Mozilla\sccache\cache
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
@@ -174,7 +173,7 @@ jobs:
       - name: Restore cache
         uses: actions/cache/restore@v5
         with:
-          path: ${{ env.LOCALAPPDATA }}\Mozilla\sccache\cache
+          path: ~/AppData/Local/Mozilla/sccache/cache
           key: ${{ runner.os }}-2022-sccache-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-2022-sccache-
@@ -199,7 +198,7 @@ jobs:
         uses: actions/cache/save@v5
         if: always()
         with:
-          path: ${{ env.LOCALAPPDATA }}\Mozilla\sccache\cache
+          path: ~/AppData/Local/Mozilla/sccache/cache
           key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
       - name: Run tests
         run: ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure -LE performance
