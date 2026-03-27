@@ -15,4 +15,7 @@ dependencies = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["minifi_test_framework"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["minifi_test_framework*"]
