@@ -32,18 +32,19 @@ namespace org::apache::nifi::minifi::utils {
 class JsonInputCallback {
  public:
   explicit JsonInputCallback(rapidjson::Document& document) : document_(document) {}
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream) {
     std::string content;
     content.resize(stream->size());
-    const auto read_ret = stream->read(as_writable_bytes(std::span(content)));
+    const size_t read_ret = stream->read(as_writable_bytes(std::span(content)));
     if (io::isError(read_ret)) {
-      return -1;
+      return io::IoResult::error();
     }
     rapidjson::ParseResult parse_result = document_.Parse<rapidjson::kParseStopWhenDoneFlag>(content.data());
-    if (parse_result.IsError())
-      return -1;
+    if (parse_result.IsError()) {
+      return io::IoResult::error();
+    }
 
-    return read_ret;
+    return io::IoResult::fromSizeT(read_ret);
   }
  private:
   rapidjson::Document& document_;
@@ -54,14 +55,14 @@ class JsonOutputCallback {
   explicit JsonOutputCallback(rapidjson::Document&& root, std::optional<uint8_t> decimal_places)
       : root_(std::move(root)), decimal_places_(decimal_places) {}
 
-  int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const {
+  io::IoResult operator()(const std::shared_ptr<io::OutputStream>& stream) const {
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     if (decimal_places_.has_value())
       writer.SetMaxDecimalPlaces(decimal_places_.value());
     root_.Accept(writer);
     const auto write_return = stream->write(reinterpret_cast<const uint8_t*>(buffer.GetString()), buffer.GetSize());
-    return !io::isError(write_return) ? gsl::narrow<int64_t>(write_return) : -1;
+    return io::IoResult::fromSizeT(write_return);
   }
 
  protected:
@@ -74,14 +75,14 @@ class PrettyJsonOutputCallback {
   explicit PrettyJsonOutputCallback(rapidjson::Document&& root, std::optional<uint8_t> decimal_places)
       : root_(std::move(root)), decimal_places_(decimal_places) {}
 
-  int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const {
+  io::IoResult operator()(const std::shared_ptr<io::OutputStream>& stream) const {
     rapidjson::StringBuffer buffer;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
     if (decimal_places_.has_value())
       writer.SetMaxDecimalPlaces(decimal_places_.value());
     root_.Accept(writer);
     const auto write_return = stream->write(reinterpret_cast<const uint8_t*>(buffer.GetString()), buffer.GetSize());
-    return !io::isError(write_return) ? gsl::narrow<int64_t>(write_return) : -1;
+    return io::IoResult::fromSizeT(write_return);
   }
 
  protected:

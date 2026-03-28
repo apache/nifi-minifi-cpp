@@ -490,7 +490,7 @@ bool SiteToSiteClient::sendFlowFile(const std::shared_ptr<Transaction>& transact
       return false;
     }
     if (flow_file.getSize() > 0) {
-      auto read_result = session.read(flow_file, [&stream](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+      auto read_result = session.read(flow_file, [&stream](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
         return internal::pipe(*input_stream, stream);
       });
       if (flow_file.getSize() != gsl::narrow<uint64_t>(read_result)) {
@@ -700,19 +700,19 @@ std::pair<uint64_t, uint64_t> SiteToSiteClient::readFlowFiles(const std::shared_
     }
 
     if (receive_header_result->flow_file_data_size > 0) {
-      session.write(flow_file, [&receive_header_result, &stream](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
+      session.write(flow_file, [&receive_header_result, &stream](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
         uint64_t len = receive_header_result->flow_file_data_size;
         std::array<std::byte, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
         while (len > 0) {
           const auto size = std::min(len, uint64_t{utils::configuration::DEFAULT_BUFFER_SIZE});
           const auto ret = stream.read(std::as_writable_bytes(std::span(buffer).subspan(0, size)));
           if (ret != size) {
-            return -1;
+            return io::IoResult::error();
           }
           output_stream->write(std::span(buffer).subspan(0, size));
           len -= size;
         }
-        return gsl::narrow<int64_t>(receive_header_result->flow_file_data_size);
+        return io::IoResult::fromSizeT(receive_header_result->flow_file_data_size);
       });
       if (flow_file->getSize() != receive_header_result->flow_file_data_size) {
         std::stringstream message;

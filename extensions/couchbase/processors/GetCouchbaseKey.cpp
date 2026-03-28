@@ -72,15 +72,15 @@ void GetCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
         session.putAttribute(*flow_file, attribute_to_put_result_to, str_value);
       }
     } else {
-      session.write(flow_file, [&, this](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+      session.write(flow_file, [&, this](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
         if (document_type_ == CouchbaseValueType::String) {
           auto& value = std::get<std::string>(get_result->value);
           stream->write(value);
-          return gsl::narrow<int64_t>(value.size());
+          return io::IoResult::fromSizeT(value.size());
         } else {
           auto& value = std::get<std::vector<std::byte>>(get_result->value);
           stream->write(value);
-          return gsl::narrow<int64_t>(value.size());
+          return io::IoResult::fromSizeT(value.size());
         }
       });
     }

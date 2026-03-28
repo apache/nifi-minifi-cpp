@@ -82,35 +82,39 @@ class BinaryConcatenationMerge : public MergeBin {
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
     FlowFileSerializer& serializer_;
 
-    int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const {
+    io::IoResult operator()(const std::shared_ptr<io::OutputStream>& stream) const {
       size_t write_size_sum = 0;
       if (!header_.empty()) {
         const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(header_.data()), header_.size());
-        if (io::isError(write_ret))
-          return -1;
+        if (io::isError(write_ret)) {
+          return io::IoResult::error();
+        }
         write_size_sum += write_ret;
       }
       bool isFirst = true;
       for (const auto& flow : flows_) {
         if (!isFirst && !demarcator_.empty()) {
           const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(demarcator_.data()), demarcator_.size());
-          if (io::isError(write_ret))
-            return -1;
+          if (io::isError(write_ret)) {
+            return io::IoResult::error();
+          }
           write_size_sum += write_ret;
         }
         const auto len = serializer_.serialize(flow, stream);
-        if (len < 0)
+        if (!len) {
           return len;
-        write_size_sum += gsl::narrow<size_t>(len);
+        }
+        write_size_sum += gsl::narrow<size_t>(*len);
         isFirst = false;
       }
       if (!footer_.empty()) {
         const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(footer_.data()), footer_.size());
-        if (io::isError(write_ret))
-          return -1;
+        if (io::isError(write_ret)) {
+          return io::IoResult::error();
+        }
         write_size_sum += write_ret;
       }
-      return gsl::narrow<int64_t>(write_size_sum);
+      return io::IoResult::fromI64(write_size_sum);
     }
   };
 
@@ -192,7 +196,7 @@ class ArchiveMerge {
       return totalWrote;
     }
 
-    int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) {
+    io::IoResult operator()(const std::shared_ptr<io::OutputStream>& stream) {
       const auto arch = archive_write_unique_ptr{archive_write_new()};
 
       if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
@@ -224,12 +228,12 @@ class ArchiveMerge {
           }
         }
         const auto ret = serializer_.serialize(flow, std::make_shared<ArchiveWriter>(*arch, *entry));
-        if (ret < 0) {
+        if (!ret) {
           return ret;
         }
       }
 
-      return gsl::narrow<int64_t>(size_);
+      return io::IoResult::fromSizeT(size_);
     }
   };
 };

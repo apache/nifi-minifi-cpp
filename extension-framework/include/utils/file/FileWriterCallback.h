@@ -29,7 +29,7 @@ class FileWriterCallback {
  public:
   explicit FileWriterCallback(std::filesystem::path dest_path);
   ~FileWriterCallback();
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream);
   bool commit();
 
 
