@@ -154,7 +154,7 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
   return gsl::narrow<la_ssize_t>(read);
 }
 
-int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
+io::IoResult FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
   auto input_archive = processors::archive_read_unique_ptr{archive_read_new()};
   struct archive_entry *entry = nullptr;
   int64_t nlen = 0;
@@ -169,7 +169,7 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
   // Read each item in the archive
   if (archive_read_open(input_archive.get(), &data, ok_cb, read_cb, ok_cb)) {
     logger_->log_error("FocusArchiveEntry can't open due to archive error: {}", archive_error_string(input_archive.get()));
-    return nlen;
+    return io::IoResult::fromI64(nlen);
   }
 
   while (context_->isRunning()) {
@@ -181,12 +181,7 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
 
     if (res < ARCHIVE_OK) {
       logger_->log_error("FocusArchiveEntry can't read header due to archive error: {}", archive_error_string(input_archive.get()));
-      return nlen;
-    }
-
-    if (res < ARCHIVE_WARN) {
-      logger_->log_warn("FocusArchiveEntry got archive warning while reading header: {}", archive_error_string(input_archive.get()));
-      return nlen;
+      return io::IoResult::error();
     }
 
     auto entryName = archive_entry_pathname(entry);
@@ -232,7 +227,7 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
     _archiveMetadata->entryMetadata.push_back(metadata);
   }
 
-  return nlen;
+  return io::IoResult::fromI64(nlen);
 }
 
 FocusArchiveEntry::ReadCallback::ReadCallback(core::ProcessContext* context, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata)

@@ -43,7 +43,7 @@ void ApplyTemplate::onTrigger(core::ProcessContext& context, core::ProcessSessio
   }
 
   std::string template_file = context.getProperty(Template.name, flow_file.get()).value_or("");
-  session.write(flow_file, [&template_file, &flow_file, this](const auto& output_stream) {
+  session.write(flow_file, [&template_file, &flow_file, this](const auto& output_stream) -> io::IoResult {
     logger_->log_info("ApplyTemplate reading template file from {}", template_file);
     // TODO(szaszm): we might want to return to memory-mapped input files when the next todo is done. Until then, the agents stores the whole result in memory anyway, so no point in not doing the same
     // with the template file itself
@@ -61,8 +61,11 @@ void ApplyTemplate::onTrigger(core::ProcessContext& context, core::ProcessSessio
 
     // TODO(calebj) write ostream reciever for format() to prevent excessive copying
     std::string ostring = bustache::to_string(format(data));
-    output_stream->write(gsl::make_span(ostring).as_span<const std::byte>());
-    return gsl::narrow<int64_t>(ostring.length());
+    const auto write_res = output_stream->write(gsl::make_span(ostring).as_span<const std::byte>());
+    if (write_res < 0) {
+      return io::IoResult::error();
+    }
+    return io::IoResult::fromSizeT(ostring.length());
   });
   session.transfer(flow_file, Success);
 }
