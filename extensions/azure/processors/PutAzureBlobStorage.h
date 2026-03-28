@@ -81,16 +81,16 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
       , params_(params) {
     }
 
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
+    io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream) {
       std::vector<std::byte> buffer;
       buffer.resize(flow_size_);
-      size_t read_ret = stream->read(buffer);
+      const size_t read_ret = stream->read(buffer);
       if (io::isError(read_ret) || read_ret != flow_size_) {
-        return -1;
+        return io::IoResult::error();
       }
 
       result_ = azure_blob_storage_.uploadBlob(params_, buffer);
-      return read_ret;
+      return io::IoResult::fromSizeT(read_ret);
     }
 
     std::optional<storage::UploadBlobResult> getResult() const {

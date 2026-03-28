@@ -248,7 +248,7 @@ class ReadCallback {
   ReadCallback& operator=(const ReadCallback&) = delete;
   ~ReadCallback() = default;
 
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream) {
     std::vector<std::byte> buffer;
 
     buffer.resize(max_seg_size_);
@@ -269,7 +269,7 @@ class ReadCallback {
         status_ = -1;
         error_ = rd_kafka_err2str(err);
       }
-      return 0;
+      return io::IoResult::zero();
     }
 
     for (size_t segment_num = 0; read_size_ < flow_size_; ++segment_num) {
@@ -277,7 +277,7 @@ class ReadCallback {
       if (io::isError(readRet)) {
         status_ = -1;
         error_ = "Failed to read from stream";
-        return read_size_;
+        return io::IoResult::fromSizeT(read_size_);  // TODO(mzink) shouldnt it be error?
       }
       if (readRet == 0) { break; }
 
@@ -289,11 +289,11 @@ class ReadCallback {
         });
         status_ = -1;
         error_ = rd_kafka_err2str(err);
-        return read_size_;
+        return io::IoResult::fromSizeT(read_size_);  // TODO(mzink) shouldnt it be error?
       }
       read_size_ += gsl::narrow<uint32_t>(readRet);
     }
-    return read_size_;
+    return io::IoResult::fromSizeT(read_size_);
   }
 
   const uint64_t flow_size_ = 0;

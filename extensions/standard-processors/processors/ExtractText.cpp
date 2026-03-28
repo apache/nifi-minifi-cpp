@@ -53,7 +53,7 @@ void ExtractText::onTrigger(core::ProcessContext& context, core::ProcessSession&
   session.transfer(flowFile, Success);
 }
 
-int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
+io::IoResult ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
   const auto flow_file_size = gsl::narrow<size_t>(flowFile_->getSize());
   const auto default_buffer_size = utils::configuration::getBufferSize(*ctx_->getConfiguration());
   std::vector<std::byte> buffer((std::min)(flow_file_size, default_buffer_size));
@@ -74,7 +74,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
     const auto ret = stream->read(std::span(buffer).subspan(0, length));
 
     if (io::isError(ret)) {
-      return -1;  // Stream error
+      return io::IoResult::error();  // Stream error
     } else if (ret == 0) {
       break;  // End of stream, no more data
     }
@@ -82,7 +82,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
     contentStream.write(reinterpret_cast<const char*>(buffer.data()), gsl::narrow<std::streamsize>(ret));
     read_size += ret;
     if (contentStream.fail()) {
-      return -1;
+      return io::IoResult::error();
     }
   }
 
@@ -137,7 +137,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
   } else {
     flowFile_->setAttribute(attrKey, contentStream.str());
   }
-  return gsl::narrow<int64_t>(read_size);
+  return io::IoResult::fromSizeT(read_size);
 }
 
 ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext& ctx,  std::shared_ptr<core::logging::Logger> lgr)

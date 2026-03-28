@@ -41,9 +41,9 @@ void ConvertRecord::onTrigger(core::ProcessContext& context, core::ProcessSessio
   }
 
   nonstd::expected<core::RecordSet, std::error_code> record_set;
-  session.read(flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) {
+  session.read(flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
     record_set = record_converter_->record_set_reader->read(*input_stream);
-    return gsl::narrow<int64_t>(input_stream->size());
+    return io::IoResult::fromSizeT(input_stream->size());
   });
   if (!record_set) {
     logger_->log_error("Failed to read record set from flow file: {}", record_set.error().message());
