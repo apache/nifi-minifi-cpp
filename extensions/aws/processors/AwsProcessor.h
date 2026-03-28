@@ -110,6 +110,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       .build();
   EXTENSIONAPI static constexpr auto AWSCredentialsProviderService = core::PropertyDefinitionBuilder<>::createProperty("AWS Credentials Provider service")
       .withDescription("The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.")
+      .withAllowedTypes<AWSCredentialsProvider>()
       .build();
   EXTENSIONAPI static constexpr auto Region = core::PropertyDefinitionBuilder<region::REGIONS.size()>::createProperty("Region")
       .isRequired(true)
