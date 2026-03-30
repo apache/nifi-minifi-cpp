@@ -37,6 +37,8 @@ class ExtensionManager {
   ExtensionManager& operator=(const ExtensionManager&) = delete;
   ExtensionManager& operator=(ExtensionManager&&) = delete;
 
+  static Extension* getExtensionBeingInitialized();
+
  private:
   std::vector<std::unique_ptr<Extension>> extensions_;
 
