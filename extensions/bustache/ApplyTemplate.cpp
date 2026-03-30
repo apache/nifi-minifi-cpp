@@ -62,9 +62,6 @@ void ApplyTemplate::onTrigger(core::ProcessContext& context, core::ProcessSessio
     // TODO(calebj) write ostream reciever for format() to prevent excessive copying
     std::string ostring = bustache::to_string(format(data));
     const auto write_res = output_stream->write(gsl::make_span(ostring).as_span<const std::byte>());
-    if (write_res < 0) {
-      return io::IoResult::error();
-    }
     return io::IoResult::fromSizeT(ostring.length());
   });
   session.transfer(flow_file, Success);

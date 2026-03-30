@@ -50,7 +50,7 @@ class IoResult {
     return IoResult(gsl::narrow<uint64_t>(i64_val));
   }
 
-  static IoResult fromSizeT(size_t val) {
+  static IoResult fromSizeT(const size_t val) {
     if (isError(val)) { return IoResult::error(); }
     return IoResult(gsl::narrow<uint64_t>(val));
   }
@@ -95,8 +95,8 @@ class ReadWriteResult {
   bool operator()() const { return result_.has_value(); }
   bool operator!() const { return !result_.has_value(); }
 
-  uint64_t bytesWritten() const { return result_->bytes_written; }
-  uint64_t bytesRead() const { return result_->bytes_read; }
+  [[nodiscard]] uint64_t bytesWritten() const { return result_->bytes_written; }
+  [[nodiscard]] uint64_t bytesRead() const { return result_->bytes_read; }
 
  private:
   struct ReadWrite {
@@ -109,7 +109,7 @@ class ReadWriteResult {
 };
 
 using OutputStreamCallback = std::function<IoResult(const std::shared_ptr<OutputStream>& output_stream)>;
-using InputStreamCallback = std::function<IoResult(const std::shared_ptr<InputStream>& output_stream)>;
+using InputStreamCallback = std::function<IoResult(const std::shared_ptr<InputStream>& input_stream)>;
 using InputOutputStreamCallback =
     std::function<ReadWriteResult(const std::shared_ptr<InputStream>& input_stream, const std::shared_ptr<OutputStream>& output_stream)>;
 
