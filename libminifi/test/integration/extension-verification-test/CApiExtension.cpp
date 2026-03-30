@@ -26,14 +26,12 @@ namespace minifi = org::apache::nifi::minifi;
 
 CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
 
-CEXTENSIONAPI void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context) {
   MinifiExtensionCreateInfo ext_create_info{
     .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
     .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
     .deinit = nullptr,
-    .user_data = nullptr,
-    .processors_count = 0,
-    .processors_ptr = nullptr,
+    .user_data = nullptr
   };
-  MinifiCreateExtension(extension, &ext_create_info);
+  MinifiCreateExtension(extension_context, &ext_create_info);
 }
