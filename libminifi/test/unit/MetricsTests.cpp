@@ -275,7 +275,7 @@ class DuplicateContentProcessor : public minifi::core::ProcessorImpl {
     std::vector<std::byte> buffer;
     session.read(flow_file, [&](const std::shared_ptr<io::InputStream>& stream) -> io::IoResult {
       buffer.resize(stream->size());
-      return io::IoResult::fromI64(stream->read(buffer));
+      return io::IoResult::fromSizeT(stream->read(buffer));
     });
     session.write(flow_file_copy, [&](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
       return io::IoResult::fromSizeT(stream->write(buffer));
