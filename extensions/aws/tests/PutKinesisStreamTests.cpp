@@ -93,7 +93,7 @@ class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream { 
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  std::unique_ptr<Aws::Kinesis::KinesisClient> getClient(const Aws::Auth::AWSCredentials&) override {
+  std::unique_ptr<Aws::Kinesis::KinesisClient> getClient() override {
     auto client = std::make_unique<MockKinesisClient>();
     client->behaviour_ = behaviour_;
     return client;

@@ -162,8 +162,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   plan->setProperty(s3_processor, "Storage Class", "ReducedRedundancy");
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::AP_SOUTHEAST_3);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
-  plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
+  plan->setProperty(s3_processor, "Endpoint Override URL", "http://localhost:1234");
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
   test_controller.runSession(plan);
   checkPutObjectResults();
@@ -277,8 +276,7 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   plan->setProperty(s3_processor, "Storage Class", "ReducedRedundancy");
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::AP_SOUTHEAST_3);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
-  plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
+  plan->setProperty(s3_processor, "Endpoint Override URL", "http://localhost:1234");
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
 
   std::string object_key;

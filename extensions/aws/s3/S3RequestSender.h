@@ -55,60 +55,18 @@ namespace org::apache::nifi::minifi::aws::s3 {
 
 class S3RequestSender {
  public:
-  virtual std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(
-    const Aws::S3Crt::Model::PutObjectRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config,
-    bool use_virtual_addressing) = 0;
-  virtual bool sendDeleteObjectRequest(
-    const Aws::S3Crt::Model::DeleteObjectRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3Crt::Model::GetObjectResult> sendGetObjectRequest(
-    const Aws::S3Crt::Model::GetObjectRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3Crt::Model::ListObjectsV2Result> sendListObjectsRequest(
-    const Aws::S3Crt::Model::ListObjectsV2Request& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> sendListVersionsRequest(
-    const Aws::S3Crt::Model::ListObjectVersionsRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3Crt::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
-    const Aws::S3Crt::Model::GetObjectTaggingRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3Crt::Model::HeadObjectResult> sendHeadObjectRequest(
-    const Aws::S3Crt::Model::HeadObjectRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual std::optional<Aws::S3Crt::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(
-    const Aws::S3Crt::Model::CreateMultipartUploadRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config,
-    bool use_virtual_addressing) = 0;
-  virtual std::optional<Aws::S3Crt::Model::UploadPartResult> sendUploadPartRequest(
-    const Aws::S3Crt::Model::UploadPartRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config,
-    bool use_virtual_addressing) = 0;
-  virtual std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
-    const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config,
-    bool use_virtual_addressing) = 0;
-  virtual std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(
-    const Aws::S3Crt::Model::ListMultipartUploadsRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config,
-    bool use_virtual_addressing) = 0;
-  virtual bool sendAbortMultipartUploadRequest(
-    const Aws::S3Crt::Model::AbortMultipartUploadRequest& request,
-    const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config,
-    bool use_virtual_addressing) = 0;
+  virtual std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) = 0;
+  virtual bool sendDeleteObjectRequest(const Aws::S3Crt::Model::DeleteObjectRequest& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3Crt::Model::GetObjectRequest& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3Crt::Model::ListObjectsV2Request& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3Crt::Model::ListObjectVersionsRequest& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(const Aws::S3Crt::Model::GetObjectTaggingRequest& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::HeadObjectResult> sendHeadObjectRequest(const Aws::S3Crt::Model::HeadObjectRequest& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(const Aws::S3Crt::Model::CreateMultipartUploadRequest& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::UploadPartResult> sendUploadPartRequest(const Aws::S3Crt::Model::UploadPartRequest& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request) = 0;
+  virtual std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(const Aws::S3Crt::Model::ListMultipartUploadsRequest& request) = 0;
+  virtual bool sendAbortMultipartUploadRequest(const Aws::S3Crt::Model::AbortMultipartUploadRequest& request) = 0;
   virtual ~S3RequestSender() = default;
 
  protected:

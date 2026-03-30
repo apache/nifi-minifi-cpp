@@ -148,8 +148,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test non-default client configurati
   setRequiredProperties();
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::US_EAST_1);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
-  plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
+  plan->setProperty(s3_processor, "Endpoint Override URL", "http://localhost:1234");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);

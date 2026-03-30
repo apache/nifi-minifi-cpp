@@ -40,7 +40,8 @@ void HeadObjectResult::setFilePaths(const std::string& key) {
   filename = absolute_path.filename();
 }
 
-S3Wrapper::S3Wrapper() : request_sender_(std::make_unique<S3ClientRequestSender>()) {
+S3Wrapper::S3Wrapper(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing)
+    : request_sender_(std::make_unique<S3ClientRequestSender>(credentials, client_config, use_virtual_addressing)) {
 }
 
 S3Wrapper::S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender) : request_sender_(std::move(request_sender)) {
@@ -94,7 +95,7 @@ std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParame
   auto request = createPutObjectRequest<Aws::S3Crt::Model::PutObjectRequest>(put_object_params);
   request.SetBody(data_stream);
 
-  auto aws_result = request_sender_->sendPutObjectRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
+  auto aws_result = request_sender_->sendPutObjectRequest(request);
   if (!aws_result) {
     return std::nullopt;
   }
@@ -135,7 +136,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
     Aws::Utils::ByteBuffer part_md5(Aws::Utils::HashingUtils::CalculateMD5(*stream_ptr));
     upload_part_request.SetContentMD5(Aws::Utils::HashingUtils::Base64Encode(part_md5));
 
-    auto upload_part_result = request_sender_->sendUploadPartRequest(upload_part_request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
+    auto upload_part_result = request_sender_->sendUploadPartRequest(upload_part_request);
     if (!upload_part_result) {
       logger_->log_error("Failed to upload part {} of {} of S3 object with key '{}'", part_number, last_part, put_object_params.object_key);
       return std::nullopt;
@@ -169,12 +170,11 @@ std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> S3Wrapper::compl
 
   complete_multipart_upload_request.SetMultipartUpload(completed_multipart_upload);
 
-  return request_sender_->sendCompleteMultipartUploadRequest(complete_multipart_upload_request, put_object_params.credentials,
-    put_object_params.client_config, put_object_params.use_virtual_addressing);
+  return request_sender_->sendCompleteMultipartUploadRequest(complete_multipart_upload_request);
 }
 
 bool S3Wrapper::multipartUploadExistsInS3(const PutObjectRequestParameters& put_object_params) {
-  ListMultipartUploadsRequestParameters params(put_object_params.credentials, put_object_params.client_config);
+  ListMultipartUploadsRequestParameters params;
   params.bucket = put_object_params.bucket;
   auto pending_uploads = listMultipartUploads(params);
   if (!pending_uploads) {
@@ -208,7 +208,7 @@ std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequ
   } else {
     logger_->log_debug("No previous multipart upload state was found for {} in bucket {}", put_object_params.object_key, put_object_params.bucket);
     auto request = createPutObjectRequest<Aws::S3Crt::Model::CreateMultipartUploadRequest>(put_object_params);
-    return request_sender_->sendCreateMultipartUploadRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing)
+    return request_sender_->sendCreateMultipartUploadRequest(request)
       | minifi::utils::andThen([&, this](const auto& create_multipart_result) { return uploadParts(put_object_params, stream,
           MultipartUploadState{create_multipart_result.GetUploadId(), multipart_size, flow_size, Aws::Utils::DateTime::Now()}); })
       | minifi::utils::andThen([&, this](const auto& upload_parts_result) { return completeMultipartUpload(put_object_params, upload_parts_result); })
@@ -223,7 +223,7 @@ bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
   if (!params.version.empty()) {
     request.SetVersionId(params.version);
   }
-  return request_sender_->sendDeleteObjectRequest(request, params.credentials, params.client_config);
+  return request_sender_->sendDeleteObjectRequest(request);
 }
 
 int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::OutputStream& output) {
@@ -246,7 +246,7 @@ int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_si
 
 std::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::OutputStream& out_body) {
   auto request = createFetchObjectRequest<Aws::S3Crt::Model::GetObjectRequest>(get_object_params);
-  auto aws_result = request_sender_->sendGetObjectRequest(request, get_object_params.credentials, get_object_params.client_config);
+  auto aws_result = request_sender_->sendGetObjectRequest(request);
   if (!aws_result) {
     return std::nullopt;
   }
@@ -307,7 +307,7 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVersions(const
   std::vector<ListedObjectAttributes> attribute_list;
   std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> aws_result;
   do {
-    aws_result = request_sender_->sendListVersionsRequest(request, params.credentials, params.client_config);
+    aws_result = request_sender_->sendListVersionsRequest(request);
     if (!aws_result) {
       return std::nullopt;
     }
@@ -328,7 +328,7 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObjects(const 
   std::vector<ListedObjectAttributes> attribute_list;
   std::optional<Aws::S3Crt::Model::ListObjectsV2Result> aws_result;
   do {
-    aws_result = request_sender_->sendListObjectsRequest(request, params.credentials, params.client_config);
+    aws_result = request_sender_->sendListObjectsRequest(request);
     if (!aws_result) {
       return std::nullopt;
     }
@@ -358,7 +358,7 @@ std::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const
   if (!params.version.empty()) {
     request.SetVersionId(params.version);
   }
-  auto aws_result = request_sender_->sendGetObjectTaggingRequest(request, params.credentials, params.client_config);
+  auto aws_result = request_sender_->sendGetObjectTaggingRequest(request);
   if (!aws_result) {
     return std::nullopt;
   }
@@ -371,7 +371,7 @@ std::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const
 
 std::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObjectRequestParameters& head_object_params) {
   auto request = createFetchObjectRequest<Aws::S3Crt::Model::HeadObjectRequest>(head_object_params);
-  auto aws_result = request_sender_->sendHeadObjectRequest(request, head_object_params.credentials, head_object_params.client_config);
+  auto aws_result = request_sender_->sendHeadObjectRequest(request);
   if (!aws_result) {
     return std::nullopt;
   }
@@ -439,7 +439,7 @@ std::optional<std::vector<MultipartUpload>> S3Wrapper::listMultipartUploads(cons
   Aws::S3Crt::Model::ListMultipartUploadsRequest request;
   request.SetBucket(params.bucket);
   do {
-    aws_result = request_sender_->sendListMultipartUploadsRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
+    aws_result = request_sender_->sendListMultipartUploadsRequest(request);
     if (!aws_result) {
       return std::nullopt;
     }
@@ -459,7 +459,7 @@ bool S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters
     .WithBucket(params.bucket)
     .WithKey(params.key)
     .WithUploadId(params.upload_id);
-  return request_sender_->sendAbortMultipartUploadRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
+  return request_sender_->sendAbortMultipartUploadRequest(request);
 }
 
 void S3Wrapper::ageOffLocalS3MultipartUploadStates(std::chrono::milliseconds multipart_upload_max_age_threshold) {

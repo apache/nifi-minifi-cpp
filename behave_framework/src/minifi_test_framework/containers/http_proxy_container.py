@@ -19,7 +19,7 @@ from textwrap import dedent
 
 from minifi_test_framework.containers.container import Container
 from minifi_test_framework.containers.docker_image_builder import DockerImageBuilder
-from minifi_test_framework.core.helpers import wait_for_condition
+from minifi_test_framework.core.helpers import wait_for_condition, retry_check
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
@@ -57,9 +57,11 @@ class HttpProxy(Container):
             context=context
         )
 
+    @retry_check(10, 1)
     def check_http_proxy_access(self, url):
         (code, output) = self.exec_run(["cat", "/var/log/squid/access.log"])
         return code == 0 and url.lower() in output.lower() \
             and ((output.count("TCP_DENIED") != 0
                   and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
-                 or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output)
+                 or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output
+                 or output.count("TCP_TUNNEL") > 0)

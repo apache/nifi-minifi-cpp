@@ -40,9 +40,7 @@ std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentialsFromCont
   return std::nullopt;
 }
 
-std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentials(
-    core::ProcessContext& context,
-    const core::FlowFile* const flow_file) {
+std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentials(core::ProcessContext& context) {
   auto service_cred = getAWSCredentialsFromControllerService(context);
   if (service_cred) {
     logger_->log_info("AWS Credentials successfully set from controller service");
@@ -50,29 +48,29 @@ std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentials(
   }
 
   aws::AWSCredentialsProvider aws_credentials_provider;
-  if (const auto access_key = context.getProperty(AccessKey.name, flow_file)) {
+  if (const auto access_key = context.getProperty(AccessKey.name)) {
     aws_credentials_provider.setAccessKey(*access_key);
   }
-  if (const auto secret_key = context.getProperty(SecretKey.name, flow_file)) {
+  if (const auto secret_key = context.getProperty(SecretKey.name)) {
     aws_credentials_provider.setSecretKey(*secret_key);
   }
-  if (const auto credentials_file = context.getProperty(CredentialsFile.name, flow_file)) {
+  if (const auto credentials_file = context.getProperty(CredentialsFile.name)) {
     aws_credentials_provider.setCredentialsFile(*credentials_file);
   }
-  if (const auto use_credentials = context.getProperty(UseDefaultCredentials.name, flow_file) | minifi::utils::andThen(parsing::parseBool)) {
+  if (const auto use_credentials = context.getProperty(UseDefaultCredentials.name) | minifi::utils::andThen(parsing::parseBool)) {
     aws_credentials_provider.setUseDefaultCredentials(*use_credentials);
   }
 
   return aws_credentials_provider.getAWSCredentials();
 }
 
-aws::ProxyOptions AwsProcessor::getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file) {
+aws::ProxyOptions AwsProcessor::getProxy(core::ProcessContext& context) {
   aws::ProxyOptions proxy;
 
-  proxy.host = minifi::utils::parseOptionalProperty(context, ProxyHost, flow_file).value_or("");
-  proxy.port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort, flow_file).value_or(0));
-  proxy.username = minifi::utils::parseOptionalProperty(context, ProxyUsername, flow_file).value_or("");
-  proxy.password = minifi::utils::parseOptionalProperty(context, ProxyPassword, flow_file).value_or("");
+  proxy.host = minifi::utils::parseOptionalProperty(context, ProxyHost).value_or("");
+  proxy.port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort).value_or(0));
+  proxy.username = minifi::utils::parseOptionalProperty(context, ProxyUsername).value_or("");
+  proxy.password = minifi::utils::parseOptionalProperty(context, ProxyPassword).value_or("");
 
   if (!proxy.host.empty()) {
     logger_->log_info("Proxy for AwsProcessor was set.");
@@ -83,46 +81,43 @@ aws::ProxyOptions AwsProcessor::getProxy(core::ProcessContext& context, const co
 void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   client_config_ = Aws::Client::ClientConfiguration();
 
-  client_config_->region = context.getProperty(Region) | minifi::utils::orThrow("Region property missing or invalid");
-  logger_->log_debug("AwsProcessor: Region [{}]", client_config_->region);
+  client_config_.region = context.getProperty(Region) | minifi::utils::orThrow("Region property missing or invalid");
+  logger_->log_debug("AwsProcessor: Region [{}]", client_config_.region);
 
   if (auto communications_timeout = minifi::utils::parseOptionalDurationProperty(context, CommunicationsTimeout)) {
     logger_->log_debug("AwsProcessor: Communications Timeout {}", *communications_timeout);
-    client_config_->connectTimeoutMs = gsl::narrow<long>(communications_timeout->count());  // NOLINT(runtime/int,google-runtime-int)
-    client_config_->requestTimeoutMs = gsl::narrow<long>(communications_timeout->count());  // NOLINT(runtime/int,google-runtime-int)
+    client_config_.connectTimeoutMs = gsl::narrow<long>(communications_timeout->count());  // NOLINT(runtime/int,google-runtime-int)
+    client_config_.requestTimeoutMs = gsl::narrow<long>(communications_timeout->count());  // NOLINT(runtime/int,google-runtime-int)
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
 
   static const auto default_ca_file = minifi::utils::getDefaultCAFile();
   if (default_ca_file) {
-    client_config_->caFile = *default_ca_file;
+    client_config_.caFile = *default_ca_file;
   }
 
   // throw here if the credentials provider service is set to an invalid value
   std::ignore = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID());
-}
 
-std::optional<CommonProperties> AwsProcessor::getCommonELSupportedProperties(
-    core::ProcessContext& context,
-    const core::FlowFile* const flow_file) {
-  CommonProperties properties;
-
-  auto credentials = getAWSCredentials(context, flow_file);
+  auto credentials = getAWSCredentials(context);
   if (!credentials) {
     logger_->log_error("AWS Credentials have not been set!");
-    return std::nullopt;
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "AWS Credentials have not been set!");
   }
-  properties.credentials = credentials.value();
-  properties.proxy = getProxy(context, flow_file);
+  credentials_ = credentials.value();
 
-  const auto endpoint_override_url = context.getProperty(EndpointOverrideURL, flow_file);
+  auto proxy = getProxy(context);
+  client_config_.proxyHost = proxy.host;
+  client_config_.proxyPort = proxy.port;
+  client_config_.proxyUserName = proxy.username;
+  client_config_.proxyPassword = proxy.password;
+
+  const auto endpoint_override_url = context.getProperty(EndpointOverrideURL);
   if (endpoint_override_url) {
-    properties.endpoint_override_url = *endpoint_override_url;
-    logger_->log_debug("AwsProcessor: Endpoint Override URL [{}]", properties.endpoint_override_url);
+    client_config_.endpointOverride = *endpoint_override_url;
+    logger_->log_debug("AwsProcessor: Endpoint Override URL [{}]", *endpoint_override_url);
   }
-
-  return properties;
 }
 
 }  // namespace org::apache::nifi::minifi::aws::processors

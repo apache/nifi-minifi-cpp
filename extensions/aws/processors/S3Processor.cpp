@@ -31,9 +31,9 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-S3Processor::S3Processor(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-  : AwsProcessor(std::move(metadata)),
-    s3_wrapper_(std::move(s3_request_sender)) {
+S3Processor::S3Processor(core::ProcessorMetadata metadata, S3WrapperFactory s3_wrapper_factory)
+    : AwsProcessor(std::move(metadata)),
+      s3_wrapper_factory_(std::move(s3_wrapper_factory)) {
 }
 
 void S3Processor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {

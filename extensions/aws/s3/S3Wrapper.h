@@ -40,7 +40,6 @@
 #include "minifi-cpp/io/InputStream.h"
 #include "minifi-cpp/io/OutputStream.h"
 #include "range/v3/algorithm/find.hpp"
-#include "utils/AWSInitializer.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/ListingStateManager.h"
 #include "utils/OptionalUtils.h"
@@ -119,25 +118,7 @@ struct PutObjectResult {
   std::string ssealgorithm;
 };
 
-struct RequestParameters {
-  RequestParameters(Aws::Auth::AWSCredentials creds, Aws::Client::ClientConfiguration config)
-    : credentials(std::move(creds)),
-      client_config(std::move(config)) {}
-  Aws::Auth::AWSCredentials credentials;
-  Aws::Client::ClientConfiguration client_config;
-
-  void setClientConfig(const aws::ProxyOptions& proxy, const std::string& endpoint_override_url) {
-    client_config.proxyHost = proxy.host;
-    client_config.proxyPort = proxy.port;
-    client_config.proxyUserName = proxy.username;
-    client_config.proxyPassword = proxy.password;
-    client_config.endpointOverride = endpoint_override_url;
-  }
-};
-
-struct PutObjectRequestParameters : public RequestParameters {
-  PutObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct PutObjectRequestParameters {
   std::string bucket;
   std::string object_key;
   std::string storage_class;
@@ -150,20 +131,15 @@ struct PutObjectRequestParameters : public RequestParameters {
   std::string write_acl_user_list;
   std::string canned_acl;
   Aws::S3Crt::Model::ChecksumAlgorithm checksum_algorithm;
-  bool use_virtual_addressing = true;
 };
 
-struct DeleteObjectRequestParameters : public RequestParameters {
-  DeleteObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct DeleteObjectRequestParameters {
   std::string bucket;
   std::string object_key;
   std::string version;
 };
 
-struct GetObjectRequestParameters : public RequestParameters {
-  GetObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct GetObjectRequestParameters {
   std::string bucket;
   std::string object_key;
   std::string version;
@@ -188,9 +164,7 @@ struct GetObjectResult : public HeadObjectResult {
   int64_t write_size = 0;
 };
 
-struct ListRequestParameters : public RequestParameters {
-  ListRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct ListRequestParameters {
   std::string bucket;
   std::string delimiter;
   std::string prefix;
@@ -219,12 +193,9 @@ struct ListedObjectAttributes : public minifi::utils::ListedObject {
 using HeadObjectRequestParameters = GetObjectRequestParameters;
 using GetObjectTagsParameters = DeleteObjectRequestParameters;
 
-struct ListMultipartUploadsRequestParameters : public RequestParameters {
-  ListMultipartUploadsRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct ListMultipartUploadsRequestParameters {
   std::string bucket;
   std::optional<std::chrono::milliseconds> age_off_limit;  // if set, only list the aged off uploads
-  bool use_virtual_addressing = true;
 };
 
 struct MultipartUpload {
@@ -232,13 +203,10 @@ struct MultipartUpload {
   std::string upload_id;
 };
 
-struct AbortMultipartUploadRequestParameters : public RequestParameters {
-  AbortMultipartUploadRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct AbortMultipartUploadRequestParameters {
   std::string bucket;
   std::string key;
   std::string upload_id;
-  bool use_virtual_addressing = true;
 };
 
 class StreamReadException : public Exception {
@@ -250,7 +218,7 @@ class S3Wrapper {
  public:
   static constexpr auto BUFFER_SIZE = minifi::utils::configuration::DEFAULT_BUFFER_SIZE;
 
-  S3Wrapper();
+  S3Wrapper(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing = true);
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
   std::optional<PutObjectResult> putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size);
@@ -355,7 +323,6 @@ class S3Wrapper {
   template<typename AwsResult, typename FetchObjectResult>
   FetchObjectResult fillFetchObjectResult(const GetObjectRequestParameters& get_object_params, const AwsResult& fetch_object_result);
 
-  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
   std::unique_ptr<S3RequestSender> request_sender_;
   uint64_t last_bucket_list_timestamp_ = 0;
