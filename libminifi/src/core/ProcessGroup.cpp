@@ -278,8 +278,11 @@ Processor* ProcessGroup::findProcessorByName(const std::string &processorName, T
   return findProcessor(name_matches, traverse);
 }
 
-void ProcessGroup::addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node) {
-  controller_service_map_.put(nodeId, node);
+void ProcessGroup::addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node, const std::optional<std::string>& alternative_key) {
+  controller_service_map_.put(nodeId, node, this);
+  if (alternative_key) {
+    controller_service_map_.registerAlternativeKey(nodeId, *alternative_key);
+  }
 }
 
 core::controller::ControllerServiceNode* ProcessGroup::findControllerService(const std::string &nodeId, Traverse traverse) const {

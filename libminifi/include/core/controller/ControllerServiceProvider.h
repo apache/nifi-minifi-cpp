@@ -68,7 +68,10 @@ class ControllerServiceProvider : public CoreComponentImpl, public ConfigurableC
     return controller_map_->get(id, processor_or_controller_uuid);
   }
 
-  virtual std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &id) = 0;
+  virtual std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type,
+      const std::string &id,
+      ProcessGroup* parent,
+      const std::optional<std::string>& alternative_key) = 0;
 
   virtual void clearControllerServices() = 0;
 
@@ -83,7 +86,10 @@ class ControllerServiceProvider : public CoreComponentImpl, public ConfigurableC
   std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) const override;
   std::shared_ptr<ControllerService> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const override;
 
-  virtual void putControllerServiceNode(const std::string& identifier, const std::shared_ptr<ControllerServiceNode>& controller_service_node, ProcessGroup* process_group);
+  virtual void putControllerServiceNode(const std::string& primary_key,
+      const std::shared_ptr<ControllerServiceNode>& controller_service_node,
+      ProcessGroup* process_group,
+      const std::optional<std::string>& alternative_key);
 
   bool supportsDynamicProperties() const final {
     return false;

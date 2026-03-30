@@ -181,7 +181,7 @@ class ProcessGroup : public CoreComponentImpl {
 
   void getAllProcessors(std::vector<Processor*>& processor_vec) const;
 
-  void addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node);
+  void addControllerService(const std::string &nodeId, const std::shared_ptr<core::controller::ControllerServiceNode> &node, const std::optional<std::string>& alternative_key);
 
   core::controller::ControllerServiceNode* findControllerService(const std::string &nodeId, Traverse traverse = Traverse::ExcludeChildren) const;
 
