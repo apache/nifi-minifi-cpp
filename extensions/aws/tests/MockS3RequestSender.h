@@ -92,15 +92,20 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     }
   }
 
-  std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(
-      const Aws::S3Crt::Model::PutObjectRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config,
-      bool use_virtual_addressing) override {
-    put_object_request = request;
+  void setCredentials(const Aws::Auth::AWSCredentials& credentials) {
     credentials_ = credentials;
+  }
+
+  void setClientConfig(const Aws::Client::ClientConfiguration& client_config) {
     client_config_ = client_config;
+  }
+
+  void setUseVirtualAddressing(bool use_virtual_addressing) {
     use_virtual_addressing_ = use_virtual_addressing;
+  }
+
+  std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) override {
+    put_object_request = request;
 
     Aws::S3Crt::Model::PutObjectResult put_s3_result;
     if (!return_empty_result_) {
@@ -112,23 +117,13 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return put_s3_result;
   }
 
-  bool sendDeleteObjectRequest(
-      const Aws::S3Crt::Model::DeleteObjectRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+  bool sendDeleteObjectRequest(const Aws::S3Crt::Model::DeleteObjectRequest& request) override {
     delete_object_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
     return delete_object_result_;
   }
 
-  std::optional<Aws::S3Crt::Model::GetObjectResult> sendGetObjectRequest(
-      const Aws::S3Crt::Model::GetObjectRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+  std::optional<Aws::S3Crt::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3Crt::Model::GetObjectRequest& request) override {
     get_object_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
 
     Aws::S3Crt::Model::GetObjectResult get_s3_result;
     if (!return_empty_result_) {
@@ -144,13 +139,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return std::make_optional(std::move(get_s3_result));
   }
 
-  std::optional<Aws::S3Crt::Model::ListObjectsV2Result> sendListObjectsRequest(
-      const Aws::S3Crt::Model::ListObjectsV2Request& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+  std::optional<Aws::S3Crt::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3Crt::Model::ListObjectsV2Request& request) override {
     list_object_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
 
     Aws::S3Crt::Model::ListObjectsV2Result list_object_result;
     if (!is_listing_truncated_) {
@@ -175,13 +165,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return list_object_result;
   }
 
-  std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> sendListVersionsRequest(
-      const Aws::S3Crt::Model::ListObjectVersionsRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+  std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3Crt::Model::ListObjectVersionsRequest& request) override {
     list_version_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
 
     Aws::S3Crt::Model::ListObjectVersionsResult list_version_result;
     if (!is_listing_truncated_) {
@@ -207,13 +192,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return list_version_result;
   }
 
-  std::optional<Aws::S3Crt::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
-      const Aws::S3Crt::Model::GetObjectTaggingRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+  std::optional<Aws::S3Crt::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(const Aws::S3Crt::Model::GetObjectTaggingRequest& request) override {
     get_object_tagging_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
     Aws::S3Crt::Model::GetObjectTaggingResult result;
     for (const auto& tag_pair : S3_OBJECT_TAGS) {
       Aws::S3Crt::Model::Tag tag;
@@ -224,13 +204,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return result;
   }
 
-  std::optional<Aws::S3Crt::Model::HeadObjectResult> sendHeadObjectRequest(
-      const Aws::S3Crt::Model::HeadObjectRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+  std::optional<Aws::S3Crt::Model::HeadObjectResult> sendHeadObjectRequest(const Aws::S3Crt::Model::HeadObjectRequest& request) override {
     head_object_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
 
     Aws::S3Crt::Model::HeadObjectResult head_s3_result;
     if (!return_empty_result_) {
@@ -245,48 +220,27 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return std::make_optional(std::move(head_s3_result));
   }
 
-  std::optional<Aws::S3Crt::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(
-      const Aws::S3Crt::Model::CreateMultipartUploadRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config,
-      bool use_virtual_addressing) override {
+  std::optional<Aws::S3Crt::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(const Aws::S3Crt::Model::CreateMultipartUploadRequest& request) override {
     create_multipart_upload_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
-    use_virtual_addressing_ = use_virtual_addressing;
     Aws::S3Crt::Model::CreateMultipartUploadResult result;
     result.SetUploadId(S3_UPLOAD_ID);
     return std::make_optional(std::move(result));
   }
 
-  std::optional<Aws::S3Crt::Model::UploadPartResult> sendUploadPartRequest(
-      const Aws::S3Crt::Model::UploadPartRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config,
-      bool use_virtual_addressing) override {
+  std::optional<Aws::S3Crt::Model::UploadPartResult> sendUploadPartRequest(const Aws::S3Crt::Model::UploadPartRequest& request) override {
     if (etag_counter_ == fail_on_part_) {
       fail_on_part_ = 0;
       return std::nullopt;
     }
     upload_part_requests.push_back(request);
-    credentials_ = credentials;
-    client_config_ = client_config;
-    use_virtual_addressing_ = use_virtual_addressing;
     Aws::S3Crt::Model::UploadPartResult result;
     result.SetETag("etag" + std::to_string(etag_counter_));
     ++etag_counter_;
     return std::make_optional(std::move(result));
   }
 
-  std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
-      const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config,
-      bool use_virtual_addressing) override {
+  std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request) override {
     complete_multipart_upload_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
-    use_virtual_addressing_ = use_virtual_addressing;
     Aws::S3Crt::Model::CompleteMultipartUploadResult result;
     if (!return_empty_result_) {
       result.SetVersionId(S3_VERSION_1);
@@ -297,15 +251,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return std::make_optional(std::move(result));
   }
 
-  std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(
-      const Aws::S3Crt::Model::ListMultipartUploadsRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config,
-      bool use_virtual_addressing) override {
+  std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(const Aws::S3Crt::Model::ListMultipartUploadsRequest& request) override {
     list_multipart_upload_request = request;
-    credentials_ = credentials;
-    client_config_ = client_config;
-    use_virtual_addressing_ = use_virtual_addressing;
     Aws::S3Crt::Model::ListMultipartUploadsResult result;
     Aws::Vector<Aws::S3Crt::Model::MultipartUpload> uploads;
     Aws::S3Crt::Model::MultipartUpload upload1;
@@ -323,15 +270,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return std::make_optional(std::move(result));
   }
 
-  bool sendAbortMultipartUploadRequest(
-      const Aws::S3Crt::Model::AbortMultipartUploadRequest& request,
-      const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config,
-      bool use_virtual_addressing) override {
+  bool sendAbortMultipartUploadRequest(const Aws::S3Crt::Model::AbortMultipartUploadRequest& request) override {
     abort_multipart_upload_requests.push_back(request);
-    credentials_ = credentials;
-    client_config_ = client_config;
-    use_virtual_addressing_ = use_virtual_addressing;
     Aws::S3Crt::Model::AbortMultipartUploadResult result;
     return true;
   }

@@ -194,8 +194,8 @@ class PutS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-me
 
   friend class ::FlowProcessorS3TestsFixture<PutS3Object>;
 
-  explicit PutS3Object(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(metadata, std::move(s3_request_sender)) {
+  PutS3Object(core::ProcessorMetadata metadata, S3WrapperFactory s3_wrapper_factory)
+      : S3Processor(std::move(metadata), std::move(s3_wrapper_factory)) {
   }
 
   virtual uint64_t getMinPartSize() const {
@@ -218,15 +218,13 @@ class PutS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-me
   std::optional<aws::s3::PutObjectRequestParameters> buildPutS3RequestParams(
     const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties,
     std::string_view bucket) const;
-  void ageOffMultipartUploads(const CommonProperties &common_properties, const std::string_view bucket);
+  void ageOffMultipartUploads(const std::string_view bucket);
 
   std::string user_metadata_;
   std::map<std::string, std::string> user_metadata_map_;
   std::string storage_class_;
   std::string server_side_encryption_;
-  bool use_virtual_addressing_ = true;
   uint64_t multipart_threshold_{};
   uint64_t multipart_size_{};
   std::chrono::milliseconds multipart_upload_ageoff_interval_;

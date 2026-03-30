@@ -26,6 +26,7 @@
 #include <string_view>
 #include <utility>
 
+#include "utils/AWSInitializer.h"
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "AWSCredentialsProvider.h"
 #include "utils/ProxyOptions.h"
@@ -93,21 +94,13 @@ inline constexpr auto REGIONS = std::array{
 };
 }  // namespace region
 
-struct CommonProperties {
-  Aws::Auth::AWSCredentials credentials;
-  aws::ProxyOptions proxy;
-  std::string endpoint_override_url;
-};
-
 class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr auto AccessKey = core::PropertyDefinitionBuilder<>::createProperty("Access Key")
       .withDescription("AWS account access key")
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto SecretKey = core::PropertyDefinitionBuilder<>::createProperty("Secret Key")
       .withDescription("AWS account secret key")
-      .supportsExpressionLanguage(true)
       .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto CredentialsFile = core::PropertyDefinitionBuilder<>::createProperty("Credentials File")
@@ -135,23 +128,18 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
           "region, but this property overrides the selected endpoint URL, allowing use "
           "with other S3-compatible endpoints.")
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
       .withDescription("Proxy host name or IP")
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyPort = core::PropertyDefinitionBuilder<>::createProperty("Proxy Port")
       .withDescription("The port number of the proxy host")
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyUsername = core::PropertyDefinitionBuilder<>::createProperty("Proxy Username")
       .withDescription("Username to set when authenticating against proxy")
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyPassword = core::PropertyDefinitionBuilder<>::createProperty("Proxy Password")
       .withDescription("Password to set when authenticating against proxy")
-      .supportsExpressionLanguage(true)
       .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
@@ -181,12 +169,13 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
+  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(core::ProcessContext& context) const;
-  std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context, const core::FlowFile* flow_file);
-  aws::ProxyOptions getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file);
-  std::optional<CommonProperties> getCommonELSupportedProperties(core::ProcessContext& context, const core::FlowFile* flow_file);
+  std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context);
+  aws::ProxyOptions getProxy(core::ProcessContext& context);
 
-  std::optional<Aws::Client::ClientConfiguration> client_config_;
+  Aws::Client::ClientConfiguration client_config_;
+  Aws::Auth::AWSCredentials credentials_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

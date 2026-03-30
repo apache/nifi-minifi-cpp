@@ -56,9 +56,15 @@ class S3Processor : public AwsProcessor {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
-  explicit S3Processor(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender);
+  using S3WrapperFactory =
+    std::function<std::unique_ptr<aws::s3::S3Wrapper>(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing)>;
+  explicit S3Processor(core::ProcessorMetadata metadata, S3WrapperFactory s3_wrapper_factory);
 
-  aws::s3::S3Wrapper s3_wrapper_;
+  S3WrapperFactory s3_wrapper_factory_ =
+    [](const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing) {
+      return std::make_unique<aws::s3::S3Wrapper>(credentials, client_config, use_virtual_addressing);
+    };
+  std::unique_ptr<aws::s3::S3Wrapper> s3_wrapper_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

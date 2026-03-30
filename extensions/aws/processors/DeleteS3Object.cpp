@@ -31,13 +31,18 @@ void DeleteS3Object::initialize() {
   setSupportedRelationships(Relationships);
 }
 
+void DeleteS3Object::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  S3Processor::onSchedule(context, session_factory);
+  if (!s3_wrapper_) {
+    s3_wrapper_ = s3_wrapper_factory_(credentials_, client_config_, true);
+  }
+}
+
 std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDeleteS3RequestParams(
     const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties& common_properties,
     const std::string_view bucket) const {
-  gsl_Expects(client_config_);
-  aws::s3::DeleteObjectRequestParameters params(common_properties.credentials, *client_config_);
+  aws::s3::DeleteObjectRequestParameters params;
   if (const auto object_key = context.getProperty(ObjectKey, &flow_file)) {
     params.object_key = *object_key;
   }
@@ -53,21 +58,15 @@ std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDelet
   logger_->log_debug("DeleteS3Object: Version [{}]", params.version);
 
   params.bucket = bucket;
-  params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   return params;
 }
 
 void DeleteS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(s3_wrapper_);
   logger_->log_trace("DeleteS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
     context.yield();
-    return;
-  }
-
-  auto common_properties = getCommonELSupportedProperties(context, flow_file.get());
-  if (!common_properties) {
-    session.transfer(flow_file, Failure);
     return;
   }
 
@@ -79,13 +78,13 @@ void DeleteS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessi
   }
   logger_->log_debug("S3Processor: Bucket [{}]", *bucket);
 
-  auto params = buildDeleteS3RequestParams(context, *flow_file, *common_properties, *bucket);
+  auto params = buildDeleteS3RequestParams(context, *flow_file, *bucket);
   if (!params) {
     session.transfer(flow_file, Failure);
     return;
   }
 
-  if (s3_wrapper_.deleteObject(*params)) {
+  if (s3_wrapper_->deleteObject(*params)) {
     logger_->log_debug("Successfully deleted S3 object '{}' from bucket '{}'", params->object_key, *bucket);
     session.transfer(flow_file, Success);
   } else {
