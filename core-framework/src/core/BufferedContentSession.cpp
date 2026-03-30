@@ -95,6 +95,11 @@ void BufferedContentSession::commit() {
   append_state_.clear();
 }
 
+void BufferedContentSession::remove(const std::shared_ptr<ResourceClaim>& resource_id) {
+  managed_resources_.erase(resource_id);
+  append_state_.erase(resource_id);
+}
+
 void BufferedContentSession::rollback() {
   managed_resources_.clear();
   append_state_.clear();
