@@ -14,9 +14,12 @@
 # limitations under the License.
 
 from typing import Protocol
+from minifi_test_framework.minifi.flow_definition import FlowDefinition
 
 
 class MinifiProtocol(Protocol):
+    flow_definition: FlowDefinition
+
     def set_property(self, key: str, value: str):
         ...
 
