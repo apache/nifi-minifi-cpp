@@ -393,7 +393,7 @@ int64_t ProcessSessionImpl::read(const core::FlowFile& flow_file, const io::Inpu
     if (metrics_) {
       metrics_->bytesRead() += *callback_result;
     }
-    return *callback_result;
+    return callback_result.toI64();
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception {}", exception.what());
     throw;
