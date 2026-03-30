@@ -177,7 +177,7 @@ io::IoResult ConsumeMQTT::WriteCallback::operator() (const std::shared_ptr<io::O
     return io::IoResult::error();
   }
 
-  return io::IoResult::fromSizeT(gsl::narrow<int64_t>(len));
+  return io::IoResult::fromSizeT(len);
 }
 
 void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) const {
