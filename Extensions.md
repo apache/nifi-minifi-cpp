@@ -28,19 +28,18 @@ Moreover the actual resource registration (processors/controller services) has t
 One possible example of this is:
 
 ```C++
-extern "C" const char* const MinifiApiVersion = MINIFI_API_VERSION;
+extern "C" const uint32_t MinifiApiVersion = MINIFI_API_VERSION;
 
-extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+extern "C" void MinifiInitExtension(MinifiExtensionContext* extension_context) {
+  MinifiExtensionCreateInfo ext_create_info{
+    .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
+    .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
+    .deinit = nullptr,
+    .user_data = nullptr
+  };
+  auto* extension = MinifiCreateExtension(extension_context, &ext_create_info);
   minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& description) {
-    MinifiExtensionCreateInfo ext_create_info{
-      .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
-      .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
-      .deinit = nullptr,
-      .user_data = nullptr,
-      .processors_count = 1,
-      .processors_ptr = &description,
-    };
-    MinifiCreateExtension(extension, &ext_create_info);
+    MinifiRegisterProcessor(extension, &description);
   });
 }
 ```
