@@ -17,8 +17,39 @@
 To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR select the option to "Enable all Extensions" in the bootstrap script. [ReadMe](https://github.com/apache/nifi-minifi-cpp/#bootstrapping)
 
 # Extension internals
-Extensions are dynamic libraries loaded at runtime by the agent. An extension makes its
-capabilities (classes) available to the system through registrars. Registration must happen in source files, not headers.
+Extensions are dynamic libraries loaded at runtime by the agent.
+
+## C extensions
+You can build a shared library depending on the C capabilities of the agent as given in the `minifi-c.h` file.
+For the shared library to be considered a valid extension, it has to have a global symbol with the name `MinifiCApiVersion`
+with its value as a null terminated string (`const char*`) of the macro `MINIFI_API_VERSION` from `minifi-c.h`.
+
+Moreover the actual resource registration (processors/controller services) has to happen during the `MinifiInitExtension` call.
+One possible example of this is:
+
+```C++
+extern "C" const char* const MinifiApiVersion = MINIFI_API_VERSION;
+
+extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+  minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& description) {
+    MinifiExtensionCreateInfo ext_create_info{
+      .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
+      .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
+      .deinit = nullptr,
+      .user_data = nullptr,
+      .processors_count = 1,
+      .processors_ptr = &description,
+    };
+    MinifiCreateExtension(extension, &ext_create_info);
+  });
+}
+```
+
+## C++ extensions
+You can utilize the C++ api, linking to `minifi-api` and possibly using the helpers in `extension-framework`.
+No compatibilities are guaranteed beyond what extensions are built together with the agent at the same time.
+
+An extension makes its capabilities (classes) available to the system through registrars. Registration must happen in source files, not headers.
 
 ```C++
 // register user-facing classes as
@@ -33,10 +64,10 @@ REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
 Some extensions (e.g. `OpenCVExtension`) require initialization before use.
-You need to define an `InitExtension` function of type `MinifiExtension*(MinifiConfig*)` to be called.
+You need to define an `MinifiInitCppExtension` function of type `MinifiExtension*(MinifiConfig*)` to be called.
 
 ```C++
-extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
+extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
   const auto success = org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
   if (!success) {
     return nullptr;
@@ -49,7 +80,7 @@ extern "C" MinifiExtension* InitExtension(MinifiConfig* /*config*/) {
     .processors_count = 0,
     .processors_ptr = nullptr
   };
-  return MinifiCreateExtension(minifi::utils::toStringView(MINIFI_API_VERSION), &ext_create_info);
+  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
 }
 ```
 

@@ -1,5 +1,6 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,7 +16,6 @@
  * limitations under the License.
  */
 
-#include "RunLlamaCppInference.h"
 #include "api/core/Resource.h"
 #include "api/utils/minifi-c-utils.h"
 
@@ -24,18 +24,16 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_API_VERSION;
+CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
 
 CEXTENSIONAPI void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
-  minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& description) {
-    MinifiExtensionCreateInfo ext_create_info{
-      .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
-      .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
-      .deinit = nullptr,
-      .user_data = nullptr,
-      .processors_count = 1,
-      .processors_ptr = &description,
-    };
-    MinifiCreateExtension(extension, &ext_create_info);
-  });
+  MinifiExtensionCreateInfo ext_create_info{
+    .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
+    .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
+    .deinit = nullptr,
+    .user_data = nullptr,
+    .processors_count = 0,
+    .processors_ptr = nullptr,
+  };
+  MinifiCreateExtension(extension, &ext_create_info);
 }

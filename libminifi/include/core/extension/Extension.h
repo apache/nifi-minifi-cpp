@@ -17,13 +17,15 @@
 
 #pragma once
 
-#include <memory>
-#include <map>
-#include <string>
 #include <filesystem>
+#include <map>
+#include <memory>
+#include <string>
 
+#include "minifi-c/minifi-c.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/properties/Configure.h"
+#include "ApiVersion.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
@@ -49,6 +51,8 @@ class Extension {
 
   bool initialize(const std::shared_ptr<minifi::Configure>& configure);
 
+  bool setInfo(Info info);
+
  private:
 #ifdef WIN32
   std::map<void*, std::string> resource_mapping_;
@@ -67,11 +71,12 @@ class Extension {
   bool unload();
   void* findSymbol(const char* name);
 
-  std::string name_;
+  std::string library_name_;
   std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
 
-  std::unique_ptr<Info> info_;
+  std::optional<Info> info_;
+  uint32_t api_version_{0};
 
   const std::shared_ptr<logging::Logger> logger_;
 };

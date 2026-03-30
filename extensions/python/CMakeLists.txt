@@ -25,12 +25,14 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 if (NOT WIN32)
     add_minifi_library(minifi-python-lib-loader-extension SHARED pythonlibloader/PythonLibLoader.cpp)
+    set_target_properties(minifi-python-lib-loader-extension PROPERTIES HAS_CUSTOM_INITIALIZER TRUE)
     target_link_libraries(minifi-python-lib-loader-extension PRIVATE ${LIBMINIFI})
 endif()
 
 file(GLOB SOURCES "*.cpp" "types/*.cpp" "pythonloader/PyProcLoader.cpp")
 
 add_minifi_library(minifi-python-script-extension SHARED ${SOURCES})
+set_target_properties(minifi-python-script-extension PROPERTIES HAS_CUSTOM_INITIALIZER TRUE)
 
 target_link_libraries(minifi-python-script-extension PRIVATE ${LIBMINIFI} Threads::Threads)
 
