@@ -107,7 +107,7 @@ class MinifiContainer(Container):
         self.properties["nifi.metrics.publisher.LogMetricsPublisher.logging.interval"] = "1s"
         self.properties["nifi.metrics.publisher.class"] = "LogMetricsPublisher"
 
-    def fetch_flow_config_from_flow_url(self):
+    def configure_c2_flow_url(self):
         self.properties["nifi.c2.flow.url"] = f"http://minifi-c2-server-{self.scenario_id}:10090/c2/config?class=minifi-test-class"
 
     def set_up_ssl_properties(self):

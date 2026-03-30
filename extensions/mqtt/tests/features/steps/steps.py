@@ -28,7 +28,7 @@ from containers.mqtt_broker_container import MqttBrokerContainer
 
 
 @given("a {processor_name} processor set up to communicate with an MQTT broker instance in the \"{container_name}\" flow")
-def step_impl(context: MinifiTestContext, processor_name: str, container_name: str):
+def setup_mqtt_processor_in_flow(context: MinifiTestContext, processor_name: str, container_name: str):
     processor = Processor(processor_name, processor_name)
     processor.add_property('Broker URI', f'mqtt-broker-{context.scenario_id}:1883')
     processor.add_property('Topic', 'testtopic')
@@ -43,18 +43,18 @@ def step_impl(context: MinifiTestContext, processor_name: str, container_name: s
 
 
 @given("a {processor_name} processor set up to communicate with an MQTT broker instance")
-def step_impl(context: MinifiTestContext, processor_name: str):
+def setup_mqtt_processor(context: MinifiTestContext, processor_name: str):
     context.execute_steps(f'given a {processor_name} processor set up to communicate with an MQTT broker instance in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 
 @step("an MQTT broker is started")
-def step_impl(context: MinifiTestContext):
+def start_mqtt_broker(context: MinifiTestContext):
     context.containers["mqtt-broker"] = MqttBrokerContainer(context)
     assert context.containers["mqtt-broker"].deploy(context)
 
 
 @then('the MQTT broker has a log line matching "{log_line_regex}"')
-def step_impl(context: MinifiTestContext, log_line_regex: str):
+def verify_mqtt_broker_log_line_matches(context: MinifiTestContext, log_line_regex: str):
     assert wait_for_condition(
         condition=lambda: re.search(log_line_regex, context.containers["mqtt-broker"].get_logs()),
         timeout_seconds=60,
@@ -63,7 +63,7 @@ def step_impl(context: MinifiTestContext, log_line_regex: str):
 
 
 @then('the MQTT broker has {log_count:d} log lines matching "{log_line_regex}"')
-def step_impl(context: MinifiTestContext, log_count: int, log_line_regex: str):
+def verify_mqtt_broker_log_line_count_matches(context: MinifiTestContext, log_count: int, log_line_regex: str):
     assert wait_for_condition(
         condition=lambda: len(re.findall(log_line_regex, context.containers["mqtt-broker"].get_logs())) == log_count,
         timeout_seconds=60,
@@ -72,5 +72,5 @@ def step_impl(context: MinifiTestContext, log_count: int, log_line_regex: str):
 
 
 @when("a test message \"{message}\" is published to the MQTT broker on topic \"{topic}\"")
-def step_impl(context: MinifiTestContext, message: str, topic: str):
+def publish_test_message_to_mqtt_broker(context: MinifiTestContext, message: str, topic: str):
     assert context.containers["mqtt-broker"].publish_mqtt_message(topic, message)
