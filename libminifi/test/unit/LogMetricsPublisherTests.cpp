@@ -85,8 +85,11 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify empty metrics if no valid metr
     configuration_->set(Configure::nifi_metrics_publisher_metrics, "InvalidMetric,NotValidMetricNode");
   }
   publisher_->initialize(configuration_, response_node_loader_);
-  publisher_->loadMetricNodes();
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(5s, "LogMetricsPublisher is configured without any valid metrics!"));
+  publisher_->loadMetricNodes(nullptr);
+  CHECK_FALSE(utils::verifyLogLinePresenceInPollTime(0s, "LogMetricsPublisher is configured without any valid metrics!"));
+  auto root_node = core::ProcessGroup(core::ROOT_PROCESS_GROUP, "root");
+  publisher_->loadMetricNodes(&root_node);
+  CHECK(utils::verifyLogLinePresenceInPollTime(5s, "LogMetricsPublisher is configured without any valid metrics!"));
 }
 
 bool check_exact_metrics_value(const rapidjson::Value& repo_metrics, const std::string_view key, const std::string_view expected_value) {
@@ -130,7 +133,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs"
   configuration_->set(minifi::Configuration::nifi_metrics_publisher_log_metrics_logging_interval, "100ms");
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics,DeviceInfoNode");
   publisher_->initialize(configuration_, response_node_loader_);
-  publisher_->loadMetricNodes();
+  publisher_->loadMetricNodes(nullptr);
   REQUIRE(utils::verifyEventHappenedInPollTime(
       5s,
       [] {
@@ -146,7 +149,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", 
   configuration_->set(minifi::Configuration::nifi_metrics_publisher_log_metrics_logging_interval, "100ms");
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics");
   publisher_->initialize(configuration_, response_node_loader_);
-  publisher_->loadMetricNodes();
+  publisher_->loadMetricNodes(nullptr);
 
   REQUIRE(utils::verifyEventHappenedInPollTime(
       5s,
@@ -160,7 +163,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", 
   LogTestController::getInstance().reset();
   LogTestController::getInstance().setTrace<minifi::state::LogMetricsPublisher>();
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "DeviceInfoNode");
-  publisher_->loadMetricNodes();
+  publisher_->loadMetricNodes(nullptr);
   std::string expected_log = R"([info] {
     "LogMetrics": {
         "deviceInfo": {
@@ -182,7 +185,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify generic and publisher specific
     configuration_->set(Configure::nifi_metrics_publisher_metrics, "DeviceInfoNode");
   }
   publisher_->initialize(configuration_, response_node_loader_);
-  publisher_->loadMetricNodes();
+  publisher_->loadMetricNodes(nullptr);
   REQUIRE(utils::verifyEventHappenedInPollTime(
       5s,
       [] {
@@ -199,7 +202,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify changing log level property fo
   configuration_->set(minifi::Configuration::nifi_metrics_publisher_log_metrics_log_level, "dEbUg");
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics");
   publisher_->initialize(configuration_, response_node_loader_);
-  publisher_->loadMetricNodes();
+  publisher_->loadMetricNodes(nullptr);
   REQUIRE(utils::verifyEventHappenedInPollTime(
       5s,
       [] {

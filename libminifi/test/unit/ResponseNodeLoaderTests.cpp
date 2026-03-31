@@ -75,29 +75,29 @@ class ResponseNodeLoaderTestFixture {
 };
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load non-existent response node", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("NonExistentNode");
+  auto nodes = response_node_loader_.loadResponseNodes("NonExistentNode", nullptr);
   REQUIRE(nodes.empty());
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load processor metrics node not part of the flow config", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("TailFileMetrics");
+  auto nodes = response_node_loader_.loadResponseNodes("TailFileMetrics", nullptr);
   REQUIRE(nodes.empty());
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load system metrics node", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("QueueMetrics");
+  auto nodes = response_node_loader_.loadResponseNodes("QueueMetrics", nullptr);
   REQUIRE(nodes.size() == 1);
   REQUIRE(nodes[0]->getName() == "QueueMetrics");
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load processor metrics node part of the flow config", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("ReadFromFlowFileTestProcessorMetrics");
+  auto nodes = response_node_loader_.loadResponseNodes("ReadFromFlowFileTestProcessorMetrics", nullptr);
   REQUIRE(nodes.size() == 1);
   REQUIRE(nodes[0]->getName() == "ReadFromFlowFileTestProcessorMetrics");
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load multiple processor metrics nodes of the same type in a single flow", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("WriteToFlowFileTestProcessorMetrics");
+  auto nodes = response_node_loader_.loadResponseNodes("WriteToFlowFileTestProcessorMetrics", nullptr);
   REQUIRE(nodes.size() == 2);
   REQUIRE(nodes[0]->getName() == "WriteToFlowFileTestProcessorMetrics");
   REQUIRE(nodes[1]->getName() == "WriteToFlowFileTestProcessorMetrics");
@@ -105,7 +105,7 @@ TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load multiple processor metrics
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Use regex to filter processor metrics", "[responseNodeLoaderTest]") {
   SECTION("Load all processor metrics with regex") {
-    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/.*");
+    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/.*", nullptr);
     std::unordered_map<std::string, uint32_t> metric_counts;
     REQUIRE(nodes.size() == 3);
     for (const auto& node : nodes) {
@@ -116,19 +116,19 @@ TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Use regex to filter processor m
   }
 
   SECTION("Filter for a single processor") {
-    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/Read.*");
+    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/Read.*", nullptr);
     REQUIRE(nodes.size() == 1);
     REQUIRE(nodes[0]->getName() == "ReadFromFlowFileTestProcessorMetrics");
   }
 
   SECTION("Full match") {
-    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/ReadFromFlowFileTestProcessorMetrics");
+    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/ReadFromFlowFileTestProcessorMetrics", nullptr);
     REQUIRE(nodes.size() == 1);
     REQUIRE(nodes[0]->getName() == "ReadFromFlowFileTestProcessorMetrics");
   }
 
   SECTION("No partial match is allowed") {
-    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/Read");
+    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/Read", nullptr);
     REQUIRE(nodes.empty());
   }
 }
