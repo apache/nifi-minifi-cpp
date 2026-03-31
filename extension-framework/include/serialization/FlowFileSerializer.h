@@ -38,11 +38,11 @@ class FlowFile;
 
 class FlowFileSerializer {
  public:
-  using FlowFileReader = std::function<int64_t(const std::shared_ptr<core::FlowFile>&, const io::InputStreamCallback&)>;
+  using FlowFileReader = std::function<io::IoResult(const std::shared_ptr<core::FlowFile>&, const io::InputStreamCallback&)>;
 
   explicit FlowFileSerializer(FlowFileReader reader) : reader_(std::move(reader)) {}
 
-  virtual int64_t serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) = 0;
+  virtual io::IoResult serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) = 0;
 
   virtual ~FlowFileSerializer() = default;
 

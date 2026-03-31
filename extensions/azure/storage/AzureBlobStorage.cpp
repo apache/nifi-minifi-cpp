@@ -78,7 +78,7 @@ bool AzureBlobStorage::deleteBlob(const DeleteAzureBlobStorageParameters& params
 std::optional<uint64_t> AzureBlobStorage::fetchBlob(const FetchAzureBlobStorageParameters& params, io::OutputStream& stream) {
   try {
     auto fetch_res = blob_storage_client_->fetchBlob(params);
-    return internal::pipe(*fetch_res, stream);
+    return internal::pipe(*fetch_res, stream).inner() | utils::toOptional();
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while fetching blob '{}' of container '{}': {}", params.blob_name, params.container_name, ex.what());
     return std::nullopt;

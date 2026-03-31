@@ -68,12 +68,12 @@ void FetchAzureBlobStorage::onTrigger(core::ProcessContext& context, core::Proce
 
   auto fetched_flow_file = session.create(flow_file.get());
   std::optional<int64_t> result_size;
-  session.write(fetched_flow_file, [&, this](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+  session.write(fetched_flow_file, [&, this](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
     result_size = azure_blob_storage_.fetchBlob(*params, *stream);
     if (!result_size) {
-      return 0;
+      return io::IoResult::zero();
     }
-    return gsl::narrow<int64_t>(*result_size);
+    return io::IoResult::fromI64(*result_size);
   });
 
   if (result_size == std::nullopt) {

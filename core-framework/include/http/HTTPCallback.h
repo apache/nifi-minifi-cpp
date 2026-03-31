@@ -65,7 +65,7 @@ class HttpStreamingCallback final : public HTTPUploadByteArrayInputCallback {
     seekInner(lock, pos);
   }
 
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) override {
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream) override {
     std::vector<std::byte> vec;
 
     if (stream->size() > 0) {
@@ -76,7 +76,7 @@ class HttpStreamingCallback final : public HTTPUploadByteArrayInputCallback {
     return processInner(std::move(vec));
   }
 
-  int64_t process(const uint8_t* data, size_t size) {
+  io::IoResult process(const uint8_t* data, size_t size) {
     std::vector<std::byte> vec;
     vec.resize(size);
     memcpy(vec.data(), data, size);
@@ -156,20 +156,20 @@ class HttpStreamingCallback final : public HTTPUploadByteArrayInputCallback {
    * @param vec the buffer to be inserted
    * @return the number of bytes processed (the size of vec)
    */
-  int64_t processInner(std::vector<std::byte>&& vec) {
+  io::IoResult processInner(std::vector<std::byte>&& vec) {
     size_t size = vec.size();
 
     logger_->log_trace("processInner() called, vec.data(): {}, vec.size(): {}", static_cast<void*>(vec.data()), size);
 
     if (size == 0U) {
-      return 0U;
+      return io::IoResult::zero();
     }
 
     std::unique_lock<std::mutex> lock(mutex_);
     byte_arrays_.emplace_back(std::move(vec));
     cv.notify_all();
 
-    return size;
+    return io::IoResult::fromSizeT(size);
   }
 
   /**

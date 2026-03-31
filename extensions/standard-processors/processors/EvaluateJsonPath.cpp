@@ -84,9 +84,9 @@ std::string EvaluateJsonPath::extractQueryResult(const jsoncons::json& query_res
 void EvaluateJsonPath::writeQueryResult(core::ProcessSession& session, core::FlowFile& flow_file, const jsoncons::json& query_result, const std::string& property_name,
     std::unordered_map<std::string, std::string>& attributes_to_set) const {
   if (destination_ == evaluate_json_path::DestinationType::FlowFileContent) {
-    session.write(flow_file, [&query_result, this](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
+    session.write(flow_file, [&query_result, this](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
       auto result_string = extractQueryResult(query_result);
-      return gsl::narrow<int64_t>(output_stream->write(reinterpret_cast<const uint8_t*>(result_string.data()), result_string.size()));
+      return io::IoResult::fromSizeT(output_stream->write(reinterpret_cast<const uint8_t*>(result_string.data()), result_string.size()));
     });
   } else {
     attributes_to_set.emplace(property_name, extractQueryResult(query_result));

@@ -26,22 +26,21 @@ LineByLineInputOutputStreamCallback::LineByLineInputOutputStreamCallback(Callbac
   : callback_(std::move(callback)) {
 }
 
-std::optional<io::ReadWriteResult> LineByLineInputOutputStreamCallback::operator()(const std::shared_ptr<io::InputStream>& input, const std::shared_ptr<io::OutputStream>& output) {
+io::ReadWriteResult LineByLineInputOutputStreamCallback::operator()(const std::shared_ptr<io::InputStream>& input, const std::shared_ptr<io::OutputStream>& output) {
   gsl_Expects(input);
   gsl_Expects(output);
 
-  io::ReadWriteResult result;
 
-  if (int64_t status = readInput(*input); status <= 0) {
+  if (const int64_t status = readInput(*input); status <= 0) {
     if (status < 0) {
-      return std::nullopt;
+      return io::ReadWriteResult::error();
     }
-    return result;
+    return io::ReadWriteResult::zero();
   }
 
-  result.bytes_read = gsl::narrow<int64_t>(input_.size());
+  const uint64_t bytes_read = input_.size();
 
-  std::size_t total_bytes_written = 0;
+  uint64_t total_bytes_written = 0;
   bool is_first_line = true;
   readLine();
   do {
@@ -49,14 +48,14 @@ std::optional<io::ReadWriteResult> LineByLineInputOutputStreamCallback::operator
     std::string output_line = callback_(*current_line_, is_first_line, isLastLine());
     const auto bytes_written = output->write(reinterpret_cast<const uint8_t *>(output_line.data()), output_line.size());
     if (io::isError(bytes_written)) {
-      return std::nullopt;
+      return io::ReadWriteResult::error();
     }
     total_bytes_written += bytes_written;
     is_first_line = false;
   } while (!isLastLine());
 
-  result.bytes_written = gsl::narrow<int64_t>(total_bytes_written);
-  return result;
+
+  return { bytes_read, total_bytes_written };
 }
 
 int64_t LineByLineInputOutputStreamCallback::readInput(io::InputStream& stream) {
