@@ -38,11 +38,13 @@ class AWSInitializer {
  public:
   static AWSInitializer& get();
   ~AWSInitializer();
+  void shutdown();
 
  private:
   AWSInitializer();
 
   Aws::SDKOptions options_;
+  bool is_shut_down_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::utils
