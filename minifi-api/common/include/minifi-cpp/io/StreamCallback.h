@@ -19,7 +19,6 @@
 #include <cinttypes>
 #include <functional>
 #include <memory>
-#include <optional>
 
 #include "../../minifi-api/include/minifi-c/minifi-c.h"
 #include "Stream.h"
