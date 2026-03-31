@@ -64,14 +64,14 @@ size_t CompressionOutputStream::write(const uint8_t *value, size_t len) {
 size_t CompressionOutputStream::compressAndWrite() {
   if (was_data_written_) {
     // Write a continue byte to indicate that there is more data to follow
-    auto ret = internal_stream_.write(static_cast<uint8_t>(1));
+    const auto ret = internal_stream_.write(static_cast<uint8_t>(1));
     if (io::isError(ret)) {
       logger_->log_error("Failed to write continue byte before compression: {}", ret);
       return ret;
     }
   }
-  auto ret = internal_stream_.write(reinterpret_cast<const uint8_t *>(SYNC_BYTES.data()), SYNC_BYTES.size());
-  if (io::isError(ret)) {
+
+  if (const auto ret = internal_stream_.write(reinterpret_cast<const uint8_t *>(SYNC_BYTES.data()), SYNC_BYTES.size()); io::isError(ret)) {
     logger_->log_error("Failed to write sync bytes before compression: {}", ret);
     return ret;
   }
@@ -79,7 +79,7 @@ size_t CompressionOutputStream::compressAndWrite() {
   io::BufferStream buffer_stream;
   {
     io::ZlibCompressStream zlib_stream{gsl::make_not_null(&buffer_stream), io::ZlibCompressionFormat::ZLIB, Z_BEST_SPEED};
-    ret = zlib_stream.write(gsl::make_span(buffer_).subspan(0, buffer_offset_));
+    const auto ret = zlib_stream.write(gsl::make_span(buffer_).subspan(0, buffer_offset_));
     if (io::isError(ret)) {
       logger_->log_error("Failed to write data to zlib stream: {}", ret);
       return ret;
@@ -90,26 +90,26 @@ size_t CompressionOutputStream::compressAndWrite() {
   }
 
   // Write the original size of the data before compression
-  ret = internal_stream_.write(gsl::narrow<uint32_t>(buffer_offset_));
-  if (io::isError(ret)) {
+
+  if (const auto ret = internal_stream_.write(gsl::narrow<uint32_t>(buffer_offset_)); io::isError(ret)) {
     logger_->log_error("Failed to write original size before compression: {}", ret);
     return ret;
   }
 
   // Write the compressed size of the data
-  ret = internal_stream_.write(gsl::narrow<uint32_t>(buffer_stream.size()));
-  if (io::isError(ret)) {
+  if (const auto ret = internal_stream_.write(gsl::narrow<uint32_t>(buffer_stream.size())); io::isError(ret)) {
     return ret;
   }
 
   // Write the compressed data
-  if (const io::IoResult pipe_res = internal::pipe(buffer_stream, internal_stream_); !pipe_res) {
+  const io::IoResult pipe_res = internal::pipe(buffer_stream, internal_stream_);
+  if (!pipe_res) {
     return io::STREAM_ERROR;
   }
 
   buffer_offset_ = 0;
   was_data_written_ = true;
-  return ret;
+  return gsl::narrow<size_t>(pipe_res.toI64());
 }
 
 void CompressionOutputStream::flush() {
