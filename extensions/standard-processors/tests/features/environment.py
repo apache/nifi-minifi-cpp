@@ -12,8 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import platform
+
 import docker
 from minifi_test_framework.core.hooks import common_before_scenario
 from minifi_test_framework.core.hooks import common_after_scenario
@@ -30,6 +31,8 @@ def before_feature(context, feature):
 
 
 def is_minifi_image_alpine_based(context):
+    if os.name == 'nt':
+        return False
     client: docker.DockerClient = docker.from_env()
     container = client.containers.create(
         image=context.minifi_container_image,

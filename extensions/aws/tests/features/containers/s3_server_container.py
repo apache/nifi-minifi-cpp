@@ -16,12 +16,12 @@
 import json
 import logging
 
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class S3ServerContainer(Container):
+class S3ServerContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         super().__init__("adobe/s3mock:3.12.0", f"s3-server-{test_context.scenario_id}", test_context.network)
         self.environment.append("initialBuckets=test_bucket")

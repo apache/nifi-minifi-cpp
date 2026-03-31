@@ -155,22 +155,6 @@ pip install --trusted-host pypi.python.org --upgrade pip setuptools
 # Install test dependencies
 echo "Installing test dependencies..." 1>&2
 
-# hint include/library paths if homewbrew is in use
-if brew list 2> /dev/null | grep openssl > /dev/null 2>&1; then
-  echo "Using homebrew paths for openssl" 1>&2
-  LDFLAGS="-L$(brew --prefix openssl@1.1)/lib"
-  export LDFLAGS
-  CFLAGS="-I$(brew --prefix openssl@1.1)/include"
-  export CFLAGS
-  SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl@1.1)/include"
-  export SWIG_FEATURES
-fi
-
-if ! command swig -version &> /dev/null; then
-  echo "Swig could not be found on your system (dependency of m2crypto python library). Please install swig to continue."
-  exit 1
-fi
-
 pip install -e "${docker_dir}/../behave_framework"
 
 export TMPDIR="/tmp/behavex_ci_${RANDOM}"
@@ -192,6 +176,9 @@ fi
 
 echo "${BEHAVE_OPTS[@]}"
 
-mapfile -t FEATURE_FILES < <(find "${docker_dir}/../extensions" -type f -name '*.feature')
+FEATURE_FILES=()
+while IFS= read -r -d '' file; do
+    FEATURE_FILES+=("$file")
+done < <(find "${docker_dir}/../extensions" -type f -name '*.feature' -print0)
 
 behavex "${BEHAVE_OPTS[@]}" "${FEATURE_FILES[@]}"
