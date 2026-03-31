@@ -18,13 +18,13 @@
 import logging
 
 from docker.errors import ContainerError
-from minifi_test_framework.containers.container import Container
+from minifi_test_framework.containers.container_linux import LinuxContainer
 from minifi_test_framework.core.helpers import run_cmd_in_docker_image
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 
 
-class AzureServerContainer(Container):
+class AzureServerContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         super().__init__("mcr.microsoft.com/azure-storage/azurite:3.35.0",
                          f"azure-storage-server-{test_context.scenario_id}",

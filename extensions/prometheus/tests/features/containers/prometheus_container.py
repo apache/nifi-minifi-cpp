@@ -14,15 +14,15 @@
 # limitations under the License.
 
 import logging
-from OpenSSL import crypto
-from minifi_test_framework.containers.container import Container
 from minifi_test_framework.core.helpers import wait_for_condition
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.core.ssl_utils import make_cert_without_extended_usage
 from minifi_test_framework.containers.file import File
+from minifi_test_framework.core.ssl_utils import dump_cert, dump_key
+from minifi_test_framework.containers.container_linux import LinuxContainer
 
 
-class PrometheusContainer(Container):
+class PrometheusContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext, ssl: bool = False):
         super().__init__("prom/prometheus:v3.9.1", f"prometheus-{test_context.scenario_id}", test_context.network)
         self.scenario_id = test_context.scenario_id
@@ -30,13 +30,13 @@ class PrometheusContainer(Container):
         if ssl:
             prometheus_cert, prometheus_key = make_cert_without_extended_usage(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
 
-            root_ca_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)
+            root_ca_content = dump_cert(test_context.root_ca_cert)
             self.files.append(File("/etc/prometheus/certs/root-ca.pem", root_ca_content, permissions=0o644))
 
-            prometheus_cert_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=prometheus_cert)
+            prometheus_cert_content = dump_cert(prometheus_cert)
             self.files.append(File("/etc/prometheus/certs/prometheus.crt", prometheus_cert_content, permissions=0o644))
 
-            prometheus_key_content = crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=prometheus_key)
+            prometheus_key_content = dump_key(prometheus_key)
             self.files.append(File("/etc/prometheus/certs/prometheus.key", prometheus_key_content, permissions=0o644))
 
             extra_ssl_settings = """

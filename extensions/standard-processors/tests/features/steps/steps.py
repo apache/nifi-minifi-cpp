@@ -27,6 +27,8 @@ from minifi_test_framework.core.helpers import wait_for_condition
 from containers.syslog_container import SyslogContainer
 from containers.diag_slave_container import DiagSlave
 from containers.tcp_client_container import TcpClientContainer
+
+from minifi_test_framework.containers.minifi_protocol import set_up_ssl_properties
 from minifi_c2_server_container import MinifiC2Server
 
 
@@ -78,7 +80,7 @@ def setup_ssl_properties_for_c2(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().set_property("nifi.c2.full.heartbeat", "false")
     context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.class", "minifi-test-class")
     context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.identifier", "minifi-test-id")
-    context.get_or_create_default_minifi_container().set_up_ssl_properties()
+    set_up_ssl_properties(context.get_or_create_default_minifi_container())
 
 
 @given("a MiNiFi C2 server is set up")
