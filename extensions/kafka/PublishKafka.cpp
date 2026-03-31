@@ -277,7 +277,7 @@ class ReadCallback {
       if (io::isError(readRet)) {
         status_ = -1;
         error_ = "Failed to read from stream";
-        return io::IoResult::fromSizeT(read_size_);  // TODO(mzink) shouldnt it be error?
+        return io::IoResult::fromSizeT(read_size_);
       }
       if (readRet == 0) { break; }
 
@@ -289,7 +289,7 @@ class ReadCallback {
         });
         status_ = -1;
         error_ = rd_kafka_err2str(err);
-        return io::IoResult::fromSizeT(read_size_);  // TODO(mzink) shouldnt it be error?
+        return io::IoResult::fromSizeT(read_size_);
       }
       read_size_ += gsl::narrow<uint32_t>(readRet);
     }

@@ -258,14 +258,15 @@ void ProcessSessionImpl::write(core::FlowFile &flow, const io::OutputStreamCallb
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
     }
     const auto callback_result = callback(stream);
-    if (!callback_result) {
-      if (callback_result.is_cancelled()) {
-        stream->close();
-        content_session_->remove(claim);
-        claim.reset();
-        return;
-      }
 
+    if (callback_result.is_cancelled()) {
+      stream->close();
+      content_session_->remove(claim);
+      claim.reset();
+      return;
+    }
+
+    if (!callback_result) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 
