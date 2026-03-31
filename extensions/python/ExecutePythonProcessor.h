@@ -42,7 +42,8 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
  public:
   explicit ExecutePythonProcessor(core::ProcessorMetadata metadata)
       : ProcessorImpl(metadata),
-        python_dynamic_(false) {
+        python_dynamic_(false),
+        python_single_threaded_(false) {
     python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName(), metadata.uuid);
   }
 
@@ -59,12 +60,12 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
-  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
   bool supportsDynamicProperties() const override { return python_dynamic_; }
   bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; }
   minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; }
-  bool isSingleThreaded() const override { return IsSingleThreaded; }
+  bool isSingleThreaded() const override { return python_single_threaded_; }
   ADD_GET_PROCESSOR_NAME
 
   void initialize() override;
@@ -73,6 +74,10 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
 
   void setSupportsDynamicProperties() {
     python_dynamic_ = true;
+  }
+
+  void setSingleThreaded() {
+    python_single_threaded_ = true;
   }
 
   void addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el, bool sensitive,
@@ -126,6 +131,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   std::optional<std::string> version_;
 
   bool python_dynamic_;
+  bool python_single_threaded_;
 
   std::string script_to_exec_;
   std::optional<std::chrono::file_clock::time_point> last_script_write_time_;
