@@ -47,7 +47,7 @@ def enable_log_metrics_publisher(minifi: MinifiProtocol):
     minifi.set_property("nifi.metrics.publisher.class", "LogMetricsPublisher")
 
 
-def configure_c2_flow_url(minifi: MinifiProtocol, scenario_id: str):
+def conf_c2_flow_url(minifi: MinifiProtocol, scenario_id: str):
     minifi.set_property("nifi.c2.flow.url", f"http://minifi-c2-server-{scenario_id}:10090/c2/config?class=minifi-test-class")
 
 
