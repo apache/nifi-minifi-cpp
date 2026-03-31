@@ -169,7 +169,7 @@ io::IoResult FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<i
   // Read each item in the archive
   if (archive_read_open(input_archive.get(), &data, ok_cb, read_cb, ok_cb)) {
     logger_->log_error("FocusArchiveEntry can't open due to archive error: {}", archive_error_string(input_archive.get()));
-    return io::IoResult::fromI64(nlen);
+    return io::IoResult::zero();
   }
 
   while (context_->isRunning()) {
@@ -181,7 +181,7 @@ io::IoResult FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<i
 
     if (res < ARCHIVE_OK) {
       logger_->log_error("FocusArchiveEntry can't read header due to archive error: {}", archive_error_string(input_archive.get()));
-      return io::IoResult::error();
+      return io::IoResult::zero();
     }
 
     auto entryName = archive_entry_pathname(entry);
