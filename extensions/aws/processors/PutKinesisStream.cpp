@@ -51,8 +51,6 @@ void PutKinesisStream::onSchedule(core::ProcessContext& context, core::ProcessSe
     logger_->log_warn("{} is invalid. Setting it to the maximum 4 MB value.", MaxBatchDataSize.name);
     batch_data_size_soft_cap_ = 4_MB;
   }
-
-  endpoint_override_url_ = context.getProperty(EndpointOverrideURL.name) | minifi::utils::toOptional();
 }
 
 nonstd::expected<Aws::Kinesis::Model::PutRecordsRequestEntry, PutKinesisStream::BatchItemError> PutKinesisStream::createEntryFromFlowFile(const core::ProcessContext& context,
@@ -174,19 +172,12 @@ void PutKinesisStream::transferFlowFiles(core::ProcessSession& session, const St
 void PutKinesisStream::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("PutKinesisStream onTrigger");
 
-  const auto credentials = getAWSCredentials(context, nullptr);
-  if (!credentials) {
-    logger_->log_error("Failed to get credentials for PutKinesisStream");
-    context.yield();
-    return;
-  }
-
   auto stream_batches = createStreamBatches(context, session);
   if (stream_batches.empty()) {
     context.yield();
     return;
   }
-  const auto kinesis_client = getClient(*credentials);
+  const auto kinesis_client = getClient();
 
   for (auto& stream_batch: stream_batches | std::views::values) {
     processBatch(stream_batch, *kinesis_client);
@@ -194,13 +185,8 @@ void PutKinesisStream::onTrigger(core::ProcessContext& context, core::ProcessSes
   }
 }
 
-std::unique_ptr<Aws::Kinesis::KinesisClient> PutKinesisStream::getClient(const Aws::Auth::AWSCredentials& credentials) {
-  gsl_Expects(client_config_);
-  auto client = std::make_unique<Aws::Kinesis::KinesisClient>(credentials, *client_config_);
-  if (endpoint_override_url_) {
-    client->OverrideEndpoint(*endpoint_override_url_);
-  }
-  return client;
+std::unique_ptr<Aws::Kinesis::KinesisClient> PutKinesisStream::getClient() {
+  return std::make_unique<Aws::Kinesis::KinesisClient>(credentials_, client_config_);
 }
 
 REGISTER_RESOURCE(PutKinesisStream, Processor);

@@ -17,18 +17,20 @@
 # under the License.
 #
 
+set(AWS_TEST_MAIN "${CMAKE_CURRENT_LIST_DIR}/AWSTestMain.cpp")
 file(GLOB AWS_INTEGRATION_TESTS  "*.cpp")
+list(REMOVE_ITEM AWS_INTEGRATION_TESTS "${AWS_TEST_MAIN}")
 
 SET(AWS_TEST_COUNT 0)
 FOREACH(testfile ${AWS_INTEGRATION_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_minifi_executable("${testfilename}" "${testfile}")
+    add_minifi_executable("${testfilename}" "${testfile}" "${AWS_TEST_MAIN}")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/aws")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/aws/s3")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/aws/processors")
     createTests("${testfilename}")
-    target_link_libraries(${testfilename} Catch2WithMain)
+    target_link_libraries(${testfilename} Catch2)
     target_link_libraries(${testfilename} minifi-aws)
     target_link_libraries(${testfilename} minifi-standard-processors)
     MATH(EXPR AWS_TEST_COUNT "${AWS_TEST_COUNT}+1")

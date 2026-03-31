@@ -64,8 +64,9 @@ void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSession
   server_side_encryption_ = minifi::utils::parseProperty(context, ServerSideEncryption);
   logger_->log_debug("PutS3Object: Server Side Encryption [{}]", server_side_encryption_);
 
+  bool use_virtual_addressing = true;
   if (const auto use_path_style_access = minifi::utils::parseOptionalBoolProperty(context, UsePathStyleAccess)) {
-    use_virtual_addressing_ = !*use_path_style_access;
+    use_virtual_addressing = !*use_path_style_access;
   }
 
   multipart_threshold_ = context.getProperty(MultipartThreshold)
@@ -102,7 +103,11 @@ void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSession
   if (state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
-  s3_wrapper_.initializeMultipartUploadStateStorage(gsl::make_not_null(state_manager));
+
+  if (!s3_wrapper_) {
+    s3_wrapper_ = s3_wrapper_factory_(credentials_, client_config_, use_virtual_addressing);
+  }
+  s3_wrapper_->initializeMultipartUploadStateStorage(gsl::make_not_null(state_manager));
 }
 
 std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) {
@@ -161,11 +166,8 @@ bool PutS3Object::setAccessControl(
 std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3RequestParams(
     const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties,
     const std::string_view bucket) const {
-  gsl_Expects(client_config_);
-  aws::s3::PutObjectRequestParameters params(common_properties.credentials, *client_config_);
-  params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
+  aws::s3::PutObjectRequestParameters params;
   params.bucket = bucket;
   params.user_metadata_map = user_metadata_map_;
   params.server_side_encryption = server_side_encryption_;
@@ -185,7 +187,6 @@ std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3Reques
     return std::nullopt;
   }
 
-  params.use_virtual_addressing = use_virtual_addressing_;
   params.checksum_algorithm = checksum_algorithm_;
   return params;
 }
@@ -216,7 +217,7 @@ void PutS3Object::setAttributes(
   }
 }
 
-void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properties, const std::string_view bucket) {
+void PutS3Object::ageOffMultipartUploads(const std::string_view bucket) {
   {
     std::lock_guard<std::mutex> lock(last_ageoff_mutex_);
     const auto now = std::chrono::system_clock::now();
@@ -228,12 +229,10 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   }
 
   logger_->log_trace("Listing aged off multipart uploads still in progress.");
-  aws::s3::ListMultipartUploadsRequestParameters list_params(common_properties.credentials, *client_config_);
-  list_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
+  aws::s3::ListMultipartUploadsRequestParameters list_params;
   list_params.bucket = bucket;
   list_params.age_off_limit = multipart_upload_max_age_threshold_;
-  list_params.use_virtual_addressing = use_virtual_addressing_;
-  auto aged_off_uploads_in_progress = s3_wrapper_.listMultipartUploads(list_params);
+  auto aged_off_uploads_in_progress = s3_wrapper_->listMultipartUploads(list_params);
   if (!aged_off_uploads_in_progress) {
     logger_->log_error("Listing aged off multipart uploads failed!");
     return;
@@ -244,13 +243,11 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   for (const auto& upload : *aged_off_uploads_in_progress) {
     logger_->log_info("Aborting multipart upload with key '{}' and upload id '{}' in bucket '{}' due to reaching maximum upload age threshold.",
       upload.key, upload.upload_id, bucket);
-    aws::s3::AbortMultipartUploadRequestParameters abort_params(common_properties.credentials, *client_config_);
-    abort_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
+    aws::s3::AbortMultipartUploadRequestParameters abort_params;
     abort_params.bucket = bucket;
     abort_params.key = upload.key;
     abort_params.upload_id = upload.upload_id;
-    abort_params.use_virtual_addressing = use_virtual_addressing_;
-    if (!s3_wrapper_.abortMultipartUpload(abort_params)) {
+    if (!s3_wrapper_->abortMultipartUpload(abort_params)) {
        logger_->log_error("Failed to abort multipart upload with key '{}' and upload id '{}' in bucket '{}'", abort_params.key, abort_params.upload_id, abort_params.bucket);
        continue;
     }
@@ -259,20 +256,15 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   if (aborted > 0) {
     logger_->log_info("Aborted {} pending multipart upload jobs in bucket '{}'", aborted, bucket);
   }
-  s3_wrapper_.ageOffLocalS3MultipartUploadStates(multipart_upload_max_age_threshold_);
+  s3_wrapper_->ageOffLocalS3MultipartUploadStates(multipart_upload_max_age_threshold_);
 }
 
 void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(s3_wrapper_);
   logger_->log_trace("PutS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
     context.yield();
-    return;
-  }
-
-  auto common_properties = getCommonELSupportedProperties(context, flow_file.get());
-  if (!common_properties) {
-    session.transfer(flow_file, Failure);
     return;
   }
 
@@ -284,9 +276,9 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
   }
   logger_->log_debug("S3Processor: Bucket [{}]", *bucket);
 
-  ageOffMultipartUploads(*common_properties, *bucket);
+  ageOffMultipartUploads(*bucket);
 
-  auto put_s3_request_params = buildPutS3RequestParams(context, *flow_file, *common_properties, *bucket);
+  auto put_s3_request_params = buildPutS3RequestParams(context, *flow_file, *bucket);
   if (!put_s3_request_params) {
     session.transfer(flow_file, Failure);
     return;
@@ -297,11 +289,11 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
     try {
       if (flow_file->getSize() <= multipart_threshold_) {
         logger_->log_info("Uploading S3 Object '{}' in a single upload", put_s3_request_params->object_key);
-        result = s3_wrapper_.putObject(*put_s3_request_params, stream, flow_file->getSize());
+        result = s3_wrapper_->putObject(*put_s3_request_params, stream, flow_file->getSize());
         return gsl::narrow<int64_t>(flow_file->getSize());
       } else {
         logger_->log_info("S3 Object '{}' passes the multipart threshold, uploading it in multiple parts", put_s3_request_params->object_key);
-        result = s3_wrapper_.putObjectMultipart(*put_s3_request_params, stream, flow_file->getSize(), multipart_size_);
+        result = s3_wrapper_->putObjectMultipart(*put_s3_request_params, stream, flow_file->getSize(), multipart_size_);
         return gsl::narrow<int64_t>(flow_file->getSize());
       }
     } catch(const aws::s3::StreamReadException& ex) {

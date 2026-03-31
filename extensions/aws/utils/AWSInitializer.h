@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <atomic>
 #include "aws/core/Aws.h"
 
 // This macro from the Windows headers is used to map the GetMessage
@@ -38,11 +39,13 @@ class AWSInitializer {
  public:
   static AWSInitializer& get();
   ~AWSInitializer();
+  void shutdown();
 
  private:
   AWSInitializer();
 
   Aws::SDKOptions options_;
+  std::atomic<bool> is_shut_down_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::utils

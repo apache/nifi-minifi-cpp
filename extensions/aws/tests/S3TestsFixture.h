@@ -117,6 +117,7 @@ class S3TestsFixture {
  protected:
   TestController test_controller;
   std::shared_ptr<TestPlan> plan;
+  std::unique_ptr<MockS3RequestSender> mock_s3_request_sender;
   MockS3RequestSender* mock_s3_request_sender_ptr;
   core::Processor* s3_processor;
   core::Processor* update_attribute;
@@ -133,11 +134,17 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
     LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
     LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
 
-    auto mock_s3_request_sender = std::make_unique<MockS3RequestSender>();
-    this->mock_s3_request_sender_ptr = mock_s3_request_sender.get();
+    this->mock_s3_request_sender = std::make_unique<MockS3RequestSender>();
+    this->mock_s3_request_sender_ptr = this->mock_s3_request_sender.get();
     auto uuid = utils::IdGenerator::getIdGenerator()->generate();
-    auto impl = std::unique_ptr<T>(new T(core::ProcessorMetadata{.uuid = uuid, .name = "S3Processor", .logger = core::logging::LoggerFactory<T>::getLogger(uuid)}, std::move(mock_s3_request_sender)));
-    auto s3_processor_unique_ptr = std::make_unique<core::Processor>("S3Processor", uuid, std::move(impl));
+    auto s3_processor_unique_ptr = std::make_unique<core::Processor>("S3Processor", uuid,
+        std::unique_ptr<T>(new T(core::ProcessorMetadata{.uuid = uuid, .name = "S3Processor", .logger = core::logging::LoggerFactory<T>::getLogger(uuid)},
+        [this](const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing) {
+          this->mock_s3_request_sender->setCredentials(credentials);
+          this->mock_s3_request_sender->setClientConfig(client_config);
+          this->mock_s3_request_sender->setUseVirtualAddressing(use_virtual_addressing);
+          return std::make_unique<minifi::aws::s3::S3Wrapper>(std::move(this->mock_s3_request_sender));
+        })));
     this->s3_processor = s3_processor_unique_ptr.get();
 
     auto input_dir = this->test_controller.createTempDirectory();
@@ -167,10 +174,8 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
   }
 
   void setAccesKeyCredentialsInProcessor() override {
-    this->plan->setDynamicProperty(update_attribute, "s3.accessKey", "key");
-    this->plan->setProperty(this->s3_processor, "Access Key", "${s3.accessKey}");
-    this->plan->setDynamicProperty(update_attribute, "s3.secretKey", "secret");
-    this->plan->setProperty(this->s3_processor, "Secret Key", "${s3.secretKey}");
+    this->plan->setProperty(this->s3_processor, "Access Key", "key");
+    this->plan->setProperty(this->s3_processor, "Secret Key", "secret");
   }
 
   void setBucket() override {
@@ -179,14 +184,10 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
   }
 
   void setProxy() override {
-    this->plan->setDynamicProperty(update_attribute, "test.proxyHost", "host");
-    this->plan->setProperty(this->s3_processor, "Proxy Host", "${test.proxyHost}");
-    this->plan->setDynamicProperty(update_attribute, "test.proxyPort", "1234");
-    this->plan->setProperty(this->s3_processor, "Proxy Port", "${test.proxyPort}");
-    this->plan->setDynamicProperty(update_attribute, "test.proxyUsername", "username");
-    this->plan->setProperty(this->s3_processor, "Proxy Username", "${test.proxyUsername}");
-    this->plan->setDynamicProperty(update_attribute, "test.proxyPassword", "password");
-    this->plan->setProperty(this->s3_processor, "Proxy Password", "${test.proxyPassword}");
+    this->plan->setProperty(this->s3_processor, "Proxy Host", "host");
+    this->plan->setProperty(this->s3_processor, "Proxy Port", "1234");
+    this->plan->setProperty(this->s3_processor, "Proxy Username", "username");
+    this->plan->setProperty(this->s3_processor, "Proxy Password", "password");
   }
 
  protected:
@@ -197,11 +198,17 @@ template<typename T>
 class FlowProducerS3TestsFixture : public S3TestsFixture<T> {
  public:
   FlowProducerS3TestsFixture() {
-    auto mock_s3_request_sender = std::make_unique<MockS3RequestSender>();
-    this->mock_s3_request_sender_ptr = mock_s3_request_sender.get();
     auto uuid = utils::IdGenerator::getIdGenerator()->generate();
-    auto impl = std::unique_ptr<T>(new T(core::ProcessorMetadata{.uuid = uuid, .name = "S3Processor", .logger = core::logging::LoggerFactory<T>::getLogger(uuid)}, std::move(mock_s3_request_sender)));
-    auto s3_processor_unique_ptr = std::make_unique<core::Processor>("S3Processor", uuid, std::move(impl));
+    this->mock_s3_request_sender = std::make_unique<MockS3RequestSender>();
+    this->mock_s3_request_sender_ptr = this->mock_s3_request_sender.get();
+    auto s3_processor_unique_ptr = std::make_unique<core::Processor>("S3Processor", uuid,
+        std::unique_ptr<T>(new T(core::ProcessorMetadata{.uuid = uuid, .name = "S3Processor", .logger = core::logging::LoggerFactory<T>::getLogger(uuid)},
+        [this](const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing) {
+          this->mock_s3_request_sender->setCredentials(credentials);
+          this->mock_s3_request_sender->setClientConfig(client_config);
+          this->mock_s3_request_sender->setUseVirtualAddressing(use_virtual_addressing);
+          return std::make_unique<minifi::aws::s3::S3Wrapper>(std::move(this->mock_s3_request_sender));
+        })));
     this->s3_processor = s3_processor_unique_ptr.get();
 
     this->plan->addProcessor(
