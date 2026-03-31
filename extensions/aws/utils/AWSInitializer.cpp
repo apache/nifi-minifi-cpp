@@ -34,6 +34,12 @@ AWSInitializer& AWSInitializer::get() {
 }
 
 AWSInitializer::~AWSInitializer() {
+  shutdown();
+}
+
+void AWSInitializer::shutdown() {
+  if (is_shut_down_) return;
+  is_shut_down_ = true;
   Aws::Utils::Logging::ShutdownAWSLogging();
   Aws::ShutdownAPI(options_);
 }
