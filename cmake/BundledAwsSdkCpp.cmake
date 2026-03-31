@@ -194,7 +194,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE AWS::aws-crt-cpp AWS::aws-c-event-stream OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB Threads::Threads)
 
     if (APPLE)
-        target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE "-framework CoreFoundation -framework Security")
+        target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE "-framework CoreFoundation -framework Security -framework Network")
     elseif (WIN32)
         target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE userenv.lib ws2_32.lib Wininet.lib bcrypt.lib version.lib Secur32 Crypt32 Shlwapi)
     else()
