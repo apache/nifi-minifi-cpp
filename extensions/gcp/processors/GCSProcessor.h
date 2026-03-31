@@ -31,7 +31,6 @@
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
-#include "controllers/ProxyConfiguration.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 class GCSProcessor : public core::ProcessorImpl {
@@ -56,8 +55,7 @@ class GCSProcessor : public core::ProcessorImpl {
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyConfigurationService = core::PropertyDefinitionBuilder<>::createProperty("Proxy Configuration Service")
-      .withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests. When used, "
-          "this will override any values specified for Proxy Host, Proxy Port, Proxy Username, and Proxy Password properties.")
+      .withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests.")
       .withAllowedTypes<minifi::controllers::ProxyConfigurationServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
