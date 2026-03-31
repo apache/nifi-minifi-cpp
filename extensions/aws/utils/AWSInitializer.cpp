@@ -38,8 +38,8 @@ AWSInitializer::~AWSInitializer() {
 }
 
 void AWSInitializer::shutdown() {
-  if (is_shut_down_) return;
-  is_shut_down_ = true;
+  bool is_shut_down = false;
+  if (!is_shut_down_.compare_exchange_strong(is_shut_down, true)) { return; }
   Aws::Utils::Logging::ShutdownAWSLogging();
   Aws::ShutdownAPI(options_);
 }
