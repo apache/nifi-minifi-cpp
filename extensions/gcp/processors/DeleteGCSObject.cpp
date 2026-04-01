@@ -17,69 +17,62 @@
 
 #include "DeleteGCSObject.h"
 
-#include "utils/ProcessorConfigUtils.h"
 
 #include "../GCPAttributes.h"
-#include "minifi-cpp/core/FlowFile.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
-#include "core/Resource.h"
+#include "api/core/ProcessContext.h"
+#include "api/core/ProcessSession.h"
+#include "api/core/Resource.h"
+#include "api/utils/ProcessorConfigUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-void DeleteGCSObject::initialize() {
-  setSupportedProperties(Properties);
-  setSupportedRelationships(Relationships);
-}
 
-void DeleteGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+MinifiStatus DeleteGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   gsl_Expects(gcp_credentials_);
 
   auto flow_file = session.get();
   if (!flow_file) {
-    context.yield();
-    return;
+    return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
-  auto bucket = context.getProperty(Bucket, flow_file.get());
+  auto bucket = api::utils::parseOptionalProperty(context, Bucket, &flow_file);
   if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
-    session.transfer(flow_file, Failure);
-    return;
+    session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
   }
-  auto object_name = context.getProperty(Key, flow_file.get());
+  auto object_name = api::utils::parseOptionalProperty(context, Key, &flow_file);
   if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
-    session.transfer(flow_file, Failure);
-    return;
+    session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
   }
 
   gcs::Generation generation;
-  if (const auto object_generation_str =  context.getProperty(ObjectGeneration, flow_file.get()); object_generation_str && !object_generation_str->empty()) {
+  if (auto object_generation_str = api::utils::parseOptionalProperty(context, ObjectGeneration, &flow_file); object_generation_str && !object_generation_str->empty()) {
     if (const auto geni64 = parsing::parseIntegral<int64_t>(*object_generation_str)) {
       generation = gcs::Generation{*geni64};
     } else {
       logger_->log_error("Invalid generation: {}", *object_generation_str);
-      session.transfer(flow_file, Failure);
-      return;
+      session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
     }
   }
 
   auto status = getClient().DeleteObject(*bucket, *object_name, generation, gcs::IfGenerationNotMatch(0));
 
   if (!status.ok()) {
-    flow_file->setAttribute(GCS_STATUS_MESSAGE, status.message());
-    flow_file->setAttribute(GCS_ERROR_REASON, status.error_info().reason());
-    flow_file->setAttribute(GCS_ERROR_DOMAIN, status.error_info().domain());
+    session.setAttribute(flow_file, GCS_STATUS_MESSAGE, status.message());
+    session.setAttribute(flow_file, GCS_ERROR_REASON, status.error_info().reason());
+    session.setAttribute(flow_file, GCS_ERROR_DOMAIN, status.error_info().domain());
     logger_->log_error("Failed to delete {} object from {} bucket on Google Cloud Storage {} {}", *object_name, *bucket, status.message(), status.error_info().reason());
-    session.transfer(flow_file, Failure);
-    return;
+    session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
   }
 
-  session.transfer(flow_file, Success);
+  session.transfer(std::move(flow_file), Success);
+  return MINIFI_STATUS_SUCCESS;
 }
-
-REGISTER_RESOURCE(DeleteGCSObject, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp

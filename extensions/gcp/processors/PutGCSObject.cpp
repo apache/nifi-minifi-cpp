@@ -19,12 +19,12 @@
 
 #include <utility>
 
-#include "core/Resource.h"
-#include "minifi-cpp/core/FlowFile.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
 #include "../GCPAttributes.h"
-#include "utils/ProcessorConfigUtils.h"
+#include "api/core/ProcessContext.h"
+#include "api/core/ProcessSession.h"
+#include "api/core/Resource.h"
+#include "api/utils/ProcessorConfigUtils.h"
+#include "minifi-cpp/io/InputStream.h"
 
 namespace gcs = ::google::cloud::storage;
 
@@ -102,80 +102,79 @@ class UploadToGCSCallback {
 }  // namespace
 
 
-void PutGCSObject::initialize() {
-  setSupportedProperties(Properties);
-  setSupportedRelationships(Relationships);
-}
+MinifiStatus PutGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
+  const auto status = GCSProcessor::onScheduleImpl(context);
+  if (status != MinifiStatus::MINIFI_STATUS_SUCCESS) {
+    return status;
+  }
 
-
-void PutGCSObject::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
-  GCSProcessor::onSchedule(context, session_factory);
   if (auto encryption_key = context.getProperty(EncryptionKey)) {
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
-      throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Could not decode the base64-encoded encryption key from property " + std::string(EncryptionKey.name));
+      logger_->log_error("Could not decode the base64-encoded encryption key from property {}", std::string(EncryptionKey.name));
+      return MINIFI_STATUS_UNKNOWN_ERROR;
     }
   }
+  return MINIFI_STATUS_SUCCESS;
 }
 
-void PutGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+MinifiStatus PutGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   gsl_Expects(gcp_credentials_);
 
   auto flow_file = session.get();
   if (!flow_file) {
-    context.yield();
-    return;
+    return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
-  auto bucket = context.getProperty(Bucket, flow_file.get());
+  auto bucket = api::utils::parseOptionalProperty(context, Bucket, &flow_file);
+
   if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
-    session.transfer(flow_file, Failure);
-    return;
+    session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
   }
-  auto object_name = context.getProperty(Key, flow_file.get());
+  auto object_name = api::utils::parseOptionalProperty(context, Key, &flow_file);
   if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
-    session.transfer(flow_file, Failure);
-    return;
+    session.transfer(std::move(flow_file), Failure);
+    return MINIFI_STATUS_SUCCESS;
   }
 
   gcs::Client client = getClient();
   UploadToGCSCallback callback(client, *bucket, *object_name);
 
-  if (auto crc32_checksum = context.getProperty(Crc32cChecksum, flow_file.get())) {
+  if (auto crc32_checksum = api::utils::parseOptionalProperty(context, Crc32cChecksum, &flow_file)) {
     callback.setCrc32CChecksumValue(*crc32_checksum);
   }
 
-  if (auto md5_hash = context.getProperty(MD5Hash, flow_file.get())) {
+  if (auto md5_hash = api::utils::parseOptionalProperty(context, MD5Hash, &flow_file)) {
     callback.setHashValue(*md5_hash);
   }
 
-  auto content_type = context.getProperty(ContentType, flow_file.get());
+  auto content_type = api::utils::parseOptionalProperty(context, ContentType, &flow_file);
   if (content_type && !content_type->empty())
     callback.setContentType(*content_type);
 
-  if (auto predefined_acl = utils::parseOptionalEnumProperty<put_gcs_object::PredefinedAcl>(context, ObjectACL))
+  if (auto predefined_acl = api::utils::parseOptionalEnumProperty<put_gcs_object::PredefinedAcl>(context, ObjectACL))
     callback.setPredefinedAcl(*predefined_acl);
-  callback.setIfGenerationMatch(utils::parseOptionalBoolProperty(context, OverwriteObject));
+  callback.setIfGenerationMatch(api::utils::parseOptionalBoolProperty(context, OverwriteObject));
 
   callback.setEncryptionKey(encryption_key_);
 
   session.read(flow_file, std::ref(callback));
   auto& result = callback.getResult();
   if (!result.ok()) {
-    flow_file->setAttribute(GCS_STATUS_MESSAGE, result.status().message());
-    flow_file->setAttribute(GCS_ERROR_REASON, result.status().error_info().reason());
-    flow_file->setAttribute(GCS_ERROR_DOMAIN, result.status().error_info().domain());
+    session.setAttribute(flow_file, GCS_STATUS_MESSAGE, result.status().message());
+    session.setAttribute(flow_file, GCS_ERROR_REASON, result.status().error_info().reason());
+    session.setAttribute(flow_file, GCS_ERROR_DOMAIN, result.status().error_info().domain());
     logger_->log_error("Failed to upload to Google Cloud Storage {} {}", result.status().message(), result.status().error_info().reason());
-    session.transfer(flow_file, Failure);
+    session.transfer(std::move(flow_file), Failure);
   } else {
-    setAttributesFromObjectMetadata(*flow_file, *result);
-    session.transfer(flow_file, Success);
+    setAttributesFromObjectMetadata(flow_file, *result, session);
+    session.transfer(std::move(flow_file), Success);
   }
+  return MINIFI_STATUS_SUCCESS;
 }
-
-REGISTER_RESOURCE(PutGCSObject, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp
