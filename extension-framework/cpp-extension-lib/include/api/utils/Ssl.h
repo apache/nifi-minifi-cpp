@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,25 +16,40 @@
  */
 #pragma once
 
-#include <iostream>
 #include <string>
+#include <memory>
+#include <optional>
+#include <filesystem>
 
-#include "minifi-c.h"
-#include "minifi-cpp/core/logging/Logger.h"
+#include "utils/Enum.h"
 
-namespace org::apache::nifi::minifi::api::core::logging {
+namespace org::apache::nifi::minifi::api::utils::net {
 
-class CffiLogger : public minifi::core::logging::Logger {
- public:
-  explicit CffiLogger(MinifiLogger* impl): impl_(impl) {}
-
-  void set_max_log_size(int size) override;
-  void log_string(minifi::core::logging::LOG_LEVEL level, std::string str) override;
-  bool should_log(minifi::core::logging::LOG_LEVEL level) override;
-  [[nodiscard]] minifi::core::logging::LOG_LEVEL level() const override;
-
- private:
-  MinifiLogger* impl_;
+enum class ClientAuthOption {
+  NONE,
+  WANT,
+  REQUIRED
 };
 
-}  // namespace org::apache::nifi::minifi::api::core::logging
+struct SslData {
+  std::filesystem::path ca_loc;
+  std::filesystem::path cert_loc;
+  std::filesystem::path key_loc;
+  std::string key_pw;
+
+  bool isValid() const {
+    return !cert_loc.empty() && !key_loc.empty();
+  }
+};
+
+struct SslServerOptions {
+  SslData cert_data;
+  ClientAuthOption client_auth_option;
+
+  SslServerOptions(SslData cert_data, ClientAuthOption client_auth_option)
+      : cert_data(cert_data),
+      client_auth_option(client_auth_option) {}
+};
+
+
+}  // namespace org::apache::nifi::minifi::api::utils::net

@@ -17,11 +17,8 @@
 # under the License.
 #
 
-file(GLOB SOURCES src/core/*.cpp src/core/logging/*.cpp src/utils/*.cpp)
+file(GLOB SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 
-add_minifi_library(minifi-cpp-extension-lib STATIC ${SOURCES})
-target_include_directories(minifi-cpp-extension-lib PUBLIC include)
-target_link_libraries(minifi-cpp-extension-lib PUBLIC minifi-core-framework-common minifi-c-api)
-
-add_subdirectory(libtest)
-add_subdirectory(mocklib)
+add_library(libmock-minifi STATIC ${SRC_FILES})
+target_link_libraries(libmock-minifi PUBLIC minifi-cpp-extension-lib minifi-core-framework-common minifi-c-api)
+target_include_directories(libmock-minifi PUBLIC include)

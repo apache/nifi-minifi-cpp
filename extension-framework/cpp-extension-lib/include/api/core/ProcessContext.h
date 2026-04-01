@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -20,23 +20,48 @@
 #include <string>
 #include <expected>
 
+#include "api/core/FlowFile.h"
+#include "api/utils/Ssl.h"
 #include "minifi-c.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
-#include "api/core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
 class ProcessContext {
  public:
-  explicit ProcessContext(MinifiProcessContext* impl): impl_(impl) {}
+  virtual ~ProcessContext() noexcept = default;
 
-  std::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const;
-  std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
-    return getProperty(property_reference.name, flow_file);
-  }
-  [[nodiscard]] std::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view controller_service_name, std::string_view controller_service_class) const;
+  ProcessContext() = default;
+  ProcessContext(const ProcessContext&) = delete;
+  ProcessContext(ProcessContext&&) = delete;
+  ProcessContext& operator=(const ProcessContext&) = delete;
+  ProcessContext& operator=(ProcessContext&&) = delete;
 
-  [[nodiscard]] bool hasNonEmptyProperty(std::string_view name) const;
+  [[nodiscard]] virtual std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& prop,
+      const FlowFile* ff) const = 0;
+  [[nodiscard]] virtual std::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view name,
+      std::string_view type) const = 0;
+  [[nodiscard]] virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
+  [[nodiscard]] virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file) const = 0;
+
+  [[nodiscard]] virtual std::expected<utils::net::SslData, std::error_code> getSslData(std::string_view name) const = 0;
+};
+
+class CffiProcessContext : public ProcessContext {
+ public:
+  explicit CffiProcessContext(MinifiProcessContext* impl) : impl_(impl) {}
+
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference,
+      const FlowFile* flow_file) const override;
+  [[nodiscard]] std::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view name,
+      std::string_view type) const override;
+  [[nodiscard]] std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file) const override;
+  [[nodiscard]] bool hasNonEmptyProperty(std::string_view name) const override;
+
+  [[nodiscard]] std::expected<utils::net::SslData, std::error_code> getSslData(std::string_view name) const override;
+
+ private:
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file) const;
 
  private:
   MinifiProcessContext* impl_;

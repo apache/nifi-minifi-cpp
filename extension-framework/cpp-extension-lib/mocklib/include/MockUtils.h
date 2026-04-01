@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,27 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include <iostream>
 #include <string>
 
-#include "minifi-c.h"
-#include "minifi-cpp/core/logging/Logger.h"
+#include "MockLogger.h"
+#include "minifi-cpp/core/ProcessorMetadata.h"
 
-namespace org::apache::nifi::minifi::api::core::logging {
+struct MinifiFlowFile{};
 
-class CffiLogger : public minifi::core::logging::Logger {
- public:
-  explicit CffiLogger(MinifiLogger* impl): impl_(impl) {}
+namespace org::apache::nifi::minifi::mock {
+inline core::ProcessorMetadata getMockMetadata() {
+  return core::ProcessorMetadata{.uuid = utils::Identifier{}, .name = "Processor", .logger = std::make_shared<MockLogger>()};
+}
 
-  void set_max_log_size(int size) override;
-  void log_string(minifi::core::logging::LOG_LEVEL level, std::string str) override;
-  bool should_log(minifi::core::logging::LOG_LEVEL level) override;
-  [[nodiscard]] minifi::core::logging::LOG_LEVEL level() const override;
-
- private:
-  MinifiLogger* impl_;
-};
-
-}  // namespace org::apache::nifi::minifi::api::core::logging
+inline core::ProcessorMetadata metadataWithLogger(std::shared_ptr<core::logging::Logger> logger) {
+  return core::ProcessorMetadata{.uuid = utils::Identifier{}, .name = "Processor", .logger = std::move(logger)};
+}
+}  // namespace org::apache::nifi::minifi::mock
