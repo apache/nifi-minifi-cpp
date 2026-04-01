@@ -27,13 +27,13 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "*.cpp")
 
-add_minifi_library(minifi-rdkafka-extensions SHARED ${SOURCES})
+add_minifi_library(minifi-kafka SHARED ${SOURCES})
 
-target_link_libraries(minifi-rdkafka-extensions ${LIBMINIFI} Threads::Threads)
+target_link_libraries(minifi-kafka minifi-cpp-extension-lib Threads::Threads)
 
 get_target_property(RDKAFKA_INCLUDE_DIRS rdkafka INCLUDE_DIRECTORIES)
-target_include_directories(minifi-rdkafka-extensions SYSTEM PUBLIC ${RDKAFKA_INCLUDE_DIRS})
-target_link_libraries(minifi-rdkafka-extensions rdkafka)
+target_include_directories(minifi-kafka SYSTEM PUBLIC ${RDKAFKA_INCLUDE_DIRS})
+target_link_libraries(minifi-kafka rdkafka)
 
-register_extension(minifi-rdkafka-extensions "RDKAFKA EXTENSIONS" RDKAFKA-EXTENSIONS "This Enables librdkafka functionality including PublishKafka" "extensions/kafka/tests")
+register_c_api_extension(minifi-kafka "RDKAFKA EXTENSIONS" RDKAFKA-EXTENSIONS "This Enables librdkafka functionality including PublishKafka" "extensions/kafka/tests")
 

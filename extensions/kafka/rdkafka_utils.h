@@ -17,16 +17,14 @@
 
 #pragma once
 
-#include <chrono>
 #include <optional>
 #include <string>
 #include <thread>
-#include <utility>
-#include <vector>
+#include <span>
 
-#include "core/logging/LoggerFactory.h"
 #include "rdkafka.h"
-#include "utils/net/Ssl.h"
+#include "api/utils/Ssl.h"
+#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -87,18 +85,28 @@ template<typename T>
 void kafka_headers_for_each(const rd_kafka_headers_t& headers, T key_value_handle) {
   const char* key = nullptr;  // Null terminated, not to be freed
   const void* value = nullptr;
-  std::size_t size;
+  std::size_t size = 0;
   for (std::size_t i = 0; RD_KAFKA_RESP_ERR_NO_ERROR == rd_kafka_header_get_all(&headers, i, &key, &value, &size); ++i) {
     key_value_handle(std::string(key), std::span<const char>(static_cast<const char*>(value), size));
   }
 }
 
 void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::string& field_name, const std::string& value);
-void print_topics_list(core::logging::Logger& logger, const rd_kafka_topic_partition_list_t& kf_topic_partition_list);
 void print_kafka_message(const rd_kafka_message_t& rkmessage, core::logging::Logger& logger);
 std::string get_encoded_string(const std::string& input, KafkaEncoding encoding);
 std::optional<std::string> get_encoded_message_key(const rd_kafka_message_t& message, KafkaEncoding encoding);
 
+class KafkaOpaque {
+ public:
+  explicit KafkaOpaque(core::logging::Logger& logger) : logger_(logger) {}
+
+  void print_topics_list(const rd_kafka_topic_partition_list_t& kf_topic_partition_list) const;
+  static void logCallback(const rd_kafka_t* rk, int level, const char* /*fac*/, const char* buf);
+  static void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* opaque_ptr);
+
+ private:
+  core::logging::Logger& logger_;
+};
 }  // namespace org::apache::nifi::minifi::utils
 
 namespace magic_enum::customize {

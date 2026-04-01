@@ -280,7 +280,7 @@ typedef struct MinifiSslData {
   MinifiStringView passphrase;
 } MinifiSslData;
 
-MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
+MinifiStatus MinifiProcessContextGetSslDataFromProperty(MinifiProcessContext* process_context, MinifiStringView property_name,
     void (*cb)(void* user_ctx, const MinifiSslData* ssl_data), void* user_ctx);
 
 #ifdef __cplusplus

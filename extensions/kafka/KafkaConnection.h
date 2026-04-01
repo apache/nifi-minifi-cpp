@@ -24,7 +24,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "rdkafka.h"
 #include "KafkaTopic.h"
@@ -73,11 +72,7 @@ class KafkaConnection {
 
   void putTopic(const std::string &topicName, const std::shared_ptr<KafkaTopic> &topic);
 
-  static void logCallback(const rd_kafka_t* rk, int level, const char* /*fac*/, const char* buf);
-
  private:
-  std::shared_ptr<core::logging::Logger> logger_;
-
   bool initialized_;
 
   KafkaConnectionKey key_;
@@ -89,17 +84,8 @@ class KafkaConnection {
   std::atomic<bool> poll_;
   std::thread thread_kafka_poll_;
 
-  static void modifyLoggers(const std::function<void(std::unordered_map<const rd_kafka_t*, std::weak_ptr<core::logging::Logger>>&)>& func) {
-    static std::mutex loggers_mutex;
-    static std::unordered_map<const rd_kafka_t*, std::weak_ptr<core::logging::Logger>> loggers;
-
-    std::lock_guard<std::mutex> lock(loggers_mutex);
-    func(loggers);
-  }
-
   void stopPoll() {
     poll_ = false;
-    logger_->log_debug("Stop polling");
     if (thread_kafka_poll_.joinable()) {
       thread_kafka_poll_.join();
     }
@@ -107,7 +93,6 @@ class KafkaConnection {
 
   void startPoll() {
     poll_ = true;
-    logger_->log_debug("Start polling");
     thread_kafka_poll_ = std::thread([this]{
         while (this->poll_) {
           rd_kafka_poll(this->kafka_connection_, 1000);
