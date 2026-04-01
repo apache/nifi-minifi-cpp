@@ -17,10 +17,11 @@
 
 #pragma once
 
-#include <string>
 #include <expected>
+#include <string>
 
 #include "api/core/FlowFile.h"
+#include "api/utils/Proxy.h"
 #include "api/utils/Ssl.h"
 #include "minifi-c.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
@@ -44,7 +45,8 @@ class ProcessContext {
   [[nodiscard]] virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
   [[nodiscard]] virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file) const = 0;
 
-  [[nodiscard]] virtual std::expected<utils::net::SslData, std::error_code> getSslData(const minifi::core::PropertyReference& prop) const = 0;
+  [[nodiscard]] virtual std::expected<std::optional<utils::net::SslData>, std::error_code> getSslData(const minifi::core::PropertyReference& prop) const = 0;
+  [[nodiscard]] virtual std::expected<std::optional<utils::ProxyData>, std::error_code> getProxyData(const minifi::core::PropertyReference& prop) const = 0;
 };
 
 class CffiProcessContext : public ProcessContext {
@@ -58,7 +60,8 @@ class CffiProcessContext : public ProcessContext {
   [[nodiscard]] std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file) const override;
   [[nodiscard]] bool hasNonEmptyProperty(std::string_view name) const override;
 
-  [[nodiscard]] std::expected<utils::net::SslData, std::error_code> getSslData(const minifi::core::PropertyReference& prop) const override;
+  [[nodiscard]] std::expected<std::optional<utils::net::SslData>, std::error_code> getSslData(const minifi::core::PropertyReference& prop) const override;
+  [[nodiscard]] std::expected<std::optional<utils::ProxyData>, std::error_code> getProxyData(const minifi::core::PropertyReference& prop) const override;
 
  private:
   [[nodiscard]] std::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file) const;

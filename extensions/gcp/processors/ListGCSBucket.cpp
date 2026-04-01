@@ -17,47 +17,44 @@
 
 #include "ListGCSBucket.h"
 
-#include "utils/ProcessorConfigUtils.h"
-
 #include "../GCPAttributes.h"
-#include "minifi-cpp/core/FlowFile.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
-#include "core/Resource.h"
+#include "api/core/ProcessContext.h"
+#include "api/core/ProcessSession.h"
+#include "api/core/Resource.h"
+#include "api/utils/ProcessorConfigUtils.h"
+#include "minifi-cpp/core/SpecialFlowAttribute.h"
 
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-void ListGCSBucket::initialize() {
-  setSupportedProperties(Properties);
-  setSupportedRelationships(Relationships);
+
+MinifiStatus ListGCSBucket::onScheduleImpl(api::core::ProcessContext& context) {
+  const auto status = GCSProcessor::onScheduleImpl(context);
+  if (status != MinifiStatus::MINIFI_STATUS_SUCCESS) {
+    return status;
+  }
+  bucket_ = api::utils::parseProperty(context, Bucket);
+  return MinifiStatus::MINIFI_STATUS_SUCCESS;
 }
 
-
-void ListGCSBucket::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
-  GCSProcessor::onSchedule(context, session_factory);
-  bucket_ = utils::parseProperty(context, Bucket);
-}
-
-void ListGCSBucket::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+MinifiStatus ListGCSBucket::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   gsl_Expects(gcp_credentials_);
 
   gcs::Client client = getClient();
-  auto list_all_versions = utils::parseOptionalBoolProperty(context, ListAllVersions);
+  auto list_all_versions = api::utils::parseOptionalBoolProperty(context, ListAllVersions);
   gcs::Versions versions = (list_all_versions && *list_all_versions) ? gcs::Versions(true) : gcs::Versions(false);
   auto objects_in_bucket = client.ListObjects(bucket_, versions);
   for (const auto& object_in_bucket : objects_in_bucket) {
     if (object_in_bucket.ok()) {
       auto flow_file = session.create();
-      flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, object_in_bucket->name());
-      setAttributesFromObjectMetadata(*flow_file, *object_in_bucket);
-      session.transfer(flow_file, Success);
+      session.setAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object_in_bucket->name());
+      setAttributesFromObjectMetadata(flow_file, *object_in_bucket, session);
+      session.transfer(std::move(flow_file), Success);
     } else {
       logger_->log_error("Invalid object in bucket {}", bucket_);
     }
   }
+  return MinifiStatus::MINIFI_STATUS_SUCCESS;
 }
-
-REGISTER_RESOURCE(ListGCSBucket, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp
