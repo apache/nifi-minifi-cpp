@@ -17,37 +17,35 @@
 
 #include "GCSProcessor.h"
 
-#include "utils/ProcessorConfigUtils.h"
-
 #include "../controllerservices/GCPCredentialsControllerService.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
+#include "api/utils/ProcessorConfigUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-std::shared_ptr<google::cloud::Credentials> GCSProcessor::getCredentials(core::ProcessContext& context) const {
-  auto gcp_credentials_controller_service = utils::parseOptionalControllerService<GCPCredentialsControllerService>(context, GCSProcessor::GCPCredentials, getUUID());
-  if (gcp_credentials_controller_service) {
+std::shared_ptr<google::cloud::Credentials> GCSProcessor::getCredentials(const api::core::ProcessContext& context) {
+  if (const auto gcp_credentials_controller_service = api::utils::parseOptionalControllerService<GCPCredentialsControllerService>(context,
+          GCPCredentials)) {
     return gcp_credentials_controller_service->getCredentials();
   }
   return nullptr;
 }
 
-void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (auto number_of_retries = utils::parseOptionalU64Property(context, NumberOfRetries)) {
+MinifiStatus GCSProcessor::onScheduleImpl(api::core::ProcessContext& context) {
+  if (const auto number_of_retries = api::utils::parseOptionalU64Property(context, NumberOfRetries)) {
     retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(gsl::narrow<int>(*number_of_retries));
   }
 
   gcp_credentials_ = getCredentials(context);
   if (!gcp_credentials_) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing GCP Credentials");
+    logger_->log_error("Couldnt find valid credentials");
+    return MINIFI_STATUS_UNKNOWN_ERROR;
   }
 
   endpoint_url_ = context.getProperty(EndpointOverrideURL) | utils::toOptional();
-  if (endpoint_url_)
-    logger_->log_debug("Endpoint overwritten: {}", *endpoint_url_);
+  if (endpoint_url_) { logger_->log_debug("Endpoint overwritten: {}", *endpoint_url_); }
+  return MINIFI_STATUS_SUCCESS;
 }
 
 gcs::Client GCSProcessor::getClient() const {
@@ -55,9 +53,7 @@ gcs::Client GCSProcessor::getClient() const {
       .set<google::cloud::UnifiedCredentialsOption>(gcp_credentials_)
       .set<google::cloud::storage::RetryPolicyOption>(retry_policy_);
 
-  if (endpoint_url_) {
-    options.set<gcs::RestEndpointOption>(*endpoint_url_);
-  }
+  if (endpoint_url_) { options.set<gcs::RestEndpointOption>(*endpoint_url_); }
   return gcs::Client(options);
 }
 
