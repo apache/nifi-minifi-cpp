@@ -17,9 +17,7 @@
 #pragma once
 
 #include <atomic>
-#include <condition_variable>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -53,7 +51,7 @@ class ProcessorImpl {
 
   virtual ~ProcessorImpl();
 
-  void setTriggerWhenEmpty(bool trigger_when_empty) {
+  void setTriggerWhenEmpty(const bool trigger_when_empty) {
     trigger_when_empty_ = trigger_when_empty;
   }
 
@@ -74,8 +72,8 @@ class ProcessorImpl {
   static constexpr auto OutputAttributes = std::array<minifi::core::OutputAttributeReference, 0>{};
 
   std::string getName() const;
-  utils::Identifier getUUID() const;
-  utils::SmallString<36> getUUIDStr() const;
+  minifi::utils::Identifier getUUID() const;
+  minifi::utils::SmallString<36> getUUIDStr() const;
 
   virtual PublishedMetrics calculateMetrics() const {return {};}
 
@@ -89,9 +87,6 @@ class ProcessorImpl {
   std::atomic<bool> trigger_when_empty_;
 
   std::shared_ptr<minifi::core::logging::Logger> logger_;
-
- private:
-  mutable std::mutex mutex_;
 };
 
 }  // namespace core

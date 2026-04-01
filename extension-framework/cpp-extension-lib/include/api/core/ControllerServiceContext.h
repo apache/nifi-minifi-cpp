@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -20,26 +20,22 @@
 #include <string>
 
 #include "minifi-c.h"
-#include "nonstd/expected.hpp"
 #include "minifi-cpp/core/PropertyDefinition.h"
-#include "api/core/FlowFile.h"
+#include "nonstd/expected.hpp"
 
 namespace org::apache::nifi::minifi::api::core {
 
-class ProcessContext {
+class ControllerServiceContext {
  public:
-  explicit ProcessContext(MinifiProcessContext* impl): impl_(impl) {}
+  explicit ControllerServiceContext(MinifiControllerServiceContext* impl) : impl_(impl) {}
 
-  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const;
-  nonstd::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
-    return getProperty(property_reference.name, flow_file);
+  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const;
+  nonstd::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference) const {
+    return getProperty(property_reference.name);
   }
-  nonstd::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view controller_service_name, std::string_view controller_service_class) const;
-
-  bool hasNonEmptyProperty(std::string_view name) const;
 
  private:
-  MinifiProcessContext* impl_;
+  MinifiControllerServiceContext* impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::api::core
