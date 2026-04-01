@@ -69,10 +69,10 @@ std::map<std::string, std::string> CffiProcessContext::getDynamicProperties(cons
   return result;
 }
 
-std::expected<utils::net::SslData, std::error_code> CffiProcessContext::getSslData(const std::string_view name) const {
+std::expected<utils::net::SslData, std::error_code> CffiProcessContext::getSslData(const minifi::core::PropertyReference& prop) const {
   auto ssl_data = utils::net::SslData{};
 
-  if (const auto status = MinifiProcessContextGetSslData(impl_, utils::minifiStringView(name), [](void* data, const MinifiSslData* minifi_ssl_data) {
+  if (const auto status = MinifiProcessContextGetSslDataFromProperty(impl_, utils::minifiStringView(prop.name), [](void* data, const MinifiSslData* minifi_ssl_data) {
       auto* my_ssl_data = static_cast<utils::net::SslData*>(data);
       my_ssl_data->ca_loc = utils::toString(minifi_ssl_data->ca_certificate_file);
       my_ssl_data->cert_loc = utils::toString(minifi_ssl_data->certificate_file);

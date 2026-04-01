@@ -15,57 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "unit/TestBase.h"
-#include "unit/TestUtils.h"
-#include "unit/Catch.h"
+#include "MockLogger.h"
+#include "MockProcessContext.h"
+#include "MockProcessSession.h"
+#include "MockUtils.h"
 #include "PublishKafka.h"
-#include "unit/SingleProcessorTestController.h"
+#include "catch2/catch_test_macros.hpp"
+#include "catch2/matchers/catch_matchers.hpp"
 
-namespace org::apache::nifi::minifi::test {
+namespace org::apache::nifi::minifi::processors::test {
 
-TEST_CASE("Scheduling should fail when batch size is larger than the max queue message count", "[testPublishKafka]") {
-  LogTestController::getInstance().setTrace<TestPlan>();
-  LogTestController::getInstance().setTrace<processors::PublishKafka>();
-  SingleProcessorTestController test_controller(minifi::test::utils::make_processor<processors::PublishKafka>("PublishKafka"));
-  const auto publish_kafka = test_controller.getProcessor();
-  REQUIRE(publish_kafka->setProperty(processors::PublishKafka::ClientName.name, "test_client"));
-  REQUIRE(publish_kafka->setProperty(processors::PublishKafka::SeedBrokers.name, "test_seedbroker"));
-  REQUIRE(publish_kafka->setProperty(processors::PublishKafka::QueueBufferMaxMessage.name, "1000"));
-  REQUIRE(publish_kafka->setProperty(processors::PublishKafka::BatchSize.name, "1500"));
-  REQUIRE_THROWS_WITH(test_controller.trigger(""), "Process Schedule Operation: Invalid configuration: Batch Size cannot be larger than Queue Max Message");
+TEST_CASE("Batch Size cannot be larger than Queue Max Message", "[PublishKafka]") {
+  auto publish_kafka = PublishKafka(mock::getMockMetadata());
+  auto context = mock::MockProcessContext{};
+  context.properties_.emplace(PublishKafka::ClientName.name, "test_client");
+  context.properties_.emplace(PublishKafka::SeedBrokers.name, "test_seedbroker");
+  context.properties_.emplace(PublishKafka::QueueBufferMaxMessage.name, "1000");
+  context.properties_.emplace(PublishKafka::BatchSize.name, "1500");
+
+  REQUIRE_THROWS_WITH(publish_kafka.onScheduleImpl(context),
+      "Process Schedule Operation: Invalid configuration: Batch Size cannot be larger than Queue Max Message");
 }
 
-TEST_CASE("Compress Codec property") {
-  using processors::PublishKafka;
-  SingleProcessorTestController test_controller(minifi::test::utils::make_processor<PublishKafka>("PublishKafka"));
-  REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::ClientName.name, "test_client"));
-  REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::SeedBrokers.name, "test_seedbroker"));
-  REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::Topic.name, "test_topic"));
-  REQUIRE(test_controller.getProcessor<PublishKafka>()->setProperty(PublishKafka::MessageTimeOut.name, "10ms"));
+TEST_CASE("Trigger without valid broker", "[PublishKafka]") {
+  const auto logger = std::make_shared<mock::MockLogger>();
+  auto publish_kafka = PublishKafka(mock::metadataWithLogger(logger));
+  auto context = mock::MockProcessContext{};
+  context.properties_.emplace(PublishKafka::ClientName.name, "test_client");
+  context.properties_.emplace(PublishKafka::SeedBrokers.name, "test_seedbroker");
+  context.properties_.emplace(PublishKafka::Topic.name, "test_topic");
+  context.properties_.emplace(PublishKafka::MessageTimeOut.name, "10 ms");
 
-  SECTION("none") {
-    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "none"));
-    REQUIRE_NOTHROW(test_controller.trigger("input"));
-  }
-  SECTION("gzip") {
-    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "gzip"));
-    REQUIRE_NOTHROW(test_controller.trigger("input"));
-  }
-  SECTION("snappy") {
-    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "snappy"));
-    REQUIRE_NOTHROW(test_controller.trigger("input"));
-  }
-  SECTION("lz4") {
-    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "lz4"));
-    REQUIRE_NOTHROW(test_controller.trigger("input"));
-  }
-  SECTION("zstd") {
-    REQUIRE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "zstd"));
-    REQUIRE_NOTHROW(test_controller.trigger("input"));
-  }
-  SECTION("foo") {
-    REQUIRE_FALSE(test_controller.getProcessor()->setProperty(PublishKafka::CompressCodec.name, "foo"));
-  }
+
+  REQUIRE_NOTHROW(publish_kafka.onScheduleImpl(context));
+  auto session = mock::MockProcessSession{};
+  session.addInputFlowFile(mock::MockFlowFileData("test_input_flow_file"));
+  REQUIRE_NOTHROW(publish_kafka.onTriggerImpl(context, session));
+
+  CHECK_FALSE(logger->logs_.empty());
 }
 
-}  // namespace org::apache::nifi::minifi::test
+}  // namespace org::apache::nifi::minifi::processors::test

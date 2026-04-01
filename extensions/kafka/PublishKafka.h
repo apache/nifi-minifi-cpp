@@ -29,19 +29,16 @@
 
 #include "KafkaConnection.h"
 #include "KafkaProcessorBase.h"
-#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
-#include "core/Core.h"
-#include "minifi-cpp/core/FlowFile.h"
-#include "core/ProcessSession.h"
+#include "api/core/ProcessSession.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "minifi-cpp/core/logging/Logger.h"
-#include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "rdkafka.h"
 #include "utils/ArrayUtils.h"
 #include "utils/RegexUtils.h"
+#include "minifi-cpp/core/Annotation.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -245,8 +242,6 @@ class PublishKafka final : public KafkaProcessorBase {
   EXTENSIONAPI static constexpr auto InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
   using KafkaProcessorBase::KafkaProcessorBase;
 
   PublishKafka(const PublishKafka&) = delete;
@@ -255,18 +250,17 @@ class PublishKafka final : public KafkaProcessorBase {
   PublishKafka& operator=(PublishKafka&&) = delete;
   ~PublishKafka() override = default;
 
-  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
-  void initialize() override;
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& sessionFactory) override;
-  void notifyStop() override;
+  MinifiStatus onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
+  void onUnSchedule() override;
 
   class Messages;
 
  protected:
-  bool configureNewConnection(core::ProcessContext& context);
+  void configureNewConnection(api::core::ProcessContext& context);
   bool createNewTopic(
-      core::ProcessContext& context, const std::string& topic_name, const std::shared_ptr<core::FlowFile>& flow_file) const;
-  std::optional<utils::net::SslData> getSslData(core::ProcessContext& context) const override;
+      const api::core::ProcessContext& context, const std::string& topic_name, const api::core::FlowFile& flow_file) const;
+  std::optional<api::utils::net::SslData> getSslData(api::core::ProcessContext& context) const override;
 
  private:
   KafkaConnectionKey key_;

@@ -19,6 +19,6 @@
 
 file(GLOB SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 
-add_library(libmock-minifi STATIC ${SRC_FILES})
-target_link_libraries(libmock-minifi PUBLIC minifi-cpp-extension-lib minifi-core-framework-common minifi-c-api)
-target_include_directories(libmock-minifi PUBLIC include)
+add_library(mock-minifi STATIC ${SRC_FILES})
+target_link_libraries(mock-minifi PUBLIC minifi-cpp-extension-lib minifi-core-framework-common minifi-c-api)
+target_include_directories(mock-minifi PUBLIC include)

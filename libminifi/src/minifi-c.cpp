@@ -613,19 +613,21 @@ void MinifiProcessContextGetDynamicProperties(MinifiProcessContext* context, Min
   }
 }
 
-MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
+MinifiStatus MinifiProcessContextGetSslDataFromProperty(MinifiProcessContext* process_context, MinifiStringView property_name,
     void (*cb)(void* user_ctx, const MinifiSslData* ssl_data), void* user_ctx) {
   gsl_Assert(process_context != MINIFI_NULL);
   try {
     const auto context = reinterpret_cast<minifi::core::ProcessContext*>(process_context);
-    const auto name_str = std::string{toStringView(controller_service_name)};
-    const auto service_shared_ptr = context->getControllerService(name_str, context->getProcessorInfo().getUUID());
+    const auto property_name_str = std::string{toStringView(property_name)};
+    const auto name_str = context->getProperty(property_name_str, nullptr);
+    if (!name_str) { return MINIFI_STATUS_PROPERTY_NOT_SET; }
+    const auto service_shared_ptr = context->getControllerService(*name_str, context->getProcessorInfo().getUUID());
     if (!service_shared_ptr) { return MINIFI_STATUS_VALIDATION_FAILED; }
     if (const auto ssl_context_service = dynamic_cast<minifi::controllers::SSLContextServiceInterface*>(service_shared_ptr.get())) {
-      const std::string ca_cert_file = ssl_context_service->getCACertificate().string();
-      const std::string passphrase = ssl_context_service->getPassphrase();
-      const std::string cert_file = ssl_context_service->getCertificateFile().string();
-      const std::string private_key_file = ssl_context_service->getPrivateKeyFile().string();
+    const std::string ca_cert_file = ssl_context_service->getCACertificate().string();
+    const std::string passphrase = ssl_context_service->getPassphrase();
+    const std::string cert_file = ssl_context_service->getCertificateFile().string();
+    const std::string private_key_file = ssl_context_service->getPrivateKeyFile().string();
 
       MinifiSslData ssl_data{
         .ca_certificate_file = minifiStringView(ca_cert_file),

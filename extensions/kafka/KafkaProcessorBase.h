@@ -20,12 +20,13 @@
 #include <optional>
 #include <string_view>
 
-#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
-#include "core/ProcessorImpl.h"
+#include "api/core/ProcessorImpl.h"
+#include "api/utils/Export.h"
+#include "api/utils/Ssl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "rdkafka_utils.h"
 #include "utils/Enum.h"
-#include "utils/net/Ssl.h"
+#include "minifi-c.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -35,12 +36,12 @@ enum class SecurityProtocolOption { plaintext, ssl, sasl_plaintext, sasl_ssl };
 enum class SASLMechanismOption { GSSAPI, PLAIN };
 }  // namespace kafka
 
-class KafkaProcessorBase : public core::ProcessorImpl {
+class KafkaProcessorBase : public api::core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr auto SSLContextService =
       core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
           .withDescription("SSL Context Service Name")
-          .withAllowedTypes<minifi::controllers::SSLContextServiceInterface>()
+          .withAllowedType<MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE>()
           .build();
   EXTENSIONAPI static constexpr auto SecurityProtocol =
       core::PropertyDefinitionBuilder<magic_enum::enum_count<kafka::SecurityProtocolOption>()>::createProperty(
@@ -88,7 +89,7 @@ class KafkaProcessorBase : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({SSLContextService,
       SecurityProtocol, KerberosServiceName, KerberosPrincipal, KerberosKeytabPath, SASLMechanism, Username, Password});
 
-  using ProcessorImpl::ProcessorImpl;
+  explicit KafkaProcessorBase(core::ProcessorMetadata metadata);
 
   KafkaProcessorBase(const KafkaProcessorBase&) = delete;
   KafkaProcessorBase(KafkaProcessorBase&&) = delete;
@@ -97,10 +98,11 @@ class KafkaProcessorBase : public core::ProcessorImpl {
   ~KafkaProcessorBase() override = default;
 
  protected:
-  virtual std::optional<utils::net::SslData> getSslData(core::ProcessContext& context) const;
-  void setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config);
+  virtual std::optional<api::utils::net::SslData> getSslData(api::core::ProcessContext& context) const;
+  void setKafkaAuthenticationParameters(api::core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config);
 
   kafka::SecurityProtocolOption security_protocol_{};
+  utils::KafkaOpaque kafka_opaque_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

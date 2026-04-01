@@ -752,7 +752,7 @@ set(EXTENSIONS_ENABLED_BY_DEFAULT (
     minifi-grafana-loki
     minifi-archive-extensions
     minifi-mqtt-extensions
-    minifi-rdkafka-extensions
+    minifi-kafka
     minifi-pdh
     minifi-prometheus
     minifi-rocksdb-repos
