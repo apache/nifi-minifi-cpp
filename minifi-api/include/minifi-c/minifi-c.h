@@ -100,6 +100,7 @@ typedef struct MinifiExtensionContext MinifiExtensionContext;
 typedef struct MinifiPublishedMetrics MinifiPublishedMetrics;
 typedef struct MinifiAgent MinifiAgent;
 
+typedef struct MinifiControllerService MinifiControllerService;
 typedef struct MinifiControllerServiceContext MinifiControllerServiceContext;
 
 typedef enum MinifiStatus : uint32_t {
