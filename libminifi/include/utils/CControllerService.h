@@ -26,8 +26,12 @@
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/controller/ControllerServiceApi.h"
 
+namespace org::apache::nifi::minifi {
+struct ClassDescription;
+}
+
 namespace org::apache::nifi::minifi::utils {
-class CControllerService;
+
 
 
 struct CControllerServiceClassDescription {
@@ -104,7 +108,6 @@ class CControllerService final : public core::controller::ControllerServiceApi, 
 };
 
 void useCControllerServiceClassDescription(const MinifiControllerServiceClassDefinition& class_description,
-    const BundleIdentifier& bundle_id,
-    const std::function<void(ClassDescription, CControllerServiceClassDescription)>& fn);
+    const std::function<void(const ClassDescription&, CControllerServiceClassDescription)>& fn);
 
 }  // namespace org::apache::nifi::minifi::utils
