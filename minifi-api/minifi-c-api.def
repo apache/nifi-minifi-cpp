@@ -16,12 +16,17 @@ EXPORTS
   MinifiProcessSessionCreate
   MinifiProcessSessionTransfer
   MinifiProcessSessionRemove
+  MinifiProcessSessionPenalize
   MinifiProcessSessionRead
   MinifiProcessSessionWrite
   MinifiConfigGet
   MinifiInputStreamSize
   MinifiInputStreamRead
   MinifiOutputStreamWrite
-  MinifiFlowFileSetAttribute
-  MinifiFlowFileGetAttribute
-  MinifiFlowFileGetAttributes
+  MinifiProcessSessionSetFlowFileAttribute
+  MinifiProcessSessionGetFlowFileAttribute
+  MinifiProcessSessionGetFlowFileAttributes
+  MinifiProcessSessionGetFlowFileSize
+  MinifiProcessSessionGetFlowFileId
+  MinifiProcessContextGetDynamicProperties
+  MinifiProcessContextGetSslData
