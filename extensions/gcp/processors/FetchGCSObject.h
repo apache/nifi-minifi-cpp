@@ -17,24 +17,20 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <utility>
-
 #include "../GCPAttributes.h"
 #include "GCSProcessor.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "google/cloud/storage/well_known_headers.h"
-#include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
+#include "minifi-cpp/core/Annotation.h"
+
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
 class FetchGCSObject : public GCSProcessor {
  public:
   using GCSProcessor::GCSProcessor;
-  ~FetchGCSObject() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches a file from a Google Cloud Bucket. Designed to be used in tandem with ListGCSBucket.";
 
@@ -80,11 +76,9 @@ class FetchGCSObject : public GCSProcessor {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  void initialize() override;
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
-  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
+ protected:
+  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
+  MinifiStatus onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
 
  private:
   google::cloud::storage::EncryptionKey encryption_key_;

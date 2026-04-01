@@ -69,10 +69,13 @@ std::map<std::string, std::string> CffiProcessContext::getDynamicProperties(cons
   return result;
 }
 
-std::expected<utils::net::SslData, std::error_code> CffiProcessContext::getSslData(const std::string_view name) const {
+std::expected<std::optional<utils::net::SslData>, std::error_code> CffiProcessContext::getSslData(const minifi::core::PropertyReference& prop) const {
+  const auto controller_name = getProperty(prop, nullptr);
+  if (!controller_name) { return std::nullopt; }
+
   auto ssl_data = utils::net::SslData{};
 
-  if (const auto status = MinifiProcessContextGetSslData(impl_, utils::minifiStringView(name), [](void* data, const MinifiSslData* minifi_ssl_data) {
+  if (const auto status = MinifiProcessContextGetSslData(impl_, utils::minifiStringView(*controller_name), [](void* data, const MinifiSslData* minifi_ssl_data) {
       auto* my_ssl_data = static_cast<utils::net::SslData*>(data);
       my_ssl_data->ca_loc = utils::toString(minifi_ssl_data->ca_certificate_file);
       my_ssl_data->cert_loc = utils::toString(minifi_ssl_data->certificate_file);
@@ -84,6 +87,38 @@ std::expected<utils::net::SslData, std::error_code> CffiProcessContext::getSslDa
   }
 
   return ssl_data;
+}
+
+std::expected<std::optional<utils::ProxyData>, std::error_code> CffiProcessContext::getProxyData(const minifi::core::PropertyReference& prop) const {
+  const auto controller_name = getProperty(prop, nullptr);
+  if (!controller_name) { return std::nullopt; }
+
+  auto proxy_data = utils::ProxyData{};
+  if (const auto status = MinifiProcessContextGetProxyData(
+          impl_,
+          utils::minifiStringView(*controller_name),
+          [](void* data, const MinifiProxyData* minifi_proxy_data) {
+            auto* proxy = static_cast<utils::ProxyData*>(data);
+            proxy->host = utils::toString(minifi_proxy_data->hostname);
+            proxy->port = minifi_proxy_data->port;
+            if (minifi_proxy_data->password && minifi_proxy_data->username) {
+              proxy->proxy_credentials = utils::BasicAuthCredentials{.username = utils::toString(*minifi_proxy_data->username),
+                  .password = utils::toString(*minifi_proxy_data->password)};
+            } else {
+              proxy->proxy_credentials = std::nullopt;
+            }
+            if (minifi_proxy_data->proxy_type == MINIFI_PROXY_TYPE_HTTP) {
+              proxy->proxy_type = utils::ProxyType::HTTP;
+            } else {
+              proxy->proxy_type = utils::ProxyType::DIRECT;
+            }
+          },
+          &proxy_data);
+      status != MINIFI_STATUS_SUCCESS) {
+    return std::unexpected{utils::make_error_code(status)};
+  }
+
+  return proxy_data;
 }
 
 }  // namespace org::apache::nifi::minifi::api::core

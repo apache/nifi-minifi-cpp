@@ -17,45 +17,43 @@
 
 #include "GCSProcessor.h"
 
-#include "utils/ProcessorConfigUtils.h"
-
 #include "../controllerservices/GCPCredentialsControllerService.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
+#include "api/utils/ProcessorConfigUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-std::shared_ptr<google::cloud::Credentials> GCSProcessor::getCredentials(core::ProcessContext& context) const {
-  auto gcp_credentials_controller_service = utils::parseOptionalControllerService<GCPCredentialsControllerService>(context, GCSProcessor::GCPCredentials, getUUID());
-  if (gcp_credentials_controller_service) {
+std::shared_ptr<google::cloud::Credentials> GCSProcessor::getCredentials(const api::core::ProcessContext& context) {
+  if (const auto gcp_credentials_controller_service = api::utils::parseOptionalControllerService<GCPCredentialsControllerService>(context,
+          GCPCredentials)) {
     return gcp_credentials_controller_service->getCredentials();
   }
   return nullptr;
 }
 
-void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (auto number_of_retries = utils::parseOptionalU64Property(context, NumberOfRetries)) {
+MinifiStatus GCSProcessor::onScheduleImpl(api::core::ProcessContext& context) {
+  if (const auto number_of_retries = api::utils::parseOptionalU64Property(context, NumberOfRetries)) {
     retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(gsl::narrow<int>(*number_of_retries));
   }
 
   gcp_credentials_ = getCredentials(context);
   if (!gcp_credentials_) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing GCP Credentials");
+    logger_->log_error("Couldnt find valid credentials");
+    return MINIFI_STATUS_UNKNOWN_ERROR;
   }
 
-  endpoint_url_ = context.getProperty(EndpointOverrideURL) | utils::toOptional();
+  endpoint_url_ = context.getProperty(EndpointOverrideURL, nullptr) | utils::toOptional();
   if (endpoint_url_)
     logger_->log_debug("Endpoint overwritten: {}", *endpoint_url_);
 
-  auto proxy_controller_service = minifi::utils::parseOptionalControllerService<minifi::controllers::ProxyConfigurationServiceInterface>(context, ProxyConfigurationService, getUUID());
-  if (proxy_controller_service && proxy_controller_service->getProxyType() != minifi::controllers::ProxyType::DIRECT) {
+  const auto proxy_data = context.getProxyData(ProxyConfigurationService) | utils::orThrow("Couldnt query ProxyConfigurationService");
+  if (proxy_data && proxy_data->proxy_type != api::utils::ProxyType::DIRECT) {
     logger_->log_debug("Proxy configuration is set for GCS processor");
 
     proxy_ = google::cloud::ProxyConfig{};
-    proxy_->set_scheme(minifi::utils::string::startsWith(proxy_controller_service->getHost(), "https") ? "https" : "http");
-    auto proxy_host = proxy_controller_service->getHost();
+    proxy_->set_scheme(minifi::utils::string::startsWith(proxy_data->host, "https") ? "https" : "http");
+    auto proxy_host = proxy_data->host;
     constexpr std::string_view https_prefix = "https://";
     constexpr std::string_view http_prefix = "http://";
     if (minifi::utils::string::startsWith(proxy_host, https_prefix)) {
@@ -64,12 +62,13 @@ void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
       proxy_host = proxy_host.substr(http_prefix.size());
     }
     proxy_->set_hostname(proxy_host);
-    proxy_->set_port(std::to_string(proxy_controller_service->getPort()));
-    if (auto proxy_credentials = proxy_controller_service->getProxyCredentials()) {
+    proxy_->set_port(std::to_string(proxy_data->port));
+    if (auto proxy_credentials = proxy_data->proxy_credentials) {
       proxy_->set_username(proxy_credentials->username);
       proxy_->set_password(proxy_credentials->password);
     }
   }
+  return MINIFI_STATUS_SUCCESS;
 }
 
 gcs::Client GCSProcessor::getClient() const {

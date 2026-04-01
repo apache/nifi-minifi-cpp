@@ -25,6 +25,7 @@
 #include "core/extension/ExtensionManager.h"
 #include "minifi-cpp/Exception.h"
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/ClassLoader.h"
 #include "minifi-cpp/core/ProcessContext.h"
@@ -179,6 +180,16 @@ class CControllerServiceFactory : public minifi::core::controller::ControllerSer
   std::string class_name_;
   minifi::utils::CControllerServiceClassDescription class_description_;
 };
+
+MinifiProxyType minifiProxyType(const minifi::controllers::ProxyType& proxy_type) {
+  switch (proxy_type) {
+    case minifi::controllers::ProxyType::DIRECT:
+      return MinifiProxyType::MINIFI_PROXY_TYPE_DIRECT;
+    case minifi::controllers::ProxyType::HTTP:
+      return MinifiProxyType::MINIFI_PROXY_TYPE_HTTP;
+  }
+  std::unreachable();
+}
 
 }  // namespace
 
@@ -642,5 +653,32 @@ MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext* process_contex
   }
 }
 
+
+MinifiStatus MinifiProcessContextGetProxyData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
+    void (*cb)(void* user_ctx, const MinifiProxyData* proxy_data), void* user_ctx) {
+  gsl_Assert(process_context != MINIFI_NULL);
+  const auto context = reinterpret_cast<minifi::core::ProcessContext*>(process_context);
+  const auto name_str = std::string{toStringView(controller_service_name)};
+  const auto service_shared_ptr = context->getControllerService(name_str, context->getProcessorInfo().getUUID());
+  if (!service_shared_ptr) { return MINIFI_STATUS_VALIDATION_FAILED; }
+  if (const auto proxy_service = dynamic_cast<minifi::controllers::ProxyConfigurationServiceInterface*>(service_shared_ptr.get())) {
+    const std::string hostname = proxy_service->getHost();
+    const auto basic_auth_data = proxy_service->getProxyCredentials();
+    MinifiStringView username_holder = basic_auth_data ? minifiStringView(basic_auth_data->username) : MinifiStringView{};
+    MinifiStringView password_holder = basic_auth_data ? minifiStringView(basic_auth_data->password) : MinifiStringView{};
+
+    MinifiProxyData proxy_data{
+        .version = 1,
+        .hostname = minifiStringView(hostname),
+        .port = proxy_service->getPort(),
+        .username = basic_auth_data ? &username_holder : nullptr,
+        .password = basic_auth_data ? &password_holder : nullptr,
+        .proxy_type = minifiProxyType(proxy_service->getProxyType()),
+    };
+    cb(user_ctx, &proxy_data);
+    return MINIFI_STATUS_SUCCESS;
+  }
+  return MINIFI_STATUS_VALIDATION_FAILED;
+}
 
 }  // extern "C"

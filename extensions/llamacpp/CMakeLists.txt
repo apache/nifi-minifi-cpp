@@ -25,7 +25,7 @@ include(LlamaCpp)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-file(GLOB SOURCES "processors/*.cpp")
+file(GLOB SOURCES "processors/*.cpp" "ExtensionInitializer.cpp")
 
 add_minifi_library(minifi-llamacpp SHARED ${SOURCES})
 target_include_directories(minifi-llamacpp PUBLIC "${CMAKE_SOURCE_DIR}/extensions/llamacpp")

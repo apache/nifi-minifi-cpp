@@ -19,17 +19,16 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "../GCPAttributes.h"
 #include "GCSProcessor.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
-#include "core/logging/LoggerFactory.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Enum.h"
 #include "google/cloud/storage/well_known_headers.h"
+#include "minifi-cpp/core/Annotation.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp::put_gcs_object {
 enum class PredefinedAcl {
@@ -73,7 +72,6 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 class PutGCSObject : public GCSProcessor {
  public:
   using GCSProcessor::GCSProcessor;
-  ~PutGCSObject() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Puts flow files to a Google Cloud Storage Bucket.";
 
@@ -191,11 +189,9 @@ class PutGCSObject : public GCSProcessor {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  void initialize() override;
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
-  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
+ protected:
+  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
+  MinifiStatus onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
 
  private:
   google::cloud::storage::EncryptionKey encryption_key_;
