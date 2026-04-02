@@ -196,9 +196,9 @@ void registerProcessors(MinifiExtension* extension) {
   }), ...);
 }
 
-template <typename... Processors>
+template <typename... ControllerServices>
 void registerControllerServices(MinifiExtension* extension) {
-  (core::useControllerServiceClassDescription<Processors>([&](const MinifiControllerServiceClassDefinition& definition) {
+  (core::useControllerServiceClassDescription<ControllerServices>([&](const MinifiControllerServiceClassDefinition& definition) {
       MinifiRegisterControllerService(extension, &definition);
   }), ...);
 }
