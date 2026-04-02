@@ -58,39 +58,47 @@ int PySSLContextService::init(PySSLContextService* self, PyObject* args, PyObjec
 }
 
 PyObject* PySSLContextService::getCertificateFile(PySSLContextService* self, PyObject* /*args*/) {
+  PYTHON_METHOD_BEGIN
   auto ssl_context_service = self->ssl_context_service_.lock();
   if (!ssl_context_service) {
     PyErr_SetString(PyExc_AttributeError, "tried reading ssl context service outside 'on_trigger'");
     return nullptr;
   }
   return object::returnReference(ssl_context_service->getCertificateFile().string());
+  PYTHON_METHOD_END
 }
 
 PyObject* PySSLContextService::getPassphrase(PySSLContextService* self, PyObject* /*args*/) {
+  PYTHON_METHOD_BEGIN
   auto ssl_context_service = self->ssl_context_service_.lock();
   if (!ssl_context_service) {
     PyErr_SetString(PyExc_AttributeError, "tried reading ssl context service outside 'on_trigger'");
     return nullptr;
   }
   return object::returnReference(ssl_context_service->getPassphrase());
+  PYTHON_METHOD_END
 }
 
 PyObject* PySSLContextService::getPrivateKeyFile(PySSLContextService* self, PyObject* /*args*/) {
+  PYTHON_METHOD_BEGIN
   auto ssl_context_service = self->ssl_context_service_.lock();
   if (!ssl_context_service) {
     PyErr_SetString(PyExc_AttributeError, "tried reading ssl context service outside 'on_trigger'");
     return nullptr;
   }
   return object::returnReference(ssl_context_service->getPrivateKeyFile().string());
+  PYTHON_METHOD_END
 }
 
 PyObject* PySSLContextService::getCACertificate(PySSLContextService* self, PyObject* /*args*/) {
+  PYTHON_METHOD_BEGIN
   auto ssl_context_service = self->ssl_context_service_.lock();
   if (!ssl_context_service) {
     PyErr_SetString(PyExc_AttributeError, "tried reading ssl context service outside 'on_trigger'");
     return nullptr;
   }
   return object::returnReference(ssl_context_service->getCACertificate().string());
+  PYTHON_METHOD_END
 }
 
 PyTypeObject* PySSLContextService::typeObject() {

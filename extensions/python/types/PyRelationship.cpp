@@ -56,11 +56,15 @@ int PyRelationship::init(PyRelationship* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyRelationship::getName(PyRelationship* self, PyObject*) {
+  PYTHON_METHOD_BEGIN
   return object::returnReference(self->relationship_.getName());
+  PYTHON_METHOD_END
 }
 
 PyObject* PyRelationship::getDescription(PyRelationship* self, PyObject*) {
+  PYTHON_METHOD_BEGIN
   return object::returnReference(self->relationship_.getDescription());
+  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyRelationship::typeObject() {

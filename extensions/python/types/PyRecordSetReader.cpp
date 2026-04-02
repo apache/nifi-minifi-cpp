@@ -61,6 +61,7 @@ int PyRecordSetReader::init(PyRecordSetReader* self, PyObject* args, PyObject*) 
 }
 
 PyObject* PyRecordSetReader::read(PyRecordSetReader* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   gsl_Expects(self && args);
   auto record_set_reader = self->record_set_reader_.lock();
   if (!record_set_reader) {
@@ -106,6 +107,7 @@ PyObject* PyRecordSetReader::read(PyRecordSetReader* self, PyObject* args) {
     records.append(std::string{buffer.GetString(), buffer.GetSize()});
   }
   return object::returnReference(records);
+  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyRecordSetReader::typeObject() {

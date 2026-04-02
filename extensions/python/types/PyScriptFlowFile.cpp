@@ -63,6 +63,7 @@ int PyScriptFlowFile::init(PyScriptFlowFile* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyScriptFlowFile::getAttribute(PyScriptFlowFile* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto flow_file = self->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -74,9 +75,11 @@ PyObject* PyScriptFlowFile::getAttribute(PyScriptFlowFile* self, PyObject* args)
     return nullptr;
   }
   return object::returnReference(flow_file->getAttribute(attribute).value_or(""));
+  PYTHON_METHOD_END
 }
 
 PyObject* PyScriptFlowFile::addAttribute(PyScriptFlowFile* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto flow_file = self->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -90,9 +93,11 @@ PyObject* PyScriptFlowFile::addAttribute(PyScriptFlowFile* self, PyObject* args)
   }
 
   return object::returnReference(flow_file->addAttribute(key, std::string(value)));
+  PYTHON_METHOD_END
 }
 
 PyObject* PyScriptFlowFile::updateAttribute(PyScriptFlowFile* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto flow_file = self->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -106,9 +111,11 @@ PyObject* PyScriptFlowFile::updateAttribute(PyScriptFlowFile* self, PyObject* ar
   }
 
   return object::returnReference(flow_file->updateAttribute(key, std::string(value)));
+  PYTHON_METHOD_END
 }
 
 PyObject* PyScriptFlowFile::removeAttribute(PyScriptFlowFile* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto flow_file = self->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -120,9 +127,11 @@ PyObject* PyScriptFlowFile::removeAttribute(PyScriptFlowFile* self, PyObject* ar
     return nullptr;
   }
   return object::returnReference(flow_file->removeAttribute(attribute));
+  PYTHON_METHOD_END
 }
 
 PyObject* PyScriptFlowFile::setAttribute(PyScriptFlowFile* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto flow_file = self->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -137,9 +146,11 @@ PyObject* PyScriptFlowFile::setAttribute(PyScriptFlowFile* self, PyObject* args)
 
   flow_file->setAttribute(key, value);
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyObject* PyScriptFlowFile::getSize(PyScriptFlowFile* self, PyObject* /*args*/) {
+  PYTHON_METHOD_BEGIN
   auto flow_file = self->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -147,9 +158,11 @@ PyObject* PyScriptFlowFile::getSize(PyScriptFlowFile* self, PyObject* /*args*/) 
   }
 
   return object::returnReference(flow_file->getSize());
+  PYTHON_METHOD_END
 }
 
 PyObject* PyScriptFlowFile::getAttributes(PyScriptFlowFile* self, PyObject* /*args*/) {
+  PYTHON_METHOD_BEGIN
   auto flow_file = self->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -162,6 +175,7 @@ PyObject* PyScriptFlowFile::getAttributes(PyScriptFlowFile* self, PyObject* /*ar
   }
 
   return object::returnReference(attributes);
+  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyScriptFlowFile::typeObject() {

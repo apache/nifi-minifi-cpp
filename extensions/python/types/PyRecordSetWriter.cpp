@@ -61,6 +61,7 @@ int PyRecordSetWriter::init(PyRecordSetWriter* self, PyObject* args, PyObject*) 
 }
 
 PyObject* PyRecordSetWriter::write(PyRecordSetWriter* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   gsl_Expects(self && args);
   auto record_set_writer = self->record_set_writer_.lock();
   if (!record_set_writer) {
@@ -103,6 +104,7 @@ PyObject* PyRecordSetWriter::write(PyRecordSetWriter* self, PyObject* args) {
 
   record_set_writer->write(record_set, flow_file, process_session->getSession());
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyRecordSetWriter::typeObject() {

@@ -60,6 +60,7 @@ int PyInputStream::init(PyInputStream* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyInputStream::read(PyInputStream* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto input_stream = self->input_stream_.lock();
   if (!input_stream) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -79,6 +80,7 @@ PyObject* PyInputStream::read(PyInputStream* self, PyObject* args) {
 
   const auto read = input_stream->read(buffer);
   return object::returnReference(OwnedBytes::fromStringAndSize(std::string_view(reinterpret_cast<const char*>(buffer.data()), read)));
+  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyInputStream::typeObject() {
