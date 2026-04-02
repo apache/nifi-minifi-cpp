@@ -1,0 +1,31 @@
+diff --color=auto -rupN llamacpp-src-original/CMakeLists.txt llamacpp-src-patched/CMakeLists.txt
+--- llamacpp-src-original/CMakeLists.txt	2026-01-25 21:19:47
++++ llamacpp-src-patched/CMakeLists.txt	2026-02-18 13:15:46
+@@ -212,6 +212,7 @@ add_subdirectory(src)
+ #
+ 
+ add_subdirectory(src)
++add_subdirectory(tools/mtmd)
+ 
+ #
+ # utils, programs, examples and tests
+diff --color=auto -rupN llamacpp-src-original/tools/mtmd/CMakeLists.txt llamacpp-src-patched/tools/mtmd/CMakeLists.txt
+--- llamacpp-src-original/tools/mtmd/CMakeLists.txt	2026-01-25 21:19:47
++++ llamacpp-src-patched/tools/mtmd/CMakeLists.txt	2026-02-18 13:13:40
+@@ -80,16 +80,3 @@ endif()
+     endif()
+ endif()
+ 
+-add_executable(llama-llava-cli    deprecation-warning.cpp)
+-add_executable(llama-gemma3-cli   deprecation-warning.cpp)
+-add_executable(llama-minicpmv-cli deprecation-warning.cpp)
+-add_executable(llama-qwen2vl-cli  deprecation-warning.cpp)
+-
+-set(TARGET llama-mtmd-cli)
+-add_executable         (${TARGET} mtmd-cli.cpp)
+-set_target_properties  (${TARGET} PROPERTIES OUTPUT_NAME llama-mtmd-cli)
+-if(LLAMA_TOOLS_INSTALL)
+-    install(TARGETS ${TARGET} RUNTIME)
+-endif()
+-target_link_libraries  (${TARGET} PRIVATE common mtmd Threads::Threads)
+-target_compile_features(${TARGET} PRIVATE cxx_std_17)
