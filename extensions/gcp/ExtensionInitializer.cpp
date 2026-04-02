@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "../../extension-framework/cpp-extension-lib/include/api/core/Resource.h"
 #include "api/core/Resource.h"
 #include "api/utils/minifi-c-utils.h"
 #include "processors/DeleteGCSObject.h"
@@ -35,18 +36,9 @@ CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context
       .deinit = nullptr,
       .user_data = nullptr};
   auto* extension = MinifiCreateExtension(extension_context, &ext_create_info);
-  minifi::api::core::useProcessorClassDescription<minifi::extensions::gcp::DeleteGCSObject>([&](const MinifiProcessorClassDefinition& description) {
-    MinifiRegisterProcessor(extension, &description);
-  });
-  minifi::api::core::useProcessorClassDescription<minifi::extensions::gcp::FetchGCSObject>([&](const MinifiProcessorClassDefinition& description) {
-    MinifiRegisterProcessor(extension, &description);
-  });
-  minifi::api::core::useProcessorClassDescription<minifi::extensions::gcp::ListGCSBucket>([&](const MinifiProcessorClassDefinition& description) {
-    MinifiRegisterProcessor(extension, &description);
-  });
-  minifi::api::core::useProcessorClassDescription<minifi::extensions::gcp::PutGCSObject>([&](const MinifiProcessorClassDefinition& description) {
-    MinifiRegisterProcessor(extension, &description);
-  });
-  minifi::api::core::useControllerServiceClassDescription<minifi::extensions::gcp::GCPCredentialsControllerService>(
-      [&](const MinifiControllerServiceClassDefinition& description) { MinifiRegisterControllerService(extension, &description); });
+  minifi::api::core::registerProcessors<minifi::extensions::gcp::DeleteGCSObject,
+      minifi::extensions::gcp::FetchGCSObject,
+      minifi::extensions::gcp::ListGCSBucket,
+      minifi::extensions::gcp::PutGCSObject>(extension);
+  minifi::api::core::registerControllerServices<minifi::extensions::gcp::GCPCredentialsControllerService>(extension);
 }

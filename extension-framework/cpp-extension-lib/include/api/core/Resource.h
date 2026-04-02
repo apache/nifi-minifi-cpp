@@ -189,4 +189,18 @@ void useControllerServiceClassDescription(Fn&& fn) {
   fn(description);
 }
 
+template <typename... Processors>
+void registerProcessors(MinifiExtension* extension) {
+  (core::useProcessorClassDescription<Processors>([&](const MinifiProcessorClassDefinition& definition) {
+      MinifiRegisterProcessor(extension, &definition);
+  }), ...);
+}
+
+template <typename... Processors>
+void registerControllerServices(MinifiExtension* extension) {
+  (core::useControllerServiceClassDescription<Processors>([&](const MinifiControllerServiceClassDefinition& definition) {
+      MinifiRegisterControllerService(extension, &definition);
+  }), ...);
+}
+
 }  // namespace org::apache::nifi::minifi::api::core
