@@ -14,56 +14,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "../processors/PutGCSObject.h"
 #include "../controllerservices/GCPCredentialsControllerService.h"
+#include "../processors/PutGCSObject.h"
+#include "CProcessorTestUtils.h"
 #include "GCPAttributes.h"
 #include "core/Resource.h"
-#include "unit/SingleProcessorTestController.h"
-#include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"
-#include "google/cloud/storage/retry_policy.h"
 #include "google/cloud/storage/testing/canonical_errors.h"
+#include "google/cloud/storage/testing/mock_client.h"
 #include "unit/ProcessorUtils.h"
+#include "unit/SingleProcessorTestController.h"
 
 namespace gcs = ::google::cloud::storage;
-namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
+namespace minifi_gcp = minifi::extensions::gcp;
 
-using PutGCSObject = org::apache::nifi::minifi::extensions::gcp::PutGCSObject;
-using GCPCredentialsControllerService = org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService;
+using PutGCSObject = minifi::extensions::gcp::PutGCSObject;
+using GCPCredentialsControllerService = minifi::extensions::gcp::GCPCredentialsControllerService;
 using ResumableUploadRequest = gcs::internal::ResumableUploadRequest;
 using QueryResumableUploadResponse = gcs::internal::QueryResumableUploadResponse;
-using ::google::cloud::storage::testing::canonical_errors::TransientError;
 using ::google::cloud::storage::testing::canonical_errors::PermanentError;
+using ::google::cloud::storage::testing::canonical_errors::TransientError;
 
 namespace {
 class PutGCSObjectMocked : public PutGCSObject {
-  using org::apache::nifi::minifi::extensions::gcp::PutGCSObject::PutGCSObject;
- public:
-  static constexpr const char* Description = "PutGCSObjectMocked";
+  using PutGCSObject::PutGCSObject;
 
-  gcs::Client getClient() const override {
-    return gcs::testing::UndecoratedClientFromMock(mock_client_);
-  }
-  std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
+ public:
+  PutGCSObjectMocked(minifi::core::ProcessorMetadata metadata, std::shared_ptr<gcs::testing::MockClient> mock_client)
+      : PutGCSObject(std::move(metadata)),
+        mock_client_(std::move(mock_client)) {}
+
+ protected:
+  gcs::Client getClient() const override { return gcs::testing::UndecoratedClientFromMock(mock_client_); }
+  std::shared_ptr<gcs::testing::MockClient> mock_client_;
 };
-REGISTER_RESOURCE(PutGCSObjectMocked, Processor);
 }  // namespace
 
 class PutGCSObjectTests : public ::testing::Test {
- public:
+ protected:
   void SetUp() override {
-    put_gcs_object_ = test_controller_.getProcessor();
-    gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
-    test_controller_.plan->setProperty(gcp_credentials_node_,
-                                       GCPCredentialsControllerService::CredentialsLoc,
-                                       magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
-    test_controller_.plan->setProperty(put_gcs_object_,
-                                       PutGCSObject::GCPCredentials,
-                                       "gcp_credentials_controller_service");
+    const auto gcp_credential_controller_service =
+        minifi::test::utils::make_custom_c_controller_service<GCPCredentialsControllerService>(core::ControllerServiceMetadata{utils::Identifier{},
+            "GCPCredentialsControllerService",
+            logging::LoggerFactory<GCPCredentialsControllerService>::getLogger()});
+    gcp_credentials_node_ = test_controller_.plan->addController("gcp_credentials_controller_service", gcp_credential_controller_service);
+    test_controller_.getProcessor()->setProperty(GCPCredentialsControllerService::CredentialsLoc.name,
+        std::string(magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS)));
+    test_controller_.getProcessor()->setProperty(PutGCSObjectMocked::GCPCredentials.name, "gcp_credentials_controller_service");
   }
-  TypedProcessorWrapper<PutGCSObjectMocked> put_gcs_object_;
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{minifi::test::utils::make_processor<PutGCSObjectMocked>("PutGCSObjectMocked")};
-  std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
+
+  std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
+  minifi::test::SingleProcessorTestController test_controller_{minifi::test::utils::make_custom_c_processor<PutGCSObjectMocked>(
+      core::ProcessorMetadata{utils::Identifier{}, "PutGCSObjectMocked", logging::LoggerFactory<PutGCSObjectMocked>::getLogger()}, mock_client_)};
+  std::shared_ptr<minifi::core::controller::ControllerServiceNode> gcp_credentials_node_;
 
   static auto return_upload_done(const ResumableUploadRequest& request) {
     using ObjectMetadataParser = gcs::internal::ObjectMetadataParser;
@@ -75,13 +78,14 @@ class PutGCSObjectTests : public ::testing::Test {
       metadata_json["customerEncryption"]["encryptionAlgorithm"] = "AES256";
       metadata_json["customerEncryption"]["keySha256"] = "zkeXIcAB56dkHp0z1023TQZ+mzm+fZ5JRVgmAQ3bEVE=";
     }
-    return testing::Return(google::cloud::make_status_or(QueryResumableUploadResponse{absl::nullopt, *ObjectMetadataParser::FromJson(metadata_json)}));
+    return testing::Return(google::cloud::make_status_or(QueryResumableUploadResponse{absl::nullopt,
+        *ObjectMetadataParser::FromJson(metadata_json)}));
   }
 };
 
 TEST_F(PutGCSObjectTests, MissingBucket) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload).Times(0);
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, ""));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).Times(0);
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
@@ -91,13 +95,12 @@ TEST_F(PutGCSObjectTests, MissingBucket) {
 }
 
 TEST_F(PutGCSObjectTests, BucketFromAttribute) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload)
-      .WillOnce([this](const ResumableUploadRequest& request) {
-        EXPECT_EQ("bucket-from-attribute", request.bucket_name());
-        EXPECT_CALL(*put_gcs_object_.get().mock_client_, UploadChunk).WillOnce(return_upload_done(request));
-        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "${gcs.bucket}"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce([this](const ResumableUploadRequest& request) {
+    EXPECT_EQ("bucket-from-attribute", request.bucket_name());
+    EXPECT_CALL(*mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+    return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "${gcs.bucket}"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
@@ -105,10 +108,10 @@ TEST_F(PutGCSObjectTests, BucketFromAttribute) {
 }
 
 TEST_F(PutGCSObjectTests, ServerGivesTransientErrors) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload).WillOnce(testing::Return(TransientError()));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::NumberOfRetries, "2"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce(testing::Return(TransientError()));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::NumberOfRetries.name, "2"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
@@ -118,9 +121,9 @@ TEST_F(PutGCSObjectTests, ServerGivesTransientErrors) {
 }
 
 TEST_F(PutGCSObjectTests, ServerGivesPermaError) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload).WillOnce(testing::Return(PermanentError()));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce(testing::Return(PermanentError()));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
@@ -130,51 +133,48 @@ TEST_F(PutGCSObjectTests, ServerGivesPermaError) {
 }
 
 TEST_F(PutGCSObjectTests, NonRequiredPropertiesAreMissing) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload)
-      .WillOnce([this](const ResumableUploadRequest& request) {
-        EXPECT_FALSE(request.HasOption<gcs::MD5HashValue>());
-        EXPECT_FALSE(request.HasOption<gcs::Crc32cChecksumValue>());
-        EXPECT_FALSE(request.HasOption<gcs::PredefinedAcl>());
-        EXPECT_FALSE(request.HasOption<gcs::IfGenerationMatch>());
-        EXPECT_CALL(*put_gcs_object_.get().mock_client_, UploadChunk).WillOnce(return_upload_done(request));
-        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce([this](const ResumableUploadRequest& request) {
+    EXPECT_FALSE(request.HasOption<gcs::MD5HashValue>());
+    EXPECT_FALSE(request.HasOption<gcs::Crc32cChecksumValue>());
+    EXPECT_FALSE(request.HasOption<gcs::PredefinedAcl>());
+    EXPECT_FALSE(request.HasOption<gcs::IfGenerationMatch>());
+    EXPECT_CALL(*mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+    return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
 }
 
 TEST_F(PutGCSObjectTests, Crc32cMD5LocationTest) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload)
-      .WillOnce([this](const ResumableUploadRequest& request) {
-        EXPECT_TRUE(request.HasOption<gcs::Crc32cChecksumValue>());
-        EXPECT_EQ("yZRlqg==", request.GetOption<gcs::Crc32cChecksumValue>().value());
-        EXPECT_TRUE(request.HasOption<gcs::MD5HashValue>());
-        EXPECT_EQ("XrY7u+Ae7tCTyyK7j1rNww==", request.GetOption<gcs::MD5HashValue>().value());
-        EXPECT_CALL(*put_gcs_object_.get().mock_client_, UploadChunk).WillOnce(return_upload_done(request));
-        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::MD5Hash, "${md5}"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Crc32cChecksum, "${crc32c}"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce([this](const ResumableUploadRequest& request) {
+    EXPECT_TRUE(request.HasOption<gcs::Crc32cChecksumValue>());
+    EXPECT_EQ("yZRlqg==", request.GetOption<gcs::Crc32cChecksumValue>().value());
+    EXPECT_TRUE(request.HasOption<gcs::MD5HashValue>());
+    EXPECT_EQ("XrY7u+Ae7tCTyyK7j1rNww==", request.GetOption<gcs::MD5HashValue>().value());
+    EXPECT_CALL(*mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+    return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::MD5Hash.name, "${md5}"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Crc32cChecksum.name, "${crc32c}"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{"crc32c", "yZRlqg=="}, {"md5", "XrY7u+Ae7tCTyyK7j1rNww=="}});
   EXPECT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
 }
 
 TEST_F(PutGCSObjectTests, DontOverwriteTest) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload)
-      .WillOnce([this](const ResumableUploadRequest& request) {
-        EXPECT_TRUE(request.HasOption<gcs::IfGenerationMatch>());
-        EXPECT_CALL(*put_gcs_object_.get().mock_client_, UploadChunk).WillOnce(return_upload_done(request));
-        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::OverwriteObject, "false"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce([this](const ResumableUploadRequest& request) {
+    EXPECT_TRUE(request.HasOption<gcs::IfGenerationMatch>());
+    EXPECT_CALL(*mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+    return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::OverwriteObject.name, "false"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{"crc32c", "yZRlqg=="}, {"md5", "XrY7u+Ae7tCTyyK7j1rNww=="}});
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
@@ -182,15 +182,14 @@ TEST_F(PutGCSObjectTests, DontOverwriteTest) {
 }
 
 TEST_F(PutGCSObjectTests, ValidServerSideEncryptionTest) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload)
-      .WillOnce([this](const ResumableUploadRequest& request) {
-        EXPECT_TRUE(request.HasOption<gcs::EncryptionKey>());
-        EXPECT_CALL(*put_gcs_object_.get().mock_client_, UploadChunk).WillOnce(return_upload_done(request));
-        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::EncryptionKey, "ZW5jcnlwdGlvbl9rZXk="));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce([this](const ResumableUploadRequest& request) {
+    EXPECT_TRUE(request.HasOption<gcs::EncryptionKey>());
+    EXPECT_CALL(*mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+    return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::EncryptionKey.name, "ZW5jcnlwdGlvbl9rZXk="));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world");
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
@@ -200,22 +199,21 @@ TEST_F(PutGCSObjectTests, ValidServerSideEncryptionTest) {
 }
 
 TEST_F(PutGCSObjectTests, InvalidServerSideEncryptionTest) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload).Times(0);
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::EncryptionKey, "not_base64_key"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).Times(0);
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::EncryptionKey.name, "not_base64_key"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   EXPECT_THROW(test_controller_.trigger("hello world"), minifi::Exception);
 }
 
 TEST_F(PutGCSObjectTests, NoContentType) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload)
-      .WillOnce([this](const ResumableUploadRequest& request) {
-        EXPECT_FALSE(request.HasOption<gcs::ContentType>());
-        EXPECT_CALL(*put_gcs_object_.get().mock_client_, UploadChunk).WillOnce(return_upload_done(request));
-        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce([this](const ResumableUploadRequest& request) {
+    EXPECT_FALSE(request.HasOption<gcs::ContentType>());
+    EXPECT_CALL(*mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+    return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world");
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
@@ -223,15 +221,14 @@ TEST_F(PutGCSObjectTests, NoContentType) {
 }
 
 TEST_F(PutGCSObjectTests, ContentTypeFromAttribute) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload)
-      .WillOnce([this](const ResumableUploadRequest& request) {
-        EXPECT_TRUE(request.HasOption<gcs::ContentType>());
-        EXPECT_EQ("text/attribute", request.GetOption<gcs::ContentType>().value());
-        EXPECT_CALL(*put_gcs_object_.get().mock_client_, UploadChunk).WillOnce(return_upload_done(request));
-        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce([this](const ResumableUploadRequest& request) {
+    EXPECT_TRUE(request.HasOption<gcs::ContentType>());
+    EXPECT_EQ("text/attribute", request.GetOption<gcs::ContentType>().value());
+    EXPECT_CALL(*mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+    return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{"mime.type", "text/attribute"}});
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
@@ -239,16 +236,16 @@ TEST_F(PutGCSObjectTests, ContentTypeFromAttribute) {
 }
 
 TEST_F(PutGCSObjectTests, ObjectACLTest) {
-  EXPECT_CALL(*put_gcs_object_.get().mock_client_, CreateResumableUpload)
-      .WillOnce([this](const ResumableUploadRequest& request) {
-        EXPECT_TRUE(request.HasOption<gcs::PredefinedAcl>());
-        EXPECT_EQ(gcs::PredefinedAcl::AuthenticatedRead().value(), request.GetOption<gcs::PredefinedAcl>().value());
-        EXPECT_CALL(*put_gcs_object_.get().mock_client_, UploadChunk).WillOnce(return_upload_done(request));
-        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::ObjectACL, magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::AUTHENTICATED_READ)));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).WillOnce([this](const ResumableUploadRequest& request) {
+    EXPECT_TRUE(request.HasOption<gcs::PredefinedAcl>());
+    EXPECT_EQ(gcs::PredefinedAcl::AuthenticatedRead().value(), request.GetOption<gcs::PredefinedAcl>().value());
+    EXPECT_CALL(*mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+    return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Bucket.name, "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::Key.name, "object-name-from-property"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(PutGCSObject::ObjectACL.name,
+      std::string(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::AUTHENTICATED_READ))));
   const auto& result = test_controller_.trigger("hello world");
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
@@ -257,7 +254,8 @@ TEST_F(PutGCSObjectTests, ObjectACLTest) {
 
 TEST_F(PutGCSObjectTests, PredefinedACLTests) {
   EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::AUTHENTICATED_READ), gcs::PredefinedAcl::AuthenticatedRead().value());
-  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_FULL_CONTROL), gcs::PredefinedAcl::BucketOwnerFullControl().value());
+  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_FULL_CONTROL),
+      gcs::PredefinedAcl::BucketOwnerFullControl().value());
   EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_READ_ONLY), gcs::PredefinedAcl::BucketOwnerRead().value());
   EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::PRIVATE), gcs::PredefinedAcl::Private().value());
   EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::PROJECT_PRIVATE), gcs::PredefinedAcl::ProjectPrivate().value());

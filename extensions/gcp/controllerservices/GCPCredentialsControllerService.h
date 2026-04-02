@@ -18,17 +18,15 @@
 #pragma once
 
 #include <filesystem>
-#include <string>
 #include <memory>
+#include <string>
 
-#include "core/controller/ControllerServiceBase.h"
-#include "minifi-cpp/core/logging/Logger.h"
-#include "core/logging/LoggerFactory.h"
-#include "minifi-cpp/core/PropertyDefinition.h"
+#include "api/core/ControllerServiceImpl.h"
+#include "api/utils/Export.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "utils/Enum.h"
-
 #include "google/cloud/credentials.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 enum class CredentialsLocation {
@@ -63,7 +61,7 @@ constexpr customize_t enum_name<CredentialsLocation>(CredentialsLocation value) 
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class GCPCredentialsControllerService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
+class GCPCredentialsControllerService : public api::core::ControllerServiceImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Manages the credentials for Google Cloud Platform. This allows for multiple Google Cloud Platform related processors "
       "to reference this single controller service so that Google Cloud Platform credentials can be managed and controlled in a central location.";
@@ -91,21 +89,16 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
 
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  using ControllerServiceBase::ControllerServiceBase;
+  using ControllerServiceImpl::ControllerServiceImpl;
 
-  void initialize() override;
-
-  void onEnable() override;
-
-  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
+  MinifiStatus enableImpl(api::core::ControllerServiceContext& ctx) override;
 
   [[nodiscard]] const auto& getCredentials() const { return credentials_; }
 
  protected:
-  [[nodiscard]] std::shared_ptr<google::cloud::Credentials> createCredentialsFromJsonPath() const;
-  [[nodiscard]] std::shared_ptr<google::cloud::Credentials> createCredentialsFromJsonContents() const;
+  [[nodiscard]] std::shared_ptr<google::cloud::Credentials> createCredentialsFromJsonPath(api::core::ControllerServiceContext& ctx) const;
+  [[nodiscard]] std::shared_ptr<google::cloud::Credentials> createCredentialsFromJsonContents(api::core::ControllerServiceContext& ctx) const;
 
 
   std::shared_ptr<google::cloud::Credentials> credentials_;

@@ -36,8 +36,8 @@ FOREACH(testfile ${GCS_TESTS})
     createTests("${testfilename}")
 
     target_link_libraries(${testfilename} minifi-gcp)
-    target_link_libraries(${testfilename} minifi-standard-processors)
     target_link_libraries(${testfilename} gtest_main gmock)
+    target_link_libraries(${testfilename} libminifi-c-unittest)
 
     gtest_add_tests(TARGET "${testfilename}")
 ENDFOREACH()
