@@ -46,6 +46,8 @@ class TestRepositoryBase : public T_BaseRepository {
     : T_BaseRepository("repo_name", "./dir", 1s, TEST_MAX_REPOSITORY_STORAGE_SIZE, 0ms) {
   }
 
+  virtual ~TestRepositoryBase() = default;
+
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
     return true;
   }

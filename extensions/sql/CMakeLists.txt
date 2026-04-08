@@ -23,15 +23,22 @@ endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-include_directories(SYSTEM ../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
-include_directories(".")
-
 file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 
 add_minifi_library(minifi-sql SHARED ${SOURCES})
 
+# Modern CMake: Target-specific includes instead of global include_directories()
+target_include_directories(minifi-sql
+    PRIVATE
+        "."
+    SYSTEM PRIVATE
+        "../../thirdparty/rapidjson-1.1.0/include/"
+        "../../thirdparty/rapidjson-1.1.0/include/rapidjson"
+)
+
 if(WIN32 OR APPLE)
     find_package(ODBC REQUIRED)
+    target_include_directories(minifi-sql SYSTEM PRIVATE ${ODBC_INCLUDE_DIR})
 else()
     # Build iODBC
 

@@ -260,11 +260,11 @@ class TestPlan {
 
   minifi::core::Processor* addProcessor(std::unique_ptr<minifi::core::Processor> processor, const std::string &name,
       const minifi::core::Relationship& relationship = minifi::core::Relationship("success", "description"), bool linkToPrevious = false) {
-    return addProcessor(std::move(processor), name, { relationship }, linkToPrevious);
+    return addProcessor(std::move(processor), name, std::initializer_list{ relationship }, linkToPrevious);
   }
   minifi::core::Processor* addProcessor(const std::string &processor_name, const std::string &name,
       const minifi::core::Relationship& relationship = minifi::core::Relationship("success", "description"), bool linkToPrevious = false) {
-    return addProcessor(processor_name, name, { relationship }, linkToPrevious);
+    return addProcessor(processor_name, name, std::initializer_list{ relationship }, linkToPrevious);
   }
   minifi::core::Processor* addProcessor(std::unique_ptr<minifi::core::Processor> processor, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships,
     bool linkToPrevious = false);

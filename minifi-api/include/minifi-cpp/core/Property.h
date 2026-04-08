@@ -48,7 +48,7 @@ class Property final {
 
   Property(const PropertyReference &);
 
-  virtual ~Property() = default;
+  ~Property() = default;
 
   void setTransient() { is_transient_ = true; }
 
