@@ -29,6 +29,9 @@
   } catch (const std::exception& e) { \
     PyErr_SetString(PyExc_Exception, e.what()); \
     return nullptr; \
+  } catch (...) { \
+    PyErr_SetString(PyExc_Exception, "Unknown C++ exception"); \
+    return nullptr; \
   }
 
 namespace org::apache::nifi::minifi::extensions::python {
