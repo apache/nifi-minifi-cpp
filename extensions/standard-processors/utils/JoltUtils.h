@@ -100,17 +100,17 @@ class Spec {
 
     // checks if the string is definitely a template (i.e. has an unescaped '&' char)
     static bool check(std::string_view str);
-    static nonstd::expected<Template, std::string> parse(std::string_view str) {
+    static std::expected<Template, std::string> parse(std::string_view str) {
       if (auto res = parse(str.begin(), str.end())) {
         if (res->second != str.end()) {
-          return nonstd::make_unexpected("Failed to fully parse template");
+          return std::unexpected("Failed to fully parse template");
         }
         return {std::move(res->first)};
       } else {
-        return nonstd::make_unexpected(std::move(res.error()));
+        return std::unexpected(std::move(res.error()));
       }
     }
-    static nonstd::expected<std::pair<Template, It>, std::string> parse(It begin, It end);
+    static std::expected<std::pair<Template, It>, std::string> parse(It begin, It end);
 
     std::string eval(const Context& ctx) const;
 
@@ -140,7 +140,7 @@ class Spec {
     }
     // checks if the string is definitely a regex (i.e. has an unescaped '*' char)
     static bool check(std::string_view str);
-    static nonstd::expected<Regex, std::string> parse(std::string_view str);
+    static std::expected<Regex, std::string> parse(std::string_view str);
 
     std::optional<std::vector<std::string_view>> match(std::string_view str) const;
 
@@ -194,9 +194,9 @@ class Spec {
     std::map<std::string, Destinations> defaults;  // #thing: a.b
   };
 
-  static nonstd::expected<Spec, std::string> parse(std::string_view str, std::shared_ptr<core::logging::Logger> logger = {});
+  static std::expected<Spec, std::string> parse(std::string_view str, std::shared_ptr<core::logging::Logger> logger = {});
 
-  nonstd::expected<rapidjson::Document, std::string> process(const rapidjson::Value& input, std::shared_ptr<core::logging::Logger> logger = {}) const;
+  std::expected<rapidjson::Document, std::string> process(const rapidjson::Value& input, std::shared_ptr<core::logging::Logger> logger = {}) const;
 
  private:
   explicit Spec(std::unique_ptr<Pattern> value): value_(std::move(value)) {}

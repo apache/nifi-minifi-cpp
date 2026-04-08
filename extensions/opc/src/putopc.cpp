@@ -88,28 +88,28 @@ bool PutOPCProcessor::readParentNodeId() {
   return true;
 }
 
-nonstd::expected<std::pair<bool, UA_NodeId>, std::string> PutOPCProcessor::configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const {
+std::expected<std::pair<bool, UA_NodeId>, std::string> PutOPCProcessor::configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const {
   const auto namespaceidx = context.getProperty(TargetNodeNameSpaceIndex, &flow_file).value_or("");
   if (namespaceidx.empty()) {
-    return nonstd::make_unexpected(fmt::format("Flowfile {} had no target namespace index specified, routing to failure!", flow_file.getUUIDStr()));
+    return std::unexpected(fmt::format("Flowfile {} had no target namespace index specified, routing to failure!", flow_file.getUUIDStr()));
   }
   int32_t nsi = 0;
   try {
     nsi = std::stoi(namespaceidx);
   } catch (const std::exception&) {
-    return nonstd::make_unexpected(fmt::format("Flowfile {} has invalid namespace index ({}), routing to failure!",
+    return std::unexpected(fmt::format("Flowfile {} has invalid namespace index ({}), routing to failure!",
                                    flow_file.getUUIDStr(), namespaceidx));
   }
 
   const auto target_id_type = context.getProperty(TargetNodeIDType, &flow_file).value_or("");
   if (target_id_type.empty()) {
-    return nonstd::make_unexpected(fmt::format("Flowfile {} has invalid target node id type, routing to failure!",
+    return std::unexpected(fmt::format("Flowfile {} has invalid target node id type, routing to failure!",
                                    flow_file.getUUIDStr()));
   }
 
   const auto target_id = context.getProperty(TargetNodeID, &flow_file).value_or("");
   if (target_id.empty()) {
-    return nonstd::make_unexpected(fmt::format("Flowfile {} had target node ID type specified ({}) without ID, routing to failure!",
+    return std::unexpected(fmt::format("Flowfile {} had target node ID type specified ({}) without ID, routing to failure!",
                                     flow_file.getUUIDStr(), target_id_type));
   }
 
@@ -120,14 +120,14 @@ nonstd::expected<std::pair<bool, UA_NodeId>, std::string> PutOPCProcessor::confi
     try {
       target_node.identifier.numeric = std::stoi(target_id);  // NOLINT(cppcoreguidelines-pro-type-union-access)
     } catch (const std::exception&) {
-      return nonstd::make_unexpected(fmt::format("Flowfile {}: target node ID is not a valid integer: {}. Routing to failure!",
+      return std::unexpected(fmt::format("Flowfile {}: target node ID is not a valid integer: {}. Routing to failure!",
                                       flow_file.getUUIDStr(), target_id));
     }
   } else if (target_id_type == "String") {
     target_node.identifierType = UA_NODEIDTYPE_STRING;
     target_node.identifier.string = UA_STRING_ALLOC(target_id.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
   } else {
-    return nonstd::make_unexpected(fmt::format("Flowfile {}: target node ID type is invalid: {}. Routing to failure!",
+    return std::unexpected(fmt::format("Flowfile {}: target node ID type is invalid: {}. Routing to failure!",
                                     flow_file.getUUIDStr(), target_id_type));
   }
   return std::make_pair(connection_->exists(target_node), target_node);

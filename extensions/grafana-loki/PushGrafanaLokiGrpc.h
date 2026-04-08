@@ -58,7 +58,7 @@ class PushGrafanaLokiGrpc final : public PushGrafanaLoki {
 
  protected:
   void setUpStreamLabels(core::ProcessContext& context) override;
-  nonstd::expected<void, std::string> submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) override;
+  std::expected<void, std::string> submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) override;
   void setUpGrpcChannel(const std::string& url, core::ProcessContext& context);
 
   std::string stream_labels_;

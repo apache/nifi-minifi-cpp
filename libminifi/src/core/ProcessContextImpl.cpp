@@ -32,7 +32,7 @@ class StandardProcessorInfo : public ProcessorInfo {
   [[nodiscard]] utils::Identifier getUUID() const override {return proc_.getUUID();}
   [[nodiscard]] std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const override {return proc_.getFlowIdentifier();}
   [[nodiscard]] std::map<std::string, core::Property, std::less<>> getSupportedProperties() const override {return proc_.getSupportedProperties();}
-  [[nodiscard]] nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const override {return proc_.getSupportedProperty(name);}
+  [[nodiscard]] std::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const override {return proc_.getSupportedProperty(name);}
 
  private:
   Processor& proc_;
@@ -99,10 +99,10 @@ uint8_t ProcessContextImpl::getMaxConcurrentTasks() const { return processor_.ge
 
 void ProcessContextImpl::yield() { processor_.yield(); }
 
-nonstd::expected<std::string, std::error_code> ProcessContextImpl::getProperty(const std::string_view name, const FlowFile* flow_file) const {
+std::expected<std::string, std::error_code> ProcessContextImpl::getProperty(const std::string_view name, const FlowFile* flow_file) const {
   const auto property = getProcessorInfo().getSupportedProperty(name);
   if (!property) {
-    return nonstd::make_unexpected(PropertyErrorCode::NotSupportedProperty);
+    return std::unexpected(PropertyErrorCode::NotSupportedProperty);
   }
 
   if (!property->supportsExpressionLanguage()) {
@@ -116,22 +116,22 @@ nonstd::expected<std::string, std::error_code> ProcessContextImpl::getProperty(c
   expression::Parameters p(this, flow_file);
   auto result = cached_expressions_[std::string{name}](p).asString();
   if (!property->getValidator().validate(result)) {
-    return nonstd::make_unexpected(PropertyErrorCode::ValidationFailed);
+    return std::unexpected(PropertyErrorCode::ValidationFailed);
   }
   return result;
 }
 
-nonstd::expected<void, std::error_code> ProcessContextImpl::setProperty(const std::string_view name, std::string value) {
+std::expected<void, std::error_code> ProcessContextImpl::setProperty(const std::string_view name, std::string value) {
   cached_expressions_.erase(std::string{name});
   return getProcessor().setProperty(name, std::move(value));
 }
 
-nonstd::expected<void, std::error_code> ProcessContextImpl::clearProperty(const std::string_view name) {
+std::expected<void, std::error_code> ProcessContextImpl::clearProperty(const std::string_view name) {
   cached_expressions_.erase(std::string{name});
   return getProcessor().clearProperty(name);
 }
 
-nonstd::expected<std::string, std::error_code> ProcessContextImpl::getDynamicProperty(const std::string_view name, const FlowFile* flow_file) const {
+std::expected<std::string, std::error_code> ProcessContextImpl::getDynamicProperty(const std::string_view name, const FlowFile* flow_file) const {
   if (!cached_dynamic_expressions_.contains(name)) {
     auto expression_str = getProcessor().getDynamicProperty(name);
     if (!expression_str) { return expression_str; }
@@ -141,20 +141,20 @@ nonstd::expected<std::string, std::error_code> ProcessContextImpl::getDynamicPro
   return cached_dynamic_expressions_[std::string{name}](p).asString();
 }
 
-nonstd::expected<std::string, std::error_code> ProcessContextImpl::getRawProperty(const std::string_view name) const {
+std::expected<std::string, std::error_code> ProcessContextImpl::getRawProperty(const std::string_view name) const {
   return getProcessor().getProperty(name);
 }
 
-nonstd::expected<std::string, std::error_code> ProcessContextImpl::getRawDynamicProperty(const std::string_view name) const {
+std::expected<std::string, std::error_code> ProcessContextImpl::getRawDynamicProperty(const std::string_view name) const {
   return getProcessor().getDynamicProperty(name);
 }
 
-nonstd::expected<void, std::error_code> ProcessContextImpl::setDynamicProperty(std::string name, std::string value) {
+std::expected<void, std::error_code> ProcessContextImpl::setDynamicProperty(std::string name, std::string value) {
   cached_dynamic_expressions_.erase(name);
   return getProcessor().setDynamicProperty(std::move(name), std::move(value));
 }
 
-[[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> ProcessContextImpl::getAllPropertyValues(std::string_view name) const {
+[[nodiscard]] std::expected<std::vector<std::string>, std::error_code> ProcessContextImpl::getAllPropertyValues(std::string_view name) const {
   return getProcessor().getAllPropertyValues(name);
 }
 

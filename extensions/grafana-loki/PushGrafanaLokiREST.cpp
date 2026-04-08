@@ -158,15 +158,15 @@ std::string PushGrafanaLokiREST::createLokiJson(const std::vector<std::shared_pt
   return buffer.GetString();
 }
 
-nonstd::expected<void, std::string> PushGrafanaLokiREST::submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) {
+std::expected<void, std::string> PushGrafanaLokiREST::submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) {
   auto loki_json = createLokiJson(batched_flow_files, session);
   client_.setPostFields(loki_json);
   if (!client_.submit()) {
-    return nonstd::make_unexpected("Submit failed");
+    return std::unexpected("Submit failed");
   }
   auto response_code = client_.getResponseCode();
   if (response_code < 200 || response_code >= 300) {
-    return nonstd::make_unexpected("Error occurred: " + std::to_string(response_code));
+    return std::unexpected("Error occurred: " + std::to_string(response_code));
   }
   return {};
 }

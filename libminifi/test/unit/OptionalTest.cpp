@@ -82,10 +82,10 @@ TEST_CASE("optional toExpected") {
   std::optional<int> opt_with_value = 5;
   std::optional<int> opt_without_value = std::nullopt;
 
-  nonstd::expected<int, std::error_code> expected_from_value_ec = opt_with_value | utils::toExpected(std::make_error_code(std::io_errc::stream));
-  nonstd::expected<int, std::error_code> expected_from_null_opt_ec = opt_without_value | utils::toExpected(std::make_error_code(std::io_errc::stream));
-  nonstd::expected<int, int> expected_from_value_int = opt_with_value | utils::toExpected(9);
-  nonstd::expected<int, int> expected_from_null_opt_int = opt_without_value | utils::toExpected(9);
+  std::expected<int, std::error_code> expected_from_value_ec = opt_with_value | utils::toExpected(std::make_error_code(std::io_errc::stream));
+  std::expected<int, std::error_code> expected_from_null_opt_ec = opt_without_value | utils::toExpected(std::make_error_code(std::io_errc::stream));
+  std::expected<int, int> expected_from_value_int = opt_with_value | utils::toExpected(9);
+  std::expected<int, int> expected_from_null_opt_int = opt_without_value | utils::toExpected(9);
 
   CHECK(expected_from_value_ec == 5);
   CHECK(expected_from_value_int == 5);

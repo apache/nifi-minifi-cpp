@@ -128,11 +128,11 @@ inline std::optional<std::chrono::file_clock::time_point> last_write_time(const 
   return std::nullopt;
 }
 
-inline nonstd::expected<void, std::error_code> set_last_write_time(const std::filesystem::path& path, std::chrono::file_clock::time_point new_time) {
+inline std::expected<void, std::error_code> set_last_write_time(const std::filesystem::path& path, std::chrono::file_clock::time_point new_time) {
   std::error_code ec;
   std::filesystem::last_write_time(path, new_time, ec);
   if (ec)
-    return nonstd::make_unexpected(ec);
+    return std::unexpected(ec);
   return {};
 }
 
@@ -600,7 +600,7 @@ struct WindowsFileTimes {
   std::chrono::file_clock::time_point last_write_time;
 };
 
-nonstd::expected<WindowsFileTimes, std::error_code> getWindowsFileTimes(const std::filesystem::path& path);
+std::expected<WindowsFileTimes, std::error_code> getWindowsFileTimes(const std::filesystem::path& path);
 #endif
 
 }  // namespace org::apache::nifi::minifi::utils::file

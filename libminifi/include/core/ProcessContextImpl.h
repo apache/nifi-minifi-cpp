@@ -65,14 +65,14 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   bool hasNonEmptyProperty(std::string_view name) const override;
 
   bool isRunning() const override;
-  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
-  nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
-  nonstd::expected<void, std::error_code> clearProperty(std::string_view name) override;
-  nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile*) const override;
-  nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
-  nonstd::expected<std::string, std::error_code> getRawProperty(std::string_view name) const override;
-  nonstd::expected<std::string, std::error_code> getRawDynamicProperty(std::string_view name) const override;
-  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const override;
+  std::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile*) const override;
+  std::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
+  std::expected<void, std::error_code> clearProperty(std::string_view name) override;
+  std::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile*) const override;
+  std::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;
+  std::expected<std::string, std::error_code> getRawProperty(std::string_view name) const override;
+  std::expected<std::string, std::error_code> getRawDynamicProperty(std::string_view name) const override;
+  [[nodiscard]] std::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const override;
   bool hasIncomingConnections() const override;
 
   void addAutoTerminatedRelationship(const core::Relationship& relationship) override;

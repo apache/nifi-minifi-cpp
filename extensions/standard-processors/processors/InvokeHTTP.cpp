@@ -79,16 +79,16 @@ void HttpClientStore::returnClient(http::HTTPClient& client) {
 }  // namespace invoke_http
 
 namespace {
-nonstd::expected<std::string_view, std::error_code> removePerSecSuffix(const std::string_view input) {
+std::expected<std::string_view, std::error_code> removePerSecSuffix(const std::string_view input) {
   const auto trimmed_input = utils::string::trim(input);
   if (trimmed_input.ends_with("/s") || trimmed_input.ends_with("/S")) {
     return trimmed_input.substr(0, trimmed_input.size() - 2);
   }
-  return nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError);
+  return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
 }
 }  // namespace
 
-nonstd::expected<uint64_t, std::error_code> invoke_http::parseDataTransferSpeed(const std::string_view input) {
+std::expected<uint64_t, std::error_code> invoke_http::parseDataTransferSpeed(const std::string_view input) {
   return removePerSecSuffix(input) | utils::andThen(parsing::parseDataSize);
 }
 

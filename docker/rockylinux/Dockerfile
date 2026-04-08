@@ -41,7 +41,7 @@ COPY . ${MINIFI_BASE_DIR}
 
 # Install the system dependencies needed for a build
 # ccache is in EPEL
-RUN dnf -y install epel-release && dnf -y install gcc-toolset-12 sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake rpmdevtools && \
+RUN dnf -y install epel-release && dnf -y install gcc-toolset-14 sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake rpmdevtools && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_ALL=ON\|ENABLE_PYTHON_SCRIPTING=ON\|ENABLE_OPC=ON"; then dnf -y --enablerepo=devel install python3-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SFTP=ON" && [ "${DOCKER_SKIP_TESTS}" == "OFF" ]; then dnf -y install java-1.8.0-openjdk maven; fi
 
@@ -52,16 +52,13 @@ RUN cd $MINIFI_BASE_DIR && \
 RUN groupadd -g ${GID} ${USER} && useradd -g ${GID} ${USER} && \
     chown -R ${USER}:${USER} ${MINIFI_BASE_DIR}
 
-# Patching standard header to avoid https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
-RUN patch -p1 /opt/rh/gcc-toolset-12/root/usr/include/c++/12/bits/basic_string.tcc ${MINIFI_BASE_DIR}/thirdparty/libstdc++/avoid_bogus_Wrestrict_PR105651.patch
-
 USER ${USER}
 
 # Perform the build
 RUN cd $MINIFI_BASE_DIR && \
     mkdir build && \
     cd build && \
-    source /opt/rh/gcc-toolset-12/enable && \
+    source /opt/rh/gcc-toolset-14/enable && \
     export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \
     export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
     cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
@@ -71,7 +68,7 @@ RUN cd $MINIFI_BASE_DIR && \
 RUN if [[ "${DOCKER_CREATE_RPM}" == "ON" ]] ; then  \
         cd $MINIFI_BASE_DIR && \
         cd build && \
-        source /opt/rh/gcc-toolset-12/enable && \
+        source /opt/rh/gcc-toolset-14/enable && \
         cmake -DMINIFI_PACKAGING_TYPE=RPM .. && \
         make -j "$(nproc)" package&& \
         ../packaging/rpm/check_rpm_contents.sh *.rpm expected-rpm-contents.txt; \

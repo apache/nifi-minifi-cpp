@@ -59,7 +59,7 @@ void SmbConnectionControllerService::notifyStop() {
     logger_->log_error("Error while disconnecting from SMB: {}", disconnection_result.error().message());
 }
 
-nonstd::expected<void, std::error_code> SmbConnectionControllerService::connect() {
+std::expected<void, std::error_code> SmbConnectionControllerService::connect() {
   auto connection_result = WNetAddConnection2A(&net_resource_,
       credentials_ ? credentials_->password.c_str() : nullptr,
       credentials_ ? credentials_->username.c_str() : nullptr,
@@ -67,15 +67,15 @@ nonstd::expected<void, std::error_code> SmbConnectionControllerService::connect(
   if (connection_result == NO_ERROR)
     return {};
 
-  return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(connection_result));
+  return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(connection_result));
 }
 
-nonstd::expected<void, std::error_code> SmbConnectionControllerService::disconnect() {
+std::expected<void, std::error_code> SmbConnectionControllerService::disconnect() {
   auto disconnection_result = WNetCancelConnection2A(server_path_.c_str(), 0, true);
   if (disconnection_result == NO_ERROR)
     return {};
 
-  return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(disconnection_result));
+  return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(disconnection_result));
 }
 
 bool SmbConnectionControllerService::isConnected() {

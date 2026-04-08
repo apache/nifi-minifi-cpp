@@ -297,9 +297,6 @@ add_library(RapidJSON INTERFACE)
 target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-48fbd8cd202ca54031fe799db2ad44ffa8e77c13/include")
 target_compile_definitions(RapidJSON INTERFACE RAPIDJSON_HAS_STDSTRING)
 
-include(Coroutines)
-enable_coroutines()
-
 # gsl-lite
 include(GslLite)
 
@@ -320,9 +317,6 @@ target_compile_definitions(gsl-lite INTERFACE ${GslDefinitions})
 # date
 include(Date)
 
-# expected-lite
-include(ExpectedLite)
-
 # magic_enum
 include(MagicEnum)
 
@@ -338,10 +332,6 @@ else()
         list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Werror)
     endif()
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.4)
-            # -Wrestrict may cause build failure in < GCC 12.4  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104336
-            list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Wno-error=restrict)
-        endif()
         if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
             list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Wno-maybe-uninitialized)
             # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118634

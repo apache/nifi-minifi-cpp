@@ -20,15 +20,15 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <expected>
 
-#include "nonstd/expected.hpp"
 #include "asio/ip/address.hpp"
 
 namespace org::apache::nifi::minifi::utils::net {
 
-nonstd::expected<asio::ip::address, std::error_code> addressFromString(std::string_view ip_address_str);
+std::expected<asio::ip::address, std::error_code> addressFromString(std::string_view ip_address_str);
 
-nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout = std::chrono::seconds(5));
+std::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout = std::chrono::seconds(5));
 
 std::string getMyHostName();
 
