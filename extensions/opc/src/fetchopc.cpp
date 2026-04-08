@@ -39,11 +39,6 @@ void FetchOPCProcessor::initialize() {
 void FetchOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) {
   logger_->log_trace("FetchOPCProcessor::onSchedule");
 
-  state_manager_ = context.getStateManager();
-  if (state_manager_ == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-  }
-
   translated_node_ids_.clear();  // Path might has changed during restart
 
   BaseOPCProcessor::onSchedule(context, factory);
@@ -73,8 +68,9 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
   size_t nodes_found = 0;
   size_t variables_found = 0;
 
+  auto* state_manager = context.getStateManager();
   std::unordered_map<std::string, std::string> state_map;
-  state_manager_->get(state_map);
+  state_manager->get(state_map);
 
   auto found_cb = [this, &context, &session, &nodes_found, &variables_found, &state_map](const UA_ReferenceDescription* ref, const std::string& path) {
     return nodeFoundCallBack(ref, path, context, session, nodes_found, variables_found, state_map);
@@ -116,7 +112,7 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
     context.yield();
   }
 
-  state_manager_->set(state_map);
+  state_manager->set(state_map);
 }
 
 void FetchOPCProcessor::writeFlowFileUsingLazyModeWithTimestamp(const opc::NodeData& nodedata, core::ProcessContext& context, core::ProcessSession& session, size_t& variables_found,

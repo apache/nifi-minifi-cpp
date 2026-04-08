@@ -123,7 +123,6 @@ class ListS3 : public S3Processor {  // NOLINT(cppcoreguidelines-special-member-
   bool write_object_tags_ = false;
   bool write_user_metadata_ = false;
   bool requester_pays_ = false;
-  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

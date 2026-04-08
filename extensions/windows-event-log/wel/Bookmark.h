@@ -43,6 +43,7 @@ class Bookmark {
       core::StateManager* state_manager,
       std::shared_ptr<core::logging::Logger> logger);
   ~Bookmark();
+  void setStateManager(core::StateManager* state_manager) { state_manager_ = state_manager; }
   bool isValid() const noexcept;
   /* non-owning */ EVT_HANDLE getBookmarkHandleFromXML();
   nonstd::expected<std::wstring, std::string> getNewBookmarkXml(EVT_HANDLE hEvent);

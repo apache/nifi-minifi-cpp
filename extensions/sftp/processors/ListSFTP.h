@@ -204,7 +204,6 @@ class ListSFTP : public SFTPProcessorBase {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  private:
-  core::StateManager* state_manager_{};
   std::string listing_strategy_;
   bool search_recursively_{};
   bool follow_symlink_{};
@@ -266,11 +265,11 @@ class ListSFTP : public SFTPProcessorBase {
       const std::string& username,
       const Child& child);
 
-  bool persistTrackingTimestampsCache(core::ProcessContext& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
-  bool updateFromTrackingTimestampsCache(core::ProcessContext& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool persistTrackingTimestampsCache(core::StateManager& state_manager, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool updateFromTrackingTimestampsCache(core::StateManager& state_manager, const std::string& hostname, const std::string& username, const std::string& remote_path);
 
-  bool persistTrackingEntitiesCache(core::ProcessContext& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
-  bool updateFromTrackingEntitiesCache(core::ProcessContext& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool persistTrackingEntitiesCache(core::StateManager& state_manager, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool updateFromTrackingEntitiesCache(core::StateManager& state_manager, const std::string& hostname, const std::string& username, const std::string& remote_path);
 
   void listByTrackingTimestamps(
       core::ProcessContext& context,

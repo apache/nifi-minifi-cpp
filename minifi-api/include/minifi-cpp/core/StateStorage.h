@@ -33,9 +33,9 @@ class StateStorage {
  public:
   virtual ~StateStorage() = default;
 
-  virtual std::unique_ptr<StateManager> getStateManager(const utils::Identifier& uuid) = 0;
+  virtual std::unique_ptr<StateManager> createStateManager(const utils::Identifier& uuid) = 0;
 
-  virtual std::unique_ptr<StateManager> getStateManager(const CoreComponent& component) = 0;
+  virtual std::unique_ptr<StateManager> createStateManager(const CoreComponent& component) = 0;
 
   virtual std::unordered_map<utils::Identifier, StateManager::State> getAllStates() = 0;
 };

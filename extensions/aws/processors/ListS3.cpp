@@ -37,12 +37,6 @@ void ListS3::initialize() {
 void ListS3::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   S3Processor::onSchedule(context, session_factory);
 
-  auto state_manager = context.getStateManager();
-  if (state_manager == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-  }
-  state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
-
   auto bucket = context.getProperty(Bucket.name) | minifi::utils::orThrow("Required property");
   logger_->log_debug("S3Processor: Bucket [{}]", bucket);
 
@@ -155,7 +149,15 @@ void ListS3::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
     return;
   }
 
-  auto stored_listing_state = state_manager_->getCurrentState();
+  auto* state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager for S3 bucket {}", list_request_params_->bucket);
+    context.yield();
+    return;
+  }
+  minifi::utils::ListingStateManager listing_state_manager(gsl::make_not_null(state_manager));
+
+  auto stored_listing_state = listing_state_manager.getCurrentState();
   auto latest_listing_state = stored_listing_state;
   std::size_t files_transferred = 0;
 
@@ -170,7 +172,7 @@ void ListS3::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
   }
 
   logger_->log_debug("ListS3 transferred {} flow files", files_transferred);
-  state_manager_->storeState(latest_listing_state);
+  listing_state_manager.storeState(latest_listing_state);
 
   if (files_transferred == 0) {
     logger_->log_debug("No new S3 objects were found in bucket {} to list", list_request_params_->bucket);

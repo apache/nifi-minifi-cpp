@@ -34,9 +34,9 @@ class StateStorageImpl : public virtual StateStorage {
  public:
   ~StateStorageImpl() override = default;
 
-  using StateStorage::getStateManager;
-  std::unique_ptr<StateManager> getStateManager(const CoreComponent& component) override {
-    return getStateManager(component.getUUID());
+  using StateStorage::createStateManager;
+  std::unique_ptr<StateManager> createStateManager(const CoreComponent& component) override {
+    return createStateManager(component.getUUID());
   }
 };
 

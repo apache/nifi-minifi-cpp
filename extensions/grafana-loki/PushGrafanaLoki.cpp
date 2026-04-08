@@ -77,12 +77,11 @@ void PushGrafanaLoki::LogBatch::setStartPushTime(std::chrono::system_clock::time
 
 const core::Relationship PushGrafanaLoki::Self("__self__", "Marks the FlowFile to be owned by this processor");
 
-void PushGrafanaLoki::setUpStateManager(core::ProcessContext& context) {
-  auto state_manager = context.getStateManager();
+void PushGrafanaLoki::restoreStartPushTime(core::ProcessContext& context) {
+  auto state_manager = context.createStateManager();
   if (state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
-  log_batch_.setStateManager(state_manager);
 
   std::unordered_map<std::string, std::string> state_map;
   if (state_manager->get(state_map)) {
@@ -116,7 +115,7 @@ std::map<std::string, std::string> PushGrafanaLoki::buildStreamLabelMap(core::Pr
 }
 
 void PushGrafanaLoki::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  setUpStateManager(context);
+  restoreStartPushTime(context);
   setUpStreamLabels(context);
 
   if (auto log_line_metadata_attributes = context.getProperty(LogLineMetadataAttributes)) {
@@ -167,6 +166,7 @@ void PushGrafanaLoki::processBatch(const std::vector<std::shared_ptr<core::FlowF
 }
 
 void PushGrafanaLoki::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  log_batch_.setStateManager(context.getStateManager());
   uint64_t flow_files_read = 0;
   std::vector<std::shared_ptr<core::FlowFile>> to_be_transferred_flow_files;
   while (!max_batch_size_ || *max_batch_size_ == 0 || flow_files_read < *max_batch_size_) {

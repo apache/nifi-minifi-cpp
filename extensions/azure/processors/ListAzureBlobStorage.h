@@ -82,7 +82,6 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
 
   storage::ListAzureBlobStorageParameters list_parameters_;
   azure::EntityTracking tracking_strategy_ = azure::EntityTracking::timestamps;
-  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

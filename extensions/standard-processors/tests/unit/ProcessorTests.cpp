@@ -92,7 +92,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   processor->addConnection(connection.get());
   REQUIRE(!dir.empty());
 
-  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, nullptr, repo, repo, content_repo);
 
   REQUIRE(context->setProperty(minifi::processors::GetFile::Directory.name, dir.string()));
   // replicate 10 threads
@@ -174,7 +174,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   processor->addConnection(connection.get());
   REQUIRE(!dir.empty());
 
-  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, nullptr, repo, repo, content_repo);
 
   REQUIRE(context->setProperty(minifi::processors::GetFile::Directory.name, dir.string()));
   // replicate 10 threads
@@ -259,7 +259,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   processor->addConnection(connection.get());
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
-  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, nullptr, repo, repo, content_repo);
 
   auto factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
 
@@ -549,7 +549,7 @@ void testRPGBypass(const std::string &host, const std::string &port, bool has_er
   rpg->initialize();
   REQUIRE(rpg->setProperty(minifi::RemoteProcessGroupPort::hostName.name, host));
   REQUIRE(rpg->setProperty(minifi::RemoteProcessGroupPort::port.name, port));
-  auto context = std::make_shared<core::ProcessContextImpl>(*rpg, nullptr, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContextImpl>(*rpg, nullptr, nullptr, repo, repo, content_repo);
   auto psf = std::make_shared<core::ProcessSessionFactoryImpl>(context);
   if (has_error) {
     rpg->onSchedule(*context, *psf);
@@ -614,7 +614,7 @@ ProcessorWithIncomingConnectionTest::ProcessorWithIncomingConnectionTest() {
   processor_->addConnection(incoming_connection_.get());
   processor_->initialize();
 
-  const auto context = std::make_shared<core::ProcessContextImpl>(*processor_, nullptr, repo, repo, content_repo);
+  const auto context = std::make_shared<core::ProcessContextImpl>(*processor_, nullptr, nullptr, repo, repo, content_repo);
   const auto session_factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
   session_ = session_factory->createSession();
 }

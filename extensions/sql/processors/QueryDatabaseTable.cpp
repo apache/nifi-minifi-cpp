@@ -49,11 +49,6 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   output_format_ = utils::parseEnumProperty<flow_file_source::OutputType>(context, OutputFormat);
   max_rows_ = gsl::narrow<size_t>(utils::parseU64Property(context, MaxRowsPerFlowFile));
 
-  state_manager_ = context.getStateManager();
-  if (state_manager_ == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-  }
-
   table_name_ = context.getProperty(TableName).value_or("");
   extra_where_clause_ = context.getProperty(WhereClause).value_or("");
 
@@ -81,7 +76,7 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   initializeMaxValues(context);
 }
 
-void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, core::ProcessSession& session) {
+void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const auto& selectQuery = buildSelectQuery();
 
   logger_->log_info("QueryDatabaseTable: selectQuery: '{}'", selectQuery.c_str());
@@ -116,7 +111,7 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
 
   if (new_max_values != max_values_) {
     max_values_ = new_max_values;
-    saveState();
+    saveState(context);
   }
 }
 
@@ -155,11 +150,13 @@ bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<s
 void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
   max_values_.clear();
   std::unordered_map<std::string, std::string> stored_state;
-  if (!state_manager_->get(stored_state)) {
+
+  auto state_manager = context.createStateManager();
+  if (!state_manager->get(stored_state)) {
     logger_->log_info("Found no stored state");
   } else {
     if (!loadMaxValuesFromStoredState(stored_state)) {
-      state_manager_->clear();
+      state_manager->clear();
     }
   }
 
@@ -226,13 +223,18 @@ std::string QueryDatabaseTable::buildSelectQuery() {
   return query;
 }
 
-bool QueryDatabaseTable::saveState() {
+bool QueryDatabaseTable::saveState(core::ProcessContext& context) {
   std::unordered_map<std::string, std::string> state_map;
   state_map.emplace(TABLENAME_KEY, table_name_);
   for (const auto& item : max_values_) {
     state_map.emplace(MAXVALUE_KEY_PREFIX + item.first.str(), item.second);
   }
-  return state_manager_->set(state_map);
+  auto state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
+    return false;
+  }
+  return state_manager->set(state_map);
 }
 
 REGISTER_RESOURCE(QueryDatabaseTable, Processor);

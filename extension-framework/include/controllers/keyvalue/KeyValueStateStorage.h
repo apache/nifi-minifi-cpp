@@ -37,8 +37,8 @@ class KeyValueStateStorage : public core::StateStorageImpl, public core::control
   static core::StateManager::State deserialize(const std::string& serialized);
   static std::string serialize(const core::StateManager::State& kvs);
 
-  using core::StateStorageImpl::getStateManager;
-  std::unique_ptr<core::StateManager> getStateManager(const utils::Identifier& uuid) override;
+  using core::StateStorageImpl::createStateManager;
+  std::unique_ptr<core::StateManager> createStateManager(const utils::Identifier& uuid) override;
   std::unordered_map<utils::Identifier, core::StateManager::State> getAllStates() override;
 
   virtual bool set(const std::string& key, const std::string& value) = 0;

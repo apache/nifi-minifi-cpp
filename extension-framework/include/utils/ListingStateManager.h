@@ -49,7 +49,7 @@ struct ListingState {
 
 class ListingStateManager {
  public:
-  explicit ListingStateManager(core::StateManager* state_manager)
+  explicit ListingStateManager(gsl::not_null<core::StateManager*> state_manager)
     : state_manager_(state_manager) {
   }
 
@@ -60,7 +60,7 @@ class ListingStateManager {
   [[nodiscard]] uint64_t getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state) const;
   [[nodiscard]] static std::unordered_set<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
 
-  core::StateManager* state_manager_;
+  gsl::not_null<core::StateManager*> state_manager_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ListingStateManager>::getLogger()};
 };
 

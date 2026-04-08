@@ -109,7 +109,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
   connection->setSourceUUID(processor->getUUID());
   processor->addConnection(connection.get());
 
-  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, prov_repo, ff_repo, content_repo);
+  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, nullptr, prov_repo, ff_repo, content_repo);
   auto session_factory = std::make_shared<core::ProcessSessionFactoryImpl>(context);
 
   for (size_t i = 0; i < 200; ++i) {
