@@ -535,7 +535,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Timestamps r
   testController.runSession(plan, true);
 
   std::unordered_map<std::string, std::string> state;
-  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->getStateManager()->get(state));
+  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->createStateManager()->get(state));
   REQUIRE("localhost" == state.at("hostname"));
   REQUIRE("nifiuser" == state.at("username"));
   REQUIRE("nifi_test" == state.at("remote_path"));
@@ -557,7 +557,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Timestamps r
 
   testController.runSession(plan, true);
 
-  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->getStateManager()->get(state));
+  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->createStateManager()->get(state));
   REQUIRE("localhost" == state.at("hostname"));
   REQUIRE("nifiuser" == state.at("username"));
   REQUIRE("nifi_test" == state.at("remote_path"));
@@ -583,7 +583,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Timestamps r
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
 
   std::unordered_map<std::string, std::string> state;
-  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->getStateManager()->get(state));
+  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->createStateManager()->get(state));
   REQUIRE("localhost" == state.at("hostname"));
   REQUIRE("nifiuser" == state.at("username"));
   REQUIRE("nifi_test" == state.at("remote_path"));
@@ -600,7 +600,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Timestamps r
 
   testController.runSession(plan, true);
 
-  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->getStateManager()->get(state));
+  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->createStateManager()->get(state));
   REQUIRE("localhost" == state.at("hostname"));
   REQUIRE("nifiuser" == state.at("username"));
   REQUIRE("/nifi_test" == state.at("remote_path"));
@@ -835,7 +835,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Entities res
   LogTestController::getInstance().clear();
 
   std::unordered_map<std::string, std::string> state;
-  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->getStateManager()->get(state));
+  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->createStateManager()->get(state));
   REQUIRE("localhost" == state.at("hostname"));
   REQUIRE("nifiuser" == state.at("username"));
   REQUIRE("nifi_test" == state.at("remote_path"));
@@ -848,7 +848,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Entities res
 
   testController.runSession(plan, true);
 
-  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->getStateManager()->get(state));
+  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->createStateManager()->get(state));
   REQUIRE("localhost" == state.at("hostname"));
   REQUIRE("nifiuser" == state.at("username"));
   REQUIRE("nifi_test" == state.at("remote_path"));
@@ -882,7 +882,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Entities res
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
 
   std::unordered_map<std::string, std::string> state;
-  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->getStateManager()->get(state));
+  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->createStateManager()->get(state));
   REQUIRE("localhost" == state.at("hostname"));
   REQUIRE("nifiuser" == state.at("username"));
   REQUIRE("nifi_test" == state.at("remote_path"));
@@ -899,7 +899,7 @@ TEST_CASE_METHOD(PersistentListSFTPTestsFixture, "ListSFTP Tracking Entities res
 
   testController.runSession(plan, true);
 
-  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->getStateManager()->get(state));
+  REQUIRE(plan->getProcessContextForProcessor(list_sftp)->createStateManager()->get(state));
   REQUIRE("localhost" == state.at("hostname"));
   REQUIRE("nifiuser" == state.at("username"));
   REQUIRE("/nifi_test" == state.at("remote_path"));

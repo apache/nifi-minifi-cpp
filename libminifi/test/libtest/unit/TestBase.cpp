@@ -288,7 +288,8 @@ minifi::core::Processor* TestPlan::addProcessor(std::unique_ptr<minifi::core::Pr
     }
     relationships_.push_back(std::move(connection));
   }
-  auto context = std::make_shared<minifi::core::ProcessContextImpl>(*processor, controller_services_provider_.get(), prov_repo_, flow_repo_, configuration_, content_repo_);
+  auto state_storage = minifi::core::ProcessContextImpl::getStateStorage(logger_, controller_services_provider_.get(), configuration_);
+  auto context = std::make_shared<minifi::core::ProcessContextImpl>(*processor, controller_services_provider_.get(), state_storage, prov_repo_, flow_repo_, configuration_, content_repo_);
   processor_contexts_.push_back(context);
   processor_queue_.push_back(processor.get());
   auto raw_ptr = processor.get();
@@ -541,6 +542,7 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
   processor->setScheduledState(minifi::core::ScheduledState::RUNNING);
 
   if (verify) {
+    context->setSessionStateManager(context->createStateManager());
     auto current_session = std::make_shared<minifi::core::ProcessSessionImpl>(context);
     current_session->setMetrics(processor->getMetrics());
     process_sessions_.push_back(current_session);

@@ -53,7 +53,7 @@ int PyStateManager::init(PyStateManager* self, PyObject* args, PyObject*) {
   auto state_manager = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
   if (!state_manager)
     return -1;
-  self->state_manager_ = *static_cast<HeldType*>(state_manager);
+  self->state_manager_ = std::move(*static_cast<HeldType*>(state_manager));
   return 0;
 }
 

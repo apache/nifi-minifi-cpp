@@ -240,9 +240,9 @@ class TailFile : public core::ProcessorImpl {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
-  bool recoverState(const core::ProcessContext& context);
+  bool recoverState(core::StateManager* state_manager, const core::ProcessContext& context);
   void logState();
-  bool storeState() const;
+  bool storeState(core::StateManager* state_manager) const;
   std::chrono::milliseconds getLookupFrequency() const;
 
  private:
@@ -266,11 +266,12 @@ class TailFile : public core::ProcessorImpl {
   static std::vector<TailState> sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime);
   void processFile(core::ProcessSession& session,
                    const std::filesystem::path& full_file_name,
-                   TailState &state);
+                   TailState &state,
+                   core::StateManager* state_manager);
   void processSingleFile(core::ProcessSession& session,
                          const std::filesystem::path& full_file_name,
                          TailState &state);
-  bool getStateFromStateManager(std::map<std::filesystem::path, TailState> &new_tail_states) const;
+  bool getStateFromStateManager(core::StateManager* state_manager, std::map<std::filesystem::path, TailState> &new_tail_states) const;
   bool getStateFromLegacyStateFile(const core::ProcessContext& context,
                                    std::map<std::filesystem::path, TailState> &new_tail_states) const;
   void doMultifileLookup(core::ProcessContext& context);
@@ -286,7 +287,6 @@ class TailFile : public core::ProcessorImpl {
   static constexpr int BUFFER_SIZE = 512;
 
   std::optional<char> delimiter_;  // Delimiter for the data incoming from the tailed file.
-  core::StateManager* state_manager_ = nullptr;
   std::map<std::filesystem::path, TailState> tail_states_;
   Mode tail_mode_ = Mode::UNDEFINED;
   std::optional<utils::Regex> pattern_regex_;

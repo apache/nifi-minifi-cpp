@@ -456,7 +456,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
         if (state_storage != nullptr) {
           update_sink_->executeOnComponent(corecomponent.second.to_string(), [this, &state_storage] (state::StateController& component) {
             logger_->log_debug("Clearing state for component {}", component.getComponentName());
-            auto state_manager = state_storage->getStateManager(component.getComponentUUID());
+            auto state_manager = state_storage->createStateManager(component.getComponentUUID());
             if (state_manager != nullptr) {
               component.stop();
               state_manager->clear();

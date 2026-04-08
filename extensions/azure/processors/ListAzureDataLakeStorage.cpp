@@ -48,12 +48,6 @@ void ListAzureDataLakeStorage::initialize() {
 void ListAzureDataLakeStorage::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   AzureDataLakeStorageProcessorBase::onSchedule(context, session_factory);
 
-  auto state_manager = context.getStateManager();
-  if (state_manager == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-  }
-  state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
-
   auto params = buildListParameters(context);
   if (!params) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required parameters for ListAzureDataLakeStorage processor are missing or invalid");
@@ -99,7 +93,15 @@ void ListAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::Pr
     return;
   }
 
-  auto stored_listing_state = state_manager_->getCurrentState();
+  auto* state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
+    context.yield();
+    return;
+  }
+  minifi::utils::ListingStateManager listing_state_manager(gsl::make_not_null(state_manager));
+
+  auto stored_listing_state = listing_state_manager.getCurrentState();
   auto latest_listing_state = stored_listing_state;
   std::size_t files_transferred = 0;
 
@@ -114,7 +116,7 @@ void ListAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::Pr
     latest_listing_state.updateState(element);
   }
 
-  state_manager_->storeState(latest_listing_state);
+  listing_state_manager.storeState(latest_listing_state);
 
   logger_->log_debug("ListAzureDataLakeStorage transferred {} flow files", files_transferred);
 

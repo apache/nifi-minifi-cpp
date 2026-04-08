@@ -67,14 +67,14 @@ struct TestFlow{
     auto processor = processorGenerator(mainProcUUID());
     {
       processor_ = processor.get();
-      processorContext = std::make_shared<core::ProcessContextImpl>(*processor_, nullptr, prov_repo, ff_repository, content_repo);
+      processorContext = std::make_shared<core::ProcessContextImpl>(*processor_, nullptr, nullptr, prov_repo, ff_repository, content_repo);
     }
 
     // setup INPUT processor
     {
       inputProcessor = minifi::test::utils::make_processor<TestProcessor>("source", inputProcUUID());
-      inputContext = std::make_shared<core::ProcessContextImpl>(*inputProcessor, nullptr, prov_repo,
-                                                            ff_repository, content_repo);
+      inputContext = std::make_shared<core::ProcessContextImpl>(*inputProcessor, nullptr, nullptr,
+                                                            prov_repo, ff_repository, content_repo);
     }
 
     // setup Input Connection

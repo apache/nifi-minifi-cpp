@@ -32,7 +32,6 @@ std::string LuaScriptProcessContext::getProperty(const std::string &name) {
   return context_.getProperty(name).value_or("");
 }
 
-
 LuaScriptStateManager LuaScriptProcessContext::getStateManager() {
   return LuaScriptStateManager(context_.getStateManager(), sol_state_);
 }
