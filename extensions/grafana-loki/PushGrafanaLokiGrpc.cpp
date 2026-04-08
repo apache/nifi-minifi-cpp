@@ -109,7 +109,7 @@ void PushGrafanaLokiGrpc::onSchedule(core::ProcessContext& context, core::Proces
   setUpGrpcChannel(url, context);
 }
 
-nonstd::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) {
+std::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) {
   logproto::PushRequest current_batch;
   logproto::StreamAdapter *stream = current_batch.add_streams();
   stream->set_labels(stream_labels_);
@@ -135,7 +135,7 @@ nonstd::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std
   }
 
   if (!push_channel_->WaitForConnected(std::chrono::system_clock::now() + connection_timeout_ms_)) {
-    return nonstd::make_unexpected("Timeout waiting for connection to Grafana Loki gRPC server. Please check if the server is running and reachable and the Url value is correct.");
+    return std::unexpected("Timeout waiting for connection to Grafana Loki gRPC server. Please check if the server is running and reachable and the Url value is correct.");
   }
 
   logproto::PushResponse response;
@@ -148,7 +148,7 @@ nonstd::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std
   if (status.ok()) {
     return {};
   } else {
-    return nonstd::make_unexpected(status.error_message());
+    return std::unexpected(status.error_message());
   }
 }
 

@@ -30,7 +30,7 @@ file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 
 add_minifi_library(minifi-sql SHARED ${SOURCES})
 
-if(WIN32)
+if(WIN32 OR APPLE)
     find_package(ODBC REQUIRED)
 else()
     # Build iODBC

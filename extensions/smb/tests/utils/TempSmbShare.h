@@ -40,7 +40,7 @@ class TempSmbShare {
       NetShareDel(nullptr, net_name_.data(), 0);
   }
 
-  static nonstd::expected<TempSmbShare, std::error_code> create(std::wstring net_name, std::wstring path) {
+  static std::expected<TempSmbShare, std::error_code> create(std::wstring net_name, std::wstring path) {
     std::wstring remark = L"SMB share to test SMB capabilities of minifi";
     SHARE_INFO_502 share_info = {
         .shi502_netname = net_name.data(),
@@ -59,7 +59,7 @@ class TempSmbShare {
     if (netshare_result == NERR_Success) {
       return TempSmbShare(std::move(net_name), std::move(path));
     }
-    return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(netshare_result));
+    return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(netshare_result));
   }
 
   std::filesystem::path getPath() const {

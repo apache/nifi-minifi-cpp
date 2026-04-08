@@ -59,7 +59,7 @@ struct GenerationResult {
 class LlamaContext {
  public:
   virtual std::optional<std::string> applyTemplate(const std::vector<LlamaChatMessage>& messages) = 0;
-  virtual nonstd::expected<GenerationResult, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) = 0;
+  virtual std::expected<GenerationResult, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) = 0;
   virtual ~LlamaContext() = default;
 };
 

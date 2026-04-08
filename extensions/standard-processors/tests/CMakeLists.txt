@@ -17,9 +17,7 @@
 # under the License.
 #
 
-include(Coroutines)
 include(JoltTests)
-enable_coroutines()
 
 file(GLOB PROCESSOR_UNIT_TESTS  "unit/*.cpp" "unit/modbus/*.cpp")
 file(GLOB PROCESSOR_INTEGRATION_TESTS "integration/*.cpp")

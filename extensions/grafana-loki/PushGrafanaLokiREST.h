@@ -59,7 +59,7 @@ class PushGrafanaLokiREST : public PushGrafanaLoki {
 
  protected:
   std::string createLokiJson(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) const;
-  nonstd::expected<void, std::string> submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) override;
+  std::expected<void, std::string> submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) override;
   void initializeHttpClient(core::ProcessContext& context);
   void setUpStreamLabels(core::ProcessContext& context) override;
   void setupClientTimeouts(const core::ProcessContext& context);

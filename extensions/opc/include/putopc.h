@@ -118,7 +118,7 @@ class PutOPCProcessor final : public BaseOPCProcessor {
 
  private:
   bool readParentNodeId();
-  nonstd::expected<std::pair<bool, UA_NodeId>, std::string> configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const;
+  std::expected<std::pair<bool, UA_NodeId>, std::string> configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const;
   void updateNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
   void createNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
 

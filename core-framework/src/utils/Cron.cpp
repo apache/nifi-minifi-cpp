@@ -46,14 +46,15 @@ namespace org::apache::nifi::minifi::utils {
 namespace {
 
 // https://github.com/HowardHinnant/date/issues/550
-// Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714
-// the month parsing with '%b' and the weekday parsing with '%a' is case-sensitive in gcc11
-// This has been fixed in gcc13
+// Due to libstdc++ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714
+// the month parsing with '%b' and the weekday parsing with '%a' can be case-sensitive.
+// Normalizing to Title Case prevents parsing failures across all GCC versions.
 std::stringstream getCaseInsensitiveCStream(const std::string& str) {
-#if defined(__GNUC__) && (__GNUC__ < 13)
+#if defined(__GLIBCXX__) || defined(__GLIBCPP__)
   auto patched_str = string::toLower(str);
-  if (!patched_str.empty())
+  if (!patched_str.empty()) {
     patched_str[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(patched_str[0])));
+  }
   auto stream = std::stringstream{patched_str};
 #else
   auto stream = std::stringstream{str};
@@ -61,7 +62,6 @@ std::stringstream getCaseInsensitiveCStream(const std::string& str) {
   stream.imbue(std::locale::classic());
   return stream;
 }
-
 
 template<class T>
 std::optional<T> fromChars(const std::string& input) {

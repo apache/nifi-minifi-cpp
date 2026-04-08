@@ -25,11 +25,11 @@
 
 namespace org::apache::nifi::minifi::utils::net {
 
-nonstd::expected<asio::ip::address, std::error_code> addressFromString(const std::string_view ip_address_str) {
+std::expected<asio::ip::address, std::error_code> addressFromString(const std::string_view ip_address_str) {
   std::error_code ip_address_from_string_error;
   auto ip_address = asio::ip::make_address(ip_address_str, ip_address_from_string_error);
   if (ip_address_from_string_error)
-    return nonstd::make_unexpected(ip_address_from_string_error);
+    return std::unexpected(ip_address_from_string_error);
   return ip_address;
 }
 
@@ -41,7 +41,7 @@ asio::awaitable<std::tuple<std::error_code, asio::ip::basic_resolver<asio::ip::u
 }
 }  // namespace
 
-nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout_duration) {
+std::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout_duration) {
   asio::io_context io_context;
 
   std::error_code resolve_error;
@@ -54,11 +54,11 @@ nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::
   io_context.run();
 
   if (resolve_error)
-    return nonstd::make_unexpected(resolve_error);
+    return std::unexpected(resolve_error);
   if (!results.empty()) {
     return results.begin()->host_name();
   }
-  return nonstd::make_unexpected(std::make_error_code(std::errc::host_unreachable));
+  return std::unexpected(std::make_error_code(std::errc::host_unreachable));
 }
 
 std::string getMyHostName() {

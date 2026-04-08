@@ -175,7 +175,7 @@ class ListenHTTP : public core::ProcessorImpl {
       FailureReason reason;
       std::promise<void> ret;
     };
-    using Request = std::promise<nonstd::expected<RequestValue, FailureValue>>;
+    using Request = std::promise<std::expected<RequestValue, FailureValue>>;
 
     Handler(std::string base_uri,
             std::optional<std::string> flow_id,
@@ -211,7 +211,7 @@ class ListenHTTP : public core::ProcessorImpl {
       while (dequeueRequest(req)) {
         std::promise<void> req_done_promise;
         auto req_done = req_done_promise.get_future();
-        req.set_value(nonstd::make_unexpected(FailureValue{Handler::FailureReason::PROCESSOR_SHUTDOWN, std::move(req_done_promise)}));
+        req.set_value(std::unexpected(FailureValue{Handler::FailureReason::PROCESSOR_SHUTDOWN, std::move(req_done_promise)}));
         req_done.wait();
       }
     }

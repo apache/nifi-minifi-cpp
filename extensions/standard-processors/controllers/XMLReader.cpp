@@ -182,7 +182,7 @@ void XMLReader::onEnable() {
   expect_records_as_array_ = parseBoolProperty(ExpectRecordsAsArray.name);
 }
 
-nonstd::expected<core::RecordSet, std::error_code> XMLReader::read(io::InputStream& input_stream) {
+std::expected<core::RecordSet, std::error_code> XMLReader::read(io::InputStream& input_stream) {
   core::RecordSet record_set{};
   const auto read_result = [this, &record_set](io::InputStream& input_stream) -> size_t {
     std::string content;
@@ -198,7 +198,7 @@ nonstd::expected<core::RecordSet, std::error_code> XMLReader::read(io::InputStre
     return read_ret;
   }(input_stream);
   if (io::isError(read_result)) {
-    return nonstd::make_unexpected(std::make_error_code(std::errc::invalid_argument));
+    return std::unexpected(std::make_error_code(std::errc::invalid_argument));
   }
   return record_set;
 }

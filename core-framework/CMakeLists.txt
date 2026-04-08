@@ -15,10 +15,7 @@ file(GLOB SOURCES
 
 add_minifi_library(minifi-core-framework STATIC ${SOURCES})
 target_include_directories(minifi-core-framework PUBLIC include)
-target_link_libraries(minifi-core-framework PUBLIC minifi-api minifi-core-framework-common ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite libsodium range-v3 expected-lite date::date date::tz asio magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON)
+target_link_libraries(minifi-core-framework PUBLIC minifi-api minifi-core-framework-common ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite libsodium range-v3 date::date date::tz asio magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON)
 if(NOT WIN32)
     target_link_libraries(minifi-core-framework PUBLIC OSSP::libuuid++)
-endif()
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
-    target_link_libraries(minifi-core-framework PUBLIC stdc++fs)
 endif()

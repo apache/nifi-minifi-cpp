@@ -35,7 +35,7 @@ class RecordSetReader : public controller::ControllerServiceHandle {
     .version = MINIFI_VERSION_STR
   };
 
-  virtual nonstd::expected<RecordSet, std::error_code> read(io::InputStream& input_stream) = 0;
+  virtual std::expected<RecordSet, std::error_code> read(io::InputStream& input_stream) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

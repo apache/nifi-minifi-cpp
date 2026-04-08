@@ -38,7 +38,7 @@ class ProcessorInfo {
   [[nodiscard]] virtual utils::Identifier getUUID() const = 0;
   [[nodiscard]] virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const = 0;
   [[nodiscard]] virtual std::map<std::string, core::Property, std::less<>> getSupportedProperties() const = 0;
-  [[nodiscard]] virtual nonstd::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const = 0;
+  [[nodiscard]] virtual std::expected<Property, std::error_code> getSupportedProperty(std::string_view name) const = 0;
 
   virtual ~ProcessorInfo() = default;
 };
@@ -50,29 +50,29 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual const ProcessorInfo& getProcessorInfo() const = 0;
   virtual Processor& getProcessor() const = 0;
 
-  virtual nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
-  nonstd::expected<std::string, std::error_code> getProperty(const Property& property, const FlowFile* flow_file = nullptr) const { return getProperty(property.getName(), flow_file); }
-  nonstd::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
+  virtual std::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
+  std::expected<std::string, std::error_code> getProperty(const Property& property, const FlowFile* flow_file = nullptr) const { return getProperty(property.getName(), flow_file); }
+  std::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
     return getProperty(property_reference.name, flow_file);
   }
 
-  virtual nonstd::expected<std::string, std::error_code> getRawProperty(std::string_view name) const = 0;
+  virtual std::expected<std::string, std::error_code> getRawProperty(std::string_view name) const = 0;
 
-  virtual nonstd::expected<void, std::error_code> setProperty(std::string_view name, std::string value) = 0;
-  nonstd::expected<void, std::error_code> setProperty(const Property& property, std::string value) { return setProperty(property.getName(), std::move(value)); };
-  nonstd::expected<void, std::error_code> setProperty(const PropertyReference& property_reference, std::string value) { return setProperty(property_reference.name, std::move(value)); };
+  virtual std::expected<void, std::error_code> setProperty(std::string_view name, std::string value) = 0;
+  std::expected<void, std::error_code> setProperty(const Property& property, std::string value) { return setProperty(property.getName(), std::move(value)); };
+  std::expected<void, std::error_code> setProperty(const PropertyReference& property_reference, std::string value) { return setProperty(property_reference.name, std::move(value)); };
 
-  virtual nonstd::expected<void, std::error_code> clearProperty(std::string_view name) = 0;
+  virtual std::expected<void, std::error_code> clearProperty(std::string_view name) = 0;
 
-  virtual nonstd::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
-  virtual nonstd::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) = 0;
+  virtual std::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
+  virtual std::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) = 0;
 
-  virtual nonstd::expected<std::string, std::error_code> getRawDynamicProperty(std::string_view name) const = 0;
+  virtual std::expected<std::string, std::error_code> getRawDynamicProperty(std::string_view name) const = 0;
 
   virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
   virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file = nullptr) const = 0;
 
-  [[nodiscard]] virtual nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const = 0;
+  [[nodiscard]] virtual std::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const = 0;
 
   virtual void addAutoTerminatedRelationship(const core::Relationship& relationship) = 0;
 

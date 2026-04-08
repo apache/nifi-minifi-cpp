@@ -30,8 +30,6 @@ include(Asio)
 include(Jsoncons)
 target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3 asio pugixml jsoncons)
 
-include(Coroutines)
-enable_coroutines()
 
 register_extension(minifi-standard-processors "STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors" "extensions/standard-processors/tests/")
 

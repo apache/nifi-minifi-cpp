@@ -99,7 +99,7 @@ void ResponseNodeLoaderImpl::initializeComponentMetrics() {
   }
 }
 
-nonstd::expected<SharedResponseNode, std::string> ResponseNodeLoaderImpl::getSystemMetricsNode(const std::string& clazz) {
+std::expected<SharedResponseNode, std::string> ResponseNodeLoaderImpl::getSystemMetricsNode(const std::string& clazz) {
   std::lock_guard<std::mutex> guard(system_metrics_mutex_);
   if (system_metrics_.contains(clazz)) {
     return system_metrics_.at(clazz);
@@ -108,7 +108,7 @@ nonstd::expected<SharedResponseNode, std::string> ResponseNodeLoaderImpl::getSys
   std::shared_ptr ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
   auto response_node = std::dynamic_pointer_cast<ResponseNode>(ptr);
   if (!response_node) {
-    return nonstd::make_unexpected("Instantiated class '" + clazz + "' is not a ResponseNode!");
+    return std::unexpected("Instantiated class '" + clazz + "' is not a ResponseNode!");
   }
   system_metrics_.emplace(clazz, gsl::make_not_null(response_node));
   return system_metrics_.at(clazz);

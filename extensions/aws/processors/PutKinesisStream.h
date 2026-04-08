@@ -108,7 +108,7 @@ class PutKinesisStream : public AwsProcessor {  // NOLINT(cppcoreguidelines-spec
   };
   struct BatchItem {
     std::shared_ptr<core::FlowFile> flow_file;
-    nonstd::expected<BatchItemResult, BatchItemError> result;
+    std::expected<BatchItemResult, BatchItemError> result;
   };
   struct StreamBatch {
     uint64_t batch_size = 0;
@@ -116,7 +116,7 @@ class PutKinesisStream : public AwsProcessor {  // NOLINT(cppcoreguidelines-spec
     Aws::Kinesis::Model::PutRecordsRequest request;
   };
 
-  nonstd::expected<Aws::Kinesis::Model::PutRecordsRequestEntry, BatchItemError> createEntryFromFlowFile(const core::ProcessContext& context,
+  std::expected<Aws::Kinesis::Model::PutRecordsRequestEntry, BatchItemError> createEntryFromFlowFile(const core::ProcessContext& context,
       core::ProcessSession& session,
       const std::shared_ptr<core::FlowFile>& flow_file) const;
 

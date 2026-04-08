@@ -24,6 +24,6 @@
 
 namespace org::apache::nifi::minifi::kubernetes::metrics {
 
-nonstd::expected<std::string, std::string> podMetricsList(const kubernetes::ApiClient& api_client);
+std::expected<std::string, std::string> podMetricsList(const kubernetes::ApiClient& api_client);
 
 }  // namespace org::apache::nifi::minifi::kubernetes::metrics

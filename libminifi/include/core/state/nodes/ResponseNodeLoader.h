@@ -55,7 +55,7 @@ class ResponseNodeLoaderImpl : public ResponseNodeLoader {
  private:
   void initializeComponentMetrics();
   std::vector<SharedResponseNode> getComponentMetricsNodes(const std::string& metrics_class) const;
-  nonstd::expected<SharedResponseNode, std::string> getSystemMetricsNode(const std::string& clazz);
+  std::expected<SharedResponseNode, std::string> getSystemMetricsNode(const std::string& clazz);
   std::vector<SharedResponseNode> getResponseNodes(const std::string& clazz);
   void initializeRepositoryMetrics(const SharedResponseNode& response_node) const;
   void initializeQueueMetrics(const SharedResponseNode& response_node) const;
