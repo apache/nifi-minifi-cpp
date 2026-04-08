@@ -72,7 +72,7 @@ class PayloadSerializer {
     }
   }
   static void serialize(uint16_t op, const C2Payload &payload, std::shared_ptr<io::OutputStream> stream) {
-    uint8_t st;
+    uint8_t st = 0;
     uint32_t size = gsl::narrow<uint32_t>(payload.getNestedPayloads().size());
     stream->write(size);
     for (const auto &nested_payload : payload.getNestedPayloads()) {
