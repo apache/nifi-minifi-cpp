@@ -126,7 +126,6 @@ class PutKinesisStream : public AwsProcessor {  // NOLINT(cppcoreguidelines-spec
 
   uint64_t batch_size_ = 250;
   uint64_t batch_data_size_soft_cap_ = 1_MB;
-  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

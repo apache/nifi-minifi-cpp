@@ -31,6 +31,7 @@ file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp" "processors/*.cp
 
 add_minifi_library(minifi-aws SHARED ${SOURCES})
 target_link_libraries(minifi-aws PUBLIC ${LIBMINIFI} Threads::Threads)
+set_target_properties(minifi-aws PROPERTIES HAS_CUSTOM_INITIALIZER TRUE)
 
 target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-s3)
 target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-s3-crt)

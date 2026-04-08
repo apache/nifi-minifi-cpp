@@ -49,7 +49,6 @@
 #include "aws/s3-crt/model/AbortMultipartUploadResult.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
-#include "utils/AWSInitializer.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -70,7 +69,6 @@ class S3RequestSender {
   virtual ~S3RequestSender() = default;
 
  protected:
-  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3RequestSender>::getLogger()};
 };
 

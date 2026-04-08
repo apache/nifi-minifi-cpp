@@ -19,7 +19,6 @@
 #define CATCH_CONFIG_RUNNER
 #include "unit/Catch.h"
 #include "catch2/catch_session.hpp"
-#include "utils/AWSInitializer.h"
 
 int main(int argc, char* argv[]) {
   Catch::Session session;
@@ -28,9 +27,5 @@ int main(int argc, char* argv[]) {
     return ret;
   }
   int result = session.run();
-  // Explicitly shut down the AWS SDK before static destruction to avoid
-  // deadlocking on Windows where CRT event loop threads block in
-  // SleepConditionVariableSRW during static destruction.
-  org::apache::nifi::minifi::aws::utils::AWSInitializer::get().shutdown();
   return result;
 }

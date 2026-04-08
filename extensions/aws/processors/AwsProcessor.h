@@ -26,7 +26,6 @@
 #include <string_view>
 #include <utility>
 
-#include "utils/AWSInitializer.h"
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "AWSCredentialsProvider.h"
 #include "utils/ProxyOptions.h"
@@ -169,7 +168,6 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
-  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(core::ProcessContext& context) const;
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context);
   aws::ProxyOptions getProxy(core::ProcessContext& context);
