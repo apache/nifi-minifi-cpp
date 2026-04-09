@@ -38,7 +38,7 @@ class LogMetricsPublisher : public MetricsPublisherImpl {
 
   void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) override;
   void clearMetricNodes() override;
-  void loadMetricNodes() override;
+  void loadMetricNodes(core::ProcessGroup* root) override;
   ~LogMetricsPublisher() override;
 
  private:

@@ -77,7 +77,7 @@ class ControllerSocketMetricsPublisherTestFixture {
 };
 
 TEST_CASE_METHOD(ControllerSocketMetricsPublisherTestFixture, "Load and clear", "[ControllerSocketMetricsPublisher]") {
-  controller_socket_metrics_publisher_.loadMetricNodes();
+  controller_socket_metrics_publisher_.loadMetricNodes(nullptr);
   auto node = controller_socket_metrics_publisher_.getQueueMetricsNode();
   auto queue_metrics = dynamic_cast<state::response::QueueMetrics*>(node.get());
   REQUIRE(queue_metrics);

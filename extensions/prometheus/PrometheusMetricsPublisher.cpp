@@ -71,14 +71,14 @@ void PrometheusMetricsPublisher::clearMetricNodes() {
   gauge_collection_.reset();
 }
 
-void PrometheusMetricsPublisher::loadMetricNodes() {
+void PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
   logger_->log_debug("Loading all metric nodes.");
   std::lock_guard<std::mutex> lock(registered_metrics_mutex_);
-  gauge_collection_ = std::make_shared<PublishedMetricGaugeCollection>(getMetricProviders(), agent_identifier_);
+  gauge_collection_ = std::make_shared<PublishedMetricGaugeCollection>(getMetricProviders(root), agent_identifier_);
   exposer_->registerMetric(gauge_collection_);
 }
 
-std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> PrometheusMetricsPublisher::getMetricProviders() const {
+std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> PrometheusMetricsPublisher::getMetricProviders(core::ProcessGroup* root) const {
   gsl_Expects(response_node_loader_ && configuration_);
   std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> nodes;
   auto metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_prometheus_metrics_publisher_metrics);
@@ -89,14 +89,16 @@ std::vector<gsl::not_null<std::shared_ptr<state::PublishedMetricProvider>>> Prom
     auto metric_classes = utils::string::splitAndTrimRemovingEmpty(*metric_classes_str, ",");
     std::unordered_set<std::string> unique_metric_classes{metric_classes.begin(), metric_classes.end()};
     for (const std::string& clazz : unique_metric_classes) {
-      auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
+      auto response_nodes = response_node_loader_->loadResponseNodes(clazz, root);
       if (response_nodes.empty()) {
-        logger_->log_warn("Metric class '{}' could not be loaded.", clazz);
-        continue;
-      }
-      for (const auto& response_node : response_nodes) {
-        logger_->log_info("Loading metric node '{}'", response_node->getName());
-        nodes.push_back(response_node);
+        if (root) {
+          logger_->log_warn("Metric class '{}' could not be loaded.", clazz);
+        }
+      } else {
+        for (const auto& response_node : response_nodes) {
+          logger_->log_info("Loading metric node '{}'", response_node->getName());
+          nodes.push_back(response_node);
+        }
       }
     }
   }
