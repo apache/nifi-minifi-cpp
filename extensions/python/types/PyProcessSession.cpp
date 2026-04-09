@@ -168,6 +168,7 @@ int PyProcessSessionObject::init(PyProcessSessionObject* self, PyObject* args, P
 }
 
 PyObject* PyProcessSessionObject::get(PyProcessSessionObject* self, PyObject*) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -176,9 +177,11 @@ PyObject* PyProcessSessionObject::get(PyProcessSessionObject* self, PyObject*) {
   if (auto flow_file = session->get())
     return object::returnReference(std::weak_ptr(flow_file));
   return object::returnReference(nullptr);
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::create(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -198,9 +201,11 @@ PyObject* PyProcessSessionObject::create(PyProcessSessionObject* self, PyObject*
   if (auto flow_file = session->create(parent_flow_file))
     return object::returnReference(std::weak_ptr(flow_file));
   return object::returnReference(nullptr);
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::clone(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -215,9 +220,11 @@ PyObject* PyProcessSessionObject::clone(PyProcessSessionObject* self, PyObject* 
   if (auto cloned_flow_file = session->clone(flow_file))
     return object::returnReference(std::weak_ptr(cloned_flow_file));
   return object::returnReference(nullptr);
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::remove(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -230,9 +237,11 @@ PyObject* PyProcessSessionObject::remove(PyProcessSessionObject* self, PyObject*
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
   session->remove(flow_file);
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::read(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -252,9 +261,11 @@ PyObject* PyProcessSessionObject::read(PyProcessSessionObject* self, PyObject* a
   }
   session->read(flow_file, BorrowedObject(callback));
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::write(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -274,9 +285,11 @@ PyObject* PyProcessSessionObject::write(PyProcessSessionObject* self, PyObject* 
   }
   session->write(flow_file, BorrowedObject(callback));
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::transfer(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -296,9 +309,11 @@ PyObject* PyProcessSessionObject::transfer(PyProcessSessionObject* self, PyObjec
   }
   session->transfer(flow_file, reinterpret_cast<PyRelationship*>(relationship)->relationship_);
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::transferToCustomRelationship(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -331,9 +346,11 @@ PyObject* PyProcessSessionObject::transferToCustomRelationship(PyProcessSessionO
   BorrowedStr name = BorrowedStr::fromTuple(args, 0);
   session->transferToCustomRelationship(flow_file, relationship_name_str);
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::getContentsAsBytes(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -347,9 +364,11 @@ PyObject* PyProcessSessionObject::getContentsAsBytes(PyProcessSessionObject* sel
   auto content = session->getContentsAsString(flow_file);
 
   return PyBytes_FromStringAndSize(content.c_str(), gsl::narrow<Py_ssize_t>(content.size()));
+  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessSessionObject::putAttribute(PyProcessSessionObject* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -388,6 +407,7 @@ PyObject* PyProcessSessionObject::putAttribute(PyProcessSessionObject* self, PyO
 
   session->putAttribute(flow_file, attribute_key_str, attribute_value_str);
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyProcessSessionObject::typeObject() {

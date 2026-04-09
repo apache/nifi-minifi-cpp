@@ -23,6 +23,17 @@
 
 #include "types/Types.h"
 
+#define PYTHON_METHOD_BEGIN \
+  try {
+#define PYTHON_METHOD_END \
+  } catch (const std::exception& e) { \
+    PyErr_Format(PyExc_RuntimeError, "C++ binding error: %s", e.what()); \
+    return nullptr; \
+  } catch (...) { \
+    PyErr_SetString(PyExc_Exception, "Unknown C++ exception"); \
+    return nullptr; \
+  }
+
 namespace org::apache::nifi::minifi::extensions::python {
 
 PyMODINIT_FUNC

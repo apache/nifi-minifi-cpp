@@ -58,6 +58,7 @@ int PyStateManager::init(PyStateManager* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyStateManager::set(PyStateManager* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   if (!self->state_manager_) {
     PyErr_SetString(PyExc_AttributeError, "tried reading state manager outside 'on_trigger'");
     return nullptr;
@@ -76,9 +77,11 @@ PyObject* PyStateManager::set(PyStateManager* self, PyObject* args) {
   }
 
   return object::returnReference(self->state_manager_->set(cpp_state));
+  PYTHON_METHOD_END
 }
 
 PyObject* PyStateManager::get(PyStateManager* self, PyObject*) {
+  PYTHON_METHOD_BEGIN
   if (!self->state_manager_) {
     PyErr_SetString(PyExc_AttributeError, "tried reading state manager outside 'on_trigger'");
     return nullptr;
@@ -92,9 +95,11 @@ PyObject* PyStateManager::get(PyStateManager* self, PyObject*) {
   } else {
     Py_RETURN_NONE;
   }
+  PYTHON_METHOD_END
 }
 
 PyObject* PyStateManager::clear(PyStateManager* self, PyObject* /*args*/) {
+  PYTHON_METHOD_BEGIN
   if (!self->state_manager_) {
     PyErr_SetString(PyExc_AttributeError, "tried reading state manager outside 'on_trigger'");
     return nullptr;
@@ -102,9 +107,11 @@ PyObject* PyStateManager::clear(PyStateManager* self, PyObject* /*args*/) {
 
   self->state_manager_->clear();
   Py_RETURN_NONE;
+  PYTHON_METHOD_END
 }
 
 PyObject* PyStateManager::replace(PyStateManager* self, PyObject* args) {
+  PYTHON_METHOD_BEGIN
   if (!self->state_manager_) {
     PyErr_SetString(PyExc_AttributeError, "tried reading state manager outside 'on_trigger'");
     return nullptr;
@@ -141,6 +148,7 @@ PyObject* PyStateManager::replace(PyStateManager* self, PyObject* args) {
   }
 
   return object::returnReference(self->state_manager_->set(new_cpp_state));
+  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyStateManager::typeObject() {
