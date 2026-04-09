@@ -57,16 +57,16 @@ jobs:
       contents: read
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           run-id: ${{ inputs.artifacts_workflow_id || github.event.workflow_run.id }}
           name: minifi-${{ matrix.arch }}-tar
           path: build
           github-token: ${{ github.token }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           run-id: ${{ inputs.artifacts_workflow_id || github.event.workflow_run.id }}
           name: minifi-${{ matrix.arch }}-rpm
@@ -88,18 +88,17 @@ jobs:
 
       - name: Test Reporter
         if: always()
-        uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e  # v15
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3
         with:
           name: "${{ matrix.platform.name }} (${{ matrix.arch }})${{ (github.event_name != 'workflow_dispatch' || inputs.enable_fips) && ' (FIPS Mode)' || '' }}"
           path: build/behavex_output_modular/behave/*.xml
           reporter: java-junit
-          output-to: 'step-summary'
           list-tests: 'failed'
           list-suites: 'failed'
 
       - name: Upload artifact
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.platform.id }}_${{ matrix.arch }}_behavex_output_modular${{ (github.event_name != 'workflow_dispatch' || inputs.enable_fips) && '_fips' || '' }}
           path: build/behavex_output_modular

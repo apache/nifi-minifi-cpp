@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - id: install_deps
         run: |
@@ -34,12 +34,12 @@ jobs:
         run: |
           mkdir build && cd build && cmake ${CMAKE_FLAGS} .. && make rocky
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.platform.tar-artifact }}
           path: build/nifi-minifi-cpp-*-bin-rockylinux.tar.gz
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.platform.rpm-artifact }}
           path: build/nifi-minifi-cpp-*.rpm
