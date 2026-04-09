@@ -30,9 +30,8 @@ file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 
 add_minifi_library(minifi-sql SHARED ${SOURCES})
 
-if(WIN32 OR APPLE)
+if(WIN32)
     find_package(ODBC REQUIRED)
-    target_include_directories(minifi-sql SYSTEM PRIVATE ${ODBC_INCLUDE_DIR})
 else()
     # Build iODBC
 
@@ -54,7 +53,7 @@ else()
         CMAKE_COMMAND ""
         UPDATE_COMMAND ""
         INSTALL_COMMAND make install
-        CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR} --with-pic
+        CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR} --with-pic CFLAGS=-std=gnu17
         STEP_TARGETS build
         BUILD_BYPRODUCTS "${IODBC_BYPRODUCT_DIR}/${IODBC_BYPRODUCT}"
         EXCLUDE_FROM_ALL TRUE
