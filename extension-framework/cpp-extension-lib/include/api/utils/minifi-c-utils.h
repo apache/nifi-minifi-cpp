@@ -24,6 +24,12 @@
 #include "utils/StringUtils.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 
+#ifdef WIN32
+  #define CEXTENSIONAPI extern "C" __declspec(dllexport)
+#else
+  #define CEXTENSIONAPI extern "C"
+#endif
+
 namespace org::apache::nifi::minifi::api::utils {
 
 inline MinifiStringView toStringView(std::string_view str) {
