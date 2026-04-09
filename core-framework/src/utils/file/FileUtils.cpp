@@ -136,7 +136,7 @@ std::expected<WindowsFileTimes, std::error_code> getWindowsFileTimes(const std::
   WIN32_FILE_ATTRIBUTE_DATA file_attributes;
   auto get_file_attributes_result = GetFileAttributesExW(path.c_str(), GetFileExInfoStandard, &file_attributes);
   if (!get_file_attributes_result)
-    return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(GetLastError()));
+    return std::unexpected{utils::OsUtils::windowsErrorToErrorCode(GetLastError())};
   return WindowsFileTimes{.creation_time = fileTimePointFromFileTime(file_attributes.ftCreationTime),
                           .last_access_time = fileTimePointFromFileTime(file_attributes.ftLastAccessTime),
                           .last_write_time = fileTimePointFromFileTime(file_attributes.ftLastWriteTime)};

@@ -39,7 +39,7 @@ class MockLlamaContext : public processors::LlamaContext {
 
   std::expected<processors::GenerationResult, std::string> generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) override {
     if (fail_generation_) {
-      return std::unexpected("Generation failed");
+      return std::unexpected{"Generation failed"};
     }
     processors::GenerationResult result;
     input_ = input;

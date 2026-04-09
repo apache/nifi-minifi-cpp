@@ -59,7 +59,7 @@ class TempSmbShare {
     if (netshare_result == NERR_Success) {
       return TempSmbShare(std::move(net_name), std::move(path));
     }
-    return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(netshare_result));
+    return std::unexpected{utils::OsUtils::windowsErrorToErrorCode(netshare_result)};
   }
 
   std::filesystem::path getPath() const {

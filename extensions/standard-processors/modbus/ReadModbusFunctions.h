@@ -123,7 +123,7 @@ class ReadRegisters : public ReadModbusFunction {
   [[nodiscard]] std::expected<core::RecordField, std::error_code> responseToRecordField(const std::span<const std::byte> resp_pdu) const override {
     const auto resp_bytes = getRespBytes(resp_pdu);
     if (!resp_bytes)
-      return std::unexpected(resp_bytes.error());
+      return std::unexpected{resp_bytes.error()};
 
     std::vector<T> holding_registers{};
     for (auto&& register_chunk : ranges::views::chunk(*resp_bytes, std::max(sizeof(T), sizeof(uint16_t)))) {

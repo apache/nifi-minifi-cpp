@@ -182,17 +182,17 @@ std::expected<std::string, std::error_code> WindowsEventLogProvider::getEventMes
   DWORD status = GetLastError();
 
   if (status != ERROR_INSUFFICIENT_BUFFER)
-    return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(status));
+    return std::unexpected{utils::OsUtils::windowsErrorToErrorCode(status)};
 
   num_chars_in_buffer = num_chars_used;
   buffer.reset((LPWSTR) malloc(num_chars_in_buffer * sizeof(WCHAR)));
   if (!buffer)
-    return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(ERROR_OUTOFMEMORY));
+    return std::unexpected{utils::OsUtils::windowsErrorToErrorCode(ERROR_OUTOFMEMORY)};
   if (EvtFormatMessage(provider_handle_.get(), event_handle, 0, 0, nullptr,
                        EvtFormatMessageEvent, num_chars_in_buffer,
                        buffer.get(), &num_chars_used))
     return utils::to_string(std::wstring{buffer.get()});
-  return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(GetLastError()));
+  return std::unexpected{utils::OsUtils::windowsErrorToErrorCode(GetLastError())};
 }
 
 namespace {

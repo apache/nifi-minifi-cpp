@@ -120,14 +120,14 @@ std::expected<void, std::string> FlowStatusBuilder::addProcessorStatuses(rapidjs
   for (const auto& option : options) {
     if (!valid_options.contains(option)) {
       logger_->log_error("Unable to get processorStatus: Invalid query option for processor status '{}'", magic_enum::enum_name(option));
-      return std::unexpected(fmt::format("Unable to get processorStatus: Invalid query option for processor status '{}'", magic_enum::enum_name(option)));
+      return std::unexpected{fmt::format("Unable to get processorStatus: Invalid query option for processor status '{}'", magic_enum::enum_name(option))};
     }
   }
 
   std::lock_guard<std::mutex> guard(root_mutex_);
   if (identifier.empty()) {
     logger_->log_error("Unable to get processorStatus: Query is incomplete");
-    return std::unexpected("Unable to get processorStatus: Query is incomplete");
+    return std::unexpected{"Unable to get processorStatus: Query is incomplete"};
   } else if (identifier == "all") {
     for (const auto processor : processors_) {
       addProcessorStatus(processor, processor_status_list, allocator, options);
@@ -136,7 +136,7 @@ std::expected<void, std::string> FlowStatusBuilder::addProcessorStatuses(rapidjs
     auto processor = findProcessor(identifier);
     if (!processor) {
       logger_->log_error("Unable to get processorStatus: No processor with key '{}' to report status on", identifier);
-      return std::unexpected(fmt::format("Unable to get processorStatus: No processor with key '{}' to report status on", identifier));
+      return std::unexpected{fmt::format("Unable to get processorStatus: No processor with key '{}' to report status on", identifier)};
     }
     addProcessorStatus(processor, processor_status_list, allocator, options);
   }
@@ -169,13 +169,13 @@ std::expected<void, std::string> FlowStatusBuilder::addConnectionStatuses(rapidj
   for (const auto& option : options) {
     if (option != FlowStatusQueryOption::health) {
       logger_->log_error("Unable to get connectionStatus: Invalid query option for connection status '{}'", magic_enum::enum_name(option));
-      return std::unexpected(fmt::format("Unable to get connectionStatus: Invalid query option for connection status '{}'", magic_enum::enum_name(option)));
+      return std::unexpected{fmt::format("Unable to get connectionStatus: Invalid query option for connection status '{}'", magic_enum::enum_name(option))};
     }
   }
   std::lock_guard<std::mutex> guard(root_mutex_);
   if (identifier.empty()) {
     logger_->log_error("Unable to get connectionStatus: Query is incomplete");
-    return std::unexpected("Unable to get connectionStatus: Query is incomplete");
+    return std::unexpected{"Unable to get connectionStatus: Query is incomplete"};
   }
 
   if (identifier == "all") {
@@ -187,7 +187,7 @@ std::expected<void, std::string> FlowStatusBuilder::addConnectionStatuses(rapidj
       addConnectionStatus(connection_map_[identifier], connection_status_list, allocator, options);
     } else {
       logger_->log_error("Unable to get connectionStatus: No connection with key '{}' to report status on", identifier);
-      return std::unexpected(fmt::format("Unable to get connectionStatus: No connection with key '{}' to report status on", identifier));
+      return std::unexpected{fmt::format("Unable to get connectionStatus: No connection with key '{}' to report status on", identifier)};
     }
   }
 
@@ -205,7 +205,7 @@ std::expected<void, std::string> FlowStatusBuilder::addInstanceStatus(rapidjson:
   for (const auto& option : options) {
     if (!valid_options.contains(option)) {
       logger_->log_error("Unable to get instance: Invalid query option for instance status '{}'", magic_enum::enum_name(option));
-      return std::unexpected(fmt::format("Unable to get instance: Invalid query option for instance status '{}'", magic_enum::enum_name(option)));
+      return std::unexpected{fmt::format("Unable to get instance: Invalid query option for instance status '{}'", magic_enum::enum_name(option))};
     }
   }
 
@@ -284,7 +284,7 @@ std::expected<void, std::string> FlowStatusBuilder::addSystemDiagnosticsStatus(r
   for (const auto& option : options) {
     if (!valid_options.contains(option)) {
       logger_->log_error("Unable to get systemDiagnostics: Invalid query option for system diagnostics '{}'", magic_enum::enum_name(option));
-      return std::unexpected(fmt::format("Unable to get systemDiagnostics: Invalid query option for system diagnostics '{}'", magic_enum::enum_name(option)));
+      return std::unexpected{fmt::format("Unable to get systemDiagnostics: Invalid query option for system diagnostics '{}'", magic_enum::enum_name(option))};
     }
   }
 

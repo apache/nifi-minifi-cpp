@@ -103,11 +103,11 @@ class Spec {
     static std::expected<Template, std::string> parse(std::string_view str) {
       if (auto res = parse(str.begin(), str.end())) {
         if (res->second != str.end()) {
-          return std::unexpected("Failed to fully parse template");
+          return std::unexpected{"Failed to fully parse template"};
         }
         return {std::move(res->first)};
       } else {
-        return std::unexpected(std::move(res.error()));
+        return std::unexpected{std::move(res.error())};
       }
     }
     static std::expected<std::pair<Template, It>, std::string> parse(It begin, It end);

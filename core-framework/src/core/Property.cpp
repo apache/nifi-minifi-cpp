@@ -122,7 +122,7 @@ Property::Property() : is_required_(false), is_collection_(false), validator_{&S
 std::expected<std::string_view, std::error_code> Property::getValue() const {
   if (!values_.empty()) { return values_.back(); }
   if (default_value_) { return *default_value_; }
-  return std::unexpected(PropertyErrorCode::PropertyNotSet);
+  return std::unexpected{PropertyErrorCode::PropertyNotSet};
 }
 
 std::expected<std::span<const std::string>, std::error_code> Property::getAllValues() const {
@@ -130,9 +130,9 @@ std::expected<std::span<const std::string>, std::error_code> Property::getAllVal
 }
 
 std::expected<void, std::error_code> Property::setValue(std::string value) {
-  if (!validator_->validate(value)) { return std::unexpected(PropertyErrorCode::ValidationFailed); }
+  if (!validator_->validate(value)) { return std::unexpected{PropertyErrorCode::ValidationFailed}; }
   if (!allowed_values_.empty() && ranges::none_of(allowed_values_, [&](const auto& allowed_value) -> bool { return utils::string::toLower(allowed_value) == utils::string::toLower(value); })) {
-    return std::unexpected(PropertyErrorCode::ValidationFailed);
+    return std::unexpected{PropertyErrorCode::ValidationFailed};
   }
   values_.clear();
   values_.push_back(std::move(value));
@@ -140,9 +140,9 @@ std::expected<void, std::error_code> Property::setValue(std::string value) {
 }
 
 std::expected<void, std::error_code> Property::appendValue(std::string value) {
-  if (!validator_->validate(value)) { return std::unexpected(PropertyErrorCode::ValidationFailed); }
+  if (!validator_->validate(value)) { return std::unexpected{PropertyErrorCode::ValidationFailed}; }
   if (!allowed_values_.empty() && ranges::none_of(allowed_values_, [&](const auto& allowed_value) -> bool { return utils::string::toLower(allowed_value) == utils::string::toLower(value); })) {
-    return std::unexpected(PropertyErrorCode::ValidationFailed);
+    return std::unexpected{PropertyErrorCode::ValidationFailed};
   }
   if (values_.empty() && default_value_) { values_.push_back(*default_value_); }
   values_.push_back(std::move(value));

@@ -487,35 +487,35 @@ TEST_CASE("expected transformError", "[expected][transformError]") {
   auto mul2 = [](int a) { return a * 2; };
 
   {
-    std::expected<int, int> e = std::unexpected(21);
+    std::expected<int, int> e = std::unexpected{21};
     auto ret = e | utils::transformError(mul2);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 42);
   }
 
   {
-    std::expected<size_t, std::string> e = std::unexpected("sajt");
+    std::expected<size_t, std::string> e = std::unexpected{"sajt"};
     auto ret = e | utils::transformError([](const std::string& error) -> size_t { return error.length(); });
     REQUIRE(!ret);
     REQUIRE(ret.error() == 4);
   }
 
   {
-    const std::expected<int, int> e = std::unexpected(21);
+    const std::expected<int, int> e = std::unexpected{21};
     auto ret = e | utils::transformError(mul2);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 42);
   }
 
   {
-    std::expected<int, int> e = std::unexpected(21);
+    std::expected<int, int> e = std::unexpected{21};
     auto ret = std::move(e) | utils::transformError(mul2);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 42);
   }
 
   {
-    const std::expected<int, int> e = std::unexpected(21);
+    const std::expected<int, int> e = std::unexpected{21};
     auto ret = std::move(e) | utils::transformError(mul2);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 42);

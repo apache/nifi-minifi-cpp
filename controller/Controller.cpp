@@ -231,28 +231,28 @@ bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out) {
 std::expected<void, std::string> getDebugBundle(const utils::net::SocketData& socket_data, const std::filesystem::path& target_dir) {
   const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
   if (connection_stream->initialize() < 0) {
-    return std::unexpected("Could not connect to remote host " + socket_data.host + ":" + std::to_string(socket_data.port));
+    return std::unexpected{"Could not connect to remote host " + socket_data.host + ":" + std::to_string(socket_data.port)};
   }
   io::BufferStream buffer;
   auto op = static_cast<uint8_t>(c2::Operation::transfer);
   buffer.write(&op, 1);
   buffer.write("debug");
   if (io::isError(connection_stream->write(buffer.getBuffer()))) {
-    return std::unexpected("Could not write to connection " + socket_data.host + ":" + std::to_string(socket_data.port));
+    return std::unexpected{"Could not write to connection " + socket_data.host + ":" + std::to_string(socket_data.port)};
   }
   connection_stream->read(op);
   size_t bundle_size = 0;
   connection_stream->read(bundle_size);
   if (bundle_size == 0) {
-    return std::unexpected("Failed to retrieve debug bundle");
+    return std::unexpected{"Failed to retrieve debug bundle"};
   }
 
   if (std::filesystem::exists(target_dir) && !std::filesystem::is_directory(target_dir)) {
-    return std::unexpected("Object specified as the target directory already exists and it is not a directory");
+    return std::unexpected{"Object specified as the target directory already exists and it is not a directory"};
   }
 
   if (!std::filesystem::exists(target_dir) && utils::file::create_dir(target_dir) != 0) {
-    return std::unexpected("Failed to create target directory: " + target_dir.string());
+    return std::unexpected{"Failed to create target directory: " + target_dir.string()};
   }
 
   std::ofstream out_file(target_dir / "debug.tar.gz");

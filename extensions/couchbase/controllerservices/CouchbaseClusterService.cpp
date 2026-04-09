@@ -98,7 +98,7 @@ CouchbaseClient::CouchbaseClient(std::string connection_string, std::string user
 std::expected<::couchbase::collection, CouchbaseErrorType> CouchbaseClient::getCollection(const CouchbaseCollection& collection) {
   auto connection_result = establishConnection();
   if (!connection_result) {
-    return std::unexpected(connection_result.error());
+    return std::unexpected{connection_result.error()};
   }
   std::lock_guard<std::mutex> lock(cluster_mutex_);
   return cluster_->bucket(collection.bucket_name).scope(collection.scope_name).collection(collection.collection_name);
@@ -108,7 +108,7 @@ std::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::upsert
     const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
   auto collection_result = getCollection(collection);
   if (!collection_result.has_value()) {
-    return std::unexpected(collection_result.error());
+    return std::unexpected{collection_result.error()};
   }
 
   std::pair<::couchbase::error, ::couchbase::mutation_result> result;
@@ -126,11 +126,11 @@ std::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::upsert
     if (getErrorType(upsert_err.ec()) == CouchbaseErrorType::TEMPORARY && upsert_err.ec().value() != static_cast<int>(::couchbase::errc::common::ambiguous_timeout)) {
       logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' due to temporary issue, error code: '{}', message: '{}'", document_id, collection.bucket_name, collection.scope_name,
           collection.collection_name, upsert_err.ec(), upsert_err.message());
-      return std::unexpected(CouchbaseErrorType::TEMPORARY);
+      return std::unexpected{CouchbaseErrorType::TEMPORARY};
     }
     logger_->log_error("Failed to upsert document '{}' to collection '{}.{}.{}' with error code: '{}', message: '{}'", document_id, collection.bucket_name, collection.scope_name,
         collection.collection_name, upsert_err.ec(), upsert_err.message());
-    return std::unexpected(CouchbaseErrorType::FATAL);
+    return std::unexpected{CouchbaseErrorType::FATAL};
   } else {
     return CouchbaseUpsertResult {
       {
@@ -147,7 +147,7 @@ std::expected<CouchbaseUpsertResult, CouchbaseErrorType> CouchbaseClient::upsert
 std::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(const CouchbaseCollection& collection, const std::string& document_id, CouchbaseValueType return_type) {
   auto collection_result = getCollection(collection);
   if (!collection_result.has_value()) {
-    return std::unexpected(collection_result.error());
+    return std::unexpected{collection_result.error()};
   }
 
   ::couchbase::get_options options;
@@ -156,14 +156,14 @@ std::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(const
   if (get_err.ec()) {
     if (getErrorType(get_err.ec()) == CouchbaseErrorType::TEMPORARY) {
       logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' due to timeout", document_id, collection.bucket_name, collection.scope_name, collection.collection_name);
-      return std::unexpected(CouchbaseErrorType::TEMPORARY);
+      return std::unexpected{CouchbaseErrorType::TEMPORARY};
     }
     logger_->log_error("Failed to get document '{}' from collection '{}.{}.{}' with error code: '{}', message: '{}'", document_id, collection.bucket_name, collection.scope_name,
         collection.collection_name, get_err.ec(), get_err.message());
     if (get_err.cause()) {
       logger_->log_error("... root cause error code: '{}', message: '{}'", get_err.cause()->ec(), get_err.cause()->message());
     }
-    return std::unexpected(CouchbaseErrorType::FATAL);
+    return std::unexpected{CouchbaseErrorType::FATAL};
   } else {
     try {
       CouchbaseGetResult result;
@@ -183,7 +183,7 @@ std::expected<CouchbaseGetResult, CouchbaseErrorType> CouchbaseClient::get(const
     } catch (const std::exception& ex) {
       logger_->log_error("Failed to get content for document '{}' from collection '{}.{}.{}' with the following exception: '{}'", document_id, collection.bucket_name, collection.scope_name,
           collection.collection_name, ex.what());
-      return std::unexpected(CouchbaseErrorType::FATAL);
+      return std::unexpected{CouchbaseErrorType::FATAL};
     }
   }
 }
@@ -205,7 +205,7 @@ std::expected<void, CouchbaseErrorType> CouchbaseClient::establishConnection() {
   auto [connect_err, cluster] = ::couchbase::cluster::connect(connection_string_, cluster_options_).get();
   if (connect_err.ec()) {
     logger_->log_error("Failed to connect to Couchbase cluster with error code: '{}' and message: '{}'", connect_err.ec(), connect_err.message());
-    return std::unexpected(getErrorType(connect_err.ec()));
+    return std::unexpected{getErrorType(connect_err.ec())};
   }
 
   cluster_ = std::move(cluster);

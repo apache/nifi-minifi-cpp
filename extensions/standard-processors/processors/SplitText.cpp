@@ -207,13 +207,13 @@ std::expected<SplitTextFragmentGenerator::Fragment, const char*> SplitTextFragme
     auto line = line_reader_.readNextLine();
     if (!line) {
       if (getState() == detail::StreamReadState::EndOfStream) {
-        return std::unexpected("The flow file's line count is less than the specified header line count!");
+        return std::unexpected{"The flow file's line count is less than the specified header line count!"};
       } else {
-        return std::unexpected("Error while reading flow file stream!");
+        return std::unexpected{"Error while reading flow file stream!"};
       }
     }
     if (lineSizeWouldExceedMaxFragmentSize(*line, header_fragment.fragment_size)) {
-      return std::unexpected("Header line would exceed the maximum fragment size!");
+      return std::unexpected{"Header line would exceed the maximum fragment size!"};
     }
 
     addLineToFragment(header_fragment, *line);
@@ -232,7 +232,7 @@ std::expected<SplitTextFragmentGenerator::Fragment, const char*> SplitTextFragme
       break;
     }
     if (lineSizeWouldExceedMaxFragmentSize(*line, header_fragment.fragment_size)) {
-      return std::unexpected("Header line would exceed the maximum fragment size!");
+      return std::unexpected{"Header line would exceed the maximum fragment size!"};
     }
 
     addLineToFragment(header_fragment, *line);

@@ -108,7 +108,7 @@ std::expected<SharedResponseNode, std::string> ResponseNodeLoaderImpl::getSystem
   std::shared_ptr ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
   auto response_node = std::dynamic_pointer_cast<ResponseNode>(ptr);
   if (!response_node) {
-    return std::unexpected("Instantiated class '" + clazz + "' is not a ResponseNode!");
+    return std::unexpected{"Instantiated class '" + clazz + "' is not a ResponseNode!"};
   }
   system_metrics_.emplace(clazz, gsl::make_not_null(response_node));
   return system_metrics_.at(clazz);

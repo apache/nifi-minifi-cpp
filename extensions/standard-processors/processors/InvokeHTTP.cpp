@@ -84,7 +84,7 @@ std::expected<std::string_view, std::error_code> removePerSecSuffix(const std::s
   if (trimmed_input.ends_with("/s") || trimmed_input.ends_with("/S")) {
     return trimmed_input.substr(0, trimmed_input.size() - 2);
   }
-  return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+  return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
 }
 }  // namespace
 

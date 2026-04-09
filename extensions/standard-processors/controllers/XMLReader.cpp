@@ -198,7 +198,7 @@ std::expected<core::RecordSet, std::error_code> XMLReader::read(io::InputStream&
     return read_ret;
   }(input_stream);
   if (io::isError(read_result)) {
-    return std::unexpected(std::make_error_code(std::errc::invalid_argument));
+    return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
   }
   return record_set;
 }

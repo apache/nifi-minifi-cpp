@@ -29,7 +29,7 @@ std::expected<asio::ip::address, std::error_code> addressFromString(const std::s
   std::error_code ip_address_from_string_error;
   auto ip_address = asio::ip::make_address(ip_address_str, ip_address_from_string_error);
   if (ip_address_from_string_error)
-    return std::unexpected(ip_address_from_string_error);
+    return std::unexpected{ip_address_from_string_error};
   return ip_address;
 }
 
@@ -54,11 +54,11 @@ std::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::add
   io_context.run();
 
   if (resolve_error)
-    return std::unexpected(resolve_error);
+    return std::unexpected{resolve_error};
   if (!results.empty()) {
     return results.begin()->host_name();
   }
-  return std::unexpected(std::make_error_code(std::errc::host_unreachable));
+  return std::unexpected{std::make_error_code(std::errc::host_unreachable)};
 }
 
 std::string getMyHostName() {

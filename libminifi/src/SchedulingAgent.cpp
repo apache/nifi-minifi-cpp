@@ -92,12 +92,12 @@ std::expected<void, std::exception_ptr> SchedulingAgent::triggerAndCommit(core::
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
         processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
     processor->yield(admin_yield_duration_);
-    return std::unexpected(std::current_exception());
+    return std::unexpected{std::current_exception()};
   } catch (...) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}",
         processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
     processor->yield(admin_yield_duration_);
-    return std::unexpected(std::current_exception());
+    return std::unexpected{std::current_exception()};
   }
   return {};
 }
@@ -130,12 +130,12 @@ std::expected<bool, std::exception_ptr> SchedulingAgent::trigger(core::Processor
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
         processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
     processor->yield(admin_yield_duration_);
-    return std::unexpected(std::current_exception());
+    return std::unexpected{std::current_exception()};
   } catch (...) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}",
         processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
     processor->yield(admin_yield_duration_);
-    return std::unexpected(std::current_exception());
+    return std::unexpected{std::current_exception()};
   }
   return true;
 }

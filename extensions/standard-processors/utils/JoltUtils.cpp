@@ -93,10 +93,10 @@ std::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Template::
       }
       case State::Escaped: {
         if (!ch) {
-          return std::unexpected("Unterminated escape sequence");
+          return std::unexpected{"Unterminated escape sequence"};
         }
         if (ch != '\\' && !isSpecialChar(ch.value())) {
-          return std::unexpected(fmt::format("Unknown escape sequence in template '\\{}'", ch.value()));
+          return std::unexpected{fmt::format("Unknown escape sequence in template '\\{}'", ch.value())};
         }
         fragments.back() += ch.value();
         state = State::Plain;
@@ -135,7 +135,7 @@ std::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Template::
           target += ch.value();
           state = State::ParentIndex;
         } else {
-          return std::unexpected(fmt::format("Expected an index at {}", std::distance(begin, ch_it)));
+          return std::unexpected{fmt::format("Expected an index at {}", std::distance(begin, ch_it))};
         }
         break;
       }
@@ -149,7 +149,7 @@ std::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Template::
           references.back().first = std::stoi(target);
           state = State::Plain;
         } else {
-          return std::unexpected(fmt::format("Invalid character at {}, expected digit, comma or close parenthesis", std::distance(begin, ch_it)));
+          return std::unexpected{fmt::format("Invalid character at {}, expected digit, comma or close parenthesis", std::distance(begin, ch_it))};
         }
         break;
       }
@@ -159,7 +159,7 @@ std::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Template::
           target += ch.value();
           state = State::MatchIndex;
         } else {
-          return std::unexpected(fmt::format("Expected an index at {}", std::distance(begin, ch_it)));
+          return std::unexpected{fmt::format("Expected an index at {}", std::distance(begin, ch_it))};
         }
         break;
       }
@@ -170,7 +170,7 @@ std::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Template::
           references.back().second = std::stoi(target);
           state = State::Plain;
         } else {
-          return std::unexpected(fmt::format("Invalid character at {}, expected digit or close parenthesis", std::distance(begin, ch_it)));
+          return std::unexpected{fmt::format("Invalid character at {}, expected digit or close parenthesis", std::distance(begin, ch_it))};
         }
         break;
       }
@@ -239,10 +239,10 @@ std::expected<Spec::Regex, std::string> Spec::Regex::parse(std::string_view str)
       }
       case State::Escaped: {
         if (!ch) {
-          return std::unexpected("Unterminated escape sequence");
+          return std::unexpected{"Unterminated escape sequence"};
         }
         if (ch != '\\' && !isSpecialChar(ch.value())) {
-          return std::unexpected(fmt::format("Unknown escape sequence in pattern '\\{}'", ch.value()));
+          return std::unexpected{fmt::format("Unknown escape sequence in pattern '\\{}'", ch.value())};
         }
         fragments.back() += ch.value();
         state = State::Plain;
@@ -463,12 +463,12 @@ std::string parseLiteral(std::string_view str) {
 std::expected<std::pair<Spec::Path, Spec::It>, std::string> parsePath(const Spec::Context& ctx, Spec::It begin, Spec::It end) {
   auto dst = parseDestination(ctx, begin, end);
   if (!dst) {
-    return std::unexpected(std::move(dst.error()));
+    return std::unexpected{std::move(dst.error())};
   }
   Spec::Path result;
   for (auto&& [member, type] : std::move(dst->first)) {
     if (!holds_alternative<Spec::Template>(member)) {
-      return std::unexpected(fmt::format("Value reference at {} cannot contain nested value reference path", ctx.path()));
+      return std::unexpected{fmt::format("Value reference at {} cannot contain nested value reference path", ctx.path())};
     }
     result.emplace_back(std::move(std::get<Spec::Template>(member)), type);
   }
@@ -479,10 +479,10 @@ std::expected<std::pair<Spec::ValueRef, Spec::It>, std::string> parseValueRefere
   using ResultT = std::pair<Spec::ValueRef, Spec::It>;
   auto it = begin;
   if (it == end) {
-    return std::unexpected("Cannot parse value reference from empty string");
+    return std::unexpected{"Cannot parse value reference from empty string"};
   }
   if (*it != '@') {
-    return std::unexpected("Value reference must start with '@'");
+    return std::unexpected{"Value reference must start with '@'"};
   }
   ++it;
   if (it == end) {
@@ -522,11 +522,11 @@ std::expected<std::pair<Spec::ValueRef, Spec::It>, std::string> parseValueRefere
     auto idx_end = it;
     idx = std::stoull(std::string{idx_begin, idx_end});
     if (it == end) {
-      return std::unexpected("Expected ')' in value reference");
+      return std::unexpected{"Expected ')' in value reference"};
     }
     if (*it != ',') {
       if (*it != ')') {
-        return std::unexpected("Expected ')' in value reference");
+        return std::unexpected{"Expected ')' in value reference"};
       }
       ++it;
       return ResultT{{idx, {}}, it};
@@ -535,15 +535,15 @@ std::expected<std::pair<Spec::ValueRef, Spec::It>, std::string> parseValueRefere
     ++it;
   }
   if (it == end) {
-    return std::unexpected("Expected member accessor in value reference");
+    return std::unexpected{"Expected member accessor in value reference"};
   }
   auto path = parsePath(ctx, it, end);
   if (!path) {
-    return std::unexpected(fmt::format("Invalid path in value reference: {}", path.error()));
+    return std::unexpected{fmt::format("Invalid path in value reference: {}", path.error())};
   }
   it = path->second;
   if (it == end || *it != ')') {
-    return std::unexpected("Expected ')' in value reference");
+    return std::unexpected{"Expected ')' in value reference"};
   }
   ++it;
   return ResultT{{idx, std::move(path->first)}, it};
@@ -664,10 +664,10 @@ std::unique_ptr<Spec::Pattern> parseMap(const Spec::Context& ctx, const rapidjso
 std::expected<std::pair<Spec::MatchingIndex, Spec::It>, std::string> parseMatchingIndex(Spec::It begin, Spec::It end) {
   auto it = begin;
   if (it == end) {
-    return std::unexpected("Empty matching index");
+    return std::unexpected{"Empty matching index"};
   }
   if (*it != '#') {
-    return std::unexpected("Matching must start with a '#'");
+    return std::unexpected{"Matching must start with a '#'"};
   }
   ++it;
   auto idx_begin = it;
@@ -688,10 +688,10 @@ std::expected<std::pair<Spec::Destination, Spec::It>, std::string> parseDestinat
   while (!isEnd()) {
     if (auto match_idx = parseMatchingIndex(ch_it, end)) {
       if (type != Spec::MemberType::INDEX) {
-        return std::unexpected("Matching index can only be used in index context, e.g. apple[#2]");
+        return std::unexpected{"Matching index can only be used in index context, e.g. apple[#2]"};
       }
       if (!ctx.find(match_idx->first)) {
-        return std::unexpected(fmt::format("Invalid matching index at {} to ancestor {}", ctx.path(), match_idx->first));
+        return std::unexpected{fmt::format("Invalid matching index at {} to ancestor {}", ctx.path(), match_idx->first)};
       }
       Spec::Destination::value_type result_element{match_idx->first, type};
       result.push_back(result_element);
@@ -705,11 +705,11 @@ std::expected<std::pair<Spec::Destination, Spec::It>, std::string> parseDestinat
       result.push_back({std::move(templ->first), type});
       ch_it = templ->second;
     } else {
-      return std::unexpected(fmt::format("Could not parse neither value reference or template in {} at {}", ctx.path(), std::distance(begin, ch_it)));
+      return std::unexpected{fmt::format("Could not parse neither value reference or template in {} at {}", ctx.path(), std::distance(begin, ch_it))};
     }
     if (type == Spec::MemberType::INDEX) {
       if (ch_it == end || *ch_it != ']') {
-        return std::unexpected(fmt::format("Expected closing index ']' in {} at {}", ctx.path(), std::distance(begin, ch_it)));
+        return std::unexpected{fmt::format("Expected closing index ']' in {} at {}", ctx.path(), std::distance(begin, ch_it))};
       }
       ++ch_it;
     }
@@ -719,14 +719,14 @@ std::expected<std::pair<Spec::Destination, Spec::It>, std::string> parseDestinat
       } else if (*ch_it == '[') {
         type = Spec::MemberType::INDEX;
       } else {
-        return std::unexpected(fmt::format("Unexpected destination delimiter '{}' in {} at {}", *ch_it, ctx.path(), std::distance(begin, ch_it)));
+        return std::unexpected{fmt::format("Unexpected destination delimiter '{}' in {} at {}", *ch_it, ctx.path(), std::distance(begin, ch_it))};
       }
       ++ch_it;
       if (ch_it == end) {
         if (type == Spec::MemberType::FIELD) {
-          return std::unexpected(fmt::format("Unterminated member in {} at {}", ctx.path(), std::distance(begin, ch_it)));
+          return std::unexpected{fmt::format("Unterminated member in {} at {}", ctx.path(), std::distance(begin, ch_it))};
         } else {
-          return std::unexpected(fmt::format("Unterminated indexed member in {} at {}", ctx.path(), std::distance(begin, ch_it)));
+          return std::unexpected{fmt::format("Unterminated indexed member in {} at {}", ctx.path(), std::distance(begin, ch_it))};
         }
       }
     }
@@ -961,20 +961,20 @@ std::expected<std::reference_wrapper<const rapidjson::Value>, std::string> resol
     if (type == Spec::MemberType::FIELD) {
       full_path += "." + member;
       if (!result.get().IsObject()) {
-        return std::unexpected(fmt::format("Expected object at {}", full_path));
+        return std::unexpected{fmt::format("Expected object at {}", full_path)};
       }
       if (!result.get().HasMember(member)) {
-        return std::unexpected(fmt::format("Object does not have member '{}' at {}", member, full_path));
+        return std::unexpected{fmt::format("Object does not have member '{}' at {}", member, full_path)};
       }
       result = result.get()[member];
     } else if (type == Spec::MemberType::INDEX) {
       size_t idx = std::stoull(member);
       full_path += "[" + member + "]";
       if (!result.get().IsArray()) {
-        return std::unexpected(fmt::format("Expected array at {}", full_path));
+        return std::unexpected{fmt::format("Expected array at {}", full_path)};
       }
       if (result.get().Size() <= idx) {
-        return std::unexpected(fmt::format("Array of size {} does not have item at index {}  at {}", result.get().Size(), idx, full_path));
+        return std::unexpected{fmt::format("Array of size {} does not have item at index {}  at {}", result.get().Size(), idx, full_path)};
       }
       result = result.get()[gsl::narrow<rapidjson::SizeType>(idx)];
     }
@@ -988,13 +988,13 @@ std::expected<Spec, std::string> Spec::parse(std::string_view str, std::shared_p
   rapidjson::Document doc;
   rapidjson::ParseResult res = doc.Parse(str.data(), str.length());
   if (!res) {
-    return std::unexpected(fmt::format("{} at {}", rapidjson::GetParseError_En(res.Code()), res.Offset()));
+    return std::unexpected{fmt::format("{} at {}", rapidjson::GetParseError_En(res.Code()), res.Offset())};
   }
   try {
     Spec::Context ctx{.matches = {"root"}, .logger = std::move(logger)};
     return Spec{parseMap(ctx, doc)};
   } catch (const std::exception& ex) {
-    return std::unexpected(ex.what());
+    return std::unexpected{ex.what()};
   }
 }
 
@@ -1135,7 +1135,7 @@ std::expected<rapidjson::Document, std::string> Spec::process(const rapidjson::V
     value_->process(Context{.matches = {"root"}, .node = &input, .logger = std::move(logger)}, input, output);
     return output;
   } catch (const std::exception& ex) {
-    return std::unexpected(ex.what());
+    return std::unexpected{ex.what()};
   }
 }
 

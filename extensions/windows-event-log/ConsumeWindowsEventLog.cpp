@@ -441,18 +441,18 @@ std::expected<std::string, std::string> ConsumeWindowsEventLog::renderEventAsXml
   DWORD propertyCount = 0;
   if (!EvtRender(nullptr, event_handle, EvtRenderEventXml, size, buf.get(), &used, &propertyCount)) {
     if (ERROR_INSUFFICIENT_BUFFER != GetLastError()) {
-      return std::unexpected(fmt::format("EvtRender failed due to {}", wel::getLastError()));
+      return std::unexpected{fmt::format("EvtRender failed due to {}", wel::getLastError())};
     }
     if (used > max_buffer_size_) {
-      return std::unexpected(fmt::format("Dropping event because it couldn't be rendered within {} bytes.", max_buffer_size_));
+      return std::unexpected{fmt::format("Dropping event because it couldn't be rendered within {} bytes.", max_buffer_size_)};
     }
     size = used;
     buf.reset((LPWSTR) malloc(size));
     if (!buf) {
-      return std::unexpected("malloc failed");
+      return std::unexpected{"malloc failed"};
     }
     if (!EvtRender(nullptr, event_handle, EvtRenderEventXml, size, buf.get(), &used, &propertyCount)) {
-      return std::unexpected(fmt::format("EvtRender failed due to {}", wel::getLastError()));
+      return std::unexpected{fmt::format("EvtRender failed due to {}", wel::getLastError())};
     }
   }
   logger_->log_trace("Event rendered with size {}", used);
@@ -462,11 +462,11 @@ std::expected<std::string, std::string> ConsumeWindowsEventLog::renderEventAsXml
 std::expected<wel::ProcessedEvent, std::string> ConsumeWindowsEventLog::processEvent(EVT_HANDLE event_handle) {
   auto event_as_xml = renderEventAsXml(event_handle);
   if (!event_as_xml)
-    return std::unexpected(event_as_xml.error());
+    return std::unexpected{event_as_xml.error()};
 
   pugi::xml_document doc;
   if (!doc.load_string(event_as_xml->c_str()))
-    return std::unexpected("Invalid XML produced");
+    return std::unexpected{"Invalid XML produced"};
 
   wel::ProcessedEvent result;
 

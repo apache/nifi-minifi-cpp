@@ -442,10 +442,10 @@ std::expected<T, std::error_code> parseNumber(std::string_view input) {
   T t{};
   const auto [ptr, ec] = std::from_chars(input.data(), input.data() + input.size(), t);
   if (ec != std::errc()) {
-    return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
   if (ptr != input.data() + input.size()) {
-    return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
   return t;
 }

@@ -43,7 +43,7 @@ void ConfigurableComponentImpl::setSupportedProperties(std::span<const Property>
 std::expected<std::string, std::error_code> ConfigurableComponentImpl::getProperty(const std::string_view name) const {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   const auto it = supported_properties_.find(name);
-  if (it == supported_properties_.end()) { return std::unexpected(PropertyErrorCode::NotSupportedProperty); }
+  if (it == supported_properties_.end()) { return std::unexpected{PropertyErrorCode::NotSupportedProperty}; }
   const Property& prop = it->second;
   return prop.getValue() | utils::transform([](const std::string_view value_view) -> std::string { return std::string{value_view}; });
 }
@@ -51,7 +51,7 @@ std::expected<std::string, std::error_code> ConfigurableComponentImpl::getProper
 std::expected<void, std::error_code> ConfigurableComponentImpl::setProperty(const std::string_view name, std::string value) {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   const auto it = supported_properties_.find(name);
-  if (it == supported_properties_.end()) { return std::unexpected(PropertyErrorCode::NotSupportedProperty); }
+  if (it == supported_properties_.end()) { return std::unexpected{PropertyErrorCode::NotSupportedProperty}; }
   Property& prop = it->second;
 
   return prop.setValue(std::move(value));
@@ -60,7 +60,7 @@ std::expected<void, std::error_code> ConfigurableComponentImpl::setProperty(cons
 std::expected<void, std::error_code> ConfigurableComponentImpl::clearProperty(const std::string_view name) {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   const auto it = supported_properties_.find(name);
-  if (it == supported_properties_.end()) { return std::unexpected(PropertyErrorCode::NotSupportedProperty); }
+  if (it == supported_properties_.end()) { return std::unexpected{PropertyErrorCode::NotSupportedProperty}; }
   Property& prop = it->second;
 
   prop.clearValues();
@@ -70,7 +70,7 @@ std::expected<void, std::error_code> ConfigurableComponentImpl::clearProperty(co
 std::expected<void, std::error_code> ConfigurableComponentImpl::appendProperty(const std::string_view name, std::string value) {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   const auto it = supported_properties_.find(name);
-  if (it == supported_properties_.end()) { return std::unexpected(PropertyErrorCode::NotSupportedProperty); }
+  if (it == supported_properties_.end()) { return std::unexpected{PropertyErrorCode::NotSupportedProperty}; }
   Property& prop = it->second;
 
   return prop.appendValue(std::move(value));
@@ -79,10 +79,10 @@ std::expected<void, std::error_code> ConfigurableComponentImpl::appendProperty(c
 std::expected<std::string, std::error_code> ConfigurableComponentImpl::getDynamicProperty(const std::string_view name) const {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   if (!supportsDynamicProperties()) {
-    return std::unexpected(PropertyErrorCode::DynamicPropertiesNotSupported);
+    return std::unexpected{PropertyErrorCode::DynamicPropertiesNotSupported};
   }
   const auto it = dynamic_properties_.find(name);
-  if (it == dynamic_properties_.end()) { return std::unexpected(PropertyErrorCode::PropertyNotSet); }
+  if (it == dynamic_properties_.end()) { return std::unexpected{PropertyErrorCode::PropertyNotSet}; }
   const Property& prop = it->second;
   return prop.getValue() | utils::transform([](const std::string_view value_view) -> std::string { return std::string{value_view}; });
 }
@@ -90,7 +90,7 @@ std::expected<std::string, std::error_code> ConfigurableComponentImpl::getDynami
 std::expected<void, std::error_code> ConfigurableComponentImpl::setDynamicProperty(std::string name, std::string value) {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   if (!supportsDynamicProperties()) {
-    return std::unexpected(PropertyErrorCode::DynamicPropertiesNotSupported);
+    return std::unexpected{PropertyErrorCode::DynamicPropertiesNotSupported};
   }
   Property& prop = dynamic_properties_[std::move(name)];
   prop.setSupportsExpressionLanguage(true);  // all dynamic properties support EL
@@ -100,7 +100,7 @@ std::expected<void, std::error_code> ConfigurableComponentImpl::setDynamicProper
 std::expected<void, std::error_code> ConfigurableComponentImpl::appendDynamicProperty(const std::string_view name, std::string value) {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   if (!supportsDynamicProperties()) {
-    return std::unexpected(PropertyErrorCode::DynamicPropertiesNotSupported);
+    return std::unexpected{PropertyErrorCode::DynamicPropertiesNotSupported};
   }
   Property& prop = dynamic_properties_[std::string{name}];
   prop.setSupportsExpressionLanguage(true);  // all dynamic properties support EL
@@ -126,7 +126,7 @@ std::map<std::string, std::string> ConfigurableComponentImpl::getDynamicProperti
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   const auto it = supported_properties_.find(name);
-  if (it == supported_properties_.end()) { return std::unexpected(PropertyErrorCode::NotSupportedProperty); }
+  if (it == supported_properties_.end()) { return std::unexpected{PropertyErrorCode::NotSupportedProperty}; }
   const Property& prop = it->second;
   return prop.getAllValues() | utils::transform([](const auto& values) -> std::vector<std::string> { return std::vector<std::string>{values.begin(), values.end()}; });
 }
@@ -135,7 +135,7 @@ std::map<std::string, std::string> ConfigurableComponentImpl::getDynamicProperti
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   const auto it = dynamic_properties_.find(name);
-  if (it == dynamic_properties_.end()) { return std::unexpected(PropertyErrorCode::PropertyNotSet); }
+  if (it == dynamic_properties_.end()) { return std::unexpected{PropertyErrorCode::PropertyNotSet}; }
   const Property& prop = it->second;
   return prop.getAllValues() | utils::transform([](const auto& values) -> std::vector<std::string> { return std::vector<std::string>{values.begin(), values.end()}; });
 }
@@ -152,7 +152,7 @@ std::map<std::string, std::string> ConfigurableComponentImpl::getDynamicProperti
 [[nodiscard]] std::expected<Property, std::error_code> ConfigurableComponentImpl::getSupportedProperty(const std::string_view name) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
   const auto it = supported_properties_.find(name);
-  if (it == supported_properties_.end()) { return std::unexpected(PropertyErrorCode::NotSupportedProperty); }
+  if (it == supported_properties_.end()) { return std::unexpected{PropertyErrorCode::NotSupportedProperty}; }
   return it->second;
 }
 

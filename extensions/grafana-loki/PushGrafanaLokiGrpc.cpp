@@ -135,7 +135,7 @@ std::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std::v
   }
 
   if (!push_channel_->WaitForConnected(std::chrono::system_clock::now() + connection_timeout_ms_)) {
-    return std::unexpected("Timeout waiting for connection to Grafana Loki gRPC server. Please check if the server is running and reachable and the Url value is correct.");
+    return std::unexpected{"Timeout waiting for connection to Grafana Loki gRPC server. Please check if the server is running and reachable and the Url value is correct."};
   }
 
   logproto::PushResponse response;
@@ -148,7 +148,7 @@ std::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std::v
   if (status.ok()) {
     return {};
   } else {
-    return std::unexpected(status.error_message());
+    return std::unexpected{status.error_message()};
   }
 }
 

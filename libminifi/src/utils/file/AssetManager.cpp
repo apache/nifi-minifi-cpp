@@ -182,7 +182,7 @@ std::expected<void, std::string> AssetManager::sync(
   persist();
 
   if (!new_asset_errors.empty()) {
-    return std::unexpected(new_asset_errors);
+    return std::unexpected{new_asset_errors};
   }
 
   return {};

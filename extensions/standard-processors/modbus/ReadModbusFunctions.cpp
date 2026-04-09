@@ -38,11 +38,11 @@ std::vector<std::byte> ReadModbusFunction::requestBytes() const {
 
 [[nodiscard]] auto ReadModbusFunction::getRespBytes(std::span<const std::byte> resp_pdu) const -> std::expected<std::span<const std::byte>, std::error_code> {
   if (resp_pdu.size() < 2) {
-    return std::unexpected(ModbusExceptionCode::MessageTooShort);
+    return std::unexpected{ModbusExceptionCode::MessageTooShort};
   }
 
   if (const auto resp_function_code = resp_pdu.front(); resp_function_code != getFunctionCode()) {
-    return std::unexpected(ModbusExceptionCode::UnexpectedResponseFunctionCode);
+    return std::unexpected{ModbusExceptionCode::UnexpectedResponseFunctionCode};
   }
 
   const auto resp_byte_count = static_cast<uint8_t>(resp_pdu[1]);
@@ -50,11 +50,11 @@ std::vector<std::byte> ReadModbusFunction::requestBytes() const {
   constexpr uint8_t unit_id_length = 1;
   const uint8_t expected_resp_pdu_size = resp_byte_count + function_code_length + unit_id_length;
   if (resp_pdu.size() != expected_resp_pdu_size) {
-    return std::unexpected(ModbusExceptionCode::UnexpectedResponsePDUSize);
+    return std::unexpected{ModbusExceptionCode::UnexpectedResponsePDUSize};
   }
 
   if (resp_byte_count != expectedByteCount()) {
-    return std::unexpected(ModbusExceptionCode::InvalidResponse);
+    return std::unexpected{ModbusExceptionCode::InvalidResponse};
   }
 
   return resp_pdu.subspan(2, resp_pdu.size()-2);
@@ -72,7 +72,7 @@ std::vector<std::byte> ReadModbusFunction::requestBytes() const {
 [[nodiscard]] std::expected<core::RecordField, std::error_code> ReadCoilStatus::responseToRecordField(const std::span<const std::byte> resp_pdu) const {
   const auto resp_bytes = getRespBytes(resp_pdu);
   if (!resp_bytes)
-    return std::unexpected(resp_bytes.error());
+    return std::unexpected{resp_bytes.error()};
 
 
   std::vector<bool> coils{};

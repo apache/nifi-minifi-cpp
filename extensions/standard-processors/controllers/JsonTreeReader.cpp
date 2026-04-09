@@ -47,7 +47,7 @@ std::expected<core::RecordField, std::error_code> parse(const rapidjson::Value& 
     for (const auto& element : json_value.GetArray()) {
       auto element_field = parse(element);
       if (!element_field)
-        return std::unexpected(element_field.error());
+        return std::unexpected{element_field.error()};
       record_array.push_back(std::move(*element_field));
     }
     return core::RecordField{std::move(record_array)};
@@ -58,25 +58,25 @@ std::expected<core::RecordField, std::error_code> parse(const rapidjson::Value& 
       auto element_key = m.name.GetString();
       auto element_field = parse(m.value);
       if (!element_field)
-        return std::unexpected(element_field.error());
+        return std::unexpected{element_field.error()};
       record_object.emplace(element_key, std::move(*element_field));
     }
     return core::RecordField{std::move(record_object)};
   }
 
-  return std::unexpected(std::make_error_code(std::errc::invalid_argument));
+  return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
 }
 
 std::expected<core::Record, std::error_code> parseRecord(rapidjson::Value& record_json) {
   core::Record result;
   if (!record_json.IsObject()) {
-    return std::unexpected(std::make_error_code(std::errc::invalid_argument));
+    return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
   }
   for (const auto& member : record_json.GetObject()) {
     const auto element_key = member.name.GetString();
     auto element_field = parse(member.value);
     if (!element_field)
-      return std::unexpected(element_field.error());
+      return std::unexpected{element_field.error()};
     result.emplace(element_key, std::move(*element_field));
   }
   return result;
@@ -130,7 +130,7 @@ std::expected<core::RecordSet, std::error_code> JsonTreeReader::read(io::InputSt
     return read_ret;
   }(input_stream);
   if (io::isError(read_result))
-    return std::unexpected(std::make_error_code(std::errc::invalid_argument));
+    return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
   return record_set;
 }
 
