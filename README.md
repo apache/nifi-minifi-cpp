@@ -15,7 +15,8 @@
 
 [<img src="https://nifi.apache.org/assets/images/minifi/minifi-logo.svg" width="300" height="126" alt="Apache NiFi MiNiFi"/>](https://nifi.apache.org/minifi/)
 
-# Apache NiFi -  MiNiFi - C++ [![MiNiFi-CPP CI](https://github.com/apache/nifi-minifi-cpp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/apache/nifi-minifi-cpp/actions/workflows/ci.yml?query=workflow%3A%22MiNiFi-CPP+CI%22+branch%3Amain)
+# Apache NiFi -  MiNiFi - C++
+[![MiNiFi-CPP CI](https://github.com/apache/nifi-minifi-cpp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/apache/nifi-minifi-cpp/actions/workflows/ci.yml?query=workflow%3A%22MiNiFi-CPP+CI%22+branch%3Amain)<br>[![Check Supported Compilers](https://github.com/apache/nifi-minifi-cpp/actions/workflows/compiler-support.yml/badge.svg?branch=main)](https://github.com/apache/nifi-minifi-cpp/actions/workflows/compiler-support.yml?query=branch%3Amain)<br>[![MiNiFi-CPP Memcheck](https://github.com/apache/nifi-minifi-cpp/actions/workflows/memcheck_ci.yml/badge.svg?branch=main)](https://github.com/apache/nifi-minifi-cpp/actions/workflows/memcheck_ci.yml?query=branch%3Amain)<br>[![MiNiFi-CPP Verify Package](https://github.com/apache/nifi-minifi-cpp/actions/workflows/verify-package.yml/badge.svg?branch=main)](https://github.com/apache/nifi-minifi-cpp/actions/workflows/verify-package.yml?query=branch%3Amain)<br>[![Status Page](https://img.shields.io/website?url=https%3A%2F%2Fapache.github.io%2Fnifi-minifi-cpp%2Fstatus%2F&label=Status%20Page)](https://apache.github.io/nifi-minifi-cpp/status/)
 
 MiNiFi is a child project effort of Apache NiFi.  This repository is for a native implementation in C++.
 

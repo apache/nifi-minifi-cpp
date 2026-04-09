@@ -1,0 +1,661 @@
+<!-- This site was generated with the help of the generative AI model Claude Opus 4.6 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nifi-minifi-cpp — Status Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --border: #d8dae0;
+    --border-bright: #bfc2ca;
+    --text: #1a1a1e;
+    --muted: #6b7280;
+    --accent: #5b4fd6;
+    --green: #16a34a;
+    --green-dim: #dcfce7;
+    --red: #dc2626;
+    --red-dim: #fee2e2;
+    --yellow: #ca8a04;
+    --yellow-dim: #fef9c3;
+    --blue: #2563eb;
+    --blue-dim: #dbeafe;
+  }
+
+  [data-theme="dark"] {
+    --bg: #0a0a0b;
+    --surface: #111114;
+    --border: #222228;
+    --border-bright: #333340;
+    --text: #e2e2e8;
+    --muted: #666672;
+    --accent: #7c6aff;
+    --green: #22c55e;
+    --green-dim: #15803d22;
+    --red: #ef4444;
+    --red-dim: #7f1d1d22;
+    --yellow: #eab308;
+    --yellow-dim: #71320a22;
+    --blue: #3b82f6;
+    --blue-dim: #1e3a5f22;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+
+  .page-header { margin-bottom: 36px; }
+
+  .repo-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .repo-title a { color: inherit; text-decoration: none; }
+  .repo-title a:hover { color: var(--accent); }
+  .repo-title .slash { color: var(--muted); font-weight: 300; }
+
+  .page-subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .page-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .last-updated {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .overall-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+  }
+  .overall-badge.ok       { background: var(--green-dim); color: var(--green);  border: 1px solid #22c55e44; }
+  .overall-badge.degraded { background: var(--yellow-dim); color: var(--yellow); border: 1px solid #eab30844; }
+  .overall-badge.outage   { background: var(--red-dim);   color: var(--red);    border: 1px solid #ef444444; }
+  .overall-badge.loading  { background: var(--blue-dim);  color: var(--blue);   border: 1px solid #3b82f644; }
+
+  .refresh-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .refresh-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .divider span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .workflows-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .workflow-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s, transform 0.15s;
+    animation: fadeUp 0.35s ease both;
+  }
+  .workflow-card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-1px);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-dot.success    { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .status-dot.failure    { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+  .status-dot.cancelled  { background: var(--muted); }
+  .status-dot.skipped    { background: var(--muted); opacity: 0.5; }
+  .status-dot.in_progress,
+  .status-dot.queued,
+  .status-dot.waiting    { background: var(--blue);  box-shadow: 0 0 8px var(--blue); animation: pulse 1.5s infinite; }
+  .status-dot.unknown    { background: var(--muted); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .workflow-info { flex: 1; min-width: 0; }
+
+  .workflow-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .workflow-sub {
+    display: flex;
+    gap: 14px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .workflow-sub span,
+  .workflow-sub a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .workflow-sub a:hover { color: var(--accent); }
+  .workflow-sub .err { color: var(--red) !important; }
+
+  .history-bars {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+  .bar {
+    width: 5px;
+    height: 20px;
+    border-radius: 2px;
+    background: var(--border-bright);
+  }
+  .bar.success    { background: #bbf7d0; border: 1px solid #22c55e; }
+  .bar.failure    { background: #fecaca; border: 1px solid #ef4444; }
+  .bar.in_progress,
+  .bar.queued     { background: #bfdbfe; border: 1px solid #3b82f6; }
+  .bar.cancelled,
+  .bar.skipped    { background: #d1d5db; }
+
+  [data-theme="dark"] .bar.success    { background: #22c55e55; border: 1px solid #22c55e88; }
+  [data-theme="dark"] .bar.failure    { background: #ef444455; border: 1px solid #ef444488; }
+  [data-theme="dark"] .bar.in_progress,
+  [data-theme="dark"] .bar.queued     { background: #3b82f655; border: 1px solid #3b82f688; }
+  [data-theme="dark"] .bar.cancelled,
+  [data-theme="dark"] .bar.skipped    { background: #333340; }
+
+  [data-theme="dark"] .overall-badge.ok       { border-color: #22c55e44; }
+  [data-theme="dark"] .overall-badge.degraded { border-color: #eab30844; }
+  [data-theme="dark"] .overall-badge.outage   { border-color: #ef444444; }
+  [data-theme="dark"] .overall-badge.loading  { border-color: #3b82f644; }
+
+  .status-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+    text-align: right;
+    min-width: 80px;
+  }
+  .status-label.success    { color: var(--green); }
+  .status-label.failure    { color: var(--red); }
+  .status-label.in_progress,
+  .status-label.queued,
+  .status-label.waiting    { color: var(--blue); }
+  .status-label.cancelled,
+  .status-label.skipped,
+  .status-label.unknown    { color: var(--muted); }
+
+  .state-msg {
+    text-align: center;
+    padding: 60px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    font-size: 13px;
+    border: 1px dashed var(--border-bright);
+    border-radius: 8px;
+    line-height: 2;
+  }
+  .state-msg .icon { font-size: 32px; display: block; margin-bottom: 12px; }
+
+  .footer-note {
+    text-align: center;
+    margin-top: 40px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 2;
+  }
+  .footer-note a { color: var(--accent); text-decoration: none; }
+  .footer-note a:hover { text-decoration: underline; }
+
+  .token-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    flex-wrap: wrap;
+  }
+  .token-bar.hidden { display: none; }
+  .token-bar label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .token-bar input {
+    flex: 1;
+    min-width: 180px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border-bright);
+    border-radius: 5px;
+    padding: 5px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .token-bar input:focus { border-color: var(--accent); }
+  .token-bar input::placeholder { color: var(--muted); }
+  .token-bar button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .token-bar button:hover { color: var(--text); border-color: var(--muted); }
+  .token-bar .token-status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+  }
+  .token-toggle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .token-toggle:hover { color: var(--text); border-color: var(--muted); }
+
+  .theme-toggle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .theme-toggle:hover { color: var(--text); border-color: var(--muted); }
+
+  @media (max-width: 600px) {
+    .history-bars { display: none; }
+    .status-label { min-width: unset; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="page-header">
+    <div class="repo-title">
+      <a id="repoLink" href="#" target="_blank">
+        <span id="repoOwner"></span><span class="slash"> / </span><span id="repoName"></span>
+      </a>
+    </div>
+    <div class="page-subtitle">Status Page</div>
+    <div class="page-meta">
+      <span class="last-updated" id="lastUpdated">Loading…</span>
+      <span class="overall-badge loading" id="overallBadge">● LOADING</span>
+      <button class="refresh-btn" onclick="load()">↻ Refresh</button>
+      <button class="token-toggle" id="tokenToggle" onclick="toggleTokenBar()">🔑 Token</button>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙 Dark</button>
+    </div>
+  </div>
+
+  <div class="token-bar hidden" id="tokenBar">
+    <label for="tokenInput">GitHub PAT:</label>
+    <input type="password" id="tokenInput" placeholder="ghp_... (stored in localStorage)" />
+    <button onclick="saveToken()">Save</button>
+    <button onclick="clearToken()">Clear</button>
+    <span class="token-status" id="tokenStatus"></span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);width:100%;margin-top:4px;">
+      Unauthenticated GitHub API requests are limited to 60/hr. Adding a <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent);">personal access token</a> (no scopes needed for public repos) raises the limit to 5,000/hr. The token is only stored in your browser's localStorage.
+    </span>
+  </div>
+
+  <div class="divider"><span>Workflows</span></div>
+
+  <div class="workflows-list" id="workflowsList">
+    <div class="state-msg"><span class="icon">⏳</span>Fetching workflow status…</div>
+  </div>
+
+  <div class="footer-note">
+    Click ↻ Refresh to update &nbsp;·&nbsp;
+    History bars show last 10 runs &nbsp;·&nbsp;
+    Data from <a href="https://docs.github.com/en/rest/actions/workflow-runs" target="_blank">GitHub Actions API</a>
+  </div>
+
+</div>
+<script>
+  function detectRepo() {
+    const hostname = window.location.hostname;
+    const parts = hostname.split('.');
+    if (parts.length >= 3 && parts[1] === 'github' && parts[2] === 'io') {
+      const owner = parts[0];
+      const repo = window.location.pathname.split('/').filter(Boolean)[0] || '';
+      if (owner && repo) return { owner, repo };
+    }
+    throw new Error('Unable to detect GitHub repo from URL. Make sure this page is hosted on GitHub Pages with a URL like https://OWNER.github.io/REPO/');
+  }
+
+  const { owner: OWNER, repo: REPO } = detectRepo();
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('repoOwner').textContent = OWNER;
+    document.getElementById('repoName').textContent  = REPO;
+    document.getElementById('repoLink').href = `https://github.com/${OWNER}/${REPO}`;
+  });
+
+
+  const CONFIG = {
+    owner: OWNER,
+    repo: REPO,
+    branch: 'main',
+    workflows: [
+      'ci.yml',
+      'memcheck_ci.yml',
+      'compiler-support.yml',
+      'create-release-artifacts.yml',
+      'verify-package.yml'
+    ],
+    token: localStorage.getItem('gh_status_token') || ''
+  };
+
+
+  function getHeaders() {
+    const h = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+    if (CONFIG.token) h['Authorization'] = `Bearer ${CONFIG.token}`;
+    return h;
+  }
+
+  async function fetchWorkflowName(file) {
+    try {
+      const r = await fetch(
+        `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/actions/workflows/${file}`,
+        { headers: getHeaders() }
+      );
+      if (!r.ok) return null;
+      const data = await r.json();
+      return data.name || null;
+    } catch { return null; }
+  }
+
+  async function fetchWorkflows() {
+    const { owner, repo, workflows } = CONFIG;
+    const results = [];
+    for (const file of workflows) {
+      try {
+        const r = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${file}/runs?per_page=10&branch=${CONFIG.branch}`,
+          { headers: getHeaders() }
+        );
+        if (!r.ok) {
+          const e = await r.json().catch(() => ({}));
+          const name = await fetchWorkflowName(file);
+          results.push({ file, name, error: e.message || `HTTP ${r.status}` });
+          continue;
+        }
+        const data = await r.json();
+        const runs = data.workflow_runs || [];
+        if (runs.length === 0) {
+          const name = await fetchWorkflowName(file);
+          results.push({ file, name, error: 'No runs found' });
+          continue;
+        }
+        const latest = runs[0];
+        const name = await fetchWorkflowName(file) || latest.name;
+        results.push({
+          file,
+          name,
+          status: latest.status,
+          conclusion: latest.conclusion,
+          html_url: latest.html_url,
+          head_branch: latest.head_branch,
+          run_number: latest.run_number,
+          updated_at: latest.updated_at,
+          history: runs.map(r => r.conclusion || r.status)
+        });
+      } catch (err) {
+        results.push({ file, error: err.message });
+      }
+    }
+    return results;
+  }
+
+  function effectiveStatus(wf) {
+    if (wf.error) return 'unknown';
+    if (wf.status === 'completed') return wf.conclusion || 'unknown';
+    return wf.status || 'unknown';
+  }
+
+  const LABELS = {
+    success: 'PASSING', failure: 'FAILING', cancelled: 'CANCELLED',
+    skipped: 'SKIPPED', in_progress: 'RUNNING', queued: 'QUEUED',
+    waiting: 'WAITING', unknown: 'UNKNOWN'
+  };
+
+  function timeAgo(iso) {
+    const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+    if (diff < 60)    return `${diff}s ago`;
+    if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function renderCard(wf, idx) {
+    const s = effectiveStatus(wf);
+    const bars = (wf.history || []).slice(0, 10).map(h => {
+      const c = h === 'completed' ? 'success' : (h || 'unknown');
+      return `<div class="bar ${c}" title="${c}"></div>`;
+    }).join('');
+    return `
+      <div class="workflow-card" style="animation-delay:${idx * 0.06}s">
+        <div class="status-dot ${s}"></div>
+        <div class="workflow-info">
+          <div class="workflow-name">${wf.name || wf.file}</div>
+          <div class="workflow-sub">
+            <span>${wf.file}</span>
+            ${wf.head_branch  ? `<span>branch: ${wf.head_branch}</span>` : ''}
+            ${wf.run_number   ? `<a href="${wf.html_url}" target="_blank">run #${wf.run_number}</a>` : ''}
+            ${wf.updated_at   ? `<span>${timeAgo(wf.updated_at)}</span>` : ''}
+            ${wf.error        ? `<span class="err">⚠ ${wf.error}</span>` : ''}
+          </div>
+        </div>
+        <div class="history-bars">${bars}</div>
+        <div class="status-label ${s}">${LABELS[s] || s.toUpperCase()}</div>
+      </div>`;
+  }
+
+  async function load() {
+    document.getElementById('lastUpdated').textContent = 'Refreshing…';
+    document.getElementById('overallBadge').className = 'overall-badge loading';
+    document.getElementById('overallBadge').textContent = '● LOADING';
+
+    try {
+      const workflows = await fetchWorkflows();
+      const statuses  = workflows.map(effectiveStatus);
+      const hasFail    = statuses.some(s => s === 'failure');
+      const hasRunning = statuses.some(s => ['in_progress','queued','waiting'].includes(s));
+      const allOk      = statuses.every(s => s === 'success');
+
+      const badge = document.getElementById('overallBadge');
+      if      (hasFail)    { badge.className = 'overall-badge outage';   badge.textContent = '● DEGRADED'; }
+      else if (hasRunning) { badge.className = 'overall-badge loading';  badge.textContent = '● RUNNING'; }
+      else if (allOk)      { badge.className = 'overall-badge ok';       badge.textContent = '● ALL PASSING'; }
+      else                 { badge.className = 'overall-badge degraded'; badge.textContent = '● PARTIAL'; }
+
+      document.getElementById('lastUpdated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+      document.getElementById('workflowsList').innerHTML = workflows.map(renderCard).join('');
+    } catch (err) {
+      document.getElementById('workflowsList').innerHTML =
+        `<div class="state-msg"><span class="icon">⚠️</span>${err.message}<br>You may be hitting the GitHub API rate limit (60 req/hr unauthenticated).<br>Click the 🔑 Token button above to add a GitHub PAT.</div>`;
+      showTokenBar();
+      document.getElementById('overallBadge').className = 'overall-badge outage';
+      document.getElementById('overallBadge').textContent = '● ERROR';
+      document.getElementById('lastUpdated').textContent = `Failed at ${new Date().toLocaleTimeString()}`;
+    }
+
+  }
+
+  function toggleTokenBar() {
+    document.getElementById('tokenBar').classList.toggle('hidden');
+  }
+
+  function showTokenBar() {
+    document.getElementById('tokenBar').classList.remove('hidden');
+  }
+
+  function saveToken() {
+    const val = document.getElementById('tokenInput').value.trim();
+    if (!val) return;
+    localStorage.setItem('gh_status_token', val);
+    CONFIG.token = val;
+    document.getElementById('tokenInput').value = '';
+    document.getElementById('tokenStatus').textContent = '✓ saved';
+    setTimeout(() => { document.getElementById('tokenStatus').textContent = '● token set'; }, 2000);
+    load();
+  }
+
+  function clearToken() {
+    localStorage.removeItem('gh_status_token');
+    CONFIG.token = '';
+    document.getElementById('tokenInput').value = '';
+    document.getElementById('tokenStatus').textContent = '✓ cleared';
+    setTimeout(() => { document.getElementById('tokenStatus').textContent = ''; }, 2000);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (CONFIG.token) {
+      document.getElementById('tokenStatus').textContent = '● token set';
+    }
+  });
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const btn = document.getElementById('themeToggle');
+    btn.textContent = theme === 'light' ? '🌙 Dark' : '☀ Light';
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'light' ? 'dark' : 'light';
+    localStorage.setItem('status_theme', next);
+    applyTheme(next);
+  }
+
+  (function initTheme() {
+    const saved = localStorage.getItem('status_theme') || 'light';
+    applyTheme(saved);
+  })();
+
+  load();
+</script>
+</body>
+</html>
