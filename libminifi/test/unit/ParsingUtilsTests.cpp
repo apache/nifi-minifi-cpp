@@ -32,26 +32,26 @@ TEST_CASE("Test boolean parsing") {
 
 TEST_CASE("Test integral parsing") {
   CHECK(8000U == parseIntegral<uint64_t>("8000"));
-  CHECK(std::unexpected(core::ParsingErrorCode::GeneralParsingError) == parseIntegral<uint64_t>("8000 banana"));
-  CHECK(std::unexpected(core::ParsingErrorCode::GeneralParsingError) == parseIntegral<uint64_t>("-8000"));
+  CHECK(std::unexpected{core::ParsingErrorCode::GeneralParsingError} == parseIntegral<uint64_t>("8000 banana"));
+  CHECK(std::unexpected{core::ParsingErrorCode::GeneralParsingError} == parseIntegral<uint64_t>("-8000"));
 
 
-  CHECK(std::unexpected(core::ParsingErrorCode::LargerThanMaximum) == parseIntegralMinMax<uint64_t>("10", 3, 8));
-  CHECK(std::unexpected(core::ParsingErrorCode::SmallerThanMinimum) == parseIntegralMinMax<uint64_t>("2", 3, 8));
+  CHECK(std::unexpected{core::ParsingErrorCode::LargerThanMaximum} == parseIntegralMinMax<uint64_t>("10", 3, 8));
+  CHECK(std::unexpected{core::ParsingErrorCode::SmallerThanMinimum} == parseIntegralMinMax<uint64_t>("2", 3, 8));
 
-  CHECK(std::unexpected(core::ParsingErrorCode::GeneralParsingError) == parseIntegral<int16_t>("90000"));
-  CHECK(std::unexpected(core::ParsingErrorCode::GeneralParsingError) == parseIntegral<int16_t>("-90000"));
-  CHECK(std::unexpected(core::ParsingErrorCode::GeneralParsingError) == parseIntegral<int16_t>("8000 banana"));
+  CHECK(std::unexpected{core::ParsingErrorCode::GeneralParsingError} == parseIntegral<int16_t>("90000"));
+  CHECK(std::unexpected{core::ParsingErrorCode::GeneralParsingError} == parseIntegral<int16_t>("-90000"));
+  CHECK(std::unexpected{core::ParsingErrorCode::GeneralParsingError} == parseIntegral<int16_t>("8000 banana"));
 }
 
 TEST_CASE("Test data size parsing") {
   CHECK(8000U == parseDataSize("8000"));
   CHECK(8192000U == parseDataSize("8000 kB"));
 
-  CHECK(std::unexpected(core::ParsingErrorCode::GeneralParsingError) == parseDataSize("8000 banana"));
-  CHECK(std::unexpected(core::ParsingErrorCode::LargerThanMaximum) == parseDataSizeMinMax("9 MB", 3000, 8000));
-  CHECK(std::unexpected(core::ParsingErrorCode::SmallerThanMinimum) == parseDataSizeMinMax("0 GB", 3000, 8000));
-  CHECK(std::unexpected(core::ParsingErrorCode::OverflowError) == parseDataSize("20000 PB"));
+  CHECK(std::unexpected{core::ParsingErrorCode::GeneralParsingError} == parseDataSize("8000 banana"));
+  CHECK(std::unexpected{core::ParsingErrorCode::LargerThanMaximum} == parseDataSizeMinMax("9 MB", 3000, 8000));
+  CHECK(std::unexpected{core::ParsingErrorCode::SmallerThanMinimum} == parseDataSizeMinMax("0 GB", 3000, 8000));
+  CHECK(std::unexpected{core::ParsingErrorCode::OverflowError} == parseDataSize("20000 PB"));
 }
 
 TEST_CASE("Test Permissions Parsing") {

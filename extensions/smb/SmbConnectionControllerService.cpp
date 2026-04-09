@@ -67,7 +67,7 @@ std::expected<void, std::error_code> SmbConnectionControllerService::connect() {
   if (connection_result == NO_ERROR)
     return {};
 
-  return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(connection_result));
+  return std::unexpected{utils::OsUtils::windowsErrorToErrorCode(connection_result)};
 }
 
 std::expected<void, std::error_code> SmbConnectionControllerService::disconnect() {
@@ -75,7 +75,7 @@ std::expected<void, std::error_code> SmbConnectionControllerService::disconnect(
   if (disconnection_result == NO_ERROR)
     return {};
 
-  return std::unexpected(utils::OsUtils::windowsErrorToErrorCode(disconnection_result));
+  return std::unexpected{utils::OsUtils::windowsErrorToErrorCode(disconnection_result)};
 }
 
 bool SmbConnectionControllerService::isConnected() {

@@ -38,7 +38,7 @@ std::expected<std::string, std::string> podMetricsList(const kubernetes::ApiClie
   if (api_response) {
     return std::string{api_response.get()};
   } else {
-    return std::unexpected("Could not access the Kubernetes API /apis/metrics.k8s.io/v1beta1/pods");
+    return std::unexpected{"Could not access the Kubernetes API /apis/metrics.k8s.io/v1beta1/pods"};
   }
 }
 

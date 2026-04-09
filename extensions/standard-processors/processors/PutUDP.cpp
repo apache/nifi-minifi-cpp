@@ -81,7 +81,7 @@ void PutUDP::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
     std::error_code error_code;
     auto results = resolver.resolve(hostname, port, error_code);
     if (error_code)
-      return std::unexpected(error_code);
+      return std::unexpected{error_code};
     return results;
   };
 
@@ -103,7 +103,7 @@ void PutUDP::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
       logger->log_debug("sending to endpoint {} succeeded", resolver_entry.endpoint());
       return {};
     }
-    return std::unexpected(error);
+    return std::unexpected{error};
   };
 
   const auto transfer_to_success = [&session, &flow_file]() -> void {

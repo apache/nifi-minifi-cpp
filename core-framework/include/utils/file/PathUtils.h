@@ -45,20 +45,20 @@ inline std::optional<std::filesystem::path> canonicalize(const std::filesystem::
 
 inline std::expected<void, std::string> validateRelativeFilePath(const std::filesystem::path& path) {
   if (path.empty()) {
-    return std::unexpected("Empty file path");
+    return std::unexpected{"Empty file path"};
   }
   if (!path.is_relative()) {
-    return std::unexpected("File path must be a relative path '" + path.string() + "'");
+    return std::unexpected{"File path must be a relative path '" + path.string() + "'"};
   }
   if (!path.has_filename()) {
-    return std::unexpected("Filename missing in output path '" + path.string() + "'");
+    return std::unexpected{"Filename missing in output path '" + path.string() + "'"};
   }
   if (path.filename() == "." || path.filename() == "..") {
-    return std::unexpected("Invalid filename '" + path.filename().string() + "'");
+    return std::unexpected{"Invalid filename '" + path.filename().string() + "'"};
   }
   for (const auto& segment : path) {
     if (segment == "..") {
-      return std::unexpected("Accessing parent directory is forbidden in file path '" + path.string() + "'");
+      return std::unexpected{"Accessing parent directory is forbidden in file path '" + path.string() + "'"};
     }
   }
   return {};

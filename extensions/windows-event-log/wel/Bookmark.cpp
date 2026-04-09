@@ -140,7 +140,7 @@ bool Bookmark::saveBookmark(EVT_HANDLE event_handle) {
 
 std::expected<std::wstring, std::string> Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent) {
   if (!EvtUpdateBookmark(hBookmark_.get(), hEvent)) {
-    return std::unexpected(fmt::format("EvtUpdateBookmark failed due to {}", wel::getLastError()));
+    return std::unexpected{fmt::format("EvtUpdateBookmark failed due to {}", wel::getLastError())};
   }
   // Render the bookmark as an XML string that can be persisted.
   logger_->log_trace("Rendering new bookmark");
@@ -149,17 +149,17 @@ std::expected<std::wstring, std::string> Bookmark::getNewBookmarkXml(EVT_HANDLE 
   DWORD propertyCount{};
   bool event_render_succeeded_without_buffer = EvtRender(nullptr, hBookmark_.get(), EvtRenderBookmark, bufferSize, nullptr, &bufferUsed, &propertyCount);
   if (event_render_succeeded_without_buffer)
-    return std::unexpected("EvtRender failed to determine the required buffer size.");
+    return std::unexpected{"EvtRender failed to determine the required buffer size."};
 
   if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-    return std::unexpected(fmt::format("EvtRender failed due to {}", wel::getLastError()));
+    return std::unexpected{fmt::format("EvtRender failed due to {}", wel::getLastError())};
   }
 
   bufferSize = bufferUsed;
   std::vector<wchar_t> buf(bufferSize / 2 + 1);
 
   if (!EvtRender(nullptr, hBookmark_.get(), EvtRenderBookmark, bufferSize, buf.data(), &bufferUsed, &propertyCount)) {
-    return std::unexpected(fmt::format("EvtRender failed due to {}", wel::getLastError()));
+    return std::unexpected{fmt::format("EvtRender failed due to {}", wel::getLastError())};
   }
 
   return std::wstring(buf.data());

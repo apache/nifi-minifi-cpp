@@ -62,7 +62,7 @@ class MockCouchbaseClusterService : public controllers::CouchbaseClusterService 
     upsert_parameters_.options = options;
 
     if (upsert_error_) {
-      return std::unexpected(*upsert_error_);
+      return std::unexpected{*upsert_error_};
     } else {
       return CouchbaseUpsertResult{{collection_.bucket_name, COUCHBASE_PUT_RESULT_CAS}, COUCHBASE_PUT_RESULT_SEQUENCE_NUMBER, COUCHBASE_PUT_RESULT_PARTITION_UUID, COUCHBASE_PUT_RESULT_PARTITION_ID};
     }
@@ -74,7 +74,7 @@ class MockCouchbaseClusterService : public controllers::CouchbaseClusterService 
     get_parameters_.document_type = document_type;
 
     if (get_error_) {
-      return std::unexpected(*get_error_);
+      return std::unexpected{*get_error_};
     } else {
       if (document_type == CouchbaseValueType::String) {
         return CouchbaseGetResult{{collection_.bucket_name, COUCHBASE_GET_RESULT_CAS}, COUCHBASE_GET_RESULT_EXPIRY, COUCHBASE_GET_RESULT_CONTENT};

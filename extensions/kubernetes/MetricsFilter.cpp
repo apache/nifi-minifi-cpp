@@ -28,12 +28,12 @@ std::expected<std::string, std::string> filter(const std::string& metrics_json, 
   rapidjson::Document document;
   rapidjson::ParseResult parse_result = document.Parse<rapidjson::kParseStopWhenDoneFlag>(metrics_json.data());
   if (parse_result.IsError()) {
-    return std::unexpected(utils::string::join_pack("Error parsing the metrics received from the Kubernetes API at offset ",
-        std::to_string(parse_result.Offset()), ": ", rapidjson::GetParseError_En(parse_result.Code())));
+    return std::unexpected{utils::string::join_pack("Error parsing the metrics received from the Kubernetes API at offset ",
+        std::to_string(parse_result.Offset()), ": ", rapidjson::GetParseError_En(parse_result.Code()))};
   }
 
   if (!document.HasMember("items") || !document["items"].IsArray()) {
-    return std::unexpected("Unexpected JSON received from the Kubernetes API: missing list of 'items'");
+    return std::unexpected{"Unexpected JSON received from the Kubernetes API: missing list of 'items'"};
   }
 
   rapidjson::Value& pods = document["items"];

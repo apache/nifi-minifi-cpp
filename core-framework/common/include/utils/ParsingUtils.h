@@ -48,14 +48,14 @@ std::expected<T, std::error_code> parseIntegralMinMax(const std::string_view inp
   T t{};
   const auto [ptr, ec] = std::from_chars(trimmed_input.data(), trimmed_input.data() + trimmed_input.size(), t);
   if (ec != std::errc()) {
-    return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
   if (ptr != trimmed_input.data() + trimmed_input.size()) {
-    return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
 
-  if (t < minimum) { return std::unexpected(core::ParsingErrorCode::SmallerThanMinimum); }
-  if (t > maximum) { return std::unexpected(core::ParsingErrorCode::LargerThanMaximum); }
+  if (t < minimum) { return std::unexpected{core::ParsingErrorCode::SmallerThanMinimum}; }
+  if (t > maximum) { return std::unexpected{core::ParsingErrorCode::LargerThanMaximum}; }
   return t;
 }
 
@@ -67,10 +67,10 @@ std::expected<T, std::error_code> parseIntegral(const std::string_view input) {
 template<class TargetDuration>
 std::expected<TargetDuration, std::error_code> parseDurationMinMax(const std::string_view input, const TargetDuration minimum, const TargetDuration maximum) {
   auto duration = utils::timeutils::StringToDuration<std::chrono::milliseconds>(input);
-  if (!duration.has_value()) { return std::unexpected(core::ParsingErrorCode::GeneralParsingError); }
+  if (!duration.has_value()) { return std::unexpected{core::ParsingErrorCode::GeneralParsingError}; }
 
-  if (*duration < minimum) { return std::unexpected(core::ParsingErrorCode::SmallerThanMinimum); }
-  if (*duration > maximum) { return std::unexpected(core::ParsingErrorCode::LargerThanMaximum); }
+  if (*duration < minimum) { return std::unexpected{core::ParsingErrorCode::SmallerThanMinimum}; }
+  if (*duration > maximum) { return std::unexpected{core::ParsingErrorCode::LargerThanMaximum}; }
 
   return *duration;
 }
@@ -85,7 +85,7 @@ template<typename T>
 std::expected<T, std::error_code> parseEnum(const std::string_view input) {
   std::optional<T> result = magic_enum::enum_cast<T>(input);
   if (!result) {
-    return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
   return *result;
 }

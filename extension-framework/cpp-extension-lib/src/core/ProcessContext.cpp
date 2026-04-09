@@ -29,7 +29,7 @@ std::expected<std::string, std::error_code> ProcessContext::getProperty(std::str
     }, &value);
 
   if (!value) {
-    return std::unexpected(utils::make_error_code(status));
+    return std::unexpected{utils::make_error_code(status)};
   }
   return value.value();
 }

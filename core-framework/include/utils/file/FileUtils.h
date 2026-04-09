@@ -132,7 +132,7 @@ inline std::expected<void, std::error_code> set_last_write_time(const std::files
   std::error_code ec;
   std::filesystem::last_write_time(path, new_time, ec);
   if (ec)
-    return std::unexpected(ec);
+    return std::unexpected{ec};
   return {};
 }
 

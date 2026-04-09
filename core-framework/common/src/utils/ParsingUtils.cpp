@@ -24,7 +24,7 @@ std::expected<bool, std::error_code> parseBool(const std::string_view input) {
   if (utils::string::equalsIgnoreCase(input, "true")) { return true; }
   if (utils::string::equalsIgnoreCase(input, "false")) { return false; }
 
-  return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+  return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
 }
 
 namespace {
@@ -68,17 +68,17 @@ std::expected<uint64_t, std::error_code> parseDataSizeMinMax(const std::string_v
   const std::string unit_str = utils::string::toUpper(std::string{trimmed_input.substr(split_pos, trimmed_input.size() - split_pos)});
 
   std::expected<uint64_t, std::error_code> num_part = parseIntegral<uint64_t>(num_str);
-  if (!num_part) { return std::unexpected(num_part.error()); }
+  if (!num_part) { return std::unexpected{num_part.error()}; }
 
   const auto unit_multiplier = getUnitMultiplier(utils::string::trim(unit_str));
-  if (!unit_multiplier) { return std::unexpected(core::ParsingErrorCode::GeneralParsingError); }
+  if (!unit_multiplier) { return std::unexpected{core::ParsingErrorCode::GeneralParsingError}; }
   uint64_t result = *num_part * *unit_multiplier;
   gsl_Assert(unit_multiplier != 0);
   if ((result / *unit_multiplier) != *num_part) {
-    return std::unexpected(core::ParsingErrorCode::OverflowError);
+    return std::unexpected{core::ParsingErrorCode::OverflowError};
   }
-  if (result < minimum) { return std::unexpected(core::ParsingErrorCode::SmallerThanMinimum); }
-  if (result > maximum) { return std::unexpected(core::ParsingErrorCode::LargerThanMaximum); }
+  if (result < minimum) { return std::unexpected{core::ParsingErrorCode::SmallerThanMinimum}; }
+  if (result > maximum) { return std::unexpected{core::ParsingErrorCode::LargerThanMaximum}; }
 
   return result;
 }
@@ -95,17 +95,17 @@ std::expected<uint32_t, std::error_code> parseUnixOctalPermissions(const std::st
       if (input[i * 3] == 'r') {
         result |= 04 << ((2 - i) * 3);
       } else if (input[i * 3] != '-') {
-        return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+        return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
       }
       if (input[i * 3 + 1] == 'w') {
         result |= 02 << ((2 - i) * 3);
       } else if (input[i * 3 + 1] != '-') {
-        return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+        return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
       }
       if (input[i * 3 + 2] == 'x') {
         result |= 01 << ((2 - i) * 3);
       } else if (input[i * 3 + 2] != '-') {
-        return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+        return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
       }
     }
   } else {
@@ -114,13 +114,13 @@ std::expected<uint32_t, std::error_code> parseUnixOctalPermissions(const std::st
       size_t pos = 0U;
       result = std::stoul(std::string{input}, &pos, 8);
       if (pos != input.size()) {
-        return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+        return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
       }
       if ((result & ~static_cast<uint32_t>(0777)) != 0U) {
-        return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+        return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
       }
     } catch (...) {
-        return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+        return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
     }
   }
   return result;
@@ -130,7 +130,7 @@ std::expected<float, std::error_code> parseFloat(std::string_view input) {
   try {
     return std::stof(std::string{input});
   } catch(const std::exception&) {
-    return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
 }
 

@@ -113,14 +113,14 @@ std::expected<void, std::string> FlowController::applyConfiguration(const std::s
     newRoot = updateFromPayload(source, configurePayload, flow_id);
   } catch (const std::exception& ex) {
     logger_->log_error("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what());
-    return std::unexpected(fmt::format("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what()));
+    return std::unexpected{fmt::format("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what())};
   } catch (...) {
     logger_->log_error("Invalid configuration payload, type: {}", getCurrentExceptionTypeName());
-    return std::unexpected(fmt::format("Invalid configuration payload, type: {}", getCurrentExceptionTypeName()));
+    return std::unexpected{fmt::format("Invalid configuration payload, type: {}", getCurrentExceptionTypeName())};
   }
 
   if (newRoot == nullptr)
-    return std::unexpected("Could not create root process group");
+    return std::unexpected{"Could not create root process group"};
 
   logger_->log_info("Starting to reload Flow Controller with flow control name {}, version {}", newRoot->getName(), newRoot->getVersion());
 
@@ -163,7 +163,7 @@ std::expected<void, std::string> FlowController::applyConfiguration(const std::s
   }
 
   if (!started) {
-    return std::unexpected("Failed to start flow");
+    return std::unexpected{"Failed to start flow"};
   }
   return {};
 }

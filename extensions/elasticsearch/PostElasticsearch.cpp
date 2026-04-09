@@ -79,22 +79,22 @@ class ElasticPayload {
   static std::expected<ElasticPayload, std::string> parse(core::ProcessSession& session, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
     auto action = context.getProperty(PostElasticsearch::Action, flow_file.get());
     if (!action || (action != "index" && action != "create" && action != "delete" && action != "update" && action != "upsert"))
-      return std::unexpected("Missing or invalid action");
+      return std::unexpected{"Missing or invalid action"};
 
     auto index = context.getProperty(PostElasticsearch::Index, flow_file.get());
     if (!index)
-      return std::unexpected("Missing index");
+      return std::unexpected{"Missing index"};
 
     auto id = context.getProperty(PostElasticsearch::Identifier, flow_file.get()) | utils::toOptional();
     if (!id && (action == "delete" || action == "update" || action == "upsert"))
-      return std::unexpected("Identifier is required for DELETE,UPDATE and UPSERT actions");
+      return std::unexpected{"Identifier is required for DELETE,UPDATE and UPSERT actions"};
 
     std::optional<rapidjson::Document> payload;
     if (action == "index" || action == "create") {
       payload = rapidjson::Document(rapidjson::kObjectType);
       utils::JsonInputCallback callback(*payload);
       if (session.read(flow_file, std::ref(callback)) < 0) {
-        return std::unexpected("invalid flowfile content");
+        return std::unexpected{"invalid flowfile content"};
       }
     }
     if (action == "update" || action == "upsert") {
@@ -102,7 +102,7 @@ class ElasticPayload {
       rapidjson::Document doc_member(rapidjson::kObjectType, &payload->GetAllocator());
       utils::JsonInputCallback callback(doc_member);
       if (session.read(flow_file, std::ref(callback)) < 0) {
-        return std::unexpected("invalid flowfile content");
+        return std::unexpected{"invalid flowfile content"};
       }
       if (action == "upsert") {
         action = "update";
@@ -155,18 +155,18 @@ class ElasticPayload {
 std::expected<rapidjson::Document, std::string> submitRequest(http::HTTPClient& client, const std::string& payload, const size_t expected_items) {
   client.setPostFields(payload);
   if (!client.submit())
-    return std::unexpected("Submit failed");
+    return std::unexpected{"Submit failed"};
   auto response_code = client.getResponseCode();
   if (response_code != 200)
-    return std::unexpected("Error occurred: " + std::to_string(response_code) + ", " + client.getResponseBody().data());
+    return std::unexpected{"Error occurred: " + std::to_string(response_code) + ", " + client.getResponseBody().data()};
   rapidjson::Document response;
   rapidjson::ParseResult parse_result = response.Parse<rapidjson::kParseStopWhenDoneFlag>(client.getResponseBody().data());
   if (parse_result.IsError())
-    return std::unexpected("Response is not valid json");
+    return std::unexpected{"Response is not valid json"};
   if (!response.HasMember("items"))
-    return std::unexpected("Response is invalid");
+    return std::unexpected{"Response is invalid"};
   if (response["items"].Size() != expected_items)
-    return std::unexpected("The number of responses dont match the number of requests");
+    return std::unexpected{"The number of responses dont match the number of requests"};
 
   return response;
 }

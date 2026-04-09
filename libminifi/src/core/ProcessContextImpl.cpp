@@ -102,7 +102,7 @@ void ProcessContextImpl::yield() { processor_.yield(); }
 std::expected<std::string, std::error_code> ProcessContextImpl::getProperty(const std::string_view name, const FlowFile* flow_file) const {
   const auto property = getProcessorInfo().getSupportedProperty(name);
   if (!property) {
-    return std::unexpected(PropertyErrorCode::NotSupportedProperty);
+    return std::unexpected{PropertyErrorCode::NotSupportedProperty};
   }
 
   if (!property->supportsExpressionLanguage()) {
@@ -116,7 +116,7 @@ std::expected<std::string, std::error_code> ProcessContextImpl::getProperty(cons
   expression::Parameters p(this, flow_file);
   auto result = cached_expressions_[std::string{name}](p).asString();
   if (!property->getValidator().validate(result)) {
-    return std::unexpected(PropertyErrorCode::ValidationFailed);
+    return std::unexpected{PropertyErrorCode::ValidationFailed};
   }
   return result;
 }

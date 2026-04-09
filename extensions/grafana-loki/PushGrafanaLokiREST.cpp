@@ -162,11 +162,11 @@ std::expected<void, std::string> PushGrafanaLokiREST::submitRequest(const std::v
   auto loki_json = createLokiJson(batched_flow_files, session);
   client_.setPostFields(loki_json);
   if (!client_.submit()) {
-    return std::unexpected("Submit failed");
+    return std::unexpected{"Submit failed"};
   }
   auto response_code = client_.getResponseCode();
   if (response_code < 200 || response_code >= 300) {
-    return std::unexpected("Error occurred: " + std::to_string(response_code));
+    return std::unexpected{"Error occurred: " + std::to_string(response_code)};
   }
   return {};
 }

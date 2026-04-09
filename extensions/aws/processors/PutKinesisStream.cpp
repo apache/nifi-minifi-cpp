@@ -64,7 +64,7 @@ std::expected<Aws::Kinesis::Model::PutRecordsRequestEntry, PutKinesisStream::Bat
   const auto [status, buffer] = session.readBuffer(flow_file);
   if (io::isError(status)) {
     logger_->log_error("Couldn't read content from {}", flow_file->getUUIDStr());
-    return std::unexpected(BatchItemError{.error_message = "Failed to read content", .error_code = std::nullopt});
+    return std::unexpected{BatchItemError{.error_message = "Failed to read content", .error_code = std::nullopt}};
   }
   Aws::Utils::ByteBuffer aws_buffer(reinterpret_cast<const unsigned char*>(buffer.data()), buffer.size());
   entry.SetData(aws_buffer);
@@ -124,9 +124,9 @@ void PutKinesisStream::processBatch(StreamBatch& stream_batch, const Aws::Kinesi
   const auto put_record_result = client.PutRecords(stream_batch.request);
   if (!put_record_result.IsSuccess()) {
     ranges::for_each(stream_batch.items, [&](auto& item) {
-      item.result = std::unexpected(BatchItemError{
+      item.result = std::unexpected{BatchItemError{
         .error_message = put_record_result.GetError().GetMessage(),
-        .error_code = std::to_string(static_cast<int>(put_record_result.GetError().GetResponseCode()))});
+        .error_code = std::to_string(static_cast<int>(put_record_result.GetError().GetResponseCode()))}};
     });
     return;
   }
@@ -136,9 +136,9 @@ void PutKinesisStream::processBatch(StreamBatch& stream_batch, const Aws::Kinesi
     logger_->log_critical("PutKinesisStream record size ({}) and result size ({}) mismatch in {} cannot tell which record succeeded and which didnt",
         stream_batch.items.size(), result_records.size(), stream_batch.request.GetStreamName());
     ranges::for_each(stream_batch.items, [&](auto& item) {
-      item.result = std::unexpected(BatchItemError{
+      item.result = std::unexpected{BatchItemError{
         .error_message = "Record size mismatch",
-        .error_code = std::nullopt});
+        .error_code = std::nullopt}};
     });
     return;
   }
@@ -147,7 +147,7 @@ void PutKinesisStream::processBatch(StreamBatch& stream_batch, const Aws::Kinesi
     auto& [flow_file, result] = stream_batch.items[i];
     const auto& result_record = result_records[i];
     if (!result_record.GetErrorCode().empty()) {
-      result = std::unexpected(BatchItemError{.error_message = result_record.GetErrorMessage(), .error_code = result_record.GetErrorCode()});
+      result = std::unexpected{BatchItemError{.error_message = result_record.GetErrorMessage(), .error_code = result_record.GetErrorCode()}};
     } else {
       result = BatchItemResult{.sequence_number = result_record.GetSequenceNumber(), .shard_id = result_record.GetShardId()};
     }

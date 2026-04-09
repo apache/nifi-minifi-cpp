@@ -323,12 +323,12 @@ struct C2DebugBundleError : public C2TransferError {
 
 std::expected<void, std::string> fetchAssetAsFile(C2Protocol& protocol, const std::string& url, const std::filesystem::path& file_path, const std::shared_ptr<core::logging::Logger>& logger) {
   if (utils::file::create_dir(file_path.parent_path()) != 0) {
-    return std::unexpected(fmt::format("Failed to create directory '{}'", file_path.parent_path().string()));
+    return std::unexpected{fmt::format("Failed to create directory '{}'", file_path.parent_path().string())};
   }
 
   std::ofstream file{file_path, std::ofstream::binary};
   if (!file) {
-    return std::unexpected(fmt::format("Failed to open file to write '{}'", file_path.string()));
+    return std::unexpected{fmt::format("Failed to open file to write '{}'", file_path.string())};
   }
   bool success = protocol.fetch(url, [&] (std::span<const char> chunk) {
     file.write(chunk.data(), gsl::narrow<std::streamsize>(chunk.size()));
@@ -343,7 +343,7 @@ std::expected<void, std::string> fetchAssetAsFile(C2Protocol& protocol, const st
     } else {
       logger->log_info("Successfully removed partial asset file '{}'", file_path.string());
     }
-    return std::unexpected(fmt::format("Failed to fetch asset from '{}'", url));
+    return std::unexpected{fmt::format("Failed to fetch asset from '{}'", url)};
   }
   return {};
 }
@@ -803,10 +803,10 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
     }
     auto get_member_str = [&] (const char* key) -> std::expected<std::string_view, std::string> {
       if (!resource.HasMember(key)) {
-        return std::unexpected(fmt::format("Malformed request, 'resourceList[{}]' has no member '{}'", resource_idx, key));
+        return std::unexpected{fmt::format("Malformed request, 'resourceList[{}]' has no member '{}'", resource_idx, key)};
       }
       if (!resource[key].IsString()) {
-        return std::unexpected(fmt::format("Malformed request, 'resourceList[{}].{}' is not a string", resource_idx, key));
+        return std::unexpected{fmt::format("Malformed request, 'resourceList[{}].{}' is not a string", resource_idx, key)};
       }
       return std::string_view{resource[key].GetString(), resource[key].GetStringLength()};
     };
@@ -858,7 +858,7 @@ void C2Agent::handle_sync(const org::apache::nifi::minifi::c2::C2ContentResponse
   auto result = asset_manager_->sync(asset_layout, [&] (std::string_view url, const std::filesystem::path& file_path) -> std::expected<void, std::string> {
     auto resolved_url = resolveUrl(std::string{url});
     if (!resolved_url) {
-      return std::unexpected("Couldn't resolve url");
+      return std::unexpected{"Couldn't resolve url"};
     }
     return fetchAssetAsFile(*protocol_, resolved_url.value(), file_path, logger_);
   });

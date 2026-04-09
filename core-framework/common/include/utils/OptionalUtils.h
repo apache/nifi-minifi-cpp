@@ -132,7 +132,7 @@ auto operator|(std::optional<SourceType> o, filter_wrapper<F> f) noexcept(noexce
 template<typename T, typename E>
 std::expected<T, E> operator|(std::optional<T> object, to_expected_wrapper<E> e) {
   if (!object) {
-    return std::unexpected(e.error);
+    return std::unexpected{e.error};
   }
   return std::move(*object);
 }

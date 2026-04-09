@@ -536,7 +536,7 @@ std::expected<std::optional<char>, std::error_code> parseCharacter(const std::st
       default: break;
     }
   }
-  return std::unexpected(core::ParsingErrorCode::GeneralParsingError);
+  return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
 }
 
 std::string replaceEscapedCharacters(std::string_view input) {

@@ -1037,7 +1037,7 @@ std::expected<void, std::string> ProcessSessionImpl::rollbackNoThrow() noexcept 
     rollback();
     return {};
   } catch(const std::exception& exception) {
-    return std::unexpected(exception.what());
+    return std::unexpected{exception.what()};
   } catch(...) {
     logger_->log_critical("Caught unknown exception during rollback, type: {}, terminating", getCurrentExceptionTypeName());
     std::terminate();
