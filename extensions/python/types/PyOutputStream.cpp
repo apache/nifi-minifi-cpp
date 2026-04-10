@@ -22,7 +22,7 @@ extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
 static PyMethodDef PyOutputStream_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
-    {"write", (PyCFunction) PyOutputStream::write, METH_VARARGS, nullptr},
+    {"write", safePyFunction<PyOutputStream::write>, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -56,7 +56,6 @@ int PyOutputStream::init(PyOutputStream* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyOutputStream::write(PyOutputStream* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto output_stream = self->output_stream_.lock();
   if (!output_stream) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -74,7 +73,6 @@ PyObject* PyOutputStream::write(PyOutputStream* self, PyObject* args) {
     return nullptr;
   }
   return object::returnReference(output_stream->write(gsl::make_span(buffer, length).as_span<const std::byte>()));
-  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyOutputStream::typeObject() {
