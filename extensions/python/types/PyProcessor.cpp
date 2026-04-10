@@ -43,6 +43,7 @@ extern "C" {
 
 static PyMethodDef PyProcessor_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"setSupportsDynamicProperties", (PyCFunction) PyProcessor::setSupportsDynamicProperties, METH_VARARGS, nullptr},
+    {"setSingleThreaded", (PyCFunction) PyProcessor::setSingleThreaded, METH_VARARGS, nullptr},
     {"setDescription", (PyCFunction) PyProcessor::setDescription, METH_VARARGS, nullptr},
     {"setVersion", (PyCFunction) PyProcessor::setVersion, METH_VARARGS, nullptr},
     {"addProperty", (PyCFunction) PyProcessor::addProperty, METH_VARARGS, nullptr},
@@ -89,6 +90,17 @@ PyObject* PyProcessor::setSupportsDynamicProperties(PyProcessor* self, PyObject*
   processor->setSupportsDynamicProperties();
   Py_RETURN_NONE;
   PYTHON_METHOD_END
+}
+
+PyObject* PyProcessor::setSingleThreaded(PyProcessor* self, PyObject*) {
+  auto processor = self->processor_.lock();
+  if (!processor) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading processor outside 'on_trigger'");
+    return nullptr;
+  }
+
+  processor->setSingleThreaded();
+  Py_RETURN_NONE;
 }
 
 PyObject* PyProcessor::setDescription(PyProcessor* self, PyObject* args) {
