@@ -46,7 +46,7 @@
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
 #include "minifi-cpp/utils/gsl.h"
-#include "utils/ProxyOptions.h"
+#include "controllers/ProxyConfiguration.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -126,11 +126,12 @@ struct RequestParameters {
   Aws::Auth::AWSCredentials credentials;
   Aws::Client::ClientConfiguration client_config;
 
-  void setClientConfig(const aws::ProxyOptions& proxy, const std::string& endpoint_override_url) {
-    client_config.proxyHost = proxy.host;
-    client_config.proxyPort = proxy.port;
-    client_config.proxyUserName = proxy.username;
-    client_config.proxyPassword = proxy.password;
+  void setClientConfig(const minifi::controllers::ProxyConfiguration& proxy, const std::string& endpoint_override_url) {
+    client_config.proxyHost = proxy.proxy_host;
+    client_config.proxyPort = proxy.proxy_port.value_or(0);
+    client_config.proxyUserName = proxy.proxy_user.value_or("");
+    client_config.proxyPassword = proxy.proxy_password.value_or("");
+    client_config.proxyScheme = proxy.proxy_type == minifi::controllers::ProxyType::HTTPS ? Aws::Http::Scheme::HTTPS : Aws::Http::Scheme::HTTP;
     client_config.endpointOverride = endpoint_override_url;
   }
 };
