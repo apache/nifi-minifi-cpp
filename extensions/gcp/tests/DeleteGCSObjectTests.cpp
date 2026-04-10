@@ -14,60 +14,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "../processors/DeleteGCSObject.h"
 #include "../controllerservices/GCPCredentialsControllerService.h"
+#include "../processors/DeleteGCSObject.h"
+#include "CProcessorTestUtils.h"
 #include "GCPAttributes.h"
 #include "core/Resource.h"
-#include "unit/SingleProcessorTestController.h"
-#include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"
 #include "google/cloud/storage/testing/canonical_errors.h"
+#include "google/cloud/storage/testing/mock_client.h"
 #include "unit/ProcessorUtils.h"
+#include "unit/SingleProcessorTestController.h"
 
 namespace gcs = ::google::cloud::storage;
-namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
+namespace minifi_gcp = minifi::extensions::gcp;
 
-using DeleteGCSObject = org::apache::nifi::minifi::extensions::gcp::DeleteGCSObject;
-using GCPCredentialsControllerService = org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService;
+using DeleteGCSObject = minifi::extensions::gcp::DeleteGCSObject;
+using GCPCredentialsControllerService = minifi::extensions::gcp::GCPCredentialsControllerService;
 using DeleteObjectRequest = gcs::internal::DeleteObjectRequest;
-using ::google::cloud::storage::testing::canonical_errors::TransientError;
 using ::google::cloud::storage::testing::canonical_errors::PermanentError;
+using ::google::cloud::storage::testing::canonical_errors::TransientError;
 
 namespace {
 class DeleteGCSObjectMocked : public DeleteGCSObject {
-  using org::apache::nifi::minifi::extensions::gcp::DeleteGCSObject::DeleteGCSObject;
- public:
-  static constexpr const char* Description = "DeleteGCSObjectMocked";
+  using DeleteGCSObject::DeleteGCSObject;
 
-  gcs::Client getClient() const override {
-    return gcs::testing::UndecoratedClientFromMock(mock_client_);
-  }
-  std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
+ public:
+  DeleteGCSObjectMocked(minifi::core::ProcessorMetadata metadata, std::shared_ptr<gcs::testing::MockClient> mock_client)
+      : DeleteGCSObject(std::move(metadata)),
+        mock_client_(std::move(mock_client)) {}
+
+ protected:
+  gcs::Client getClient() const override { return gcs::testing::UndecoratedClientFromMock(mock_client_); }
+  std::shared_ptr<gcs::testing::MockClient> mock_client_;
 };
-REGISTER_RESOURCE(DeleteGCSObjectMocked, Processor);
 }  // namespace
 
 class DeleteGCSObjectTests : public ::testing::Test {
- public:
+ protected:
   void SetUp() override {
-    delete_gcs_object_ = test_controller_.getProcessor();
-    gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
-    test_controller_.plan->setProperty(gcp_credentials_node_,
-                                       GCPCredentialsControllerService::CredentialsLoc,
-                                       magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
-    test_controller_.plan->setProperty(delete_gcs_object_,
-                                       DeleteGCSObject::GCPCredentials,
-                                       "gcp_credentials_controller_service");
+    const auto gcp_credential_controller_service =
+        minifi::test::utils::make_custom_c_controller_service<GCPCredentialsControllerService>(core::ControllerServiceMetadata{utils::Identifier{},
+            "GCPCredentialsControllerService",
+            logging::LoggerFactory<GCPCredentialsControllerService>::getLogger()});
+    gcp_credentials_node_ = test_controller_.plan->addController("gcp_credentials_controller_service", gcp_credential_controller_service);
+    test_controller_.getProcessor()->setProperty(GCPCredentialsControllerService::CredentialsLoc.name,
+        std::string(magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS)));
+    test_controller_.getProcessor()->setProperty(DeleteGCSObject::GCPCredentials.name, "gcp_credentials_controller_service");
   }
 
-  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{minifi::test::utils::make_processor<DeleteGCSObjectMocked>("DeleteGCSObjectMocked")};
-  std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
-  TypedProcessorWrapper<DeleteGCSObjectMocked> delete_gcs_object_ = nullptr;
+ public:
+  std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
+  minifi::test::SingleProcessorTestController test_controller_{minifi::test::utils::make_custom_c_processor<DeleteGCSObjectMocked>(
+      core::ProcessorMetadata{utils::Identifier{}, "DeleteGCSObjectMocked", logging::LoggerFactory<DeleteGCSObjectMocked>::getLogger()},
+      mock_client_)};
+  std::shared_ptr<core::controller::ControllerServiceNode> gcp_credentials_node_;
 };
 
 TEST_F(DeleteGCSObjectTests, MissingBucket) {
-  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, CreateResumableUpload).Times(0);
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, ""));
+  EXPECT_CALL(*mock_client_, CreateResumableUpload).Times(0);
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::Bucket.name, ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
   ASSERT_EQ(1, result.at(DeleteGCSObject::Failure).size());
@@ -77,9 +82,8 @@ TEST_F(DeleteGCSObjectTests, MissingBucket) {
 }
 
 TEST_F(DeleteGCSObjectTests, ServerGivesPermaError) {
-  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, DeleteObject)
-      .WillOnce(testing::Return(PermanentError()));
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, "bucket-from-property"));
+  EXPECT_CALL(*mock_client_, DeleteObject).WillOnce(testing::Return(PermanentError()));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::Bucket.name, "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
   ASSERT_EQ(1, result.at(DeleteGCSObject::Failure).size());
@@ -89,9 +93,9 @@ TEST_F(DeleteGCSObjectTests, ServerGivesPermaError) {
 }
 
 TEST_F(DeleteGCSObjectTests, ServerGivesTransientErrors) {
-  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, DeleteObject).WillOnce(testing::Return(TransientError()));
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::NumberOfRetries, "1"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, "bucket-from-property"));
+  EXPECT_CALL(*mock_client_, DeleteObject).WillOnce(testing::Return(TransientError()));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::NumberOfRetries.name, "1"));
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::Bucket.name, "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
   ASSERT_EQ(1, result.at(DeleteGCSObject::Failure).size());
@@ -100,31 +104,29 @@ TEST_F(DeleteGCSObjectTests, ServerGivesTransientErrors) {
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Failure)[0]));
 }
 
-
 TEST_F(DeleteGCSObjectTests, HandlingSuccessfullDeletion) {
-  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, DeleteObject)
-      .WillOnce([](DeleteObjectRequest const& request) {
-        EXPECT_EQ("bucket-from-attribute", request.bucket_name());
-        EXPECT_TRUE(request.HasOption<gcs::Generation>());
-        EXPECT_TRUE(request.GetOption<gcs::Generation>().has_value());
-        EXPECT_EQ(23, request.GetOption<gcs::Generation>().value());
-        return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration, "${gcs.generation}"));
-  const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23"}});
+  EXPECT_CALL(*mock_client_, DeleteObject).WillOnce([](DeleteObjectRequest const& request) {
+    EXPECT_EQ("bucket-from-attribute", request.bucket_name());
+    EXPECT_TRUE(request.HasOption<gcs::Generation>());
+    EXPECT_TRUE(request.GetOption<gcs::Generation>().has_value());
+    EXPECT_EQ(23, request.GetOption<gcs::Generation>().value());
+    return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::ObjectGeneration.name, "${gcs.generation}"));
+  const auto& result = test_controller_.trigger("hello world",
+      {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23"}});
   ASSERT_EQ(1, result.at(DeleteGCSObject::Success).size());
   EXPECT_EQ(0, result.at(DeleteGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Success)[0]));
 }
 
 TEST_F(DeleteGCSObjectTests, EmptyGeneration) {
-  EXPECT_CALL(*delete_gcs_object_.get().mock_client_, DeleteObject)
-      .WillOnce([](DeleteObjectRequest const& request) {
-        EXPECT_EQ("bucket-from-attribute", request.bucket_name());
-        EXPECT_FALSE(request.HasOption<gcs::Generation>());
-        return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
-      });
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration, "${gcs.generation}"));
+  EXPECT_CALL(*mock_client_, DeleteObject).WillOnce([](DeleteObjectRequest const& request) {
+    EXPECT_EQ("bucket-from-attribute", request.bucket_name());
+    EXPECT_FALSE(request.HasOption<gcs::Generation>());
+    return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
+  });
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::ObjectGeneration.name, "${gcs.generation}"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   ASSERT_EQ(1, result.at(DeleteGCSObject::Success).size());
   EXPECT_EQ(0, result.at(DeleteGCSObject::Failure).size());
@@ -132,8 +134,9 @@ TEST_F(DeleteGCSObjectTests, EmptyGeneration) {
 }
 
 TEST_F(DeleteGCSObjectTests, InvalidGeneration) {
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration, "${gcs.generation}"));
-  const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23 banana"}});
+  EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::ObjectGeneration.name, "${gcs.generation}"));
+  const auto& result = test_controller_.trigger("hello world",
+      {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23 banana"}});
   ASSERT_EQ(0, result.at(DeleteGCSObject::Success).size());
   EXPECT_EQ(1, result.at(DeleteGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Failure)[0]));
