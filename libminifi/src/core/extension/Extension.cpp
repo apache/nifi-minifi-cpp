@@ -139,14 +139,6 @@ Extension::~Extension() {
 #endif
 }
 
-bool Extension::setInfo(Info info) {
-  if (info_) {
-    return false;
-  }
-  info_ = std::move(info);
-  return true;
-}
-
 bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) {
   logger_->log_trace("Initializing extension '{}'", library_name_);
   void* init_symbol_ptr = findSymbol("MinifiInitCppExtension");
@@ -158,10 +150,19 @@ bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) 
     return false;
   }
   logger_->log_debug("Found initializer for '{}'", library_name_);
-  auto init_fn = reinterpret_cast<void(*)(MinifiExtension*, MinifiConfig*)>(init_symbol_ptr);
-  auto config_handle = reinterpret_cast<MinifiConfig*>(configure.get());
-  auto extension_handle = reinterpret_cast<MinifiExtension*>(this);
-  init_fn(extension_handle, config_handle);
+
+  auto init_fn = reinterpret_cast<void(*)(MinifiExtensionContext*)>(init_symbol_ptr);
+  Context extension_context{
+    .config = configure,
+    .create = [&] (Info info) -> Extension* {
+      if (info_) {
+        return nullptr;
+      }
+      info_ = std::move(info);
+      return this;
+    }
+  };
+  init_fn(reinterpret_cast<MinifiExtensionContext*>(&extension_context));
   if (!info_) {
     logger_->log_error("Failed to initialize extension '{}'", library_name_);
     return false;
