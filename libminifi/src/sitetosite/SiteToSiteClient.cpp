@@ -562,7 +562,7 @@ bool SiteToSiteClient::sendPacket(const DataPacket& packet) {
 std::expected<void, std::string> SiteToSiteClient::readFlowFileHeaderData(io::InputStream& stream, const std::string& transaction_id_str, SiteToSiteClient::ReceiveFlowFileHeaderResult& result) {
   uint32_t num_attributes = 0;
   if (const auto ret = stream.read(num_attributes); ret == 0 || io::isError(ret) || num_attributes > MAX_NUM_ATTRIBUTES) {
-    return std::unexpected(fmt::format("Site2Site failed to read number of attributes with return code {}, or number of attributes is invalid: {}", ret, num_attributes));
+    return std::unexpected{fmt::format("Site2Site failed to read number of attributes with return code {}, or number of attributes is invalid: {}", ret, num_attributes)};
   }
 
   logger_->log_debug("Site2Site transaction {} receives {} attributes", transaction_id_str, num_attributes);
@@ -570,11 +570,11 @@ std::expected<void, std::string> SiteToSiteClient::readFlowFileHeaderData(io::In
     std::string key;
     std::string value;
     if (const auto ret = stream.read(key, true); ret == 0 || io::isError(ret)) {
-      return std::unexpected(fmt::format("Site2Site transaction {} failed to read attribute key", transaction_id_str));
+      return std::unexpected{fmt::format("Site2Site transaction {} failed to read attribute key", transaction_id_str)};
     }
 
     if (const auto ret = stream.read(value, true); ret == 0 || io::isError(ret)) {
-      return std::unexpected(fmt::format("Site2Site transaction {} failed to read attribute value for key {}", transaction_id_str, key));
+      return std::unexpected{fmt::format("Site2Site transaction {} failed to read attribute value for key {}", transaction_id_str, key)};
     }
 
     result.attributes[key] = value;
@@ -583,7 +583,7 @@ std::expected<void, std::string> SiteToSiteClient::readFlowFileHeaderData(io::In
 
   uint64_t len = 0;
   if (const auto ret = stream.read(len); ret == 0 || io::isError(ret)) {
-    return std::unexpected(fmt::format("Site2Site transaction {} failed to read flow file data size", transaction_id_str));
+    return std::unexpected{fmt::format("Site2Site transaction {} failed to read flow file data size", transaction_id_str)};
   }
 
   result.flow_file_data_size = len;
@@ -596,16 +596,16 @@ std::expected<SiteToSiteClient::ReceiveFlowFileHeaderResult, std::string> SiteTo
   }
 
   if (peer_state_ != PeerState::READY) {
-    return std::unexpected("Peer state is not ready");
+    return std::unexpected{"Peer state is not ready"};
   }
 
   const auto transaction_id_str = transaction->getUUIDStr();
   if (transaction->getState() != TransactionState::TRANSACTION_STARTED && transaction->getState() != TransactionState::DATA_EXCHANGED) {
-    return std::unexpected(fmt::format("Site2Site transaction {} is not at started or exchanged state", transaction_id_str));
+    return std::unexpected{fmt::format("Site2Site transaction {} is not at started or exchanged state", transaction_id_str)};
   }
 
   if (transaction->getDirection() != TransferDirection::RECEIVE) {
-    return std::unexpected(fmt::format("Site2Site transaction {} direction is wrong", transaction_id_str));
+    return std::unexpected{fmt::format("Site2Site transaction {} direction is wrong", transaction_id_str)};
   }
 
   ReceiveFlowFileHeaderResult result;
@@ -618,7 +618,7 @@ std::expected<SiteToSiteClient::ReceiveFlowFileHeaderResult, std::string> SiteTo
     // if we already have transferred a flow file before, check to see whether another one is available
     auto response = readResponse(transaction);
     if (!response) {
-      return std::unexpected("Failed to read response");
+      return std::unexpected{"Failed to read response"};
     }
     if (response->code == ResponseCode::CONTINUE_TRANSACTION) {
       logger_->log_debug("Site2Site transaction {} peer indicate continue transaction", transaction_id_str);
@@ -629,7 +629,7 @@ std::expected<SiteToSiteClient::ReceiveFlowFileHeaderResult, std::string> SiteTo
       result.eof = true;
       return result;
     } else {
-      return std::unexpected(fmt::format("Site2Site transaction {} peer indicate wrong response code {}", transaction_id_str, magic_enum::enum_underlying(response->code)));
+      return std::unexpected{fmt::format("Site2Site transaction {} peer indicate wrong response code {}", transaction_id_str, magic_enum::enum_underlying(response->code))};
     }
   }
 
@@ -640,7 +640,7 @@ std::expected<SiteToSiteClient::ReceiveFlowFileHeaderResult, std::string> SiteTo
   }
 
   if (auto ret = readFlowFileHeaderData(stream, transaction_id_str, result); !ret.has_value()) {
-    return std::unexpected(fmt::format("Site2Site transaction {} failed to read flow file header data: {}", transaction_id_str, ret.error()));
+    return std::unexpected{fmt::format("Site2Site transaction {} failed to read flow file header data: {}", transaction_id_str, ret.error())};
   }
 
   if (result.flow_file_data_size > 0 || !result.attributes.empty()) {

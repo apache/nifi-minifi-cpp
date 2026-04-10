@@ -73,7 +73,7 @@ class MockSmbConnectionControllerService : public SmbConnectionControllerService
 
   void setPath(std::filesystem::path path) { server_path_ = std::move(path);}
 
-  nonstd::expected<ListSmbExpectedAttributes, std::error_code> addFile(const std::filesystem::path& relative_path,
+  std::expected<ListSmbExpectedAttributes, std::error_code> addFile(const std::filesystem::path& relative_path,
       std::string_view content,
       std::chrono::file_clock::duration age) {
     auto full_path = getPath() / relative_path;
@@ -81,13 +81,13 @@ class MockSmbConnectionControllerService : public SmbConnectionControllerService
     {
       std::ofstream out_file(full_path, std::ios::binary | std::ios::out);
       if (!out_file.is_open())
-        return nonstd::make_unexpected(std::make_error_code(std::errc::bad_file_descriptor));
+        return std::unexpected{std::make_error_code(std::errc::bad_file_descriptor)};
       out_file << content;
     }
     auto current_time = std::chrono::system_clock::now();
     auto last_write_time_error = utils::file::set_last_write_time(full_path, minifi::utils::file::from_sys(current_time) - age);
     if (!last_write_time_error)
-      return nonstd::make_unexpected(std::make_error_code(std::errc::bad_file_descriptor));
+      return std::unexpected{std::make_error_code(std::errc::bad_file_descriptor)};
     auto path = relative_path.parent_path().empty() ? (std::filesystem::path(".") / "").string() : (relative_path.parent_path() / "").string();
     return ListSmbExpectedAttributes{
         .expected_filename = relative_path.filename().string(),

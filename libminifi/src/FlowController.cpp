@@ -107,20 +107,20 @@ FlowController::~FlowController() {
   logger_->log_trace("Destroying FlowController");
 }
 
-nonstd::expected<void, std::string> FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id) {
+std::expected<void, std::string> FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
     newRoot = updateFromPayload(source, configurePayload, flow_id);
   } catch (const std::exception& ex) {
     logger_->log_error("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what());
-    return nonstd::make_unexpected(fmt::format("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what()));
+    return std::unexpected{fmt::format("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what())};
   } catch (...) {
     logger_->log_error("Invalid configuration payload, type: {}", getCurrentExceptionTypeName());
-    return nonstd::make_unexpected(fmt::format("Invalid configuration payload, type: {}", getCurrentExceptionTypeName()));
+    return std::unexpected{fmt::format("Invalid configuration payload, type: {}", getCurrentExceptionTypeName())};
   }
 
   if (newRoot == nullptr)
-    return nonstd::make_unexpected("Could not create root process group");
+    return std::unexpected{"Could not create root process group"};
 
   logger_->log_info("Starting to reload Flow Controller with flow control name {}, version {}", newRoot->getName(), newRoot->getVersion());
 
@@ -163,7 +163,7 @@ nonstd::expected<void, std::string> FlowController::applyConfiguration(const std
   }
 
   if (!started) {
-    return nonstd::make_unexpected("Failed to start flow");
+    return std::unexpected{"Failed to start flow"};
   }
   return {};
 }
@@ -379,7 +379,7 @@ std::vector<std::string> FlowController::getSupportedConfigurationFormats() cons
   return flow_configuration_->getSupportedFormats();
 }
 
-nonstd::expected<void, std::string> FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) {
+std::expected<void, std::string> FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) {
   auto result = applyConfiguration(source, configuration, flow_id);
   if (result) {
     if (persist) {

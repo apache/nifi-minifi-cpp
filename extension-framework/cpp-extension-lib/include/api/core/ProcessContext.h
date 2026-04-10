@@ -18,9 +18,9 @@
 #pragma once
 
 #include <string>
+#include <expected>
 
 #include "minifi-c.h"
-#include "nonstd/expected.hpp"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "api/core/FlowFile.h"
 
@@ -30,8 +30,8 @@ class ProcessContext {
  public:
   explicit ProcessContext(MinifiProcessContext* impl): impl_(impl) {}
 
-  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const;
-  nonstd::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
+  std::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const;
+  std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
     return getProperty(property_reference.name, flow_file);
   }
 

@@ -119,9 +119,9 @@ std::string AssetManager::hash() const {
   return state_.digest.empty() ? "null" : state_.digest;
 }
 
-nonstd::expected<void, std::string> AssetManager::sync(
+std::expected<void, std::string> AssetManager::sync(
     const AssetLayout& layout,
-    const std::function<nonstd::expected<void, std::string>(std::string_view /*url*/, const std::filesystem::path& /*tmp_path*/)>& fetch) {
+    const std::function<std::expected<void, std::string>(std::string_view /*url*/, const std::filesystem::path& /*tmp_path*/)>& fetch) {
   logger_->log_info("Synchronizing assets");
   std::lock_guard lock(mtx_);
   AssetLayout new_state{
@@ -182,7 +182,7 @@ nonstd::expected<void, std::string> AssetManager::sync(
   persist();
 
   if (!new_asset_errors.empty()) {
-    return nonstd::make_unexpected(new_asset_errors);
+    return std::unexpected{new_asset_errors};
   }
 
   return {};

@@ -48,7 +48,7 @@ class Property final {
 
   Property(const PropertyReference &);
 
-  virtual ~Property() = default;
+  ~Property() = default;
 
   void setTransient() { is_transient_ = true; }
 
@@ -61,10 +61,10 @@ class Property final {
   std::vector<std::string> getAllowedTypes() const;
   std::string getDescription() const;
   const PropertyValidator& getValidator() const;
-  [[nodiscard]] nonstd::expected<std::span<const std::string>, std::error_code> getAllValues() const;
-  [[nodiscard]] nonstd::expected<std::string_view, std::error_code> getValue() const;
-  nonstd::expected<void, std::error_code> setValue(std::string value);
-  nonstd::expected<void, std::error_code> appendValue(std::string value);
+  [[nodiscard]] std::expected<std::span<const std::string>, std::error_code> getAllValues() const;
+  [[nodiscard]] std::expected<std::string_view, std::error_code> getValue() const;
+  std::expected<void, std::error_code> setValue(std::string value);
+  std::expected<void, std::error_code> appendValue(std::string value);
   void clearValues();
   bool getRequired() const;
   bool isSensitive() const;

@@ -54,12 +54,12 @@ class ReadModbusFunction {
 
   [[nodiscard]] uint16_t getTransactionId() const { return transaction_id_; }
   [[nodiscard]] uint8_t getUnitId() const { return unit_id_; }
-  [[nodiscard]] virtual nonstd::expected<core::RecordField, std::error_code> responseToRecordField(std::span<const std::byte> resp_pdu) const = 0;
+  [[nodiscard]] virtual std::expected<core::RecordField, std::error_code> responseToRecordField(std::span<const std::byte> resp_pdu) const = 0;
 
   static std::unique_ptr<ReadModbusFunction> parse(uint16_t transaction_id, uint8_t unit_id, const std::string& address);
 
  protected:
-  [[nodiscard]] auto getRespBytes(std::span<const std::byte> resp_pdu) const -> nonstd::expected<std::span<const std::byte>, std::error_code>;
+  [[nodiscard]] auto getRespBytes(std::span<const std::byte> resp_pdu) const -> std::expected<std::span<const std::byte>, std::error_code>;
 
   [[nodiscard]] virtual std::byte getFunctionCode() const = 0;
   [[nodiscard]] virtual std::array<std::byte, 5> rawPdu() const = 0;
@@ -77,7 +77,7 @@ class ReadCoilStatus : public ReadModbusFunction {
         number_of_points_(number_of_points) {
   }
 
-  [[nodiscard]] nonstd::expected<core::RecordField, std::error_code> responseToRecordField(std::span<const std::byte> resp_pdu) const override;
+  [[nodiscard]] std::expected<core::RecordField, std::error_code> responseToRecordField(std::span<const std::byte> resp_pdu) const override;
 
   [[nodiscard]] std::byte getFunctionCode() const override;
   [[nodiscard]] std::array<std::byte, 5> rawPdu() const override;
@@ -120,10 +120,10 @@ class ReadRegisters : public ReadModbusFunction {
     return expectedByteCount() / sizeof(uint16_t);
   }
 
-  [[nodiscard]] nonstd::expected<core::RecordField, std::error_code> responseToRecordField(const std::span<const std::byte> resp_pdu) const override {
+  [[nodiscard]] std::expected<core::RecordField, std::error_code> responseToRecordField(const std::span<const std::byte> resp_pdu) const override {
     const auto resp_bytes = getRespBytes(resp_pdu);
     if (!resp_bytes)
-      return nonstd::make_unexpected(resp_bytes.error());
+      return std::unexpected{resp_bytes.error()};
 
     std::vector<T> holding_registers{};
     for (auto&& register_chunk : ranges::views::chunk(*resp_bytes, std::max(sizeof(T), sizeof(uint16_t)))) {

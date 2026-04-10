@@ -159,7 +159,7 @@ class StateMonitor : public StateController {
   /**
    * Apply an update with the provided string.
    */
-  virtual nonstd::expected<void, std::string> applyUpdate(const std::string & source, const std::string &configuration,
+  virtual std::expected<void, std::string> applyUpdate(const std::string & source, const std::string &configuration,
                                                           bool persist = false, const std::optional<std::string>& flow_id = std::nullopt) = 0;
   /**
    * Returns uptime for this module.

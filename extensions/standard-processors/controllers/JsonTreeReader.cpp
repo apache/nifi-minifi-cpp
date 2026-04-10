@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::standard {
 
 namespace {
 
-nonstd::expected<core::RecordField, std::error_code> parse(const rapidjson::Value& json_value) {
+std::expected<core::RecordField, std::error_code> parse(const rapidjson::Value& json_value) {
   if (json_value.IsDouble()) {
     return core::RecordField{json_value.GetDouble()};
   }
@@ -47,7 +47,7 @@ nonstd::expected<core::RecordField, std::error_code> parse(const rapidjson::Valu
     for (const auto& element : json_value.GetArray()) {
       auto element_field = parse(element);
       if (!element_field)
-        return nonstd::make_unexpected(element_field.error());
+        return std::unexpected{element_field.error()};
       record_array.push_back(std::move(*element_field));
     }
     return core::RecordField{std::move(record_array)};
@@ -58,33 +58,25 @@ nonstd::expected<core::RecordField, std::error_code> parse(const rapidjson::Valu
       auto element_key = m.name.GetString();
       auto element_field = parse(m.value);
       if (!element_field)
-        return nonstd::make_unexpected(element_field.error());
+        return std::unexpected{element_field.error()};
       record_object.emplace(element_key, std::move(*element_field));
     }
-    // Workaround for GCC 12 false positive -Wfree-nonheap-object https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99098
-#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ <= 12)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
-#endif
     return core::RecordField{std::move(record_object)};
-#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ <= 12)
-#pragma GCC diagnostic pop
-#endif
   }
 
-  return nonstd::make_unexpected(std::make_error_code(std::errc::invalid_argument));
+  return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
 }
 
-nonstd::expected<core::Record, std::error_code> parseRecord(rapidjson::Value& record_json) {
+std::expected<core::Record, std::error_code> parseRecord(rapidjson::Value& record_json) {
   core::Record result;
   if (!record_json.IsObject()) {
-    return nonstd::make_unexpected(std::make_error_code(std::errc::invalid_argument));
+    return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
   }
   for (const auto& member : record_json.GetObject()) {
     const auto element_key = member.name.GetString();
     auto element_field = parse(member.value);
     if (!element_field)
-      return nonstd::make_unexpected(element_field.error());
+      return std::unexpected{element_field.error()};
     result.emplace(element_key, std::move(*element_field));
   }
   return result;
@@ -121,7 +113,7 @@ bool readAsArray(const std::string& content, core::RecordSet& record_set) {
   return true;
 }
 
-nonstd::expected<core::RecordSet, std::error_code> JsonTreeReader::read(io::InputStream& input_stream) {
+std::expected<core::RecordSet, std::error_code> JsonTreeReader::read(io::InputStream& input_stream) {
   core::RecordSet record_set{};
   const auto read_result = [&record_set](io::InputStream& input_stream) -> size_t {
     std::string content;
@@ -138,7 +130,7 @@ nonstd::expected<core::RecordSet, std::error_code> JsonTreeReader::read(io::Inpu
     return read_ret;
   }(input_stream);
   if (io::isError(read_result))
-    return nonstd::make_unexpected(std::make_error_code(std::errc::invalid_argument));
+    return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
   return record_set;
 }
 

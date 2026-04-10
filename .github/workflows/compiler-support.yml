@@ -14,8 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ { id: gcc-12, base_image: gcc:12-bookworm },
-                    { id: gcc-15, base_image: gcc:15-bookworm } ]
+        platform: [ { id: gcc-13, base_image: gcc:13-bookworm },
+                    { id: gcc-15, base_image: gcc:15-trixie } ]
     runs-on: ubuntu-24.04
 
     steps:
@@ -36,8 +36,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ { id: clang-16, base_image: silkeh/clang:16-bookworm },
-                    { id: clang-20, base_image: silkeh/clang:20-bookworm } ]
+        platform: [ { id: clang-17, base_image: silkeh/clang:17-bookworm },
+                    { id: clang-21, base_image: silkeh/clang:21-trixie } ]
 
     runs-on: ubuntu-24.04
 

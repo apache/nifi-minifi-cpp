@@ -75,12 +75,12 @@ class ControllerServiceBase : public ControllerServiceApi {
     onEnable();
   }
 
-  [[nodiscard]] nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const {
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(std::string_view name) const {
     gsl_Expects(context_);
     return context_->getProperty(name);
   }
 
-  [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const {
+  [[nodiscard]] std::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const {
     gsl_Expects(context_);
     return context_->getAllPropertyValues(name);
   }

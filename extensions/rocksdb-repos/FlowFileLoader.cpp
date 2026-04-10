@@ -50,7 +50,7 @@ std::future<FlowFileLoader::FlowFilePtrVec> FlowFileLoader::load(std::vector<Swa
   // the dummy_future is for the return value of the Worker's lambda, rerunning this lambda
   // depends on run_determinant + result
   // we could create a custom run_determinant to instead determine if/when it should be rerun
-  // based on the lambda's return value (e.g. it could return a nonstd::expected<FlowFilePtrVec, TaskRescheduleInfo>)
+  // based on the lambda's return value (e.g. it could return a std::expected<FlowFilePtrVec, TaskRescheduleInfo>)
   // but then the std::future would also bear this type
   std::future<utils::TaskRescheduleInfo> dummy_future;
   thread_pool_.execute(std::move(task), dummy_future);

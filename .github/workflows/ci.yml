@@ -13,8 +13,8 @@ env:
   CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
   macos_xcode:
-    name: "macOS 14 aarch64"
-    runs-on: macos-14
+    name: "macOS 26 aarch64"
+    runs-on: macos-26
     timeout-minutes: 240
     env:
       MACOS_MINIFI_OPTIONS: >-
@@ -76,7 +76,7 @@ jobs:
       - id: install_dependencies
         run: |
           brew update
-          brew install ossp-uuid bison flex ccache sqliteodbc automake autoconf ninja
+          brew install ossp-uuid bison flex ccache sqliteodbc unixodbc automake autoconf ninja
       - id: setup_env
         name: setup enviroment
         run: |

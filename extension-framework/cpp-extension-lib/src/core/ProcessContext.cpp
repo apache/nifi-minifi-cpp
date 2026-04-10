@@ -21,7 +21,7 @@
 
 namespace org::apache::nifi::minifi::api::core {
 
-nonstd::expected<std::string, std::error_code> ProcessContext::getProperty(std::string_view name, const FlowFile* flow_file) const {
+std::expected<std::string, std::error_code> ProcessContext::getProperty(std::string_view name, const FlowFile* flow_file) const {
   std::optional<std::string> value;
   MinifiStatus status = MinifiProcessContextGetProperty(impl_, utils::toStringView(name), flow_file ? flow_file->get() : MINIFI_NULL,
     [] (void* data, MinifiStringView result) {
@@ -29,7 +29,7 @@ nonstd::expected<std::string, std::error_code> ProcessContext::getProperty(std::
     }, &value);
 
   if (!value) {
-    return nonstd::make_unexpected(utils::make_error_code(status));
+    return std::unexpected{utils::make_error_code(status)};
   }
   return value.value();
 }

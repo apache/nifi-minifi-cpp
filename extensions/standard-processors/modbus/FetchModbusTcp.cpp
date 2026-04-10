@@ -168,16 +168,16 @@ void FetchModbusTcp::processFlowFile(const std::shared_ptr<utils::net::Connectio
   }
 }
 
-nonstd::expected<core::Record, std::error_code> FetchModbusTcp::readModbus(
+std::expected<core::Record, std::error_code> FetchModbusTcp::readModbus(
     const std::shared_ptr<utils::net::ConnectionHandlerBase>& connection_handler,
     const std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>>& address_map) {
-  nonstd::expected<core::Record, std::error_code> result;
+  std::expected<core::Record, std::error_code> result;
   io_context_.restart();
   asio::co_spawn(io_context_,
     sendRequestsAndReadResponses(*connection_handler, address_map),
     [&result](const std::exception_ptr& exception_ptr, auto res) {
       if (exception_ptr) {
-        result = nonstd::make_unexpected(ModbusExceptionCode::InvalidResponse);
+        result = std::unexpected{ModbusExceptionCode::InvalidResponse};
       } else {
         result = std::move(res);
       }
@@ -187,13 +187,13 @@ nonstd::expected<core::Record, std::error_code> FetchModbusTcp::readModbus(
 }
 
 auto FetchModbusTcp::sendRequestsAndReadResponses(utils::net::ConnectionHandlerBase& connection_handler,
-    const std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>>& address_map) -> asio::awaitable<nonstd::expected<core::Record, std::error_code>> {
+    const std::unordered_map<std::string, std::unique_ptr<ReadModbusFunction>>& address_map) -> asio::awaitable<std::expected<core::Record, std::error_code>> {
   core::Record result;
   for (const auto& [variable, read_modbus_fn] : address_map) {
     gsl_Expects(read_modbus_fn);
     auto response = co_await sendRequestAndReadResponse(connection_handler, *read_modbus_fn);
     if (!response) {
-      co_return nonstd::make_unexpected(response.error());
+      co_return std::unexpected{response.error()};
     }
     result.emplace(variable, std::move(*response));
   }
@@ -202,19 +202,19 @@ auto FetchModbusTcp::sendRequestsAndReadResponses(utils::net::ConnectionHandlerB
 
 
 auto FetchModbusTcp::sendRequestAndReadResponse(utils::net::ConnectionHandlerBase& connection_handler,
-    const ReadModbusFunction& read_modbus_function) -> asio::awaitable<nonstd::expected<core::RecordField, std::error_code>> {
+    const ReadModbusFunction& read_modbus_function) -> asio::awaitable<std::expected<core::RecordField, std::error_code>> {
   if (auto connection_error = co_await connection_handler.setupUsableSocket(io_context_)) {  // NOLINT (clang tidy doesnt like coroutines)
-    co_return nonstd::make_unexpected(connection_error);
+    co_return std::unexpected{connection_error};
   }
 
   if (auto [write_error, bytes_written] = co_await connection_handler.write(asio::buffer(read_modbus_function.requestBytes())); write_error) {
-    co_return nonstd::make_unexpected(write_error);
+    co_return std::unexpected{write_error};
   }
 
   std::array<std::byte, 7> apu_buffer{};
   asio::mutable_buffer response_apu(apu_buffer.data(), 7);
   if (auto [read_error, bytes_read] = co_await connection_handler.read(response_apu); read_error) {
-    co_return nonstd::make_unexpected(read_error);
+    co_return std::unexpected{read_error};
   }
 
   const auto received_transaction_id = fromBytes<uint16_t>({apu_buffer[0], apu_buffer[1]});
@@ -223,23 +223,23 @@ auto FetchModbusTcp::sendRequestAndReadResponse(utils::net::ConnectionHandlerBas
   const auto unit_id = static_cast<uint8_t>(apu_buffer[6]);
 
   if (received_transaction_id != read_modbus_function.getTransactionId()) {
-    co_return nonstd::make_unexpected(ModbusExceptionCode::InvalidTransactionId);
+    co_return std::unexpected{ModbusExceptionCode::InvalidTransactionId};
   }
   if (received_protocol != 0) {
-    co_return nonstd::make_unexpected(ModbusExceptionCode::IllegalProtocol);
+    co_return std::unexpected{ModbusExceptionCode::IllegalProtocol};
   }
   if (unit_id != read_modbus_function.getUnitId()) {
-    co_return nonstd::make_unexpected(ModbusExceptionCode::InvalidSlaveId);
+    co_return std::unexpected{ModbusExceptionCode::InvalidSlaveId};
   }
   if (received_length + 6 > 260 || received_length <= 1) {
-    co_return nonstd::make_unexpected(ModbusExceptionCode::InvalidResponse);
+    co_return std::unexpected{ModbusExceptionCode::InvalidResponse};
   }
 
   std::array<std::byte, 260-7> pdu_buffer{};
   asio::mutable_buffer response_pdu(pdu_buffer.data(), received_length-1);
   auto [read_error, bytes_read] = co_await connection_handler.read(response_pdu);
   if (read_error) {
-    co_return nonstd::make_unexpected(read_error);
+    co_return std::unexpected{read_error};
   }
 
   const auto pdu_span = std::span<std::byte>(pdu_buffer.data(), received_length-1);

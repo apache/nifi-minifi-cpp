@@ -108,7 +108,7 @@ std::optional<std::string> DefaultLlamaContext::applyTemplate(const std::vector<
   return text;
 }
 
-nonstd::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) {
+std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const std::string& input, std::function<void(std::string_view/*token*/)> token_handler) {
   GenerationResult result{};
   auto start_time = std::chrono::steady_clock::now();
   const llama_vocab * vocab = llama_model_get_vocab(llama_model_);
@@ -121,9 +121,9 @@ nonstd::expected<GenerationResult, std::string> DefaultLlamaContext::generate(co
   while (true) {
     int32_t res = llama_decode(llama_ctx_, batch);
     if (res == 1) {
-      return nonstd::make_unexpected("Could not find a KV slot for the batch (try reducing the size of the batch or increase the context)");
+      return std::unexpected{"Could not find a KV slot for the batch (try reducing the size of the batch or increase the context)"};
     } else if (res < 0) {
-      return nonstd::make_unexpected("Error occurred while executing llama decode");
+      return std::unexpected{"Error occurred while executing llama decode"};
     }
 
     new_token_id = llama_sampler_sample(llama_sampler_, llama_ctx_, -1);
@@ -142,7 +142,7 @@ nonstd::expected<GenerationResult, std::string> DefaultLlamaContext::generate(co
     std::array<char, 128> buf{};
     int32_t len = llama_token_to_piece(vocab, new_token_id, buf.data(), gsl::narrow<int32_t>(buf.size()), 0, true);
     if (len < 0) {
-      return nonstd::make_unexpected("Failed to convert token to text");
+      return std::unexpected{"Failed to convert token to text"};
     }
     gsl_Assert(len < 128);
 

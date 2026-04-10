@@ -22,8 +22,8 @@
 #include <type_traits>
 #include <utility>
 #include <iostream>
+#include <expected>
 
-#include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/detail/MonadicOperationWrappers.h"
@@ -130,9 +130,9 @@ auto operator|(std::optional<SourceType> o, filter_wrapper<F> f) noexcept(noexce
 }
 
 template<typename T, typename E>
-nonstd::expected<T, E> operator|(std::optional<T> object, to_expected_wrapper<E> e) {
+std::expected<T, E> operator|(std::optional<T> object, to_expected_wrapper<E> e) {
   if (!object) {
-    return nonstd::make_unexpected(e.error);
+    return std::unexpected{e.error};
   }
   return std::move(*object);
 }

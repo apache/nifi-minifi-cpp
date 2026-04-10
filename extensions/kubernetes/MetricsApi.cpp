@@ -32,13 +32,13 @@ using genericClient_unique_ptr = std::unique_ptr<genericClient_t, genericClient_
 
 namespace org::apache::nifi::minifi::kubernetes::metrics {
 
-nonstd::expected<std::string, std::string> podMetricsList(const kubernetes::ApiClient& api_client) {
+std::expected<std::string, std::string> podMetricsList(const kubernetes::ApiClient& api_client) {
   genericClient_unique_ptr genericClient{genericClient_create(api_client.getClient(), "metrics.k8s.io", "v1beta1", "pods")};
   utils::freeing_unique_ptr<char> api_response{Generic_list(genericClient.get())};
   if (api_response) {
     return std::string{api_response.get()};
   } else {
-    return nonstd::make_unexpected("Could not access the Kubernetes API /apis/metrics.k8s.io/v1beta1/pods");
+    return std::unexpected{"Could not access the Kubernetes API /apis/metrics.k8s.io/v1beta1/pods"};
   }
 }
 

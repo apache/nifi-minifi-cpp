@@ -82,15 +82,15 @@ class CouchbaseClient {
   CouchbaseClient& operator=(CouchbaseClient&&) = delete;
   CouchbaseClient& operator=(const CouchbaseClient&) = delete;
 
-  nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id,
+  std::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type, const std::string& document_id,
     const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options);
-  nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> get(const CouchbaseCollection& collection, const std::string& document_id, CouchbaseValueType return_type);
-  nonstd::expected<void, CouchbaseErrorType> establishConnection();
+  std::expected<CouchbaseGetResult, CouchbaseErrorType> get(const CouchbaseCollection& collection, const std::string& document_id, CouchbaseValueType return_type);
+  std::expected<void, CouchbaseErrorType> establishConnection();
   void close();
 
  private:
   ::couchbase::cluster_options buildClusterOptions(std::string username, std::string password, minifi::controllers::SSLContextServiceInterface* ssl_context_service);
-  nonstd::expected<::couchbase::collection, CouchbaseErrorType> getCollection(const CouchbaseCollection& collection);
+  std::expected<::couchbase::collection, CouchbaseErrorType> getCollection(const CouchbaseCollection& collection);
 
   std::string connection_string_;
   std::shared_ptr<core::logging::Logger> logger_;
@@ -140,13 +140,13 @@ class CouchbaseClusterService : public core::controller::ControllerServiceBase, 
 
   [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
-  virtual nonstd::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type,
+  virtual std::expected<CouchbaseUpsertResult, CouchbaseErrorType> upsert(const CouchbaseCollection& collection, CouchbaseValueType document_type,
       const std::string& document_id, const std::vector<std::byte>& buffer, const ::couchbase::upsert_options& options) {
     gsl_Expects(client_);
     return client_->upsert(collection, document_type, document_id, buffer, options);
   }
 
-  virtual nonstd::expected<CouchbaseGetResult, CouchbaseErrorType> get(const CouchbaseCollection& collection, const std::string& document_id, CouchbaseValueType return_type) {
+  virtual std::expected<CouchbaseGetResult, CouchbaseErrorType> get(const CouchbaseCollection& collection, const std::string& document_id, CouchbaseValueType return_type) {
     gsl_Expects(client_);
     return client_->get(collection, document_id, return_type);
   }
