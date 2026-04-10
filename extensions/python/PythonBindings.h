@@ -33,7 +33,7 @@ PyObject* safePyFunction(PyObject* self, PyObject* args) {
   try {
     return ((PyCFunction)Fn)(self, args);
   } catch (const std::exception& e) { \
-    PyErr_Format(PyExc_RuntimeError, "C++ binding error: %s", e.what()); \
+    PyErr_Format(PyExc_RuntimeError, "C++ exception: %s", e.what()); \
     return nullptr; \
   } catch (...) { \
     PyErr_SetString(PyExc_Exception, "Unknown C++ exception"); \
