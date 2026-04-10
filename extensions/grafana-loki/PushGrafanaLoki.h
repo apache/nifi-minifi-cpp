@@ -127,7 +127,7 @@ class PushGrafanaLoki : public core::ProcessorImpl {
     std::optional<std::chrono::milliseconds> log_line_batch_wait_;
     std::chrono::system_clock::time_point start_push_time_;
     std::vector<std::shared_ptr<core::FlowFile>> batched_flowfiles_;
-    core::StateManager* state_manager_;
+    core::StateManager* state_manager_ = nullptr;
     std::shared_ptr<core::logging::Logger> logger_;
   };
 
@@ -136,7 +136,7 @@ class PushGrafanaLoki : public core::ProcessorImpl {
   void processBatch(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session);
   virtual nonstd::expected<void, std::string> submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) = 0;
   void initializeHttpClient(core::ProcessContext& context);
-  void setUpStateManager(core::ProcessContext& context);
+  void restoreStartPushTime(core::ProcessContext& context);
   virtual void setUpStreamLabels(core::ProcessContext& context) = 0;
 
   std::optional<uint64_t> max_batch_size_;

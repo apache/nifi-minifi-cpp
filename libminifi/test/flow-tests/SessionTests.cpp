@@ -86,7 +86,7 @@ TEST_CASE("Import null data") {
   output->addRelationship({"out", ""});
   output->setSourceUUID(uuid);
   processor->addConnection(output.get());
-  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, prov_repo, ff_repository, content_repo);
+  auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, nullptr, prov_repo, ff_repository, content_repo);
   core::ProcessSessionImpl session(context);
 
   minifi::io::BufferStream input{};

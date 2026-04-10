@@ -92,7 +92,6 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
 
   azure::EntityTracking tracking_strategy_ = azure::EntityTracking::timestamps;
   storage::ListAzureDataLakeStorageParameters list_parameters_;
-  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

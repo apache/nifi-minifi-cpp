@@ -194,7 +194,7 @@ class MergeTestController : public TestController {
     log_attribute_processor_->incrementActiveTasks();
     log_attribute_processor_->setScheduledState(core::ScheduledState::RUNNING);
 
-    context_ = std::make_shared<core::ProcessContextImpl>(*merge_content_processor_, nullptr, repo, repo, content_repo);
+    context_ = std::make_shared<core::ProcessContextImpl>(*merge_content_processor_, nullptr, nullptr, repo, repo, content_repo);
 
     for (size_t i = 0; i < 6; ++i) {
       flowFileContents_[i] = utils::string::repeat(std::to_string(i), 32);

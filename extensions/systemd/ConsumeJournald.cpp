@@ -69,7 +69,7 @@ void ConsumeJournald::onSchedule(core::ProcessContext& context, core::ProcessSes
     return tf_prop;
   }();
 
-  state_manager_ = context.getStateManager();
+  auto temp_state_manager = context.createStateManager();
   // All journal-related API calls are thread-agnostic, meaning they need to be called from the same thread. In our environment,
   // where a processor can easily be scheduled on different threads, we ensure this by executing all library calls on a dedicated
   // worker thread. This is why all such operations are dispatched to a thread and immediately waited for in the initiating thread.
@@ -77,8 +77,8 @@ void ConsumeJournald::onSchedule(core::ProcessContext& context, core::ProcessSes
   const auto seek_default = [process_old_messages](libwrapper::Journal& journal) {
     return process_old_messages ? journal.seekHead() : journal.seekTail();
   };
-  worker_->enqueue([this, &seek_default] {
-    const auto cursor = state_manager_->get() | utils::transform([](const std::unordered_map<std::string, std::string>& m) { return m.at(CURSOR_KEY); });
+  worker_->enqueue([this, &seek_default, temp_state_manager = std::move(temp_state_manager)] {
+    const auto cursor = temp_state_manager->get() | utils::transform([](const std::unordered_map<std::string, std::string>& m) { return m.at(CURSOR_KEY); });
     if (!cursor) {
       seek_default(*journal_);
     } else {
@@ -94,7 +94,8 @@ void ConsumeJournald::onSchedule(core::ProcessContext& context, core::ProcessSes
 }
 
 void ConsumeJournald::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  gsl_Expects(state_manager_);
+  auto state_manager = context.getStateManager();
+  gsl_Expects(state_manager);
   if (!running_.load(std::memory_order_acquire)) return;
   auto cursor_and_messages = getCursorAndMessageBatch().get();
   auto messages = std::move(cursor_and_messages.second);
@@ -116,7 +117,7 @@ void ConsumeJournald::onTrigger(core::ProcessContext& context, core::ProcessSess
     if (include_timestamp_) flow_file->setAttribute("timestamp", date::format(timestamp_format_, chr::floor<chr::microseconds>(msg.timestamp)));
     session.transfer(flow_file, Success);
   }
-  state_manager_->set({{"cursor", std::move(cursor_and_messages.first)}});
+  state_manager->set({{"cursor", std::move(cursor_and_messages.first)}});
 }
 
 std::optional<std::span<const char>> ConsumeJournald::enumerateJournalEntry(libwrapper::Journal& journal) {

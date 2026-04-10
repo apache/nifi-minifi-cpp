@@ -319,7 +319,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
     REQUIRE(uuid);
     inputPtr->setSourceUUID(uuid);
     processor->addConnection(inputPtr);
-    auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, prov_repo, ff_repository, content_repo);
+    auto context = std::make_shared<core::ProcessContextImpl>(*processor, nullptr, nullptr, prov_repo, ff_repository, content_repo);
     core::ProcessSessionImpl sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(content, flow);

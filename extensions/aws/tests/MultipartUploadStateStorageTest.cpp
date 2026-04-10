@@ -43,7 +43,7 @@ class MultipartUploadStateStorageTestFixture {
 
  protected:
   std::unique_ptr<minifi::controllers::KeyValueStateStorage> state_storage_;
-  std::unique_ptr<core::StateManager> state_manager_;
+  std::unique_ptr<minifi::controllers::KeyValueStateManager> state_manager_;
   std::unique_ptr<minifi::aws::s3::MultipartUploadStateStorage> upload_storage_;
 };
 

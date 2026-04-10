@@ -24,6 +24,7 @@
 namespace org::apache::nifi::minifi::core {
 
 std::shared_ptr<ProcessSession> ProcessSessionFactoryImpl::createSession() {
+  process_context_->setSessionStateManager(process_context_->createStateManager());
   return std::make_shared<ProcessSessionImpl>(process_context_);
 }
 

@@ -62,7 +62,7 @@ core::StateManager::State KeyValueStateStorage::deserialize(const std::string& s
   return retState;
 }
 
-std::unique_ptr<core::StateManager> KeyValueStateStorage::getStateManager(const utils::Identifier& uuid) {
+std::unique_ptr<core::StateManager> KeyValueStateStorage::createStateManager(const utils::Identifier& uuid) {
   return std::make_unique<KeyValueStateManager>(uuid, gsl::make_not_null(this));
 }
 

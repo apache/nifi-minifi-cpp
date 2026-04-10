@@ -156,7 +156,7 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
   plan->reset(true);  // start a new but with state file
   LogTestController::getInstance().clear();
 
-  plan->getProcessContextForProcessor(tailfile)->getStateManager()->clear();
+  plan->getProcessContextForProcessor(tailfile)->createStateManager()->clear();
 
   TestController::runSession(plan, true);
 
@@ -204,7 +204,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
     plan->reset(true);  // start a new but with state file
     LogTestController::getInstance().clear();
 
-    plan->getProcessContextForProcessor(tailfile)->getStateManager()->set({{"file.0.name", temp_file_path.filename().string()},
+    plan->getProcessContextForProcessor(tailfile)->createStateManager()->set({{"file.0.name", temp_file_path.filename().string()},
                                                                                    {"file.0.position", "14"},
                                                                                    {"file.0.current", temp_file_path.string()}});
 
@@ -216,7 +216,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
   for (int i = 14; i < 34; i++) {
     plan->reset(true);  // start a new but with state file
 
-    plan->getProcessContextForProcessor(tailfile)->getStateManager()->set({{"file.0.name", temp_file_path.filename().string()},
+    plan->getProcessContextForProcessor(tailfile)->createStateManager()->set({{"file.0.name", temp_file_path.filename().string()},
                                                                                    {"file.0.position", std::to_string(i)},
                                                                                    {"file.0.current", temp_file_path.string()}});
 
@@ -273,7 +273,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.14-34.txt"));
 
     std::unordered_map<std::string, std::string> state;
-    REQUIRE(plan->getProcessContextForProcessor(tailfile)->getStateManager()->get(state));
+    REQUIRE(plan->getProcessContextForProcessor(tailfile)->createStateManager()->get(state));
 
     REQUIRE(temp_file.has_filename());
     REQUIRE(temp_file.has_parent_path());
@@ -317,7 +317,7 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     REQUIRE(LogTestController::getInstance().contains(file_name_2.substr(0, file_name_2.rfind('.')) + ".15-34.txt"));
 
     std::unordered_map<std::string, std::string> state;
-    REQUIRE(plan->getProcessContextForProcessor(tailfile)->getStateManager()->get(state));
+    REQUIRE(plan->getProcessContextForProcessor(tailfile)->createStateManager()->get(state));
 
     REQUIRE(temp_file_1.has_parent_path());
     REQUIRE(temp_file_1.has_filename());
