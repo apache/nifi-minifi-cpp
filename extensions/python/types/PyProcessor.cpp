@@ -42,10 +42,10 @@ bool getBoolFromTuple(PyObject* tuple, Py_ssize_t location) {
 extern "C" {
 
 static PyMethodDef PyProcessor_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
-    {"setSupportsDynamicProperties", (PyCFunction) PyProcessor::setSupportsDynamicProperties, METH_VARARGS, nullptr},
-    {"setDescription", (PyCFunction) PyProcessor::setDescription, METH_VARARGS, nullptr},
-    {"setVersion", (PyCFunction) PyProcessor::setVersion, METH_VARARGS, nullptr},
-    {"addProperty", (PyCFunction) PyProcessor::addProperty, METH_VARARGS, nullptr},
+    {"setSupportsDynamicProperties", safePyFunction<PyProcessor::setSupportsDynamicProperties>, METH_VARARGS, nullptr},
+    {"setDescription", safePyFunction<PyProcessor::setDescription>, METH_VARARGS, nullptr},
+    {"setVersion", safePyFunction<PyProcessor::setVersion>, METH_VARARGS, nullptr},
+    {"addProperty", safePyFunction<PyProcessor::addProperty>, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -79,7 +79,6 @@ int PyProcessor::init(PyProcessor* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyProcessor::setSupportsDynamicProperties(PyProcessor* self, PyObject*) {
-  PYTHON_METHOD_BEGIN
   auto processor = self->processor_.lock();
   if (!processor) {
     PyErr_SetString(PyExc_AttributeError, "tried reading processor outside 'on_trigger'");
@@ -88,11 +87,9 @@ PyObject* PyProcessor::setSupportsDynamicProperties(PyProcessor* self, PyObject*
 
   processor->setSupportsDynamicProperties();
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessor::setDescription(PyProcessor* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto processor = self->processor_.lock();
   if (!processor) {
     PyErr_SetString(PyExc_AttributeError, "tried reading processor outside 'on_trigger'");
@@ -105,11 +102,9 @@ PyObject* PyProcessor::setDescription(PyProcessor* self, PyObject* args) {
   }
   processor->setDescription(std::string(description));
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessor::setVersion(PyProcessor* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto processor = self->processor_.lock();
   if (!processor) {
     PyErr_SetString(PyExc_AttributeError, "tried reading processor outside 'on_trigger'");
@@ -122,11 +117,9 @@ PyObject* PyProcessor::setVersion(PyProcessor* self, PyObject* args) {
   }
   processor->setVersion(std::string(version));
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto processor = self->processor_.lock();
   if (!processor) {
     PyErr_SetString(PyExc_AttributeError, "tried reading processor outside 'on_trigger'");
@@ -197,7 +190,6 @@ PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
   processor->addProperty(name.toUtf8String(), description.toUtf8String(), default_value, is_required, supports_expression_language, sensitive,
       validator_value, allowable_values, controller_service_type_name);
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyProcessor::typeObject() {

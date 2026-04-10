@@ -21,8 +21,8 @@ extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
 static PyMethodDef PyRelationship_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
-    {"getName", (PyCFunction) PyRelationship::getName, METH_VARARGS, nullptr},
-    {"getDescription", (PyCFunction) PyRelationship::getDescription, METH_VARARGS, nullptr},
+    {"getName", safePyFunction<PyRelationship::getName>, METH_VARARGS, nullptr},
+    {"getDescription", safePyFunction<PyRelationship::getDescription>, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -56,15 +56,11 @@ int PyRelationship::init(PyRelationship* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyRelationship::getName(PyRelationship* self, PyObject*) {
-  PYTHON_METHOD_BEGIN
   return object::returnReference(self->relationship_.getName());
-  PYTHON_METHOD_END
 }
 
 PyObject* PyRelationship::getDescription(PyRelationship* self, PyObject*) {
-  PYTHON_METHOD_BEGIN
   return object::returnReference(self->relationship_.getDescription());
-  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyRelationship::typeObject() {
