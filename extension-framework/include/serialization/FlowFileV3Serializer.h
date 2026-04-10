@@ -38,7 +38,7 @@ class FlowFileV3Serializer : public FlowFileSerializer {
  public:
   using FlowFileSerializer::FlowFileSerializer;
 
-  int64_t serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) override;
+  io::IoResult serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) override;
 };
 
 }  // namespace org::apache::nifi::minifi

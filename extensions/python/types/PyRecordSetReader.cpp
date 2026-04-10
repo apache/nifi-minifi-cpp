@@ -90,7 +90,7 @@ PyObject* PyRecordSetReader::read(PyRecordSetReader* self, PyObject* args) {
   nonstd::expected<core::RecordSet, std::error_code> read_result;
   process_session->getSession().read(flow_file, [&record_set_reader, &read_result](const std::shared_ptr<io::InputStream>& input_stream) {
     read_result = record_set_reader->read(*input_stream);
-    return gsl::narrow<int64_t>(input_stream->size());
+    return io::IoResult::fromSizeT(input_stream->size());
   });
 
   if  (!read_result) {

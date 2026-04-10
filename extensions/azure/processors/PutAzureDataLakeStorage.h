@@ -81,7 +81,7 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
   class ReadCallback {
    public:
     ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage &azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters &params, std::shared_ptr<core::logging::Logger> logger);
-    int64_t operator()(const std::shared_ptr<io::InputStream> &stream);
+    io::IoResult operator()(const std::shared_ptr<io::InputStream> &stream);
 
     [[nodiscard]] storage::UploadDataLakeStorageResult getResult() const {
       return result_;

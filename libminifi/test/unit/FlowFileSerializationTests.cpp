@@ -47,7 +47,7 @@ TEST_CASE("Payload Serializer", "[testPayload]") {
   flowFile->addAttribute("first", "one");
   flowFile->addAttribute("second", "two");
 
-  minifi::PayloadSerializer serializer([&] (const std::shared_ptr<core::FlowFile>&, const minifi::io::InputStreamCallback& cb) {
+  minifi::PayloadSerializer serializer([&] (const std::shared_ptr<core::FlowFile>&, const minifi::io::InputStreamCallback& cb) -> minifi::io::IoResult {
     return cb(contentStream);
   });
   serializer.serialize(flowFile, result);
@@ -67,7 +67,7 @@ TEST_CASE("FFv3 Serializer", "[testFFv3]") {
   flowFile->addAttribute("first", "one");
   flowFile->addAttribute("second", "two");
 
-  minifi::FlowFileV3Serializer serializer([&] (const std::shared_ptr<core::FlowFile>&, const minifi::io::InputStreamCallback& cb) {
+  minifi::FlowFileV3Serializer serializer([&] (const std::shared_ptr<core::FlowFile>&, const minifi::io::InputStreamCallback& cb) -> minifi::io::IoResult {
     return cb(contentStream);
   });
   serializer.serialize(flowFile, result);

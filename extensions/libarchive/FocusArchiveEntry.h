@@ -66,7 +66,7 @@ class FocusArchiveEntry : public core::ProcessorImpl {
   class ReadCallback {
    public:
     explicit ReadCallback(core::ProcessContext* context, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata);
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const;
+    io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream) const;
 
    private:
     utils::file::FileManager *file_man_;

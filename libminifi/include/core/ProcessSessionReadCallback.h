@@ -31,7 +31,7 @@ class ProcessSessionReadCallback {
  public:
   ProcessSessionReadCallback(std::filesystem::path temp_file, std::filesystem::path dest_file, std::shared_ptr<logging::Logger> logger);
   ~ProcessSessionReadCallback();
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream);
   bool commit();
 
  private:

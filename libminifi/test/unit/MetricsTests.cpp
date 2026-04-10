@@ -273,15 +273,15 @@ class DuplicateContentProcessor : public minifi::core::ProcessorImpl {
 
     auto flow_file_copy = session.create();
     std::vector<std::byte> buffer;
-    session.read(flow_file, [&](const std::shared_ptr<io::InputStream>& stream) -> int64_t {
+    session.read(flow_file, [&](const std::shared_ptr<io::InputStream>& stream) -> io::IoResult {
       buffer.resize(stream->size());
-      return gsl::narrow<int64_t>(stream->read(buffer));
+      return io::IoResult::fromSizeT(stream->read(buffer));
     });
-    session.write(flow_file_copy, [&](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
-      return gsl::narrow<int64_t>(stream->write(buffer));
+    session.write(flow_file_copy, [&](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
+      return io::IoResult::fromSizeT(stream->write(buffer));
     });
-    session.append(flow_file_copy, [&](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
-      return gsl::narrow<int64_t>(stream->write(buffer));
+    session.append(flow_file_copy, [&](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
+      return io::IoResult::fromSizeT(stream->write(buffer));
     });
     session.transfer(flow_file_copy, Success);
     session.transfer(flow_file, Original);

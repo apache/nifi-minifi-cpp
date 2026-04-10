@@ -67,8 +67,8 @@ void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, Bo
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_.read(flow_file, [&input_stream_callback](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
-    return Long(Callable(input_stream_callback.getAttribute("process"))(std::weak_ptr(input_stream))).asInt64();
+  session_.read(flow_file, [&input_stream_callback](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
+    return io::IoResult::fromI64(Long(Callable(input_stream_callback.getAttribute("process"))(std::weak_ptr(input_stream))).asInt64());
   });
 }
 
@@ -77,8 +77,8 @@ void PyProcessSession::write(const std::shared_ptr<core::FlowFile>& flow_file, B
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_.write(flow_file, [&output_stream_callback](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
-    return Long(Callable(output_stream_callback.getAttribute("process"))(std::weak_ptr(output_stream))).asInt64();
+  session_.write(flow_file, [&output_stream_callback](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
+    return io::IoResult::fromI64(Long(Callable(output_stream_callback.getAttribute("process"))(std::weak_ptr(output_stream))).asInt64());
   });
 }
 
@@ -111,9 +111,9 @@ std::string PyProcessSession::getContentsAsString(const std::shared_ptr<core::Fl
   }
 
   std::string content;
-  session_.read(flow_file, [&content](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+  session_.read(flow_file, [&content](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
     content.resize(input_stream->size());
-    return gsl::narrow<int64_t>(input_stream->read(as_writable_bytes(std::span(content))));
+    return io::IoResult::fromSizeT(input_stream->read(as_writable_bytes(std::span(content))));
   });
   return content;
 }

@@ -50,7 +50,7 @@ nonstd::expected<std::shared_ptr<io::BufferStream>, std::string> createDebugBund
     if (!archiver->newEntry({filename, file_size})) {
       return nonstd::make_unexpected("Couldn't initialize archive entry for '" + filename + "'");
     }
-    if (gsl::narrow<int64_t>(file_size) != minifi::internal::pipe(*stream, *archiver)) {
+    if (gsl::narrow<int64_t>(file_size) != minifi::internal::pipe(*stream, *archiver).toI64()) {
       // we have touched the input streams, they cannot be reused
       return nonstd::make_unexpected("Error while writing file '" + filename + "' into the debug bundle");
     }
