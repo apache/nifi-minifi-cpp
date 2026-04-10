@@ -315,7 +315,7 @@ def onTrigger(context, session):
   )"));
 
   auto result = controller.trigger();
-  REQUIRE(LogTestController::getInstance().contains("Got exception from c++: C++ binding error: File Operation: Failed to process flowfile content"));
+  REQUIRE(LogTestController::getInstance().contains("Got exception from c++: C++ exception: File Operation: Failed to process flowfile content"));
 }
 
 }  // namespace org::apache::nifi::minifi::processors::test
