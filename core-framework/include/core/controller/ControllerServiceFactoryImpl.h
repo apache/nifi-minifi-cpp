@@ -17,10 +17,12 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 #include <utility>
+
 #include "core/ClassName.h"
+#include "minifi-cpp/core/ControllerServiceMetadata.h"
 #include "minifi-cpp/core/controller/ControllerServiceFactory.h"
 
 namespace org::apache::nifi::minifi::core::controller {

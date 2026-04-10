@@ -31,7 +31,7 @@ std::shared_ptr<core::controller::ControllerService> createNetworkPrioritizerSer
     const std::shared_ptr<utils::timeutils::Clock>& clock = std::make_shared<minifi::test::utils::ManualClock>()) {
   return std::make_shared<core::controller::ControllerService>(
     name, utils::Identifier{},
-    std::make_unique<minifi::controllers::NetworkPrioritizerService>(core::controller::ControllerServiceMetadata{
+    std::make_unique<minifi::controllers::NetworkPrioritizerService>(core::ControllerServiceMetadata{
       .uuid = utils::Identifier{},
       .name = name,
       .logger = logging::LoggerFactory<minifi::controllers::NetworkPrioritizerService>::getLogger()
