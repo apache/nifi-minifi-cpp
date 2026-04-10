@@ -122,7 +122,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test default properties", "[awsS3Co
   REQUIRE(get_content(output_dir / INPUT_FILENAME) == S3_CONTENT);
   REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetVersionId().empty());
   REQUIRE(!mock_s3_request_sender_ptr->get_object_request.VersionIdHasBeenSet());
-  REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::NOT_SET);
+  REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetRequestPayer() == Aws::S3Crt::Model::RequestPayer::NOT_SET);
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test subdirectories on AWS", "[awsS3Config]") {
@@ -141,15 +141,14 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test optional values are set in req
   plan->setProperty(s3_processor, "Requester Pays", "true");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetVersionId() == S3_VERSION_1);
-  REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
+  REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetRequestPayer() == Aws::S3Crt::Model::RequestPayer::requester);
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test non-default client configuration values", "[awsS3Config]") {
   setRequiredProperties();
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::US_EAST_1);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
-  plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
+  plan->setProperty(s3_processor, "Endpoint Override URL", "http://localhost:1234");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);

@@ -40,6 +40,7 @@ namespace org::apache::nifi::minifi::aws::processors {
 namespace region {
 inline constexpr std::string_view AF_SOUTH_1 = "af-south-1";
 inline constexpr std::string_view AP_EAST_1 = "ap-east-1";
+inline constexpr std::string_view AP_EAST_2 = "ap-east-2";
 inline constexpr std::string_view AP_NORTHEAST_1 = "ap-northeast-1";
 inline constexpr std::string_view AP_NORTHEAST_2 = "ap-northeast-2";
 inline constexpr std::string_view AP_NORTHEAST_3 = "ap-northeast-3";
@@ -50,6 +51,7 @@ inline constexpr std::string_view AP_SOUTHEAST_2 = "ap-southeast-2";
 inline constexpr std::string_view AP_SOUTHEAST_3 = "ap-southeast-3";
 inline constexpr std::string_view AP_SOUTHEAST_4 = "ap-southeast-4";
 inline constexpr std::string_view AP_SOUTHEAST_5 = "ap-southeast-5";
+inline constexpr std::string_view AP_SOUTHEAST_6 = "ap-southeast-6";
 inline constexpr std::string_view AP_SOUTHEAST_7 = "ap-southeast-7";
 inline constexpr std::string_view CA_CENTRAL_1 = "ca-central-1";
 inline constexpr std::string_view CA_WEST_1 = "ca-west-1";
@@ -64,6 +66,7 @@ inline constexpr std::string_view EU_SOUTH_2 = "eu-south-2";
 inline constexpr std::string_view EU_WEST_1 = "eu-west-1";
 inline constexpr std::string_view EU_WEST_2 = "eu-west-2";
 inline constexpr std::string_view EU_WEST_3 = "eu-west-3";
+inline constexpr std::string_view EUSC_DE_EAST_1 = "eusc-de-east-1";
 inline constexpr std::string_view IL_CENTRAL_1 = "il-central-1";
 inline constexpr std::string_view ME_CENTRAL_1 = "me-central-1";
 inline constexpr std::string_view ME_SOUTH_1 = "me-south-1";
@@ -77,32 +80,26 @@ inline constexpr std::string_view US_ISO_EAST_1 = "us-iso-east-1";
 inline constexpr std::string_view US_ISO_WEST_1 = "us-iso-west-1";
 inline constexpr std::string_view US_ISOB_EAST_1 = "us-isob-east-1";
 inline constexpr std::string_view US_ISOF_EAST_1 = "us-isof-east-1";
+inline constexpr std::string_view US_ISOB_WEST_1 = "us-isob-west-1";
 inline constexpr std::string_view US_ISOF_SOUTH_1 = "us-isof-south-1";
 inline constexpr std::string_view US_WEST_1 = "us-west-1";
 inline constexpr std::string_view US_WEST_2 = "us-west-2";
 
 inline constexpr auto REGIONS = std::array{
-  AF_SOUTH_1, AP_EAST_1, AP_NORTHEAST_1, AP_NORTHEAST_2, AP_NORTHEAST_3, AP_SOUTH_1, AP_SOUTH_2, AP_SOUTHEAST_1, AP_SOUTHEAST_2, AP_SOUTHEAST_3, AP_SOUTHEAST_4, AP_SOUTHEAST_5, AP_SOUTHEAST_7,
-  CA_CENTRAL_1, CA_WEST_1, CN_NORTH_1, CN_NORTHWEST_1, EU_CENTRAL_1, EU_CENTRAL_2, EU_ISOE_WEST_1, EU_NORTH_1, EU_SOUTH_1, EU_SOUTH_2, EU_WEST_1, EU_WEST_2, EU_WEST_3, IL_CENTRAL_1, ME_CENTRAL_1,
-  ME_SOUTH_1, MX_CENTRAL_1, SA_EAST_1, US_EAST_1, US_EAST_2, US_GOV_EAST_1, US_GOV_WEST_1, US_ISO_EAST_1, US_ISO_WEST_1, US_ISOB_EAST_1, US_ISOF_EAST_1, US_ISOF_SOUTH_1, US_WEST_1, US_WEST_2
+  AF_SOUTH_1, AP_EAST_1, AP_EAST_2, AP_NORTHEAST_1, AP_NORTHEAST_2, AP_NORTHEAST_3, AP_SOUTH_1, AP_SOUTH_2, AP_SOUTHEAST_1, AP_SOUTHEAST_2, AP_SOUTHEAST_3, AP_SOUTHEAST_4, AP_SOUTHEAST_5,
+  AP_SOUTHEAST_6, AP_SOUTHEAST_7, CA_CENTRAL_1, CA_WEST_1, CN_NORTH_1, CN_NORTHWEST_1, EU_CENTRAL_1, EU_CENTRAL_2, EU_ISOE_WEST_1, EU_NORTH_1, EU_SOUTH_1, EU_SOUTH_2, EU_WEST_1, EU_WEST_2,
+  EU_WEST_3, EUSC_DE_EAST_1, IL_CENTRAL_1, ME_CENTRAL_1, ME_SOUTH_1, MX_CENTRAL_1, SA_EAST_1, US_EAST_1, US_EAST_2, US_GOV_EAST_1, US_GOV_WEST_1, US_ISO_EAST_1, US_ISO_WEST_1, US_ISOB_EAST_1,
+  US_ISOF_EAST_1, US_ISOB_WEST_1, US_ISOF_SOUTH_1, US_WEST_1, US_WEST_2
 };
 }  // namespace region
-
-struct CommonProperties {
-  Aws::Auth::AWSCredentials credentials;
-  aws::ProxyOptions proxy;
-  std::string endpoint_override_url;
-};
 
 class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr auto AccessKey = core::PropertyDefinitionBuilder<>::createProperty("Access Key")
       .withDescription("AWS account access key")
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto SecretKey = core::PropertyDefinitionBuilder<>::createProperty("Secret Key")
       .withDescription("AWS account secret key")
-      .supportsExpressionLanguage(true)
       .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto CredentialsFile = core::PropertyDefinitionBuilder<>::createProperty("Credentials File")
@@ -130,23 +127,18 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
           "region, but this property overrides the selected endpoint URL, allowing use "
           "with other S3-compatible endpoints.")
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
       .withDescription("Proxy host name or IP")
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyPort = core::PropertyDefinitionBuilder<>::createProperty("Proxy Port")
       .withDescription("The port number of the proxy host")
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyUsername = core::PropertyDefinitionBuilder<>::createProperty("Proxy Username")
       .withDescription("Username to set when authenticating against proxy")
-      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyPassword = core::PropertyDefinitionBuilder<>::createProperty("Proxy Password")
       .withDescription("Password to set when authenticating against proxy")
-      .supportsExpressionLanguage(true)
       .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
@@ -177,11 +169,11 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
 
  protected:
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(core::ProcessContext& context) const;
-  std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context, const core::FlowFile* flow_file);
-  aws::ProxyOptions getProxy(core::ProcessContext& context, const core::FlowFile* const flow_file);
-  std::optional<CommonProperties> getCommonELSupportedProperties(core::ProcessContext& context, const core::FlowFile* flow_file);
+  std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context);
+  aws::ProxyOptions getProxy(core::ProcessContext& context);
 
-  std::optional<Aws::Client::ClientConfiguration> client_config_;
+  Aws::Client::ClientConfiguration client_config_;
+  Aws::Auth::AWSCredentials credentials_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

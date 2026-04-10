@@ -23,7 +23,6 @@
 #include <string>
 
 #include "aws/core/auth/AWSCredentials.h"
-#include "utils/AWSInitializer.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
@@ -44,7 +43,6 @@ class AWSCredentialsProvider {
   [[nodiscard]] std::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 
  private:
-  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   bool use_default_credentials_;
   std::string access_key_;
   std::string secret_key_;

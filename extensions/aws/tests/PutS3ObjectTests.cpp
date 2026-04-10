@@ -131,9 +131,9 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/octet-stream"));
   checkPutObjectResults();
   CHECK(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/octet-stream");
-  CHECK(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::STANDARD);
-  CHECK(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::NOT_SET);
-  CHECK(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::NOT_SET);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3Crt::Model::StorageClass::STANDARD);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3Crt::Model::ServerSideEncryption::NOT_SET);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3Crt::Model::ObjectCannedACL::NOT_SET);
   CHECK(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
   CHECK(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 30000);
   CHECK(mock_s3_request_sender_ptr->getClientConfig().endpointOverride.empty());
@@ -162,8 +162,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   plan->setProperty(s3_processor, "Storage Class", "ReducedRedundancy");
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::AP_SOUTHEAST_3);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
-  plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
+  plan->setProperty(s3_processor, "Endpoint Override URL", "http://localhost:1234");
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
   test_controller.runSession(plan);
   checkPutObjectResults();
@@ -171,8 +170,8 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:custom_key"));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/tar"));
   CHECK(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/tar");
-  CHECK(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
-  CHECK(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::AES256);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3Crt::Model::StorageClass::REDUCED_REDUNDANCY);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3Crt::Model::ServerSideEncryption::AES256);
   CHECK(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::AP_SOUTHEAST_3);
   CHECK(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
   CHECK(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
@@ -222,7 +221,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3
   CHECK(mock_s3_request_sender_ptr->put_object_request.GetGrantRead() == "id=myuserid456, emailAddress=\"myuser2@example.com\"");
   CHECK(mock_s3_request_sender_ptr->put_object_request.GetGrantReadACP() == "id=myuserid789, id=otheruser");
   CHECK(mock_s3_request_sender_ptr->put_object_request.GetGrantWriteACP() == "emailAddress=\"myuser3@example.com\"");
-  CHECK(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::public_read_write);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3Crt::Model::ObjectCannedACL::public_read_write);
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test path style access property", "[awsS3PathStyleAccess]") {
@@ -277,8 +276,7 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   plan->setProperty(s3_processor, "Storage Class", "ReducedRedundancy");
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::AP_SOUTHEAST_3);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
-  plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
+  plan->setProperty(s3_processor, "Endpoint Override URL", "http://localhost:1234");
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
 
   std::string object_key;
@@ -330,12 +328,12 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetGrantRead() == "id=myuserid456, emailAddress=\"myuser2@example.com\"");
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetGrantReadACP() == "id=myuserid789, id=otheruser");
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetGrantWriteACP() == "emailAddress=\"myuser3@example.com\"");
-  CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetACL() == Aws::S3::Model::ObjectCannedACL::public_read_write);
+  CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetACL() == Aws::S3Crt::Model::ObjectCannedACL::public_read_write);
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetMetadata().at("meta_key1") == "meta_value1");
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetMetadata().at("meta_key2") == "meta_value2");
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetContentType() == "application/tar");
-  CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetStorageClass() == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
-  CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::AES256);
+  CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetStorageClass() == Aws::S3Crt::Model::StorageClass::REDUCED_REDUNDANCY);
+  CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetServerSideEncryption() == Aws::S3Crt::Model::ServerSideEncryption::AES256);
 
   REQUIRE(mock_s3_request_sender_ptr->upload_part_requests.size() == 4);
   for (size_t i = 0; i < mock_s3_request_sender_ptr->upload_part_requests.size(); ++i) {
@@ -436,7 +434,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test checksum algorithm property", "[
   setRequiredProperties();
   plan->setProperty(s3_processor, "Checksum Algorithm", "SHA256");
   test_controller.runSession(plan);
-  CHECK(mock_s3_request_sender_ptr->put_object_request.GetChecksumAlgorithm() == Aws::S3::Model::ChecksumAlgorithm::SHA256);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetChecksumAlgorithm() == Aws::S3Crt::Model::ChecksumAlgorithm::SHA256);
 }
 
 }  // namespace

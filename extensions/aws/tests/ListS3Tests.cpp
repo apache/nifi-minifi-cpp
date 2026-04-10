@@ -195,7 +195,7 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test write user metadata", "[awsS3ListMeta
   for (const auto& metadata : S3_OBJECT_USER_METADATA) {
     REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.user.metadata." + metadata.first + " value:" + metadata.second) == S3_OBJECT_COUNT);
   }
-  REQUIRE(mock_s3_request_sender_ptr->head_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
+  REQUIRE(mock_s3_request_sender_ptr->head_object_request.GetRequestPayer() == Aws::S3Crt::Model::RequestPayer::requester);
   REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
   REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);

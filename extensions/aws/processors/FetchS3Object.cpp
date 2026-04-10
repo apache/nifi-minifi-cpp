@@ -38,15 +38,17 @@ void FetchS3Object::onSchedule(core::ProcessContext& context, core::ProcessSessi
 
   requester_pays_ = minifi::utils::parseBoolProperty(context, RequesterPays);
   logger_->log_debug("FetchS3Object: RequesterPays [{}]", requester_pays_);
+
+  if (!s3_wrapper_) {
+    s3_wrapper_ = s3_wrapper_factory_(credentials_, client_config_, true);
+  }
 }
 
 std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3RequestParams(
     const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties,
     const std::string_view bucket) const {
-  gsl_Expects(client_config_);
-  minifi::aws::s3::GetObjectRequestParameters get_object_params(common_properties.credentials, *client_config_);
+  minifi::aws::s3::GetObjectRequestParameters get_object_params;
   get_object_params.bucket = bucket;
   get_object_params.requester_pays = requester_pays_;
 
@@ -63,21 +65,15 @@ std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3Re
     get_object_params.version = *version;
   }
   logger_->log_debug("FetchS3Object: Version [{}]", get_object_params.version);
-  get_object_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   return get_object_params;
 }
 
 void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(s3_wrapper_);
   logger_->log_trace("FetchS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
     context.yield();
-    return;
-  }
-
-  auto common_properties = getCommonELSupportedProperties(context, flow_file.get());
-  if (!common_properties) {
-    session.transfer(flow_file, Failure);
     return;
   }
 
@@ -89,7 +85,7 @@ void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessio
   }
   logger_->log_debug("S3Processor: Bucket [{}]", *bucket);
 
-  auto get_object_params = buildFetchS3RequestParams(context, *flow_file, *common_properties, *bucket);
+  auto get_object_params = buildFetchS3RequestParams(context, *flow_file, *bucket);
   if (!get_object_params) {
     session.transfer(flow_file, Failure);
     return;
@@ -97,7 +93,7 @@ void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessio
 
   std::optional<minifi::aws::s3::GetObjectResult> result;
   session.write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
-    result = s3_wrapper_.getObject(*get_object_params, *stream);
+    result = s3_wrapper_->getObject(*get_object_params, *stream);
     return (result | minifi::utils::transform(&s3::GetObjectResult::write_size)).value_or(0);
   });
 
