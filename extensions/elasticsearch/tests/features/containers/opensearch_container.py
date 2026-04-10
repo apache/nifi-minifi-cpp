@@ -18,8 +18,7 @@ import logging
 
 from elastic_base_container import ElasticBaseContainer
 from pathlib import Path
-from OpenSSL import crypto
-from minifi_test_framework.core.ssl_utils import make_server_cert
+from minifi_test_framework.core.ssl_utils import make_server_cert, dump_cert, dump_key
 from minifi_test_framework.containers.file import File
 from minifi_test_framework.containers.host_file import HostFile
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
@@ -31,13 +30,13 @@ class OpensearchContainer(ElasticBaseContainer):
 
         admin_pem, admin_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
 
-        root_ca_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=test_context.root_ca_cert)
+        root_ca_content = dump_cert(test_context.root_ca_cert)
         self.files.append(File("/usr/share/opensearch/config/root-ca.pem", root_ca_content, permissions=0o644))
 
-        admin_pem_content = crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=admin_pem)
+        admin_pem_content = dump_cert(admin_pem)
         self.files.append(File("/usr/share/opensearch/config/admin.pem", admin_pem_content, permissions=0o644))
 
-        admin_key_content = crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=admin_key)
+        admin_key_content = dump_key(admin_key)
         self.files.append(File("/usr/share/opensearch/config/admin-key.pem", admin_key_content, permissions=0o644))
 
         features_dir = Path(__file__).resolve().parent.parent
