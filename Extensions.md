@@ -86,10 +86,6 @@ extern "C" void MinifiInitCppExtension(MinifiExtensionContext* /*extension_conte
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
     .user_data = nullptr,
-    .processors_count = 0,
-    .processors_ptr = nullptr,
-    .controller_services_count = 0,
-    .controller_services_ptr = nullptr,
   };
   minifi::utils::MinifiRegisterCppExtension(extension, &extension_definition);
 }

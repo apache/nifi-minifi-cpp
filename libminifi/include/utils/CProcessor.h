@@ -63,8 +63,8 @@ class CProcessor : public minifi::core::ProcessorApi {
  public:
   CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata)
       : class_description_(std::move(class_description)),
+        metadata_(std::move(metadata)),
         metrics_extension_(std::make_shared<CProcessorMetricsWrapper>(*this)) {
-    metadata_ = std::move(metadata);
     MinifiProcessorMetadata c_metadata;
     const auto uuid_str = metadata.uuid.to_string();
     c_metadata.uuid = MinifiStringView{.data = uuid_str.data(), .length = uuid_str.length()};
