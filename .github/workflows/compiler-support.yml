@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: 'Checkout repository code'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 'Build Project with ${{ matrix.platform.id }}'
         run: |
@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: 'Checkout repository code'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 'Build Project with ${{ matrix.platform.id }}'
         run: |
