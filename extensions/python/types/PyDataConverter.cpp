@@ -23,7 +23,6 @@
 namespace org::apache::nifi::minifi::extensions::python {
 
 PyObject* timePeriodStringToMilliseconds(PyObject* /*self*/, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   const char* time_period_str = nullptr;
   if (!PyArg_ParseTuple(args, "s", &time_period_str)) {
     return nullptr;
@@ -32,11 +31,9 @@ PyObject* timePeriodStringToMilliseconds(PyObject* /*self*/, PyObject* args) {
   auto milliseconds = core::TimePeriodValue(std::string(time_period_str)).getMilliseconds().count();
 
   return object::returnReference(milliseconds);
-  PYTHON_METHOD_END
 }
 
 PyObject* dataSizeStringToBytes(PyObject* /*self*/, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   const char* data_size_str = nullptr;
   if (!PyArg_ParseTuple(args, "s", &data_size_str)) {
     return nullptr;
@@ -45,7 +42,6 @@ PyObject* dataSizeStringToBytes(PyObject* /*self*/, PyObject* args) {
   uint64_t bytes = core::DataSizeValue(std::string(data_size_str)).getValue();
 
   return object::returnReference(bytes);
-  PYTHON_METHOD_END
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::python

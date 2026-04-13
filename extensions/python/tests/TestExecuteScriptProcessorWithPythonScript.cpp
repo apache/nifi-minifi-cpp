@@ -288,4 +288,34 @@ def onTrigger(context, session):
   }
 }
 
+TEST_CASE("Python: Test exception handling", "[pythonException]") {
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<ExecuteScript>("ExecuteScript")};
+  const auto execute_script = controller.getProcessor();
+  LogTestController::getInstance().setTrace<ExecuteScript>();
+
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptEngine.name, "python"));
+  REQUIRE(execute_script->setProperty(ExecuteScript::ScriptBody.name, R"(
+class ErroringWriteCallback(object):
+    def process(self, output_stream):
+        return -1
+
+
+def onTrigger(context, session):
+    flow_file = session.create()
+    try:
+        session.write(flow_file, ErroringWriteCallback())
+        log.error(f'Got no exceptions from c++')
+    except Exception as e:
+        log.error(f'Got exception from c++: {e}')
+    except:
+        log.error(f'Got unknown exception from c++')
+    finally:
+        session.remove(flow_file)
+
+  )"));
+
+  auto result = controller.trigger();
+  REQUIRE(LogTestController::getInstance().contains("Got exception from c++: C++ exception: File Operation: Failed to process flowfile content"));
+}
+
 }  // namespace org::apache::nifi::minifi::processors::test

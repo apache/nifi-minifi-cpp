@@ -29,16 +29,16 @@ extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
 static PyMethodDef PyProcessContext_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
-    {"getProperty", (PyCFunction) PyProcessContext::getProperty, METH_VARARGS, nullptr},
-    {"getRawProperty", (PyCFunction) PyProcessContext::getRawProperty, METH_VARARGS, nullptr},
-    {"getDynamicProperty", (PyCFunction) PyProcessContext::getDynamicProperty, METH_VARARGS, nullptr},
-    {"getRawDynamicProperty", (PyCFunction) PyProcessContext::getRawDynamicProperty, METH_VARARGS, nullptr},
-    {"getDynamicPropertyKeys", (PyCFunction) PyProcessContext::getDynamicPropertyKeys, METH_VARARGS, nullptr},
-    {"getStateManager", (PyCFunction) PyProcessContext::getStateManager, METH_VARARGS, nullptr},
-    {"getControllerService", (PyCFunction) PyProcessContext::getControllerService, METH_VARARGS, nullptr},
-    {"getName", (PyCFunction) PyProcessContext::getName, METH_VARARGS, nullptr},
-    {"getProperties", (PyCFunction) PyProcessContext::getProperties, METH_VARARGS, nullptr},
-    {"yieldResources", (PyCFunction) PyProcessContext::yieldResources, METH_VARARGS, nullptr},
+    {"getProperty", safePyFunction<PyProcessContext::getProperty>, METH_VARARGS, nullptr},
+    {"getRawProperty", safePyFunction<PyProcessContext::getRawProperty>, METH_VARARGS, nullptr},
+    {"getDynamicProperty", safePyFunction<PyProcessContext::getDynamicProperty>, METH_VARARGS, nullptr},
+    {"getRawDynamicProperty", safePyFunction<PyProcessContext::getRawDynamicProperty>, METH_VARARGS, nullptr},
+    {"getDynamicPropertyKeys", safePyFunction<PyProcessContext::getDynamicPropertyKeys>, METH_VARARGS, nullptr},
+    {"getStateManager", safePyFunction<PyProcessContext::getStateManager>, METH_VARARGS, nullptr},
+    {"getControllerService", safePyFunction<PyProcessContext::getControllerService>, METH_VARARGS, nullptr},
+    {"getName", safePyFunction<PyProcessContext::getName>, METH_VARARGS, nullptr},
+    {"getProperties", safePyFunction<PyProcessContext::getProperties>, METH_VARARGS, nullptr},
+    {"yieldResources", safePyFunction<PyProcessContext::yieldResources>, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -72,7 +72,6 @@ int PyProcessContext::init(PyProcessContext* self, PyObject* args, PyObject*) {
 }
 
 PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -103,11 +102,9 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
     return object::returnReference(*property_value);
   }
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::getRawProperty(PyProcessContext* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -124,11 +121,9 @@ PyObject* PyProcessContext::getRawProperty(PyProcessContext* self, PyObject* arg
     return object::returnReference(*property_value);
   }
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::getDynamicProperty(PyProcessContext* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -158,11 +153,9 @@ PyObject* PyProcessContext::getDynamicProperty(PyProcessContext* self, PyObject*
     return object::returnReference(*property_value);
   }
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::getRawDynamicProperty(PyProcessContext* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -179,11 +172,9 @@ PyObject* PyProcessContext::getRawDynamicProperty(PyProcessContext* self, PyObje
     return object::returnReference(*property_value);
   }
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::getDynamicPropertyKeys(PyProcessContext* self, PyObject*) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -197,11 +188,9 @@ PyObject* PyProcessContext::getDynamicPropertyKeys(PyProcessContext* self, PyObj
   }
 
   return object::returnReference(py_properties);
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::getStateManager(PyProcessContext* self, PyObject*) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -209,11 +198,9 @@ PyObject* PyProcessContext::getStateManager(PyProcessContext* self, PyObject*) {
   }
 
   return object::returnReference(context->getStateManager());
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObject* args) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -241,11 +228,9 @@ PyObject* PyProcessContext::getControllerService(PyProcessContext* self, PyObjec
   }
 
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::getName(PyProcessContext* self, PyObject*) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -253,11 +238,9 @@ PyObject* PyProcessContext::getName(PyProcessContext* self, PyObject*) {
   }
 
   return object::returnReference(context->getProcessorInfo().getName());
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -273,11 +256,9 @@ PyObject* PyProcessContext::getProperties(PyProcessContext* self, PyObject*) {
   }
 
   return object::returnReference(py_properties);
-  PYTHON_METHOD_END
 }
 
 PyObject* PyProcessContext::yieldResources(PyProcessContext* self, PyObject*) {
-  PYTHON_METHOD_BEGIN
   auto context = self->process_context_;
   if (!context) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
@@ -287,7 +268,6 @@ PyObject* PyProcessContext::yieldResources(PyProcessContext* self, PyObject*) {
   context->yield();
 
   Py_RETURN_NONE;
-  PYTHON_METHOD_END
 }
 
 PyTypeObject* PyProcessContext::typeObject() {
