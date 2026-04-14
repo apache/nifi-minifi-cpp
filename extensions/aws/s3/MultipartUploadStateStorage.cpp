@@ -24,9 +24,6 @@ namespace org::apache::nifi::minifi::aws::s3 {
 void MultipartUploadStateStorage::storeState(const std::string& bucket, const std::string& key, const MultipartUploadState& state) {
   std::unordered_map<std::string, std::string> stored_state;
   std::lock_guard<std::mutex> lock(state_manager_mutex_);
-  if (!state_manager_) {
-    return;
-  }
   state_manager_->get(stored_state);
   std::string state_key = bucket + "/" + key;
   stored_state[state_key + ".upload_id"] = state.upload_id;
@@ -45,9 +42,6 @@ std::optional<MultipartUploadState> MultipartUploadStateStorage::getState(const 
   std::unordered_map<std::string, std::string> state_map;
   {
     std::lock_guard<std::mutex> lock(state_manager_mutex_);
-    if (!state_manager_) {
-      return std::nullopt;
-    }
     if (!state_manager_->get(state_map)) {
       logger_->log_warn("No previous multipart upload state was associated with this processor.");
       return std::nullopt;
@@ -85,9 +79,6 @@ void MultipartUploadStateStorage::removeKey(const std::string& state_key, std::u
 void MultipartUploadStateStorage::removeState(const std::string& bucket, const std::string& key) {
   std::unordered_map<std::string, std::string> state_map;
   std::lock_guard<std::mutex> lock(state_manager_mutex_);
-  if (!state_manager_) {
-    return;
-  }
   if (!state_manager_->get(state_map)) {
     logger_->log_warn("No previous multipart upload state was associated with this processor.");
     return;
@@ -107,9 +98,6 @@ void MultipartUploadStateStorage::removeState(const std::string& bucket, const s
 void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds multipart_upload_max_age_threshold) {
   std::unordered_map<std::string, std::string> state_map;
   std::lock_guard<std::mutex> lock(state_manager_mutex_);
-  if (!state_manager_) {
-    return;
-  }
   if (!state_manager_->get(state_map)) {
     logger_->log_warn("No previous multipart upload state was associated with this processor.");
     return;

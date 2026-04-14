@@ -258,7 +258,7 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
   logger_->log_trace("PutS3Object onTrigger");
   auto* state_manager = context.getStateManager();
   if (state_manager != nullptr) {
-    s3_wrapper_.initializeMultipartUploadStateStorage(gsl::make_not_null(state_manager));
+    s3_wrapper_.initializeMultipartUploadStateStorage(*state_manager);
   }
   std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {

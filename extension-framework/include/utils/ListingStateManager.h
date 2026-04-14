@@ -49,8 +49,8 @@ struct ListingState {
 
 class ListingStateManager {
  public:
-  explicit ListingStateManager(gsl::not_null<core::StateManager*> state_manager)
-    : state_manager_(state_manager) {
+  explicit ListingStateManager(core::StateManager& state_manager)
+    : state_manager_(&state_manager) {
   }
 
   [[nodiscard]] ListingState getCurrentState() const;

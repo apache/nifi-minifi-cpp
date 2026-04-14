@@ -96,7 +96,7 @@ void ListFile::onTrigger(core::ProcessContext& context, core::ProcessSession& se
     context.yield();
     return;
   }
-  minifi::utils::ListingStateManager listing_state_manager(gsl::make_not_null(state_manager));
+  minifi::utils::ListingStateManager listing_state_manager(*state_manager);
   auto stored_listing_state = listing_state_manager.getCurrentState();
   auto latest_listing_state = stored_listing_state;
   uint32_t files_listed = 0;

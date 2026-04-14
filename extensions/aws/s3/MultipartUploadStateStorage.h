@@ -55,8 +55,8 @@ struct MultipartUploadState {
 
 class MultipartUploadStateStorage {
  public:
-  explicit MultipartUploadStateStorage(gsl::not_null<core::StateManager*> state_manager)
-    : state_manager_(state_manager) {
+  explicit MultipartUploadStateStorage(core::StateManager& state_manager)
+    : state_manager_(&state_manager) {
   }
 
   void storeState(const std::string& bucket, const std::string& key, const MultipartUploadState& state);
@@ -69,7 +69,7 @@ class MultipartUploadStateStorage {
   static void removeKey(const std::string& state_key, std::unordered_map<std::string, std::string>& state_map);
 
   mutable std::mutex state_manager_mutex_;
-  core::StateManager* state_manager_ = nullptr;
+  gsl::not_null<core::StateManager*> state_manager_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<MultipartUploadStateStorage>::getLogger()};
 };
 
