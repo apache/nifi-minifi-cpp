@@ -61,7 +61,15 @@ std::expected<core::RecordField, std::error_code> parse(const rapidjson::Value& 
         return std::unexpected{element_field.error()};
       record_object.emplace(element_key, std::move(*element_field));
     }
+    // Workaround for GCC false positive -Wfree-nonheap-object https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99098
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
+#endif
     return core::RecordField{std::move(record_object)};
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
   }
 
   return std::unexpected{std::make_error_code(std::errc::invalid_argument)};

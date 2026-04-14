@@ -1,0 +1,49 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index efb1cbc..b1f2e71 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -58,43 +58,7 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+ 
+ include(GNUInstallDirs)
+ 
+-# Install the library and headers.
+-install(
+-  TARGETS
+-    ${PROJECT_NAME}
+-  EXPORT
+-    ${PROJECT_NAME}-targets
+-  LIBRARY DESTINATION
+-    ${CMAKE_INSTALL_LIBDIR}
+-  RUNTIME DESTINATION
+-    ${CMAKE_INSTALL_BINDIR}
+-  ARCHIVE DESTINATION
+-    ${CMAKE_INSTALL_LIBDIR}
+-  INCLUDES DESTINATION
+-    include
+-  PUBLIC_HEADER DESTINATION
+-    include
+-)
+-
+-# Install version, config and target files.
+-install(
+-  EXPORT 
+-    ${PROJECT_NAME}-targets
+-  FILE
+-    ${PROJECT_NAME}-targets.cmake
+-  NAMESPACE
+-    ${PROJECT_NAME}::
+-  DESTINATION
+-    ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+-)
+-
+-# Install the `include` directory
+-install(
+-  DIRECTORY
+-    include/${PROJECT_NAME}
+-  DESTINATION
+-    include
+-)
++# removed installs
+ 
+ # Quick `config-version.cmake` creation
+ include(CMakePackageConfigHelpers)

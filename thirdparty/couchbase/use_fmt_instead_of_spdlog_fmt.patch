@@ -1,0 +1,2641 @@
+Subject: [PATCH] use fmt instead of spdlog/fmt
+---
+Index: core/operations/management/eventing_upsert_function.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/eventing_upsert_function.cxx b/core/operations/management/eventing_upsert_function.cxx
+--- a/core/operations/management/eventing_upsert_function.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/eventing_upsert_function.cxx	(date 1776177013947)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/contrib/traits.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/fmt/key_value_status_code.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/fmt/key_value_status_code.hxx b/core/fmt/key_value_status_code.hxx
+--- a/core/fmt/key_value_status_code.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/fmt/key_value_status_code.hxx	(date 1776177013919)
+@@ -19,7 +19,7 @@
+
+ #include "core/error_context/key_value_status_code.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ /**
+  * Helper for fmtlib to format @ref couchbase::core::key_value_status_code objects.
+Index: test/test_transaction_examples.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/test_transaction_examples.cxx b/test/test_transaction_examples.cxx
+--- a/test/test_transaction_examples.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/test/test_transaction_examples.cxx	(date 1776177013913)
+@@ -21,7 +21,7 @@
+ #include <couchbase/codec/codec_flags.hxx>
+ #include <couchbase/codec/tao_json_serializer.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json.hpp>
+ #include <tao/json/to_string.hpp>
+
+Index: core/fmt/key_value_extended_error_info.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/fmt/key_value_extended_error_info.hxx b/core/fmt/key_value_extended_error_info.hxx
+--- a/core/fmt/key_value_extended_error_info.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/fmt/key_value_extended_error_info.hxx	(date 1776177013911)
+@@ -19,7 +19,7 @@
+
+ #include "core/error_context/key_value_extended_error_info.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ /**
+  * Helper for fmtlib to format @ref couchbase::key_value_extended_error_info objects.
+Index: core/fmt/key_value_error_map_attribute.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/fmt/key_value_error_map_attribute.hxx b/core/fmt/key_value_error_map_attribute.hxx
+--- a/core/fmt/key_value_error_map_attribute.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/fmt/key_value_error_map_attribute.hxx	(date 1776177014144)
+@@ -19,7 +19,7 @@
+
+ #include "core/error_context/key_value_error_map_attribute.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::key_value_error_map_attribute> {
+Index: core/operations/management/search_index_upsert.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_upsert.cxx b/core/operations/management/search_index_upsert.cxx
+--- a/core/operations/management/search_index_upsert.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_upsert.cxx	(date 1776177014126)
+@@ -22,7 +22,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/columnar/query_component.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/columnar/query_component.cxx b/core/columnar/query_component.cxx
+--- a/core/columnar/query_component.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/columnar/query_component.cxx	(date 1776177014044)
+@@ -34,8 +34,8 @@
+ #include <asio/io_context.hpp>
+ #include <asio/steady_timer.hpp>
+ #include <gsl/util>
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+ #include <tl/expected.hpp>
+
+Index: core/operations/management/analytics_link_utils.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_link_utils.hxx b/core/operations/management/analytics_link_utils.hxx
+--- a/core/operations/management/analytics_link_utils.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_link_utils.hxx	(date 1776177014124)
+@@ -19,7 +19,7 @@
+
+ #include "core/utils/url_codec.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <algorithm>
+ #include <string>
+Index: test/test_unit_connection_string.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/test_unit_connection_string.cxx b/test/test_unit_connection_string.cxx
+--- a/test/test_unit_connection_string.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/test/test_unit_connection_string.cxx	(date 1776177014011)
+@@ -22,7 +22,7 @@
+
+ #include <couchbase/build_config.hxx>
+
+-#include <spdlog/fmt/bundled/ranges.h>
++#include <fmt/ranges.h>
+
+ TEST_CASE("unit: connection string", "[unit]")
+ {
+Index: core/operations/management/search_index_control_plan_freeze.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_control_plan_freeze.cxx b/core/operations/management/search_index_control_plan_freeze.cxx
+--- a/core/operations/management/search_index_control_plan_freeze.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_control_plan_freeze.cxx	(date 1776177014021)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/impl/query_error_context.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/query_error_context.cxx b/core/impl/query_error_context.cxx
+--- a/core/impl/query_error_context.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/query_error_context.cxx	(date 1776177013926)
+@@ -17,7 +17,7 @@
+
+ #include "core/error_context/query_error_context.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/to_string.hpp>
+
+ #include <couchbase/fmt/retry_reason.hxx>
+Index: core/operations/management/analytics_get_pending_mutations.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_get_pending_mutations.cxx b/core/operations/management/analytics_get_pending_mutations.cxx
+--- a/core/operations/management/analytics_get_pending_mutations.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_get_pending_mutations.cxx	(date 1776177013875)
+@@ -20,7 +20,7 @@
+ #include "core/utils/json.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/view_index_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/view_index_drop.cxx b/core/operations/management/view_index_drop.cxx
+--- a/core/operations/management/view_index_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/view_index_drop.cxx	(date 1776177013996)
+@@ -20,7 +20,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/eventing_resume_function.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/eventing_resume_function.cxx b/core/operations/management/eventing_resume_function.cxx
+--- a/core/operations/management/eventing_resume_function.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/eventing_resume_function.cxx	(date 1776177013969)
+@@ -20,7 +20,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/columnar/columnar_agent_config.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/columnar/columnar_agent_config.cxx b/core/columnar/columnar_agent_config.cxx
+--- a/core/columnar/columnar_agent_config.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/columnar/columnar_agent_config.cxx	(date 1776177014156)
+@@ -17,8 +17,8 @@
+
+ #include "agent_config.hxx"
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+
+ #include <string>
+
+Index: test/utils/test_data.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/utils/test_data.cxx b/test/utils/test_data.cxx
+--- a/test/utils/test_data.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/test/utils/test_data.cxx	(date 1776177013894)
+@@ -17,8 +17,8 @@
+
+ #include "core/mcbp/big_endian.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
+-#include <spdlog/fmt/bundled/ranges.h>
++#include <fmt/core.h>
++#include <fmt/ranges.h>
+
+ #include <chrono>
+ #include <filesystem>
+Index: core/operations/management/search_index_get_stats.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_get_stats.cxx b/core/operations/management/search_index_get_stats.cxx
+--- a/core/operations/management/search_index_get_stats.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_get_stats.cxx	(date 1776177014053)
+@@ -20,7 +20,7 @@
+ #include "core/utils/json.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: test/utils/wait_until.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/utils/wait_until.cxx b/test/utils/wait_until.cxx
+--- a/test/utils/wait_until.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/test/utils/wait_until.cxx	(date 1776177013870)
+@@ -34,7 +34,7 @@
+ #include "core/topology/collections_manifest_fmt.hxx"
+ #include "core/utils/json.hxx"
+
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+ #include <tao/json/value.hpp>
+
+ namespace test::utils
+Index: core/operations/management/analytics_dataset_create.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_dataset_create.cxx b/core/operations/management/analytics_dataset_create.cxx
+--- a/core/operations/management/analytics_dataset_create.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_dataset_create.cxx	(date 1776177014167)
+@@ -21,7 +21,7 @@
+ #include "core/utils/name_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/search_index_control_ingest.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_control_ingest.cxx b/core/operations/management/search_index_control_ingest.cxx
+--- a/core/operations/management/search_index_control_ingest.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_control_ingest.cxx	(date 1776177013872)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/group_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/group_drop.cxx b/core/operations/management/group_drop.cxx
+--- a/core/operations/management/group_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/group_drop.cxx	(date 1776177013868)
+@@ -19,7 +19,7 @@
+
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ namespace couchbase::core::operations::management
+ {
+Index: core/operations/management/analytics_dataverse_create.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_dataverse_create.cxx b/core/operations/management/analytics_dataverse_create.cxx
+--- a/core/operations/management/analytics_dataverse_create.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_dataverse_create.cxx	(date 1776177013965)
+@@ -21,7 +21,7 @@
+ #include "core/utils/name_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/eventing_pause_function.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/eventing_pause_function.cxx b/core/operations/management/eventing_pause_function.cxx
+--- a/core/operations/management/eventing_pause_function.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/eventing_pause_function.cxx	(date 1776177014023)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/impl/date_range.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/date_range.cxx b/core/impl/date_range.cxx
+--- a/core/impl/date_range.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/date_range.cxx	(date 1776177013922)
+@@ -17,8 +17,8 @@
+
+ #include <couchbase/date_range.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+
+ #include <chrono>
+ #include <ctime>
+Index: core/operations/management/analytics_dataset_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_dataset_drop.cxx b/core/operations/management/analytics_dataset_drop.cxx
+--- a/core/operations/management/analytics_dataset_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_dataset_drop.cxx	(date 1776177014132)
+@@ -21,7 +21,7 @@
+ #include "core/utils/name_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/sasl/oauthbearer/oauthbearer.cc
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/sasl/oauthbearer/oauthbearer.cc b/core/sasl/oauthbearer/oauthbearer.cc
+--- a/core/sasl/oauthbearer/oauthbearer.cc	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/sasl/oauthbearer/oauthbearer.cc	(date 1776177014176)
+@@ -16,7 +16,7 @@
+
+ #include "oauthbearer.h"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ namespace couchbase::core::sasl::mechanism::oauthbearer
+ {
+Index: core/operations/management/search_index_get.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_get.cxx b/core/operations/management/search_index_get.cxx
+--- a/core/operations/management/search_index_get.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_get.cxx	(date 1776177013905)
+@@ -22,7 +22,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/search_index_get_documents_count.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_get_documents_count.cxx b/core/operations/management/search_index_get_documents_count.cxx
+--- a/core/operations/management/search_index_get_documents_count.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_get_documents_count.cxx	(date 1776177013866)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/bucket_describe.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/bucket_describe.cxx b/core/operations/management/bucket_describe.cxx
+--- a/core/operations/management/bucket_describe.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/bucket_describe.cxx	(date 1776177014152)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <algorithm>
+Index: core/impl/date_range_query.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/date_range_query.cxx b/core/impl/date_range_query.cxx
+--- a/core/impl/date_range_query.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/date_range_query.cxx	(date 1776177013915)
+@@ -21,8 +21,8 @@
+
+ #include <couchbase/error_codes.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+ #include <tao/json/type.hpp>
+
+ #include <chrono>
+Index: core/operations/management/analytics_link_connect.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_link_connect.cxx b/core/operations/management/analytics_link_connect.cxx
+--- a/core/operations/management/analytics_link_connect.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_link_connect.cxx	(date 1776177014122)
+@@ -21,7 +21,7 @@
+ #include "core/utils/name_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/protocol/hello_feature_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/protocol/hello_feature_fmt.hxx b/core/protocol/hello_feature_fmt.hxx
+--- a/core/protocol/hello_feature_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/protocol/hello_feature_fmt.hxx	(date 1776177014063)
+@@ -19,7 +19,7 @@
+
+ #include "hello_feature.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::protocol::hello_feature> {
+Index: core/operations/management/view_index_get_all.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/view_index_get_all.cxx b/core/operations/management/view_index_get_all.cxx
+--- a/core/operations/management/view_index_get_all.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/view_index_get_all.cxx	(date 1776177014148)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/impl/scope.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/scope.cxx b/core/impl/scope.cxx
+--- a/core/impl/scope.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/scope.cxx	(date 1776177013917)
+@@ -34,7 +34,7 @@
+ #include <couchbase/collection.hxx>
+ #include <couchbase/scope.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <memory>
+ #include <utility>
+Index: core/operations/management/scope_get_all.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/scope_get_all.cxx b/core/operations/management/scope_get_all.cxx
+--- a/core/operations/management/scope_get_all.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/scope_get_all.cxx	(date 1776177013885)
+@@ -22,7 +22,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/protocol/magic_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/protocol/magic_fmt.hxx b/core/protocol/magic_fmt.hxx
+--- a/core/protocol/magic_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/protocol/magic_fmt.hxx	(date 1776177014061)
+@@ -19,7 +19,7 @@
+
+ #include "magic.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::protocol::magic> {
+Index: core/impl/numeric_range.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/numeric_range.cxx b/core/impl/numeric_range.cxx
+--- a/core/impl/numeric_range.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/numeric_range.cxx	(date 1776177014097)
+@@ -17,7 +17,7 @@
+
+ #include <couchbase/numeric_range.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+
+ namespace couchbase
+ {
+Index: core/operations/management/analytics_link_get_all.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_link_get_all.cxx b/core/operations/management/analytics_link_get_all.cxx
+--- a/core/operations/management/analytics_link_get_all.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_link_get_all.cxx	(date 1776177013852)
+@@ -24,7 +24,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/scope_create.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/scope_create.cxx b/core/operations/management/scope_create.cxx
+--- a/core/operations/management/scope_create.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/scope_create.cxx	(date 1776177014109)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <regex>
+Index: core/impl/search.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/search.cxx b/core/impl/search.cxx
+--- a/core/impl/search.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/search.cxx	(date 1776177013924)
+@@ -29,7 +29,7 @@
+ #include <couchbase/match_none_query.hxx>
+ #include <utility>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ namespace couchbase::core::impl
+ {
+Index: core/impl/expiry.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/expiry.cxx b/core/impl/expiry.cxx
+--- a/core/impl/expiry.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/expiry.cxx	(date 1776177013828)
+@@ -18,8 +18,8 @@
+ #include <couchbase/error_codes.hxx>
+ #include <couchbase/expiry.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+
+ #include <chrono>
+ #include <cstdint>
+Index: tools/utils.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/utils.hxx b/tools/utils.hxx
+--- a/tools/utils.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/utils.hxx	(date 1776177014136)
+@@ -26,8 +26,8 @@
+
+ #include <CLI/CLI.hpp>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+
+ #include <chrono>
+ #include <cstdint>
+Index: core/protocol/client_response.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/protocol/client_response.hxx b/core/protocol/client_response.hxx
+--- a/core/protocol/client_response.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/protocol/client_response.hxx	(date 1776177014140)
+@@ -34,7 +34,7 @@
+ #include <couchbase/cas.hxx>
+
+ #include <gsl/assert>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <cmath>
+ #include <cstring>
+Index: core/operations/management/analytics_dataverse_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_dataverse_drop.cxx b/core/operations/management/analytics_dataverse_drop.cxx
+--- a/core/operations/management/analytics_dataverse_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_dataverse_drop.cxx	(date 1776177013850)
+@@ -21,7 +21,7 @@
+ #include "core/utils/name_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: tools/cbc.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/cbc.cxx b/tools/cbc.cxx
+--- a/tools/cbc.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/cbc.cxx	(date 1776177013900)
+@@ -29,7 +29,7 @@
+
+ #include "core/meta/version.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ auto
+ main(int argc, const char** argv) -> int
+Index: core/operations/management/query_index_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/query_index_drop.cxx b/core/operations/management/query_index_drop.cxx
+--- a/core/operations/management/query_index_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/query_index_drop.cxx	(date 1776177013877)
+@@ -21,7 +21,7 @@
+ #include "core/utils/keyspace.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <regex>
+Index: core/operations/management/bucket_flush.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/bucket_flush.cxx b/core/operations/management/bucket_flush.cxx
+--- a/core/operations/management/bucket_flush.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/bucket_flush.cxx	(date 1776177013936)
+@@ -20,7 +20,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ namespace couchbase::core::operations::management
+ {
+Index: tools/get.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/get.cxx b/tools/get.cxx
+--- a/tools/get.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/get.cxx	(date 1776177014158)
+@@ -29,7 +29,7 @@
+ #include <couchbase/read_preference.hxx>
+
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+ #include <tao/json.hpp>
+
+ #include <couchbase/fmt/cas.hxx>
+Index: core/operations/management/query_index_create.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/query_index_create.cxx b/core/operations/management/query_index_create.cxx
+--- a/core/operations/management/query_index_create.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/query_index_create.cxx	(date 1776177014120)
+@@ -21,7 +21,7 @@
+ #include "core/utils/keyspace.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <regex>
+Index: core/operations/management/analytics_index_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_index_drop.cxx b/core/operations/management/analytics_index_drop.cxx
+--- a/core/operations/management/analytics_index_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_index_drop.cxx	(date 1776177013898)
+@@ -21,7 +21,7 @@
+ #include "core/utils/name_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/change_password.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/change_password.cxx b/core/operations/management/change_password.cxx
+--- a/core/operations/management/change_password.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/change_password.cxx	(date 1776177013994)
+@@ -19,7 +19,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ namespace couchbase::core::operations::management
+ {
+Index: core/operations/management/eventing_drop_function.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/eventing_drop_function.cxx b/core/operations/management/eventing_drop_function.cxx
+--- a/core/operations/management/eventing_drop_function.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/eventing_drop_function.cxx	(date 1776177014162)
+@@ -20,7 +20,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/impl/best_effort_retry_strategy.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/best_effort_retry_strategy.cxx b/core/impl/best_effort_retry_strategy.cxx
+--- a/core/impl/best_effort_retry_strategy.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/best_effort_retry_strategy.cxx	(date 1776177013890)
+@@ -21,7 +21,7 @@
+ #include <couchbase/retry_reason.hxx>
+ #include <couchbase/retry_request.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <algorithm>
+ #include <chrono>
+Index: tools/pillowfight.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/pillowfight.cxx b/tools/pillowfight.cxx
+--- a/tools/pillowfight.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/pillowfight.cxx	(date 1776177013889)
+@@ -31,8 +31,8 @@
+ #include <asio/steady_timer.hpp>
+ #include <gsl/util>
+ #include <hdr/hdr_histogram.h>
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/std.h>
++#include <fmt/chrono.h>
++#include <fmt/std.h>
+ #include <tao/json.hpp>
+
+ #include <couchbase/fmt/cas.hxx>
+Index: tools/utils.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/utils.cxx b/tools/utils.cxx
+--- a/tools/utils.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/utils.cxx	(date 1776177013956)
+@@ -87,7 +87,7 @@
+ #endif
+
+ #include <spdlog/details/os.h>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+ #include <spdlog/spdlog.h>
+ #include <tao/json/value.hpp>
+
+Index: core/operations/management/view_index_get.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/view_index_get.cxx b/core/operations/management/view_index_get.cxx
+--- a/core/operations/management/view_index_get.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/view_index_get.cxx	(date 1776177013831)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: tools/query.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/query.cxx b/tools/query.cxx
+--- a/tools/query.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/query.cxx	(date 1776177014058)
+@@ -31,7 +31,7 @@
+ #include <couchbase/fmt/query_status.hxx>
+
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+
+ #include <tao/json.hpp>
+ #include <tao/json/type.hpp>
+Index: core/query_context.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/query_context.hxx b/core/query_context.hxx
+--- a/core/query_context.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/query_context.hxx	(date 1776177014099)
+@@ -16,7 +16,7 @@
+  */
+ #pragma once
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <optional>
+ #include <string>
+Index: core/key_value_config.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/key_value_config.cxx b/core/key_value_config.cxx
+--- a/core/key_value_config.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/key_value_config.cxx	(date 1776177014056)
+@@ -15,8 +15,8 @@
+
+ #include "key_value_config.hxx"
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+
+ namespace couchbase::core
+ {
+Index: core/operations/management/search_index_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_drop.cxx b/core/operations/management/search_index_drop.cxx
+--- a/core/operations/management/search_index_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_drop.cxx	(date 1776177013928)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/impl/error.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/error.cxx b/core/impl/error.cxx
+--- a/core/impl/error.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/error.cxx	(date 1776177013836)
+@@ -43,7 +43,7 @@
+ #include <couchbase/error_codes.hxx>
+ #include <couchbase/error_context.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include "core/transactions/internal/exceptions_internal_fmt.hxx"
+Index: tools/version.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/version.cxx b/tools/version.cxx
+--- a/tools/version.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/version.cxx	(date 1776177014111)
+@@ -21,7 +21,7 @@
+
+ #include <core/meta/version.hxx>
+
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/format.h>
+ #include <tao/json.hpp>
+
+ namespace
+Index: core/impl/dns_srv_tracker.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/dns_srv_tracker.cxx b/core/impl/dns_srv_tracker.cxx
+--- a/core/impl/dns_srv_tracker.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/dns_srv_tracker.cxx	(date 1776177014165)
+@@ -31,7 +31,7 @@
+ #include <asio/bind_executor.hpp>
+ #include <asio/io_context.hpp>
+ #include <asio/post.hpp>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <functional>
+ #include <memory>
+Index: core/operations/management/bucket_get.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/bucket_get.cxx b/core/operations/management/bucket_get.cxx
+--- a/core/operations/management/bucket_get.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/bucket_get.cxx	(date 1776177014128)
+@@ -22,7 +22,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: tools/beam.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/beam.cxx b/tools/beam.cxx
+--- a/tools/beam.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/beam.cxx	(date 1776177013896)
+@@ -25,8 +25,8 @@
+ #include <couchbase/cluster.hxx>
+ #include <couchbase/codec/tao_json_serializer.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/ranges.h>
++#include <fmt/chrono.h>
++#include <fmt/ranges.h>
+
+ #include <couchbase/fmt/cas.hxx>
+ #include <couchbase/fmt/error.hxx>
+Index: core/http_component.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/http_component.cxx b/core/http_component.cxx
+--- a/core/http_component.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/http_component.cxx	(date 1776177014138)
+@@ -25,7 +25,7 @@
+ #include <couchbase/build_config.hxx>
+
+ #include <asio/error.hpp>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+ #include <tl/expected.hpp>
+
+ #include <memory>
+Index: core/protocol/frame_info_id_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/protocol/frame_info_id_fmt.hxx b/core/protocol/frame_info_id_fmt.hxx
+--- a/core/protocol/frame_info_id_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/protocol/frame_info_id_fmt.hxx	(date 1776177013967)
+@@ -19,7 +19,7 @@
+
+ #include "frame_info_id.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::protocol::request_frame_info_id> {
+Index: tools/analytics.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/analytics.cxx b/tools/analytics.cxx
+--- a/tools/analytics.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/analytics.cxx	(date 1776177013985)
+@@ -30,7 +30,7 @@
+
+ #include <asio/io_context.hpp>
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+ #include <tao/json.hpp>
+
+ #include <regex>
+Index: core/operations/management/collection_create.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/collection_create.cxx b/core/operations/management/collection_create.cxx
+--- a/core/operations/management/collection_create.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/collection_create.cxx	(date 1776177013892)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <regex>
+Index: core/impl/collection.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/collection.cxx b/core/impl/collection.cxx
+--- a/core/impl/collection.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/collection.cxx	(date 1776177013958)
+@@ -94,7 +94,7 @@
+ #include <couchbase/unlock_options.hxx>
+ #include <couchbase/upsert_options.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <chrono>
+ #include <cstdint>
+Index: examples/async_game_server.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/examples/async_game_server.cxx b/examples/async_game_server.cxx
+--- a/examples/async_game_server.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/examples/async_game_server.cxx	(date 1776177013934)
+@@ -19,7 +19,7 @@
+ #include <couchbase/codec/tao_json_serializer.hxx>
+ #include <couchbase/logger.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <couchbase/fmt/error.hxx>
+
+Index: core/protocol/server_opcode_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/protocol/server_opcode_fmt.hxx b/core/protocol/server_opcode_fmt.hxx
+--- a/core/protocol/server_opcode_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/protocol/server_opcode_fmt.hxx	(date 1776177014084)
+@@ -19,7 +19,7 @@
+
+ #include "server_opcode.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::protocol::server_opcode> {
+Index: examples/bulk_transactional_get_replace.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/examples/bulk_transactional_get_replace.cxx b/examples/bulk_transactional_get_replace.cxx
+--- a/examples/bulk_transactional_get_replace.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/examples/bulk_transactional_get_replace.cxx	(date 1776177013864)
+@@ -19,8 +19,8 @@
+ #include <couchbase/codec/tao_json_serializer.hxx>
+ #include <couchbase/transactions.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/chrono.h>
++#include <fmt/format.h>
+ #include <tao/json/to_string.hpp>
+
+ #include <couchbase/fmt/error.hxx>
+Index: core/collections_component.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/collections_component.cxx b/core/collections_component.cxx
+--- a/core/collections_component.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/collections_component.cxx	(date 1776177014150)
+@@ -42,7 +42,7 @@
+ #include <asio/error.hpp>
+ #include <asio/io_context.hpp>
+ #include <asio/steady_timer.hpp>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+ #include <tao/pegtl/parse_error.hpp>
+ #include <tl/expected.hpp>
+Index: examples/bulk_base_api.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/examples/bulk_base_api.cxx b/examples/bulk_base_api.cxx
+--- a/examples/bulk_base_api.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/examples/bulk_base_api.cxx	(date 1776177013999)
+@@ -18,8 +18,8 @@
+ #include <couchbase/cluster.hxx>
+ #include <couchbase/codec/tao_json_serializer.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/chrono.h>
++#include <fmt/format.h>
+ #include <tao/json/to_string.hpp>
+
+ #include <couchbase/fmt/error.hxx>
+Index: examples/distributed_mutex.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/examples/distributed_mutex.cxx b/examples/distributed_mutex.cxx
+--- a/examples/distributed_mutex.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/examples/distributed_mutex.cxx	(date 1776177014094)
+@@ -19,8 +19,8 @@
+ #include <couchbase/cluster.hxx>
+ #include <couchbase/codec/tao_json_serializer.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/chrono.h>
++#include <fmt/format.h>
+
+ #include <couchbase/fmt/error_context.hxx>
+
+Index: examples/minimal.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/examples/minimal.cxx b/examples/minimal.cxx
+--- a/examples/minimal.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/examples/minimal.cxx	(date 1776177014038)
+@@ -19,7 +19,7 @@
+ #include <couchbase/codec/tao_json_serializer.hxx>
+ #include <couchbase/logger.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <couchbase/fmt/error.hxx>
+
+Index: core/document_id_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/document_id_fmt.hxx b/core/document_id_fmt.hxx
+--- a/core/document_id_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/document_id_fmt.hxx	(date 1776177014065)
+@@ -19,7 +19,7 @@
+
+ #include "document_id.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::document_id> {
+Index: examples/bulk_transactional_api.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/examples/bulk_transactional_api.cxx b/examples/bulk_transactional_api.cxx
+--- a/examples/bulk_transactional_api.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/examples/bulk_transactional_api.cxx	(date 1776177013847)
+@@ -19,8 +19,8 @@
+ #include <couchbase/codec/tao_json_serializer.hxx>
+ #include <couchbase/transactions.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/chrono.h>
++#include <fmt/format.h>
+ #include <tao/json/to_string.hpp>
+
+ #include <couchbase/fmt/error.hxx>
+Index: core/impl/fail_fast_retry_strategy.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/fail_fast_retry_strategy.cxx b/core/impl/fail_fast_retry_strategy.cxx
+--- a/core/impl/fail_fast_retry_strategy.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/fail_fast_retry_strategy.cxx	(date 1776177013971)
+@@ -20,7 +20,7 @@
+ #include <couchbase/retry_reason.hxx>
+ #include <couchbase/retry_request.hxx>
+
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/format.h>
+
+ #include <memory>
+ #include <string>
+Index: core/bucket.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/bucket.cxx b/core/bucket.cxx
+--- a/core/bucket.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/bucket.cxx	(date 1776177014174)
+@@ -55,7 +55,7 @@
+ #include <asio/post.hpp>
+ #include <asio/ssl/context.hpp>
+ #include <gsl/span>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <algorithm>
+ #include <chrono>
+Index: core/impl/key_value_error_context.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/key_value_error_context.cxx b/core/impl/key_value_error_context.cxx
+--- a/core/impl/key_value_error_context.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/key_value_error_context.cxx	(date 1776177014016)
+@@ -17,7 +17,7 @@
+
+ #include "core/error_context/key_value_error_context.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/to_string.hpp>
+
+ #include "core/fmt/key_value_error_map_attribute.hxx"
+Index: core/topology/configuration_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/topology/configuration_fmt.hxx b/core/topology/configuration_fmt.hxx
+--- a/core/topology/configuration_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/topology/configuration_fmt.hxx	(date 1776177014105)
+@@ -22,7 +22,7 @@
+ #include "core/service_type_fmt.hxx"
+ #include "core/utils/join_strings.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::topology::configuration::node> {
+Index: core/transactions/async_attempt_context.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/async_attempt_context.cxx b/core/transactions/async_attempt_context.cxx
+--- a/core/transactions/async_attempt_context.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/async_attempt_context.cxx	(date 1776177013977)
+@@ -18,7 +18,7 @@
+ #include <couchbase/scope.hxx>
+ #include <couchbase/transactions/async_attempt_context.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ namespace couchbase::transactions
+ {
+Index: core/protocol/client_opcode_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/protocol/client_opcode_fmt.hxx b/core/protocol/client_opcode_fmt.hxx
+--- a/core/protocol/client_opcode_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/protocol/client_opcode_fmt.hxx	(date 1776177014050)
+@@ -19,7 +19,7 @@
+
+ #include "client_opcode.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::protocol::client_opcode> {
+Index: core/transactions/exceptions_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/exceptions_fmt.hxx b/core/transactions/exceptions_fmt.hxx
+--- a/core/transactions/exceptions_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/exceptions_fmt.hxx	(date 1776177013940)
+@@ -18,7 +18,7 @@
+
+ #include "exceptions.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::transactions::external_exception> {
+Index: core/topology/capabilities_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/topology/capabilities_fmt.hxx b/core/topology/capabilities_fmt.hxx
+--- a/core/topology/capabilities_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/topology/capabilities_fmt.hxx	(date 1776177013855)
+@@ -19,7 +19,7 @@
+
+ #include "capabilities.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::bucket_capability> {
+Index: core/transactions/attempt_context.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/attempt_context.cxx b/core/transactions/attempt_context.cxx
+--- a/core/transactions/attempt_context.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/attempt_context.cxx	(date 1776177014154)
+@@ -18,7 +18,7 @@
+ #include <couchbase/scope.hxx>
+ #include <couchbase/transactions/attempt_context.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ namespace couchbase::transactions
+ {
+Index: core/topology/collections_manifest_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/topology/collections_manifest_fmt.hxx b/core/topology/collections_manifest_fmt.hxx
+--- a/core/topology/collections_manifest_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/topology/collections_manifest_fmt.hxx	(date 1776177014006)
+@@ -21,7 +21,7 @@
+
+ #include "core/utils/join_strings.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <vector>
+
+Index: core/seed_config.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/seed_config.cxx b/core/seed_config.cxx
+--- a/core/seed_config.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/seed_config.cxx	(date 1776177014088)
+@@ -15,8 +15,8 @@
+
+ #include "seed_config.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
+-#include <spdlog/fmt/bundled/ranges.h>
++#include <fmt/core.h>
++#include <fmt/ranges.h>
+
+ namespace couchbase::core
+ {
+Index: core/retry_orchestrator.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/retry_orchestrator.cxx b/core/retry_orchestrator.cxx
+--- a/core/retry_orchestrator.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/retry_orchestrator.cxx	(date 1776177013963)
+@@ -21,7 +21,7 @@
+
+ #include <couchbase/fmt/retry_reason.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+
+ namespace couchbase::core
+ {
+Index: core/transactions/result_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/result_fmt.hxx b/core/transactions/result_fmt.hxx
+--- a/core/transactions/result_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/result_fmt.hxx	(date 1776177014178)
+@@ -18,7 +18,7 @@
+
+ #include "result.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::transactions::result> {
+Index: core/document_id.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/document_id.cxx b/core/document_id.cxx
+--- a/core/document_id.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/document_id.cxx	(date 1776177014103)
+@@ -20,7 +20,7 @@
+ #include "core/utils/binary.hxx"
+ #include "core/utils/unsigned_leb128.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <algorithm>
+ #include <cstddef>
+Index: core/websocket_codec.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/websocket_codec.cxx b/core/websocket_codec.cxx
+--- a/core/websocket_codec.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/websocket_codec.cxx	(date 1776177013887)
+@@ -20,7 +20,7 @@
+ #include "core/platform/random.h"
+
+ #include <llhttp.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <algorithm>
+ #include <array>
+Index: core/transactions/transaction_links.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/transaction_links.hxx b/core/transactions/transaction_links.hxx
+--- a/core/transactions/transaction_links.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/transaction_links.hxx	(date 1776177014101)
+@@ -18,7 +18,7 @@
+
+ #include <couchbase/codec/encoded_value.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <optional>
+Index: core/service_type_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/service_type_fmt.hxx b/core/service_type_fmt.hxx
+--- a/core/service_type_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/service_type_fmt.hxx	(date 1776177013920)
+@@ -19,7 +19,7 @@
+
+ #include "service_type.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::service_type> {
+Index: core/mcbp/operation_queue.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/mcbp/operation_queue.cxx b/core/mcbp/operation_queue.cxx
+--- a/core/mcbp/operation_queue.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/mcbp/operation_queue.cxx	(date 1776177014032)
+@@ -23,7 +23,7 @@
+
+ #include <couchbase/error_codes.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <algorithm>
+ #include <iterator>
+Index: core/management/rbac_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/management/rbac_fmt.hxx b/core/management/rbac_fmt.hxx
+--- a/core/management/rbac_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/management/rbac_fmt.hxx	(date 1776177014042)
+@@ -19,7 +19,7 @@
+
+ #include "rbac.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::management::rbac::auth_domain> {
+Index: core/agent_group_config.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/agent_group_config.cxx b/core/agent_group_config.cxx
+--- a/core/agent_group_config.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/agent_group_config.cxx	(date 1776177013860)
+@@ -15,7 +15,7 @@
+
+ #include "agent_group_config.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <string>
+
+Index: core/transactions/internal/exceptions_internal_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/internal/exceptions_internal_fmt.hxx b/core/transactions/internal/exceptions_internal_fmt.hxx
+--- a/core/transactions/internal/exceptions_internal_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/internal/exceptions_internal_fmt.hxx	(date 1776177013953)
+@@ -16,7 +16,7 @@
+
+ #pragma once
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::transactions::error_class> {
+Index: core/transactions/internal/atr_cleanup_entry.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/internal/atr_cleanup_entry.hxx b/core/transactions/internal/atr_cleanup_entry.hxx
+--- a/core/transactions/internal/atr_cleanup_entry.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/internal/atr_cleanup_entry.hxx	(date 1776177014142)
+@@ -21,7 +21,7 @@
+ #include "core/transactions/transaction_get_result.hxx"
+ #include "logging.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <chrono>
+ #include <memory>
+Index: core/crud_component.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/crud_component.cxx b/core/crud_component.cxx
+--- a/core/crud_component.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/crud_component.cxx	(date 1776177014113)
+@@ -43,7 +43,7 @@
+ #include <gsl/span_ext>
+ #include <gsl/util>
+ #include <snappy.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+ #include <tl/expected.hpp>
+
+Index: core/cluster_agent_config.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/cluster_agent_config.cxx b/core/cluster_agent_config.cxx
+--- a/core/cluster_agent_config.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/cluster_agent_config.cxx	(date 1776177014034)
+@@ -15,7 +15,7 @@
+
+ #include "cluster_agent_config.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <string>
+
+Index: core/transactions/internal/doc_record_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/internal/doc_record_fmt.hxx b/core/transactions/internal/doc_record_fmt.hxx
+--- a/core/transactions/internal/doc_record_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/internal/doc_record_fmt.hxx	(date 1776177014025)
+@@ -17,7 +17,7 @@
+
+ #include "doc_record.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::transactions::doc_record> {
+Index: core/transactions/internal/client_record.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/internal/client_record.hxx b/core/transactions/internal/client_record.hxx
+--- a/core/transactions/internal/client_record.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/internal/client_record.hxx	(date 1776177014051)
+@@ -15,7 +15,7 @@
+  */
+ #pragma once
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <string>
+ #include <vector>
+Index: core/app_telemetry_meter.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/app_telemetry_meter.cxx b/core/app_telemetry_meter.cxx
+--- a/core/app_telemetry_meter.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/app_telemetry_meter.cxx	(date 1776177014160)
+@@ -22,7 +22,7 @@
+ #include "utils/json.hxx"
+
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/to_string.hpp>
+ #include <tao/json/value.hpp>
+
+Index: core/transactions/internal/logging.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/transactions/internal/logging.hxx b/core/transactions/internal/logging.hxx
+--- a/core/transactions/internal/logging.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/transactions/internal/logging.hxx	(date 1776177013907)
+@@ -17,7 +17,7 @@
+
+ #include <core/logger/logger.hxx>
+
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/format.h>
+
+ namespace couchbase::core::transactions
+ {
+Index: core/diagnostics_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/diagnostics_fmt.hxx b/core/diagnostics_fmt.hxx
+--- a/core/diagnostics_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/diagnostics_fmt.hxx	(date 1776177014048)
+@@ -19,7 +19,7 @@
+
+ #include "diagnostics.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::diag::cluster_state> {
+Index: core/error_context/key_value_json.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/error_context/key_value_json.hxx b/core/error_context/key_value_json.hxx
+--- a/core/error_context/key_value_json.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/error_context/key_value_json.hxx	(date 1776177014172)
+@@ -22,7 +22,7 @@
+
+ #include "key_value_error_context.hxx"
+
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/format.h>
+ #include <tao/json/forward.hpp>
+
+ namespace tao::json
+Index: core/error_context/query_public_json.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/error_context/query_public_json.hxx b/core/error_context/query_public_json.hxx
+--- a/core/error_context/query_public_json.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/error_context/query_public_json.hxx	(date 1776177013841)
+@@ -21,7 +21,7 @@
+
+ #include <couchbase/fmt/retry_reason.hxx>
+
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/format.h>
+ #include <tao/json/forward.hpp>
+
+ namespace tao::json
+Index: core/mcbp/packet.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/mcbp/packet.cxx b/core/mcbp/packet.cxx
+--- a/core/mcbp/packet.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/mcbp/packet.cxx	(date 1776177014163)
+@@ -23,7 +23,7 @@
+ #include "core/fmt/key_value_status_code.hxx"
+
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <iterator>
+
+Index: core/origin.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/origin.cxx b/core/origin.cxx
+--- a/core/origin.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/origin.cxx	(date 1776177013982)
+@@ -21,8 +21,8 @@
+ #include "core/utils/connection_string.hxx"
+ #include "topology/configuration.hxx"
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+
+ #include <tao/json.hpp>
+
+Index: core/meta/version.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/meta/version.cxx b/core/meta/version.cxx
+--- a/core/meta/version.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/meta/version.cxx	(date 1776177014046)
+@@ -32,7 +32,7 @@
+ #include <hdr/hdr_histogram_version.h>
+ #include <llhttp.h>
+ #include <snappy-stubs-public.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <spdlog/version.h>
+ #ifdef COUCHBASE_CXX_CLIENT_BUILD_OPENTELEMETRY
+ #include <opentelemetry/version.h>
+Index: core/core_sdk_shim.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/core_sdk_shim.cxx b/core/core_sdk_shim.cxx
+--- a/core/core_sdk_shim.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/core_sdk_shim.cxx	(date 1776177014036)
+@@ -15,7 +15,7 @@
+
+ #include "core_sdk_shim.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <string>
+
+Index: core/error_context/subdocument_json.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/error_context/subdocument_json.hxx b/core/error_context/subdocument_json.hxx
+--- a/core/error_context/subdocument_json.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/error_context/subdocument_json.hxx	(date 1776177014030)
+@@ -21,7 +21,7 @@
+
+ #include <couchbase/fmt/retry_reason.hxx>
+
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/format.h>
+ #include <tao/json/forward.hpp>
+
+ #include "key_value_json.hxx"
+Index: core/config_profiles.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/config_profiles.cxx b/core/config_profiles.cxx
+--- a/core/config_profiles.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/config_profiles.cxx	(date 1776177014013)
+@@ -20,7 +20,7 @@
+ #include "cluster_options.hxx"
+ #include "core/config_profile.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <chrono>
+ #include <mutex>
+Index: core/app_telemetry_reporter.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/app_telemetry_reporter.cxx b/core/app_telemetry_reporter.cxx
+--- a/core/app_telemetry_reporter.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/app_telemetry_reporter.cxx	(date 1776177014003)
+@@ -33,8 +33,8 @@
+ #include <asio/steady_timer.hpp>
+ #include <llhttp.h>
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+ #include <tao/json/to_string.hpp>
+ #include <tao/json/value.hpp>
+
+Index: core/agent_config.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/agent_config.cxx b/core/agent_config.cxx
+--- a/core/agent_config.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/agent_config.cxx	(date 1776177013988)
+@@ -15,7 +15,7 @@
+
+ #include "agent_config.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <string>
+
+Index: core/sasl/error_fmt.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/sasl/error_fmt.h b/core/sasl/error_fmt.h
+--- a/core/sasl/error_fmt.h	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/sasl/error_fmt.h	(date 1776177014029)
+@@ -19,7 +19,7 @@
+
+ #include "error.h"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::sasl::error> {
+Index: core/error_context/analytics_json.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/error_context/analytics_json.hxx b/core/error_context/analytics_json.hxx
+--- a/core/error_context/analytics_json.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/error_context/analytics_json.hxx	(date 1776177013858)
+@@ -22,7 +22,7 @@
+
+ #include <couchbase/error_codes.hxx>
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/forward.hpp>
+ #include <tao/json/value.hpp>
+
+Index: core/utils/join_strings.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/utils/join_strings.hxx b/core/utils/join_strings.hxx
+--- a/core/utils/join_strings.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/utils/join_strings.hxx	(date 1776177014008)
+@@ -17,7 +17,7 @@
+
+ #pragma once
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <sstream>
+
+Index: core/operations/management/analytics_link_disconnect.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_link_disconnect.cxx b/core/operations/management/analytics_link_disconnect.cxx
+--- a/core/operations/management/analytics_link_disconnect.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_link_disconnect.cxx	(date 1776177013952)
+@@ -21,7 +21,7 @@
+ #include "core/utils/name_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/utils/url_codec.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/utils/url_codec.cxx b/core/utils/url_codec.cxx
+--- a/core/utils/url_codec.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/utils/url_codec.cxx	(date 1776177013904)
+@@ -17,7 +17,7 @@
+
+ #include "url_codec.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <cctype>
+ #include <climits>
+Index: core/operations/management/group_get.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/group_get.cxx b/core/operations/management/group_get.cxx
+--- a/core/operations/management/group_get.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/group_get.cxx	(date 1776177013930)
+@@ -21,7 +21,7 @@
+ #include "core/utils/json.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/scope_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/scope_drop.cxx b/core/operations/management/scope_drop.cxx
+--- a/core/operations/management/scope_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/scope_drop.cxx	(date 1776177014027)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <regex>
+Index: test/test_unit_metrics.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/test_unit_metrics.cxx b/test/test_unit_metrics.cxx
+--- a/test/test_unit_metrics.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/test/test_unit_metrics.cxx	(date 1776177014130)
+@@ -21,7 +21,7 @@
+ #include "core/tracing/constants.hxx"
+
+ #include <couchbase/error_codes.hxx>
+-#include <spdlog/fmt/bundled/printf.h>
++#include <fmt/printf.h>
+
+ TEST_CASE("unit: metric attributes encoding", "[unit]")
+ {
+Index: core/design_document_namespace_fmt.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/design_document_namespace_fmt.hxx b/core/design_document_namespace_fmt.hxx
+--- a/core/design_document_namespace_fmt.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/design_document_namespace_fmt.hxx	(date 1776177013902)
+@@ -19,7 +19,7 @@
+
+ #include "design_document_namespace.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ template<>
+ struct fmt::formatter<couchbase::core::design_document_namespace> {
+Index: core/operations/management/collection_update.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/collection_update.cxx b/core/operations/management/collection_update.cxx
+--- a/core/operations/management/collection_update.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/collection_update.cxx	(date 1776177014115)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <regex>
+Index: core/operations/management/search_index_analyze_document.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_analyze_document.cxx b/core/operations/management/search_index_analyze_document.cxx
+--- a/core/operations/management/search_index_analyze_document.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_analyze_document.cxx	(date 1776177013932)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/view_index_upsert.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/view_index_upsert.cxx b/core/operations/management/view_index_upsert.cxx
+--- a/core/operations/management/view_index_upsert.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/view_index_upsert.cxx	(date 1776177013909)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: test/test_integration_tracer.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/test_integration_tracer.cxx b/test/test_integration_tracer.cxx
+--- a/test/test_integration_tracer.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/test/test_integration_tracer.cxx	(date 1776177013879)
+@@ -25,7 +25,7 @@
+
+ #include <catch2/catch_message.hpp>
+ #include <catch2/generators/catch_generators.hpp>
+-#include <spdlog/fmt/bundled/ranges.h>
++#include <fmt/ranges.h>
+
+ class test_span : public couchbase::tracing::request_span
+ {
+Index: test/test_integration_examples.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/test_integration_examples.cxx b/test/test_integration_examples.cxx
+--- a/test/test_integration_examples.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/test/test_integration_examples.cxx	(date 1776177013961)
+@@ -34,8 +34,8 @@
+ #include <couchbase/query_string_query.hxx>
+ #include <couchbase/term_facet.hxx>
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/ranges.h>
++#include <fmt/chrono.h>
++#include <fmt/ranges.h>
+ #include <tao/json.hpp>
+ #include <tao/json/contrib/traits.hpp>
+
+Index: core/io/http_parser.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/io/http_parser.cxx b/core/io/http_parser.cxx
+--- a/core/io/http_parser.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/io/http_parser.cxx	(date 1776177013973)
+@@ -18,7 +18,7 @@
+ #include "http_parser.hxx"
+
+ #include <llhttp.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <algorithm>
+
+Index: core/impl/crypto.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/impl/crypto.cxx b/core/impl/crypto.cxx
+--- a/core/impl/crypto.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/impl/crypto.cxx	(date 1776177014018)
+@@ -24,7 +24,7 @@
+ #include "core/utils/binary.hxx"
+
+ #include "include_ssl/rand.h"
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/format.h>
+
+ namespace couchbase::crypto::internal
+ {
+Index: core/operations/management/bucket_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/bucket_drop.cxx b/core/operations/management/bucket_drop.cxx
+--- a/core/operations/management/bucket_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/bucket_drop.cxx	(date 1776177014080)
+@@ -20,7 +20,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ namespace couchbase::core::operations::management
+ {
+Index: core/operations/management/search_index_control_query.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_control_query.cxx b/core/operations/management/search_index_control_query.cxx
+--- a/core/operations/management/search_index_control_query.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_control_query.cxx	(date 1776177013839)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/utils/keyspace.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/utils/keyspace.hxx b/core/utils/keyspace.hxx
+--- a/core/utils/keyspace.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/utils/keyspace.hxx	(date 1776177013950)
+@@ -17,7 +17,7 @@
+
+ #pragma once
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <string>
+
+Index: core/io/config_tracker.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/io/config_tracker.cxx b/core/io/config_tracker.cxx
+--- a/core/io/config_tracker.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/io/config_tracker.cxx	(date 1776177013975)
+@@ -29,7 +29,7 @@
+ #include "mcbp_session.hxx"
+
+ #include <asio/steady_timer.hpp>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+
+ namespace couchbase::core::io
+ {
+Index: core/io/mcbp_command.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/io/mcbp_command.hxx b/core/io/mcbp_command.hxx
+--- a/core/io/mcbp_command.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/io/mcbp_command.hxx	(date 1776177013883)
+@@ -38,7 +38,7 @@
+ #include <couchbase/error_codes.hxx>
+
+ #include <asio/steady_timer.hpp>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+
+ #include <functional>
+ #include <utility>
+Index: core/operations/management/collection_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/collection_drop.cxx b/core/operations/management/collection_drop.cxx
+--- a/core/operations/management/collection_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/collection_drop.cxx	(date 1776177014146)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ #include <regex>
+Index: core/io/http_session.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/io/http_session.hxx b/core/io/http_session.hxx
+--- a/core/io/http_session.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/io/http_session.hxx	(date 1776177014107)
+@@ -36,7 +36,7 @@
+ #include "core/tls_context_provider.hxx"
+
+ #include <asio.hpp>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+
+ #include <memory>
+ #include <optional>
+Index: core/operations/management/eventing_get_function.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/eventing_get_function.cxx b/core/operations/management/eventing_get_function.cxx
+--- a/core/operations/management/eventing_get_function.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/eventing_get_function.cxx	(date 1776177013833)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: tools/config.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/config.cxx b/tools/config.cxx
+--- a/tools/config.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/config.cxx	(date 1776177014040)
+@@ -26,7 +26,7 @@
+
+ #include <couchbase/cluster.hxx>
+
+-#include <spdlog/fmt/bundled/format.h>
++#include <fmt/format.h>
+ #include <tao/json.hpp>
+ #include <tao/json/from_string.hpp>
+
+Index: core/operations/management/analytics_link_drop.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/analytics_link_drop.cxx b/core/operations/management/analytics_link_drop.cxx
+--- a/core/operations/management/analytics_link_drop.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/analytics_link_drop.cxx	(date 1776177014134)
+@@ -21,7 +21,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: tools/remove.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/remove.cxx b/tools/remove.cxx
+--- a/tools/remove.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/remove.cxx	(date 1776177013881)
+@@ -24,7 +24,7 @@
+ #include <couchbase/codec/tao_json_serializer.hxx>
+
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+ #include <tao/json.hpp>
+
+ #include <couchbase/fmt/cas.hxx>
+Index: core/logger/logger.hxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/logger/logger.hxx b/core/logger/logger.hxx
+--- a/core/logger/logger.hxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/logger/logger.hxx	(date 1776177013845)
+@@ -29,7 +29,7 @@
+
+ #include "level.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <spdlog/fwd.h>
+
+ #include <memory>
+Index: tools/sysinfo.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/sysinfo.cxx b/tools/sysinfo.cxx
+--- a/tools/sysinfo.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/sysinfo.cxx	(date 1776177014060)
+@@ -19,8 +19,8 @@
+
+ #include "system_metrics_reporter.hxx"
+
+-#include <spdlog/fmt/bundled/chrono.h>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/chrono.h>
++#include <fmt/core.h>
+ #include <tao/json.hpp>
+
+ #include <array>
+Index: core/io/dns_client.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/io/dns_client.cxx b/core/io/dns_client.cxx
+--- a/core/io/dns_client.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/io/dns_client.cxx	(date 1776177013862)
+@@ -28,7 +28,7 @@
+ #include <asio/read.hpp>
+ #include <asio/write.hpp>
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+
+ #include <chrono>
+ #include <memory>
+Index: tools/key_generator.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/key_generator.cxx b/tools/key_generator.cxx
+--- a/tools/key_generator.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/key_generator.cxx	(date 1776177013991)
+@@ -20,7 +20,7 @@
+ #include "core/topology/configuration.hxx"
+
+ #include <optional>
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+
+ #include <gsl/assert>
+ #include <gsl/span>
+Index: tools/upsert.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/upsert.cxx b/tools/upsert.cxx
+--- a/tools/upsert.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/tools/upsert.cxx	(date 1776177013938)
+@@ -27,7 +27,7 @@
+ #include <couchbase/replicate_to.hxx>
+
+ #include <spdlog/fmt/bin_to_hex.h>
+-#include <spdlog/fmt/bundled/chrono.h>
++#include <fmt/chrono.h>
+ #include <tao/json.hpp>
+
+ #include <couchbase/fmt/cas.hxx>
+Index: core/operations/management/eventing_deploy_function.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/eventing_deploy_function.cxx b/core/operations/management/eventing_deploy_function.cxx
+--- a/core/operations/management/eventing_deploy_function.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/eventing_deploy_function.cxx	(date 1776177014054)
+@@ -20,7 +20,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/search_index_get_all.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/search_index_get_all.cxx b/core/operations/management/search_index_get_all.cxx
+--- a/core/operations/management/search_index_get_all.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/search_index_get_all.cxx	(date 1776177014117)
+@@ -22,7 +22,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+
+ namespace couchbase::core::operations::management
+Index: core/operations/management/eventing_undeploy_function.cxx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/core/operations/management/eventing_undeploy_function.cxx b/core/operations/management/eventing_undeploy_function.cxx
+--- a/core/operations/management/eventing_undeploy_function.cxx	(revision fb3f860843c3ca594f2676225dcc95ed8d6c1375)
++++ b/core/operations/management/eventing_undeploy_function.cxx	(date 1776177013979)
+@@ -20,7 +20,7 @@
+ #include "core/utils/url_codec.hxx"
+ #include "error_utils.hxx"
+
+-#include <spdlog/fmt/bundled/core.h>
++#include <fmt/core.h>
+ #include <tao/json/value.hpp>
+ 
+ namespace couchbase::core::operations::management

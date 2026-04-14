@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ { id: clang-17, base_image: silkeh/clang:17-bookworm },
+        platform: [ { id: clang-18, base_image: silkeh/clang:18-bookworm },
                     { id: clang-21, base_image: silkeh/clang:21-trixie } ]
 
     runs-on: ubuntu-24.04

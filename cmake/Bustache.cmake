@@ -24,14 +24,17 @@ set(BUSTACHE_USE_FMT ON CACHE STRING "" FORCE)
 
 set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/add-append.patch")
 set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/fix-deprecated-literal-operator.patch")
+set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/remove_installs.patch")
 
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
             (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
-            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\") &&\
+            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_3}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_3}\\\")")
+
 
 FetchContent_Declare(Bustache
         GIT_REPOSITORY  https://github.com/jamboree/bustache.git
-        GIT_TAG         47096caa8e1f9f7ebe34e3a022dbb822c174011d
+        GIT_TAG         af10816ce3d2ff8577fd27caa2c1005c01d8069b
         PATCH_COMMAND   "${PC}"
         SYSTEM
 )
