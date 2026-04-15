@@ -51,10 +51,22 @@ void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
 
   auto proxy_controller_service = minifi::utils::parseOptionalControllerService<minifi::controllers::ProxyConfigurationServiceInterface>(context, ProxyConfigurationService, getUUID());
   if (proxy_controller_service) {
+    if (proxy_controller_service->getProxyType() == minifi::controllers::ProxyType::DIRECT) {
+      logger_->log_debug("Proxy configuration service indicates DIRECT connection, no proxy will be used for GCS processor");
+      return;
+    }
+
     logger_->log_debug("Proxy configuration is set for GCS processor");
 
     proxy_ = google::cloud::ProxyConfig{};
-    proxy_->set_hostname(proxy_controller_service->getHost()).set_scheme(proxy_controller_service->getProxyType() == minifi::controllers::ProxyType::HTTPS ? "https" : "http");
+    proxy_->set_scheme(minifi::utils::string::startsWith(proxy_controller_service->getHost(), "https") ? "https" : "http");
+    auto proxy_host = proxy_controller_service->getHost();
+    if (minifi::utils::string::startsWith(proxy_host, "https://")) {
+      proxy_host = proxy_host.substr(8);
+    } else if (minifi::utils::string::startsWith(proxy_host, "http://")) {
+      proxy_host = proxy_host.substr(7);
+    }
+    proxy_->set_hostname(proxy_host);
     if (proxy_controller_service->getPort()) {
       proxy_->set_port(std::to_string(*proxy_controller_service->getPort()));
     }

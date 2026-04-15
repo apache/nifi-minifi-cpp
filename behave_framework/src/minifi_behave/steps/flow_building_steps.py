@@ -244,10 +244,11 @@ def set_processor_properties(context: MinifiTestContext):
 @given("a ProxyConfigurationService controller service is set up with {proxy_type} proxy configuration in the \"{container_name}\" flow")
 def step_impl(context: MinifiTestContext, proxy_type: str, container_name: str):
     controller_service = ControllerService(class_name="ProxyConfigurationService", service_name="ProxyConfigurationService")
-    controller_service.add_property("Proxy Server Host", f"{proxy_type.lower()}://http-proxy-{context.scenario_id}")
+    prefix = proxy_type.lower() if proxy_type.lower() != "direct" else "http"
+    controller_service.add_property("Proxy Server Host", f"{prefix}://http-proxy-{context.scenario_id}")
     controller_service.add_property("Proxy User Name", "admin")
     controller_service.add_property("Proxy User Password", "test101")
-    controller_service.add_property("Proxy Type", "HTTP")
+    controller_service.add_property("Proxy Type", "DIRECT" if proxy_type.lower() == "direct" else "HTTP")
     if proxy_type.lower() == "http":
         controller_service.add_property("Proxy Server Port", "3128")
     else:

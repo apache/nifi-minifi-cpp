@@ -197,3 +197,32 @@ Feature: Sending data to Google Cloud Storage using PutGCSObject
     | proxy type |
     | HTTP       |
     | HTTPS      |
+
+  Scenario: A MiNiFi instance can upload data to Google Cloud storage when http proxy is configured but the proxy configuration service indicates DIRECT connection
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
+    And the scheduling period of the GetFile processor is set to "60 sec"
+    And a file with the content "hello_gcs" is present in "/tmp/input"
+    And a Google Cloud storage server is set up
+    And a PutGCSObject processor
+    And the "Proxy Configuration Service" property of the PutGCSObject processor is set to "ProxyConfigurationService"
+    And PutGCSObject is EVENT_DRIVEN
+    And a GCPCredentialsControllerService controller service is set up
+    And the "Credentials Location" property of the GCPCredentialsControllerService controller service is set to "Use Anonymous credentials"
+    And the "GCP Credentials Provider Service" property of the PutGCSObject processor is set to "GCPCredentialsControllerService"
+    And the "Bucket" property of the PutGCSObject processor is set to "test-bucket"
+    And the "Number of retries" property of the PutGCSObject processor is set to "2"
+    And the "Endpoint Override URL" property of the PutGCSObject processor is set to "fake-gcs-server-${scenario_id}:4443"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And PutFile is EVENT_DRIVEN
+    And a ProxyConfigurationService controller service is set up with DIRECT proxy configuration
+    And the "success" relationship of the GetFile processor is connected to the PutGCSObject
+    And the "success" relationship of the PutGCSObject processor is connected to the PutFile
+    And the "failure" relationship of the PutGCSObject processor is connected to the PutGCSObject
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
+
+    When all instances start up
+
+    Then a single file with the content "hello_gcs" is placed in the "/tmp/output" directory in less than 60 seconds
+    And an object with the content "hello_gcs" is present in the Google Cloud storage
