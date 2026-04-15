@@ -31,19 +31,17 @@ void StatefulProcessor::onSchedule(core::ProcessContext& context, core::ProcessS
   if (temp_state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
-  state_manager_ = temp_state_manager.get();
 
   if (on_schedule_hook_) {
-    on_schedule_hook_(*state_manager_);
+    on_schedule_hook_(*temp_state_manager);
   }
-  state_manager_ = nullptr;
 }
 
 void StatefulProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession&) {
   std::lock_guard<std::mutex> lock(mutex_);
-  state_manager_ = context.getStateManager();
+  auto state_manager = context.getStateManager();
   if (on_trigger_hook_index_ < on_trigger_hooks_.size()) {
-    on_trigger_hooks_[on_trigger_hook_index_++](*state_manager_);
+    on_trigger_hooks_[on_trigger_hook_index_++](*state_manager);
   }
 }
 
