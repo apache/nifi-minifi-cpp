@@ -43,12 +43,11 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a directory at "/tmp/input" has a file with the content "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{"
     And a PutS3Object processor set up to communicate with an s3 server
     And these processor properties are set
-      | processor name  | property name  | property value                  |
-      | PutS3Object     | Proxy Host     | http-proxy-${scenario_id}       |
-      | PutS3Object     | Proxy Port     | <proxy port>                    |
-      | PutS3Object     | Proxy Username | admin                           |
-      | PutS3Object     | Proxy Password | test101                         |
-      | PutS3Object     | Proxy Type     | <proxy type>                    |
+      | processor name  | property name  | property value                           |
+      | PutS3Object     | Proxy Host     | <proxy type>://http-proxy-${scenario_id} |
+      | PutS3Object     | Proxy Port     | <proxy port>                             |
+      | PutS3Object     | Proxy Username | admin                                    |
+      | PutS3Object     | Proxy Password | test101                                  |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
     And the "success" relationship of the PutS3Object processor is connected to the PutFile
@@ -66,8 +65,8 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     Examples: Proxy Type
     | proxy type | proxy port |
-    | HTTP       | 3128       |
-    | HTTPS      | 3129       |
+    | http       | 3128       |
+    | https      | 3129       |
 
   Scenario Outline: A MiNiFi instance transfers encoded data through a http proxy to s3 using proxy configuration service
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -138,12 +137,12 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a DeleteS3Object processor set up to communicate with the same s3 server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And these processor properties are set
-      | processor name  | property name  | property value                  |
-      | DeleteS3Object  | Proxy Host     | http-proxy-${scenario_id}       |
-      | DeleteS3Object  | Proxy Port     | <proxy port>                    |
-      | DeleteS3Object  | Proxy Username | admin                           |
-      | DeleteS3Object  | Proxy Password | test101                         |
-      | DeleteS3Object  | Proxy Type     | <proxy type>                    |
+      | processor name  | property name  | property value                           |
+      | DeleteS3Object  | Proxy Host     | <proxy type>://http-proxy-${scenario_id} |
+      | DeleteS3Object  | Proxy Port     | <proxy port>                             |
+      | DeleteS3Object  | Proxy Username | admin                                    |
+      | DeleteS3Object  | Proxy Password | test101                                  |
+      | DeleteS3Object  | Proxy Type     | <proxy type>                             |
     And the processors are connected up as described here
       | source name    | relationship name | destination name |
       | GetFile        | success           | PutS3Object      |
@@ -163,8 +162,8 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     Examples: Proxy Type
     | proxy type | proxy port |
-    | HTTP       | 3128       |
-    | HTTPS      | 3129       |
+    | http       | 3128       |
+    | https      | 3129       |
 
   Scenario Outline: Deletion of a s3 object through a proxy-server succeeds using proxy configuration service
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -228,12 +227,12 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     Given a GenerateFlowFile processor with the "File Size" property set to "1 kB"
     And a FetchS3Object processor set up to communicate with the same s3 server
     And these processor properties are set
-      | processor name | property name  | property value                  |
-      | FetchS3Object  | Proxy Host     | http-proxy-${scenario_id}       |
-      | FetchS3Object  | Proxy Port     | <proxy port>                    |
-      | FetchS3Object  | Proxy Username | admin                           |
-      | FetchS3Object  | Proxy Password | test101                         |
-      | FetchS3Object  | Proxy Type     | <proxy type>                    |
+      | processor name | property name  | property value                           |
+      | FetchS3Object  | Proxy Host     | <proxy type>://http-proxy-${scenario_id} |
+      | FetchS3Object  | Proxy Port     | <proxy port>                             |
+      | FetchS3Object  | Proxy Username | admin                                    |
+      | FetchS3Object  | Proxy Password | test101                                  |
+      | FetchS3Object  | Proxy Type     | <proxy type>                             |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the processors are connected up as described here
       | source name      | relationship name | destination name |
@@ -250,8 +249,8 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
   Examples: Proxy Type
     | proxy type | proxy port |
-    | HTTP       | 3128       |
-    | HTTPS      | 3129       |
+    | http       | 3128       |
+    | https      | 3129       |
 
   Scenario Outline: A MiNiFi instance can download s3 bucket objects via a http-proxy using proxy configuration service
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -312,12 +311,11 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     Given a ListS3 processor set up to communicate with the same s3 server
     And these processor properties are set
-      | processor name | property name  | property value                  |
-      | ListS3         | Proxy Host     | http-proxy-${scenario_id}       |
-      | ListS3         | Proxy Port     | <proxy port>                    |
-      | ListS3         | Proxy Username | admin                           |
-      | ListS3         | Proxy Password | test101                         |
-      | ListS3         | Proxy Type     | <proxy type>                    |
+      | processor name | property name  | property value                           |
+      | ListS3         | Proxy Host     | <proxy type>://http-proxy-${scenario_id} |
+      | ListS3         | Proxy Port     | <proxy port>                             |
+      | ListS3         | Proxy Username | admin                                    |
+      | ListS3         | Proxy Password | test101                                  |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the ListS3 processor is connected to the PutFile
 
@@ -331,8 +329,8 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     Examples: Proxy Type
       | proxy port | proxy type |
-      | 3128       | HTTP       |
-      | 3129       | HTTPS      |
+      | 3128       | http       |
+      | 3129       | https      |
 
   Scenario Outline: A MiNiFi instance can list an S3 bucket objects via a http-proxy using proxy configuration service
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -385,12 +383,11 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "Multipart Threshold" property of the PutS3Object processor is set to "5 MB"
     And the "Multipart Part Size" property of the PutS3Object processor is set to "5 MB"
     And these processor properties are set
-    | processor name  | property name  | property value            |
-    | PutS3Object     | Proxy Host     | http-proxy-${scenario_id} |
-    | PutS3Object     | Proxy Port     | <proxy port>              |
-    | PutS3Object     | Proxy Username | admin                     |
-    | PutS3Object     | Proxy Password | test101                   |
-    | PutS3Object     | Proxy Type     | <proxy type>              |
+    | processor name  | property name  | property value                           |
+    | PutS3Object     | Proxy Host     | <proxy type>://http-proxy-${scenario_id} |
+    | PutS3Object     | Proxy Port     | <proxy port>                             |
+    | PutS3Object     | Proxy Username | admin                                    |
+    | PutS3Object     | Proxy Password | test101                                  |
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the PutS3Object processor is connected to the PutFile
@@ -406,5 +403,5 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     Examples: Proxy Type
       | proxy port | proxy type |
-      | 3128       | HTTP       |
-      | 3129       | HTTPS      |
+      | 3128       | http       |
+      | 3129       | https      |

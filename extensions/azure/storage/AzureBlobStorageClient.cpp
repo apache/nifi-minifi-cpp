@@ -61,16 +61,8 @@ Azure::Storage::Blobs::BlobContainerClient AzureBlobStorageClient::createClient(
     const std::optional<minifi::controllers::ProxyConfiguration>& proxy_configuration) {
   Azure::Storage::Blobs::BlobClientOptions client_options;
 
-  if (proxy_configuration) {
-    std::string protocol_prefix;
-    if (!minifi::utils::regexMatch(proxy_configuration->proxy_host, minifi::utils::Regex("^https?:\\/\\/"))) {
-      if (proxy_configuration->proxy_type == controllers::ProxyType::HTTP) {
-        protocol_prefix = "http://";
-      } else if (proxy_configuration->proxy_type == controllers::ProxyType::HTTPS) {
-        protocol_prefix = "https://";
-      }
-    }
-    client_options.Transport.HttpProxy = protocol_prefix + proxy_configuration->proxy_host + (proxy_configuration->proxy_port ? (":" + std::to_string(*proxy_configuration->proxy_port)) : "");
+  if (proxy_configuration && proxy_configuration->proxy_type != minifi::controllers::ProxyType::DIRECT) {
+    client_options.Transport.HttpProxy = proxy_configuration->proxy_host + (proxy_configuration->proxy_port ? (":" + std::to_string(*proxy_configuration->proxy_port)) : "");
 
     if (proxy_configuration->proxy_user) {
       client_options.Transport.ProxyUserName = *proxy_configuration->proxy_user;

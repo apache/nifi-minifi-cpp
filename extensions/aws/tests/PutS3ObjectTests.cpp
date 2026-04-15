@@ -200,13 +200,24 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
   setRequiredProperties();
   SECTION("Use proxy configuration service") {
-    setProxy(true);
+    setProxy(ProxyConfigType::ControllerServiceHttp);
   }
   SECTION("Use processor properties") {
-    setProxy(false);
+    setProxy(ProxyConfigType::ProcessorProperties);
   }
   test_controller.runSession(plan);
   checkProxySettings();
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy is not configured if proxy type is direct", "[awsS3Proxy]") {
+  setRequiredProperties();
+  setProxy(ProxyConfigType::ControllerServiceDirect);
+
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 0);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName == "");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword == "");
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {

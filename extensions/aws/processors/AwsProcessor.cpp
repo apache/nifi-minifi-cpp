@@ -75,7 +75,7 @@ aws::ProxyOptions AwsProcessor::getProxy(core::ProcessContext& context) {
     proxy.proxy_user = proxy_controller_service->getUsername().value_or("");
     proxy.proxy_password = proxy_controller_service->getPassword().value_or("");
   } else {
-    proxy.proxy_type = minifi::utils::parseOptionalEnumProperty<minifi::controllers::ProxyType>(context, ProxyType).value_or(minifi::controllers::ProxyType::HTTP);
+    proxy.proxy_type = proxy.proxy_host.empty() ? minifi::controllers::ProxyType::DIRECT : minifi::controllers::ProxyType::HTTP;
     proxy.proxy_host = minifi::utils::parseOptionalProperty(context, ProxyHost).value_or("");
     proxy.proxy_port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort).value_or(0));
     proxy.proxy_user = minifi::utils::parseOptionalProperty(context, ProxyUsername).value_or("");
@@ -118,10 +118,19 @@ void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
   credentials_ = credentials.value();
 
   auto proxy = getProxy(context);
-  client_config_.proxyHost = proxy.host;
-  client_config_.proxyPort = proxy.port;
-  client_config_.proxyUserName = proxy.username;
-  client_config_.proxyPassword = proxy.password;
+  if (proxy.proxy_type != minifi::controllers::ProxyType::DIRECT) {
+    client_config.proxyScheme = minifi::utils::string::startsWith(proxy.proxy_host, "https") ? Aws::Http::Scheme::HTTPS : Aws::Http::Scheme::HTTP;
+    auto proxy_host = proxy.proxy_host;
+    if (minifi::utils::string::startsWith(proxy_host, "https://")) {
+      proxy_host = proxy_host.substr(8);
+    } else if (minifi::utils::string::startsWith(proxy_host, "http://")) {
+      proxy_host = proxy_host.substr(7);
+    }
+    client_config_.proxyHost = proxy_host;
+    client_config_.proxyPort = proxy.port;
+    client_config_.proxyUserName = proxy.username;
+    client_config_.proxyPassword = proxy.password;
+  }
 
   const auto endpoint_override_url = context.getProperty(EndpointOverrideURL);
   if (endpoint_override_url) {

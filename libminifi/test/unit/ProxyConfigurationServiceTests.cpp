@@ -19,6 +19,8 @@
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "controllers/ProxyConfigurationService.h"
+#include "unit/ControllerServiceUtils.h"
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -31,12 +33,14 @@ struct ProxyConfigurationServiceTestFixture {
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_ = test_controller_.createPlan();
   std::shared_ptr<core::controller::ControllerServiceNode>  proxy_configuration_node_ = plan_->addController("ProxyConfigurationService", "ProxyConfigurationService");
-  std::shared_ptr<controllers::ProxyConfigurationService> proxy_configuration_service_ =
-    std::dynamic_pointer_cast<controllers::ProxyConfigurationService>(proxy_configuration_node_->getControllerServiceImplementation());
+  std::shared_ptr<controllers::ProxyConfigurationService> proxy_configuration_service_ = proxy_configuration_node_->getControllerServiceImplementation<controllers::ProxyConfigurationService>();
 };
 
-TEST_CASE_METHOD(ProxyConfigurationServiceTestFixture, "ProxyConfigurationService onEnable throws when empty") {
-  REQUIRE_THROWS_WITH(proxy_configuration_service_->onEnable(), "Process Schedule Operation: Proxy Server Host is required");
+TEST_CASE_METHOD(ProxyConfigurationServiceTestFixture, "ProxyConfigurationService onEnable throws when invalid proxy type is set") {
+  auto proxy_configuration_service = minifi::test::utils::make_controller_service<controllers::ProxyConfigurationService>(
+    "ProxyConfigurationService", minifi::utils::IdGenerator::getIdGenerator()->generate());
+  proxy_configuration_service->initialize();
+  REQUIRE_THROWS_WITH(proxy_configuration_service->onEnable(), "Process Schedule Operation: Proxy Server Host is required");
 }
 
 TEST_CASE_METHOD(ProxyConfigurationServiceTestFixture, "Only required properties are set in ProxyConfigurationService") {

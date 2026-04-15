@@ -16,22 +16,27 @@
  */
 #pragma once
 
-#include "minifi-cpp/core/controller/ControllerService.h"
+#include <string>
+#include <optional>
+
+#include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 #include "minifi-cpp/core/ControllerServiceApiDefinition.h"
+#include "minifi-cpp/agent/agent_version.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
 enum class ProxyType {
-  HTTP,
-  HTTPS
+  DIRECT,
+  HTTP
 };
 
-class ProxyConfigurationServiceInterface : public virtual core::controller::ControllerService {
+class ProxyConfigurationServiceInterface : public virtual core::controller::ControllerServiceHandle {
  public:
   static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition {
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface",
+    .version = MINIFI_VERSION_STR
   };
 
   virtual std::string getHost() const = 0;

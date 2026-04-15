@@ -340,11 +340,11 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failur
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob storage put using proxy", "[azureBlobStorageUpload]") {
   auto proxy_configuration_service = plan_->addController("ProxyConfigurationService", "ProxyConfigurationService");
-  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "host");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "https://host");
   plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
   plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
   plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
-  plan_->setProperty(proxy_configuration_service, "Proxy Type", "HTTPS");
+  plan_->setProperty(proxy_configuration_service, "Proxy Type", "HTTP");
   plan_->setProperty(azure_blob_storage_processor_, "Proxy Configuration Service", "ProxyConfigurationService");
 
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "test.container");
@@ -353,14 +353,14 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob storage put u
   test_controller_.runSession(plan_, true);
   auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
   REQUIRE(passed_params.proxy_configuration);
-  REQUIRE(passed_params.proxy_configuration->proxy_host == "host");
+  REQUIRE(passed_params.proxy_configuration->proxy_host == "https://host");
   REQUIRE(passed_params.proxy_configuration->proxy_port);
   REQUIRE(*passed_params.proxy_configuration->proxy_port == 1234);
   REQUIRE(passed_params.proxy_configuration->proxy_user);
   REQUIRE(*passed_params.proxy_configuration->proxy_user == "username");
   REQUIRE(passed_params.proxy_configuration->proxy_password);
   REQUIRE(*passed_params.proxy_configuration->proxy_password == "password");
-  REQUIRE(passed_params.proxy_configuration->proxy_type == minifi::controllers::ProxyType::HTTPS);
+  REQUIRE(passed_params.proxy_configuration->proxy_type == minifi::controllers::ProxyType::HTTP);
   CHECK(getFailedFlowFileContents().empty());
 }
 

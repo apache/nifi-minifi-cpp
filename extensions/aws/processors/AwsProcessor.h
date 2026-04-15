@@ -129,22 +129,17 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
           "with other S3-compatible endpoints.")
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
-  EXTENSIONAPI static constexpr auto ProxyType = core::PropertyDefinitionBuilder<magic_enum::enum_count<minifi::controllers::ProxyType>()>::createProperty("Proxy Type")
-      .withDescription("Proxy type")
-      .withDefaultValue(magic_enum::enum_name(minifi::controllers::ProxyType::HTTP))
-      .withAllowedValues(magic_enum::enum_names<minifi::controllers::ProxyType>())
-      .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
-      .withDescription("Proxy host name or IP")
+      .withDescription("Proxy host name or IP. Use https:// prefix for HTTPS proxy. DEPRECATED, please use Proxy Configuration Service instead.")
       .build();
   EXTENSIONAPI static constexpr auto ProxyPort = core::PropertyDefinitionBuilder<>::createProperty("Proxy Port")
-      .withDescription("The port number of the proxy host")
+      .withDescription("The port number of the proxy host. DEPRECATED, please use Proxy Configuration Service instead.")
       .build();
   EXTENSIONAPI static constexpr auto ProxyUsername = core::PropertyDefinitionBuilder<>::createProperty("Proxy Username")
-      .withDescription("Username to set when authenticating against proxy")
+      .withDescription("Username to set when authenticating against proxy. DEPRECATED, please use Proxy Configuration Service instead.")
       .build();
   EXTENSIONAPI static constexpr auto ProxyPassword = core::PropertyDefinitionBuilder<>::createProperty("Proxy Password")
-      .withDescription("Password to set when authenticating against proxy")
+      .withDescription("Password to set when authenticating against proxy. DEPRECATED, please use Proxy Configuration Service instead.")
       .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto ProxyConfigurationService = core::PropertyDefinitionBuilder<>::createProperty("Proxy Configuration Service")
@@ -166,7 +161,6 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       Region,
       CommunicationsTimeout,
       EndpointOverrideURL,
-      ProxyType,
       ProxyHost,
       ProxyPort,
       ProxyUsername,

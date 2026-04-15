@@ -42,14 +42,9 @@ std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> Azure
     options.Retry.MaxRetries = gsl::narrow<int32_t>(*number_of_retries);
   }
 
-  if (proxy_configuration) {
-    std::string protocol_prefix;
-    if (proxy_configuration->proxy_type == controllers::ProxyType::HTTP && !minifi::utils::string::startsWith(proxy_configuration->proxy_host, "http://")) {
-      protocol_prefix = "http://";
-    } else if (proxy_configuration->proxy_type == controllers::ProxyType::HTTPS && !minifi::utils::string::startsWith(proxy_configuration->proxy_host, "https://")) {
-      protocol_prefix = "https://";
-    }
-    options.Transport.HttpProxy = protocol_prefix + proxy_configuration->proxy_host + (proxy_configuration->proxy_port ? (":" + std::to_string(*proxy_configuration->proxy_port)) : "");
+  if (proxy_configuration && proxy_configuration->proxy_type != minifi::controllers::ProxyType::DIRECT) {
+    options.Transport.HttpProxy = proxy_configuration->proxy_host + (proxy_configuration->proxy_port ? (":" + std::to_string(*proxy_configuration->proxy_port)) : "");
+
     if (proxy_configuration->proxy_user) {
       options.Transport.ProxyUserName = *proxy_configuration->proxy_user;
     }

@@ -20,17 +20,15 @@
 
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 #include "controllers/ProxyConfiguration.h"
-#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceBase.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-class ProxyConfigurationService : public core::controller::ControllerServiceImpl, public ProxyConfigurationServiceInterface {
+class ProxyConfigurationService : public core::controller::ControllerServiceBase, public ProxyConfigurationServiceInterface {
  public:
-  explicit ProxyConfigurationService(std::string_view name, const utils::Identifier& uuid = {})
-      : ControllerServiceImpl(name, uuid) {
-  }
+  using ControllerServiceBase::ControllerServiceBase;
 
   MINIFIAPI static constexpr const char* Description = "Provides a set of configurations for various MiNiFi C++ components to use a proxy server. Currently these properties can only be used for "
       "HTTP proxy configuration, no other protocols are supported at this time.";
@@ -52,7 +50,7 @@ class ProxyConfigurationService : public core::controller::ControllerServiceImpl
       .isSensitive(true)
       .build();
   MINIFIAPI static constexpr auto ProxyTypeProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<ProxyType>()>::createProperty("Proxy Type")
-      .withDescription("Proxy type.")
+      .withDescription("Proxy type. If set to DIRECT, the proxy server is not used.")
       .withDefaultValue(magic_enum::enum_name(ProxyType::HTTP))
       .withAllowedValues(magic_enum::enum_names<ProxyType>())
       .build();
@@ -68,19 +66,10 @@ class ProxyConfigurationService : public core::controller::ControllerServiceImpl
   MINIFIAPI static constexpr auto ImplementsApis = std::array{ ProxyConfigurationServiceInterface::ProvidesApi };
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  void yield() override {
-  }
-
-  bool isRunning() const override {
-    return getState() == core::controller::ControllerServiceState::ENABLED;
-  }
-
-  bool isWorkAvailable() override {
-    return false;
-  }
-
   void initialize() override;
   void onEnable() override;
+
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
 
   ProxyType getProxyType() const override {
     std::lock_guard lock(configuration_mutex_);

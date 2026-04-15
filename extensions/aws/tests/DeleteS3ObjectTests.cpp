@@ -85,10 +85,10 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Non blank validator tests") {
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
   setRequiredProperties();
   SECTION("Use proxy configuration service") {
-    setProxy(true);
+    setProxy(ProxyConfigType::ControllerServiceHttp);
   }
   SECTION("Use processor properties") {
-    setProxy(false);
+    setProxy(ProxyConfigType::ProcessorProperties);
   }
   test_controller.runSession(plan, true);
   checkProxySettings();
