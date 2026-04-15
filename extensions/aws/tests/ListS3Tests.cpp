@@ -89,10 +89,10 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test proxy is not configured if proxy type
   setProxy(ProxyConfigType::ControllerServiceDirect);
 
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost.empty());
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 0);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName == "");
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword == "");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test listing without versioning", "[awsS3ListObjects]") {

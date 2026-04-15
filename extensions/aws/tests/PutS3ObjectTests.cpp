@@ -214,10 +214,10 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy is not configured if proxy
   setProxy(ProxyConfigType::ControllerServiceDirect);
 
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost.empty());
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 0);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName == "");
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword == "");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {
