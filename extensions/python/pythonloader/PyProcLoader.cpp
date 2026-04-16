@@ -41,11 +41,11 @@ extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context
     }, &result);
     return result;
   });
-  MinifiExtensionCreateInfo ext_create_info{
+  MinifiExtensionDefinition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
     .user_data = nullptr
   };
-  minifi::utils::MinifiCreateCppExtension(extension_context, &ext_create_info);
+  minifi::utils::MinifiRegisterCppExtension(extension_context, &extension_definition);
 }

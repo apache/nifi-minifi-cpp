@@ -27,13 +27,13 @@ namespace minifi = org::apache::nifi::minifi;
 CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_API_VERSION;
 
 CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context) {
-  MinifiExtensionCreateInfo ext_create_info{
+  MinifiExtensionDefinition extension_definition{
     .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
     .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
     .deinit = nullptr,
     .user_data = nullptr
   };
-  auto* extension = MinifiCreateExtension(extension_context, &ext_create_info);
+  auto* extension = MinifiRegisterExtension(extension_context, &extension_definition);
   minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& description) {
     MinifiRegisterProcessor(extension, &description);
   });

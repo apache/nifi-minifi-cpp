@@ -18,8 +18,10 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "minifi-c/minifi-c.h"
@@ -57,7 +59,7 @@ class Extension {
   bool initialize(const std::shared_ptr<minifi::Configure>& configure);
 
   std::optional<Info> getInfo() const {
-    return info_.value();
+    return info_;
   }
 
  private:

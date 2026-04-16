@@ -225,19 +225,14 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
 
 extern "C" {
 
-MinifiExtension* MinifiCreateExtension(MinifiExtensionContext* extension_context, const MinifiExtensionCreateInfo* extension_create_info) {
+MinifiExtension* MinifiRegisterExtension(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition) {
   gsl_Assert(extension_context);
-  gsl_Assert(extension_create_info);
-  auto extension_name = toString(extension_create_info->name);
-  minifi::BundleIdentifier bundle{
-    .name = extension_name,
-    .version = toString(extension_create_info->version)
-  };
+  gsl_Assert(extension_definition);
   auto* extension = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension::Context*>(extension_context)->create(org::apache::nifi::minifi::core::extension::Extension::Info{
-    .name = toString(extension_create_info->name),
-    .version = toString(extension_create_info->version),
-    .deinit = extension_create_info->deinit,
-    .user_data = extension_create_info->user_data
+    .name = toString(extension_definition->name),
+    .version = toString(extension_definition->version),
+    .deinit = extension_definition->deinit,
+    .user_data = extension_definition->user_data
   });
   if (extension) {
     return reinterpret_cast<MinifiExtension*>(extension);
@@ -266,8 +261,8 @@ MinifiStatus MinifiRegisterProcessor(MinifiExtension* extension_handle, const Mi
   return MINIFI_STATUS_SUCCESS;
 }
 
-MinifiExtension* MINIFI_CREATE_EXTENSION_FN(MinifiExtensionContext* extension_context, const MinifiExtensionCreateInfo* extension_create_info) {
-  return MinifiCreateExtension(extension_context, extension_create_info);
+MinifiExtension* MINIFI_REGISTER_EXTENSION_FN(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition) {
+  return MinifiRegisterExtension(extension_context, extension_definition);
 }
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flowfile,

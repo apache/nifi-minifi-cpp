@@ -33,7 +33,7 @@ extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context
     libssh2_exit();
     return;
   }
-  MinifiExtensionCreateInfo ext_create_info{
+  MinifiExtensionDefinition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = [] (void* /*user_data*/) {
@@ -42,5 +42,5 @@ extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context
     },
     .user_data = nullptr
   };
-  minifi::utils::MinifiCreateCppExtension(extension_context, &ext_create_info);
+  minifi::utils::MinifiRegisterCppExtension(extension_context, &extension_definition);
 }

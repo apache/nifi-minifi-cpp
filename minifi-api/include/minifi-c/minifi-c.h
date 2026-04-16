@@ -37,12 +37,12 @@ extern "C" {
 #define MINIFI_NULL nullptr
 #define MINIFI_OWNED
 
-#ifndef MINIFI_CREATE_EXTENSION_FN
-#define MINIFI_CREATE_EXTENSION_FN MinifiCreateExtension
+#ifndef MINIFI_REGISTER_EXTENSION_FN
+#define MINIFI_REGISTER_EXTENSION_FN MinifiRegisterExtension
 #endif
 
 enum : uint32_t {
-  MINIFI_API_VERSION = 1
+  MINIFI_API_VERSION = 2
 };
 
 typedef bool MinifiBool;
@@ -183,14 +183,17 @@ typedef struct MinifiProcessorClassDefinition {
   MinifiProcessorCallbacks callbacks;
 } MinifiProcessorClassDefinition;
 
-typedef struct MinifiExtensionCreateInfo {
+typedef struct MinifiExtensionDefinition {
   MinifiStringView name;
   MinifiStringView version;
   void(*deinit)(void* user_data);
   void* user_data;
-} MinifiExtensionCreateInfo;
+} MinifiExtensionDefinition;
 
-MinifiExtension* MINIFI_CREATE_EXTENSION_FN(MinifiExtensionContext* extension_context, const MinifiExtensionCreateInfo* create_info);
+//  When directly linking against the agent library (legacy c++ extension) this declares a build identifier dependent function
+//  which prevents loading extensions from different builds (e.g. the agent provides MinifiRegisterCppExtension_123 but the extension
+//  expects MinifiRegisterCppExtension_567). Otherwise, it declares MinifiRegisterExtension.
+MinifiExtension* MINIFI_REGISTER_EXTENSION_FN(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition);
 
 MinifiStatus MinifiRegisterProcessor(MinifiExtension* extension, const MinifiProcessorClassDefinition* processor);
 

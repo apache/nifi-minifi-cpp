@@ -69,11 +69,11 @@ endif()
 
 create_loading_test_extension(test-extension-loading-invalid-build-id-cpp CppApiExtension.cpp)
 target_link_libraries(test-extension-loading-invalid-build-id-cpp dummy-cpp-api)
-target_compile_definitions(test-extension-loading-invalid-build-id-cpp PRIVATE MINIFI_CREATE_EXTENSION_FN=MinifiCreateCppExtension_NonMatchingBuildId)
+target_compile_definitions(test-extension-loading-invalid-build-id-cpp PRIVATE MINIFI_REGISTER_EXTENSION_FN=MinifiRegisterCppExtension_NonMatchingBuildId)
 
 create_loading_test_extension(test-extension-loading-valid-build-id-cpp CppApiExtension.cpp)
 target_link_libraries(test-extension-loading-valid-build-id-cpp dummy-cpp-api)
-target_compile_definitions(test-extension-loading-valid-build-id-cpp PRIVATE MINIFI_CREATE_EXTENSION_FN=MinifiCreateCppExtension_MatchingBuildId)
+target_compile_definitions(test-extension-loading-valid-build-id-cpp PRIVATE MINIFI_REGISTER_EXTENSION_FN=MinifiRegisterCppExtension_MatchingBuildId)
 
 create_c_test_extension(max-version 10)
 create_c_test_extension(valid-version 7)
