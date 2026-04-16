@@ -30,16 +30,6 @@
 
 namespace org::apache::nifi::minifi::core::extension {
 
-namespace {
-
-std::atomic<Extension*> extension_being_initialized{nullptr};
-
-}  // namespace
-
-Extension* ExtensionManager::getExtensionBeingInitialized() {
-  return extension_being_initialized.load();
-}
-
 ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): logger_(logging::LoggerFactory<ExtensionManager>::getLogger()) {
   logger_->log_trace("Initializing extensions");
   if (!config) {
@@ -82,8 +72,6 @@ ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): lo
       }
     }
     {
-      auto extension_guard = gsl::finally([] {extension_being_initialized = nullptr;});
-      extension_being_initialized = extension.get();
       if (!extension->initialize(config)) {
         logger_->log_error("Failed to initialize extension '{}' at '{}'", library->name, library->getFullPath());
       } else {
