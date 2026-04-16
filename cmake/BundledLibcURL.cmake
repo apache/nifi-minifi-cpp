@@ -16,91 +16,57 @@
 # under the License.
 
 function(use_bundled_curl SOURCE_DIR BINARY_DIR)
-    # Define patch step
-    set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/curl/module-path.patch")
-    set(PC ${Bash_EXECUTABLE} -c "set -x && \
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\")")
-    # Define byproducts
-    string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
-    if (WIN32)
-        if (build_type MATCHES relwithdebinfo OR build_type MATCHES release)
-            set(BYPRODUCT "lib/libcurl.lib")
-        else()
-            set(BYPRODUCT "lib/libcurl-d.lib")
-        endif()
-    else()
-        include(GNUInstallDirs)
-        string(REPLACE "/" ";" LIBDIR_LIST ${CMAKE_INSTALL_LIBDIR})
-        list(GET LIBDIR_LIST 0 LIBDIR)
-        if (build_type MATCHES relwithdebinfo OR build_type MATCHES release)
-            set(BYPRODUCT "${LIBDIR}/libcurl.a")
-        else()
-            set(BYPRODUCT "${LIBDIR}/libcurl-d.a")
-        endif()
-    endif()
+    message(STATUS "Using bundled curl via FetchContent")
 
-    # Set build options
-    set(CURL_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-            "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/curl-install"
-            -DBUILD_CURL_EXE=OFF
-            -DBUILD_TESTING=OFF
-            -DBUILD_SHARED_LIBS=OFF
-            -DHTTP_ONLY=ON
-            -DCURL_CA_PATH=none
-            -DCURL_USE_LIBSSH2=OFF
-            -DUSE_LIBIDN2=OFF
-            -DCURL_USE_LIBPSL=OFF
-            -DCURL_USE_OPENSSL=ON
-            -DUSE_NGHTTP2=OFF
-            -DCURL_ZSTD=OFF
-            -DCURL_BROTLI=OFF
-            )
+    find_package(OpenSSL REQUIRED)
+    find_package(ZLIB REQUIRED)
+    find_package(Threads REQUIRED)
 
-    append_third_party_passthrough_args(CURL_CMAKE_ARGS "${CURL_CMAKE_ARGS}")
+    include(FetchContent)
 
-    # Build project
-    ExternalProject_Add(
-            curl-external
-            URL "https://github.com/curl/curl/releases/download/curl-8_18_0/curl-8.18.0.tar.gz"
-            URL_HASH "SHA256=e9274a5f8ab5271c0e0e6762d2fce194d5f98acc568e4ce816845b2dcc0cf88f"
-            SOURCE_DIR "${BINARY_DIR}/thirdparty/curl-src"
-            LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
-            CMAKE_ARGS ${CURL_CMAKE_ARGS}
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/curl/module-path.patch")
+    set(PC "${Patch_EXECUTABLE}" -p1 -i "${PATCH_FILE}")
+
+    FetchContent_Declare(
+            curl
+            URL "https://github.com/curl/curl/releases/download/curl-8_19_0/curl-8.19.0.tar.gz"
+            URL_HASH "SHA256=2a2c11db4c122691aa23b4363befda1bfd801770bfebf41e1d21cee4f2ab0f71"
             PATCH_COMMAND ${PC}
-            BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/curl-install/${BYPRODUCT}"
-            EXCLUDE_FROM_ALL TRUE
-            DOWNLOAD_NO_PROGRESS TRUE
-            TLS_VERIFY TRUE
+            SYSTEM
+            OVERRIDE_FIND_PACKAGE
     )
 
-    # Set dependencies
-    add_dependencies(curl-external ZLIB::ZLIB OpenSSL::SSL OpenSSL::Crypto)
+    set(BUILD_CURL_EXE OFF CACHE BOOL "" FORCE)
+    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(HTTP_ONLY ON CACHE BOOL "" FORCE)
+    set(CURL_CA_PATH "none" CACHE STRING "" FORCE)
+    set(CURL_USE_LIBSSH2 OFF CACHE BOOL "" FORCE)
+    set(USE_LIBIDN2 OFF CACHE BOOL "" FORCE)
+    set(CURL_USE_LIBPSL OFF CACHE BOOL "" FORCE)
+    set(CURL_USE_OPENSSL ON CACHE BOOL "" FORCE)
+    set(USE_NGHTTP2 OFF CACHE BOOL "" FORCE)
+    set(CURL_ZSTD OFF CACHE BOOL "" FORCE)
+    set(CURL_BROTLI OFF CACHE BOOL "" FORCE)
 
-    # Set variables
-    set(CURL_FOUND "YES" CACHE STRING "" FORCE)
-    set(CURL_INCLUDE_DIR "${BINARY_DIR}/thirdparty/curl-install/include" CACHE STRING "" FORCE)
-    set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}" CACHE STRING "" FORCE)
-    set(CURL_LIBRARY "${BINARY_DIR}/thirdparty/curl-install/${BYPRODUCT}" CACHE STRING "" FORCE)
-    set(CURL_LIBRARIES "${CURL_LIBRARY}" CACHE STRING "" FORCE)
+    FetchContent_MakeAvailable(curl)
 
-    # Set exported variables for FindPackage.cmake
-    set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_CURL_INCLUDE_DIR=${CURL_INCLUDE_DIR}" CACHE STRING "" FORCE)
-    set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_CURL_LIBRARY=${CURL_LIBRARY}" CACHE STRING "" FORCE)
+    if (TARGET libcurl_static)
+        target_compile_definitions(libcurl_static PUBLIC CURL_STATICLIB)
 
-    # Create imported targets
-    file(MAKE_DIRECTORY ${CURL_INCLUDE_DIRS})
-
-    add_library(CURL::libcurl STATIC IMPORTED)
-    set_target_properties(CURL::libcurl PROPERTIES IMPORTED_LOCATION "${CURL_LIBRARY}")
-    add_dependencies(CURL::libcurl curl-external)
-    target_include_directories(CURL::libcurl INTERFACE ${CURL_INCLUDE_DIRS})
-    target_link_libraries(CURL::libcurl INTERFACE ZLIB::ZLIB Threads::Threads OpenSSL::SSL OpenSSL::Crypto)
-    target_compile_definitions(CURL::libcurl INTERFACE CURL_STATICLIB)
-    if (APPLE)
-        target_link_libraries(CURL::libcurl INTERFACE "-framework CoreFoundation")
-        target_link_libraries(CURL::libcurl INTERFACE "-framework SystemConfiguration")
-        target_link_libraries(CURL::libcurl INTERFACE "-framework CoreServices")
-    elseif (WIN32)
-        target_link_libraries(CURL::libcurl INTERFACE Iphlpapi.lib)
+        if (APPLE)
+            target_link_libraries(libcurl_static INTERFACE "-framework CoreFoundation -framework SystemConfiguration -framework CoreServices")
+        elseif (WIN32)
+            target_link_libraries(libcurl_static INTERFACE Iphlpapi.lib)
+        endif ()
+    else()
+        message(WARNING "libcurl_static target not found; bundled curl may not link correctly.")
     endif()
-endfunction(use_bundled_curl SOURCE_DIR BINARY_DIR)
+
+    # --- EXPORT LEGACY VARIABLES ---
+    set(CURL_FOUND "YES" CACHE INTERNAL "")
+    set(CURL_INCLUDE_DIR "${curl_SOURCE_DIR}/include" CACHE INTERNAL "")
+    set(CURL_INCLUDE_DIRS "${curl_SOURCE_DIR}/include" CACHE INTERNAL "")
+    set(CURL_LIBRARY CURL::libcurl CACHE INTERNAL "")
+    set(CURL_LIBRARIES CURL::libcurl CACHE INTERNAL "")
+endfunction(use_bundled_curl)

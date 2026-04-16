@@ -1,35 +1,49 @@
-# - Try to find the libssh2 library
-# Once done this will define
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 #
-# LIBSSH2_FOUND - system has the libssh2 library
-# LIBSSH2_INCLUDE_DIR - the libssh2 include directory
-# LIBSSH2_LIBRARY - the libssh2 library name
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 
-if(LIBSSH2_INCLUDE_DIR AND LIBSSH2_LIBRARY)
-    set(LibSSH2_FIND_QUIETLY TRUE)
-endif()
+if (TARGET libssh2)
+    set(LIBSSH2_FOUND TRUE)
+    set(LibSSH2_FOUND TRUE)
+    return()
+endif ()
 
-find_path(LIBSSH2_INCLUDE_DIR libssh2.h
-        )
+if (NOT LIBSSH2_ROOT_DIR)
+    message(FATAL_ERROR "Strict bundled libssh2 requires LIBSSH2_ROOT_DIR to be passed to this CMake scope!")
+endif ()
 
-find_library(LIBSSH2_LIBRARY NAMES ssh2
-        )
+find_library(LIBSSH2_LIBRARY
+        NAMES ssh2 libssh2
+        PATHS "${LIBSSH2_ROOT_DIR}/lib" "${LIBSSH2_ROOT_DIR}/lib64"
+        NO_DEFAULT_PATH # Strictly prevent system fallback
+)
 
-if(LIBSSH2_INCLUDE_DIR)
-    file(STRINGS "${LIBSSH2_INCLUDE_DIR}/libssh2.h" libssh2_version_str REGEX "^#define[\t ]+LIBSSH2_VERSION_NUM[\t ]+0x[0-9][0-9][0-9][0-9][0-9][0-9].*")
+set(LIBSSH2_INCLUDE_DIR "${LIBSSH2_ROOT_DIR}/include")
 
-    string(REGEX REPLACE "^.*LIBSSH2_VERSION_NUM[\t ]+0x([0-9][0-9]).*$" "\\1" LIBSSH2_VERSION_MAJOR "${libssh2_version_str}")
-    string(REGEX REPLACE "^.*LIBSSH2_VERSION_NUM[\t ]+0x[0-9][0-9]([0-9][0-9]).*$" "\\1" LIBSSH2_VERSION_MINOR  "${libssh2_version_str}")
-    string(REGEX REPLACE "^.*LIBSSH2_VERSION_NUM[\t ]+0x[0-9][0-9][0-9][0-9]([0-9][0-9]).*$" "\\1" LIBSSH2_VERSION_PATCH "${libssh2_version_str}")
+if (NOT LIBSSH2_LIBRARY OR NOT EXISTS "${LIBSSH2_INCLUDE_DIR}")
+    message(FATAL_ERROR "Failed to locate bundled libssh2 components inside ${LIBSSH2_ROOT_DIR}")
+endif ()
 
-    string(REGEX REPLACE "^0(.+)" "\\1" LIBSSH2_VERSION_MAJOR "${LIBSSH2_VERSION_MAJOR}")
-    string(REGEX REPLACE "^0(.+)" "\\1" LIBSSH2_VERSION_MINOR "${LIBSSH2_VERSION_MINOR}")
-    string(REGEX REPLACE "^0(.+)" "\\1" LIBSSH2_VERSION_PATCH "${LIBSSH2_VERSION_PATCH}")
+set(LIBSSH2_FOUND TRUE)
+set(LibSSH2_FOUND TRUE)
+set(LIBSSH2_INCLUDE_DIRS "${LIBSSH2_INCLUDE_DIR}")
+set(LIBSSH2_LIBRARIES "${LIBSSH2_LIBRARY}")
 
-    set(LIBSSH2_VERSION "${LIBSSH2_VERSION_MAJOR}.${LIBSSH2_VERSION_MINOR}.${LIBSSH2_VERSION_PATCH}")
-endif()
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(LibSSH2 DEFAULT_MSG LIBSSH2_INCLUDE_DIR LIBSSH2_LIBRARY )
-
-mark_as_advanced(LIBSSH2_INCLUDE_DIR LIBSSH2_LIBRARY LIBSSH2_VERSION_MAJOR LIBSSH2_VERSION_MINOR LIBSSH2_VERSION_PATCH LIBSSH2_VERSION)
+add_library(libssh2 STATIC IMPORTED)
+set_target_properties(libssh2 PROPERTIES
+        IMPORTED_LOCATION "${LIBSSH2_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${LIBSSH2_INCLUDE_DIR}"
+)

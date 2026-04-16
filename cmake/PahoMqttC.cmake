@@ -41,4 +41,4 @@ FetchContent_MakeAvailable(paho.mqtt.c-external)
 
 # Set dependencies and target to link to
 add_library(paho.mqtt.c ALIAS paho-mqtt3as-static)
-add_dependencies(common_ssl_obj_static OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(common_ssl_obj_static PUBLIC OpenSSL::SSL OpenSSL::Crypto)

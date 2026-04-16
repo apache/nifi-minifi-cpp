@@ -26,6 +26,8 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
 
     set(LIBARCHIVE_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/libarchive-install"
+            "-DCURL_ROOT_DIR=${CURL_ROOT_DIR}"
+            "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}"
             -DCMAKE_INSTALL_LIBDIR=lib
             -DLIBARCHIVE_STATIC=1
             -DBUILD_SHARED_LIBS=OFF
