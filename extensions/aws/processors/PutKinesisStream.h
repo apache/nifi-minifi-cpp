@@ -95,7 +95,7 @@ class PutKinesisStream : public AwsProcessor {  // NOLINT(cppcoreguidelines-spec
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  protected:
-  virtual std::unique_ptr<Aws::Kinesis::KinesisClient> getClient(const Aws::Auth::AWSCredentials& credentials);
+  virtual std::unique_ptr<Aws::Kinesis::KinesisClient> getClient();
 
  private:
   struct BatchItemResult {
@@ -126,8 +126,6 @@ class PutKinesisStream : public AwsProcessor {  // NOLINT(cppcoreguidelines-spec
 
   uint64_t batch_size_ = 250;
   uint64_t batch_data_size_soft_cap_ = 1_MB;
-  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
-  std::optional<std::string> endpoint_override_url_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

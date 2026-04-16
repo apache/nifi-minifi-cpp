@@ -25,7 +25,6 @@
 
 #include "aws/core/auth/AWSCredentials.h"
 
-#include "utils/AWSInitializer.h"
 #include "core/controller/ControllerServiceBase.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
@@ -83,7 +82,6 @@ class AWSCredentialsService : public core::controller::ControllerServiceBase, pu
  private:
   friend class ::AWSCredentialsServiceTestAccessor;
 
-  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::optional<Aws::Auth::AWSCredentials> aws_credentials_;
   AWSCredentialsProvider aws_credentials_provider_;
 };

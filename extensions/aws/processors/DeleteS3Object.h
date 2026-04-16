@@ -69,19 +69,19 @@ class DeleteS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special
   ~DeleteS3Object() override = default;
 
   void initialize() override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  private:
   friend class ::FlowProcessorS3TestsFixture<DeleteS3Object>;
 
-  explicit DeleteS3Object(core::ProcessorMetadata metadata, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(metadata, std::move(s3_request_sender)) {
+  DeleteS3Object(core::ProcessorMetadata metadata, S3WrapperFactory s3_wrapper_factory)
+      : S3Processor(std::move(metadata), std::move(s3_wrapper_factory)) {
   }
 
   std::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(
     const core::ProcessContext& context,
     const core::FlowFile& flow_file,
-    const CommonProperties &common_properties,
     std::string_view bucket) const;
 };
 

@@ -30,17 +30,16 @@
 #include "minifi-cpp/Exception.h"
 #include "MultipartUploadStateStorage.h"
 #include "S3RequestSender.h"
-#include "aws/s3/model/ObjectCannedACL.h"
-#include "aws/s3/model/ServerSideEncryption.h"
-#include "aws/s3/model/StorageClass.h"
-#include "aws/s3/model/ChecksumAlgorithm.h"
+#include "aws/s3-crt/model/ObjectCannedACL.h"
+#include "aws/s3-crt/model/ServerSideEncryption.h"
+#include "aws/s3-crt/model/StorageClass.h"
+#include "aws/s3-crt/model/ChecksumAlgorithm.h"
 
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/io/InputStream.h"
 #include "minifi-cpp/io/OutputStream.h"
 #include "range/v3/algorithm/find.hpp"
-#include "utils/AWSInitializer.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/ListingStateManager.h"
 #include "utils/OptionalUtils.h"
@@ -50,61 +49,61 @@
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
-inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::StorageClass>, 11> STORAGE_CLASS_MAP {{
-  {"Standard", Aws::S3::Model::StorageClass::STANDARD},
-  {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY},
-  {"StandardIA", Aws::S3::Model::StorageClass::STANDARD_IA},
-  {"OnezoneIA", Aws::S3::Model::StorageClass::ONEZONE_IA},
-  {"IntelligentTiering", Aws::S3::Model::StorageClass::INTELLIGENT_TIERING},
-  {"Glacier", Aws::S3::Model::StorageClass::GLACIER},
-  {"DeepArchive", Aws::S3::Model::StorageClass::DEEP_ARCHIVE},
-  {"Outposts", Aws::S3::Model::StorageClass::OUTPOSTS},
-  {"GlacierIR", Aws::S3::Model::StorageClass::GLACIER_IR},
-  {"Snow", Aws::S3::Model::StorageClass::SNOW},
-  {"ExpressOneZone", Aws::S3::Model::StorageClass::EXPRESS_ONEZONE}
+inline constexpr std::array<std::pair<std::string_view, Aws::S3Crt::Model::StorageClass>, 11> STORAGE_CLASS_MAP {{
+  {"Standard", Aws::S3Crt::Model::StorageClass::STANDARD},
+  {"ReducedRedundancy", Aws::S3Crt::Model::StorageClass::REDUCED_REDUNDANCY},
+  {"StandardIA", Aws::S3Crt::Model::StorageClass::STANDARD_IA},
+  {"OnezoneIA", Aws::S3Crt::Model::StorageClass::ONEZONE_IA},
+  {"IntelligentTiering", Aws::S3Crt::Model::StorageClass::INTELLIGENT_TIERING},
+  {"Glacier", Aws::S3Crt::Model::StorageClass::GLACIER},
+  {"DeepArchive", Aws::S3Crt::Model::StorageClass::DEEP_ARCHIVE},
+  {"Outposts", Aws::S3Crt::Model::StorageClass::OUTPOSTS},
+  {"GlacierIR", Aws::S3Crt::Model::StorageClass::GLACIER_IR},
+  {"Snow", Aws::S3Crt::Model::StorageClass::SNOW},
+  {"ExpressOneZone", Aws::S3Crt::Model::StorageClass::EXPRESS_ONEZONE}
 }};
 
-inline constexpr std::array<std::pair<Aws::S3::Model::ObjectStorageClass, std::string_view>, 11> OBJECT_STORAGE_CLASS_MAP {{
-  {Aws::S3::Model::ObjectStorageClass::STANDARD, "Standard"},
-  {Aws::S3::Model::ObjectStorageClass::REDUCED_REDUNDANCY, "ReducedRedundancy"},
-  {Aws::S3::Model::ObjectStorageClass::GLACIER, "Glacier"},
-  {Aws::S3::Model::ObjectStorageClass::STANDARD_IA, "StandardIA"},
-  {Aws::S3::Model::ObjectStorageClass::ONEZONE_IA, "OnezoneIA"},
-  {Aws::S3::Model::ObjectStorageClass::INTELLIGENT_TIERING, "IntelligentTiering"},
-  {Aws::S3::Model::ObjectStorageClass::DEEP_ARCHIVE, "DeepArchive"},
-  {Aws::S3::Model::ObjectStorageClass::OUTPOSTS, "Outposts"},
-  {Aws::S3::Model::ObjectStorageClass::GLACIER_IR, "GlacierIR"},
-  {Aws::S3::Model::ObjectStorageClass::SNOW, "Snow"},
-  {Aws::S3::Model::ObjectStorageClass::EXPRESS_ONEZONE, "ExpressOneZone"}
+inline constexpr std::array<std::pair<Aws::S3Crt::Model::ObjectStorageClass, std::string_view>, 11> OBJECT_STORAGE_CLASS_MAP {{
+  {Aws::S3Crt::Model::ObjectStorageClass::STANDARD, "Standard"},
+  {Aws::S3Crt::Model::ObjectStorageClass::REDUCED_REDUNDANCY, "ReducedRedundancy"},
+  {Aws::S3Crt::Model::ObjectStorageClass::GLACIER, "Glacier"},
+  {Aws::S3Crt::Model::ObjectStorageClass::STANDARD_IA, "StandardIA"},
+  {Aws::S3Crt::Model::ObjectStorageClass::ONEZONE_IA, "OnezoneIA"},
+  {Aws::S3Crt::Model::ObjectStorageClass::INTELLIGENT_TIERING, "IntelligentTiering"},
+  {Aws::S3Crt::Model::ObjectStorageClass::DEEP_ARCHIVE, "DeepArchive"},
+  {Aws::S3Crt::Model::ObjectStorageClass::OUTPOSTS, "Outposts"},
+  {Aws::S3Crt::Model::ObjectStorageClass::GLACIER_IR, "GlacierIR"},
+  {Aws::S3Crt::Model::ObjectStorageClass::SNOW, "Snow"},
+  {Aws::S3Crt::Model::ObjectStorageClass::EXPRESS_ONEZONE, "ExpressOneZone"}
 }};
 
-inline constexpr std::array<std::pair<Aws::S3::Model::ObjectVersionStorageClass, std::string_view>, 1> VERSION_STORAGE_CLASS_MAP {{
-  {Aws::S3::Model::ObjectVersionStorageClass::STANDARD, "Standard"}
+inline constexpr std::array<std::pair<Aws::S3Crt::Model::ObjectVersionStorageClass, std::string_view>, 1> VERSION_STORAGE_CLASS_MAP {{
+  {Aws::S3Crt::Model::ObjectVersionStorageClass::STANDARD, "Standard"}
 }};
 
-inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ServerSideEncryption>, 4> SERVER_SIDE_ENCRYPTION_MAP {{
-  {"None", Aws::S3::Model::ServerSideEncryption::NOT_SET},
-  {"AES256", Aws::S3::Model::ServerSideEncryption::AES256},
-  {"aws_kms", Aws::S3::Model::ServerSideEncryption::aws_kms},
-  {"aws_kms_dsse", Aws::S3::Model::ServerSideEncryption::aws_kms_dsse}
+inline constexpr std::array<std::pair<std::string_view, Aws::S3Crt::Model::ServerSideEncryption>, 4> SERVER_SIDE_ENCRYPTION_MAP {{
+  {"None", Aws::S3Crt::Model::ServerSideEncryption::NOT_SET},
+  {"AES256", Aws::S3Crt::Model::ServerSideEncryption::AES256},
+  {"aws_kms", Aws::S3Crt::Model::ServerSideEncryption::aws_kms},
+  {"aws_kms_dsse", Aws::S3Crt::Model::ServerSideEncryption::aws_kms_dsse}
 }};
 
-inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ObjectCannedACL>, 7> CANNED_ACL_MAP {{
-  {"BucketOwnerFullControl", Aws::S3::Model::ObjectCannedACL::bucket_owner_full_control},
-  {"BucketOwnerRead", Aws::S3::Model::ObjectCannedACL::bucket_owner_read},
-  {"AuthenticatedRead", Aws::S3::Model::ObjectCannedACL::authenticated_read},
-  {"PublicReadWrite", Aws::S3::Model::ObjectCannedACL::public_read_write},
-  {"PublicRead", Aws::S3::Model::ObjectCannedACL::public_read},
-  {"Private", Aws::S3::Model::ObjectCannedACL::private_},
-  {"AwsExecRead", Aws::S3::Model::ObjectCannedACL::aws_exec_read},
+inline constexpr std::array<std::pair<std::string_view, Aws::S3Crt::Model::ObjectCannedACL>, 7> CANNED_ACL_MAP {{
+  {"BucketOwnerFullControl", Aws::S3Crt::Model::ObjectCannedACL::bucket_owner_full_control},
+  {"BucketOwnerRead", Aws::S3Crt::Model::ObjectCannedACL::bucket_owner_read},
+  {"AuthenticatedRead", Aws::S3Crt::Model::ObjectCannedACL::authenticated_read},
+  {"PublicReadWrite", Aws::S3Crt::Model::ObjectCannedACL::public_read_write},
+  {"PublicRead", Aws::S3Crt::Model::ObjectCannedACL::public_read},
+  {"Private", Aws::S3Crt::Model::ObjectCannedACL::private_},
+  {"AwsExecRead", Aws::S3Crt::Model::ObjectCannedACL::aws_exec_read},
 }};
 
-inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ChecksumAlgorithm>, 5> CHECKSUM_ALGORITHM_MAP {{
-  {"CRC32", Aws::S3::Model::ChecksumAlgorithm::CRC32},
-  {"CRC32C", Aws::S3::Model::ChecksumAlgorithm::CRC32C},
-  {"SHA1", Aws::S3::Model::ChecksumAlgorithm::SHA1},
-  {"SHA256", Aws::S3::Model::ChecksumAlgorithm::SHA256},
-  {"CRC64NVME", Aws::S3::Model::ChecksumAlgorithm::CRC64NVME}
+inline constexpr std::array<std::pair<std::string_view, Aws::S3Crt::Model::ChecksumAlgorithm>, 5> CHECKSUM_ALGORITHM_MAP {{
+  {"CRC32", Aws::S3Crt::Model::ChecksumAlgorithm::CRC32},
+  {"CRC32C", Aws::S3Crt::Model::ChecksumAlgorithm::CRC32C},
+  {"SHA1", Aws::S3Crt::Model::ChecksumAlgorithm::SHA1},
+  {"SHA256", Aws::S3Crt::Model::ChecksumAlgorithm::SHA256},
+  {"CRC64NVME", Aws::S3Crt::Model::ChecksumAlgorithm::CRC64NVME}
 }};
 
 struct Expiration {
@@ -119,25 +118,7 @@ struct PutObjectResult {
   std::string ssealgorithm;
 };
 
-struct RequestParameters {
-  RequestParameters(Aws::Auth::AWSCredentials creds, Aws::Client::ClientConfiguration config)
-    : credentials(std::move(creds)),
-      client_config(std::move(config)) {}
-  Aws::Auth::AWSCredentials credentials;
-  Aws::Client::ClientConfiguration client_config;
-
-  void setClientConfig(const aws::ProxyOptions& proxy, const std::string& endpoint_override_url) {
-    client_config.proxyHost = proxy.host;
-    client_config.proxyPort = proxy.port;
-    client_config.proxyUserName = proxy.username;
-    client_config.proxyPassword = proxy.password;
-    client_config.endpointOverride = endpoint_override_url;
-  }
-};
-
-struct PutObjectRequestParameters : public RequestParameters {
-  PutObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct PutObjectRequestParameters {
   std::string bucket;
   std::string object_key;
   std::string storage_class;
@@ -149,21 +130,16 @@ struct PutObjectRequestParameters : public RequestParameters {
   std::string read_acl_user_list;
   std::string write_acl_user_list;
   std::string canned_acl;
-  Aws::S3::Model::ChecksumAlgorithm checksum_algorithm;
-  bool use_virtual_addressing = true;
+  Aws::S3Crt::Model::ChecksumAlgorithm checksum_algorithm;
 };
 
-struct DeleteObjectRequestParameters : public RequestParameters {
-  DeleteObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct DeleteObjectRequestParameters {
   std::string bucket;
   std::string object_key;
   std::string version;
 };
 
-struct GetObjectRequestParameters : public RequestParameters {
-  GetObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct GetObjectRequestParameters {
   std::string bucket;
   std::string object_key;
   std::string version;
@@ -188,9 +164,7 @@ struct GetObjectResult : public HeadObjectResult {
   int64_t write_size = 0;
 };
 
-struct ListRequestParameters : public RequestParameters {
-  ListRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct ListRequestParameters {
   std::string bucket;
   std::string delimiter;
   std::string prefix;
@@ -219,12 +193,9 @@ struct ListedObjectAttributes : public minifi::utils::ListedObject {
 using HeadObjectRequestParameters = GetObjectRequestParameters;
 using GetObjectTagsParameters = DeleteObjectRequestParameters;
 
-struct ListMultipartUploadsRequestParameters : public RequestParameters {
-  ListMultipartUploadsRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct ListMultipartUploadsRequestParameters {
   std::string bucket;
   std::optional<std::chrono::milliseconds> age_off_limit;  // if set, only list the aged off uploads
-  bool use_virtual_addressing = true;
 };
 
 struct MultipartUpload {
@@ -232,13 +203,10 @@ struct MultipartUpload {
   std::string upload_id;
 };
 
-struct AbortMultipartUploadRequestParameters : public RequestParameters {
-  AbortMultipartUploadRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : RequestParameters(creds, config) {}
+struct AbortMultipartUploadRequestParameters {
   std::string bucket;
   std::string key;
   std::string upload_id;
-  bool use_virtual_addressing = true;
 };
 
 class StreamReadException : public Exception {
@@ -250,7 +218,7 @@ class S3Wrapper {
  public:
   static constexpr auto BUFFER_SIZE = minifi::utils::configuration::DEFAULT_BUFFER_SIZE;
 
-  S3Wrapper();
+  S3Wrapper(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing = true);
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
   std::optional<PutObjectResult> putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size);
@@ -332,17 +300,17 @@ class S3Wrapper {
   }
 
   static int64_t writeFetchedBody(Aws::IOStream& source, int64_t data_size, io::OutputStream& output);
-  static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
+  static std::string getEncryptionString(Aws::S3Crt::Model::ServerSideEncryption encryption);
   static std::shared_ptr<Aws::StringStream> readFlowFileStream(const std::shared_ptr<io::InputStream>& stream, uint64_t read_limit, uint64_t& read_size_out);
 
   std::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
   std::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
-  void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
-  void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
-  void addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::optional<std::chrono::milliseconds> age_off_limit,
+  void addListResults(const Aws::Vector<Aws::S3Crt::Model::ObjectVersion>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
+  void addListResults(const Aws::Vector<Aws::S3Crt::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
+  void addListMultipartUploadResults(const Aws::Vector<Aws::S3Crt::Model::MultipartUpload>& uploads, std::optional<std::chrono::milliseconds> age_off_limit,
     std::vector<MultipartUpload>& filtered_uploads);
   std::optional<UploadPartsResult> uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, MultipartUploadState upload_state);
-  std::optional<Aws::S3::Model::CompleteMultipartUploadResult> completeMultipartUpload(const PutObjectRequestParameters& put_object_params, const UploadPartsResult& upload_parts_result);
+  std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> completeMultipartUpload(const PutObjectRequestParameters& put_object_params, const UploadPartsResult& upload_parts_result);
   bool multipartUploadExistsInS3(const PutObjectRequestParameters& put_object_params);
   std::optional<MultipartUploadState> getMultipartUploadState(const PutObjectRequestParameters& put_object_params);
 
@@ -355,7 +323,6 @@ class S3Wrapper {
   template<typename AwsResult, typename FetchObjectResult>
   FetchObjectResult fillFetchObjectResult(const GetObjectRequestParameters& get_object_params, const AwsResult& fetch_object_result);
 
-  const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
   std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3Wrapper>::getLogger()};
   std::unique_ptr<S3RequestSender> request_sender_;
   uint64_t last_bucket_list_timestamp_ = 0;

@@ -43,17 +43,10 @@ void ListS3::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  auto common_properties = getCommonELSupportedProperties(context, nullptr);
-  if (!common_properties) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required property is not set or invalid");
-  }
-
   auto bucket = context.getProperty(Bucket.name) | minifi::utils::orThrow("Required property");
   logger_->log_debug("S3Processor: Bucket [{}]", bucket);
 
-  gsl_Expects(client_config_);
-  list_request_params_ = std::make_unique<aws::s3::ListRequestParameters>(common_properties->credentials, *client_config_);
-  list_request_params_->setClientConfig(common_properties->proxy, common_properties->endpoint_override_url);
+  list_request_params_ = std::make_unique<aws::s3::ListRequestParameters>();
   list_request_params_->bucket = bucket;
 
   if (const auto delimiter = context.getProperty(Delimiter)) {
@@ -80,6 +73,10 @@ void ListS3::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
 
   requester_pays_ = minifi::utils::parseBoolProperty(context, RequesterPays);
   logger_->log_debug("ListS3: RequesterPays [{}]", requester_pays_);
+
+  if (!s3_wrapper_) {
+    s3_wrapper_ = s3_wrapper_factory_(credentials_, client_config_, true);
+  }
 }
 
 void ListS3::writeObjectTags(
@@ -90,11 +87,11 @@ void ListS3::writeObjectTags(
     return;
   }
 
-  aws::s3::GetObjectTagsParameters params(list_request_params_->credentials, list_request_params_->client_config);
+  aws::s3::GetObjectTagsParameters params;
   params.bucket = list_request_params_->bucket;
   params.object_key = object_attributes.filename;
   params.version = object_attributes.version;
-  auto get_object_tags_result = s3_wrapper_.getObjectTags(params);
+  auto get_object_tags_result = s3_wrapper_->getObjectTags(params);
   if (get_object_tags_result) {
     for (const auto& tag : *get_object_tags_result) {
       session.putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
@@ -112,12 +109,12 @@ void ListS3::writeUserMetadata(
     return;
   }
 
-  aws::s3::HeadObjectRequestParameters params(list_request_params_->credentials, list_request_params_->client_config);
+  aws::s3::HeadObjectRequestParameters params;
   params.bucket = list_request_params_->bucket;
   params.object_key = object_attributes.filename;
   params.version = object_attributes.version;
   params.requester_pays = requester_pays_;
-  auto head_object_tags_result = s3_wrapper_.headObject(params);
+  auto head_object_tags_result = s3_wrapper_->headObject(params);
   if (head_object_tags_result) {
     for (const auto& metadata : head_object_tags_result->user_metadata_map) {
       session.putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
@@ -148,9 +145,10 @@ void ListS3::createNewFlowFile(
 }
 
 void ListS3::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(s3_wrapper_);
   logger_->log_trace("ListS3 onTrigger");
 
-  auto aws_results = s3_wrapper_.listBucket(*list_request_params_);
+  auto aws_results = s3_wrapper_->listBucket(*list_request_params_);
   if (!aws_results) {
     logger_->log_error("Failed to list S3 bucket {}", list_request_params_->bucket);
     context.yield();

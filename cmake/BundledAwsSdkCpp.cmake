@@ -17,18 +17,12 @@
 
 function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     set(PATCH_FILE1 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/dll-export-injection.patch")
-    set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/shutdown-fix.patch")
-    set(PATCH_FILE3 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/bundle-openssl.patch")
-    set(PATCH_FILE4 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/fix-finding-s2n.patch")
-    set(PATCH_FILE5 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/fix-deprecated-literal-operator.patch")
-    set(PATCH_FILE6 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/cpp23-cstdint.patch")
+    set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/bundle-openssl.patch")
+    set(PATCH_FILE3 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/fix-finding-s2n.patch")
     set(AWS_SDK_CPP_PATCH_COMMAND ${Bash_EXECUTABLE} -c "set -x &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE4}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE4}\") &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE5}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE5}\") &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE6}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE6}\") &&\
     :")
 
     if (WIN32)
@@ -66,6 +60,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             "${LIBDIR}/${PREFIX}aws-c-sdkutils.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-cpp-sdk-s3-crt.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-cpp-sdk-kinesis.${SUFFIX}"
     )
 
@@ -76,13 +71,14 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     set(AWS_SDK_CPP_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             -DCMAKE_PREFIX_PATH=${BINARY_DIR}/thirdparty/libaws-install
             -DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/libaws-install
-            -DBUILD_ONLY=kinesis%s3
+            -DBUILD_ONLY=kinesis%s3%s3-crt
             -DENABLE_TESTING=OFF
             -DBUILD_SHARED_LIBS=OFF
-            -DENABLE_UNITY_BUILD=${AWS_ENABLE_UNITY_BUILD})
+            -DENABLE_UNITY_BUILD=${AWS_ENABLE_UNITY_BUILD}
+            -DUSE_CRT_HTTP_CLIENT=ON)
 
     if(WIN32)
-        list(APPEND AWS_SDK_CPP_CMAKE_ARGS -DFORCE_EXPORT_CORE_API=ON -DFORCE_EXPORT_S3_API=ON -DFORCE_EXPORT_KINESIS_API=ON)
+        list(APPEND AWS_SDK_CPP_CMAKE_ARGS -DFORCE_EXPORT_CORE_API=ON -DFORCE_EXPORT_S3_API=ON -DFORCE_EXPORT_S3_CRT_API=ON -DFORCE_EXPORT_KINESIS_API=ON)
     endif()
 
     append_third_party_passthrough_args(AWS_SDK_CPP_CMAKE_ARGS "${AWS_SDK_CPP_CMAKE_ARGS}")
@@ -90,8 +86,8 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             aws-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/aws/aws-sdk-cpp.git"
-            GIT_TAG "1.11.530"
-            UPDATE_COMMAND git submodule update --init --recursive && git -C "${BINARY_DIR}/thirdparty/aws-sdk-cpp-src/crt/aws-crt-cpp/crt/s2n" checkout v1.5.15
+            GIT_TAG "1.11.771"
+            UPDATE_COMMAND git submodule update --init --recursive
             SOURCE_DIR "${BINARY_DIR}/thirdparty/aws-sdk-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
@@ -105,9 +101,6 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
 
     # Set dependencies
     add_dependencies(aws-sdk-cpp-external OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB)
-    if (NOT WIN32)
-        add_dependencies(aws-sdk-cpp-external CURL::libcurl)
-    endif()
 
     # Set variables
     set(LIBAWS_FOUND "YES" CACHE STRING "" FORCE)
@@ -199,14 +192,11 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     add_dependencies(AWS::aws-cpp-sdk-core aws-sdk-cpp-external)
     target_include_directories(AWS::aws-cpp-sdk-core INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE AWS::aws-crt-cpp AWS::aws-c-event-stream OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB Threads::Threads)
-    if (NOT WIN32)
-        target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE CURL::libcurl)
-    endif()
 
     if (APPLE)
-        target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE "-framework CoreFoundation -framework Security")
+        target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE "-framework CoreFoundation -framework Security -framework Network")
     elseif (WIN32)
-        target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE userenv.lib ws2_32.lib Wininet.lib winhttp.lib bcrypt.lib version.lib Secur32 Crypt32 Shlwapi)
+        target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE userenv.lib ws2_32.lib Wininet.lib bcrypt.lib version.lib Secur32 Crypt32 Shlwapi)
     else()
         target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE AWS::s2n)
     endif()
@@ -216,6 +206,12 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     add_dependencies(AWS::aws-cpp-sdk-s3 aws-sdk-cpp-external)
     target_include_directories(AWS::aws-cpp-sdk-s3 INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-cpp-sdk-s3 INTERFACE AWS::aws-cpp-sdk-core)
+
+    add_library(AWS::aws-cpp-sdk-s3-crt STATIC IMPORTED)
+    set_target_properties(AWS::aws-cpp-sdk-s3-crt PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-cpp-sdk-s3-crt.${SUFFIX}")
+    add_dependencies(AWS::aws-cpp-sdk-s3-crt aws-sdk-cpp-external)
+    target_include_directories(AWS::aws-cpp-sdk-s3-crt INTERFACE ${LIBAWS_INCLUDE_DIR})
+    target_link_libraries(AWS::aws-cpp-sdk-s3-crt INTERFACE AWS::aws-cpp-sdk-core AWS::aws-crt-cpp)
 
     add_library(AWS::aws-cpp-sdk-kinesis STATIC IMPORTED)
     set_target_properties(AWS::aws-cpp-sdk-kinesis PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-cpp-sdk-kinesis.${SUFFIX}")
