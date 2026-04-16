@@ -47,7 +47,6 @@ class StatefulProcessor : public core::ProcessorImpl {
 
  private:
   mutable std::mutex mutex_;
-  core::StateManager* state_manager_ = nullptr;
   HookType on_schedule_hook_;
   std::vector<HookType> on_trigger_hooks_;
   size_t on_trigger_hook_index_ = 0;

@@ -161,10 +161,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
       std::move(libwrapper)), "ConsumeJournald");
   REQUIRE(consume_journald->setProperty(ConsumeJournald::TimestampFormat.name, "ISO8601"));
   const auto get_cursor_position = [&plan, &consume_journald]() -> std::string {
-    auto sm = plan->getProcessContextForProcessor(consume_journald)->createStateManager();
-    std::unordered_map<std::string, std::string> state;
-    sm->get(state);
-    return state.at("cursor");
+    return plan->getProcessContextForProcessor(consume_journald)->createStateManager()->get()->at("cursor");
   };
 
   SECTION("defaults") {

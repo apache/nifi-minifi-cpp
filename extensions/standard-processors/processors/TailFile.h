@@ -240,9 +240,9 @@ class TailFile : public core::ProcessorImpl {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
-  bool recoverState(core::StateManager* state_manager, const core::ProcessContext& context);
+  bool recoverState(core::StateManager& state_manager, const core::ProcessContext& context);
   void logState();
-  bool storeState(core::StateManager* state_manager) const;
+  bool storeState(core::StateManager& state_manager) const;
   std::chrono::milliseconds getLookupFrequency() const;
 
  private:
@@ -267,11 +267,11 @@ class TailFile : public core::ProcessorImpl {
   void processFile(core::ProcessSession& session,
                    const std::filesystem::path& full_file_name,
                    TailState &state,
-                   core::StateManager* state_manager);
+                   core::StateManager& state_manager);
   void processSingleFile(core::ProcessSession& session,
                          const std::filesystem::path& full_file_name,
                          TailState &state);
-  bool getStateFromStateManager(core::StateManager* state_manager, std::map<std::filesystem::path, TailState> &new_tail_states) const;
+  bool getStateFromStateManager(core::StateManager& state_manager, std::map<std::filesystem::path, TailState> &new_tail_states) const;
   bool getStateFromLegacyStateFile(const core::ProcessContext& context,
                                    std::map<std::filesystem::path, TailState> &new_tail_states) const;
   void doMultifileLookup(core::ProcessContext& context);

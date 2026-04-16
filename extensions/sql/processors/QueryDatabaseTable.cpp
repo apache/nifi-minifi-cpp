@@ -152,7 +152,7 @@ void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
   std::unordered_map<std::string, std::string> stored_state;
 
   auto state_manager = context.createStateManager();
-  if (!state_manager->get(stored_state)) {
+  if (!state_manager || !state_manager->get(stored_state)) {
     logger_->log_info("Found no stored state");
   } else {
     if (!loadMaxValuesFromStoredState(stored_state)) {

@@ -166,7 +166,13 @@ void PushGrafanaLoki::processBatch(const std::vector<std::shared_ptr<core::FlowF
 }
 
 void PushGrafanaLoki::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  log_batch_.setStateManager(context.getStateManager());
+  auto state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
+    context.yield();
+    return;
+  }
+  log_batch_.setStateManager(state_manager);
   const auto reset_log_batch_state_manager = gsl::finally([this]() {
     log_batch_.setStateManager(nullptr);
   });

@@ -287,7 +287,7 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
     recursive_lookup_ = utils::parseBoolProperty(context, RecursiveLookup);
     lookup_frequency_ = utils::parseDurationProperty(context, LookupFrequency);
 
-    recoverState(temp_state_manager.get(), context);
+    recoverState(*temp_state_manager, context);
 
     doMultifileLookup(context);
 
@@ -302,7 +302,7 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "File to tail must be a fully qualified file");
     }
 
-    recoverState(temp_state_manager.get(), context);
+    recoverState(*temp_state_manager, context);
   }
 
   std::string rolling_filename_pattern_glob = utils::parseProperty(context, RollingFilenamePattern);
@@ -381,7 +381,7 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
   }
 }
 
-bool TailFile::recoverState(core::StateManager* state_manager, const core::ProcessContext& context) {
+bool TailFile::recoverState(core::StateManager& state_manager, const core::ProcessContext& context) {
   std::map<std::filesystem::path, TailState> new_tail_states;
   bool state_load_success = getStateFromStateManager(state_manager, new_tail_states) ||
                             getStateFromLegacyStateFile(context, new_tail_states);
@@ -410,9 +410,9 @@ bool TailFile::recoverState(core::StateManager* state_manager, const core::Proce
   return true;
 }
 
-bool TailFile::getStateFromStateManager(core::StateManager* state_manager, std::map<std::filesystem::path, TailState> &new_tail_states) const {
+bool TailFile::getStateFromStateManager(core::StateManager& state_manager, std::map<std::filesystem::path, TailState> &new_tail_states) const {
   std::unordered_map<std::string, std::string> state_map;
-  if (state_manager->get(state_map)) {
+  if (state_manager.get(state_map)) {
     for (size_t i = 0U;; ++i) {
       if (!state_map.contains("file." + std::to_string(i) + ".name")) {
         break;
@@ -483,7 +483,7 @@ std::ostream& operator<<(std::ostream &os, const TailState &tail_state) {
   return os;
 }
 
-bool TailFile::storeState(core::StateManager* state_manager) const {
+bool TailFile::storeState(core::StateManager& state_manager) const {
   std::unordered_map<std::string, std::string> state;
   size_t i = 0;
   for (const auto& tail_state : tail_states_) {
@@ -494,7 +494,7 @@ bool TailFile::storeState(core::StateManager* state_manager) const {
     state["file." + std::to_string(i) + ".last_read_time"] = std::to_string(tail_state.second.lastReadTimeInMilliseconds());
     ++i;
   }
-  if (!state_manager->set(state)) {
+  if (!state_manager.set(state)) {
     logger_->log_error("Failed to set state");
     return false;
   }
@@ -580,6 +580,12 @@ std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &stat
 }
 
 void TailFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
+    context.yield();
+    return;
+  }
   if (tail_mode_ == Mode::MULTIPLE) {
     if (last_multifile_lookup_ + lookup_frequency_ < std::chrono::steady_clock::now()) {
       logger_->log_debug("Lookup frequency {} have elapsed, doing new multifile lookup", lookup_frequency_);
@@ -591,7 +597,7 @@ void TailFile::onTrigger(core::ProcessContext& context, core::ProcessSession& se
 
   // iterate over file states. may modify them
   for (auto &state : tail_states_) {
-    processFile(session, state.first, state.second, context.getStateManager());
+    processFile(session, state.first, state.second, *state_manager);
   }
 
   if (!session.existsFlowFileInRelationship(Success)) {
@@ -609,7 +615,7 @@ bool TailFile::isOldFileInitiallyRead(const TailState& state) const {
 void TailFile::processFile(core::ProcessSession& session,
                            const std::filesystem::path& full_file_name,
                            TailState &state,
-                           core::StateManager* state_manager) {
+                           core::StateManager& state_manager) {
   if (isOldFileInitiallyRead(state)) {
     if (initial_start_position_ == InitialStartPositions::BEGINNING_OF_TIME) {
       processAllRotatedFiles(session, state);

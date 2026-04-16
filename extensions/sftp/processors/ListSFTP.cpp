@@ -417,6 +417,12 @@ void ListSFTP::listByTrackingTimestamps(
     const std::string& remote_path,
     std::vector<Child> files) {
   auto* state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
+    context.yield();
+    return;
+  }
+
   auto min_timestamp_to_list = last_listed_latest_entry_timestamp_;
 
   /* Load state from cache file if needed */
