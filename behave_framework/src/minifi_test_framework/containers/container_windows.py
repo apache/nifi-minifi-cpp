@@ -366,9 +366,13 @@ class WindowsContainer(ContainerProtocol):
             f"{{ exit 0 }} else {{ exit 1 }}"
         )
 
-        exit_code, _ = self._run_powershell(ps_script)
+        exit_code, output = self._run_powershell(ps_script)
 
-        return exit_code == 0
+        if exit_code != 0:
+            logging.error(f"Error running command for nonempty_dir_exists: {output}")
+            return False
+
+        return True
 
     def directory_contains_file_with_minimum_size(self, directory_path: str, expected_size: int) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
