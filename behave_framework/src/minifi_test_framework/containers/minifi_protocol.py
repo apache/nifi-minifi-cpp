@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from typing import Protocol
+
 from minifi_test_framework.minifi.flow_definition import FlowDefinition
 
 
@@ -30,13 +31,6 @@ class MinifiProtocol(Protocol):
         ...
 
 
-def set_controller_socket_properties(minifi: MinifiProtocol):
-    minifi.set_property("controller.socket.enable", "true")
-    minifi.set_property("controller.socket.host", "localhost")
-    minifi.set_property("controller.socket.port", "9998")
-    minifi.set_property("controller.socket.local.any.interface", "false")
-
-
 def enable_openssl_fips_mode(minifi: MinifiProtocol):
     minifi.set_property("nifi.openssl.fips.support.enable", "true")
 
@@ -48,7 +42,8 @@ def enable_log_metrics_publisher(minifi: MinifiProtocol):
 
 
 def conf_c2_flow_url(minifi: MinifiProtocol, scenario_id: str):
-    minifi.set_property("nifi.c2.flow.url", f"http://minifi-c2-server-{scenario_id}:10090/c2/config?class=minifi-test-class")
+    minifi.set_property("nifi.c2.flow.url",
+                        f"http://minifi-c2-server-{scenario_id}:10090/c2/config?class=minifi-test-class")
 
 
 def set_up_ssl_properties(minifi: MinifiProtocol):

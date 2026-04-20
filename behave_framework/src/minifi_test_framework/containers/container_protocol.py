@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Protocol, List
+from typing import Protocol
 
 from minifi_test_framework.containers.directory import Directory
 from minifi_test_framework.containers.file import File
@@ -23,9 +23,9 @@ from minifi_test_framework.containers.host_file import HostFile
 class ContainerProtocol(Protocol):
     image_name: str
     container_name: str
-    dirs: List[Directory]
-    files: List[File]
-    host_files: List[HostFile]
+    dirs: list[Directory]
+    files: list[File]
+    host_files: list[HostFile]
 
     def deploy(self, context) -> bool:
         ...

@@ -14,8 +14,6 @@
 # limitations under the License.
 
 
-from typing import Dict
-
 from minifi_test_framework.core.minifi_test_context import MinifiTestContext
 from minifi_test_framework.minifi.minifi_flow_definition import MinifiFlowDefinition
 from minifi_test_framework.containers.directory import Directory
@@ -29,8 +27,8 @@ class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
         super().__init__(test_context.minifi_container_image, f"{container_name}-{test_context.scenario_id}", test_context.network)
         self.flow_config_str: str = ""
         self.flow_definition = MinifiFlowDefinition()
-        self.properties: Dict[str, str] = {}
-        self.log_properties: Dict[str, str] = {}
+        self.properties: dict[str, str] = {}
+        self.log_properties: dict[str, str] = {}
 
         self._fill_default_properties()
         self._fill_default_log_properties()

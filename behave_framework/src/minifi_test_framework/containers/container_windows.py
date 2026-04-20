@@ -21,7 +21,7 @@ import tempfile
 import base64
 import tarfile
 import io
-from typing import Union, Optional, Tuple, List, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import docker
 from docker.models.networks import Network
@@ -44,16 +44,16 @@ class WindowsContainer(ContainerProtocol):
         self.network: Network = network
 
         self.client: docker.DockerClient = docker.from_env()
-        self.container: Optional[Container] = None
-        self.files: List[File] = []
-        self.dirs: List[Directory] = []
-        self.host_files: List[HostFile] = []
-        self.volumes: Dict = {}
+        self.container: Container | None = None
+        self.files: list[File] = []
+        self.dirs: list[Directory] = []
+        self.host_files: list[HostFile] = []
+        self.volumes: dict = {}
         self.command: str | None = command
         self.entrypoint: str | None = entrypoint
-        self._temp_dir: Optional[tempfile.TemporaryDirectory] = None
-        self.ports: Optional[Dict[str, int]] = None
-        self.environment: List[str] = []
+        self._temp_dir: tempfile.TemporaryDirectory | None = None
+        self.ports: dict[str, int] | None = None
+        self.environment: list[str] = []
 
     def _normalize_path(self, path: str) -> str:
         clean_path = path.strip().replace("/", "\\")
@@ -100,7 +100,7 @@ class WindowsContainer(ContainerProtocol):
 
         try:
             logging.info(f"Creating and starting container '{self.container_name}'...")
-            self.container = self.client.containers.create(
+            self.container = self.client.containers.run(
                 image=self.image_name,
                 name=self.container_name,
                 ports=self.ports,
@@ -112,8 +112,6 @@ class WindowsContainer(ContainerProtocol):
                 detach=True,
                 tty=False
             )
-
-            self.container.start()
 
             for file in self.files:
                 self._copy_content_to_container(file.content, file.path)
@@ -152,9 +150,10 @@ class WindowsContainer(ContainerProtocol):
         if self._temp_dir:
             try:
                 self._temp_dir.cleanup()
-                self._temp_dir = None
             except Exception as e:
                 logging.warning(f"Failed to cleanup temp dir: {e}")
+            finally:
+                self._temp_dir = None
 
         if self.container:
             try:
@@ -166,7 +165,7 @@ class WindowsContainer(ContainerProtocol):
             finally:
                 self.container = None
 
-    def exec_run(self, command: Union[str, list]) -> Tuple[int | None, str]:
+    def exec_run(self, command: str | list) -> tuple[int | None, str]:
         logging.debug(f"Running command: {command}")
         if self.container:
             (code, output) = self.container.exec_run(command, detach=False)
@@ -175,7 +174,7 @@ class WindowsContainer(ContainerProtocol):
             return code, decoded_output
         return None, "Container not running."
 
-    def _run_powershell(self, ps_script: str) -> Tuple[int | None, str]:
+    def _run_powershell(self, ps_script: str) -> tuple[int | None, str]:
         if not self.container:
             return None, "Container not running"
 
@@ -319,7 +318,7 @@ class WindowsContainer(ContainerProtocol):
         except (ValueError, IndexError):
             return -1
 
-    def verify_file_contents(self, directory_path: str, expected_contents: List[str]) -> bool:
+    def verify_file_contents(self, directory_path: str, expected_contents: list[str]) -> bool:
         if not self.container:
             return False
 
