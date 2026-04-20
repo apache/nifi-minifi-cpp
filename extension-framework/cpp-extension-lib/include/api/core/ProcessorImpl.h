@@ -74,8 +74,8 @@ class ProcessorImpl {
   static constexpr auto OutputAttributes = std::array<minifi::core::OutputAttributeReference, 0>{};
 
   std::string getName() const;
-  utils::Identifier getUUID() const;
-  utils::SmallString<36> getUUIDStr() const;
+  minifi::utils::Identifier getUUID() const;
+  minifi::utils::SmallString<36> getUUIDStr() const;
 
   virtual PublishedMetrics calculateMetrics() const {return {};}
 

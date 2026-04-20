@@ -39,6 +39,7 @@
 #include "minifi-c/minifi-c.h"
 #include "minifi-cpp/agent/agent_docs.h"
 #include "utils/RegexUtils.h"
+#include "core/ClassLoader.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
@@ -115,6 +116,11 @@ void* Extension::findSymbol(const char *name) {
 Extension::~Extension() {
   if (info_ && info_->deinit) {
     info_->deinit(info_->user_data);
+  }
+  if (info_) {
+    for (auto& resource_name : info_->resources) {
+      core::ClassLoader::getDefaultClassLoader().getClassLoader(info_->name).unregisterClass(resource_name);
+    }
   }
   unload();
 

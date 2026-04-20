@@ -40,6 +40,7 @@ class Extension {
     std::string version;
     void(*deinit)(void* user_data);
     void* user_data;
+    std::vector<std::string> resources;
   };
 
   struct Context {

@@ -18,11 +18,27 @@
 
 #include "api/core/Resource.h"
 #include "api/utils/minifi-c-utils.h"
+#include "api/core/ProcessorImpl.h"
 
 #define MKSOC(x) #x
 #define MAKESTRING(x) MKSOC(x)  // NOLINT(cppcoreguidelines-macro-usage)
 
 namespace minifi = org::apache::nifi::minifi;
+
+class DummyCProcessor : public minifi::api::core::ProcessorImpl {
+ public:
+  using ProcessorImpl::ProcessorImpl;
+
+  static constexpr const char* Description = "C processor that does nothing";
+
+  static constexpr auto Relationships = std::array<minifi::core::RelationshipDefinition, 0>{};
+  static constexpr auto Properties = std::array<minifi::core::PropertyReference, 0>{};
+  static constexpr auto OutputAttributes = std::array<minifi::core::OutputAttributeReference, 0>{};
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr minifi::core::annotation::Input InputRequirement = minifi::core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = true;
+};
 
 CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
 
@@ -33,5 +49,8 @@ CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context
     .deinit = nullptr,
     .user_data = nullptr
   };
-  MinifiRegisterExtension(extension_context, &extension_definition);
+  auto extension = MinifiRegisterExtension(extension_context, &extension_definition);
+  minifi::api::core::useProcessorClassDescription<DummyCProcessor>([&] (const MinifiProcessorClassDefinition& description) {
+    MinifiRegisterProcessor(extension, &description);
+  });
 }
