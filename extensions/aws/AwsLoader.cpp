@@ -50,19 +50,17 @@ void deinit(gsl::owner<void*> sdk_opts_ptr) {
 }
 }  // namespace org::apache::nifi::minifi::aws::init
 
-extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig*) {
+extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
   using minifi::aws::init::toStringView;
   auto sdk_options = std::make_unique<Aws::SDKOptions>();
   Aws::InitAPI(*sdk_options);
   Aws::Utils::Logging::InitializeAWSLogging(std::make_shared<minifi::aws::utils::AWSSdkLogger>());
 
-  MinifiExtensionCreateInfo ext_create_info{.name = toStringView(MAKESTRING(MODULE_NAME)),
+  MinifiExtensionDefinition ext_definition{.name = toStringView(MAKESTRING(MODULE_NAME)),
       .version = toStringView(minifi::AgentBuild::VERSION),
       .deinit = &minifi::aws::init::deinit,
-      .user_data = sdk_options.get(),
-      .processors_count = 0,
-      .processors_ptr = nullptr};
+      .user_data = sdk_options.get()};
 
-  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
+  minifi::utils::MinifiRegisterCppExtension(extension_context, &ext_definition);
   std::ignore = sdk_options.release();  // ownership is transferred to deinit
 }
