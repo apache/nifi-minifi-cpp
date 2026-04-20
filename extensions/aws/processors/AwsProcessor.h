@@ -177,7 +177,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
  protected:
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(core::ProcessContext& context) const;
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context);
-  aws::ProxyOptions getProxy(core::ProcessContext& context);
+  minifi::controllers::ProxyConfiguration getProxy(core::ProcessContext& context);
 
   Aws::Client::ClientConfiguration client_config_;
   Aws::Auth::AWSCredentials credentials_;
