@@ -41,10 +41,13 @@ def make_self_signed_cert(common_name: str) -> tuple[Certificate, RSAPrivateKey]
 
     subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name), ])
 
-    cert = x509.CertificateBuilder().subject_name(subject).issuer_name(issuer).public_key(key.public_key()).serial_number(
-        x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.timezone.utc)).not_valid_after(
-        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3650)).add_extension(
-        x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False, ).add_extension(x509.BasicConstraints(ca=True, path_length=None),
+    cert = (x509.CertificateBuilder().subject_name(subject).issuer_name(issuer).public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
+        .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3650))
+        .add_extension(x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False)
+        .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+        .sign(key, hashes.SHA256()))
                                                                                                      critical=True, ).sign(key, hashes.SHA256())
 
     return cert, key
