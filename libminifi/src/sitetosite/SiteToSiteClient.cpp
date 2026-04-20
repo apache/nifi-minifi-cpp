@@ -712,7 +712,7 @@ std::pair<uint64_t, uint64_t> SiteToSiteClient::readFlowFiles(const std::shared_
           output_stream->write(std::span(buffer).subspan(0, size));
           len -= size;
         }
-        return io::IoResult::fromSizeT(receive_header_result->flow_file_data_size);
+        return io::IoResult::from(receive_header_result->flow_file_data_size);
       });
       if (flow_file->getSize() != receive_header_result->flow_file_data_size) {
         std::stringstream message;

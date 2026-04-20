@@ -377,7 +377,7 @@ MinifiStatus MinifiProcessSessionRead(MinifiProcessSession* session, MinifiFlowF
   try {
     reinterpret_cast<minifi::core::ProcessSession*>(session)->read(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(flowfile), [&] (auto& input_stream) -> minifi::io::IoResult {
       const int64_t cb_result = cb(user_ctx, reinterpret_cast<MinifiInputStream*>(input_stream.get()));
-      return minifi::io::IoResult::fromI64(cb_result);
+      return minifi::io::IoResult::from(cb_result);
     });
     return MINIFI_STATUS_SUCCESS;
   } catch (...) {
@@ -391,7 +391,7 @@ MinifiStatus MinifiProcessSessionWrite(MinifiProcessSession* session, MinifiFlow
   try {
     reinterpret_cast<minifi::core::ProcessSession*>(session)->write(*reinterpret_cast<std::shared_ptr<minifi::core::FlowFile>*>(ff), [&] (auto& output_stream) -> minifi::io::IoResult {
       const int64_t cb_result = cb(user_ctx, reinterpret_cast<MinifiOutputStream*>(output_stream.get()));
-      return minifi::io::IoResult::fromI64(cb_result);
+      return minifi::io::IoResult::from(cb_result);
     });
     return MINIFI_STATUS_SUCCESS;
   } catch (...) {

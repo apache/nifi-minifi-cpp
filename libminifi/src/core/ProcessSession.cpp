@@ -190,7 +190,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::clone(const FlowFile& parent
     logger_->log_debug("Cloned parent flow files {} to {}, with {}:{}", parent.getUUIDStr(), record->getUUIDStr(), offset, size);
     if (parent.getResourceClaim()) {
       write(record, [&] (const std::shared_ptr<io::OutputStream>& output) -> io::IoResult {
-        return io::IoResult::fromI64(read(parent, [&] (const std::shared_ptr<io::InputStream>& input) -> io::IoResult {
+        return io::IoResult::from(read(parent, [&] (const std::shared_ptr<io::InputStream>& input) -> io::IoResult {
           io::StreamSlice slice(input, offset, size);
           return internal::pipe(slice, *output);
         }));
@@ -301,7 +301,7 @@ void ProcessSessionImpl::writeBuffer(const std::shared_ptr<core::FlowFile>& flow
 void ProcessSessionImpl::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer) {
   write(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
     const auto write_status = output_stream->write(buffer);
-    return io::IoResult::fromSizeT(write_status);
+    return io::IoResult::from(write_status);
   });
 }
 
@@ -358,7 +358,7 @@ void ProcessSessionImpl::appendBuffer(const std::shared_ptr<core::FlowFile>& flo
   if (buffer.empty()) { return; }
   append(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
     const auto write_status = output_stream->write(buffer);
-    return io::IoResult::fromSizeT(write_status);
+    return io::IoResult::from(write_status);
   });
 }
 
@@ -468,7 +468,7 @@ detail::ReadBufferResult ProcessSessionImpl::readBuffer(const std::shared_ptr<co
       logger_->log_error("readBuffer: {} bytes were requested from the stream but {} bytes were read. Rolling back.", result.buffer.size(), read_status);
       throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
     }
-    return io::IoResult::fromSizeT(read_status);
+    return io::IoResult::from(read_status);
   });
   return result;
 }

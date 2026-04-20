@@ -288,11 +288,11 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
       if (flow_file->getSize() <= multipart_threshold_) {
         logger_->log_info("Uploading S3 Object '{}' in a single upload", put_s3_request_params->object_key);
         result = s3_wrapper_->putObject(*put_s3_request_params, stream, flow_file->getSize());
-        return io::IoResult::fromSizeT(flow_file->getSize());
+        return io::IoResult::from(flow_file->getSize());
       }
       logger_->log_info("S3 Object '{}' passes the multipart threshold, uploading it in multiple parts", put_s3_request_params->object_key);
       result = s3_wrapper_->putObjectMultipart(*put_s3_request_params, stream, flow_file->getSize(), multipart_size_);
-      return io::IoResult::fromSizeT(flow_file->getSize());
+      return io::IoResult::from(flow_file->getSize());
     } catch(const aws::s3::StreamReadException& ex) {
       logger_->log_error("Error occurred while uploading to S3: {}", ex.what());
       return io::IoResult::error();

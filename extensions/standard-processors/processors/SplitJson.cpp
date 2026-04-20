@@ -117,7 +117,7 @@ void SplitJson::onTrigger(core::ProcessContext& context, core::ProcessSession& s
     auto& json_value_to_write = result_array[i];
     session.write(child_flow_file, [this, &json_value_to_write](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
       auto result_string = jsonValueToString(json_value_to_write);
-      return io::IoResult::fromSizeT(output_stream->write(reinterpret_cast<const uint8_t*>(result_string.data()), result_string.size()));
+      return io::IoResult::from(output_stream->write(reinterpret_cast<const uint8_t*>(result_string.data()), result_string.size()));
     });
 
     session.transfer(child_flow_file, Split);

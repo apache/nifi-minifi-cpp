@@ -137,7 +137,7 @@ io::IoResult ExtractText::ReadCallback::operator()(const std::shared_ptr<io::Inp
   } else {
     flowFile_->setAttribute(attrKey, contentStream.str());
   }
-  return io::IoResult::fromSizeT(read_size);
+  return io::IoResult::from(read_size);
 }
 
 ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext& ctx,  std::shared_ptr<core::logging::Logger> lgr)

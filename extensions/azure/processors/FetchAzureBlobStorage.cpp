@@ -73,7 +73,7 @@ void FetchAzureBlobStorage::onTrigger(core::ProcessContext& context, core::Proce
     if (!result_size) {
       return io::IoResult::zero();
     }
-    return io::IoResult::fromI64(*result_size);
+    return io::IoResult::from(*result_size);
   });
 
   if (result_size == std::nullopt) {

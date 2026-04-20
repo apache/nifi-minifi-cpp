@@ -44,7 +44,7 @@ class JsonInputCallback {
       return io::IoResult::error();
     }
 
-    return io::IoResult::fromSizeT(read_ret);
+    return io::IoResult::from(read_ret);
   }
  private:
   rapidjson::Document& document_;
@@ -62,7 +62,7 @@ class JsonOutputCallback {
       writer.SetMaxDecimalPlaces(decimal_places_.value());
     root_.Accept(writer);
     const auto write_return = stream->write(reinterpret_cast<const uint8_t*>(buffer.GetString()), buffer.GetSize());
-    return io::IoResult::fromSizeT(write_return);
+    return io::IoResult::from(write_return);
   }
 
  protected:
@@ -82,7 +82,7 @@ class PrettyJsonOutputCallback {
       writer.SetMaxDecimalPlaces(decimal_places_.value());
     root_.Accept(writer);
     const auto write_return = stream->write(reinterpret_cast<const uint8_t*>(buffer.GetString()), buffer.GetSize());
-    return io::IoResult::fromSizeT(write_return);
+    return io::IoResult::from(write_return);
   }
 
  protected:

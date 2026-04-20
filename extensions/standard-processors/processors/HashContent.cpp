@@ -73,7 +73,7 @@ void HashContent::onTrigger(core::ProcessContext&, core::ProcessSession& session
     const auto& ret_val = algorithm_(stream);
     flowFile->setAttribute(attrKey_, ret_val.first);
 
-    return io::IoResult::fromI64(ret_val.second);
+    return io::IoResult::from(ret_val.second);
   });
   session.transfer(flowFile, Success);
 }

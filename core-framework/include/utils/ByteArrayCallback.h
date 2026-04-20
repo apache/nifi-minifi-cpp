@@ -45,7 +45,7 @@ class ByteInputCallback {
       stream->read(vec);
     }
 
-    return io::IoResult::fromSizeT(vec.size());
+    return io::IoResult::from(vec.size());
   }
 
   virtual void close() { }

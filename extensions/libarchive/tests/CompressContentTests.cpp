@@ -65,7 +65,7 @@ class ReadCallback {
       read_size_ += gsl::narrow<size_t>(ret);
       total_read += gsl::narrow<int64_t>(ret);
     } while (buffer_.size() != read_size_);
-    return minifi::io::IoResult::fromI64(total_read);
+    return minifi::io::IoResult::from(total_read);
   }
   void archive_read() {
     const auto archive = minifi::processors::archive_read_unique_ptr{archive_read_new()};

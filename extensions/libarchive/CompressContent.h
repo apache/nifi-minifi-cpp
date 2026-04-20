@@ -193,12 +193,12 @@ class CompressContent : public core::ProcessorImpl {
           }
         }
         filterStream->close();
-        return io::IoResult::fromSizeT(read_size);
+        return io::IoResult::from(read_size);
       });
 
       success_ = filterStream->isFinished();
 
-      return io::IoResult::fromSizeT(flow_->getSize());
+      return io::IoResult::from(flow_->getSize());
     }
   };
 

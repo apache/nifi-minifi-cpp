@@ -68,7 +68,7 @@ void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, Bo
   }
 
   session_.read(flow_file, [&input_stream_callback](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
-    return io::IoResult::fromI64(Long(Callable(input_stream_callback.getAttribute("process"))(std::weak_ptr(input_stream))).asInt64());
+    return io::IoResult::from(Long(Callable(input_stream_callback.getAttribute("process"))(std::weak_ptr(input_stream))).asInt64());
   });
 }
 
@@ -78,7 +78,7 @@ void PyProcessSession::write(const std::shared_ptr<core::FlowFile>& flow_file, B
   }
 
   session_.write(flow_file, [&output_stream_callback](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
-    return io::IoResult::fromI64(Long(Callable(output_stream_callback.getAttribute("process"))(std::weak_ptr(output_stream))).asInt64());
+    return io::IoResult::from(Long(Callable(output_stream_callback.getAttribute("process"))(std::weak_ptr(output_stream))).asInt64());
   });
 }
 
@@ -113,7 +113,7 @@ std::string PyProcessSession::getContentsAsString(const std::shared_ptr<core::Fl
   std::string content;
   session_.read(flow_file, [&content](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
     content.resize(input_stream->size());
-    return io::IoResult::fromSizeT(input_stream->read(as_writable_bytes(std::span(content))));
+    return io::IoResult::from(input_stream->read(as_writable_bytes(std::span(content))));
   });
   return content;
 }

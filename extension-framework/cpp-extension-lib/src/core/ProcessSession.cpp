@@ -152,7 +152,7 @@ void ProcessSession::writeBuffer(FlowFile& flow_file, std::span<const char> buff
 void ProcessSession::writeBuffer(FlowFile& flow_file, std::span<const std::byte> buffer) {
   write(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
     const auto write_status = output_stream->write(buffer);
-    return io::IoResult::fromSizeT(write_status);
+    return io::IoResult::from(write_status);
   });
 }
 
@@ -161,7 +161,7 @@ std::vector<std::byte> ProcessSession::readBuffer(FlowFile& flow_file) {
   read(flow_file, [&result](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
     result.resize(input_stream->size());
     const auto read_status = input_stream->read(result);
-    return io::IoResult::fromSizeT(read_status);
+    return io::IoResult::from(read_status);
   });
   return result;
 }

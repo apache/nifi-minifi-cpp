@@ -112,7 +112,7 @@ io::IoResult PutAzureDataLakeStorage::ReadCallback::operator()(const std::shared
   }
 
   result_ = azure_data_lake_storage_.uploadFile(params_, buffer);
-  return io::IoResult::fromSizeT(read_ret);
+  return io::IoResult::from(read_ret);
 }
 
 REGISTER_RESOURCE(PutAzureDataLakeStorage, Processor);

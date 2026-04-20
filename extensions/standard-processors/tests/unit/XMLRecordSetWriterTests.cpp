@@ -70,7 +70,7 @@ class XMLRecordSetWriterTestFixture {
       std::vector<std::byte> buffer(input_stream->size());
       input_stream->read(buffer);
       xml_content = std::string(reinterpret_cast<const char*>(buffer.data()), buffer.size());
-      return io::IoResult::fromSizeT(input_stream->size());
+      return io::IoResult::from(input_stream->size());
     });
     return xml_content;
   }

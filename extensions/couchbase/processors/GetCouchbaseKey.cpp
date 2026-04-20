@@ -76,11 +76,11 @@ void GetCouchbaseKey::onTrigger(core::ProcessContext& context, core::ProcessSess
         if (document_type_ == CouchbaseValueType::String) {
           auto& value = std::get<std::string>(get_result->value);
           stream->write(value);
-          return io::IoResult::fromSizeT(value.size());
+          return io::IoResult::from(value.size());
         } else {
           auto& value = std::get<std::vector<std::byte>>(get_result->value);
           stream->write(value);
-          return io::IoResult::fromSizeT(value.size());
+          return io::IoResult::from(value.size());
         }
       });
     }

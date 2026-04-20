@@ -60,7 +60,7 @@ class OutputProcessor : public core::ProcessorImpl {
     ff->addAttribute("index", id);
     session.write(ff, [&] (const std::shared_ptr<minifi::io::OutputStream>& output) -> io::IoResult {
       const size_t ret = output->write(as_bytes(std::span(id)));
-      return io::IoResult::fromSizeT(ret);
+      return io::IoResult::from(ret);
     });
     session.transfer(ff, Success);
     flow_files_.push_back(ff);

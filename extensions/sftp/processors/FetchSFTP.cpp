@@ -112,7 +112,7 @@ void FetchSFTP::onTrigger(core::ProcessContext& context, core::ProcessSession& s
       if (!bytes_read) {
         throw utils::SFTPException{client->getLastError()};
       }
-      return io::IoResult::fromSizeT(*bytes_read);
+      return io::IoResult::from(*bytes_read);
     });
   } catch (const utils::SFTPException& ex) {
     logger_->log_debug("{}", ex.what());

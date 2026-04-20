@@ -227,7 +227,7 @@ io::IoResult FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<i
     _archiveMetadata->entryMetadata.push_back(metadata);
   }
 
-  return io::IoResult::fromI64(nlen);
+  return io::IoResult::from(nlen);
 }
 
 FocusArchiveEntry::ReadCallback::ReadCallback(core::ProcessContext* context, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata)

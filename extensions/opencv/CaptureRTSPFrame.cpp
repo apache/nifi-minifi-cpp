@@ -98,7 +98,7 @@ void CaptureRTSPFrame::onTrigger(core::ProcessContext& context, core::ProcessSes
         std::vector<uchar> image_buf;
         imencode(image_encoding_, frame, image_buf);
         const auto ret = output_stream->write(image_buf.data(), image_buf.size());
-        return io::IoResult::fromSizeT(ret);
+        return io::IoResult::from(ret);
       });
       session.transfer(flow_file, Success);
       logger_->log_info("A frame is captured");

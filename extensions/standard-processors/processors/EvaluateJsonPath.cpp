@@ -86,7 +86,7 @@ void EvaluateJsonPath::writeQueryResult(core::ProcessSession& session, core::Flo
   if (destination_ == evaluate_json_path::DestinationType::FlowFileContent) {
     session.write(flow_file, [&query_result, this](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
       auto result_string = extractQueryResult(query_result);
-      return io::IoResult::fromSizeT(output_stream->write(reinterpret_cast<const uint8_t*>(result_string.data()), result_string.size()));
+      return io::IoResult::from(output_stream->write(reinterpret_cast<const uint8_t*>(result_string.data()), result_string.size()));
     });
   } else {
     attributes_to_set.emplace(property_name, extractQueryResult(query_result));

@@ -93,7 +93,7 @@ io::IoResult FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFil
     if (!ret) return ret;
     sum += gsl::narrow<size_t>(ret.toI64());
   }
-  return io::IoResult::fromSizeT(sum);
+  return io::IoResult::from(sum);
 }
 
 }  // namespace org::apache::nifi::minifi

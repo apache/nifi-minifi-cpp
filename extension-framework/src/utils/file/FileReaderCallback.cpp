@@ -54,7 +54,7 @@ io::IoResult FileReaderCallback::operator()(const std::shared_ptr<io::OutputStre
   input_stream.close();
 
   logger_->log_debug("Finished reading {} bytes from the file", num_bytes_written);
-  return io::IoResult::fromSizeT(num_bytes_written);
+  return io::IoResult::from(num_bytes_written);
 }
 
 }  // namespace org::apache::nifi::minifi::utils

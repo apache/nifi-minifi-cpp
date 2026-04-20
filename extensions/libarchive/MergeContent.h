@@ -94,11 +94,11 @@ class BinaryConcatenationMerge : public MergeBin {
       bool isFirst = true;
       for (const auto& flow : flows_) {
         if (!isFirst && !demarcator_.empty()) {
-          const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(demarcator_.data()), demarcator_.size());
-          if (io::isError(write_ret)) {
+          const auto write_result = stream->write(reinterpret_cast<const uint8_t*>(demarcator_.data()), demarcator_.size());
+          if (io::isError(write_result)) {
             return io::IoResult::error();
           }
-          write_size_sum += write_ret;
+          write_size_sum += write_result;
         }
         const auto len = serializer_.serialize(flow, stream);
         if (!len) {
@@ -108,13 +108,13 @@ class BinaryConcatenationMerge : public MergeBin {
         isFirst = false;
       }
       if (!footer_.empty()) {
-        const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(footer_.data()), footer_.size());
-        if (io::isError(write_ret)) {
+        const auto write_result = stream->write(reinterpret_cast<const uint8_t*>(footer_.data()), footer_.size());
+        if (io::isError(write_result)) {
           return io::IoResult::error();
         }
-        write_size_sum += write_ret;
+        write_size_sum += write_result;
       }
-      return io::IoResult::fromI64(write_size_sum);
+      return io::IoResult::from(write_size_sum);
     }
   };
 
@@ -233,7 +233,7 @@ class ArchiveMerge {
         }
       }
 
-      return io::IoResult::fromSizeT(size_);
+      return io::IoResult::from(size_);
     }
   };
 };

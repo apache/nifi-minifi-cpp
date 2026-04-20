@@ -49,7 +49,7 @@ class UploadToGCSCallback {
     writer << content;
     writer.Close();
     result_ = writer.metadata();
-    return io::IoResult::fromSizeT(read_ret);
+    return io::IoResult::from(read_ret);
   }
 
   [[nodiscard]] const google::cloud::StatusOr<gcs::ObjectMetadata>& getResult() const noexcept {

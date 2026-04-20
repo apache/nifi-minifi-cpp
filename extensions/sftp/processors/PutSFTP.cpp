@@ -248,7 +248,7 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
           gsl::narrow<int64_t>(stream->size()) /*expected_size*/)) {
         throw utils::SFTPException{client->getLastError()};
       }
-      return io::IoResult::fromSizeT(stream->size());
+      return io::IoResult::from(stream->size());
     });
   } catch (const utils::SFTPException& ex) {
     logger_->log_debug("{}", ex.what());

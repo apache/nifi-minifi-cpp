@@ -117,7 +117,7 @@ void MotionDetector::onTrigger(core::ProcessContext& context, core::ProcessSessi
       throw std::runtime_error("ImageReadCallback failed to fully read flow file input stream");
     }
     frame = cv::imdecode(image_buf, -1);
-    return io::IoResult::fromSizeT(ret);
+    return io::IoResult::from(ret);
   });
 
   if (frame.empty()) {
@@ -152,7 +152,7 @@ void MotionDetector::onTrigger(core::ProcessContext& context, core::ProcessSessi
     std::vector<uchar> image_buf;
     imencode(image_encoding_, frame, image_buf);
     const auto ret = output_stream->write(image_buf.data(), image_buf.size());
-    return io::IoResult::fromSizeT(ret);
+    return io::IoResult::from(ret);
   });
   session.transfer(flow_file, Success);
   logger_->log_trace("Finish motion detecting");

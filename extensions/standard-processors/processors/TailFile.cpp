@@ -143,7 +143,7 @@ class FileReaderCallback {
       latest_flow_file_ends_with_delimiter_ = false;
     }
 
-    return io::IoResult::fromSizeT(num_bytes_written);
+    return io::IoResult::from(num_bytes_written);
   }
 
   uint64_t checksum() const {
@@ -208,7 +208,7 @@ class WholeFileReaderCallback {
 
     checksum_ = crc_stream.getCRC();
 
-    return io::IoResult::fromSizeT(num_bytes_written);
+    return io::IoResult::from(num_bytes_written);
   }
 
  private:

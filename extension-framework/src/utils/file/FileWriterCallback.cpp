@@ -55,7 +55,7 @@ io::IoResult FileWriterCallback::operator()(const std::shared_ptr<io::InputStrea
     write_succeeded_ = true;
   }
 
-  return io::IoResult::fromSizeT(size);
+  return io::IoResult::from(size);
 }
 
 bool FileWriterCallback::commit() {

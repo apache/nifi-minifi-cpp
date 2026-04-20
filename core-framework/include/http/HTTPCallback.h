@@ -169,7 +169,7 @@ class HttpStreamingCallback final : public HTTPUploadByteArrayInputCallback {
     byte_arrays_.emplace_back(std::move(vec));
     cv.notify_all();
 
-    return io::IoResult::fromSizeT(size);
+    return io::IoResult::from(size);
   }
 
   /**

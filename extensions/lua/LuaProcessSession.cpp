@@ -59,8 +59,8 @@ void LuaProcessSession::read(const std::shared_ptr<LuaScriptFlowFile> &script_fl
   }
 
   session_.read(flow_file, [&input_stream_callback](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
-    sol::function callback = input_stream_callback["process"];
-    return io::IoResult::fromI64(callback(input_stream_callback, std::make_shared<LuaInputStream>(input_stream)));
+    const int64_t callback_result = input_stream_callback["process"](input_stream_callback, std::make_shared<LuaInputStream>(input_stream));
+    return io::IoResult::from(callback_result);
   });
 }
 
@@ -73,8 +73,8 @@ void LuaProcessSession::write(const std::shared_ptr<LuaScriptFlowFile> &script_f
   }
 
   session_.write(flow_file, [&output_stream_callback](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
-    sol::function callback = output_stream_callback["process"];
-    return io::IoResult::fromI64(callback(output_stream_callback, std::make_shared<LuaOutputStream>(output_stream)));
+    const int64_t callback_result = output_stream_callback["process"](output_stream_callback, std::make_shared<LuaOutputStream>(output_stream));
+    return io::IoResult::from(callback_result);
   });
 }
 

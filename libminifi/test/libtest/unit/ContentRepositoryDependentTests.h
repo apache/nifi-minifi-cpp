@@ -46,7 +46,7 @@ struct ReadUntilItCan {
       if (minifi::io::isError(read_result))
         return minifi::io::IoResult::error();
       if (read_result == 0)
-        return minifi::io::IoResult::fromSizeT(bytes_read);
+        return minifi::io::IoResult::from(bytes_read);
       bytes_read += read_result;
       const auto char_view = gsl::make_span(buffer).subspan(0, read_result).as_span<const char>();
       value_.append(std::begin(char_view), std::end(char_view));
@@ -204,7 +204,7 @@ inline void testOkWrite(std::shared_ptr<core::ContentRepository> content_repo) {
 
   process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) -> minifi::io::IoResult {
     std::string str = "new_content";
-    return minifi::io::IoResult::fromSizeT(output_stream->write(as_bytes(std::span(str))));
+    return minifi::io::IoResult::from(output_stream->write(as_bytes(std::span(str))));
   });
 
   fixture.transferAndCommit(flow_file);

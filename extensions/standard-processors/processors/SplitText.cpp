@@ -331,9 +331,9 @@ void ReadCallback::mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowF
     });
     if (header_write_result < 0) {
       logger_->log_error("Failed to write header to fragment!");
-      return io::IoResult::fromI64(header_write_result);
+      return io::IoResult::from(header_write_result);
     }
-    return io::IoResult::fromI64(session_.read(fragment_flow, [&output_stream](const std::shared_ptr<io::InputStream>& fragment_input_stream) -> io::IoResult {
+    return io::IoResult::from(session_.read(fragment_flow, [&output_stream](const std::shared_ptr<io::InputStream>& fragment_input_stream) -> io::IoResult {
       return internal::pipe(*fragment_input_stream, *output_stream);
     }));
   });
@@ -362,7 +362,7 @@ io::IoResult ReadCallback::operator()(const std::shared_ptr<io::InputStream>& st
     header_fragment = fragment_generator.readHeaderFragment();
     if (!header_fragment) {
       error = header_fragment.error();
-      return io::IoResult::fromSizeT(flow_file_->getSize());
+      return io::IoResult::from(flow_file_->getSize());
     }
     header_flow = session_.clone(*flow_file_, gsl::narrow<int64_t>(header_fragment->fragment_offset), gsl::narrow<int64_t>(header_fragment->fragment_size));
     if (!header_flow) {
@@ -387,7 +387,7 @@ io::IoResult ReadCallback::operator()(const std::shared_ptr<io::InputStream>& st
     session_.remove(header_flow);
   }
   if (fragment_generator.getState() == detail::StreamReadState::EndOfStream) {
-    return io::IoResult::fromSizeT(flow_file_->getSize());
+    return io::IoResult::from(flow_file_->getSize());
   }
   return io::IoResult::error();
 }

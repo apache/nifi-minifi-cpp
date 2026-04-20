@@ -194,7 +194,7 @@ void DefragmentText::Buffer::append(core::ProcessSession& session, const gsl::no
     return;
   }
   auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, const io::InputStreamCallback& cb) -> io::IoResult {
-    return io::IoResult::fromI64(session.read(ff, cb));
+    return io::IoResult::from(session.read(ff, cb));
   };
   PayloadSerializer serializer(flowFileReader);
   session.add(buffered_flow_file_);

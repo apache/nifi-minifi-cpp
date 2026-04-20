@@ -232,7 +232,7 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
   }
 
   auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, const io::InputStreamCallback& cb) -> io::IoResult {
-    return io::IoResult::fromI64(session.read(ff, cb));
+    return io::IoResult::from(session.read(ff, cb));
   };
 
   const char* mimeType = nullptr;

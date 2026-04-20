@@ -90,7 +90,7 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
       }
 
       result_ = azure_blob_storage_.uploadBlob(params_, buffer);
-      return io::IoResult::fromSizeT(read_ret);
+      return io::IoResult::from(read_ret);
     }
 
     std::optional<storage::UploadBlobResult> getResult() const {

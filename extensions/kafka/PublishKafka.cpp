@@ -277,7 +277,7 @@ class ReadCallback {
       if (io::isError(readRet)) {
         status_ = -1;
         error_ = "Failed to read from stream";
-        return io::IoResult::fromSizeT(read_size_);
+        return io::IoResult::zero();
       }
       if (readRet == 0) { break; }
 
@@ -289,11 +289,11 @@ class ReadCallback {
         });
         status_ = -1;
         error_ = rd_kafka_err2str(err);
-        return io::IoResult::fromSizeT(read_size_);
+        return io::IoResult::zero();
       }
       read_size_ += gsl::narrow<uint32_t>(readRet);
     }
-    return io::IoResult::fromSizeT(read_size_);
+    return io::IoResult::from(gsl::narrow<uint64_t>(read_size_));
   }
 
   const uint64_t flow_size_ = 0;

@@ -44,13 +44,22 @@ class IoResult {
   static IoResult cancelled() { return IoResult(nonstd::make_unexpected(MINIFI_IO_CANCEL)); }
   static IoResult zero() { return IoResult(0U); }
 
-  static IoResult fromI64(int64_t i64_val) {
-    if (i64_val < 0) { return IoResult(nonstd::make_unexpected(static_cast<MinifiIoStatus>(i64_val))); }
-    return IoResult(gsl::narrow<uint64_t>(i64_val));
-  }
+  template <typename T>
+  static IoResult from(T val) {
+    static_assert(std::is_same_v<T, int64_t> || std::is_same_v<T, size_t> || std::is_same_v<T, uint64_t>,
+                  "IoResult::from() can only be called with uint64_t, int64_t or size_t");
 
-  static IoResult fromSizeT(const size_t val) {
-    if (isError(val)) { return IoResult::error(); }
+    if constexpr (std::is_same_v<T, int64_t>) {
+      if (val < 0) {
+        return IoResult(nonstd::make_unexpected(static_cast<MinifiIoStatus>(val)));
+      }
+    } else if constexpr (std::is_same_v<T, size_t>) {
+      if (isError(val)) {
+        return IoResult::error();
+      }
+    }
+
+    // Common return path for the valid cases of both types
     return IoResult(gsl::narrow<uint64_t>(val));
   }
 

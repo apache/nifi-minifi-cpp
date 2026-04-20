@@ -159,7 +159,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
       };
     }
     session.write(result, [&] (const auto& out) {
-      return io::IoResult::fromI64(session.read(flowFile, [&] (const auto& in) {
+      return io::IoResult::from(session.read(flowFile, [&] (const auto& in) {
         return transformer(in, out);
       }));
     });

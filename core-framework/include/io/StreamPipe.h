@@ -55,7 +55,7 @@ inline io::IoResult pipe(io::InputStream& src, io::OutputStream& dst) {
     }
     totalTransferred += transferred;
   }
-  return io::IoResult::fromSizeT(totalTransferred);
+  return io::IoResult::from(totalTransferred);
 }
 
 }  // namespace internal

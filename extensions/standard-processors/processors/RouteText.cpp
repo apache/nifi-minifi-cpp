@@ -82,7 +82,7 @@ class RouteText::ReadCallback {
     switch (segmentation_) {
       case route_text::Segmentation::FULL_TEXT: {
         fn_({content, 0});
-        return io::IoResult::fromSizeT(content.length());
+        return io::IoResult::from(content.length());
       }
       case route_text::Segmentation::PER_LINE: {
         // 1-based index as in nifi
@@ -102,7 +102,7 @@ class RouteText::ReadCallback {
           curr = next_line;
           ++segment_idx;
         }
-        return io::IoResult::fromSizeT(content.length());
+        return io::IoResult::from(content.length());
       }
     }
     throw Exception(PROCESSOR_EXCEPTION, "Unknown segmentation strategy");

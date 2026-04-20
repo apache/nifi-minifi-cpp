@@ -218,7 +218,7 @@ io::IoResult UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_pt
     archive_entry_clear(entry.get());
   }
 
-  return io::IoResult::fromI64(nlen);
+  return io::IoResult::from(nlen);
 }
 
 REGISTER_RESOURCE(UnfocusArchiveEntry, Processor);
