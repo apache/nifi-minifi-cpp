@@ -362,7 +362,8 @@ class WindowsContainer(ContainerProtocol):
         win_path = self._normalize_path(directory_path)
         ps_script = (
             f"if ((Test-Path -LiteralPath '{win_path}' -PathType Container) "
-            f"-and (Get-ChildItem -LiteralPath '{win_path}' -Force | Select-Object -First 1)) "
+            f"-and ((Get-ChildItem -LiteralPath '{win_path}' -Force | "
+            f"        Select-Object -First 1 | Measure-Object).Count -gt 0)) "
             f"{{ exit 0 }} else {{ exit 1 }}"
         )
 
