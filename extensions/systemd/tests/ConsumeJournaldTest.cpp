@@ -141,11 +141,7 @@ struct TestLibWrapper final : libwrapper::LibWrapper {
 }  // namespace
 
 namespace org::apache::nifi::minifi::extensions::systemd {
-struct ConsumeJournaldTestAccessor {
-  FIELD_ACCESSOR(state_manager_);
-};
 }  // namespace org::apache::nifi::minifi::extensions::systemd
-using org::apache::nifi::minifi::extensions::systemd::ConsumeJournaldTestAccessor;
 
 TEST_CASE("ConsumeJournald", "[consumejournald]") {
   TestController test_controller;
@@ -164,8 +160,8 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
       minifi::core::ProcessorMetadata{utils::Identifier{}, "ConsumeJournald", core::logging::LoggerFactory<ConsumeJournald>::getLogger()},
       std::move(libwrapper)), "ConsumeJournald");
   REQUIRE(consume_journald->setProperty(ConsumeJournald::TimestampFormat.name, "ISO8601"));
-  const auto get_cursor_position = [&consume_journald]() -> std::string {
-    return ConsumeJournaldTestAccessor::get_state_manager_(consume_journald.get())->get()->at("cursor");
+  const auto get_cursor_position = [&plan, &consume_journald]() -> std::string {
+    return plan->getProcessContextForProcessor(consume_journald)->createStateManager()->get()->at("cursor");
   };
 
   SECTION("defaults") {

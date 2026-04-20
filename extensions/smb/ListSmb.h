@@ -142,7 +142,6 @@ class ListSmb : public core::ProcessorImpl {
 
   std::filesystem::path input_directory_;
   std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service_;
-  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
   bool recurse_subdirectories_ = true;
   utils::FileFilter file_filter_{};
 };

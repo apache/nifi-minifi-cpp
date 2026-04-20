@@ -144,7 +144,6 @@ class ConsumeJournald final : public core::ProcessorImpl {
   std::string getCursor() const;
 
   std::atomic<bool> running_{false};
-  core::StateManager* state_manager_ = nullptr;
   std::unique_ptr<libwrapper::LibWrapper> libwrapper_;
   std::unique_ptr<utils::FifoExecutor> worker_;
   std::unique_ptr<libwrapper::Journal> journal_;

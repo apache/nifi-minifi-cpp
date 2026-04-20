@@ -122,9 +122,8 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   bool loadMaxValuesFromStoredState(const std::unordered_map<std::string, std::string>& state);
   void loadMaxValuesFromDynamicProperties(core::ProcessContext& context);
 
-  bool saveState();
+  bool saveState(core::ProcessContext& context);
 
-  core::StateManager* state_manager_{};
   std::string table_name_;
   std::unordered_set<sql::SQLColumnIdentifier> return_columns_;
   std::string queried_columns_;

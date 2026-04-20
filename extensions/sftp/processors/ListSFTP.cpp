@@ -73,11 +73,6 @@ ListSFTP::~ListSFTP() = default;
 void ListSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   parseCommonPropertiesOnSchedule(context);
 
-  state_manager_ = context.getStateManager();
-  if (state_manager_ == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-  }
-
   listing_strategy_ = utils::parseProperty(context, ListingStrategy);
   if (!last_listing_strategy_.empty() && last_listing_strategy_ != listing_strategy_) {
     invalidateCache();
@@ -316,7 +311,7 @@ ListSFTP::ListedEntity::ListedEntity(uint64_t timestamp_, uint64_t size_)
     , size(size_) {
 }
 
-bool ListSFTP::persistTrackingTimestampsCache(core::ProcessContext& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::persistTrackingTimestampsCache(core::StateManager& state_manager, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::unordered_map<std::string, std::string> state;
   state["listing_strategy"] = LISTING_STRATEGY_TRACKING_TIMESTAMPS;
   state["hostname"] = hostname;
@@ -329,10 +324,10 @@ bool ListSFTP::persistTrackingTimestampsCache(core::ProcessContext& /*context*/,
     state["id." + std::to_string(i)] = identifier;
     ++i;
   }
-  return state_manager_->set(state);
+  return state_manager.set(state);
 }
 
-bool ListSFTP::updateFromTrackingTimestampsCache(core::ProcessContext& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::updateFromTrackingTimestampsCache(core::StateManager& state_manager, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;
@@ -342,7 +337,7 @@ bool ListSFTP::updateFromTrackingTimestampsCache(core::ProcessContext& /*context
   std::set<std::string> state_ids;
 
   std::unordered_map<std::string, std::string> state_map;
-  if (!state_manager_->get(state_map)) {
+  if (!state_manager.get(state_map)) {
     logger_->log_info("Found no stored state");
     return false;
   }
@@ -421,11 +416,18 @@ void ListSFTP::listByTrackingTimestamps(
     const std::string& username,
     const std::string& remote_path,
     std::vector<Child> files) {
+  auto* state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
+    context.yield();
+    return;
+  }
+
   auto min_timestamp_to_list = last_listed_latest_entry_timestamp_;
 
   /* Load state from cache file if needed */
   if (!already_loaded_from_cache_) {
-    if (updateFromTrackingTimestampsCache(context, hostname, username, remote_path)) {
+    if (updateFromTrackingTimestampsCache(*state_manager, hostname, username, remote_path)) {
       logger_->log_debug("Successfully loaded state");
     } else {
       logger_->log_debug("Failed to load state");
@@ -564,7 +566,7 @@ void ListSFTP::listByTrackingTimestamps(
 
     if (latest_listed_entry_timestamp_this_cycle != last_listed_latest_entry_timestamp_ || processed_new_files) {
       last_listed_latest_entry_timestamp_ = latest_listed_entry_timestamp_this_cycle;
-      persistTrackingTimestampsCache(context, hostname, username, remote_path);
+      persistTrackingTimestampsCache(*state_manager, hostname, username, remote_path);
     }
   } else {
     logger_->log_debug("There are no files to list. Yielding.");
@@ -573,7 +575,7 @@ void ListSFTP::listByTrackingTimestamps(
   }
 }
 
-bool ListSFTP::persistTrackingEntitiesCache(core::ProcessContext& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::persistTrackingEntitiesCache(core::StateManager& state_manager, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::unordered_map<std::string, std::string> state;
   state["listing_strategy"] = listing_strategy_;
   state["hostname"] = hostname;
@@ -586,10 +588,10 @@ bool ListSFTP::persistTrackingEntitiesCache(core::ProcessContext& /*context*/, c
     state["entity." + std::to_string(i) + ".size"] = std::to_string(already_listed_entity.second.size);
     ++i;
   }
-  return state_manager_->set(state);
+  return state_manager.set(state);
 }
 
-bool ListSFTP::updateFromTrackingEntitiesCache(core::ProcessContext& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::updateFromTrackingEntitiesCache(core::StateManager& state_manager, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;
@@ -597,7 +599,7 @@ bool ListSFTP::updateFromTrackingEntitiesCache(core::ProcessContext& /*context*/
   std::unordered_map<std::string, ListedEntity> new_already_listed_entities;
 
   std::unordered_map<std::string, std::string> state_map;
-  if (!state_manager_->get(state_map)) {
+  if (!state_manager.get(state_map)) {
     logger_->log_debug("Failed to get state from StateManager");
     return false;
   }
@@ -677,9 +679,10 @@ void ListSFTP::listByTrackingEntities(
     const std::string& remote_path,
     std::chrono::milliseconds entity_tracking_time_window,
     std::vector<Child> files) {
+  auto* state_manager = context.getStateManager();
   /* Load state from cache file if needed */
   if (!already_loaded_from_cache_) {
-    if (updateFromTrackingEntitiesCache(context, hostname, username, remote_path)) {
+    if (updateFromTrackingEntitiesCache(*state_manager, hostname, username, remote_path)) {
       logger_->log_debug("Successfully loaded state");
       initial_listing_complete_ = true;
     } else {
@@ -772,7 +775,7 @@ void ListSFTP::listByTrackingEntities(
 
   initial_listing_complete_ = true;
 
-  persistTrackingEntitiesCache(context, hostname, username, remote_path);
+  persistTrackingEntitiesCache(*state_manager, hostname, username, remote_path);
 }
 
 void ListSFTP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {

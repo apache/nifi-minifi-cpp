@@ -41,12 +41,12 @@ class StandardProcessorInfo : public ProcessorInfo {
 }  // namespace
 
 ProcessContextImpl::ProcessContextImpl(
-    Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
+    Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::StateStorage>& state_storage, const std::shared_ptr<core::Repository>& repo,
     const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<core::ContentRepository>& content_repo)
     : VariableRegistryImpl(static_cast<std::shared_ptr<Configure>>(minifi::Configure::create())),
       logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
       controller_service_provider_(controller_service_provider),
-      state_storage_(getStateStorage(logger_, controller_service_provider_, nullptr)),
+      state_storage_(state_storage),
       repo_(repo),
       flow_repo_(flow_repo),
       content_repo_(content_repo),
@@ -55,13 +55,13 @@ ProcessContextImpl::ProcessContextImpl(
       info_(std::make_unique<StandardProcessorInfo>(processor)) {}
 
 ProcessContextImpl::ProcessContextImpl(
-    Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::Repository>& repo,
+    Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::StateStorage>& state_storage, const std::shared_ptr<core::Repository>& repo,
     const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<minifi::Configure>& configuration,
     const std::shared_ptr<core::ContentRepository>& content_repo)
     : VariableRegistryImpl(configuration),
       logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
       controller_service_provider_(controller_service_provider),
-      state_storage_(getStateStorage(logger_, controller_service_provider_, configuration)),
+      state_storage_(state_storage),
       repo_(repo),
       flow_repo_(flow_repo),
       content_repo_(content_repo),
@@ -166,10 +166,17 @@ bool ProcessContextImpl::isRunning() const {
   return getProcessor().isRunning();
 }
 
-StateManager* ProcessContextImpl::getStateManager() {
+std::unique_ptr<StateManager> ProcessContextImpl::createStateManager() {
   if (state_storage_ == nullptr) { return nullptr; }
-  if (!state_manager_) { state_manager_ = state_storage_->getStateManager(processor_); }
-  return state_manager_.get();
+  return state_storage_->createStateManager(processor_);
+}
+
+StateManager* ProcessContextImpl::getStateManager() {
+  return session_state_manager_.get();
+}
+
+void ProcessContextImpl::setSessionStateManager(std::unique_ptr<StateManager> state_manager) {
+  session_state_manager_ = std::move(state_manager);
 }
 
 bool ProcessContextImpl::hasIncomingConnections() const {

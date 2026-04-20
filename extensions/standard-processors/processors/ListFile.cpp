@@ -33,12 +33,6 @@ void ListFile::initialize() {
 }
 
 void ListFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  auto state_manager = context.getStateManager();
-  if (state_manager == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-  }
-  state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
-
   input_directory_ = utils::parseProperty(context, InputDirectory);
 
   recurse_subdirectories_ = utils::parseBoolProperty(context, RecurseSubdirectories);
@@ -96,7 +90,14 @@ std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& s
 }
 
 void ListFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  auto stored_listing_state = state_manager_->getCurrentState();
+  auto* state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
+    context.yield();
+    return;
+  }
+  minifi::utils::ListingStateManager listing_state_manager(*state_manager);
+  auto stored_listing_state = listing_state_manager.getCurrentState();
   auto latest_listing_state = stored_listing_state;
   uint32_t files_listed = 0;
 
@@ -114,7 +115,7 @@ void ListFile::onTrigger(core::ProcessContext& context, core::ProcessSession& se
   };
   utils::file::list_dir(input_directory_, process_files, logger_, recurse_subdirectories_);
 
-  state_manager_->storeState(latest_listing_state);
+  listing_state_manager.storeState(latest_listing_state);
 
   if (files_listed == 0) {
     logger_->log_debug("No new files were found in input directory '{}' to list", input_directory_);

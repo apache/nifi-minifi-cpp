@@ -220,11 +220,10 @@ class ConsumeWindowsEventLog : public core::ProcessorImpl {
   void substituteXMLPercentageItems(pugi::xml_document& doc);
   std::function<std::string(const std::string&)> userIdToUsernameFunction() const;
   nonstd::expected<std::string, std::string> renderEventAsXml(EVT_HANDLE event_handle);
-  bool commitAndSaveBookmark(const std::wstring& bookmarkXml, core::ProcessContext& context, core::ProcessSession& session);
+  bool commitAndSaveBookmark(const std::wstring& bookmarkXml, core::ProcessContext& context, core::ProcessSession& session, core::StateManager* state_manager);
   std::tuple<size_t, std::wstring> processEventLogs(core::ProcessSession& session, EVT_HANDLE event_query_results);
-  std::unique_ptr<wel::Bookmark> createBookmark(const core::ProcessContext& context) const;
+  std::unique_ptr<wel::Bookmark> createBookmark(const core::ProcessContext& context, core::StateManager* state_manager) const;
 
-  core::StateManager* state_manager_{nullptr};
   wel::HeaderNames header_names_;
   std::optional<std::string> header_delimiter_;
   wel::EventPath path_;

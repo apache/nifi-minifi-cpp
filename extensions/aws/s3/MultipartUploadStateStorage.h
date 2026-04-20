@@ -55,8 +55,8 @@ struct MultipartUploadState {
 
 class MultipartUploadStateStorage {
  public:
-  explicit MultipartUploadStateStorage(gsl::not_null<core::StateManager*> state_manager)
-    : state_manager_(state_manager) {
+  explicit MultipartUploadStateStorage(core::StateManager& state_manager)
+    : state_manager_(&state_manager) {
   }
 
   void storeState(const std::string& bucket, const std::string& key, const MultipartUploadState& state);

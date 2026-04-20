@@ -65,7 +65,7 @@ TEST_CASE("Parse enum property") {
     self.setSupportedProperties(std::to_array<core::PropertyReference>({prop}));
   };
   proc->initialize();
-  core::ProcessContextImpl context(*proc, nullptr, nullptr, nullptr, nullptr, nullptr);
+  core::ProcessContextImpl context(*proc, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   SECTION("Valid") {
     REQUIRE(proc->setProperty(prop.name, "B"));
     const auto val = utils::parseEnumProperty<TestEnum>(context, prop);
@@ -138,7 +138,7 @@ TEST_CASE("Parse controller service property") {
   };
   processor->initialize();
   auto configuration = minifi::Configure::create();
-  core::ProcessContextImpl context(*processor, &test_controller_service_provider, nullptr, nullptr, configuration, nullptr);
+  core::ProcessContextImpl context(*processor, &test_controller_service_provider, nullptr, nullptr, nullptr, configuration, nullptr);
 
   SECTION("Required controller service property") {
     SECTION("... is valid") {

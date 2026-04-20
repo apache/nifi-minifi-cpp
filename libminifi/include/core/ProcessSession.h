@@ -185,7 +185,7 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<provenance::ProvenanceReporter> provenance_report_;
   std::shared_ptr<ContentSession> content_session_;
-  StateManager* stateManager_;
+  StateManager* stateManager_ = nullptr;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 

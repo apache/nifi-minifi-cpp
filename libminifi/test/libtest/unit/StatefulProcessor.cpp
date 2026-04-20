@@ -21,25 +21,27 @@
 #include "minifi-cpp/Exception.h"
 #include "core/Resource.h"
 #include "minifi-cpp/core/ProcessContext.h"
+#include "core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 void StatefulProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::lock_guard<std::mutex> lock(mutex_);
-  state_manager_ = context.getStateManager();
-  if (state_manager_ == nullptr) {
+  auto temp_state_manager = context.createStateManager();
+  if (temp_state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
   if (on_schedule_hook_) {
-    on_schedule_hook_(*state_manager_);
+    on_schedule_hook_(*temp_state_manager);
   }
 }
 
-void StatefulProcessor::onTrigger(core::ProcessContext&, core::ProcessSession&) {
+void StatefulProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession&) {
   std::lock_guard<std::mutex> lock(mutex_);
+  auto state_manager = context.getStateManager();
   if (on_trigger_hook_index_ < on_trigger_hooks_.size()) {
-    on_trigger_hooks_[on_trigger_hook_index_++](*state_manager_);
+    on_trigger_hooks_[on_trigger_hook_index_++](*state_manager);
   }
 }
 

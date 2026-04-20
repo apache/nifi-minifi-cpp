@@ -90,7 +90,7 @@ class SchedulingAgentTestFixture {
 
   std::shared_ptr<core::Processor> count_proc_ = minifi::test::utils::make_processor<CountOnTriggersProcessor>("count_proc");
   CountOnTriggersProcessor* count_proc_impl_ = &count_proc_->getImpl<CountOnTriggersProcessor>();
-  std::shared_ptr<core::ProcessContext> context_ = std::make_shared<core::ProcessContextImpl>(*count_proc_, nullptr, test_repo_, test_repo_, content_repo_);
+  std::shared_ptr<core::ProcessContext> context_ = std::make_shared<core::ProcessContextImpl>(*count_proc_, nullptr, nullptr, test_repo_, test_repo_, content_repo_);
   std::shared_ptr<core::ProcessSessionFactory> factory_ = std::make_shared<core::ProcessSessionFactoryImpl>(context_);
 };
 #ifdef __GNUC__

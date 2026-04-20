@@ -148,7 +148,6 @@ class ListFile : public core::ProcessorImpl {
   std::shared_ptr<core::FlowFile> createFlowFile(core::ProcessSession& session, const utils::ListedFile& listed_file);
 
   std::filesystem::path input_directory_;
-  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
   bool recurse_subdirectories_ = true;
   utils::FileFilter file_filter_{};
 };
