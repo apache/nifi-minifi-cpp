@@ -486,9 +486,9 @@ class LinuxContainer(ContainerProtocol):
         return False
 
     def get_memory_usage(self) -> int | None:
-        exit_code, output = self.exec_run(["awk", "/VmRSS/ { printf \"%d\\n\", $2 }", "/proc/1/status"])
+        exit_code, output = self.exec_run(["awk", "/VmRSS.*kB/ { printf \"%d\", $2 }", "/proc/1/status"])
         if exit_code != 0:
             return None
-        memory_usage_in_bytes = int(output.strip()) * 1024
+        memory_usage_in_bytes = int(output) * 1024
         logging.info(f"{self.container_name} memory usage: {memory_usage_in_bytes} bytes")
         return memory_usage_in_bytes
