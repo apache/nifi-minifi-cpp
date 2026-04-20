@@ -48,7 +48,6 @@ def make_self_signed_cert(common_name: str) -> tuple[Certificate, RSAPrivateKey]
         .add_extension(x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False)
         .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
         .sign(key, hashes.SHA256()))
-                                                                                                     critical=True, ).sign(key, hashes.SHA256())
 
     return cert, key
 
