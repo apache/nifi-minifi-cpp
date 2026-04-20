@@ -181,7 +181,7 @@ io::IoResult FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<i
 
     if (res < ARCHIVE_OK) {  // TODO(MINIFICPP-2761)
       logger_->log_error("FocusArchiveEntry can't read header due to archive error: {}", archive_error_string(input_archive.get()));
-      return io::IoResult::zero();
+      return io::IoResult::from(nlen);
     }
 
     auto entryName = archive_entry_pathname(entry);
