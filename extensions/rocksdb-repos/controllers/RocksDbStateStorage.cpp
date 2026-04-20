@@ -134,7 +134,7 @@ bool RocksDbStateStorage::get(const std::string& key, std::string& value) {
     if (status.getState() != nullptr) {
       logger_->log_error("Failed to Get key {} from RocksDB database at {}, error: {}", key.c_str(), directory_.c_str(), status.getState());
     } else {
-      logger_->log_info("Failed to Get key {} from RocksDB database at {} (it may not have been initialized yet)", key.c_str(), directory_.c_str());
+      logger_->log_debug("Failed to Get key {} from RocksDB database at {} (it may not have been initialized yet)", key.c_str(), directory_.c_str());
     }
     return false;
   }
