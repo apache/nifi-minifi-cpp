@@ -234,8 +234,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         endif()
         ExternalProject_Add(
                 openssl-fips-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.0.9/openssl-3.0.9.tar.gz
-                URL_HASH "SHA256=eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.1.2/openssl-3.1.2.tar.gz
+                URL_HASH "SHA256=a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-fips-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND perl Configure "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} ${OPENSSL_WINDOWS_COMPILE_FLAGS}" ${OPENSSL_SHARED_FLAG} ${OPENSSL_FIPS_EXTRA_FLAGS} enable-fips "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
@@ -247,8 +247,8 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     else()
         ExternalProject_Add(
             openssl-fips-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.0.9/openssl-3.0.9.tar.gz
-                URL_HASH "SHA256=eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.1.2/openssl-3.1.2.tar.gz
+                URL_HASH "SHA256=a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-fips-src"
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND ./Configure "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} ${OPENSSL_FIPS_EXTRA_FLAGS}  "--prefix=${OPENSSL_FIPS_BIN_DIR}" "--openssldir=${OPENSSL_FIPS_BIN_DIR}"
