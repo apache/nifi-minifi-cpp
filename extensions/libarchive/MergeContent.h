@@ -100,11 +100,11 @@ class BinaryConcatenationMerge : public MergeBin {
           }
           write_size_sum += write_result;
         }
-        const auto len = serializer_.serialize(flow, stream);
-        if (!len) {
-          return len;
+        const auto serialization_result = serializer_.serialize(flow, stream);
+        if (!serialization_result) {
+          return serialization_result;
         }
-        write_size_sum += gsl::narrow<size_t>(*len);
+        write_size_sum += gsl::narrow<size_t>(*serialization_result);
         isFirst = false;
       }
       if (!footer_.empty()) {
