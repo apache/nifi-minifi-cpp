@@ -24,6 +24,7 @@
 #include "core/ProcessorMetrics.h"
 #include "core/extension/ExtensionManager.h"
 #include "minifi-cpp/Exception.h"
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/ClassLoader.h"
 #include "minifi-cpp/core/ProcessContext.h"
@@ -35,8 +36,8 @@
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/state/PublishedMetricProvider.h"
-#include "utils/CProcessor.h"
 #include "utils/CControllerService.h"
+#include "utils/CProcessor.h"
 #include "utils/PropertyErrors.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -578,5 +579,47 @@ MinifiStatus MinifiProcessContextGetControllerService(
   return MINIFI_STATUS_VALIDATION_FAILED;
 }
 
+
+MinifiStatus MinifiProcessContextGetProxyData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
+    void (*cb)(void* user_ctx, const MinifiProxyData* proxy_data), void* user_ctx) {
+  gsl_Assert(process_context != MINIFI_NULL);
+  const auto context = reinterpret_cast<minifi::core::ProcessContext*>(process_context);
+  const auto name_str = std::string{toStringView(controller_service_name)};
+  const auto service_shared_ptr = context->getControllerService(name_str, context->getProcessorInfo().getUUID());
+  if (!service_shared_ptr) { return MINIFI_STATUS_VALIDATION_FAILED; }
+  if (const auto proxy_service = dynamic_cast<minifi::controllers::ProxyConfigurationServiceInterface*>(service_shared_ptr.get())) {
+    const std::string hostname = proxy_service->getHost();
+    const uint16_t port = proxy_service->getPort();
+    const auto basic_auth_data = proxy_service->getProxyCredentials();
+    MinifiStringView username_holder = basic_auth_data ? minifiStringView(basic_auth_data->username) : MinifiStringView{};
+    MinifiStringView password_holder = basic_auth_data ? minifiStringView(basic_auth_data->password) : MinifiStringView{};
+    MinifiProxyType proxy_type;
+    switch (proxy_service->getProxyType()) {
+      case minifi::controllers::ProxyType::DIRECT: {
+        proxy_type = MinifiProxyType::DIRECT;
+        break;
+      }
+      case minifi::controllers::ProxyType::HTTP: {
+        proxy_type = MinifiProxyType::HTTP;
+        break;
+      }
+      default: {
+        throw std::logic_error("Unknown proxy type");
+      }
+    }
+
+    MinifiProxyData proxy_data{
+        .version = 1,
+        .hostname = minifiStringView(hostname),
+        .port = port,
+        .username = basic_auth_data ? &username_holder : nullptr,
+        .password = basic_auth_data ? &password_holder : nullptr,
+        .proxy_type = proxy_type,
+    };
+    cb(user_ctx, &proxy_data);
+    return MINIFI_STATUS_SUCCESS;
+  }
+  return MINIFI_STATUS_VALIDATION_FAILED;
+}
 
 }  // extern "C"

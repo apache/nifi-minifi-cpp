@@ -264,6 +264,23 @@ MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceCo
     void(*cb)(void* user_ctx, MinifiStringView property_value),
     void* user_ctx);
 
+typedef enum MinifiProxyType : uint8_t {
+  DIRECT,
+  HTTP
+} MinifiProxyType;
+
+struct MinifiProxyData {
+  uint8_t version;
+  MinifiStringView hostname;
+  uint16_t port;
+  MinifiStringView* username;
+  MinifiStringView* password;
+  MinifiProxyType proxy_type;
+};
+
+MinifiStatus MinifiProcessContextGetProxyData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
+  void (*cb)(void* user_ctx, const MinifiProxyData* proxy_data), void* user_ctx);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
