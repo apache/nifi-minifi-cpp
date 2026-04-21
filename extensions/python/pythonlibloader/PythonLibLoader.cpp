@@ -98,21 +98,19 @@ class PythonLibLoader {
   std::shared_ptr<minifi::core::logging::Logger> logger_ = minifi::core::logging::LoggerFactory<PythonLibLoader>::getLogger();
 };
 
-extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* config) {
+extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
   static PythonLibLoader python_lib_loader([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
-    MinifiConfigGet(config, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
+    MinifiConfigGet(extension_context, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
       *static_cast<std::optional<std::string>*>(user_data) = std::string{value.data, value.length};
     }, &result);
     return result;
   });
-  MinifiExtensionCreateInfo ext_create_info{
+  MinifiExtensionDefinition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
-    .user_data = nullptr,
-    .processors_count = 0,
-    .processors_ptr = nullptr
+    .user_data = nullptr
   };
-  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
+  minifi::utils::MinifiRegisterCppExtension(extension_context, &extension_definition);
 }

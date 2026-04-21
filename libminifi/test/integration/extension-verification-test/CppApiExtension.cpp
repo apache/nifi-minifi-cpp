@@ -24,14 +24,12 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
-  MinifiExtensionCreateInfo ext_create_info{
+extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
+  MinifiExtensionDefinition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView("1.0.0"),
     .deinit = nullptr,
-    .user_data = nullptr,
-    .processors_count = 0,
-    .processors_ptr = nullptr
+    .user_data = nullptr
   };
-  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
+  minifi::utils::MinifiRegisterCppExtension(extension_context, &extension_definition);
 }

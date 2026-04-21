@@ -20,27 +20,36 @@ To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR sel
 Extensions are dynamic libraries loaded at runtime by the agent.
 
 ## C extensions
-You can build a shared library depending on the C capabilities of the agent as given in the `minifi-c.h` file.
-For the shared library to be considered a valid extension, it has to have a global symbol with the name `MinifiCApiVersion`
-with its value as a null terminated string (`const char*`) of the macro `MINIFI_API_VERSION` from `minifi-c.h`.
+You can build shared libraries using the API defined in `minifi-c.h`
+For the shared library to be considered a valid extension, it must export a global symbol with the name `MinifiApiVersion`
+with its value equal to the uint32_t constant `MINIFI_API_VERSION` from `minifi-c.h`.
 
-Moreover the actual resource registration (processors/controller services) has to happen during the `MinifiInitExtension` call.
+### Resource Lifetime
+
+Unless otherwise specified, the following lifetime rules apply to all functions called by the agent (e.g., `MinifiInitExtension`, `MinifiProcessorCallbacks::onTrigger`, or other callbacks):
+
+* Arguments: The lifetime of any resource provided as a function argument is limited to the duration of that function call.
+
+* Created Resources: The lifetime of resources created within these functions (e.g., a handle returned by `MinifiProcessSessionGet` inside `MinifiProcessorCallbacks::onTrigger`)
+is limited to the scope of the innermost callback.
+(the return value of `MinifiRegisterExtension` is only valid during the execution of `MinifiInitExtension`).
+
+Because of these scoping rules, all processor and controller service registrations must occur within the `MinifiInitExtension` call.
 One possible example of this is:
 
 ```C++
-extern "C" const char* const MinifiApiVersion = MINIFI_API_VERSION;
+extern "C" const uint32_t MinifiApiVersion = MINIFI_API_VERSION;
 
-extern "C" void MinifiInitExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+extern "C" void MinifiInitExtension(MinifiExtensionContext* extension_context) {
+  MinifiExtensionDefinition extension_definition{
+    .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
+    .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
+    .deinit = nullptr,
+    .user_data = nullptr
+  };
+  auto* extension = MinifiRegisterExtension(extension_context, &extension_definition);
   minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& description) {
-    MinifiExtensionCreateInfo ext_create_info{
-      .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
-      .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
-      .deinit = nullptr,
-      .user_data = nullptr,
-      .processors_count = 1,
-      .processors_ptr = &description,
-    };
-    MinifiCreateExtension(extension, &ext_create_info);
+    MinifiRegisterProcessor(extension, &description);
   });
 }
 ```
@@ -64,15 +73,15 @@ REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
 Some extensions (e.g. `OpenCVExtension`) require initialization before use.
-You need to define an `MinifiInitCppExtension` function of type `MinifiExtension*(MinifiConfig*)` to be called.
+You need to define an `MinifiInitCppExtension` function of type `MinifiExtension*(MinifiExtensionContext*)` to be called.
 
 ```C++
-extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig* /*config*/) {
+extern "C" void MinifiInitCppExtension(MinifiExtensionContext* /*extension_context*/) {
   const auto success = org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
   if (!success) {
     return nullptr;
   }
-  MinifiExtensionCreateInfo ext_create_info{
+  MinifiExtensionDefinition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
@@ -80,7 +89,7 @@ extern "C" void MinifiInitCppExtension(MinifiExtension* extension, MinifiConfig*
     .processors_count = 0,
     .processors_ptr = nullptr
   };
-  minifi::utils::MinifiCreateCppExtension(extension, &ext_create_info);
+  minifi::utils::MinifiRegisterCppExtension(extension, &extension_definition);
 }
 ```
 

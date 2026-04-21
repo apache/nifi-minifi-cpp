@@ -37,12 +37,12 @@ extern "C" {
 #define MINIFI_NULL nullptr
 #define MINIFI_OWNED
 
-#ifndef MINIFI_CREATE_EXTENSION_FN
-#define MINIFI_CREATE_EXTENSION_FN MinifiCreateExtension
+#ifndef MINIFI_REGISTER_EXTENSION_FN
+#define MINIFI_REGISTER_EXTENSION_FN MinifiRegisterExtension
 #endif
 
 enum : uint32_t {
-  MINIFI_API_VERSION = 1
+  MINIFI_API_VERSION = 2
 };
 
 typedef bool MinifiBool;
@@ -95,8 +95,8 @@ typedef struct MinifiProcessContext MinifiProcessContext;
 typedef struct MinifiProcessSession MinifiProcessSession;
 typedef struct MinifiInputStream MinifiInputStream;
 typedef struct MinifiOutputStream MinifiOutputStream;
-typedef struct MinifiConfig MinifiConfig;
 typedef struct MinifiExtension MinifiExtension;
+typedef struct MinifiExtensionContext MinifiExtensionContext;
 typedef struct MinifiPublishedMetrics MinifiPublishedMetrics;
 typedef struct MinifiAgent MinifiAgent;
 
@@ -183,16 +183,19 @@ typedef struct MinifiProcessorClassDefinition {
   MinifiProcessorCallbacks callbacks;
 } MinifiProcessorClassDefinition;
 
-typedef struct MinifiExtensionCreateInfo {
+typedef struct MinifiExtensionDefinition {
   MinifiStringView name;
   MinifiStringView version;
   void(*deinit)(void* user_data);
   void* user_data;
-  size_t processors_count;
-  const MinifiProcessorClassDefinition* processors_ptr;
-} MinifiExtensionCreateInfo;
+} MinifiExtensionDefinition;
 
-MinifiStatus MINIFI_CREATE_EXTENSION_FN(MinifiExtension* extension, const MinifiExtensionCreateInfo* create_info);
+//  When directly linking against the agent library (legacy c++ extension) this declares a build identifier dependent function
+//  which prevents loading extensions from different builds (e.g. the agent provides MinifiRegisterCppExtension_123 but the extension
+//  expects MinifiRegisterCppExtension_567). Otherwise, it declares MinifiRegisterExtension.
+MinifiExtension* MINIFI_REGISTER_EXTENSION_FN(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition);
+
+MinifiStatus MinifiRegisterProcessor(MinifiExtension* extension, const MinifiProcessorClassDefinition* processor);
 
 MINIFI_OWNED MinifiPublishedMetrics* MinifiPublishedMetricsCreate(size_t count, const MinifiStringView* metric_names, const double* metric_values);
 
@@ -214,7 +217,7 @@ MinifiStatus MinifiProcessSessionRemove(MinifiProcessSession* session, MINIFI_OW
 MinifiStatus MinifiProcessSessionRead(MinifiProcessSession*, MinifiFlowFile*, int64_t(*cb)(void* user_ctx, MinifiInputStream*), void* user_ctx);
 MinifiStatus MinifiProcessSessionWrite(MinifiProcessSession*, MinifiFlowFile*, int64_t(*cb)(void* user_ctx, MinifiOutputStream*), void* user_ctx);
 
-void MinifiConfigGet(MinifiConfig* config, MinifiStringView config_key, void(*cb)(void* user_ctx, MinifiStringView config_value), void* user_ctx);
+void MinifiConfigGet(MinifiExtensionContext* extension_context, MinifiStringView config_key, void(*cb)(void* user_ctx, MinifiStringView config_value), void* user_ctx);
 
 size_t MinifiInputStreamSize(MinifiInputStream*);
 

@@ -18,8 +18,10 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "minifi-c/minifi-c.h"
@@ -40,6 +42,11 @@ class Extension {
     void* user_data;
   };
 
+  struct Context {
+    std::shared_ptr<minifi::Configure> config;
+    std::function<Extension*(Info)> create;
+  };
+
   Extension(std::string name, std::filesystem::path library_path);
 
   Extension(const Extension&) = delete;
@@ -51,7 +58,9 @@ class Extension {
 
   bool initialize(const std::shared_ptr<minifi::Configure>& configure);
 
-  bool setInfo(Info info);
+  std::optional<Info> getInfo() const {
+    return info_;
+  }
 
  private:
 #ifdef WIN32

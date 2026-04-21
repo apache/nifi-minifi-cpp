@@ -1,4 +1,4 @@
 LIBRARY ExtensionVerificationTests.exe
 EXPORTS
-  MinifiCreateCppExtension_NonMatchingBuildId
-  MinifiCreateCppExtension_MatchingBuildId
+  MinifiRegisterCppExtension_NonMatchingBuildId
+  MinifiRegisterCppExtension_MatchingBuildId

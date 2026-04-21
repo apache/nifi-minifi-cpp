@@ -18,7 +18,7 @@
 
 #define CUSTOM_EXTENSION_INIT
 
-#undef MINIFI_CREATE_EXTENSION_FN
+#undef MINIFI_REGISTER_EXTENSION_FN
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
@@ -28,8 +28,8 @@
 
 
 extern "C" {
-MinifiStatus MinifiCreateCppExtension_MatchingBuildId(MinifiExtension* extension, const MinifiExtensionCreateInfo* extension_create_info) {
-  return MinifiCreateExtension(extension, extension_create_info);
+MinifiExtension* MinifiRegisterCppExtension_MatchingBuildId(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition) {
+  return MinifiRegisterExtension(extension_context, extension_definition);
 }
 }  // extern "C"
 
@@ -93,7 +93,7 @@ TEST_CASE("Can't load c-api extensions with no MinifiInitExtension function") {
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load as c extension 'test-extension-loading-missing-init'"));
 }
 
-TEST_CASE("Can't load c-api extensions with no MinifiCreateExtension call") {
+TEST_CASE("Can't load c-api extensions with no MinifiRegisterExtension call") {
   ExtensionLoadingTestController controller{"*test-extension-loading-create-not-called*"};
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to initialize extension 'test-extension-loading-create-not-called'"));
 }

@@ -21,6 +21,6 @@
 
 CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
 
-CEXTENSIONAPI void MinifiInitExtension(MinifiExtension* /*extension*/, MinifiConfig* /*config*/) {
+CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* /*extension_context*/) {
   // NOT CALLING CREATE
 }

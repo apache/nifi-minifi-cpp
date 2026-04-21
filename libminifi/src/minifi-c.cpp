@@ -225,37 +225,44 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
 
 extern "C" {
 
-MinifiStatus MinifiCreateExtension(MinifiExtension* extension, const MinifiExtensionCreateInfo* extension_create_info) {
-  gsl_Assert(extension);
-  gsl_Assert(extension_create_info);
-  auto extension_name = toString(extension_create_info->name);
-  minifi::BundleIdentifier bundle{
-    .name = extension_name,
-    .version = toString(extension_create_info->version)
-  };
-  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[bundle];
-  for (size_t proc_idx = 0; proc_idx < extension_create_info->processors_count; ++proc_idx) {
-    minifi::utils::useCProcessorClassDescription(extension_create_info->processors_ptr[proc_idx], [&] (const auto& description, const auto& c_class_description) {
-      minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_name).registerClass(
-        c_class_description.name,
-        std::make_unique<CProcessorFactory>(extension_name, toString(extension_create_info->processors_ptr[proc_idx].full_name), c_class_description));
-      bundle_components.processors.emplace_back(description);
-    });
-  }
-  bool success = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension*>(extension)->setInfo(org::apache::nifi::minifi::core::extension::Extension::Info{
-    .name = toString(extension_create_info->name),
-    .version = toString(extension_create_info->version),
-    .deinit = extension_create_info->deinit,
-    .user_data = extension_create_info->user_data
+MinifiExtension* MinifiRegisterExtension(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition) {
+  gsl_Assert(extension_context);
+  gsl_Assert(extension_definition);
+  auto* extension = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension::Context*>(extension_context)->create(org::apache::nifi::minifi::core::extension::Extension::Info{
+    .name = toString(extension_definition->name),
+    .version = toString(extension_definition->version),
+    .deinit = extension_definition->deinit,
+    .user_data = extension_definition->user_data
   });
-  if (success) {
-    return MINIFI_STATUS_SUCCESS;
+  if (extension) {
+    return reinterpret_cast<MinifiExtension*>(extension);
   }
-  return MINIFI_STATUS_UNKNOWN_ERROR;
+  return MINIFI_NULL;
 }
 
-MinifiStatus MINIFI_CREATE_EXTENSION_FN(MinifiExtension* extension, const MinifiExtensionCreateInfo* extension_create_info) {
-  return MinifiCreateExtension(extension, extension_create_info);
+MinifiStatus MinifiRegisterProcessor(MinifiExtension* extension_handle, const MinifiProcessorClassDefinition* processor) {
+  gsl_Assert(extension_handle);
+  gsl_Assert(processor);
+  auto extension_info = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension*>(extension_handle)->getInfo();
+  if (!extension_info) {
+    return MINIFI_STATUS_UNKNOWN_ERROR;
+  }
+  minifi::BundleIdentifier bundle{
+    .name = extension_info->name,
+    .version = extension_info->version
+  };
+  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[bundle];
+  minifi::utils::useCProcessorClassDescription(*processor, [&] (const auto& description, const auto& c_class_description) {
+    minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_info->name).registerClass(
+      c_class_description.name,
+      std::make_unique<CProcessorFactory>(extension_info->name, toString(processor->full_name), c_class_description));
+    bundle_components.processors.emplace_back(description);
+  });
+  return MINIFI_STATUS_SUCCESS;
+}
+
+MinifiExtension* MINIFI_REGISTER_EXTENSION_FN(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition) {
+  return MinifiRegisterExtension(extension_context, extension_definition);
 }
 
 MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, MinifiStringView property_name, MinifiFlowFile* flowfile,
@@ -281,9 +288,9 @@ MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext* context
   return reinterpret_cast<minifi::core::ProcessContext*>(context)->hasNonEmptyProperty(toString(property_name));
 }
 
-void MinifiConfigGet(MinifiConfig* configure, MinifiStringView key, void(*cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
-  gsl_Assert(configure != MINIFI_NULL);
-  auto value = reinterpret_cast<minifi::Configure*>(configure)->get(toString(key));
+void MinifiConfigGet(MinifiExtensionContext* extension_context, MinifiStringView key, void(*cb)(void* user_ctx, MinifiStringView result), void* user_ctx) {
+  gsl_Assert(extension_context);
+  auto value = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension::Context*>(extension_context)->config->get(toString(key));
   if (value) {
     cb(user_ctx, MinifiStringView{
       .data = value->data(),
