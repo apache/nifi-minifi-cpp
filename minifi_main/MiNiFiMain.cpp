@@ -114,12 +114,6 @@ void sigHandler(int signal) {
   }
 }
 
-void dumpDocs(const std::string& dir) {
-  minifi::docs::AgentDocs docsCreator;
-
-  docsCreator.generate(dir);
-}
-
 void writeJsonSchema(std::ostream& out) {
   out << minifi::docs::generateJsonSchema() << '\n';
 }
@@ -148,7 +142,12 @@ void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, c
   }
 
   std::cout << "Dumping docs to " << docs_params[0] << std::endl;
-  dumpDocs(docs_params[0]);
+  minifi::docs::AgentDocs::generate(docs_params[0]);
+  return 0;
+}
+
+[[nodiscard]] int generateManifest() {
+  minifi::docs::AgentDocs::generateManifest();
   return 0;
 }
 
@@ -185,6 +184,10 @@ int main(int argc, char **argv) {
     .nargs(1)
     .metavar("DIRECTORY")
     .help("Generate documentation in the specified directory");
+  bool generate_manifest = false;
+  argument_parser.add_argument("--manifest")
+    .store_into(generate_manifest)
+    .help("Generate manifest to stdout");
   argument_parser.add_argument("-s", "--schema")
     .metavar("PATH")
     .default_value("-")
@@ -214,6 +217,9 @@ int main(int argc, char **argv) {
     minifi::setSyslogLogger();
   }
   auto& logger_configuration = core::logging::LoggerConfiguration::getConfiguration();
+  if (generate_manifest) {
+    logger_configuration.disableLogging();
+  }
   const auto logger = logger_configuration.getLogger("main");
   auto startup_timepoint = std::chrono::system_clock::now();
   auto log_runtime = gsl::finally([&]() {
@@ -327,6 +333,9 @@ int main(int argc, char **argv) {
 
     if (const auto maybe_exit_code = dumpDocsIfRequested(argument_parser)) { return *maybe_exit_code; }
     if (const auto maybe_exit_code = writeSchemaIfRequested(argument_parser)) { return *maybe_exit_code; }
+    if (generate_manifest) {
+      return generateManifest();
+    }
 
     std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
         | utils::andThen(utils::timeutils::StringToDuration<std::chrono::milliseconds>)

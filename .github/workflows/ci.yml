@@ -322,6 +322,11 @@ jobs:
           ulimit -c unlimited
           ctest --timeout 300 -j$(nproc) --output-on-failure -LE performance
         working-directory: build
+      - name: Check manifest
+        run: |
+          sed -i 's|nifi\.extension\.path=\.\./extensions/\*|nifi.extension.path=./*|' conf/minifi.properties
+          ./bin/minifi --manifest | diff -u ../.github/references/ubuntu_22_04_clang_arm_manifest.json - || (echo "::error::Manifest mismatch! Please update manifest.json locally." && exit 1)
+        working-directory: build
       - name: performance-test
         id: performance-test
         run: ctest -j1 --verbose -L performance
