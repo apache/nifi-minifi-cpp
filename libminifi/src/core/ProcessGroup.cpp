@@ -68,8 +68,11 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
 }
 
 ProcessGroup::~ProcessGroup() {
-  if (onScheduleTimer_) {
-    onScheduleTimer_->stop();
+  {
+    std::lock_guard<std::mutex> lock(on_schedule_timer_mutex_);
+    if (onScheduleTimer_) {
+      onScheduleTimer_->stop();
+    }
   }
 
   for (auto&& connection : connections_) {
@@ -169,15 +172,18 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
 
   // The admin yield duration comes from the configuration, should be equal in all three schedulers
   std::chrono::milliseconds admin_yield_duration = timeScheduler.getAdminYieldDuration();
-  if (!onScheduleTimer_ && !failed_processors.empty() && admin_yield_duration > 0ms) {
-    logger_->log_info("Retrying failed processors in {}", admin_yield_duration);
-    auto func = [this, eventScheduler = &eventScheduler, cronScheduler = &cronScheduler, timeScheduler = &timeScheduler]() {
-      this->startProcessingProcessors(*timeScheduler, *eventScheduler, *cronScheduler);
-    };
-    onScheduleTimer_ = std::make_unique<utils::CallBackTimer>(admin_yield_duration, func);
-    onScheduleTimer_->start();
-  } else if (failed_processors.empty() && onScheduleTimer_) {
-    onScheduleTimer_->stop();
+
+  {
+    std::lock_guard<std::mutex> lock(on_schedule_timer_mutex_);
+    if (!onScheduleTimer_ && !failed_processors.empty() && admin_yield_duration > 0ms) {
+      auto func = [this, eventScheduler = &eventScheduler, cronScheduler = &cronScheduler, timeScheduler = &timeScheduler]() {
+        this->startProcessingProcessors(*timeScheduler, *eventScheduler, *cronScheduler);
+      };
+      onScheduleTimer_ = std::make_unique<utils::CallBackTimer>(admin_yield_duration, func);
+      onScheduleTimer_->start();
+    } else if (failed_processors.empty() && onScheduleTimer_) {
+      onScheduleTimer_->stop();
+    }
   }
 
   {
@@ -223,11 +229,19 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent& timeScheduler, Eve
     }
   }
 
-  if (onScheduleTimer_) {
-    onScheduleTimer_->stop();
+  // Stop and join the retry timer outside the lock to avoid deadlock: the timer callback
+  // (startProcessingProcessors) acquires on_schedule_timer_mutex_ at the end, so the join
+  // must not be done while holding that lock.
+  // Loop because the timer callback may create a new timer while we held the lock
+  while (true) {
+    std::unique_ptr<utils::CallBackTimer> timer_to_destroy;
+    {
+      std::lock_guard<std::mutex> lock(on_schedule_timer_mutex_);
+      if (!onScheduleTimer_) break;
+      onScheduleTimer_->stop();
+      timer_to_destroy = std::move(onScheduleTimer_);  // reset onScheduleTimer_ under the lock, and destroy the timer implicitly at the end of the loop
+    }
   }
-
-  onScheduleTimer_.reset();
 
   try {
     // Stop all the processor node, input and output ports
