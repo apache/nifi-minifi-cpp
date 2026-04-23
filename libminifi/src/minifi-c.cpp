@@ -243,7 +243,8 @@ MinifiExtension* MinifiRegisterExtension(MinifiExtensionContext* extension_conte
 MinifiStatus MinifiRegisterProcessor(MinifiExtension* extension_handle, const MinifiProcessorClassDefinition* processor) {
   gsl_Assert(extension_handle);
   gsl_Assert(processor);
-  auto extension_info = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension*>(extension_handle)->getInfo();
+  auto* extension = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension*>(extension_handle);
+  auto extension_info = extension->getInfo();
   if (!extension_info) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
@@ -257,6 +258,7 @@ MinifiStatus MinifiRegisterProcessor(MinifiExtension* extension_handle, const Mi
       c_class_description.name,
       std::make_unique<CProcessorFactory>(extension_info->name, toString(processor->full_name), c_class_description));
     bundle_components.processors.emplace_back(description);
+    extension->addResource(c_class_description.name);
   });
   return MINIFI_STATUS_SUCCESS;
 }

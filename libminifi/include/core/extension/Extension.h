@@ -40,7 +40,6 @@ class Extension {
     std::string version;
     void(*deinit)(void* user_data);
     void* user_data;
-    std::vector<std::string> resources;
   };
 
   struct Context {
@@ -61,6 +60,10 @@ class Extension {
 
   std::optional<Info> getInfo() const {
     return info_;
+  }
+
+  void addResource(std::string resource_name) {
+    resources_.push_back(std::move(resource_name));
   }
 
  private:
@@ -86,6 +89,7 @@ class Extension {
   gsl::owner<void*> handle_ = nullptr;
 
   std::optional<Info> info_;
+  std::vector<std::string> resources_;
   uint32_t api_version_{0};
 
   const std::shared_ptr<logging::Logger> logger_;

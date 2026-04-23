@@ -118,7 +118,7 @@ Extension::~Extension() {
     info_->deinit(info_->user_data);
   }
   if (info_) {
-    for (auto& resource_name : info_->resources) {
+    for (auto& resource_name : resources_) {
       core::ClassLoader::getDefaultClassLoader().getClassLoader(info_->name).unregisterClass(resource_name);
     }
   }
