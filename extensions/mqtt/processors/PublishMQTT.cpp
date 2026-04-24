@@ -65,7 +65,7 @@ void PublishMQTT::onTriggerImpl(core::ProcessContext& context, core::ProcessSess
 
   std::vector<std::shared_ptr<core::FlowFile>> flow_files;
   if (record_converter_) {
-    nonstd::expected<core::RecordSet, std::error_code> record_set;
+    std::expected<core::RecordSet, std::error_code> record_set;
     session.read(original_flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
       record_set = record_converter_->record_set_reader->read(*input_stream);
       return io::IoResult::from(input_stream->size());

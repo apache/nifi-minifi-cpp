@@ -29,6 +29,10 @@ FOREACH(testfile ${COUCHBASE_TESTS})
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/couchbase/")
     target_include_directories(${testfilename} PRIVATE BEFORE "${COUCHBASE_INCLUDE_DIR}")
 
+    # Demote preprocessor warnings so <ciso646> doesn't break the build
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        target_compile_options(${testfilename} PRIVATE -Wno-error=cpp)
+    endif()
     createTests("${testfilename}")
     target_link_libraries(${testfilename} Catch2WithMain)
     target_link_libraries(${testfilename} minifi-couchbase)

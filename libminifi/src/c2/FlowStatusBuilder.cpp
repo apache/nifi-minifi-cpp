@@ -109,7 +109,7 @@ core::Processor* FlowStatusBuilder::findProcessor(const std::string& processor_i
   return nullptr;
 }
 
-nonstd::expected<void, std::string> FlowStatusBuilder::addProcessorStatuses(rapidjson::Value& processor_status_list, rapidjson::Document::AllocatorType& allocator,
+std::expected<void, std::string> FlowStatusBuilder::addProcessorStatuses(rapidjson::Value& processor_status_list, rapidjson::Document::AllocatorType& allocator,
     const std::string& identifier, const std::unordered_set<FlowStatusQueryOption>& options) {
   static const std::unordered_set<FlowStatusQueryOption> valid_options = {
     FlowStatusQueryOption::health,
@@ -120,14 +120,14 @@ nonstd::expected<void, std::string> FlowStatusBuilder::addProcessorStatuses(rapi
   for (const auto& option : options) {
     if (!valid_options.contains(option)) {
       logger_->log_error("Unable to get processorStatus: Invalid query option for processor status '{}'", magic_enum::enum_name(option));
-      return nonstd::make_unexpected(fmt::format("Unable to get processorStatus: Invalid query option for processor status '{}'", magic_enum::enum_name(option)));
+      return std::unexpected{fmt::format("Unable to get processorStatus: Invalid query option for processor status '{}'", magic_enum::enum_name(option))};
     }
   }
 
   std::lock_guard<std::mutex> guard(root_mutex_);
   if (identifier.empty()) {
     logger_->log_error("Unable to get processorStatus: Query is incomplete");
-    return nonstd::make_unexpected("Unable to get processorStatus: Query is incomplete");
+    return std::unexpected{"Unable to get processorStatus: Query is incomplete"};
   } else if (identifier == "all") {
     for (const auto processor : processors_) {
       addProcessorStatus(processor, processor_status_list, allocator, options);
@@ -136,7 +136,7 @@ nonstd::expected<void, std::string> FlowStatusBuilder::addProcessorStatuses(rapi
     auto processor = findProcessor(identifier);
     if (!processor) {
       logger_->log_error("Unable to get processorStatus: No processor with key '{}' to report status on", identifier);
-      return nonstd::make_unexpected(fmt::format("Unable to get processorStatus: No processor with key '{}' to report status on", identifier));
+      return std::unexpected{fmt::format("Unable to get processorStatus: No processor with key '{}' to report status on", identifier)};
     }
     addProcessorStatus(processor, processor_status_list, allocator, options);
   }
@@ -164,18 +164,18 @@ void FlowStatusBuilder::addConnectionStatus(Connection* connection, rapidjson::V
   connection_status_list.PushBack(connection_status, allocator);
 }
 
-nonstd::expected<void, std::string> FlowStatusBuilder::addConnectionStatuses(rapidjson::Value& connection_status_list, rapidjson::Document::AllocatorType& allocator,
+std::expected<void, std::string> FlowStatusBuilder::addConnectionStatuses(rapidjson::Value& connection_status_list, rapidjson::Document::AllocatorType& allocator,
     const std::string& identifier, const std::unordered_set<FlowStatusQueryOption>& options) {
   for (const auto& option : options) {
     if (option != FlowStatusQueryOption::health) {
       logger_->log_error("Unable to get connectionStatus: Invalid query option for connection status '{}'", magic_enum::enum_name(option));
-      return nonstd::make_unexpected(fmt::format("Unable to get connectionStatus: Invalid query option for connection status '{}'", magic_enum::enum_name(option)));
+      return std::unexpected{fmt::format("Unable to get connectionStatus: Invalid query option for connection status '{}'", magic_enum::enum_name(option))};
     }
   }
   std::lock_guard<std::mutex> guard(root_mutex_);
   if (identifier.empty()) {
     logger_->log_error("Unable to get connectionStatus: Query is incomplete");
-    return nonstd::make_unexpected("Unable to get connectionStatus: Query is incomplete");
+    return std::unexpected{"Unable to get connectionStatus: Query is incomplete"};
   }
 
   if (identifier == "all") {
@@ -187,14 +187,14 @@ nonstd::expected<void, std::string> FlowStatusBuilder::addConnectionStatuses(rap
       addConnectionStatus(connection_map_[identifier], connection_status_list, allocator, options);
     } else {
       logger_->log_error("Unable to get connectionStatus: No connection with key '{}' to report status on", identifier);
-      return nonstd::make_unexpected(fmt::format("Unable to get connectionStatus: No connection with key '{}' to report status on", identifier));
+      return std::unexpected{fmt::format("Unable to get connectionStatus: No connection with key '{}' to report status on", identifier)};
     }
   }
 
   return {};
 }
 
-nonstd::expected<void, std::string> FlowStatusBuilder::addInstanceStatus(rapidjson::Value& instance_status, rapidjson::Document::AllocatorType& allocator,
+std::expected<void, std::string> FlowStatusBuilder::addInstanceStatus(rapidjson::Value& instance_status, rapidjson::Document::AllocatorType& allocator,
    const std::unordered_set<FlowStatusQueryOption>& options) {
   static const std::unordered_set<FlowStatusQueryOption> valid_options = {
     FlowStatusQueryOption::health,
@@ -205,7 +205,7 @@ nonstd::expected<void, std::string> FlowStatusBuilder::addInstanceStatus(rapidjs
   for (const auto& option : options) {
     if (!valid_options.contains(option)) {
       logger_->log_error("Unable to get instance: Invalid query option for instance status '{}'", magic_enum::enum_name(option));
-      return nonstd::make_unexpected(fmt::format("Unable to get instance: Invalid query option for instance status '{}'", magic_enum::enum_name(option)));
+      return std::unexpected{fmt::format("Unable to get instance: Invalid query option for instance status '{}'", magic_enum::enum_name(option))};
     }
   }
 
@@ -273,7 +273,7 @@ nonstd::expected<void, std::string> FlowStatusBuilder::addInstanceStatus(rapidjs
   return {};
 }
 
-nonstd::expected<void, std::string> FlowStatusBuilder::addSystemDiagnosticsStatus(rapidjson::Value& system_diagnostics_status, rapidjson::Document::AllocatorType& allocator,
+std::expected<void, std::string> FlowStatusBuilder::addSystemDiagnosticsStatus(rapidjson::Value& system_diagnostics_status, rapidjson::Document::AllocatorType& allocator,
     const std::unordered_set<FlowStatusQueryOption>& options) {
   static const std::unordered_set<FlowStatusQueryOption> valid_options = {
     FlowStatusQueryOption::processorstats,
@@ -284,7 +284,7 @@ nonstd::expected<void, std::string> FlowStatusBuilder::addSystemDiagnosticsStatu
   for (const auto& option : options) {
     if (!valid_options.contains(option)) {
       logger_->log_error("Unable to get systemDiagnostics: Invalid query option for system diagnostics '{}'", magic_enum::enum_name(option));
-      return nonstd::make_unexpected(fmt::format("Unable to get systemDiagnostics: Invalid query option for system diagnostics '{}'", magic_enum::enum_name(option)));
+      return std::unexpected{fmt::format("Unable to get systemDiagnostics: Invalid query option for system diagnostics '{}'", magic_enum::enum_name(option))};
     }
   }
 
@@ -350,7 +350,7 @@ rapidjson::Document FlowStatusBuilder::buildFlowStatus(const std::vector<FlowSta
 
   auto allocator = doc.GetAllocator();
 
-  auto handleError = [&doc, &allocator](const nonstd::expected<void, std::string>& result) {
+  auto handleError = [&doc, &allocator](const std::expected<void, std::string>& result) {
     if (result) {
       return;
     }

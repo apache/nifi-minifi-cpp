@@ -16,8 +16,9 @@
  */
 #include "SplitRecord.h"
 
+#include <expected>
+
 #include "core/Resource.h"
-#include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "minifi-cpp/utils/gsl.h"
@@ -31,7 +32,7 @@ void SplitRecord::onSchedule(core::ProcessContext& context, core::ProcessSession
   };
 }
 
-nonstd::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file) {
+std::expected<std::size_t, std::string> SplitRecord::readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file) {
   return context.getProperty(RecordsPerSplit, &original_flow_file)
       | utils::andThen([](const auto& records_per_split_str) {
             return parsing::parseIntegralMinMax<std::size_t>(records_per_split_str, 1, std::numeric_limits<std::size_t>::max());
@@ -54,7 +55,7 @@ void SplitRecord::onTrigger(core::ProcessContext& context, core::ProcessSession&
     return;
   }
 
-  nonstd::expected<core::RecordSet, std::error_code> record_set;
+  std::expected<core::RecordSet, std::error_code> record_set;
   session.read(original_flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
     record_set = record_converter_->record_set_reader->read(*input_stream);
     return io::IoResult::from(input_stream->size());

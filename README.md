@@ -123,8 +123,8 @@ Communicating with Apache NiFi can be done using the Site-to-Site protocol. More
 #### Utilities
 * CMake 3.24 or greater
 * Compiler
-  * g++ 12 or greater
-  * clang 16 or greater
+  * g++ 13 or greater
+  * clang 18 or greater
   * msvc 19.33 or greater
 * bison 3.0.x+ (3.2 has been shown to fail builds)
 * flex 2.6 or greater

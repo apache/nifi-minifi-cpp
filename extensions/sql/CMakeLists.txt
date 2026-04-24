@@ -53,7 +53,7 @@ else()
         CMAKE_COMMAND ""
         UPDATE_COMMAND ""
         INSTALL_COMMAND make install
-        CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR} --with-pic
+        CONFIGURE_COMMAND bash "-c" "./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR} --with-pic CFLAGS='${CMAKE_C_FLAGS} -std=gnu17'"
         STEP_TARGETS build
         BUILD_BYPRODUCTS "${IODBC_BYPRODUCT_DIR}/${IODBC_BYPRODUCT}"
         EXCLUDE_FROM_ALL TRUE

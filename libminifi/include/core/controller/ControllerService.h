@@ -52,8 +52,8 @@ class ControllerService : public ConfigurableComponentImpl, public CoreComponent
   class ControllerServiceContextImpl : public ControllerServiceContext {
    public:
     explicit ControllerServiceContextImpl(ControllerService& impl): impl_(impl) {}
-    [[nodiscard]] nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const override;
-    [[nodiscard]] nonstd::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const override;
+    [[nodiscard]] std::expected<std::string, std::error_code> getProperty(std::string_view name) const override;
+    [[nodiscard]] std::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const override;
 
    private:
     ControllerService& impl_;
@@ -146,11 +146,11 @@ inline void ControllerService::ControllerServiceDescriptorImpl::setSupportedProp
   impl_.setSupportedProperties(properties);
 }
 
-inline nonstd::expected<std::string, std::error_code> ControllerService::ControllerServiceContextImpl::getProperty(std::string_view name) const {
+inline std::expected<std::string, std::error_code> ControllerService::ControllerServiceContextImpl::getProperty(std::string_view name) const {
   return impl_.getProperty(name);
 }
 
-inline nonstd::expected<std::vector<std::string>, std::error_code> ControllerService::ControllerServiceContextImpl::getAllPropertyValues(std::string_view name) const {
+inline std::expected<std::vector<std::string>, std::error_code> ControllerService::ControllerServiceContextImpl::getAllPropertyValues(std::string_view name) const {
   return impl_.getAllPropertyValues(name);
 }
 

@@ -40,14 +40,14 @@ class FlowStatusBuilder {
   void addProcessorStatus(core::Processor* processor, rapidjson::Value& processor_status_list, rapidjson::Document::AllocatorType& allocator,
     const std::unordered_set<FlowStatusQueryOption>& options);
   core::Processor* findProcessor(const std::string& processor_id);
-  nonstd::expected<void, std::string> addProcessorStatuses(rapidjson::Value& processor_status_list, rapidjson::Document::AllocatorType& allocator,
+  std::expected<void, std::string> addProcessorStatuses(rapidjson::Value& processor_status_list, rapidjson::Document::AllocatorType& allocator,
     const std::string& identifier, const std::unordered_set<FlowStatusQueryOption>& options);
   static void addConnectionStatus(Connection* connection, rapidjson::Value& connection_status_list, rapidjson::Document::AllocatorType& allocator,
     const std::unordered_set<FlowStatusQueryOption>& options);
-  nonstd::expected<void, std::string> addConnectionStatuses(rapidjson::Value& connection_status_list, rapidjson::Document::AllocatorType& allocator,
+  std::expected<void, std::string> addConnectionStatuses(rapidjson::Value& connection_status_list, rapidjson::Document::AllocatorType& allocator,
     const std::string& identifier, const std::unordered_set<FlowStatusQueryOption>& options);
-  nonstd::expected<void, std::string> addInstanceStatus(rapidjson::Value& instance_status, rapidjson::Document::AllocatorType& allocator, const std::unordered_set<FlowStatusQueryOption>& options);
-  nonstd::expected<void, std::string> addSystemDiagnosticsStatus(rapidjson::Value& system_diagnostics_status, rapidjson::Document::AllocatorType& allocator,
+  std::expected<void, std::string> addInstanceStatus(rapidjson::Value& instance_status, rapidjson::Document::AllocatorType& allocator, const std::unordered_set<FlowStatusQueryOption>& options);
+  std::expected<void, std::string> addSystemDiagnosticsStatus(rapidjson::Value& system_diagnostics_status, rapidjson::Document::AllocatorType& allocator,
     const std::unordered_set<FlowStatusQueryOption>& options);
 
   std::mutex root_mutex_;

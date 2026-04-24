@@ -104,7 +104,7 @@ detail::value_or_else_wrapper<T&&> valueOrElse(T&& func) noexcept { return {std:
 
 
 /**
- * Converts from std::optional<T> to nonstd::expected<T, E>
+ * Converts from std::optional<T> to std::expected<T, E>
  * The parameter will be used as the unexpected value if the optional is null.
  */
 template<typename E>
@@ -112,7 +112,7 @@ detail::to_expected_wrapper<E> toExpected(E&& e) noexcept { return {std::forward
 
 
 /**
- * Converts from nonstd::expected<T, E> to std::optional<T>
+ * Converts from std::expected<T, E> to std::optional<T>
  * Consuming the expected and discarding the error, if any.
  */
 inline detail::to_optional_wrapper toOptional() noexcept { return {}; }

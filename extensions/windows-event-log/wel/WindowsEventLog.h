@@ -92,7 +92,7 @@ class WindowsEventLogProvider {
   WindowsEventLogProvider() : provider_handle_(nullptr) {}
   explicit WindowsEventLogProvider(EVT_HANDLE provider_handle) : provider_handle_(provider_handle) {}
 
-  nonstd::expected<std::string, std::error_code> getEventMessage(EVT_HANDLE event_handle) const;
+  std::expected<std::string, std::error_code> getEventMessage(EVT_HANDLE event_handle) const;
   [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS field, const std::string& key, EVT_HANDLE event_handle) const;
 
  private:

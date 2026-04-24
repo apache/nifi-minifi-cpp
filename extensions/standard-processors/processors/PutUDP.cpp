@@ -76,16 +76,16 @@ void PutUDP::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
 
   asio::io_context io_context;
 
-  const auto resolve_hostname = [&io_context, &hostname, &port]() -> nonstd::expected<udp::resolver::results_type, std::error_code> {
+  const auto resolve_hostname = [&io_context, &hostname, &port]() -> std::expected<udp::resolver::results_type, std::error_code> {
     udp::resolver resolver(io_context);
     std::error_code error_code;
     auto results = resolver.resolve(hostname, port, error_code);
     if (error_code)
-      return nonstd::make_unexpected(error_code);
+      return std::unexpected{error_code};
     return results;
   };
 
-  const auto send_data_to_endpoint = [&io_context, &data, &logger = this->logger_](const udp::resolver::results_type& resolved_query) -> nonstd::expected<void, std::error_code> {
+  const auto send_data_to_endpoint = [&io_context, &data, &logger = this->logger_](const udp::resolver::results_type& resolved_query) -> std::expected<void, std::error_code> {
     std::error_code error;
     for (const auto& resolver_entry : resolved_query) {
       error.clear();
@@ -103,7 +103,7 @@ void PutUDP::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
       logger->log_debug("sending to endpoint {} succeeded", resolver_entry.endpoint());
       return {};
     }
-    return nonstd::make_unexpected(error);
+    return std::unexpected{error};
   };
 
   const auto transfer_to_success = [&session, &flow_file]() -> void {

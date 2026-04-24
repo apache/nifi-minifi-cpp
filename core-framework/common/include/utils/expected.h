@@ -19,8 +19,8 @@
 #include <utility>
 #include <optional>
 #include <iostream>
+#include <expected>
 
-#include "nonstd/expected.hpp"
 #include "utils/detail/MonadicOperationWrappers.h"
 #include "fmt/format.h"
 #include "fmt/std.h"
@@ -32,7 +32,7 @@ template<typename T>
 inline constexpr bool is_expected_v = false;
 
 template<typename V, typename E>
-inline constexpr bool is_expected_v<nonstd::expected<V, E>> = true;
+inline constexpr bool is_expected_v<std::expected<V, E>> = true;
 
 template<typename T>
 concept expected = is_expected_v<std::remove_cvref_t<T>>;
@@ -44,7 +44,7 @@ inline constexpr bool is_valid_unexpected_type_v = std::is_same_v<T, std::remove
 
 // specialization: the type must not be a specialization of std::unexpected
 template<typename E>
-inline constexpr bool is_valid_unexpected_type_v<nonstd::unexpected_type<E>> = false;
+inline constexpr bool is_valid_unexpected_type_v<std::unexpected<E>> = false;
 
 template<typename T>
 concept valid_unexpected_type = is_valid_unexpected_type_v<T>;
@@ -68,24 +68,24 @@ auto operator|(Expected&& object, transform_wrapper<F> f) {
   if constexpr (std::is_void_v<value_type>) {
     using function_return_type = std::remove_cvref_t<std::invoke_result_t<F>>;
     if (!object.has_value()) {
-      return nonstd::expected<function_return_type, error_type>{nonstd::unexpect, std::forward<Expected>(object).error()};
+      return std::expected<function_return_type, error_type>{std::unexpect, std::forward<Expected>(object).error()};
     }
     if constexpr (std::is_void_v<function_return_type>) {
       std::invoke(std::forward<F>(f.function));
-      return nonstd::expected<void, error_type>{};
+      return std::expected<void, error_type>{};
     } else {
-      return nonstd::expected<function_return_type, error_type>{std::invoke(std::forward<F>(f.function))};
+      return std::expected<function_return_type, error_type>{std::invoke(std::forward<F>(f.function))};
     }
   } else {
     using function_return_type = std::remove_cvref_t<std::invoke_result_t<F, decltype(*std::forward<Expected>(object))>>;
     if (!object.has_value()) {
-      return nonstd::expected<function_return_type, error_type>{nonstd::unexpect, std::forward<Expected>(object).error()};
+      return std::expected<function_return_type, error_type>{std::unexpect, std::forward<Expected>(object).error()};
     }
     if constexpr (std::is_void_v<function_return_type>) {
       std::invoke(std::forward<F>(f.function), *std::forward<Expected>(object));
-      return nonstd::expected<void, error_type>{};
+      return std::expected<void, error_type>{};
     } else {
-      return nonstd::expected<function_return_type, error_type>{std::invoke(std::forward<F>(f.function), *std::forward<Expected>(object))};
+      return std::expected<function_return_type, error_type>{std::invoke(std::forward<F>(f.function), *std::forward<Expected>(object))};
     }
   }
 }
@@ -100,7 +100,7 @@ auto operator|(Expected&& object, and_then_wrapper<F> f) {
     if (object.has_value()) {
       return std::invoke(std::forward<F>(f.function));
     } else {
-      return function_return_type{nonstd::unexpect, std::forward<Expected>(object).error()};
+      return function_return_type{std::unexpect, std::forward<Expected>(object).error()};
     }
   } else {
     using function_return_type = std::remove_cvref_t<std::invoke_result_t<F, decltype(*std::forward<Expected>(object))>>;
@@ -108,7 +108,7 @@ auto operator|(Expected&& object, and_then_wrapper<F> f) {
     if (object.has_value()) {
       return std::invoke(std::forward<F>(f.function), *std::forward<Expected>(object));
     } else {
-      return function_return_type{nonstd::unexpect, std::forward<Expected>(object).error()};
+      return function_return_type{std::unexpect, std::forward<Expected>(object).error()};
     }
   }
 }
@@ -188,11 +188,11 @@ auto operator|(Expected&& object, transform_error_wrapper<F> f) {
   using value_type = typename std::remove_cvref_t<Expected>::value_type;
   using transformed_error_type = std::remove_cv_t<std::invoke_result_t<F, decltype(std::forward<Expected>(object).error())>>;
   static_assert(valid_unexpected_type<transformed_error_type>, "transformError expects a function returning a valid unexpected type");
-  using transformed_expected_type = nonstd::expected<value_type, transformed_error_type>;
+  using transformed_expected_type = std::expected<value_type, transformed_error_type>;
   if (object.has_value()) {
     return transformed_expected_type{std::forward<Expected>(object).value()};
   }
-  return transformed_expected_type{nonstd::unexpect, std::invoke(std::forward<F>(f.function), std::forward<Expected>(object).error())};
+  return transformed_expected_type{std::unexpect, std::invoke(std::forward<F>(f.function), std::forward<Expected>(object).error())};
 }
 
 template<expected Expected>
@@ -224,7 +224,7 @@ typename std::remove_cvref_t<Expected>::value_type operator|(Expected object, de
 template<typename F, typename... Args>
 auto try_expression(F&& action, Args&&... args) noexcept {
   using action_return_type = std::remove_cvref_t<std::invoke_result_t<F, Args&&...>>;
-  using return_type = nonstd::expected<action_return_type, std::exception_ptr>;
+  using return_type = std::expected<action_return_type, std::exception_ptr>;
   try {
     if constexpr (std::is_void_v<action_return_type>) {
       std::invoke(std::forward<F>(action), std::forward<Args>(args)...);
@@ -233,40 +233,8 @@ auto try_expression(F&& action, Args&&... args) noexcept {
       return return_type{std::invoke(std::forward<F>(action), std::forward<Args>(args)...)};
     }
   } catch (...) {
-    return return_type{nonstd::unexpect, std::current_exception()};
+    return return_type{std::unexpect, std::current_exception()};
   }
 }
 
 }  // namespace org::apache::nifi::minifi::utils
-
-template <typename T, typename E>
-concept HasStdExpected = requires { typename std::expected<T, E>; };
-
-template <typename T, typename E>
-concept ExpectedTypesDoNotConflict =
-    (!HasStdExpected<T, E> ||
-     !std::same_as<nonstd::expected<T, E>, std::expected<T, E>>);
-
-// based on fmt::formatter<std::expected<T, E>, Char>
-template <typename T, typename E, typename Char>
-requires ExpectedTypesDoNotConflict<T, E> &&
-         (std::is_void_v<T> || fmt::is_formattable<T, Char>::value) &&
-         fmt::is_formattable<E, Char>::value
-struct fmt::formatter<nonstd::expected<T, E>, Char> {
-  constexpr auto parse(auto& ctx) { return ctx.begin(); }
-
-  auto format(const nonstd::expected<T, E>& value, auto& ctx) const {
-    auto out = ctx.out();
-
-    if (value.has_value()) {
-      out = fmt::detail::write<Char>(out, "nonstd::expected(");
-      if constexpr (!std::is_void_v<T>)
-        out = fmt::detail::write_escaped_alternative<Char>(out, *value);
-    } else {
-      out = fmt::detail::write<Char>(out, "nonstd::unexpected(");
-      out = fmt::detail::write_escaped_alternative<Char>(out, value.error());
-    }
-    *out++ = ')';
-    return out;
-  }
-};

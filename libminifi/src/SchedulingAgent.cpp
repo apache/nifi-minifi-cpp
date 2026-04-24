@@ -62,7 +62,7 @@ bool SchedulingAgent::processorYields(core::Processor* processor) const {
   return false;
 }
 
-nonstd::expected<void, std::exception_ptr> SchedulingAgent::triggerAndCommit(core::Processor* processor,
+std::expected<void, std::exception_ptr> SchedulingAgent::triggerAndCommit(core::Processor* processor,
     const std::shared_ptr<core::ProcessContext>& process_context,
     const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
   gsl_Expects(processor);
@@ -92,17 +92,17 @@ nonstd::expected<void, std::exception_ptr> SchedulingAgent::triggerAndCommit(cor
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
         processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
     processor->yield(admin_yield_duration_);
-    return nonstd::make_unexpected(std::current_exception());
+    return std::unexpected{std::current_exception()};
   } catch (...) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}",
         processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
     processor->yield(admin_yield_duration_);
-    return nonstd::make_unexpected(std::current_exception());
+    return std::unexpected{std::current_exception()};
   }
   return {};
 }
 
-nonstd::expected<bool, std::exception_ptr> SchedulingAgent::trigger(core::Processor* processor,
+std::expected<bool, std::exception_ptr> SchedulingAgent::trigger(core::Processor* processor,
     const std::shared_ptr<core::ProcessContext>& process_context,
     const std::shared_ptr<core::ProcessSession>& process_session) {
   gsl_Expects(processor);
@@ -130,12 +130,12 @@ nonstd::expected<bool, std::exception_ptr> SchedulingAgent::trigger(core::Proces
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
         processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
     processor->yield(admin_yield_duration_);
-    return nonstd::make_unexpected(std::current_exception());
+    return std::unexpected{std::current_exception()};
   } catch (...) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}",
         processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
     processor->yield(admin_yield_duration_);
-    return nonstd::make_unexpected(std::current_exception());
+    return std::unexpected{std::current_exception()};
   }
   return true;
 }

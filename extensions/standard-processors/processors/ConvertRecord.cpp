@@ -16,8 +16,9 @@
  */
 #include "ConvertRecord.h"
 
+#include <expected>
+
 #include "core/Resource.h"
-#include "nonstd/expected.hpp"
 #include "utils/GeneralUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "minifi-cpp/utils/gsl.h"
@@ -40,7 +41,7 @@ void ConvertRecord::onTrigger(core::ProcessContext& context, core::ProcessSessio
     return;
   }
 
-  nonstd::expected<core::RecordSet, std::error_code> record_set;
+  std::expected<core::RecordSet, std::error_code> record_set;
   session.read(flow_file, [this, &record_set](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
     record_set = record_converter_->record_set_reader->read(*input_stream);
     return io::IoResult::from(input_stream->size());

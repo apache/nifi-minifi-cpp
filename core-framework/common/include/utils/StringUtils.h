@@ -430,7 +430,7 @@ bool matchesSequence(std::string_view str, const std::vector<std::string>& patte
 bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit);
 
 
-nonstd::expected<std::optional<char>, std::error_code> parseCharacter(std::string_view input);
+std::expected<std::optional<char>, std::error_code> parseCharacter(std::string_view input);
 
 std::string replaceEscapedCharacters(std::string_view input);
 
@@ -438,14 +438,14 @@ std::string replaceEscapedCharacters(std::string_view input);
 template <typename T> concept arithmetic = std::integral<T> || std::floating_point<T>;
 
 template<arithmetic T>
-nonstd::expected<T, std::error_code> parseNumber(std::string_view input) {
+std::expected<T, std::error_code> parseNumber(std::string_view input) {
   T t{};
   const auto [ptr, ec] = std::from_chars(input.data(), input.data() + input.size(), t);
   if (ec != std::errc()) {
-    return nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError);
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
   if (ptr != input.data() + input.size()) {
-    return nonstd::make_unexpected(core::ParsingErrorCode::GeneralParsingError);
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
   return t;
 }

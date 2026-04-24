@@ -86,7 +86,7 @@ class SplitRecord final : public core::AbstractProcessor<SplitRecord> {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  private:
-  static nonstd::expected<std::size_t, std::string> readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file);
+  static std::expected<std::size_t, std::string> readRecordsPerSplit(core::ProcessContext& context, const core::FlowFile& original_flow_file);
 
   std::optional<core::RecordConverter> record_converter_;
 };

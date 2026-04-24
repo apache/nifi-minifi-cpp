@@ -40,8 +40,8 @@ class IoResult {
 
   virtual ~IoResult() = default;
 
-  static IoResult error() { return IoResult(nonstd::make_unexpected(MINIFI_IO_ERROR)); }
-  static IoResult cancelled() { return IoResult(nonstd::make_unexpected(MINIFI_IO_CANCEL)); }
+  static IoResult error() { return IoResult(std::unexpected{MINIFI_IO_ERROR}); }
+  static IoResult cancelled() { return IoResult(std::unexpected{MINIFI_IO_CANCEL}); }
   static IoResult zero() { return IoResult(0U); }
 
   template <typename T>
@@ -51,7 +51,7 @@ class IoResult {
 
     if constexpr (std::is_same_v<T, int64_t>) {
       if (val < 0) {
-        return IoResult(nonstd::make_unexpected(static_cast<MinifiIoStatus>(val)));
+        return IoResult(std::unexpected{static_cast<MinifiIoStatus>(val)});
       }
     } else if constexpr (std::is_same_v<T, size_t>) {
       if (isError(val)) {
@@ -75,12 +75,12 @@ class IoResult {
 
   uint64_t operator*() const { return *result_; }
 
-  nonstd::expected<uint64_t, MinifiIoStatus> inner() const { return result_; }
+  std::expected<uint64_t, MinifiIoStatus> inner() const { return result_; }
 
  private:
-  explicit IoResult(nonstd::expected<uint64_t, MinifiIoStatus> result) : result_(std::move(result)) {}
+  explicit IoResult(std::expected<uint64_t, MinifiIoStatus> result) : result_(std::move(result)) {}
 
-  nonstd::expected<uint64_t, MinifiIoStatus> result_;
+  std::expected<uint64_t, MinifiIoStatus> result_;
 };
 
 class ReadWriteResult {
@@ -95,8 +95,8 @@ class ReadWriteResult {
       : result_(ReadWrite{.bytes_read = bytes_read, .bytes_written = bytes_written}) {}
 
   static ReadWriteResult zero() { return ReadWriteResult(ReadWrite{.bytes_read = 0, .bytes_written = 0}); };
-  static ReadWriteResult error() { return ReadWriteResult(nonstd::make_unexpected(MINIFI_IO_ERROR)); }
-  static ReadWriteResult cancelled() { return ReadWriteResult(nonstd::make_unexpected(MINIFI_IO_CANCEL)); }
+  static ReadWriteResult error() { return ReadWriteResult(std::unexpected{MINIFI_IO_ERROR}); }
+  static ReadWriteResult cancelled() { return ReadWriteResult(std::unexpected{MINIFI_IO_CANCEL}); }
 
   virtual ~ReadWriteResult() = default;
 
@@ -111,9 +111,9 @@ class ReadWriteResult {
     uint64_t bytes_read;
     uint64_t bytes_written;
   };
-  explicit ReadWriteResult(nonstd::expected<ReadWrite, MinifiIoStatus> result) : result_(std::move(result)) {}
+  explicit ReadWriteResult(std::expected<ReadWrite, MinifiIoStatus> result) : result_(std::move(result)) {}
 
-  nonstd::expected<ReadWrite, MinifiIoStatus> result_;
+  std::expected<ReadWrite, MinifiIoStatus> result_;
 };
 
 using OutputStreamCallback = std::function<IoResult(const std::shared_ptr<OutputStream>& output_stream)>;

@@ -24,7 +24,7 @@
 
 namespace org::apache::nifi::minifi::kubernetes::metrics {
 
-[[nodiscard]] nonstd::expected<std::string, std::string> filter(
+[[nodiscard]] std::expected<std::string, std::string> filter(
     const std::string& metrics_json,
     const std::function<bool(const kubernetes::ContainerInfo&)>& filter_function);
 
