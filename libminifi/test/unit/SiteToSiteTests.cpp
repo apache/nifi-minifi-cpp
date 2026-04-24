@@ -250,7 +250,7 @@ TEST_CASE("TestSiteToSiteVerifySend using flowfile data", "[S2S]") {
   session->write(flow_file, [&](const std::shared_ptr<io::OutputStream>& output_stream) {
     std::span<const std::byte> span{reinterpret_cast<const std::byte*>(payload.data()), payload.size()};
     output_stream->write(span);
-    return payload.size();
+    return io::IoResult::from(span.size());
   });
   flow_file->updateAttribute("filename", "myfile");
   flow_file->updateAttribute("flow.id", "test");

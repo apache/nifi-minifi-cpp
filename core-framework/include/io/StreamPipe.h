@@ -31,12 +31,12 @@
 namespace org::apache::nifi::minifi {
 namespace internal {
 
-inline int64_t pipe(io::InputStream& src, io::OutputStream& dst) {
+inline io::IoResult pipe(io::InputStream& src, io::OutputStream& dst) {
   std::array<std::byte, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
-  size_t totalTransferred = 0;
+  uint64_t totalTransferred = 0;
   while (true) {
     const auto readRet = src.read(buffer);
-    if (io::isError(readRet)) return -1;
+    if (io::isError(readRet)) return io::IoResult::error();
     if (readRet == 0) break;
     auto remaining = readRet;
     size_t transferred = 0;
@@ -48,14 +48,14 @@ inline int64_t pipe(io::InputStream& src, io::OutputStream& dst) {
       //     - the number of bytes read or
       //     - the number of bytes wrote
       if (io::isError(writeRet)) {
-        return -1;
+        return io::IoResult::error();
       }
       transferred += writeRet;
       remaining -= writeRet;
     }
     totalTransferred += transferred;
   }
-  return gsl::narrow<int64_t>(totalTransferred);
+  return io::IoResult::from(totalTransferred);
 }
 
 }  // namespace internal
@@ -64,7 +64,7 @@ class InputStreamPipe {
  public:
   explicit InputStreamPipe(io::OutputStream& output) : output_(&output) {}
 
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const {
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream) const {
     return internal::pipe(*stream, *output_);
   }
 
@@ -76,7 +76,7 @@ class OutputStreamPipe {
  public:
   explicit OutputStreamPipe(io::InputStream& input) : input_(&input) {}
 
-  int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const {
+  io::IoResult operator()(const std::shared_ptr<io::OutputStream>& stream) const {
     return internal::pipe(*input_, *stream);
   }
 

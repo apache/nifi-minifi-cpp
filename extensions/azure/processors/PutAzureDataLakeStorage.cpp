@@ -103,16 +103,16 @@ PutAzureDataLakeStorage::ReadCallback::ReadCallback(
     logger_(std::move(logger)) {
 }
 
-int64_t PutAzureDataLakeStorage::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
+io::IoResult PutAzureDataLakeStorage::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   std::vector<std::byte> buffer;
   buffer.resize(flow_size_);
   size_t read_ret = stream->read(buffer);
   if (io::isError(read_ret) || read_ret != flow_size_) {
-    return -1;
+    return io::IoResult::error();
   }
 
   result_ = azure_data_lake_storage_.uploadFile(params_, buffer);
-  return gsl::narrow<int64_t>(read_ret);
+  return io::IoResult::from(read_ret);
 }
 
 REGISTER_RESOURCE(PutAzureDataLakeStorage, Processor);

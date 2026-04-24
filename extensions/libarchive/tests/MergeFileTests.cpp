@@ -108,8 +108,8 @@ class FixedBuffer {
     return gsl::narrow<int64_t>(total_read);
   }
 
-  int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
-    return write(*stream, capacity_);
+  minifi::io::IoResult operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
+    return minifi::io::IoResult::from(write(*stream, capacity_));
   }
 
  private:
@@ -712,11 +712,11 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
 
   core::ProcessSessionImpl session(context);
 
-  minifi::PayloadSerializer payloadSerializer([&] (const std::shared_ptr<core::FlowFile>& ff, const minifi::io::InputStreamCallback& cb) {
-    return session.read(ff, cb);
+  minifi::PayloadSerializer payloadSerializer([&] (const std::shared_ptr<core::FlowFile>& ff, const minifi::io::InputStreamCallback& cb) -> minifi::io::IoResult {
+    return minifi::io::IoResult::from(session.read(ff, cb));
   });
-  minifi::FlowFileV3Serializer ffV3Serializer([&] (const std::shared_ptr<core::FlowFile>& ff, const minifi::io::InputStreamCallback& cb) {
-    return session.read(ff, cb);
+  minifi::FlowFileV3Serializer ffV3Serializer([&] (const std::shared_ptr<core::FlowFile>& ff, const minifi::io::InputStreamCallback& cb) -> minifi::io::IoResult {
+    return minifi::io::IoResult::from(session.read(ff, cb));
   });
 
   minifi::FlowFileSerializer* usedSerializer = nullptr;

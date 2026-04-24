@@ -150,7 +150,7 @@ la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *
   return io::isError(write_ret) ? -1 : gsl::narrow<la_ssize_t>(write_ret);
 }
 
-int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io::OutputStream>& stream) const {
+io::IoResult UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io::OutputStream>& stream) const {
   UnfocusArchiveEntryWriteData data;
   data.stream = stream;
   auto output_archive = archive_write_unique_ptr{archive_write_new()};
@@ -218,7 +218,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
     archive_entry_clear(entry.get());
   }
 
-  return nlen;
+  return io::IoResult::from(nlen);
 }
 
 REGISTER_RESOURCE(UnfocusArchiveEntry, Processor);

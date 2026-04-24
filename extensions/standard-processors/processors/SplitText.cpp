@@ -157,7 +157,7 @@ class ReadCallback {
  public:
   ReadCallback(std::shared_ptr<core::FlowFile> flow_file, const SplitTextConfiguration& split_text_config,
     core::ProcessSession& session, size_t buffer_size, std::shared_ptr<core::logging::Logger> logger);
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream);
   std::optional<const char*> error;
   std::vector<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> results;
 
@@ -325,17 +325,17 @@ void ReadCallback::mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowF
     logger_->log_error("Failed to clone merged fragment flow!");
     return;
   }
-  session_.write(merged_flow, [this, &fragment_flow, &header_flow](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
-    auto header_write_result = session_.read(header_flow, [&output_stream](const std::shared_ptr<io::InputStream>& header_input_stream) -> int64_t {
+  session_.write(merged_flow, [this, &fragment_flow, &header_flow](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
+    const int64_t header_write_result = session_.read(header_flow, [&output_stream](const std::shared_ptr<io::InputStream>& header_input_stream) -> io::IoResult {
       return internal::pipe(*header_input_stream, *output_stream);
     });
     if (header_write_result < 0) {
       logger_->log_error("Failed to write header to fragment!");
-      return header_write_result;
+      return io::IoResult::from(header_write_result);
     }
-    return session_.read(fragment_flow, [&output_stream](const std::shared_ptr<io::InputStream>& fragment_input_stream) -> int64_t {
+    return io::IoResult::from(session_.read(fragment_flow, [&output_stream](const std::shared_ptr<io::InputStream>& fragment_input_stream) -> io::IoResult {
       return internal::pipe(*fragment_input_stream, *output_stream);
-    });
+    }));
   });
   logger_->log_debug("Creating fragment with header with fragment index: {} fragment size: {}", emitted_fragment_index_, merged_flow->getSize());
   setAttributesOfDoneSegment(*merged_flow, fragment.text_line_count);
@@ -354,7 +354,7 @@ void ReadCallback::createFragmentFlowWithoutHeader(const SplitTextFragmentGenera
   results.push_back(fragment_flow);
 }
 
-int64_t ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
+io::IoResult ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   SplitTextFragmentGenerator fragment_generator(stream, split_text_config_, buffer_size_);
   nonstd::expected<SplitTextFragmentGenerator::Fragment, const char*> header_fragment;
   std::shared_ptr<core::FlowFile> header_flow;  // cache header flow file to avoid cloning it for each fragment
@@ -362,12 +362,12 @@ int64_t ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream)
     header_fragment = fragment_generator.readHeaderFragment();
     if (!header_fragment) {
       error = header_fragment.error();
-      return gsl::narrow<int64_t>(flow_file_->getSize());
+      return io::IoResult::from(flow_file_->getSize());
     }
     header_flow = session_.clone(*flow_file_, gsl::narrow<int64_t>(header_fragment->fragment_offset), gsl::narrow<int64_t>(header_fragment->fragment_size));
     if (!header_flow) {
       logger_->log_error("Failed to clone header flow!");
-      return -1;
+      return io::IoResult::error();
     }
   }
 
@@ -386,7 +386,10 @@ int64_t ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream)
   if (header_flow) {
     session_.remove(header_flow);
   }
-  return fragment_generator.getState() == detail::StreamReadState::EndOfStream ? gsl::narrow<int64_t>(flow_file_->getSize()) : -1;
+  if (fragment_generator.getState() == detail::StreamReadState::EndOfStream) {
+    return io::IoResult::from(flow_file_->getSize());
+  }
+  return io::IoResult::error();
 }
 
 }  // namespace

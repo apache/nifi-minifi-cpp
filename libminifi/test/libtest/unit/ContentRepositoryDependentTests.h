@@ -37,16 +37,16 @@ namespace ContentRepositoryDependentTests {
 struct ReadUntilItCan {
   std::string value_;
 
-  int64_t operator()(const std::shared_ptr<minifi::io::InputStream> &stream) {
+  minifi::io::IoResult operator()(const std::shared_ptr<minifi::io::InputStream> &stream) {
     value_.clear();
     std::array<std::byte, 1024> buffer{};
     size_t bytes_read = 0;
     while (true) {
       const size_t read_result = stream->read(buffer);
       if (minifi::io::isError(read_result))
-        return -1;
+        return minifi::io::IoResult::error();
       if (read_result == 0)
-        return gsl::narrow<int64_t>(bytes_read);
+        return minifi::io::IoResult::from(bytes_read);
       bytes_read += read_result;
       const auto char_view = gsl::make_span(buffer).subspan(0, read_result).as_span<const char>();
       value_.append(std::begin(char_view), std::end(char_view));
@@ -179,10 +179,10 @@ inline void testErrWrite(std::shared_ptr<core::ContentRepository> content_repo) 
   fixture.writeToFlowFile(flow_file, "original_content");
 
   REQUIRE_THROWS(
-  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
+  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) -> minifi::io::IoResult {
     std::string str = "new_content";
     output_stream->write(as_bytes(std::span(str)));
-    return MinifiIoStatus::MINIFI_IO_ERROR;
+    return minifi::io::IoResult::error();
   }));
 
   fixture.transferAndCommit(flow_file);
@@ -202,9 +202,9 @@ inline void testOkWrite(std::shared_ptr<core::ContentRepository> content_repo) {
 
   CHECK(flow_file->getSize() == 16);
 
-  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
+  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) -> minifi::io::IoResult {
     std::string str = "new_content";
-    return output_stream->write(as_bytes(std::span(str)));
+    return minifi::io::IoResult::from(output_stream->write(as_bytes(std::span(str))));
   });
 
   fixture.transferAndCommit(flow_file);
@@ -222,10 +222,10 @@ inline void testCancelWrite(std::shared_ptr<core::ContentRepository> content_rep
   const auto flow_file = process_session.create();
   fixture.writeToFlowFile(flow_file, "original_content");
 
-  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) {
+  process_session.write(flow_file, [](const std::shared_ptr<minifi::io::OutputStream>& output_stream) -> minifi::io::IoResult {
     std::string str = "new_content";
     output_stream->write(as_bytes(std::span(str)));
-    return MinifiIoStatus::MINIFI_IO_CANCEL;
+    return minifi::io::IoResult::cancelled();
   });
 
   fixture.transferAndCommit(flow_file);

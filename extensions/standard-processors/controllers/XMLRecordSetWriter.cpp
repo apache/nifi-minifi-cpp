@@ -154,9 +154,9 @@ void XMLRecordSetWriter::write(const core::RecordSet& record_set, const std::sha
   }
 
   auto xml_content = convertRecordSetToXml(record_set);
-  session.write(flow_file, [&xml_content](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+  session.write(flow_file, [&xml_content](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
     stream->write(reinterpret_cast<const uint8_t*>(xml_content.data()), xml_content.size());
-    return gsl::narrow<int64_t>(xml_content.size());
+    return io::IoResult::from(xml_content.size());
   });
 }
 

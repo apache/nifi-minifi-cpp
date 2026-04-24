@@ -94,11 +94,11 @@ void CaptureRTSPFrame::onTrigger(core::ProcessContext& context, core::ProcessSes
       session.putAttribute(*flow_file, "filename", filename);
       session.putAttribute(*flow_file, "video.backend.driver", video_backend_driver_);
 
-      session.write(flow_file, [&frame, this](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
+      session.write(flow_file, [&frame, this](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
         std::vector<uchar> image_buf;
         imencode(image_encoding_, frame, image_buf);
         const auto ret = output_stream->write(image_buf.data(), image_buf.size());
-        return io::isError(ret) ? -1 : gsl::narrow<int64_t>(ret);
+        return io::IoResult::from(ret);
       });
       session.transfer(flow_file, Success);
       logger_->log_info("A frame is captured");

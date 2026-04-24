@@ -163,21 +163,21 @@ std::queue<ConsumeMQTT::SmartMessage> ConsumeMQTT::getReceivedMqttMessages() {
   return msg_queue;
 }
 
-int64_t ConsumeMQTT::WriteCallback::operator() (const std::shared_ptr<io::OutputStream>& stream) {
+io::IoResult ConsumeMQTT::WriteCallback::operator() (const std::shared_ptr<io::OutputStream>& stream) {
   if (message_.contents->payloadlen < 0) {
     success_status_ = false;
     logger_->log_error("Payload length of message is negative, value is [{}]", message_.contents->payloadlen);
-    return -1;
+    return io::IoResult::error();
   }
 
-  const auto len = stream->write(reinterpret_cast<uint8_t*>(message_.contents->payload), gsl::narrow<size_t>(message_.contents->payloadlen));
+  const size_t len = stream->write(reinterpret_cast<uint8_t*>(message_.contents->payload), gsl::narrow<size_t>(message_.contents->payloadlen));
   if (io::isError(len)) {
     success_status_ = false;
     logger_->log_error("Stream writing error when processing message");
-    return -1;
+    return io::IoResult::error();
   }
 
-  return gsl::narrow<int64_t>(len);
+  return io::IoResult::from(len);
 }
 
 void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) const {

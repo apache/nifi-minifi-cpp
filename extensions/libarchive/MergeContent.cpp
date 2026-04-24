@@ -231,8 +231,8 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
     return false;
   }
 
-  auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, const io::InputStreamCallback& cb) {
-    return session.read(ff, cb);
+  auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, const io::InputStreamCallback& cb) -> io::IoResult {
+    return io::IoResult::from(session.read(ff, cb));
   };
 
   const char* mimeType = nullptr;

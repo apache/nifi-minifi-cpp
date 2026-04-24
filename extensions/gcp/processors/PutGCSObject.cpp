@@ -38,18 +38,18 @@ class UploadToGCSCallback {
         client_(client) {
   }
 
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream) {
     std::string content;
     content.resize(stream->size());
     const auto read_ret = stream->read(as_writable_bytes(std::span(content)));
     if (io::isError(read_ret)) {
-      return -1;
+      return io::IoResult::error();
     }
     auto writer = client_.WriteObject(bucket_, key_, hash_value_, crc32c_checksum_, encryption_key_, content_type_, predefined_acl_, if_generation_match_);
     writer << content;
     writer.Close();
     result_ = writer.metadata();
-    return gsl::narrow<int64_t>(read_ret);
+    return io::IoResult::from(read_ret);
   }
 
   [[nodiscard]] const google::cloud::StatusOr<gcs::ObjectMetadata>& getResult() const noexcept {

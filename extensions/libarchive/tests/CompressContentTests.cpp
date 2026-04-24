@@ -56,16 +56,16 @@ class ReadCallback {
   ReadCallback& operator=(ReadCallback&&) = delete;
   ~ReadCallback() = default;
 
-  int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
+  minifi::io::IoResult operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     int64_t total_read = 0;
     do {
       const auto ret = stream->read(std::span(buffer_).subspan(read_size_));
       if (ret == 0) { break; }
-      if (minifi::io::isError(ret)) { return -1; }
+      if (minifi::io::isError(ret)) { return  minifi::io::IoResult::error(); }
       read_size_ += gsl::narrow<size_t>(ret);
       total_read += gsl::narrow<int64_t>(ret);
     } while (buffer_.size() != read_size_);
-    return total_read;
+    return minifi::io::IoResult::from(total_read);
   }
   void archive_read() {
     const auto archive = minifi::processors::archive_read_unique_ptr{archive_read_new()};

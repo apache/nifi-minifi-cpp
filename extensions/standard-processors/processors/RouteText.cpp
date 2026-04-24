@@ -68,12 +68,12 @@ class RouteText::ReadCallback {
   ReadCallback(route_text::Segmentation segmentation, size_t file_size, Fn&& fn)
     : segmentation_(segmentation), file_size_(file_size), fn_(std::move(fn)) {}
 
-  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const {
+  io::IoResult operator()(const std::shared_ptr<io::InputStream>& stream) const {
     std::vector<std::byte> buffer;
     buffer.resize(file_size_);
     size_t ret = stream->read(buffer);
     if (io::isError(ret)) {
-      return -1;
+      return io::IoResult::error();
     }
     if (ret != file_size_) {
       throw Exception(PROCESS_SESSION_EXCEPTION, "Couldn't read whole flowfile content");
@@ -82,7 +82,7 @@ class RouteText::ReadCallback {
     switch (segmentation_) {
       case route_text::Segmentation::FULL_TEXT: {
         fn_({content, 0});
-        return gsl::narrow<int64_t>(content.length());
+        return io::IoResult::from(content.length());
       }
       case route_text::Segmentation::PER_LINE: {
         // 1-based index as in nifi
@@ -102,7 +102,7 @@ class RouteText::ReadCallback {
           curr = next_line;
           ++segment_idx;
         }
-        return gsl::narrow<int64_t>(content.length());
+        return io::IoResult::from(content.length());
       }
     }
     throw Exception(PROCESSOR_EXCEPTION, "Unknown segmentation strategy");

@@ -189,11 +189,11 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::clone(const FlowFile& parent
   if (record) {
     logger_->log_debug("Cloned parent flow files {} to {}, with {}:{}", parent.getUUIDStr(), record->getUUIDStr(), offset, size);
     if (parent.getResourceClaim()) {
-      write(record, [&] (const std::shared_ptr<io::OutputStream>& output) -> int64_t {
-        return read(parent, [&] (const std::shared_ptr<io::InputStream>& input) -> int64_t {
+      write(record, [&] (const std::shared_ptr<io::OutputStream>& output) -> io::IoResult {
+        return io::IoResult::from(read(parent, [&] (const std::shared_ptr<io::InputStream>& input) -> io::IoResult {
           io::StreamSlice slice(input, offset, size);
-          return minifi::internal::pipe(slice, *output);
-        });
+          return internal::pipe(slice, *output);
+        }));
       });
     }
     provenance_report_->clone(parent, *record);
@@ -262,14 +262,15 @@ void ProcessSessionImpl::write(core::FlowFile &flow, const io::OutputStreamCallb
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
     }
     const auto callback_result = callback(stream);
-    if (callback_result == MinifiIoStatus::MINIFI_IO_CANCEL) {
+
+    if (callback_result.is_cancelled()) {
       stream->close();
       content_session_->remove(claim);
       claim.reset();
       return;
     }
 
-    if (callback_result < 0) {
+    if (!callback_result) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 
@@ -300,7 +301,7 @@ void ProcessSessionImpl::writeBuffer(const std::shared_ptr<core::FlowFile>& flow
 void ProcessSessionImpl::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer) {
   write(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
     const auto write_status = output_stream->write(buffer);
-    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
+    return io::IoResult::from(write_status);
   });
 }
 
@@ -330,7 +331,7 @@ void ProcessSessionImpl::append(const std::shared_ptr<core::FlowFile> &flow, con
     // this prevents an issue if we write, above, with zero length.
     if (stream_size_before_callback > 0)
       stream->seek(stream_size_before_callback);
-    if (callback(stream) < 0) {
+    if (!callback(stream)) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
     flow->setSize(flow_file_size + (stream->size() - stream_size_before_callback));
@@ -357,7 +358,7 @@ void ProcessSessionImpl::appendBuffer(const std::shared_ptr<core::FlowFile>& flo
   if (buffer.empty()) { return; }
   append(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
     const auto write_status = output_stream->write(buffer);
-    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
+    return io::IoResult::from(write_status);
   });
 }
 
@@ -390,14 +391,14 @@ int64_t ProcessSessionImpl::read(const core::FlowFile& flow_file, const io::Inpu
       return 0;
     }
 
-    auto ret = callback(flow_file_stream);
-    if (ret < 0) {
+    const auto callback_result = callback(flow_file_stream);
+    if (!callback_result) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
     if (metrics_) {
-      metrics_->bytesRead() += ret;
+      metrics_->bytesRead() += *callback_result;
     }
-    return ret;
+    return callback_result.toI64();
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception {}", exception.what());
     throw;
@@ -432,7 +433,7 @@ int64_t ProcessSessionImpl::readWrite(const std::shared_ptr<core::FlowFile> &flo
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
     }
 
-    auto read_write_result = callback(input_stream, output_stream);
+    const auto read_write_result = callback(input_stream, output_stream);
     if (!read_write_result) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
@@ -440,15 +441,15 @@ int64_t ProcessSessionImpl::readWrite(const std::shared_ptr<core::FlowFile> &flo
     input_stream->close();
     output_stream->close();
 
-    flow->setSize(gsl::narrow<uint64_t>(read_write_result->bytes_written));
+    flow->setSize(gsl::narrow<uint64_t>(read_write_result.bytesWritten()));
     flow->setOffset(0);
     flow->setResourceClaim(output_claim);
     if (metrics_) {
-      metrics_->bytesWritten() += read_write_result->bytes_written;
-      metrics_->bytesRead() += read_write_result->bytes_read;
+      metrics_->bytesWritten() += read_write_result.bytesWritten();
+      metrics_->bytesRead() += read_write_result.bytesRead();
     }
 
-    return read_write_result->bytes_written;
+    return gsl::narrow<int64_t>(read_write_result.bytesWritten());
   } catch (const std::exception& exception) {
     logger_->log_debug("Caught exception during process session readWrite, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
@@ -460,14 +461,14 @@ int64_t ProcessSessionImpl::readWrite(const std::shared_ptr<core::FlowFile> &flo
 
 detail::ReadBufferResult ProcessSessionImpl::readBuffer(const std::shared_ptr<core::FlowFile>& flow) {
   detail::ReadBufferResult result;
-  result.status = read(flow, [&result, this](const std::shared_ptr<io::InputStream>& input_stream) {
+  result.status = read(flow, [&result, this](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
     result.buffer.resize(input_stream->size());
     const auto read_status = input_stream->read(result.buffer);
     if (read_status != result.buffer.size()) {
       logger_->log_error("readBuffer: {} bytes were requested from the stream but {} bytes were read. Rolling back.", result.buffer.size(), read_status);
       throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
     }
-    return gsl::narrow<int64_t>(read_status);
+    return io::IoResult::from(read_status);
   });
   return result;
 }

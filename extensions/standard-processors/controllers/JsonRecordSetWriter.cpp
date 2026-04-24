@@ -75,7 +75,7 @@ void JsonRecordSetWriter::onEnable() {
 }
 
 void JsonRecordSetWriter::writePerLine(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
-  session.write(flow_file, [&record_set](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+  session.write(flow_file, [&record_set](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
     int64_t write_result = 0;
     for (const auto& record : record_set) {
       auto doc = rapidjson::Document(rapidjson::kObjectType);
@@ -86,12 +86,12 @@ void JsonRecordSetWriter::writePerLine(const core::RecordSet& record_set, const 
       doc.Accept(writer);
       write_result += gsl::narrow<int64_t>(stream->write(gsl::make_span(fmt::format("{}\n", buffer.GetString())).as_span<const std::byte>()));
     }
-    return write_result;
+    return io::IoResult::from(write_result);
   });
 }
 
 void JsonRecordSetWriter::writeAsArray(const core::RecordSet& record_set, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) const {
-  session.write(flow_file, [this, &record_set](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+  session.write(flow_file, [this, &record_set](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
     auto doc = rapidjson::Document(rapidjson::kArrayType);
     for (const auto& record : record_set) {
       auto& allocator = doc.GetAllocator();
@@ -107,7 +107,7 @@ void JsonRecordSetWriter::writeAsArray(const core::RecordSet& record_set, const 
       rapidjson::Writer writer(buffer);
       doc.Accept(writer);
     }
-    return gsl::narrow<int64_t>(stream->write(gsl::make_span(fmt::format("{}", buffer.GetString())).as_span<const std::byte>()));
+    return io::IoResult::from(stream->write(gsl::make_span(fmt::format("{}", buffer.GetString())).as_span<const std::byte>()));
   });
 }
 

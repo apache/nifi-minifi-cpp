@@ -31,9 +31,9 @@ FileReaderCallback::FileReaderCallback(std::filesystem::path file_path, const si
     logger_(core::logging::LoggerFactory<FileReaderCallback>::getLogger()) {
 }
 
-int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& output_stream) const {
+io::IoResult FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& output_stream) const {
   std::vector<char> buffer(buffer_size_);
-  uint64_t num_bytes_written = 0;
+  size_t num_bytes_written = 0;
 
   std::ifstream input_stream{file_path_, std::ifstream::in | std::ifstream::binary};
   if (!input_stream.is_open()) {
@@ -47,14 +47,14 @@ int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& 
     }
     const auto num_bytes_read = input_stream.gcount();
     logger_->log_trace("Read {} bytes of input", std::intmax_t{num_bytes_read});
-    const auto len = gsl::narrow<size_t>(num_bytes_read);
+    const auto len = num_bytes_read;
     output_stream->write(reinterpret_cast<uint8_t*>(buffer.data()), len);
     num_bytes_written += len;
   }
   input_stream.close();
 
   logger_->log_debug("Finished reading {} bytes from the file", num_bytes_written);
-  return gsl::narrow<int64_t>(num_bytes_written);
+  return io::IoResult::from(num_bytes_written);
 }
 
 }  // namespace org::apache::nifi::minifi::utils

@@ -111,7 +111,7 @@ class FileReaderCallback {
     openFile(file_path, offset, input_stream_, logger_);
   }
 
-  int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
+  io::IoResult operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
     io::CRCStream<io::OutputStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
 
     uint64_t num_bytes_written = 0;
@@ -143,7 +143,7 @@ class FileReaderCallback {
       latest_flow_file_ends_with_delimiter_ = false;
     }
 
-    return gsl::narrow<int64_t>(num_bytes_written);
+    return io::IoResult::from(num_bytes_written);
   }
 
   uint64_t checksum() const {
@@ -187,7 +187,7 @@ class WholeFileReaderCallback {
     return checksum_;
   }
 
-  int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
+  io::IoResult operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
     std::vector<char> buffer(buffer_size_);
 
     io::CRCStream<io::OutputStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
@@ -208,7 +208,7 @@ class WholeFileReaderCallback {
 
     checksum_ = crc_stream.getCRC();
 
-    return gsl::narrow<int64_t>(num_bytes_written);
+    return io::IoResult::from(num_bytes_written);
   }
 
  private:

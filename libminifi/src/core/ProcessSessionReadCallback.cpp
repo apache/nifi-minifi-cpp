@@ -39,22 +39,22 @@ ProcessSessionReadCallback::ProcessSessionReadCallback(std::filesystem::path tem
 }
 
 // Copy the entire file contents to the temporary file
-int64_t ProcessSessionReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
+io::IoResult ProcessSessionReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   // Copy file contents into tmp file
   write_succeeded_ = false;
   size_t size = 0;
   std::array<std::byte, 8192> buffer{};
   do {
     const auto read = stream->read(buffer);
-    if (io::isError(read)) return -1;
+    if (io::isError(read)) { return io::IoResult::error(); }
     if (read == 0) break;
     if (!tmp_file_os_.write(reinterpret_cast<char*>(buffer.data()), gsl::narrow<std::streamsize>(read))) {
-      return -1;
+      return io::IoResult::error();
     }
     size += read;
   } while (size < stream->size());
         write_succeeded_ = true;
-  return gsl::narrow<int64_t>(size);
+  return io::IoResult::from(size);
 }
 
 // Renames tmp file to final destination

@@ -69,12 +69,11 @@ void HashContent::onTrigger(core::ProcessContext&, core::ProcessSession& session
   }
 
   logger_->log_trace("attempting read");
-  session.read(flowFile, [&flowFile, this](const std::shared_ptr<io::InputStream>& stream) {
+  session.read(flowFile, [&flowFile, this](const std::shared_ptr<io::InputStream>& stream) -> io::IoResult {
     const auto& ret_val = algorithm_(stream);
-
     flowFile->setAttribute(attrKey_, ret_val.first);
 
-    return ret_val.second;
+    return io::IoResult::from(ret_val.second);
   });
   session.transfer(flowFile, Success);
 }

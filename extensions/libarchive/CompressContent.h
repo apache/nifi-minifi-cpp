@@ -168,37 +168,37 @@ class CompressContent : public core::ProcessorImpl {
     core::ProcessSession& session_;
     bool success_{false};
 
-    int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
+    io::IoResult operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
       std::shared_ptr<io::ZlibBaseStream> filterStream;
       if (compress_mode_ == compress_content::CompressionMode::compress) {
         filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
         filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP);
       }
-      session_.read(flow_, [this, &filterStream](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+      session_.read(flow_, [this, &filterStream](const std::shared_ptr<io::InputStream>& input_stream) -> io::IoResult {
         std::vector<std::byte> buffer(16 * 1024U);
         size_t read_size = 0;
         while (read_size < flow_->getSize()) {
           const auto ret = input_stream->read(buffer);
           if (io::isError(ret)) {
-            return -1;
+            return io::IoResult::error();
           } else if (ret == 0) {
             break;
           } else {
             const auto writeret = filterStream->write(gsl::make_span(buffer).subspan(0, ret));
             if (io::isError(writeret) || gsl::narrow<size_t>(writeret) != ret) {
-              return -1;
+              return io::IoResult::error();
             }
             read_size += ret;
           }
         }
         filterStream->close();
-        return gsl::narrow<int64_t>(read_size);
+        return io::IoResult::from(read_size);
       });
 
       success_ = filterStream->isFinished();
 
-      return gsl::narrow<int64_t>(flow_->getSize());
+      return io::IoResult::from(flow_->getSize());
     }
   };
 
