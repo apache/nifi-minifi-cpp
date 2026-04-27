@@ -260,13 +260,13 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
   }
 
   if (decode_status == 1) {
-    return nonstd::make_unexpected("Could not find a KV slot for the batch (try reducing the size of the batch or increase the context)");
+    return std::unexpected("Could not find a KV slot for the batch (try reducing the size of the batch or increase the context)");
   }
   if (decode_status == 2) {
-    return nonstd::make_unexpected("Llama decode aborted");
+    return std::unexpected("Llama decode aborted");
   }
   if (decode_status < 0) {
-    return nonstd::make_unexpected("Error occurred while executing llama decode");
+    return std::unexpected("Error occurred while executing llama decode");
   }
 
   result.tokens_per_second =
