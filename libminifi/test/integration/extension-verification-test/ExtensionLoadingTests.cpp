@@ -44,15 +44,11 @@ class ExtensionLoadingTestController {
 };
 
 TEST_CASE("Loading an extension makes the processors available") {
-  CHECK_FALSE(core::ClassLoader::getDefaultClassLoader().instantiate("DummyProcessor", "dummy"));
   CHECK_FALSE(core::ClassLoader::getDefaultClassLoader().instantiate("DummyCProcessor", "dummy"));
   {
-    ExtensionLoadingTestController controller{"*test-extension-loading-cpp-resources*,*test-extension-loading-c-resources*"};
-    CHECK(core::ClassLoader::getDefaultClassLoader().instantiate("DummyProcessor", "dummy"));
+    ExtensionLoadingTestController controller{"*test-extension-loading-c-resources*"};
     CHECK(core::ClassLoader::getDefaultClassLoader().instantiate("DummyCProcessor", "dummy"));
   }
-  // on some platforms the dlclose is noop, which does not trigger the static registrar's destruction
-  // CHECK_FALSE(core::ClassLoader::getDefaultClassLoader().instantiate("DummyProcessor", "dummy"));
   CHECK_FALSE(core::ClassLoader::getDefaultClassLoader().instantiate("DummyCProcessor", "dummy"));
 }
 

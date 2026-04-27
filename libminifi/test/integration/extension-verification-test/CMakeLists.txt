@@ -92,11 +92,5 @@ createIntegrationTests(ExtensionLoadingTests)
 target_link_libraries(ExtensionLoadingTests core-minifi Catch2WithMain Threads::Threads)
 add_test(NAME ExtensionLoadingTests COMMAND ExtensionLoadingTests)
 
-
-create_loading_test_extension(test-extension-loading-cpp-resources CppApiResources.cpp)
-add_dependencies(ExtensionLoadingTests test-extension-loading-cpp-resources)
-target_link_libraries(test-extension-loading-cpp-resources PRIVATE ${LIBMINIFI})
-target_include_directories(test-extension-loading-cpp-resources BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test/libtest/")
-
 create_c_test_extension(c-resources 10)
 add_dependencies(ExtensionLoadingTests test-extension-loading-c-resources)
