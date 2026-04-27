@@ -205,7 +205,7 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
       .parse_special = true,
     };
     unique_mtmd_input_chunks_ptr chunks{mtmd_input_chunks_init()};
-    auto bitmap_c_ptrs = bitmaps | std::views::transform([] (auto& ptr) {return ptr.get();}) | std::ranges::to<std::vector<const mtmd_bitmap*>>();
+    auto bitmap_c_ptrs = bitmaps | std::views::transform([] (auto& ptr) {return static_cast<const mtmd_bitmap*>(ptr.get());}) | std::ranges::to<std::vector>();
     auto tokenized = mtmd_tokenize(multimodal_ctx_, chunks.get(), &inp_txt, bitmap_c_ptrs.data(), bitmap_c_ptrs.size());
     if (tokenized != 0) {
       throw Exception(PROCESSOR_EXCEPTION, fmt::format("Failed to tokenize multimodal prompt, error: {}", tokenized));
