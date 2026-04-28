@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,17 +16,20 @@
  */
 #pragma once
 
-#include <memory>
 #include <string>
-#include "minifi-cpp/utils/Id.h"
-#include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
 
-namespace org::apache::nifi::minifi::core::controller {
+namespace org::apache::nifi::minifi::core {
 
-struct ControllerServiceMetadata {
-  utils::Identifier uuid;
-  std::string name;
-  std::shared_ptr<logging::Logger> logger;
+struct ControllerServiceType {
+  std::string artifact;
+  std::string group;
+  std::string type;
+
+  ControllerServiceType(const ControllerServiceTypeDefinition& definition)  // NOLINT(runtime/explicit)
+    : artifact(definition.artifact),
+      group(definition.group),
+      type(definition.type) {}
 };
 
-}  // namespace org::apache::nifi::minifi::core::controller
+}  // namespace org::apache::nifi::minifi::core
