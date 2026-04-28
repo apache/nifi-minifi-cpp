@@ -119,14 +119,11 @@ void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
 
   auto proxy = getProxy(context);
   if (proxy.proxy_type != minifi::controllers::ProxyType::DIRECT) {
-    client_config_.proxyScheme = minifi::utils::string::startsWith(proxy.proxy_host, "https") ? Aws::Http::Scheme::HTTPS : Aws::Http::Scheme::HTTP;
-    auto proxy_host = proxy.proxy_host;
-    if (minifi::utils::string::startsWith(proxy_host, "https://")) {
-      proxy_host = proxy_host.substr(8);
-    } else if (minifi::utils::string::startsWith(proxy_host, "http://")) {
-      proxy_host = proxy_host.substr(7);
+    if (minifi::utils::string::startsWith(proxy.proxy_host, "https://")) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "HTTPS proxy is not supported");
     }
-    client_config_.proxyHost = proxy_host;
+    client_config_.proxyScheme = Aws::Http::Scheme::HTTP;
+    client_config_.proxyHost = proxy.proxy_host;
     client_config_.proxyPort = proxy.proxy_port.value_or(0);
     client_config_.proxyUserName = proxy.proxy_user.value_or("");
     client_config_.proxyPassword = proxy.proxy_password.value_or("");

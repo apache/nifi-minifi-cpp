@@ -209,6 +209,15 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") 
   checkProxySettings();
 }
 
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "HTTPS proxy is not supported", "[awsS3Proxy]") {
+  setRequiredProperties();
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Host", "https://host"));
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Port", "1234"));
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Username", "username"));
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Password", "password"));
+  REQUIRE_THROWS_WITH(test_controller.runSession(plan), "Process Schedule Operation: HTTPS proxy is not supported");
+}
+
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy is not configured if proxy type is direct", "[awsS3Proxy]") {
   setRequiredProperties();
   setProxy(ProxyConfigType::ControllerServiceDirect);

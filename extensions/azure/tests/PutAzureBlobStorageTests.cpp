@@ -340,7 +340,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failur
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob storage put using proxy", "[azureBlobStorageUpload]") {
   auto proxy_configuration_service = plan_->addController("ProxyConfigurationService", "ProxyConfigurationService");
-  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "https://host");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "http://host");
   plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
   plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
   plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
@@ -353,7 +353,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob storage put u
   test_controller_.runSession(plan_, true);
   auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
   REQUIRE(passed_params.proxy_configuration);
-  REQUIRE(passed_params.proxy_configuration->proxy_host == "https://host");
+  REQUIRE(passed_params.proxy_configuration->proxy_host == "http://host");
   REQUIRE(passed_params.proxy_configuration->proxy_port);
   REQUIRE(*passed_params.proxy_configuration->proxy_port == 1234);
   REQUIRE(passed_params.proxy_configuration->proxy_user);

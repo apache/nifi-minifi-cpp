@@ -112,13 +112,13 @@ class S3TestsFixture {
     if (proxy_config_type == ProxyConfigType::ControllerServiceHttp || proxy_config_type == ProxyConfigType::ControllerServiceDirect) {
       auto proxy_configuration_service = this->plan->addController("ProxyConfigurationService", "ProxyConfigurationService");
       REQUIRE(this->plan->setProperty(proxy_configuration_service, "Proxy Type", proxy_config_type == ProxyConfigType::ControllerServiceHttp ? "HTTP" : "DIRECT"));
-      REQUIRE(this->plan->setProperty(proxy_configuration_service, "Proxy Server Host", "https://host"));
+      REQUIRE(this->plan->setProperty(proxy_configuration_service, "Proxy Server Host", "http://host"));
       REQUIRE(this->plan->setProperty(proxy_configuration_service, "Proxy Server Port", "1234"));
       REQUIRE(this->plan->setProperty(proxy_configuration_service, "Proxy User Name", "username"));
       REQUIRE(this->plan->setProperty(proxy_configuration_service, "Proxy User Password", "password"));
       REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Configuration Service", "ProxyConfigurationService"));
     } else {
-      REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Host", "https://host"));
+      REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Host", "http://host"));
       REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Port", "1234"));
       REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Username", "username"));
       REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Password", "password"));
@@ -126,8 +126,8 @@ class S3TestsFixture {
   }
 
   void checkProxySettings() {
-    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyScheme == Aws::Http::Scheme::HTTPS);
-    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "host");
+    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyScheme == Aws::Http::Scheme::HTTP);
+    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "http://host");
     REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 1234);
     REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName == "username");
     REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword == "password");
