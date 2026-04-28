@@ -569,7 +569,7 @@ MinifiStatus MinifiProcessContextGetControllerService(
   if (const minifi::utils::CControllerService* c_controller_service = dynamic_cast<minifi::utils::CControllerService*>(&*service_shared_ptr)) {
     const auto class_description = c_controller_service->getClassDescription();
     if (class_description.full_name == toStringView(controller_service_type)) {
-      *controller_service_out = c_controller_service->getImpl();
+      *controller_service_out = static_cast<MinifiControllerService*>(c_controller_service->getImpl());
       return MINIFI_STATUS_SUCCESS;
     }
   }
