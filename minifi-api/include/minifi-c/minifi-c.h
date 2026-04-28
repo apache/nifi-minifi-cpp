@@ -177,7 +177,7 @@ typedef struct MinifiControllerServiceCallbacks {
   MINIFI_OWNED void*(*create)(MinifiControllerServiceMetadata);
   void(*destroy)(MINIFI_OWNED void*);
   MinifiStatus(*enable)(void*, MinifiControllerServiceContext*);
-  void(*notifyStop)(void*);
+  void(*disable)(void*);
 } MinifiControllerServiceCallbacks;
 
 typedef struct MinifiProcessorClassDefinition {

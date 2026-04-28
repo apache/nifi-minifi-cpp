@@ -78,7 +78,7 @@ class CControllerService final : public core::controller::ControllerServiceApi, 
   }
 
   void notifyStop() override {
-    class_description_.callbacks.notifyStop(impl_);
+    class_description_.callbacks.disable(impl_);
   }
 
   ControllerServiceHandle* getControllerServiceHandle() override {
