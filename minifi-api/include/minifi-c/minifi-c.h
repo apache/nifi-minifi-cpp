@@ -153,13 +153,13 @@ typedef enum MinifiLogLevel : uint32_t {
 typedef struct MinifiProcessorMetadata {
   MinifiStringView uuid;
   MinifiStringView name;
-  MinifiLogger* logger;  // borrowed reference, live until the processor is live
+  MinifiLogger* logger;  // borrowed non-null reference, live until the processor is live
 } MinifiProcessorMetadata;
 
 typedef struct MinifiControllerServiceMetadata {
   MinifiStringView uuid;
   MinifiStringView name;
-  MinifiLogger* logger;  // borrowed reference, live until the controller service is live
+  MinifiLogger* logger;  // borrowed non-null reference, live until the controller service is live
 } MinifiControllerServiceMetadata;
 
 typedef struct MinifiProcessorCallbacks {
