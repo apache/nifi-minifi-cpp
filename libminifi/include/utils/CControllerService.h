@@ -52,6 +52,10 @@ class CControllerService final : public core::controller::ControllerServiceApi, 
       : class_description_(std::move(class_description)),
         impl_(impl),
         metadata_(std::move(metadata)) {}
+  CControllerService(const CControllerService&) = delete;
+  CControllerService& operator=(const CControllerService&) = delete;
+  CControllerService(CControllerService&&) = delete;
+  CControllerService& operator=(CControllerService&&) = delete;
   ~CControllerService() override {
     class_description_.callbacks.destroy(impl_);
   }
