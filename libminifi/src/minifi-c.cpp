@@ -554,7 +554,7 @@ MinifiStatus MinifiProcessContextGetControllerService(
     MinifiProcessContext* process_context,
     const MinifiStringView controller_service_name,
     const MinifiStringView controller_service_type,
-    void** controller_service_out) {
+    MinifiControllerService** controller_service_out) {
   if (!controller_service_out) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
