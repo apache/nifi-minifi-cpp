@@ -62,6 +62,10 @@ class Extension {
     return info_;
   }
 
+  void addClass(std::string class_name) {
+    classes_.push_back(std::move(class_name));
+  }
+
  private:
 #ifdef WIN32
   std::map<void*, std::string> resource_mapping_;
@@ -85,6 +89,7 @@ class Extension {
   gsl::owner<void*> handle_ = nullptr;
 
   std::optional<Info> info_;
+  std::vector<std::string> classes_;
   uint32_t api_version_{0};
 
   const std::shared_ptr<logging::Logger> logger_;

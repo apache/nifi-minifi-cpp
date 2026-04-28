@@ -85,3 +85,12 @@ create_loading_test_extension(test-extension-loading-missing-init InvalidMissing
 create_loading_test_extension(test-extension-loading-create-not-called CreateNotCalled.cpp)
 target_link_libraries(test-extension-loading-create-not-called minifi-cpp-extension-lib)
 target_compile_definitions(test-extension-loading-create-not-called PRIVATE MINIFI_TEST_API_VERSION=10)
+
+### Extension Loading Tests
+add_minifi_executable(ExtensionLoadingTests ExtensionLoadingTests.cpp)
+createIntegrationTests(ExtensionLoadingTests)
+target_link_libraries(ExtensionLoadingTests core-minifi Catch2WithMain Threads::Threads)
+add_test(NAME ExtensionLoadingTests COMMAND ExtensionLoadingTests)
+
+create_c_test_extension(c-resources 10)
+add_dependencies(ExtensionLoadingTests test-extension-loading-c-resources)
