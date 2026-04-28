@@ -258,7 +258,7 @@ MinifiStatus MinifiRegisterProcessor(MinifiExtension* extension_handle, const Mi
       c_class_description.name,
       std::make_unique<CProcessorFactory>(extension_info->name, toString(processor->full_name), c_class_description));
     bundle_components.processors.emplace_back(description);
-    extension->addResource(c_class_description.name);
+    extension->addClass(c_class_description.name);
   });
   return MINIFI_STATUS_SUCCESS;
 }

@@ -62,8 +62,8 @@ class Extension {
     return info_;
   }
 
-  void addResource(std::string resource_name) {
-    resources_.push_back(std::move(resource_name));
+  void addClass(std::string class_name) {
+    classes_.push_back(std::move(class_name));
   }
 
  private:
@@ -89,7 +89,7 @@ class Extension {
   gsl::owner<void*> handle_ = nullptr;
 
   std::optional<Info> info_;
-  std::vector<std::string> resources_;
+  std::vector<std::string> classes_;
   uint32_t api_version_{0};
 
   const std::shared_ptr<logging::Logger> logger_;
