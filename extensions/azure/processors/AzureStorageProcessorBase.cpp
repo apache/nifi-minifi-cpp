@@ -37,8 +37,7 @@ void AzureStorageProcessorBase::onSchedule(core::ProcessContext& context, core::
       .proxy_type = proxy_controller_service->getProxyType(),
       .proxy_host = proxy_controller_service->getHost(),
       .proxy_port = proxy_controller_service->getPort(),
-      .proxy_user = proxy_controller_service->getUsername(),
-      .proxy_password = proxy_controller_service->getPassword()
+      .proxy_credentials = proxy_controller_service->getProxyCredentials()
     };
   }
 }

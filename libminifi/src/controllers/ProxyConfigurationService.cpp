@@ -37,11 +37,12 @@ void ProxyConfigurationService::onEnable() {
   if (auto proxy_port = getProperty(ProxyServerPort.name) | utils::andThen(parsing::parseIntegral<uint16_t>)) {
     proxy_configuration_.proxy_port = *proxy_port;
   }
-  if (auto proxy_user = getProperty(ProxyUserName.name)) {
-    proxy_configuration_.proxy_user = *proxy_user;
+  std::string proxy_user;
+  if (auto proxy_user_prop = getProperty(ProxyUserName.name)) {
+    proxy_user = *proxy_user_prop;
   }
-  if (auto proxy_password = getProperty(ProxyUserPassword.name)) {
-    proxy_configuration_.proxy_password = *proxy_password;
+  if (auto proxy_password = getProperty(ProxyUserPassword.name); !proxy_user.empty() && proxy_password) {
+    proxy_configuration_.proxy_credentials = BasicAuthCredentials{.username = proxy_user, .password = *proxy_password};
   }
 }
 

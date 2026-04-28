@@ -36,20 +36,18 @@ AzureDataLakeStorageClient::AzureDataLakeStorageClient() {
 }
 
 std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> AzureDataLakeStorageClient::createClient(const AzureStorageCredentials& credentials,
-    const std::string& file_system_name, std::optional<uint64_t> number_of_retries, const std::optional<minifi::controllers::ProxyConfiguration>& proxy_configuration) {
+    const std::string& file_system_name, std::optional<uint64_t> number_of_retries, const minifi::controllers::ProxyConfiguration& proxy_configuration) {
   Azure::Storage::Files::DataLake::DataLakeClientOptions options;
   if (number_of_retries) {
     options.Retry.MaxRetries = gsl::narrow<int32_t>(*number_of_retries);
   }
 
-  if (proxy_configuration && proxy_configuration->proxy_type != minifi::controllers::ProxyType::DIRECT) {
-    options.Transport.HttpProxy = proxy_configuration->proxy_host + (proxy_configuration->proxy_port ? (":" + std::to_string(*proxy_configuration->proxy_port)) : "");
+  if (proxy_configuration.proxy_type != minifi::controllers::ProxyType::DIRECT) {
+    options.Transport.HttpProxy = proxy_configuration.proxy_host + (proxy_configuration.proxy_port != 0 ? (":" + std::to_string(proxy_configuration.proxy_port)) : "");
 
-    if (proxy_configuration->proxy_user) {
-      options.Transport.ProxyUserName = *proxy_configuration->proxy_user;
-    }
-    if (proxy_configuration->proxy_password) {
-      options.Transport.ProxyPassword = *proxy_configuration->proxy_password;
+    if (proxy_configuration.proxy_credentials) {
+      options.Transport.ProxyUserName = proxy_configuration.proxy_credentials->username;
+      options.Transport.ProxyPassword = proxy_configuration.proxy_credentials->password;
     }
   }
 

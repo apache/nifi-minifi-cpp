@@ -352,15 +352,12 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob storage put u
   setDefaultCredentials();
   test_controller_.runSession(plan_, true);
   auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
-  REQUIRE(passed_params.proxy_configuration);
-  REQUIRE(passed_params.proxy_configuration->proxy_host == "http://host");
-  REQUIRE(passed_params.proxy_configuration->proxy_port);
-  REQUIRE(*passed_params.proxy_configuration->proxy_port == 1234);
-  REQUIRE(passed_params.proxy_configuration->proxy_user);
-  REQUIRE(*passed_params.proxy_configuration->proxy_user == "username");
-  REQUIRE(passed_params.proxy_configuration->proxy_password);
-  REQUIRE(*passed_params.proxy_configuration->proxy_password == "password");
-  REQUIRE(passed_params.proxy_configuration->proxy_type == minifi::controllers::ProxyType::HTTP);
+  REQUIRE(passed_params.proxy_configuration.proxy_host == "http://host");
+  REQUIRE(passed_params.proxy_configuration.proxy_port == 1234);
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials);
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials->username == "username");
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials->password == "password");
+  REQUIRE(passed_params.proxy_configuration.proxy_type == minifi::controllers::ProxyType::HTTP);
   CHECK(getFailedFlowFileContents().empty());
 }
 

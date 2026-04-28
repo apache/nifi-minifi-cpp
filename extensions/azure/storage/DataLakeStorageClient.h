@@ -41,7 +41,7 @@ struct AzureDataLakeStorageParameters {
   std::string file_system_name;
   std::string directory_name;
   std::optional<uint64_t> number_of_retries;
-  std::optional<minifi::controllers::ProxyConfiguration> proxy_configuration;
+  minifi::controllers::ProxyConfiguration proxy_configuration;
 };
 
 struct AzureDataLakeStorageFileOperationParameters : public AzureDataLakeStorageParameters {

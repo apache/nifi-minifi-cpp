@@ -81,19 +81,15 @@ class ProxyConfigurationService : public core::controller::ControllerServiceBase
     return proxy_configuration_.proxy_host;
   }
 
-  std::optional<uint16_t> getPort() const override {
+  uint16_t getPort() const override {
     std::lock_guard lock(configuration_mutex_);
     return proxy_configuration_.proxy_port;
   }
 
-  std::optional<std::string> getUsername() const override {
+  std::optional<BasicAuthCredentials> getProxyCredentials() const override {
     std::lock_guard lock(configuration_mutex_);
-    return proxy_configuration_.proxy_user;
-  }
+    return proxy_configuration_.proxy_credentials;
 
-  std::optional<std::string> getPassword() const override {
-    std::lock_guard lock(configuration_mutex_);
-    return proxy_configuration_.proxy_password;
   }
 
  private:

@@ -62,7 +62,7 @@ class AzureStorageProcessorBase : public core::ProcessorImpl {
   std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(core::ProcessContext &context) const;
 
  protected:
-  std::optional<minifi::controllers::ProxyConfiguration> proxy_configuration_;
+  minifi::controllers::ProxyConfiguration proxy_configuration_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

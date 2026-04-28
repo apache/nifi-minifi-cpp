@@ -30,6 +30,11 @@ enum class ProxyType {
   HTTP
 };
 
+struct BasicAuthCredentials {
+  std::string username;
+  std::string password;
+};
+
 class ProxyConfigurationServiceInterface : public virtual core::controller::ControllerServiceHandle {
  public:
   static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition {
@@ -40,9 +45,8 @@ class ProxyConfigurationServiceInterface : public virtual core::controller::Cont
   };
 
   virtual std::string getHost() const = 0;
-  virtual std::optional<uint16_t> getPort() const = 0;
-  virtual std::optional<std::string> getUsername() const = 0;
-  virtual std::optional<std::string> getPassword() const = 0;
+  virtual uint16_t getPort() const = 0;
+  virtual std::optional<BasicAuthCredentials> getProxyCredentials() const = 0;
   virtual ProxyType getProxyType() const = 0;
 };
 

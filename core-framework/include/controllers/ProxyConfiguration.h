@@ -24,11 +24,10 @@
 namespace org::apache::nifi::minifi::controllers {
 
 struct ProxyConfiguration {
-  ProxyType proxy_type;
+  ProxyType proxy_type = ProxyType::DIRECT;
   std::string proxy_host;
-  std::optional<uint16_t> proxy_port;
-  std::optional<std::string> proxy_user;
-  std::optional<std::string> proxy_password;
+  uint16_t proxy_port = 0;
+  std::optional<BasicAuthCredentials> proxy_credentials;
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

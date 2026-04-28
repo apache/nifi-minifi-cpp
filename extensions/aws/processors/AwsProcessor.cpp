@@ -71,15 +71,16 @@ minifi::controllers::ProxyConfiguration AwsProcessor::getProxy(core::ProcessCont
   if (proxy_controller_service) {
     proxy.proxy_type = proxy_controller_service->getProxyType();
     proxy.proxy_host = proxy_controller_service->getHost();
-    proxy.proxy_port = proxy_controller_service->getPort().value_or(0);
-    proxy.proxy_user = proxy_controller_service->getUsername().value_or("");
-    proxy.proxy_password = proxy_controller_service->getPassword().value_or("");
+    proxy.proxy_port = proxy_controller_service->getPort();
+    proxy.proxy_credentials = proxy_controller_service->getProxyCredentials();
   } else {
     proxy.proxy_host = minifi::utils::parseOptionalProperty(context, ProxyHost).value_or("");
     proxy.proxy_type = proxy.proxy_host.empty() ? minifi::controllers::ProxyType::DIRECT : minifi::controllers::ProxyType::HTTP;
     proxy.proxy_port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort).value_or(0));
-    proxy.proxy_user = minifi::utils::parseOptionalProperty(context, ProxyUsername).value_or("");
-    proxy.proxy_password = minifi::utils::parseOptionalProperty(context, ProxyPassword).value_or("");
+    auto proxy_user = minifi::utils::parseOptionalProperty(context, ProxyUsername).value_or("");
+    if (!proxy_user.empty()) {
+      proxy.proxy_credentials = minifi::controllers::BasicAuthCredentials{.username = proxy_user, .password = minifi::utils::parseOptionalProperty(context, ProxyPassword).value_or("")};
+    }
   }
 
   if (!proxy.proxy_host.empty()) {
@@ -124,9 +125,11 @@ void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
     }
     client_config_.proxyScheme = Aws::Http::Scheme::HTTP;
     client_config_.proxyHost = proxy.proxy_host;
-    client_config_.proxyPort = proxy.proxy_port.value_or(0);
-    client_config_.proxyUserName = proxy.proxy_user.value_or("");
-    client_config_.proxyPassword = proxy.proxy_password.value_or("");
+    client_config_.proxyPort = proxy.proxy_port;
+    if (proxy.proxy_credentials) {
+      client_config_.proxyUserName = proxy.proxy_credentials->username;
+      client_config_.proxyPassword = proxy.proxy_credentials->password;
+    }
   }
 
   const auto endpoint_override_url = context.getProperty(EndpointOverrideURL);

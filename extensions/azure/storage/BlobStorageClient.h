@@ -64,7 +64,7 @@ namespace org::apache::nifi::minifi::azure::storage {
 struct AzureBlobStorageParameters {
   AzureStorageCredentials credentials;
   std::string container_name;
-  std::optional<minifi::controllers::ProxyConfiguration> proxy_configuration;
+  minifi::controllers::ProxyConfiguration proxy_configuration;
 };
 
 struct AzureBlobStorageBlobOperationParameters : public AzureBlobStorageParameters {

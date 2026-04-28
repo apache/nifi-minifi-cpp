@@ -58,17 +58,15 @@ AzureBlobStorageClient::AzureBlobStorageClient() {
 }
 
 Azure::Storage::Blobs::BlobContainerClient AzureBlobStorageClient::createClient(const AzureStorageCredentials &credentials, const std::string &container_name,
-    const std::optional<minifi::controllers::ProxyConfiguration>& proxy_configuration) {
+    const minifi::controllers::ProxyConfiguration& proxy_configuration) {
   Azure::Storage::Blobs::BlobClientOptions client_options;
 
-  if (proxy_configuration && proxy_configuration->proxy_type != minifi::controllers::ProxyType::DIRECT) {
-    client_options.Transport.HttpProxy = proxy_configuration->proxy_host + (proxy_configuration->proxy_port ? (":" + std::to_string(*proxy_configuration->proxy_port)) : "");
+  if (proxy_configuration.proxy_type != minifi::controllers::ProxyType::DIRECT) {
+    client_options.Transport.HttpProxy = proxy_configuration.proxy_host + (proxy_configuration.proxy_port != 0 ? (":" + std::to_string(proxy_configuration.proxy_port)) : "");
 
-    if (proxy_configuration->proxy_user) {
-      client_options.Transport.ProxyUserName = *proxy_configuration->proxy_user;
-    }
-    if (proxy_configuration->proxy_password) {
-      client_options.Transport.ProxyPassword = *proxy_configuration->proxy_password;
+    if (proxy_configuration.proxy_credentials) {
+      client_options.Transport.ProxyUserName = proxy_configuration.proxy_credentials->username;
+      client_options.Transport.ProxyPassword = proxy_configuration.proxy_credentials->password;
     }
   }
 
