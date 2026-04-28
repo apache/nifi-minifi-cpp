@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 enum : uint32_t {
-  MINIFI_API_VERSION = 2
+  MINIFI_API_VERSION = 3
 };
 
 typedef bool MinifiBool;
@@ -165,11 +165,10 @@ typedef struct MinifiControllerServiceMetadata {
 typedef struct MinifiProcessorCallbacks {
   MINIFI_OWNED void*(*create)(MinifiProcessorMetadata);
   void(*destroy)(MINIFI_OWNED void*);
-  MinifiBool(*isWorkAvailable)(void*);
   MinifiBool(*getTriggerWhenEmpty)(void*);
-  MinifiStatus(*onTrigger)(void*, MinifiProcessContext*, MinifiProcessSession*);
-  MinifiStatus(*onSchedule)(void*, MinifiProcessContext*);
-  void(*onUnSchedule)(void*);
+  MinifiStatus(*trigger)(void*, MinifiProcessContext*, MinifiProcessSession*);
+  MinifiStatus(*schedule)(void*, MinifiProcessContext*);
+  void(*unSchedule)(void*);
   MINIFI_OWNED MinifiPublishedMetrics*(*calculateMetrics)(void*);
 } MinifiProcessorCallbacks;
 
