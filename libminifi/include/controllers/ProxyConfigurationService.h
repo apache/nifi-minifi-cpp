@@ -89,7 +89,6 @@ class ProxyConfigurationService : public core::controller::ControllerServiceBase
   std::optional<BasicAuthCredentials> getProxyCredentials() const override {
     std::lock_guard lock(configuration_mutex_);
     return proxy_configuration_.proxy_credentials;
-
   }
 
  private:
