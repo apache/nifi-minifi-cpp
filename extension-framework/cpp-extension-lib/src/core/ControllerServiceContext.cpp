@@ -20,7 +20,7 @@
 
 namespace org::apache::nifi::minifi::api::core {
 
-nonstd::expected<std::string, std::error_code> ControllerServiceContext::getProperty(const std::string_view name) const {
+std::expected<std::string, std::error_code> ControllerServiceContext::getProperty(const std::string_view name) const {
   std::optional<std::string> value = std::nullopt;
   const MinifiStatus status = MinifiControllerServiceContextGetProperty(impl_, utils::toStringView(name),
     [] (void* data, const MinifiStringView result) {
@@ -28,11 +28,11 @@ nonstd::expected<std::string, std::error_code> ControllerServiceContext::getProp
     }, &value);
 
   if (status != MINIFI_STATUS_SUCCESS) {
-    return nonstd::make_unexpected(utils::make_error_code(status));
+    return std::unexpected{utils::make_error_code(status)};
   }
 
   if (!value) {
-    return nonstd::make_unexpected(utils::make_error_code(MINIFI_STATUS_UNKNOWN_ERROR));
+    return std::unexpected{utils::make_error_code(MINIFI_STATUS_UNKNOWN_ERROR)};
   }
   return value.value();
 }

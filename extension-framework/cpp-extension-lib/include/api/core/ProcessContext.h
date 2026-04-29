@@ -34,9 +34,9 @@ class ProcessContext {
   std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
     return getProperty(property_reference.name, flow_file);
   }
-  nonstd::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view controller_service_name, std::string_view controller_service_class) const;
+  [[nodiscard]] std::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view controller_service_name, std::string_view controller_service_class) const;
 
-  bool hasNonEmptyProperty(std::string_view name) const;
+  [[nodiscard]] bool hasNonEmptyProperty(std::string_view name) const;
 
  private:
   MinifiProcessContext* impl_;

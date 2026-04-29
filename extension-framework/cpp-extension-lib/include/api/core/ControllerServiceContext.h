@@ -18,10 +18,10 @@
 #pragma once
 
 #include <string>
+#include <expected>
 
 #include "minifi-c.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
-#include "nonstd/expected.hpp"
 
 namespace org::apache::nifi::minifi::api::core {
 
@@ -29,8 +29,8 @@ class ControllerServiceContext {
  public:
   explicit ControllerServiceContext(MinifiControllerServiceContext* impl) : impl_(impl) {}
 
-  nonstd::expected<std::string, std::error_code> getProperty(std::string_view name) const;
-  nonstd::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference) const {
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(std::string_view name) const;
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference) const {
     return getProperty(property_reference.name);
   }
 

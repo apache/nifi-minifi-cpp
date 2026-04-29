@@ -174,7 +174,7 @@ ControllerServiceType* parseOptionalControllerService(const core::ProcessContext
     return nullptr;
   }
 
-  nonstd::expected<MinifiControllerService*, std::error_code> service = context.getControllerService(*controller_service_name, minifi::core::className<ControllerServiceType>());
+  auto service = context.getControllerService(*controller_service_name, minifi::core::className<ControllerServiceType>());
   if (!service) {
     return nullptr;
   }
