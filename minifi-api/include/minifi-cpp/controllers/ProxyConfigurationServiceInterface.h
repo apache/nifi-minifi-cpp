@@ -20,7 +20,7 @@
 #include <optional>
 
 #include "minifi-cpp/core/controller/ControllerServiceHandle.h"
-#include "minifi-cpp/core/ControllerServiceApiDefinition.h"
+#include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
 #include "minifi-cpp/agent/agent_version.h"
 
 namespace org::apache::nifi::minifi::controllers {
@@ -37,7 +37,7 @@ struct BasicAuthCredentials {
 
 class ProxyConfigurationServiceInterface : public virtual core::controller::ControllerServiceHandle {
  public:
-  static constexpr auto ProvidesApi = core::ControllerServiceApiDefinition {
+  static constexpr auto ProvidesApi = core::ControllerServiceTypeDefinition {
     .artifact = "minifi-system",
     .group = "org.apache.nifi.minifi",
     .type = "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface",
