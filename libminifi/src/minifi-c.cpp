@@ -627,7 +627,7 @@ MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext* process_contex
 
     MinifiSslData ssl_data{
         .version = 1,
-        .ca_certificate = minifiStringView(ca_cert_file),
+        .ca_certificate_file = minifiStringView(ca_cert_file),
         .certificate_file = minifiStringView(cert_file),
         .private_key_file = minifiStringView(private_key_file),
         .passphrase = minifiStringView(passphrase),
