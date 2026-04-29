@@ -80,6 +80,7 @@ class CProcessor : public minifi::core::ProcessorApi {
     class_description_.callbacks.destroy(impl_);
   }
 
+  // C API doesnt yet expose isWorkAvailable
   bool isWorkAvailable() override {
     return false;
   }
@@ -118,7 +119,7 @@ class CProcessor : public minifi::core::ProcessorApi {
 
   void onTrigger(minifi::core::ProcessContext& process_context, minifi::core::ProcessSession& process_session) override {
     std::optional<std::string> error;
-    auto status = class_description_.callbacks.trigger(impl_, reinterpret_cast<MinifiProcessContext*>(&process_context), reinterpret_cast<MinifiProcessSession*>(&process_session));
+    auto status = class_description_.callbacks.onTrigger(impl_, reinterpret_cast<MinifiProcessContext*>(&process_context), reinterpret_cast<MinifiProcessSession*>(&process_session));
     if (status == MINIFI_STATUS_PROCESSOR_YIELD) {
       process_context.yield();
       return;
@@ -130,18 +131,18 @@ class CProcessor : public minifi::core::ProcessorApi {
 
   void onSchedule(minifi::core::ProcessContext& process_context, minifi::core::ProcessSessionFactory& /*process_session_factory*/) override {
     std::optional<std::string> error;
-    auto status = class_description_.callbacks.schedule(impl_, reinterpret_cast<MinifiProcessContext*>(&process_context));
+    auto status = class_description_.callbacks.onSchedule(impl_, reinterpret_cast<MinifiProcessContext*>(&process_context));
     if (status != MINIFI_STATUS_SUCCESS) {
       throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Error while scheduling processor");
     }
   }
 
   void onUnSchedule() override {
-    class_description_.callbacks.unSchedule(impl_);
+    class_description_.callbacks.onUnSchedule(impl_);
   }
 
   void notifyStop() override {
-    class_description_.callbacks.unSchedule(impl_);
+    class_description_.callbacks.onUnSchedule(impl_);
   }
 
   minifi::core::annotation::Input getInputRequirement() const override {

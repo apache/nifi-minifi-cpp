@@ -106,7 +106,7 @@ void useProcessorClassDescription(Fn&& fn) {
       .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
         return static_cast<Class*>(self)->getTriggerWhenEmpty();
       },
-      .trigger = [] (void* self, MinifiProcessContext* context, MinifiProcessSession* session) -> MinifiStatus {
+      .onTrigger = [] (void* self, MinifiProcessContext* context, MinifiProcessSession* session) -> MinifiStatus {
         ProcessContext context_wrapper(context);
         ProcessSession session_wrapper(session);
         try {
@@ -115,7 +115,7 @@ void useProcessorClassDescription(Fn&& fn) {
           return MINIFI_STATUS_UNKNOWN_ERROR;
         }
       },
-      .schedule = [] (void* self, MinifiProcessContext* context) -> MinifiStatus {
+      .onSchedule = [] (void* self, MinifiProcessContext* context) -> MinifiStatus {
         ProcessContext context_wrapper(context);
         try {
           return static_cast<Class*>(self)->onSchedule(context_wrapper);
@@ -123,7 +123,7 @@ void useProcessorClassDescription(Fn&& fn) {
           return MINIFI_STATUS_UNKNOWN_ERROR;
         }
       },
-      .unSchedule = [] (void* self) -> void {
+      .onUnSchedule = [] (void* self) -> void {
         static_cast<Class*>(self)->onUnSchedule();
       },
       .calculateMetrics = [] (void* self) -> MINIFI_OWNED MinifiPublishedMetrics* {

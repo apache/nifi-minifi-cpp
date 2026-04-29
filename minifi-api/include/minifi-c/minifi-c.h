@@ -157,9 +157,9 @@ typedef struct MinifiProcessorCallbacks {
   MINIFI_OWNED void*(*create)(MinifiProcessorMetadata);
   void(*destroy)(MINIFI_OWNED void*);
   MinifiBool(*getTriggerWhenEmpty)(void*);
-  MinifiStatus(*trigger)(void*, MinifiProcessContext*, MinifiProcessSession*);
-  MinifiStatus(*schedule)(void*, MinifiProcessContext*);
-  void(*unSchedule)(void*);
+  MinifiStatus(*onTrigger)(void*, MinifiProcessContext*, MinifiProcessSession*);
+  MinifiStatus(*onSchedule)(void*, MinifiProcessContext*);
+  void(*onUnSchedule)(void*);
   MINIFI_OWNED MinifiPublishedMetrics*(*calculateMetrics)(void*);
 } MinifiProcessorCallbacks;
 
