@@ -273,7 +273,7 @@ MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceCo
 
 struct MinifiSslData {
   uint8_t version;
-  MinifiStringView ca_certificate;
+  MinifiStringView ca_certificate_file;
   MinifiStringView certificate_file;
   MinifiStringView private_key_file;
   MinifiStringView passphrase;
