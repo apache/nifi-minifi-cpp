@@ -17,11 +17,11 @@
 
 from behave import step, given
 
-from minifi_test_framework.core.minifi_test_context import MinifiTestContext
-from minifi_test_framework.containers.minifi_protocol import enable_openssl_fips_mode
-from minifi_test_framework.containers.minifi_protocol import set_up_ssl_properties
-from minifi_test_framework.containers.minifi_protocol import enable_log_metrics_publisher
-from minifi_test_framework.containers.minifi_protocol import conf_c2_flow_url
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.containers.minifi_protocol import enable_openssl_fips_mode
+from minifi_behave.containers.minifi_protocol import set_up_ssl_properties
+from minifi_behave.containers.minifi_protocol import enable_log_metrics_publisher
+from minifi_behave.containers.minifi_protocol import conf_c2_flow_url
 
 
 @step('MiNiFi configuration "{config_key}" is set to "{config_value}"')

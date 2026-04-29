@@ -1,6 +1,6 @@
 [project]
-name = "minifi-test-framework"
-version = "0.2.0"
+name = "minifi-behave"
+version = "0.3.0"
 requires-python = ">= 3.10"
 description = "A testing framework for MiNiFi extensions."
 dependencies = [
@@ -17,4 +17,4 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["minifi_test_framework*"]
+include = ["minifi_behave*"]

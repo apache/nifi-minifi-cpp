@@ -15,9 +15,9 @@
 
 from typing import Protocol
 
-from minifi_test_framework.containers.directory import Directory
-from minifi_test_framework.containers.file import File
-from minifi_test_framework.containers.host_file import HostFile
+from minifi_behave.containers.directory import Directory
+from minifi_behave.containers.file import File
+from minifi_behave.containers.host_file import HostFile
 
 
 class ContainerProtocol(Protocol):
