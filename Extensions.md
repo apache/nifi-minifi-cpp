@@ -48,8 +48,8 @@ extern "C" void MinifiInitExtension(MinifiExtensionContext* extension_context) {
     .user_data = nullptr
   };
   auto* extension = MinifiRegisterExtension(extension_context, &extension_definition);
-  minifi::api::core::useProcessorClassDescription<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& description) {
-    MinifiRegisterProcessor(extension, &description);
+  minifi::api::core::useProcessorClassDefinition<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& definition) {
+    MinifiRegisterProcessor(extension, &definition);
   });
 }
 ```

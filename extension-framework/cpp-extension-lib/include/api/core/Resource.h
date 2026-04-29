@@ -40,7 +40,7 @@
 namespace org::apache::nifi::minifi::api::core {
 
 template<typename Class, typename Fn>
-void useProcessorClassDescription(Fn&& fn) {
+void useProcessorClassDefinition(Fn&& fn) {
   std::vector<std::vector<MinifiStringView>> string_vector_cache;
 
   const auto full_name = minifi::core::className<Class>();
@@ -78,7 +78,7 @@ void useProcessorClassDescription(Fn&& fn) {
     attribute_relationships_cache.push_back(std::move(rel_cache));
   }
 
-  MinifiProcessorClassDefinition description{
+  MinifiProcessorClassDefinition definition{
     .full_name = utils::toStringView(full_name),
     .description = utils::toStringView(Class::Description),
     .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
@@ -147,18 +147,18 @@ void useProcessorClassDescription(Fn&& fn) {
     }
   };
 
-  fn(description);
+  fn(definition);
 }
 
 template<typename Class, typename Fn>
-void useControllerServiceClassDescription(Fn&& fn) {
+void useControllerServiceClassDefinition(Fn&& fn) {
   std::vector<std::vector<MinifiStringView>> string_vector_cache;
 
   const auto full_name = minifi::core::className<Class>();
 
   std::vector<MinifiPropertyDefinition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
 
-  MinifiControllerServiceClassDefinition description{.full_name = utils::toStringView(full_name),
+  MinifiControllerServiceClassDefinition definition{.full_name = utils::toStringView(full_name),
       .description = utils::toStringView(Class::Description),
       .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
       .class_properties_ptr = class_properties.data(),
@@ -179,14 +179,14 @@ void useControllerServiceClassDescription(Fn&& fn) {
               return static_cast<Class*>(self)->enable(context_wrapper);
             } catch (...) { return MINIFI_STATUS_UNKNOWN_ERROR; }
           },
-          .notifyStop = [](void* self) -> void {
+          .disable = [](void* self) -> void {
             try {
               static_cast<Class*>(self)->notifyStop();
             } catch (...) {}
           },
       }};
 
-  fn(description);
+  fn(definition);
 }
 
 }  // namespace org::apache::nifi::minifi::api::core
