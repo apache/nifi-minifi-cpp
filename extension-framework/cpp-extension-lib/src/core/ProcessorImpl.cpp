@@ -40,10 +40,6 @@ ProcessorImpl::~ProcessorImpl() {
   logger_->log_debug("Destroying processor {} with uuid {}", getName(), getUUIDStr());
 }
 
-bool ProcessorImpl::isWorkAvailable() {
-  return false;
-}
-
 std::string ProcessorImpl::getName() const {
   return metadata_.name;
 }
