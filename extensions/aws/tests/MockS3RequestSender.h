@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <limits>
 #include <map>
 #include <optional>
 #include <string>
@@ -232,6 +233,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       fail_on_part_ = 0;
       return std::nullopt;
     }
+    // Consume the body like the real SDK, allowing the next part to start at the correct position
+    if (auto body = request.GetBody()) {
+      body->ignore(std::numeric_limits<std::streamsize>::max());
+    }
     upload_part_requests.push_back(request);
     Aws::S3Crt::Model::UploadPartResult result;
     result.SetETag("etag" + std::to_string(etag_counter_));
@@ -294,6 +299,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   }
 
   static std::string getUploadPartRequestBody(const Aws::S3Crt::Model::UploadPartRequest& upload_part_request) {
+    // Seek to the beginning of this part's window before reading, because the
+    // underlying io::InputStream is shared across all parts and may be positioned
+    // elsewhere by the time this helper is called.
+    upload_part_request.GetBody()->seekg(0);
     std::istreambuf_iterator<char> buf_it;
     return std::string(std::istreambuf_iterator<char>(*upload_part_request.GetBody()), buf_it);
   }
