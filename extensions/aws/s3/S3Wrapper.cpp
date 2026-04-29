@@ -22,6 +22,7 @@
 #include <vector>
 #include <algorithm>
 
+#include "MinifiToAwsInputStream.h"
 #include "S3ClientRequestSender.h"
 #include "utils/ArrayUtils.h"
 #include "utils/StringUtils.h"
@@ -68,32 +69,11 @@ std::string S3Wrapper::getEncryptionString(Aws::S3Crt::Model::ServerSideEncrypti
   return "";
 }
 
-std::shared_ptr<Aws::StringStream> S3Wrapper::readFlowFileStream(const std::shared_ptr<io::InputStream>& stream, uint64_t read_limit, uint64_t& read_size_out) {
-  std::array<std::byte, BUFFER_SIZE> buffer{};
-  auto data_stream = std::make_shared<Aws::StringStream>();
-  uint64_t read_size = 0;
-  while (read_size < read_limit) {
-    const auto next_read_size = (std::min)(read_limit - read_size, uint64_t{BUFFER_SIZE});
-    const auto read_ret = stream->read(std::span(buffer).subspan(0, next_read_size));
-    if (io::isError(read_ret)) {
-      throw StreamReadException("Reading flow file inputstream failed!");
-    }
-    if (read_ret > 0) {
-      data_stream->write(reinterpret_cast<char*>(buffer.data()), gsl::narrow<std::streamsize>(read_ret));
-      read_size += read_ret;
-    } else {
-      break;
-    }
-  }
-  read_size_out = read_size;
-  return data_stream;
-}
-
 std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size) {
-  uint64_t read_size{};
-  auto data_stream = readFlowFileStream(stream, flow_size, read_size);
   auto request = createPutObjectRequest<Aws::S3Crt::Model::PutObjectRequest>(put_object_params);
-  request.SetBody(data_stream);
+  auto aws_stream = std::make_shared<MinifiToAwsInputStream>(stream, flow_size);
+  request.SetBody(aws_stream);
+  request.SetContentLength(static_cast<long long>(flow_size));  // NOLINT(runtime/int,google-runtime-int) AWS SDK expects long long for content length
 
   auto aws_result = request_sender_->sendPutObjectRequest(request);
   if (!aws_result) {
@@ -120,11 +100,9 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
   const size_t start_part = upload_state.uploaded_parts + 1;
   const size_t last_part = start_part + part_count - 1;
   for (size_t part_number = start_part; part_number <= last_part; ++part_number) {
-    uint64_t read_size{};
     const auto remaining = flow_size - total_read;
     const auto next_read_size = std::min(remaining, upload_state.part_size);
-    auto stream_ptr = readFlowFileStream(stream, next_read_size, read_size);
-    total_read += read_size;
+    auto aws_stream = std::make_shared<MinifiToAwsInputStream>(stream, next_read_size);
 
     auto upload_part_request = Aws::S3Crt::Model::UploadPartRequest{}
       .WithBucket(put_object_params.bucket)
@@ -132,20 +110,24 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
       .WithPartNumber(gsl::narrow<int>(part_number))
       .WithUploadId(upload_state.upload_id)
       .WithChecksumAlgorithm(put_object_params.checksum_algorithm);
-    upload_part_request.SetBody(stream_ptr);
+    upload_part_request.SetBody(aws_stream);
+    upload_part_request.SetContentLength(static_cast<long long>(next_read_size));  // NOLINT(runtime/int,google-runtime-int) AWS SDK expects long long for content length
 
-    Aws::Utils::ByteBuffer part_md5(Aws::Utils::HashingUtils::CalculateMD5(*stream_ptr));
+    Aws::Utils::ByteBuffer part_md5(Aws::Utils::HashingUtils::CalculateMD5(*aws_stream));
     upload_part_request.SetContentMD5(Aws::Utils::HashingUtils::Base64Encode(part_md5));
+    // Reset to part start so the SDK reads the full part during the upload request.
+    aws_stream->seekg(0, std::ios::beg);
 
     auto upload_part_result = request_sender_->sendUploadPartRequest(upload_part_request);
     if (!upload_part_result) {
       logger_->log_error("Failed to upload part {} of {} of S3 object with key '{}'", part_number, last_part, put_object_params.object_key);
       return std::nullopt;
     }
+    total_read += next_read_size;
     result.part_etags.push_back(upload_part_result->GetETag());
     upload_state.uploaded_etags.push_back(upload_part_result->GetETag());
     upload_state.uploaded_parts += 1;
-    upload_state.uploaded_size += read_size;
+    upload_state.uploaded_size += next_read_size;
     multipart_upload_storage_->storeState(put_object_params.bucket, put_object_params.object_key, upload_state);
     logger_->log_info("Uploaded part {} of {} S3 object with key '{}'", part_number, last_part, put_object_params.object_key);
   }
