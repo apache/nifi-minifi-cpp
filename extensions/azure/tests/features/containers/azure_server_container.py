@@ -25,8 +25,10 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class AzureServerContainer(LinuxContainer):
+    IMAGE = "mcr.microsoft.com/azure-storage/azurite:3.35.0"
+
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__("mcr.microsoft.com/azure-storage/azurite:3.35.0",
+        super().__init__(AzureServerContainer.IMAGE,
                          f"azure-storage-server-{test_context.scenario_id}",
                          test_context.network)
         azure_storage_hostname = f"azure-storage-server-{test_context.scenario_id}"

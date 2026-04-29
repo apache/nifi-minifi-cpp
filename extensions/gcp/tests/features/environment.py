@@ -12,8 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import docker
+from containers.fake_gcs_server_container import FakeGcsServerContainer
 from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
+
+
+def before_all(context):
+    docker.from_env().images.pull(FakeGcsServerContainer.IMAGE)
 
 
 def before_scenario(context, scenario):

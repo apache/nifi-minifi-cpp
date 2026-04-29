@@ -21,8 +21,10 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class FakeGcsServerContainer(LinuxContainer):
+    IMAGE = "fsouza/fake-gcs-server:1.45.1"
+
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__("fsouza/fake-gcs-server:1.45.1", f"fake-gcs-server-{test_context.scenario_id}", test_context.network,
+        super().__init__(FakeGcsServerContainer.IMAGE, f"fake-gcs-server-{test_context.scenario_id}", test_context.network,
                          command=f'-scheme http -host fake-gcs-server-{test_context.scenario_id}')
         self.dirs.append(Directory(path="/data/test-bucket", files={"test-file": "preloaded data\n"}))
 

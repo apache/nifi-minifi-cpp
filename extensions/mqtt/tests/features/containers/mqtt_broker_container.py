@@ -25,12 +25,14 @@ from docker.errors import ContainerError
 
 
 class MqttBrokerContainer(LinuxContainer):
+    IMAGE = "eclipse-mosquitto:2.1.1-alpine"
+
     def __init__(self, test_context: MinifiTestContext):
         dockerfile = dedent("""\
             FROM {base_image}
             RUN echo 'log_dest stderr' >> /mosquitto-no-auth.conf
             CMD ["/usr/sbin/mosquitto", "--verbose", "--config-file", "/mosquitto-no-auth.conf"]
-            """.format(base_image='eclipse-mosquitto:2.1.1-alpine'))
+            """.format(base_image=MqttBrokerContainer.IMAGE))
 
         builder = DockerImageBuilder(
             image_tag="minifi-mqtt-broker:latest",

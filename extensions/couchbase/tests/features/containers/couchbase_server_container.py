@@ -24,8 +24,10 @@ from docker.errors import ContainerError
 
 
 class CouchbaseServerContainer(LinuxContainer):
+    IMAGE = "couchbase:enterprise-7.2.5"
+
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__("couchbase:enterprise-7.2.5", f"couchbase-server-{test_context.scenario_id}", test_context.network)
+        super().__init__(CouchbaseServerContainer.IMAGE, f"couchbase-server-{test_context.scenario_id}", test_context.network)
 
         couchbase_cert, couchbase_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
 

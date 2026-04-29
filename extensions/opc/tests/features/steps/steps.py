@@ -79,8 +79,8 @@ def _copy_file_from_docker_image(image_name: str, file_path: str, output_path: s
 def place_opcua_certificate_files_in_minifi_container(context: MinifiTestContext, directory: str, container_name: str):
     if not hasattr(context, "opcua_cert_temp_dir"):
         context.opcua_cert_temp_dir = tempfile.TemporaryDirectory()
-        _copy_file_from_docker_image(OPCUAServerContainer.OPC_SERVER_IMAGE, "/opt/open62541/pki/created/server_cert.der", os.path.join(context.opcua_cert_temp_dir.name, "server_cert.der"))
-        _copy_file_from_docker_image(OPCUAServerContainer.OPC_SERVER_IMAGE, "/opt/open62541/pki/created/server_key.der", os.path.join(context.opcua_cert_temp_dir.name, "server_key.der"))
+        _copy_file_from_docker_image(OPCUAServerContainer.IMAGE, "/opt/open62541/pki/created/server_cert.der", os.path.join(context.opcua_cert_temp_dir.name, "server_cert.der"))
+        _copy_file_from_docker_image(OPCUAServerContainer.IMAGE, "/opt/open62541/pki/created/server_key.der", os.path.join(context.opcua_cert_temp_dir.name, "server_key.der"))
 
     context.get_or_create_minifi_container(container_name).add_host_file(os.path.join(context.opcua_cert_temp_dir.name, "server_cert.der"), os.path.join(directory, "opcua_client_cert.der"))
     context.get_or_create_minifi_container(container_name).add_host_file(os.path.join(context.opcua_cert_temp_dir.name, "server_key.der"), os.path.join(directory, "opcua_client_key.der"))

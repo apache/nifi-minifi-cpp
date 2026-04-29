@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import docker
+from containers.mqtt_broker_container import MqttBrokerContainer
 from pathlib import Path
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.hooks import common_before_scenario
@@ -34,6 +36,7 @@ COPY publish_mqtt_message.py /scripts/publish_mqtt_message.py"""
         files_on_context={"publish_mqtt_message.py": check_log_lines_content}
     )
     mqtt_helper_builder.build()
+    docker.from_env().images.pull(MqttBrokerContainer.IMAGE)
 
 
 def before_scenario(context, scenario):

@@ -12,8 +12,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import docker
+from containers.elasticsearch_container import ElasticsearchContainer
+from containers.opensearch_container import OpensearchContainer
 from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
+
+
+def before_feature(context, feature):
+    if feature.filename.endswith("elasticsearch.feature"):
+        docker.from_env().images.pull(ElasticsearchContainer.IMAGE)
+    elif feature.filename.endswith("opensearch.feature"):
+        docker.from_env().images.pull(OpensearchContainer.IMAGE)
 
 
 def before_scenario(context, scenario):

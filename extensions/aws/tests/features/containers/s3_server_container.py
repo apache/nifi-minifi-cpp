@@ -22,8 +22,10 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class S3ServerContainer(LinuxContainer):
+    IMAGE = "adobe/s3mock:3.12.0"
+
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__("adobe/s3mock:3.12.0", f"s3-server-{test_context.scenario_id}", test_context.network)
+        super().__init__(S3ServerContainer.IMAGE, f"s3-server-{test_context.scenario_id}", test_context.network)
         self.environment.append("initialBuckets=test_bucket")
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
