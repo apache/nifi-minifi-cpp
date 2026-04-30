@@ -52,6 +52,8 @@ DefaultLlamaContext::DefaultLlamaContext(const std::filesystem::path& model_path
     throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load model from '{}'", model_path.string()));
   }
 
+  chat_template_ = common_chat_templates_init(llama_model_, "");
+
   llama_context_params ctx_params = llama_context_default_params();
   ctx_params.n_ctx = llama_ctx_params.n_ctx;
   ctx_params.n_batch = llama_ctx_params.n_batch;
@@ -108,27 +110,16 @@ DefaultLlamaContext::~DefaultLlamaContext() {
 }
 
 std::optional<std::string> DefaultLlamaContext::applyTemplate(const std::vector<LlamaChatMessage>& messages) {
-  std::vector<llama_chat_message> llama_messages;
-  llama_messages.reserve(messages.size());
-  std::transform(messages.begin(), messages.end(), std::back_inserter(llama_messages),
-                 [](const LlamaChatMessage& msg) { return llama_chat_message{.role = msg.role.c_str(), .content = msg.content.c_str()}; });
-  std::string text;
-  text.resize(DEFAULT_BUFFER_SIZE);
-  const char * chat_template = llama_model_chat_template(llama_model_, nullptr);
-  int32_t res_size = llama_chat_apply_template(chat_template, llama_messages.data(), llama_messages.size(), true, text.data(), gsl::narrow<int32_t>(text.size()));
-  if (res_size < 0) {
+  if (!chat_template_) {
     return std::nullopt;
   }
-  if (res_size > gsl::narrow<int32_t>(text.size())) {
-    text.resize(res_size);
-    res_size = llama_chat_apply_template(chat_template, llama_messages.data(), llama_messages.size(), true, text.data(), gsl::narrow<int32_t>(text.size()));
-    if (res_size < 0) {
-      return std::nullopt;
-    }
+  common_chat_templates_inputs inputs;
+  for (auto& msg : messages) {
+    inputs.messages.push_back(common_chat_msg{.role = msg.role, .content = msg.content});
   }
-  text.resize(res_size);
+  inputs.enable_thinking = false;  // TODO(adebreceni): MINIFICPP-2800 common_chat_templates_support_enable_thinking(chat_template_.get());
 
-  return text;
+  return common_chat_templates_apply(chat_template_.get(), inputs).prompt;
 }
 
 namespace {

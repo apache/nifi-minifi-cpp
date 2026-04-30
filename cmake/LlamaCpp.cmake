@@ -38,8 +38,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
 
 
 FetchContent_Declare(llamacpp
-        URL https://github.com/ggml-org/llama.cpp/archive/refs/tags/b7836.tar.gz
-        URL_HASH SHA256=3d384e7e8b3bc3cd31abddedf684a6e201405c1d932cafb3c4a5277d872b0614
+        URL https://github.com/ggml-org/llama.cpp/archive/refs/tags/b8944.tar.gz
+        URL_HASH SHA256=ca231c8aca086f56bad3ed371f6dc5b01e971e812a8ddf67564f087390c0e781
         PATCH_COMMAND "${PC}"
         SYSTEM
 )
@@ -50,5 +50,7 @@ set(LLAMACPP_INCLUDE_DIRS
     "${llamacpp_SOURCE_DIR}/include"
     "${llamacpp_SOURCE_DIR}/ggml/include"
     "${llamacpp_SOURCE_DIR}/tools"
+    "${llamacpp_SOURCE_DIR}/common"
+    "${llamacpp_SOURCE_DIR}/vendor"
     CACHE STRING "" FORCE
 )
