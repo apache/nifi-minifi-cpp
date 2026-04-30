@@ -48,12 +48,38 @@ void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
   endpoint_url_ = context.getProperty(EndpointOverrideURL) | utils::toOptional();
   if (endpoint_url_)
     logger_->log_debug("Endpoint overwritten: {}", *endpoint_url_);
+
+  auto proxy_controller_service = minifi::utils::parseOptionalControllerService<minifi::controllers::ProxyConfigurationServiceInterface>(context, ProxyConfigurationService, getUUID());
+  if (proxy_controller_service && proxy_controller_service->getProxyType() != minifi::controllers::ProxyType::DIRECT) {
+    logger_->log_debug("Proxy configuration is set for GCS processor");
+
+    proxy_ = google::cloud::ProxyConfig{};
+    proxy_->set_scheme(minifi::utils::string::startsWith(proxy_controller_service->getHost(), "https") ? "https" : "http");
+    auto proxy_host = proxy_controller_service->getHost();
+    constexpr std::string_view https_prefix = "https://";
+    constexpr std::string_view http_prefix = "http://";
+    if (minifi::utils::string::startsWith(proxy_host, https_prefix)) {
+      proxy_host = proxy_host.substr(https_prefix.size());
+    } else if (minifi::utils::string::startsWith(proxy_host, http_prefix)) {
+      proxy_host = proxy_host.substr(http_prefix.size());
+    }
+    proxy_->set_hostname(proxy_host);
+    proxy_->set_port(std::to_string(proxy_controller_service->getPort()));
+    if (auto proxy_credentials = proxy_controller_service->getProxyCredentials()) {
+      proxy_->set_username(proxy_credentials->username);
+      proxy_->set_password(proxy_credentials->password);
+    }
+  }
 }
 
 gcs::Client GCSProcessor::getClient() const {
   auto options = google::cloud::Options{}
       .set<google::cloud::UnifiedCredentialsOption>(gcp_credentials_)
       .set<google::cloud::storage::RetryPolicyOption>(retry_policy_);
+
+  if (proxy_) {
+    options.set<google::cloud::ProxyOption>(*proxy_);
+  }
 
   if (endpoint_url_) {
     options.set<gcs::RestEndpointOption>(*endpoint_url_);

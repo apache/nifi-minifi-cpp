@@ -56,6 +56,9 @@ class LinuxContainer(ContainerProtocol):
         self.ports: dict[str, int] | None = None
         self.environment: list[str] = []
 
+    def is_deployed(self) -> bool:
+        return self.container is not None
+
     def add_host_file(self, host_path: str, container_path: str, mode: str = "ro"):
         self.host_files.append(HostFile(container_path, host_path, mode))
 
@@ -109,6 +112,7 @@ class LinuxContainer(ContainerProtocol):
         if self.is_deployed():
             logging.info(f"Container '{self.container_name}' is already deployed.")
             return True
+
         self._temp_dir = tempfile.TemporaryDirectory()
         self._configure_volumes_of_container_files()
         self._configure_volumes_of_container_dirs()
