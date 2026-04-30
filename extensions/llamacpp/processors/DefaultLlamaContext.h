@@ -19,6 +19,7 @@
 #include "LlamaContext.h"
 #include "llama.h"
 #include "LlamaBackendInitializer.h"
+#include "chat.h"
 #include "mtmd/mtmd.h"
 #include "minifi-cpp/core/logging/Logger.h"
 
@@ -40,6 +41,7 @@ class DefaultLlamaContext : public LlamaContext {
  private:
   const LlamaBackendInitializer& llama_context_initializer_ = LlamaBackendInitializer::get();
   llama_model* llama_model_{};
+  common_chat_templates_ptr chat_template_;
   llama_context* llama_ctx_{};
   mtmd_context* multimodal_ctx_{};
   llama_sampler* llama_sampler_{};
