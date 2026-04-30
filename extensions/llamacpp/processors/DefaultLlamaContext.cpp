@@ -40,8 +40,6 @@ std::vector<llama_token> tokenizeInput(const llama_vocab* vocab, const std::stri
   return tokenized_input;
 }
 
-constexpr size_t DEFAULT_BUFFER_SIZE = 4096;
-
 }  // namespace
 
 
@@ -115,7 +113,10 @@ std::optional<std::string> DefaultLlamaContext::applyTemplate(const std::vector<
   }
   common_chat_templates_inputs inputs;
   for (auto& msg : messages) {
-    inputs.messages.push_back(common_chat_msg{.role = msg.role, .content = msg.content});
+    common_chat_msg chat_msg;
+    chat_msg.role = msg.role;
+    chat_msg.content = msg.content;
+    inputs.messages.push_back(std::move(chat_msg));
   }
   inputs.enable_thinking = false;  // TODO(adebreceni): MINIFICPP-2800 common_chat_templates_support_enable_thinking(chat_template_.get());
 
