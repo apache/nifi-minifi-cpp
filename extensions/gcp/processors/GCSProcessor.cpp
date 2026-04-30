@@ -67,14 +67,10 @@ void GCSProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
       proxy_host = proxy_host.substr(7);
     }
     proxy_->set_hostname(proxy_host);
-    if (proxy_controller_service->getPort()) {
-      proxy_->set_port(std::to_string(*proxy_controller_service->getPort()));
-    }
-    if (proxy_controller_service->getUsername()) {
-      proxy_->set_username(*proxy_controller_service->getUsername());
-    }
-    if (proxy_controller_service->getPassword()) {
-      proxy_->set_password(*proxy_controller_service->getPassword());
+    proxy_->set_port(std::to_string(proxy_controller_service->getPort()));
+    if (auto proxy_credentials = proxy_controller_service->getProxyCredentials()) {
+      proxy_->set_username(proxy_credentials->username);
+      proxy_->set_password(proxy_credentials->password);
     }
   }
 }
