@@ -64,15 +64,26 @@ std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentials(core::P
   return aws_credentials_provider.getAWSCredentials();
 }
 
-aws::ProxyOptions AwsProcessor::getProxy(core::ProcessContext& context) {
-  aws::ProxyOptions proxy;
+minifi::controllers::ProxyConfiguration AwsProcessor::getProxy(core::ProcessContext& context) {
+  minifi::controllers::ProxyConfiguration proxy;
 
-  proxy.host = minifi::utils::parseOptionalProperty(context, ProxyHost).value_or("");
-  proxy.port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort).value_or(0));
-  proxy.username = minifi::utils::parseOptionalProperty(context, ProxyUsername).value_or("");
-  proxy.password = minifi::utils::parseOptionalProperty(context, ProxyPassword).value_or("");
+  auto proxy_controller_service = minifi::utils::parseOptionalControllerService<minifi::controllers::ProxyConfigurationServiceInterface>(context, ProxyConfigurationService, getUUID());
+  if (proxy_controller_service) {
+    proxy.proxy_type = proxy_controller_service->getProxyType();
+    proxy.proxy_host = proxy_controller_service->getHost();
+    proxy.proxy_port = proxy_controller_service->getPort();
+    proxy.proxy_credentials = proxy_controller_service->getProxyCredentials();
+  } else {
+    proxy.proxy_host = minifi::utils::parseOptionalProperty(context, ProxyHost).value_or("");
+    proxy.proxy_type = proxy.proxy_host.empty() ? minifi::controllers::ProxyType::DIRECT : minifi::controllers::ProxyType::HTTP;
+    proxy.proxy_port = gsl::narrow<uint32_t>(minifi::utils::parseOptionalU64Property(context, ProxyPort).value_or(0));
+    auto proxy_user = minifi::utils::parseOptionalProperty(context, ProxyUsername).value_or("");
+    if (!proxy_user.empty()) {
+      proxy.proxy_credentials = minifi::controllers::BasicAuthCredentials{.username = proxy_user, .password = minifi::utils::parseOptionalProperty(context, ProxyPassword).value_or("")};
+    }
+  }
 
-  if (!proxy.host.empty()) {
+  if (!proxy.proxy_host.empty()) {
     logger_->log_info("Proxy for AwsProcessor was set.");
   }
   return proxy;
@@ -108,10 +119,18 @@ void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
   credentials_ = credentials.value();
 
   auto proxy = getProxy(context);
-  client_config_.proxyHost = proxy.host;
-  client_config_.proxyPort = proxy.port;
-  client_config_.proxyUserName = proxy.username;
-  client_config_.proxyPassword = proxy.password;
+  if (proxy.proxy_type != minifi::controllers::ProxyType::DIRECT) {
+    if (minifi::utils::string::startsWith(proxy.proxy_host, "https://")) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "HTTPS proxy is not supported");
+    }
+    client_config_.proxyScheme = Aws::Http::Scheme::HTTP;
+    client_config_.proxyHost = proxy.proxy_host;
+    client_config_.proxyPort = proxy.proxy_port;
+    if (proxy.proxy_credentials) {
+      client_config_.proxyUserName = proxy.proxy_credentials->username;
+      client_config_.proxyPassword = proxy.proxy_credentials->password;
+    }
+  }
 
   const auto endpoint_override_url = context.getProperty(EndpointOverrideURL);
   if (endpoint_override_url) {

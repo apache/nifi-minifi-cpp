@@ -193,4 +193,25 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Upload to Azure Data Lake
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.directory value:\n"));
 }
 
+TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Test Azure data lake storage upload using proxy", "[azureDataLakeStorageUpload]") {
+  auto proxy_configuration_service = plan_->addController("ProxyConfigurationService", "ProxyConfigurationService");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "host");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+  plan_->setProperty(proxy_configuration_service, "Proxy Type", "HTTP");
+  plan_->setProperty(azure_data_lake_storage_, "Proxy Configuration Service", "ProxyConfigurationService");
+
+  test_controller_.runSession(plan_, true);
+
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedPutParams();
+  REQUIRE(passed_params.proxy_configuration.proxy_host == "host");
+  REQUIRE(passed_params.proxy_configuration.proxy_port == 1234);
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials);
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials->username == "username");
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials->password == "password");
+  REQUIRE(passed_params.proxy_configuration.proxy_type == minifi::controllers::ProxyType::HTTP);
+  CHECK(getFailedFlowFileContents().empty());
+}
+
 }  // namespace

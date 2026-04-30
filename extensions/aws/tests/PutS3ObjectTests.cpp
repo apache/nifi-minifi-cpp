@@ -199,9 +199,34 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
   setRequiredProperties();
-  setProxy();
+  SECTION("Use proxy configuration service") {
+    setProxy(ProxyConfigType::ControllerServiceHttp);
+  }
+  SECTION("Use processor properties") {
+    setProxy(ProxyConfigType::ProcessorProperties);
+  }
   test_controller.runSession(plan);
   checkProxySettings();
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "HTTPS proxy is not supported", "[awsS3Proxy]") {
+  setRequiredProperties();
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Host", "https://host"));
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Port", "1234"));
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Username", "username"));
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Password", "password"));
+  REQUIRE_THROWS_WITH(test_controller.runSession(plan), "Process Schedule Operation: HTTPS proxy is not supported");
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy is not configured if proxy type is direct", "[awsS3Proxy]") {
+  setRequiredProperties();
+  setProxy(ProxyConfigType::ControllerServiceDirect);
+
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 0);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {

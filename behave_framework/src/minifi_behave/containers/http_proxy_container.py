@@ -21,23 +21,30 @@ from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.helpers import wait_for_condition, retry_check
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import make_server_cert, dump_cert, dump_key
+from minifi_behave.containers.file import File
 
 
 class HttpProxy(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         dockerfile = dedent("""\
-                FROM {base_image}
-                RUN apt -y update && apt install -y apache2-utils
+                FROM ubuntu:24.04
+                RUN apt -y update && apt install -y squid-openssl apache2-utils
                 RUN htpasswd -b -c /etc/squid/.squid_users {proxy_username} {proxy_password}
                 RUN echo 'auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/.squid_users'  > /etc/squid/squid.conf && \
                     echo 'auth_param basic realm proxy' >> /etc/squid/squid.conf && \
                     echo 'acl authenticated proxy_auth REQUIRED' >> /etc/squid/squid.conf && \
+                    echo 'acl SSL_ports port 443' >> /etc/squid/squid.conf && \
+                    echo 'acl SSL_ports port 3002' >> /etc/squid/squid.conf && \
+                    echo 'acl Safe_ports port 80' >> /etc/squid/squid.conf && \
                     echo 'http_access allow authenticated' >> /etc/squid/squid.conf && \
                     echo 'http_port {proxy_port}' >> /etc/squid/squid.conf && \
                     echo 'negative_dns_ttl 0 seconds' >> /etc/squid/squid.conf && \
-                    echo 'max_filedescriptors 1024' >> /etc/squid/squid.conf
-                """.format(base_image='ubuntu/squid:5.2-22.04_beta', proxy_username='admin', proxy_password='test101',
-                           proxy_port='3128'))
+                    echo 'max_filedescriptors 1024' >> /etc/squid/squid.conf && \
+                    echo 'https_port {proxy_ssl_port} tls-cert=/etc/squid/certs/squid-cert.pem tls-key=/etc/squid/certs/squid-key.pem' >> /etc/squid/squid.conf
+                ENTRYPOINT ["/bin/sh", "-c", "squid -N -f /etc/squid/squid.conf & tail -F --pid=$! /var/log/squid/cache.log /var/log/squid/access.log"]
+                """.format(proxy_username='admin', proxy_password='test101',
+                           proxy_port='3128', proxy_ssl_port='3129'))
 
         builder = DockerImageBuilder(
             image_tag="minifi-http-proxy:latest",
@@ -46,6 +53,10 @@ class HttpProxy(LinuxContainer):
         builder.build()
 
         super().__init__("minifi-http-proxy:latest", f"http-proxy-{test_context.scenario_id}", test_context.network)
+        squid_cert, squid_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
+
+        self.files.append(File("/etc/squid/certs/squid-cert.pem", dump_cert(squid_cert), permissions=0o666))
+        self.files.append(File("/etc/squid/certs/squid-key.pem", dump_key(squid_key), permissions=0o666))
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)

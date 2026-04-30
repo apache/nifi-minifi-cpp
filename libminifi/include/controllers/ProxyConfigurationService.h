@@ -1,0 +1,100 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#pragma once
+
+#include <mutex>
+
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "controllers/ProxyConfiguration.h"
+#include "core/controller/ControllerServiceBase.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "minifi-cpp/core/PropertyValidator.h"
+
+namespace org::apache::nifi::minifi::controllers {
+
+class ProxyConfigurationService : public core::controller::ControllerServiceBase, public ProxyConfigurationServiceInterface {
+ public:
+  using ControllerServiceBase::ControllerServiceBase;
+
+  MINIFIAPI static constexpr const char* Description = "Provides a set of configurations for various MiNiFi C++ components to use a proxy server. Currently these properties can only be used for "
+      "HTTP proxy configuration, no other protocols are supported at this time.";
+
+  MINIFIAPI static constexpr auto ProxyServerHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Server Host")
+      .withDescription("Proxy server hostname or ip-address.")
+      .isRequired(true)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
+      .build();
+  MINIFIAPI static constexpr auto ProxyServerPort = core::PropertyDefinitionBuilder<>::createProperty("Proxy Server Port")
+      .withDescription("Proxy server port number.")
+      .withValidator(core::StandardPropertyValidators::PORT_VALIDATOR)
+      .build();
+  MINIFIAPI static constexpr auto ProxyUserName = core::PropertyDefinitionBuilder<>::createProperty("Proxy User Name")
+      .withDescription("The name of the proxy client for user authentication.")
+      .build();
+  MINIFIAPI static constexpr auto ProxyUserPassword = core::PropertyDefinitionBuilder<>::createProperty("Proxy User Password")
+      .withDescription("The password of the proxy client for user authentication.")
+      .isSensitive(true)
+      .build();
+  MINIFIAPI static constexpr auto ProxyTypeProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<ProxyType>()>::createProperty("Proxy Type")
+      .withDescription("Proxy type. If set to DIRECT, the proxy server is not used.")
+      .withDefaultValue(magic_enum::enum_name(ProxyType::HTTP))
+      .withAllowedValues(magic_enum::enum_names<ProxyType>())
+      .build();
+  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
+    ProxyServerHost,
+    ProxyServerPort,
+    ProxyUserName,
+    ProxyUserPassword,
+    ProxyTypeProperty
+  });
+
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  MINIFIAPI static constexpr auto ImplementsApis = std::array{ ProxyConfigurationServiceInterface::ProvidesApi };
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+
+  void initialize() override;
+  void onEnable() override;
+
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override {return this;}
+
+  ProxyType getProxyType() const override {
+    std::lock_guard lock(configuration_mutex_);
+    return proxy_configuration_.proxy_type;
+  }
+
+  std::string getHost() const override {
+    std::lock_guard lock(configuration_mutex_);
+    return proxy_configuration_.proxy_host;
+  }
+
+  uint16_t getPort() const override {
+    std::lock_guard lock(configuration_mutex_);
+    return proxy_configuration_.proxy_port;
+  }
+
+  std::optional<BasicAuthCredentials> getProxyCredentials() const override {
+    std::lock_guard lock(configuration_mutex_);
+    return proxy_configuration_.proxy_credentials;
+  }
+
+ private:
+  mutable std::mutex configuration_mutex_;
+  ProxyConfiguration proxy_configuration_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ProxyConfigurationService>::getLogger(uuid_);
+};
+
+}  // namespace org::apache::nifi::minifi::controllers

@@ -74,9 +74,25 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Non blank validator tests") {
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test proxy setting", "[awsS3Proxy]") {
   setRequiredProperties();
-  setProxy();
+  SECTION("Use proxy configuration service") {
+    setProxy(ProxyConfigType::ControllerServiceHttp);
+  }
+  SECTION("Use processor properties") {
+    setProxy(ProxyConfigType::ProcessorProperties);
+  }
   test_controller.runSession(plan, true);
   checkProxySettings();
+}
+
+TEST_CASE_METHOD(ListS3TestsFixture, "Test proxy is not configured if proxy type is direct", "[awsS3Proxy]") {
+  setRequiredProperties();
+  setProxy(ProxyConfigType::ControllerServiceDirect);
+
+  test_controller.runSession(plan, true);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 0);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test listing without versioning", "[awsS3ListObjects]") {

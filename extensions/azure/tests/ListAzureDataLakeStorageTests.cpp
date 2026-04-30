@@ -256,4 +256,24 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Both SAS Token and Stora
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
 }
 
+TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "List data lake storage files using proxy", "[azureDataLakeStorageParameters]") {
+  auto proxy_configuration_service = plan_->addController("ProxyConfigurationService", "ProxyConfigurationService");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Host", "http://host");
+  plan_->setProperty(proxy_configuration_service, "Proxy Server Port", "1234");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Name", "username");
+  plan_->setProperty(proxy_configuration_service, "Proxy User Password", "password");
+  plan_->setProperty(proxy_configuration_service, "Proxy Type", "HTTP");
+  plan_->setProperty(list_azure_data_lake_storage_, "Proxy Configuration Service", "ProxyConfigurationService");
+
+  test_controller_.runSession(plan_, true);
+
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedListParams();
+  REQUIRE(passed_params.proxy_configuration.proxy_host == "http://host");
+  REQUIRE(passed_params.proxy_configuration.proxy_port == 1234);
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials);
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials->username == "username");
+  REQUIRE(passed_params.proxy_configuration.proxy_credentials->password == "password");
+  REQUIRE(passed_params.proxy_configuration.proxy_type == minifi::controllers::ProxyType::HTTP);
+}
+
 }  // namespace

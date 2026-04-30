@@ -28,11 +28,12 @@
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "AWSCredentialsProvider.h"
-#include "utils/ProxyOptions.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/ProcessorImpl.h"
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "controllers/ProxyConfiguration.h"
 
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -129,17 +130,22 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
-      .withDescription("Proxy host name or IP")
+      .withDescription("Proxy host name or IP. Use https:// prefix for HTTPS proxy. DEPRECATED, please use Proxy Configuration Service instead.")
       .build();
   EXTENSIONAPI static constexpr auto ProxyPort = core::PropertyDefinitionBuilder<>::createProperty("Proxy Port")
-      .withDescription("The port number of the proxy host")
+      .withDescription("The port number of the proxy host. DEPRECATED, please use Proxy Configuration Service instead.")
       .build();
   EXTENSIONAPI static constexpr auto ProxyUsername = core::PropertyDefinitionBuilder<>::createProperty("Proxy Username")
-      .withDescription("Username to set when authenticating against proxy")
+      .withDescription("Username to set when authenticating against proxy. DEPRECATED, please use Proxy Configuration Service instead.")
       .build();
   EXTENSIONAPI static constexpr auto ProxyPassword = core::PropertyDefinitionBuilder<>::createProperty("Proxy Password")
-      .withDescription("Password to set when authenticating against proxy")
+      .withDescription("Password to set when authenticating against proxy. DEPRECATED, please use Proxy Configuration Service instead.")
       .isSensitive(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ProxyConfigurationService = core::PropertyDefinitionBuilder<>::createProperty("Proxy Configuration Service")
+      .withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests. When used, "
+          "this will override any values specified for Proxy Host, Proxy Port, Proxy Username, and Proxy Password properties.")
+      .withAllowedTypes<minifi::controllers::ProxyConfigurationServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
       .withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
@@ -159,6 +165,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       ProxyPort,
       ProxyUsername,
       ProxyPassword,
+      ProxyConfigurationService,
       UseDefaultCredentials
   });
 
@@ -170,7 +177,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
  protected:
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(core::ProcessContext& context) const;
   std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context);
-  aws::ProxyOptions getProxy(core::ProcessContext& context);
+  minifi::controllers::ProxyConfiguration getProxy(core::ProcessContext& context);
 
   Aws::Client::ClientConfiguration client_config_;
   Aws::Auth::AWSCredentials credentials_;
