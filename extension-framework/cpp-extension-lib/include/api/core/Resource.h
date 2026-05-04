@@ -26,19 +26,21 @@
 #define WIN32_LEAN_AND_MEAN 1
 #endif
 
-#include "minifi-c.h"
-#include "core/ClassName.h"
-#include "api/utils/minifi-c-utils.h"
+#include "ControllerServiceContext.h"
+#include "FlowFile.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
-#include "FlowFile.h"
-#include "minifi-cpp/core/ProcessorMetadata.h"
+#include "api/utils/minifi-c-utils.h"
+#include "core/ClassName.h"
 #include "logging/Logger.h"
+#include "minifi-c.h"
+#include "minifi-cpp/core/ControllerServiceMetadata.h"
+#include "minifi-cpp/core/ProcessorMetadata.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
 template<typename Class, typename Fn>
-void useProcessorClassDescription(Fn&& fn) {
+void useProcessorClassDefinition(Fn&& fn) {
   std::vector<std::vector<MinifiStringView>> string_vector_cache;
 
   const auto full_name = minifi::core::className<Class>();
@@ -76,7 +78,7 @@ void useProcessorClassDescription(Fn&& fn) {
     attribute_relationships_cache.push_back(std::move(rel_cache));
   }
 
-  MinifiProcessorClassDefinition description{
+  MinifiProcessorClassDefinition definition{
     .full_name = utils::toStringView(full_name),
     .description = utils::toStringView(Class::Description),
     .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
@@ -94,11 +96,12 @@ void useProcessorClassDescription(Fn&& fn) {
 
     .callbacks = MinifiProcessorCallbacks{
       .create = [] (MinifiProcessorMetadata metadata) -> MINIFI_OWNED void* {
-        return new Class{minifi::core::ProcessorMetadata{
-          .uuid = minifi::utils::Identifier::parse(std::string{metadata.uuid.data, metadata.uuid.length}).value(),
-          .name = std::string{metadata.name.data, metadata.name.length},
-          .logger = std::make_shared<logging::Logger>(metadata.logger)
-        }};
+        try {
+          return new Class{minifi::core::ProcessorMetadata{
+              .uuid = minifi::utils::Identifier::parse(std::string{metadata.uuid.data, metadata.uuid.length}).value(),
+              .name = std::string{metadata.name.data, metadata.name.length},
+              .logger = std::make_shared<logging::Logger>(metadata.logger)}};
+        } catch (...) { return nullptr; }
       },
       .destroy = [] (MINIFI_OWNED void* self) -> void {
         delete static_cast<Class*>(self);
@@ -124,7 +127,9 @@ void useProcessorClassDescription(Fn&& fn) {
         }
       },
       .onUnSchedule = [] (void* self) -> void {
-        static_cast<Class*>(self)->onUnSchedule();
+        try {
+          static_cast<Class*>(self)->onUnSchedule();
+        } catch (...) {}
       },
       .calculateMetrics = [] (void* self) -> MINIFI_OWNED MinifiPublishedMetrics* {
         auto metrics = static_cast<Class*>(self)->calculateMetrics();
@@ -139,7 +144,46 @@ void useProcessorClassDescription(Fn&& fn) {
     }
   };
 
-  fn(description);
+  fn(definition);
+}
+
+template<typename Class, typename Fn>
+void useControllerServiceClassDefinition(Fn&& fn) {
+  std::vector<std::vector<MinifiStringView>> string_vector_cache;
+
+  const auto full_name = minifi::core::className<Class>();
+
+  std::vector<MinifiPropertyDefinition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
+
+  MinifiControllerServiceClassDefinition definition{.full_name = utils::toStringView(full_name),
+      .description = utils::toStringView(Class::Description),
+      .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
+      .class_properties_ptr = class_properties.data(),
+
+      .callbacks = MinifiControllerServiceCallbacks{
+          .create = [](MinifiControllerServiceMetadata metadata) -> MINIFI_OWNED void* {
+            try {
+              return new Class{minifi::core::ControllerServiceMetadata{
+                  .uuid = minifi::utils::Identifier::parse(std::string{metadata.uuid.data, metadata.uuid.length}).value(),
+                  .name = std::string{metadata.name.data, metadata.name.length},
+                  .logger = std::make_shared<logging::Logger>(metadata.logger)}};
+            } catch (...) { return nullptr; }
+          },
+          .destroy = [](MINIFI_OWNED void* self) -> void { delete static_cast<Class*>(self); },
+          .enable = [](void* self, MinifiControllerServiceContext* context) -> MinifiStatus {
+            ControllerServiceContext context_wrapper(context);
+            try {
+              return static_cast<Class*>(self)->enable(context_wrapper);
+            } catch (...) { return MINIFI_STATUS_UNKNOWN_ERROR; }
+          },
+          .disable = [](void* self) -> void {
+            try {
+              static_cast<Class*>(self)->notifyStop();
+            } catch (...) {}
+          },
+      }};
+
+  fn(definition);
 }
 
 }  // namespace org::apache::nifi::minifi::api::core

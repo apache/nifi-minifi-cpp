@@ -50,7 +50,7 @@ CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context
     .user_data = nullptr
   };
   auto extension = MinifiRegisterExtension(extension_context, &extension_definition);
-  minifi::api::core::useProcessorClassDescription<DummyCProcessor>([&] (const MinifiProcessorClassDefinition& description) {
-    MinifiRegisterProcessor(extension, &description);
+  minifi::api::core::useProcessorClassDefinition<DummyCProcessor>([&] (const MinifiProcessorClassDefinition& definition) {
+    MinifiRegisterProcessor(extension, &definition);
   });
 }

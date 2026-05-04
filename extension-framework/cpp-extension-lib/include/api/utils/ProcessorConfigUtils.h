@@ -167,4 +167,28 @@ std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& context, 
   return result.value();
 }
 
+template<typename ControllerServiceType>
+ControllerServiceType* parseOptionalControllerService(const core::ProcessContext& context, const minifi::core::PropertyReference& prop) {
+  const auto controller_service_name = context.getProperty(prop.name);
+  if (!controller_service_name || controller_service_name->empty()) {
+    return nullptr;
+  }
+
+  auto service = context.getControllerService(*controller_service_name, minifi::core::className<ControllerServiceType>());
+  if (!service) {
+    return nullptr;
+  }
+
+  return reinterpret_cast<ControllerServiceType*>(*service);
+}
+
+template<typename ControllerServiceType>
+gsl::not_null<ControllerServiceType*> parseControllerService(const core::ProcessContext& context, const minifi::core::PropertyReference& prop) {
+  auto controller_service = parseOptionalControllerService<ControllerServiceType>(context, prop);
+  if (!controller_service) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Required controller service property '{}' is missing", prop.name));
+  }
+  return gsl::make_not_null(controller_service);
+}
+
 }  // namespace org::apache::nifi::minifi::api::utils
