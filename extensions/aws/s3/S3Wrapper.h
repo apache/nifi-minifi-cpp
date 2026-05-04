@@ -21,7 +21,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -301,7 +300,6 @@ class S3Wrapper {
 
   static int64_t writeFetchedBody(Aws::IOStream& source, int64_t data_size, io::OutputStream& output);
   static std::string getEncryptionString(Aws::S3Crt::Model::ServerSideEncryption encryption);
-  static std::shared_ptr<Aws::StringStream> readFlowFileStream(const std::shared_ptr<io::InputStream>& stream, uint64_t read_limit, uint64_t& read_size_out);
 
   std::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
   std::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
