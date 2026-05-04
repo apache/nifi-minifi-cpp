@@ -222,7 +222,7 @@ class VaderSentiment(object):
     return len(self.content)
 ```
 
-By default the MiNiFi C++ style native python processors are executed with multiple threads in parallel, but it is possible to set the processor to be single threaded by calling the `setSingleThreaded()` method in the processor while initializing. When a processor is set to be single threaded, only one thread will execute the processor, and setting the max concurrent tasks to more than 1 in the flow configuration will not have any effect.
+By default, the MiNiFi C++ style native python processors are executed on multiple threads in parallel if 'max concurrent tasks' is set to more than 1 in the flow configuration, but it is possible to set the processor to be single threaded by calling the `setSingleThreaded()` method in the processor while initializing. When a processor is set to be single threaded, only one thread will execute the processor, and setting 'max concurrent tasks' to more than 1 will not have any effect.
 
 ```python
 def onInitialize(processor):
@@ -256,7 +256,7 @@ One feature that is currently only available in MiNiFi C++ is the ability to set
 
 ```python
 from nifiapi.flowfilesource import FlowFileSource, FlowFileSourceResult
-from nifiapi.processorutils import trigger_serially
+from nifiapi.decorators import trigger_serially
 
 
 @trigger_serially

@@ -78,7 +78,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
   std::ofstream{python_dir / "nifi_python_processors" / "MyPyProc3.py"} << R"(
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import ExpressionLanguageScope, PropertyDescriptor, StandardValidators
-from nifiapi.processorutils import trigger_serially
+from nifiapi.decorators import trigger_serially
 
 @trigger_serially
 class MyPyProc3(FlowFileTransform):

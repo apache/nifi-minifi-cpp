@@ -15,7 +15,7 @@
 
 import time
 from nifiapi.flowfilesource import FlowFileSource
-from nifiapi.processorutils import trigger_serially
+from nifiapi.decorators import trigger_serially
 
 
 @trigger_serially
@@ -25,8 +25,8 @@ class SingleThreadedSleepForever(FlowFileSource):
 
     class ProcessorDetails:
         version = '2.0.0-snapshot'
-        description = '''Test Python source processor.'''
-        tags = ['text', 'test', 'python', 'source']
+        description = '''NiFi-style sleep forever python processor (single-threaded).'''
+        tags = ['test', 'python', 'sleep']
 
     def __init__(self, **kwargs):
         pass

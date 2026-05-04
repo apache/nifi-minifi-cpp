@@ -23,8 +23,8 @@ class SleepForever(FlowFileSource):
 
     class ProcessorDetails:
         version = '2.0.0-snapshot'
-        description = '''Test Python source processor.'''
-        tags = ['text', 'test', 'python', 'source']
+        description = '''NiFi-style sleep forever python processor.'''
+        tags = ['test', 'python', 'sleep']
 
     def __init__(self, **kwargs):
         pass
