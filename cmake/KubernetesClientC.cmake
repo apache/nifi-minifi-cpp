@@ -16,6 +16,7 @@
 # under the License.
 
 include(FetchContent)
+find_package(OpenSSL REQUIRED)
 
 set(BUILD_TESTING OFF     CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -64,4 +65,4 @@ FetchContent_Declare(kubernetes
 
 FetchContent_MakeAvailable(kubernetes)
 
-add_dependencies(websockets CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
+target_link_libraries(websockets CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)

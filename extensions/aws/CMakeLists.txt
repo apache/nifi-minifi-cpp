@@ -43,9 +43,9 @@ get_target_property(AWS_SDK_S3_INCLUDE_DIRS AWS::aws-cpp-sdk-s3 INTERFACE_INCLUD
 get_target_property(AWS_SDK_S3_CRT_INCLUDE_DIRS AWS::aws-cpp-sdk-s3-crt INTERFACE_INCLUDE_DIRECTORIES)
 get_target_property(AWS_SDK_KINESIS_INCLUDE_DIRS AWS::aws-cpp-sdk-kinesis INTERFACE_INCLUDE_DIRECTORIES)
 
-target_include_directories(minifi-aws INTERFACE ${AWS_SDK_S3_INCLUDE_DIRS})
-target_include_directories(minifi-aws INTERFACE ${AWS_SDK_S3_CRT_INCLUDE_DIRS})
-target_include_directories(minifi-aws INTERFACE ${AWS_SDK_KINESIS_INCLUDE_DIRS})
+target_include_directories(minifi-aws SYSTEM INTERFACE ${AWS_SDK_S3_INCLUDE_DIRS})
+target_include_directories(minifi-aws SYSTEM INTERFACE ${AWS_SDK_S3_CRT_INCLUDE_DIRS})
+target_include_directories(minifi-aws SYSTEM INTERFACE ${AWS_SDK_KINESIS_INCLUDE_DIRS})
 
 if(WIN32)
     target_compile_definitions(minifi-aws INTERFACE "AWS_CORE_API=__declspec(dllimport)")
