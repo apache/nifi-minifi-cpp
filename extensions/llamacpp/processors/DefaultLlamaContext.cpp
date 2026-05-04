@@ -137,14 +137,14 @@ using unique_mtmd_input_chunks_ptr = std::unique_ptr<mtmd_input_chunks, mtmd_inp
 
 class unique_llama_batch {
  public:
-  explicit unique_llama_batch(std::optional<llama_batch> batch = std::nullopt): batch_(std::move(batch)) {}
+  explicit unique_llama_batch(std::optional<llama_batch> batch = std::nullopt): batch_(batch) {}
 
   unique_llama_batch(unique_llama_batch&&) = default;
   unique_llama_batch& operator=(unique_llama_batch&&) = default;
   unique_llama_batch(const unique_llama_batch&) = delete;
   unique_llama_batch& operator=(const unique_llama_batch&) = delete;
 
-  std::optional<llama_batch> get() const {
+  [[nodiscard]] std::optional<llama_batch> get() const {
     return batch_;
   }
 
@@ -156,7 +156,7 @@ class unique_llama_batch {
     if (batch_) {
       llama_batch_free(batch_.value());
     }
-    batch_ = std::move(batch);
+    batch_ = batch;
   }
 
   ~unique_llama_batch() {
