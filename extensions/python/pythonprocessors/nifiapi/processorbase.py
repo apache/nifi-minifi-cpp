@@ -53,6 +53,9 @@ class ProcessorBase(ABC):
         else:
             self.supports_dynamic_properties = False
 
+        if hasattr(self, '_trigger_serially') and self._trigger_serially:
+            processor.setSingleThreaded()
+
         for property in self.getPropertyDescriptors():
             expression_language_supported = True if property.expressionLanguageScope != ExpressionLanguageScope.NONE else False
             property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
