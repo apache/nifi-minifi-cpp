@@ -176,6 +176,7 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
   {
     std::lock_guard<std::mutex> lock(on_schedule_timer_mutex_);
     if (!onScheduleTimer_ && !failed_processors.empty() && admin_yield_duration > 0ms) {
+      logger_->log_info("Retrying failed processors in {}", admin_yield_duration);
       auto func = [this, eventScheduler = &eventScheduler, cronScheduler = &cronScheduler, timeScheduler = &timeScheduler]() {
         this->startProcessingProcessors(*timeScheduler, *eventScheduler, *cronScheduler);
       };

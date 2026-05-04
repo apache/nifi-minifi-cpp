@@ -110,7 +110,7 @@ FlowController::~FlowController() {
 nonstd::expected<void, std::string> FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
-    // Parse the new flow here and and clear controller services later to avoid race condition with the onScheduleTimer_ callback thread
+    // Parse the new flow here and clear controller services later to avoid race condition with the onScheduleTimer_ callback thread
     newRoot = flow_configuration_->updateFromPayload(source, configurePayload, flow_id);
   } catch (const std::exception& ex) {
     logger_->log_error("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what());
