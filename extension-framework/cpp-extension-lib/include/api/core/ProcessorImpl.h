@@ -67,8 +67,6 @@ class ProcessorImpl {
 
   virtual void onUnSchedule() {}
 
-  virtual bool isWorkAvailable();
-
   static constexpr auto DynamicProperties = std::array<minifi::core::DynamicPropertyDefinition, 0>{};
 
   static constexpr auto OutputAttributes = std::array<minifi::core::OutputAttributeReference, 0>{};

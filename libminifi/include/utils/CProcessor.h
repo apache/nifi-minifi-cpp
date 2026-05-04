@@ -81,8 +81,9 @@ class CProcessor : public minifi::core::ProcessorApi {
     class_description_.callbacks.destroy(impl_);
   }
 
+  // C API doesnt yet expose isWorkAvailable
   bool isWorkAvailable() override {
-    return static_cast<bool>(class_description_.callbacks.isWorkAvailable(impl_));
+    return false;
   }
 
   void restore(const std::shared_ptr<minifi::core::FlowFile>& /*file*/) override {

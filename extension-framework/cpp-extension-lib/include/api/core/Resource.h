@@ -103,9 +103,6 @@ void useProcessorClassDescription(Fn&& fn) {
       .destroy = [] (MINIFI_OWNED void* self) -> void {
         delete static_cast<Class*>(self);
       },
-      .isWorkAvailable = [] (void* self) -> MinifiBool {
-        return static_cast<Class*>(self)->isWorkAvailable();
-      },
       .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
         return static_cast<Class*>(self)->getTriggerWhenEmpty();
       },
