@@ -172,7 +172,8 @@ class unique_llama_batch {
 
 }  // namespace
 
-std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const std::string& prompt, const std::vector<std::vector<std::byte>>& files, std::function<void(std::string_view/*token*/)> token_handler) {
+std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const std::string& prompt, const std::vector<std::vector<std::byte>>& files,
+      std::function<void(std::string_view/*token*/)> token_handler) {
   GenerationResult result{};
   auto start_time = std::chrono::steady_clock::now();
   llama_memory_seq_rm(llama_get_memory(llama_ctx_), 0, -1, -1);
