@@ -20,7 +20,7 @@ index 2acb62d91..6470de162 100644
  
 -    # Check if the AWS::crypto target has been added and handle it
 -    if (TARGET AWS::crypto)
-+    # Check if the OpenSSL::Crypto target has beeen added and handle it
++    # Check if the OpenSSL::Crypto target has been added and handle it
 +    if (TARGET OpenSSL::Crypto)
          # Get the target library type (shared or static)
 -        get_target_property(target_type AWS::crypto TYPE)

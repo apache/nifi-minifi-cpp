@@ -10,7 +10,7 @@ index 5d30c6d..dd20fb4 100644
 +            include(${FIND_OPENSSL_PATH})
              find_package(Threads REQUIRED)
              list(APPEND PLATFORM_LIBS OpenSSL::Crypto Threads::Threads)
-             message(STATUS "Using libcrypto from system: ${OPENSSL_CRYPTO_LIBRARY}")
+             message(STATUS "Using libcrypto: ${OPENSSL_CRYPTO_LIBRARY}")
 @@ -138,7 +138,7 @@ if (NOT BYO_CRYPTO)
                  list(APPEND PLATFORM_LIBS  crypto)
              elseif(AWSLC_PREBUILT)

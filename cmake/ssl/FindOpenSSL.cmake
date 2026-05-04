@@ -22,7 +22,7 @@ endif ()
 
 if (WIN32)
     set(LIB_EXT ".lib")
-elseif (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64)$")
+elseif (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
     set(LIB_EXT ".dylib")
 else ()
     set(LIB_EXT ".a")
