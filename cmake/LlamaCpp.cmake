@@ -38,13 +38,17 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
 
 
 FetchContent_Declare(llamacpp
-        URL https://github.com/ggml-org/llama.cpp/archive/refs/tags/b8944.tar.gz
-        URL_HASH SHA256=ca231c8aca086f56bad3ed371f6dc5b01e971e812a8ddf67564f087390c0e781
-        PATCH_COMMAND "${PC}"
-        SYSTEM
+    URL https://github.com/ggml-org/llama.cpp/archive/refs/tags/b8944.tar.gz
+    URL_HASH SHA256=ca231c8aca086f56bad3ed371f6dc5b01e971e812a8ddf67564f087390c0e781
+    PATCH_COMMAND "${PC}"
+    SYSTEM
 )
 
 FetchContent_MakeAvailable(llamacpp)
+
+if(MSVC AND TARGET llama)
+    target_compile_options(llama PRIVATE /Zc:__cplusplus)
+endif()
 
 set(LLAMACPP_INCLUDE_DIRS
     "${llamacpp_SOURCE_DIR}/include"
