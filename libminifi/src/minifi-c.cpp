@@ -193,7 +193,7 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
   std::vector<minifi::core::DynamicProperty> dynamic_properties;
   dynamic_properties.reserve(class_description.dynamic_properties_count);
   for (size_t i = 0; i < class_description.dynamic_properties_count; ++i) {
-    dynamic_properties.emplace_back(minifi::core::DynamicPropertyDefinition{
+    dynamic_properties.push_back(minifi::core::DynamicPropertyDefinition{
       .name = toStringView(class_description.dynamic_properties_ptr[i].name),
       .value = toStringView(class_description.dynamic_properties_ptr[i].value),
       .description = toStringView(class_description.dynamic_properties_ptr[i].description),
@@ -203,9 +203,10 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
   std::vector<minifi::core::Relationship> relationships;
   relationships.reserve(class_description.class_relationships_count);
   for (size_t i = 0; i < class_description.class_relationships_count; ++i) {
-    relationships.emplace_back(
+    relationships.push_back(minifi::core::Relationship{
       toString(class_description.class_relationships_ptr[i].name),
-      toString(class_description.class_relationships_ptr[i].description));
+      toString(class_description.class_relationships_ptr[i].description)
+    });
   }
   std::vector<minifi::core::OutputAttribute> output_attributes;
   for (size_t attribute_idx = 0; attribute_idx < class_description.output_attributes_count; ++attribute_idx) {
@@ -265,7 +266,7 @@ void useCControllerServiceClassDescription(const MinifiControllerServiceClassDef
   auto name_segments = minifi::utils::string::split(toStringView(class_description.full_name), "::");
   gsl_Assert(!name_segments.empty());
 
-  const minifi::ClassDescription description{
+  minifi::ClassDescription description{
     .type_ = minifi::ResourceType::ControllerService,
     .short_name_ = name_segments.back(),
     .full_name_ = minifi::utils::string::join(".", name_segments),
