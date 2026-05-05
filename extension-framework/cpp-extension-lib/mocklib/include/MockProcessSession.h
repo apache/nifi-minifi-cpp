@@ -51,8 +51,8 @@ class MockProcessSession : public api::core::ProcessSession {
   MockProcessSession() = default;
   MockProcessSession(const MockProcessSession&) = delete;
   MockProcessSession& operator=(const MockProcessSession&) = delete;
-  MockProcessSession(const MockProcessSession&&) = delete;
-  MockProcessSession& operator=(const MockProcessSession&&) = delete;
+  MockProcessSession(MockProcessSession&&) = delete;
+  MockProcessSession& operator=(MockProcessSession&&) = delete;
 
   ~MockProcessSession() override;
 

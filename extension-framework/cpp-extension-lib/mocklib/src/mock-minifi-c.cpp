@@ -46,13 +46,13 @@ MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext*, Minifi
 MinifiStatus MinifiProcessContextGetControllerService(MinifiProcessContext*, MinifiStringView, MinifiStringView, MinifiControllerService**) {
   throw std::runtime_error("Not implemented");
 }
-void MinifiProcessContextGetDynamicProperties(MinifiProcessContext*,
+void MinifiProcessContextGetDynamicProperties(MinifiProcessContext*, MinifiFlowFile*,
     void (*)(void* user_ctx, MinifiStringView dynamic_property_name, MinifiStringView dynamic_property_value), void*) {
   throw std::runtime_error("Not implemented");
 }
 
 MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext*, MinifiStringView,
-    void (*)(void* user_ctx, const MinifiSslData& ssl_data), void*) {
+    void (*)(void* user_ctx, const MinifiSslData* ssl_data), void*) {
   throw std::runtime_error("Not implemented");
 }
 

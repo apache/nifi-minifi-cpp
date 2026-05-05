@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
 #include <span>
 #include <vector>
 
