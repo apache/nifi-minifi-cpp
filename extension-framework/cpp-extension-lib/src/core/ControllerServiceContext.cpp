@@ -1,0 +1,40 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "api/core/ControllerServiceContext.h"
+#include "api/utils/minifi-c-utils.h"
+
+namespace org::apache::nifi::minifi::api::core {
+
+std::expected<std::string, std::error_code> ControllerServiceContext::getProperty(const std::string_view name) const {
+  std::optional<std::string> value = std::nullopt;
+  const MinifiStatus status = MinifiControllerServiceContextGetProperty(impl_, utils::toStringView(name),
+    [] (void* data, const MinifiStringView result) {
+      (*static_cast<std::optional<std::string>*>(data)) = std::string(result.data, result.length);
+    }, &value);
+
+  if (status != MINIFI_STATUS_SUCCESS) {
+    return std::unexpected{utils::make_error_code(status)};
+  }
+
+  if (!value) {
+    return std::unexpected{utils::make_error_code(MINIFI_STATUS_UNKNOWN_ERROR)};
+  }
+  return value.value();
+}
+
+}  // namespace org::apache::nifi::minifi::api::core

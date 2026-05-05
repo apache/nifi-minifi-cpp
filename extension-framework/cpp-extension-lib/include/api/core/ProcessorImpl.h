@@ -17,9 +17,7 @@
 #pragma once
 
 #include <atomic>
-#include <condition_variable>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -53,7 +51,7 @@ class ProcessorImpl {
 
   virtual ~ProcessorImpl();
 
-  void setTriggerWhenEmpty(bool trigger_when_empty) {
+  void setTriggerWhenEmpty(const bool trigger_when_empty) {
     trigger_when_empty_ = trigger_when_empty;
   }
 
@@ -87,9 +85,6 @@ class ProcessorImpl {
   std::atomic<bool> trigger_when_empty_;
 
   std::shared_ptr<minifi::core::logging::Logger> logger_;
-
- private:
-  mutable std::mutex mutex_;
 };
 
 }  // namespace core
