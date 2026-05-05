@@ -41,7 +41,8 @@ extern "C" {
 #define MINIFI_REGISTER_EXTENSION_FN MinifiRegisterExtension
 #endif
 
-#define MINIFI_SSL_CONTEXT_SERVICE_API "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
+/// To allow the proper usage of SSLContextServices set the MinifiPropertyDefinition::type to MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE
+#define MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
 
 enum : uint32_t {
   MINIFI_API_VERSION = 3
