@@ -118,6 +118,7 @@ def before_scenario(context, scenario):
 
     common_before_scenario(context, scenario)
     context.minifi_container_image = "apacheminificpp-python:latest"
+    context.override_default_ca_cert_files = False
 
 
 def after_scenario(context, scenario):

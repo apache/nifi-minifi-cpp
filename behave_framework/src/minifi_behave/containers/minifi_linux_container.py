@@ -31,6 +31,13 @@ from .minifi_controller import MinifiController
 from .minifi_protocol import MinifiProtocol
 
 
+CA_CERT_PATHS = [
+    "/usr/local/share/certs/ca-root-nss.crt",
+    "/etc/ssl/certs/ca-certificates.crt",
+    "/etc/pki/tls/certs/ca-bundle.crt"
+]
+
+
 class NormalDeployment:
     def __init__(self):
         self.conf_path = "/opt/minifi/minifi-current/conf"
@@ -67,9 +74,10 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=self.container_name,
                                                                                  ca_cert=test_context.root_ca_cert,
                                                                                  ca_key=test_context.root_ca_key)
-        self.files.append(File("/usr/local/share/certs/ca-root-nss.crt", dump_cert(test_context.root_ca_cert)))
         self.files.append(File("/tmp/resources/root_ca.crt", dump_cert(test_context.root_ca_cert)))
-        self.files.append(File("/etc/ssl/certs/ca-certificates.crt", dump_cert(test_context.root_ca_cert)))
+        if test_context.override_default_ca_cert_files:
+            for ca_cert_path in CA_CERT_PATHS:
+                self.files.append(File(ca_cert_path, dump_cert(test_context.root_ca_cert)))
         self.files.append(File("/tmp/resources/minifi_client.crt", dump_cert(minifi_client_cert)))
         self.files.append(File("/tmp/resources/minifi_client.key", dump_key(minifi_client_key)))
         self.files.append(
@@ -143,5 +151,5 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         return "\n".join(lines)
 
     def add_example_python_processors(self):
-        run_minifi_cmd = f'{self.deployment_type.bin_path}/minifi.sh run'
+        run_minifi_cmd = f'{self.deployment_type.bin_path}/minifi'
         self.command = f'sh -c "cp -r {self.deployment_type.minifi_python_examples_path} {self.deployment_type.minifi_python_path}/examples && {run_minifi_cmd}"'
