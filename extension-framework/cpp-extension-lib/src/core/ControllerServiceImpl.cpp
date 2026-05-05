@@ -41,9 +41,9 @@ MinifiStatus ControllerServiceImpl::enable(ControllerServiceContext& ctx) {
   }
 }
 
-void ControllerServiceImpl::notifyStop() {
+void ControllerServiceImpl::disable() {
   try {
-    notifyStopImpl();
+    disableImpl();
   } catch (const std::exception& e) {
     logger_->log_error("{}", e.what());
     throw;
