@@ -30,6 +30,8 @@ class Connection;
 
 namespace core {
 
+/// Helper class that makes implementing the stable API easier
+/// It is used in conjunction with useControllerServiceClassDefinition
 class ControllerServiceImpl {
  public:
   explicit ControllerServiceImpl(minifi::core::ControllerServiceMetadata metadata);
@@ -42,7 +44,7 @@ class ControllerServiceImpl {
   virtual ~ControllerServiceImpl();
 
   MinifiStatus enable(ControllerServiceContext&);
-  void notifyStop();
+  void disable();
 
   [[nodiscard]] std::string getName() const;
   [[nodiscard]] minifi::utils::Identifier getUUID() const;
@@ -50,7 +52,7 @@ class ControllerServiceImpl {
 
  protected:
   virtual MinifiStatus enableImpl(api::core::ControllerServiceContext&) = 0;
-  virtual void notifyStopImpl() {}
+  virtual void disableImpl() {}
 
   minifi::core::ControllerServiceMetadata metadata_;
 

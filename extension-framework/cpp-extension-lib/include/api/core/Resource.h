@@ -181,7 +181,7 @@ void useControllerServiceClassDefinition(Fn&& fn) {
           },
           .disable = [](void* self) -> void {
             try {
-              static_cast<Class*>(self)->notifyStop();
+              static_cast<Class*>(self)->disable();
             } catch (...) {}
           },
       }};
