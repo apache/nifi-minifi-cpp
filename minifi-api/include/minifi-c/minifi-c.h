@@ -272,13 +272,13 @@ MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceCo
     void(*cb)(void* user_ctx, MinifiStringView property_value),
     void* user_ctx);
 
-struct MinifiSslData {
+typedef struct MinifiSslData {
   uint8_t version;
   MinifiStringView ca_certificate_file;
   MinifiStringView certificate_file;
   MinifiStringView private_key_file;
   MinifiStringView passphrase;
-};
+} MinifiSslData;
 
 MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
     void (*cb)(void* user_ctx, const MinifiSslData* ssl_data), void* user_ctx);
