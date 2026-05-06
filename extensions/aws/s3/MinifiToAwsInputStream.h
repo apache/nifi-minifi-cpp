@@ -17,11 +17,9 @@
  */
 #pragma once
 
-#include <algorithm>
-#include <cstdint>
+#include <streambuf>
 #include <iostream>
 #include <memory>
-#include <span>
 #include <vector>
 
 #include "utils/ConfigurationUtils.h"
@@ -40,52 +38,9 @@ class MinifiInputStreamBuf : public std::streambuf {
         owner_(owner) {}
 
  protected:
-  int_type underflow() override {
-    if (gptr() < egptr()) {
-      return traits_type::to_int_type(*gptr());
-    }
-    const uint64_t stream_pos = stream_->tell();
-    if (stream_pos >= start_pos_ + content_length_) {
-      return traits_type::eof();
-    }
-    const auto remaining = (start_pos_ + content_length_) - stream_pos;
-    const auto to_read = std::min<uint64_t>(utils::configuration::DEFAULT_BUFFER_SIZE, remaining);
-    const auto bytes_read = stream_->read(std::span(reinterpret_cast<std::byte*>(buffer_.data()), gsl::narrow<size_t>(to_read)));
-    if (io::isError(bytes_read)) {
-      owner_->setstate(std::ios_base::badbit);
-      return traits_type::eof();
-    }
-    if (bytes_read == 0) {
-      return traits_type::eof();
-    }
-    setg(buffer_.data(), buffer_.data(), buffer_.data() + bytes_read);
-    return traits_type::to_int_type(*gptr());
-  }
-
-  pos_type seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode which) override {
-    if (!(which & std::ios_base::in)) {
-      return pos_type(off_type(-1));
-    }
-    pos_type new_virtual_pos;
-    if (way == std::ios_base::beg) {
-      new_virtual_pos = pos_type(off);
-    } else if (way == std::ios_base::cur) {
-      const auto phys_pos = static_cast<off_type>(stream_->tell()) - static_cast<off_type>(egptr() - gptr());
-      new_virtual_pos = pos_type(phys_pos - static_cast<off_type>(start_pos_) + off);
-    } else {
-      new_virtual_pos = pos_type(static_cast<off_type>(content_length_) + off);
-    }
-    return seekpos(new_virtual_pos, which);
-  }
-
-  pos_type seekpos(pos_type pos, std::ios_base::openmode which) override {
-    if (!(which & std::ios_base::in)) {
-      return pos_type(off_type(-1));
-    }
-    stream_->seek(start_pos_ + static_cast<size_t>(off_type(pos)));
-    setg(buffer_.data(), buffer_.data(), buffer_.data());  // invalidate read buffer
-    return pos;
-  }
+  int_type underflow() override;
+  pos_type seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode which) override;
+  pos_type seekpos(pos_type pos, std::ios_base::openmode which) override;
 
  private:
   std::shared_ptr<io::InputStream> stream_;
