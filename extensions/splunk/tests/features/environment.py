@@ -21,15 +21,13 @@ from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
 
 
-def before_all(context):
-    docker.from_env().images.pull(SplunkContainer.IMAGE)
-
-
 def before_feature(context, feature):
     if "x86_x64_only" in feature.tags:
         is_x86 = platform.machine() in ("i386", "AMD64", "x86_64")
         if not is_x86:
             feature.skip("This feature is only x86/x64 compatible")
+
+    docker.from_env().images.pull(SplunkContainer.IMAGE)
 
 
 def before_scenario(context, scenario):
