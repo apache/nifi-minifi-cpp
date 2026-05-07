@@ -20,12 +20,10 @@ if (NOT (ENABLE_ALL OR ENABLE_OPC))
     return()
 endif()
 
-include(BundledMbedTLS)
-use_bundled_mbedtls(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+include(MbedTLS)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/mbedtls/dummy")
 
-include(BundledOpen62541)
-use_bundled_open62541(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+include(Open62541)
 
 set( CMAKE_VERBOSE_MAKEFILE on )
 
