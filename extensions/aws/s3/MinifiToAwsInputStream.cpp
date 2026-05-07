@@ -46,7 +46,7 @@ MinifiInputStreamBuf::int_type MinifiInputStreamBuf::underflow() {
 
 MinifiInputStreamBuf::pos_type MinifiInputStreamBuf::seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode which) {
   if (!(which & std::ios_base::in)) {
-    return pos_type(off_type(-1));
+    return {off_type(-1)};
   }
   pos_type new_virtual_pos;
   if (way == std::ios_base::beg) {
@@ -62,7 +62,7 @@ MinifiInputStreamBuf::pos_type MinifiInputStreamBuf::seekoff(off_type off, std::
 
 MinifiInputStreamBuf::pos_type MinifiInputStreamBuf::seekpos(pos_type pos, std::ios_base::openmode which) {
   if (!(which & std::ios_base::in)) {
-    return pos_type(off_type(-1));
+    return {off_type(-1)};
   }
   stream_->seek(start_pos_ + static_cast<size_t>(off_type(pos)));
   setg(buffer_.data(), buffer_.data(), buffer_.data());  // invalidate read buffer
