@@ -30,8 +30,10 @@ class GrafanaLokiOptions:
 
 
 class GrafanaLokiContainer(LinuxContainer):
+    IMAGE = "grafana/loki:3.2.1"
+
     def __init__(self, test_context: MinifiTestContext, options: GrafanaLokiOptions):
-        super().__init__("grafana/loki:3.2.1", f"grafana-loki-server-{test_context.scenario_id}", test_context.network)
+        super().__init__(GrafanaLokiContainer.IMAGE, f"grafana-loki-server-{test_context.scenario_id}", test_context.network)
         extra_ssl_settings = ""
         if options.enable_ssl:
             grafana_loki_cert, grafana_loki_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)

@@ -14,9 +14,14 @@
 # limitations under the License.
 
 import os
-
+import docker
+from containers.opc_ua_server_container import OPCUAServerContainer
 from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
+
+
+def before_all(context):
+    docker.from_env().images.pull(OPCUAServerContainer.IMAGE)
 
 
 def before_scenario(context, scenario):

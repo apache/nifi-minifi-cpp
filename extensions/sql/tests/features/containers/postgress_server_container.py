@@ -24,6 +24,8 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class PostgresContainer(LinuxContainer):
+    IMAGE = "postgres:17.4"
+
     def __init__(self, context):
         dockerfile = dedent("""\
                 FROM {base_image}
@@ -39,7 +41,7 @@ class PostgresContainer(LinuxContainer):
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (5, 'ApPlE');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (6, 'BaNaNa');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
-                """.format(base_image='postgres:17.4'))
+                """.format(base_image=PostgresContainer.IMAGE))
         builder = DockerImageBuilder(
             image_tag="minifi-postgres-server:latest",
             dockerfile_content=dockerfile

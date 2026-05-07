@@ -20,10 +20,10 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class OPCUAServerContainer(LinuxContainer):
-    OPC_SERVER_IMAGE = "lordgamez/open62541:1.5.2"
+    IMAGE = "lordgamez/open62541:1.5.2"
 
     def __init__(self, test_context: MinifiTestContext, command: Optional[List[str]] = None):
-        super().__init__(self.OPC_SERVER_IMAGE, f"opcua-server-{test_context.scenario_id}", test_context.network, command=command)
+        super().__init__(OPCUAServerContainer.IMAGE, f"opcua-server-{test_context.scenario_id}", test_context.network, command=command)
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)

@@ -16,8 +16,10 @@
 #
 
 import os
+import docker
 from textwrap import dedent
 
+from containers.postgress_server_container import PostgresContainer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
@@ -78,6 +80,7 @@ def before_all(context):
         dockerfile_content=dockerfile
     )
     builder.build()
+    docker.from_env().images.pull(PostgresContainer.IMAGE)
 
 
 def before_scenario(context, scenario):

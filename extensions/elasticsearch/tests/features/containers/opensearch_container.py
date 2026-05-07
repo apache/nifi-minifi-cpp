@@ -25,8 +25,10 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class OpensearchContainer(ElasticBaseContainer):
+    IMAGE = "opensearchproject/opensearch:2.6.0"
+
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__(test_context, "opensearchproject/opensearch:2.6.0", f"opensearch-{test_context.scenario_id}")
+        super().__init__(test_context, OpensearchContainer.IMAGE, f"opensearch-{test_context.scenario_id}")
 
         admin_pem, admin_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
 

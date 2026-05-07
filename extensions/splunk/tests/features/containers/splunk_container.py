@@ -23,8 +23,10 @@ from minifi_behave.core.ssl_utils import make_server_cert, dump_cert, dump_key
 
 
 class SplunkContainer(LinuxContainer):
+    IMAGE = "splunk/splunk:9.2.1-patch2"
+
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__("splunk/splunk:9.2.1-patch2", f"splunk-{test_context.scenario_id}", test_context.network)
+        super().__init__(SplunkContainer.IMAGE, f"splunk-{test_context.scenario_id}", test_context.network)
         self.user = None
 
         self.environment = ["SPLUNK_LICENSE_URI=Free",

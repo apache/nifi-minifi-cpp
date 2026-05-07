@@ -14,7 +14,9 @@
 # limitations under the License.
 
 import platform
+import docker
 
+from containers.splunk_container import SplunkContainer
 from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
 
@@ -24,6 +26,8 @@ def before_feature(context, feature):
         is_x86 = platform.machine() in ("i386", "AMD64", "x86_64")
         if not is_x86:
             feature.skip("This feature is only x86/x64 compatible")
+
+    docker.from_env().images.pull(SplunkContainer.IMAGE)
 
 
 def before_scenario(context, scenario):

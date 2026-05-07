@@ -27,8 +27,10 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class KafkaServer(LinuxContainer):
+    IMAGE = "apache/kafka:4.1.0"
+
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__("apache/kafka:4.1.0", f"kafka-server-{test_context.scenario_id}", test_context.network)
+        super().__init__(KafkaServer.IMAGE, f"kafka-server-{test_context.scenario_id}", test_context.network)
         self.environment.append("KAFKA_NODE_ID=1")
         self.environment.append("KAFKA_PROCESS_ROLES=controller,broker")
         self.environment.append("KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT")

@@ -26,8 +26,10 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class ElasticsearchContainer(ElasticBaseContainer):
+    IMAGE = "elasticsearch:9.1.5"
+
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__(test_context, "elasticsearch:9.1.5", f"elasticsearch-{test_context.scenario_id}")
+        super().__init__(test_context, ElasticsearchContainer.IMAGE, f"elasticsearch-{test_context.scenario_id}")
 
         http_cert, http_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
         transport_cert, transport_key = make_cert_without_extended_usage(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
