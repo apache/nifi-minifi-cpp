@@ -285,8 +285,7 @@ include(GetSpdlog)
 get_spdlog()
 
 # yaml-cpp
-include(BundledYamlCpp)
-use_bundled_yamlcpp(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+include(YamlCpp)
 
 # concurrentqueue
 add_library(concurrentqueue INTERFACE)

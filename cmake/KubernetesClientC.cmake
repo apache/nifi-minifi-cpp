@@ -34,7 +34,6 @@ set(LWS_WITHOUT_TEST_CLIENT ON                        CACHE BOOL "" FORCE)
 set(LWS_WITH_SHARED OFF                               CACHE BOOL "" FORCE)
 set(LWS_OPENSSL_INCLUDE_DIRS "${OPENSSL_INCLUDE_DIR}" CACHE STRING "" FORCE)
 set(LWS_OPENSSL_LIBRARIES "${OPENSSL_LIBRARIES}"      CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS "-fpic"                             CACHE STRING "" FORCE)
 set(DISABLE_WERROR ON                                 CACHE STRING "" FORCE)
 
 set(WEBSOCKETS_PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/libwebsockets/fix-include-dirs.patch")
@@ -50,6 +49,8 @@ FetchContent_Declare(websockets
 )
 
 FetchContent_MakeAvailable(yaml websockets)
+
+target_compile_options(websockets PRIVATE -fPIC)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(K8S_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/kubernetes-client-c/remove-findpackage.patch")
