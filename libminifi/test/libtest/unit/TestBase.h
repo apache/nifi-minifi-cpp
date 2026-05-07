@@ -275,6 +275,7 @@ class TestPlan {
 
   minifi::Connection* addConnection(minifi::core::Processor* source_proc, const minifi::core::Relationship& source_relationship, minifi::core::Processor* destination_proc);
 
+  std::shared_ptr<minifi::core::controller::ControllerServiceNode> addController(const std::string& name, const std::shared_ptr<minifi::core::controller::ControllerService>& cs);
   std::shared_ptr<minifi::core::controller::ControllerServiceNode> addController(const std::string &controller_name, const std::string &name);
 
   bool setProperty(minifi::core::Processor* processor, const core::PropertyReference& property, std::string_view value);
@@ -298,7 +299,7 @@ class TestPlan {
   void scheduleProcessor(minifi::core::Processor* processor);
   void scheduleProcessors();
 
-  bool runProcessor(minifi::core::Processor* processor, const PreTriggerVerifier& verify = nullptr);
+  bool runProcessor(const minifi::core::Processor* processor, const PreTriggerVerifier& verify = nullptr);
   bool runProcessor(size_t target_location, const PreTriggerVerifier& verify = nullptr);
   bool runNextProcessor(const PreTriggerVerifier& verify = nullptr);
   bool runCurrentProcessor();

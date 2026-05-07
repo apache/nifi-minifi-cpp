@@ -255,7 +255,7 @@ void useCProcessorClassDescription(const MinifiProcessorClassDefinition& class_d
 }
 
 void useCControllerServiceClassDescription(const MinifiControllerServiceClassDefinition& class_description,
-    const std::function<void(ClassDescription, CControllerServiceClassDescription)>& fn) {
+    const std::function<void(const ClassDescription&, CControllerServiceClassDescription)>& fn) {
   std::vector<minifi::core::Property> properties;
   properties.reserve(class_description.class_properties_count);
   for (size_t i = 0; i < class_description.class_properties_count; ++i) {

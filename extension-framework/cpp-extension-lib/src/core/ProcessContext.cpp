@@ -38,4 +38,17 @@ bool ProcessContext::hasNonEmptyProperty(std::string_view name) const {
   return MinifiProcessContextHasNonEmptyProperty(impl_, utils::toStringView(name));
 }
 
+std::expected<MinifiControllerService*, std::error_code> ProcessContext::getControllerService(const std::string_view controller_service_name,
+    const std::string_view controller_service_class) const {
+  MinifiControllerService* controller_service = nullptr;
+  if (const MinifiStatus status = MinifiProcessContextGetControllerService(impl_,
+          utils::toStringView(controller_service_name),
+          utils::toStringView(controller_service_class),
+          &controller_service);
+      status != MINIFI_STATUS_SUCCESS) {
+    return std::unexpected{utils::make_error_code(status)};
+  }
+  return controller_service;
+}
+
 }  // namespace org::apache::nifi::minifi::api::core
