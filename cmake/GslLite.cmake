@@ -18,8 +18,8 @@
 include(FetchContent)
 
 FetchContent_Declare(gsl-lite
-    URL      https://github.com/gsl-lite/gsl-lite/archive/refs/tags/v0.39.0.tar.gz
-    URL_HASH SHA256=f80ec07d9f4946097a1e2554e19cee4b55b70b45d59e03a7d2b7f80d71e467e9
+    URL      https://github.com/gsl-lite/gsl-lite/archive/refs/tags/v1.1.0.tar.gz
+    URL_HASH SHA256=bc786258eda511980942b973f5f394c854705bb0462ee46f82a8c39b5e19ea03
     SYSTEM
 )
 FetchContent_MakeAvailable(gsl-lite)

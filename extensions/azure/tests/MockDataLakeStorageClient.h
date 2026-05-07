@@ -81,7 +81,7 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
       size = *params.range_length;
     }
 
-    const auto range = gsl::make_span(FETCHED_DATA).subspan(range_start, size).as_span<const std::byte>();
+    const auto range = std::as_bytes(std::span(FETCHED_DATA).subspan(range_start, size));
     buffer_.assign(std::begin(range), std::end(range));
     return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(buffer_);
   }

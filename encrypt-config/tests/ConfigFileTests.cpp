@@ -168,7 +168,7 @@ TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
 
   TestController test_controller;
   auto temp_dir = test_controller.createTempDirectory();
-  auto remove_directory = minifi::gsl::finally([&temp_dir]() { utils::file::delete_dir(temp_dir); });
+  auto remove_directory = gsl::finally([&temp_dir]() { utils::file::delete_dir(temp_dir); });
   auto file_path = temp_dir / "minifi.properties";
 
   test_file.writeTo(file_path);

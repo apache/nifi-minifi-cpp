@@ -106,10 +106,11 @@ void ConsumeJournald::onTrigger(core::ProcessContext& context, core::ProcessSess
 
   for (auto& msg: messages) {
     const auto flow_file = session.create();
-    if (payload_format_ == systemd::PayloadFormat::Syslog) session.writeBuffer(flow_file, gsl::make_span(formatSyslogMessage(msg)));
+    const auto syslog_message = formatSyslogMessage(msg);
+    if (payload_format_ == systemd::PayloadFormat::Syslog) session.writeBuffer(flow_file, std::span(syslog_message));
     for (auto& field: msg.fields) {
       if (field.name == "MESSAGE" && payload_format_ == systemd::PayloadFormat::Raw) {
-        session.writeBuffer(flow_file, gsl::make_span(field.value));
+        session.writeBuffer(flow_file, std::span(field.value));
       } else {
         flow_file->setAttribute(std::move(field.name), std::move(field.value));
       }
@@ -129,7 +130,7 @@ std::optional<std::span<const char>> ConsumeJournald::enumerateJournalEntry(libw
   gsl_Ensures(data_ptr && "if sd_journal_enumerate_data was successful, then data_ptr must be set");
   gsl_Ensures(data_length > 0 && "if sd_journal_enumerate_data was successful, then data_length must be greater than zero");
   const char* const data_str_ptr = reinterpret_cast<const char*>(data_ptr);
-  return gsl::make_span(data_str_ptr, data_length);
+  return std::span(data_str_ptr, data_length);
 }
 
 std::optional<ConsumeJournald::journal_field> ConsumeJournald::getNextField(libwrapper::Journal& journal) {

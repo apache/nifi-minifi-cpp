@@ -328,7 +328,7 @@ std::string to_hex(std::span<const std::byte> data_to_be_transformed, bool upper
  * @return the hexencoded string
  */
 inline std::string to_hex(std::string_view str, bool uppercase = false) {
-  return to_hex(gsl::make_span(str).as_span<const std::byte>(), uppercase);
+  return to_hex(std::as_bytes(std::span(str)), uppercase);
 }
 
 
@@ -381,7 +381,7 @@ std::string to_base64(std::span<const std::byte> raw_data, bool url = false, boo
  * @return the Base64 encoded string
  */
 inline std::string to_base64(std::string_view str, bool url = false, bool padded = true) {
-  return to_base64(gsl::make_span(str).as_span<const std::byte>(), url, padded);
+  return to_base64(std::as_bytes(std::span(str)), url, padded);
 }
 
 std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map);

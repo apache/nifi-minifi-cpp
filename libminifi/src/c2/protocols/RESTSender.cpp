@@ -192,7 +192,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   } else {
     logger_->log_debug("Response code '{}' from '{}'", respCode, url);
   }
-  const auto response_body_bytes = gsl::make_span(client.getResponseBody()).as_span<const std::byte>();
+  const auto response_body_bytes = std::as_bytes(std::span(client.getResponseBody()));
   logger_->log_trace("Received response: \"{}\"", [&] { return utils::string::escapeUnprintableBytes(response_body_bytes); });
   if (isOkay && !clientError && !serverError) {
     if (accepted_formats) {

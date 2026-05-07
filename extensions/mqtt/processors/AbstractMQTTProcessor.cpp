@@ -323,6 +323,8 @@ void AbstractMQTTProcessor::setBrokerLimits(MQTTAsync_successData5* response) {
     if (value != PAHO_MQTT_C_FAILURE_CODE) {
       if constexpr (std::is_same_v<decltype(out_var), std::optional<std::chrono::seconds>&>) {
         out_var = std::chrono::seconds(value);
+      } else if constexpr (std::is_same_v<typename std::remove_reference_t<decltype(out_var)>::value_type, bool>) {
+        out_var = (value != 0);
       } else {
         out_var = gsl::narrow<typename std::remove_reference_t<decltype(out_var)>::value_type>(value);
       }

@@ -382,11 +382,11 @@ bool SFTPClient::connect() {
     }
   } else {
     const char* fingerprint = libssh2_hostkey_hash(ssh_session_, LIBSSH2_HOSTKEY_HASH_SHA1);
-    const auto fingerprint_span = gsl::make_span(fingerprint, 20);
+    const auto fingerprint_span = std::span(fingerprint, 20);
     if (fingerprint == nullptr) {
       logger_->log_warn("Cannot get remote server fingerprint");
     } else {
-      auto fingerprint_hex = utils::string::to_hex(fingerprint_span.as_span<const std::byte>());
+      auto fingerprint_hex = utils::string::to_hex(std::as_bytes(fingerprint_span));
       std::stringstream fingerprint_hex_colon;
       for (size_t i = 0; i < 20; i++) {
         fingerprint_hex_colon << fingerprint_hex.substr(i * 2, 2);

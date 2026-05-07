@@ -185,7 +185,7 @@ class CompressContent : public core::ProcessorImpl {
           } else if (ret == 0) {
             break;
           } else {
-            const auto writeret = filterStream->write(gsl::make_span(buffer).subspan(0, ret));
+            const auto writeret = filterStream->write(std::span(buffer).subspan(0, ret));
             if (io::isError(writeret) || gsl::narrow<size_t>(writeret) != ret) {
               return io::IoResult::error();
             }

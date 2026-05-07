@@ -84,7 +84,8 @@ void JsonRecordSetWriter::writePerLine(const core::RecordSet& record_set, const 
       rapidjson::StringBuffer buffer;
       rapidjson::Writer writer(buffer);
       doc.Accept(writer);
-      write_result += gsl::narrow<int64_t>(stream->write(gsl::make_span(fmt::format("{}\n", buffer.GetString())).as_span<const std::byte>()));
+      const auto line = fmt::format("{}\n", buffer.GetString());
+      write_result += gsl::narrow<int64_t>(stream->write(std::as_bytes(std::span(line))));
     }
     return io::IoResult::from(write_result);
   });
@@ -107,7 +108,8 @@ void JsonRecordSetWriter::writeAsArray(const core::RecordSet& record_set, const 
       rapidjson::Writer writer(buffer);
       doc.Accept(writer);
     }
-    return io::IoResult::from(stream->write(gsl::make_span(fmt::format("{}", buffer.GetString())).as_span<const std::byte>()));
+    auto output = fmt::format("{}", buffer.GetString());
+    return io::IoResult::from(stream->write(std::as_bytes(std::span(output))));
   });
 }
 

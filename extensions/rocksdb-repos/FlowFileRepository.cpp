@@ -104,7 +104,7 @@ void FlowFileRepository::deserializeFlowFilesWithNoContentClaim(minifi::internal
     }
 
     utils::Identifier container_id;
-    auto flow_file = FlowFileRecord::DeSerialize(gsl::make_span(values[i]).as_span<const std::byte>(), content_repo_, container_id);
+    auto flow_file = FlowFileRecord::DeSerialize(std::as_bytes(std::span(values[i])), content_repo_, container_id);
     if (flow_file) {
       gsl_Expects(flow_file->getUUIDStr() == key_positions.at(i)->key);
       key_positions.at(i)->content = flow_file->getResourceClaim();
@@ -151,7 +151,8 @@ void FlowFileRepository::initialize_repository() {
   const auto it = opendb->NewIterator(options);
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     utils::Identifier container_id;
-    auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>(), content_repo_, container_id);
+    const auto slice = it->value();
+    auto eventRead = FlowFileRecord::DeSerialize(std::span<const std::byte>(reinterpret_cast<const std::byte*>(slice.data()), slice.size()), content_repo_, container_id);
     const std::string key = it->key().ToString();
     if (!eventRead) {
       // failed to deserialize FlowFile, cannot clear claim

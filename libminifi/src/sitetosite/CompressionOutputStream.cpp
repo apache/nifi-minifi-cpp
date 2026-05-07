@@ -79,7 +79,7 @@ size_t CompressionOutputStream::compressAndWrite() {
   io::BufferStream buffer_stream;
   {
     io::ZlibCompressStream zlib_stream{gsl::make_not_null(&buffer_stream), io::ZlibCompressionFormat::ZLIB, Z_BEST_SPEED};
-    const auto ret = zlib_stream.write(gsl::make_span(buffer_).subspan(0, buffer_offset_));
+    const auto ret = zlib_stream.write(std::span(buffer_).subspan(0, buffer_offset_));
     if (io::isError(ret)) {
       logger_->log_error("Failed to write data to zlib stream: {}", ret);
       return ret;

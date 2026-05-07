@@ -21,9 +21,9 @@
 
 #include <gsl-lite/gsl-lite.hpp>
 
-namespace org::apache::nifi::minifi {
-
 namespace gsl = ::gsl_lite;
+
+namespace org::apache::nifi::minifi {
 
 namespace utils {
 

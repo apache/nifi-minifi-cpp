@@ -41,7 +41,7 @@ class ReadArchiveStreamImpl final : public InputStreamImpl, public ReadArchiveSt
       if (io::isError(result)) {
         return std::nullopt;
       }
-      return gsl::make_span(buffer_).subspan(0, result);
+      return std::span(buffer_).subspan(0, result);
     }
 
    private:

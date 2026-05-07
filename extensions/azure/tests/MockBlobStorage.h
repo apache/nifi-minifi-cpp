@@ -88,7 +88,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     }
 
     buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + size);
-    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(gsl::make_span(buffer_).as_span<const std::byte>());
+    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(std::as_bytes(std::span(buffer_)));
   }
 
   std::vector<Azure::Storage::Blobs::Models::BlobItem> listContainer(const minifi::azure::storage::ListAzureBlobStorageParameters& params) override {

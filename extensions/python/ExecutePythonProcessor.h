@@ -81,7 +81,7 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   }
 
   void addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el, bool sensitive,
-      const std::optional<int64_t>& property_type_code, gsl::span<const std::string_view> allowable_values, const std::optional<std::string>& controller_service_type_name);
+      const std::optional<int64_t>& property_type_code, std::span<const std::string_view> allowable_values, const std::optional<std::string>& controller_service_type_name);
 
   std::vector<core::Property> getPythonProperties() const {
     std::lock_guard<std::mutex> lock(python_properties_mutex_);
