@@ -38,6 +38,8 @@ class PythonProcessor {
 
   void setSupportsDynamicProperties();
 
+  void setSingleThreaded();
+
   void setDescription(const std::string& desc);
 
   void setVersion(const std::string& version);

@@ -61,6 +61,7 @@
 /var/lib/nifi-minifi-cpp/minifi-python/nifiapi/flowfilesource.py
 /var/lib/nifi-minifi-cpp/minifi-python/nifiapi/flowfiletransform.py
 /var/lib/nifi-minifi-cpp/minifi-python/nifiapi/processorbase.py
+/var/lib/nifi-minifi-cpp/minifi-python/nifiapi/decorators.py
 /var/lib/nifi-minifi-cpp/minifi-python/nifiapi/properties.py
 /var/lib/nifi-minifi-cpp/minifi-python/nifiapi/recordtransform.py
 /var/lib/nifi-minifi-cpp/minifi-python/nifiapi/relationship.py

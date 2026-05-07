@@ -60,6 +60,10 @@ COPY NifiStyleLogDynamicProperties.py {minifi_python_dir}/nifi_python_processors
 COPY LogDynamicProperties.py {minifi_python_dir}/LogDynamicProperties.py
 COPY ExpressionLanguagePropertyWithValidator.py {minifi_python_dir}/nifi_python_processors/ExpressionLanguagePropertyWithValidator.py
 COPY EvaluateExpressionLanguageChecker.py {minifi_python_dir}/nifi_python_processors/EvaluateExpressionLanguageChecker.py
+COPY SleepForever.py {minifi_python_dir}/nifi_python_processors/SleepForever.py
+COPY SingleThreadedSleepForever.py {minifi_python_dir}/nifi_python_processors/SingleThreadedSleepForever.py
+COPY MinifiSleepForever.py {minifi_python_dir}/MinifiSleepForever.py
+COPY SingleThreadedMinifiSleepForever.py {minifi_python_dir}/SingleThreadedMinifiSleepForever.py
 RUN python3 -m venv {minifi_python_venv_parent}/venv
     """.format(base_image=context.minifi_container_image,
                pip3_install_command=pip3_install_command,

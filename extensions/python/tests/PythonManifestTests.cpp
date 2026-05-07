@@ -66,6 +66,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
     "def describe(proc):\n"
     "  proc.setDescription('Another amazing processor')\n"
     "  proc.setSupportsDynamicProperties()\n"
+    "  proc.setSingleThreaded()\n"
     "  proc.addProperty('Prop1', 'A great property', 'banana', True, False, False, None, ['apple', 'orange', 'banana', 'durian'], None)\n";
 
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
@@ -77,7 +78,9 @@ TEST_CASE("Python processor's description is part of the manifest") {
   std::ofstream{python_dir / "nifi_python_processors" / "MyPyProc3.py"} << R"(
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import ExpressionLanguageScope, PropertyDescriptor, StandardValidators
+from nifiapi.decorators import trigger_serially
 
+@trigger_serially
 class MyPyProc3(FlowFileTransform):
 
     class Java:
@@ -203,7 +206,7 @@ class MyPyProc5(FlowFileTransform):
     auto MyPyProc = getProcessorNode(python_bundle);
 
     CHECK(getNode(MyPyProc->children, "inputRequirement").value == "INPUT_ALLOWED");
-    CHECK(getNode(MyPyProc->children, "isSingleThreaded").value == true);
+    CHECK(getNode(MyPyProc->children, "isSingleThreaded").value == false);
     CHECK(getNode(MyPyProc->children, "typeDescription").value == "An amazing processor");
     CHECK(getNode(MyPyProc->children, "supportsDynamicRelationships").value == false);
     CHECK(getNode(MyPyProc->children, "supportsDynamicProperties").value == false);
@@ -302,6 +305,8 @@ class MyPyProc5(FlowFileTransform):
   {
     auto python_bundle = findPythonBundle("MyPyProc4");
     CHECK(getNode(python_bundle->children, "version").value == minifi::AgentBuild::VERSION);
+    auto MyPyProc4 = getProcessorNode(python_bundle);
+    CHECK(getNode(MyPyProc4->children, "isSingleThreaded").value == false);
   }
 
   {

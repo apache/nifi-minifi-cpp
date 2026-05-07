@@ -32,6 +32,7 @@ struct PyProcessor {
   static int init(PyProcessor* self, PyObject* args, PyObject* kwds);
 
   static PyObject* setSupportsDynamicProperties(PyProcessor* self, PyObject* args);
+  static PyObject* setSingleThreaded(PyProcessor* self, PyObject* args);
   static PyObject* setDescription(PyProcessor* self, PyObject* args);
   static PyObject* setVersion(PyProcessor* self, PyObject* args);
   static PyObject* addProperty(PyProcessor* self, PyObject* args);

@@ -353,3 +353,53 @@ Feature: MiNiFi can use python processors in its flows
     And the Minifi logs contain the following message: "Non-existent property value is empty" in less than 1 seconds
     And the Minifi logs contain the following message: "My Dynamic Property value is: Dynamic ${my.attribute}" in less than 1 seconds
     And the Minifi logs contain the following message: "My Dynamic Property evaluated value is: Dynamic my.value" in less than 1 seconds
+
+  Scenario Outline: NiFi python processors are allowed to run in parallel
+    Given a org.apache.nifi.minifi.processors.nifi_python_processors.SleepForever processor with the name "SleepForever"
+    And the max concurrent tasks attribute of the SleepForever processor is set to <Max concurrent tasks>
+    And the scheduling period of the SleepForever processor is set to "100 milliseconds"
+    And SleepForever's success relationship is auto-terminated
+
+    When the MiNiFi instance starts up
+
+    Then the Minifi logs contain the following message: "Sleeping forever" <Max concurrent tasks> times after 5 seconds
+
+    Examples:
+    | Max concurrent tasks |
+    | 3                    |
+    | 1                    |
+
+  Scenario: NiFi python processors can be set to be single threaded
+    Given a org.apache.nifi.minifi.processors.nifi_python_processors.SingleThreadedSleepForever processor with the name "SingleThreadedSleepForever"
+    And the max concurrent tasks attribute of the SingleThreadedSleepForever processor is set to 5
+    And the scheduling period of the SingleThreadedSleepForever processor is set to "100 milliseconds"
+    And SingleThreadedSleepForever's success relationship is auto-terminated
+
+    When the MiNiFi instance starts up
+
+    Then the Minifi logs contain the following message: "Sleeping forever" 1 times after 5 seconds
+
+  Scenario Outline: MiNiFi python processors are allowed to run in parallel
+    Given a MinifiSleepForever processor
+    And the max concurrent tasks attribute of the MinifiSleepForever processor is set to <Max concurrent tasks>
+    And the scheduling period of the MinifiSleepForever processor is set to "100 milliseconds"
+    And MinifiSleepForever's success relationship is auto-terminated
+
+    When the MiNiFi instance starts up
+
+    Then the Minifi logs contain the following message: "Sleeping forever" <Max concurrent tasks> times after 5 seconds
+
+    Examples:
+    | Max concurrent tasks |
+    | 3                    |
+    | 1                    |
+
+  Scenario: MiNiFi python processors can be set to be single threaded
+    Given a SingleThreadedMinifiSleepForever processor
+    And the max concurrent tasks attribute of the SingleThreadedMinifiSleepForever processor is set to 5
+    And the scheduling period of the SingleThreadedMinifiSleepForever processor is set to "100 milliseconds"
+    And SingleThreadedMinifiSleepForever's success relationship is auto-terminated
+
+    When the MiNiFi instance starts up
+
+    Then the Minifi logs contain the following message: "Sleeping forever" 1 times after 5 seconds
