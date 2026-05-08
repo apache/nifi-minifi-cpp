@@ -26,8 +26,8 @@ set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/libssh2/libs
 
 FetchContent_Declare(
         libssh2
-        URL "https://github.com/libssh2/libssh2/releases/download/libssh2-1.10.0/libssh2-1.10.0.tar.gz"
-        URL_HASH "SHA256=2d64e90f3ded394b91d3a2e774ca203a4179f69aebee03003e5a6fa621e41d51"
+        URL "https://github.com/libssh2/libssh2/archive/refs/tags/libssh2-1.11.1.tar.gz"
+        URL_HASH "SHA256=82b35c61c78b475647bdc981a183c5b5ab0d979e1caee94186e8f9150f2b0d0d"
         PATCH_COMMAND ${PC}
         SYSTEM
         OVERRIDE_FIND_PACKAGE
@@ -41,4 +41,4 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(libssh2)
 
-target_link_libraries(libssh2 PUBLIC OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB)
+target_link_libraries(libssh2_static PUBLIC OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB)

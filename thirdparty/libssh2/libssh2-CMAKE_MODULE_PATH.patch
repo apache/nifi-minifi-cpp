@@ -1,13 +1,13 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index ae55942..a49d808 100644
+index 6b51ac64..8720c375 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -35,7 +35,7 @@
+@@ -39,7 +39,7 @@
+ cmake_minimum_required(VERSION 3.7)
+ message(STATUS "Using CMake version ${CMAKE_VERSION}")
  
- cmake_minimum_required(VERSION 2.8.11)
- 
--set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 +list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
  
- project(libssh2 C)
- set(PROJECT_URL "https://www.libssh2.org/")
+ include(CheckFunctionExists)
+ include(CheckSymbolExists)
