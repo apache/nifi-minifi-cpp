@@ -25,8 +25,8 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
 
 FetchContent_Declare(lz4
-    URL            https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
-    URL_HASH       SHA256=0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b
+    URL            https://github.com/lz4/lz4/archive/refs/tags/v1.10.0.tar.gz
+    URL_HASH       SHA256=537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b
     SOURCE_SUBDIR  build/cmake
     OVERRIDE_FIND_PACKAGE
     SYSTEM
