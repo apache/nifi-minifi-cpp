@@ -77,6 +77,7 @@ v1_pod_list_unique_ptr getPods(gsl::not_null<apiClient_t*> api_client, core::log
                                                                     nullptr,  // pretty
                                                                     nullptr,  // resourceVersion
                                                                     nullptr,  // resourceVersionMatch
+                                                                    nullptr,  // sendInitialEvents
                                                                     0,  // timeoutSeconds
                                                                     0)};  // watch
   logger.log_info("The return code of the Kubernetes API listPodForAllNamespaces call: {}", api_client->response_code);

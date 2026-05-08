@@ -42,8 +42,8 @@ set(WEBSOCKETS_PC ${Bash_EXECUTABLE} -c "set -x &&\
         (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${WEBSOCKETS_PATCH_FILE_1} || ${Patch_EXECUTABLE} -p1 -i ${WEBSOCKETS_PATCH_FILE_1}) &&\
         (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${WEBSOCKETS_PATCH_FILE_2} || ${Patch_EXECUTABLE} -p1 -i ${WEBSOCKETS_PATCH_FILE_2})")
 FetchContent_Declare(websockets
-        URL             https://github.com/warmcat/libwebsockets/archive/refs/tags/v4.3.2.tar.gz
-        URL_HASH        SHA256=6a85a1bccf25acc7e8e5383e4934c9b32a102880d1e4c37c70b27ae2a42406e1
+        URL             https://github.com/warmcat/libwebsockets/archive/refs/tags/v4.5.8.tar.gz
+        URL_HASH        SHA256=b6ade658f4af3a823d0dc806ae5ef0623f0f4f5e2aeb895a0f77c4783840c30e
         PATCH_COMMAND "${WEBSOCKETS_PC}"
         SYSTEM
 )
@@ -57,8 +57,8 @@ set(K8S_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/kubernetes-client-c/remove-fi
 set(K8S_PC ${Bash_EXECUTABLE} -c "set -x &&\
         (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${K8S_PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${K8S_PATCH_FILE})")
 FetchContent_Declare(kubernetes
-    URL             https://github.com/kubernetes-client/c/archive/refs/tags/v0.5.0.tar.gz
-    URL_HASH        SHA256=dbb6e6cd29ae2ac6c15de894aefb9b1e3d48916541d443f089aa0ffad6517ec6
+    URL             https://github.com/kubernetes-client/c/archive/refs/tags/v0.14.0.tar.gz
+    URL_HASH        SHA256=52216183b540cd10cfe33da326c7a529c127e9bca3cc512533059374591cbdc4
     PATCH_COMMAND   "${K8S_PC}"
     SOURCE_SUBDIR   kubernetes
     SYSTEM
