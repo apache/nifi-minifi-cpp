@@ -17,6 +17,7 @@
  */
 
 #include <fstream>
+#include <unordered_set>
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
@@ -233,9 +234,11 @@ TEST_CASE("The JSON schema detects invalid values in the json flow") {
   std::unordered_map<std::string, std::string> errors;
   extractExpectedErrors(config_json, "", errors);
 
+  std::unordered_set<std::string> consumed_error_paths;
   ErrorHandler err_handler{[&] (const auto& err) {
     auto it = errors.find(err.path);
     if (it == errors.end()) {
+      if (consumed_error_paths.count(err.path) != 0) { return; }
       throw std::logic_error("Unexpected error in json flow at " + err.path + ": " + err.error);
     }
     if (!it->second.empty()) {
@@ -244,6 +247,7 @@ TEST_CASE("The JSON schema detects invalid values in the json flow") {
         throw std::logic_error("Error in json flow at " + err.path + " does not match expected pattern, expected: '" + it->second + "', actual: " + err.error);
       }
     }
+    consumed_error_paths.insert(err.path);
     errors.erase(it);
   }};
   validator.validate(config_json, err_handler);

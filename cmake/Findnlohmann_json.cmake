@@ -21,8 +21,8 @@ if (NOT nlohmann_json_FOUND)
     set(nlohmann_json_FOUND "YES" CACHE STRING "" FORCE)
     set(nlohmann_json_INCLUDE_DIR "${CMAKE_BINARY_DIR}/_deps/nlohmann/" CACHE STRING "" FORCE)
     if(NOT EXISTS "${nlohmann_json_INCLUDE_DIR}/nlohmann/json.hpp")
-        file(DOWNLOAD "https://github.com/nlohmann/json/releases/download/v3.10.5/json.hpp" "${nlohmann_json_INCLUDE_DIR}/nlohmann/json.hpp"
-                EXPECTED_HASH SHA256=e832d339d9e0c042e7dff807754769d778cf5d6ae9730ce21eed56de99cb5e86)
+        file(DOWNLOAD "https://github.com/nlohmann/json/releases/download/v3.12.0/json.hpp" "${nlohmann_json_INCLUDE_DIR}/nlohmann/json.hpp"
+                EXPECTED_HASH SHA256=aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63)
     endif()
 endif()
 
