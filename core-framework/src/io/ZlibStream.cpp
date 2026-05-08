@@ -22,7 +22,7 @@
 #include "minifi-cpp/Exception.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "core/logging/LoggerFactory.h"
-#include "magic_enum.hpp"
+#include "magic_enum/magic_enum.hpp"
 
 namespace org::apache::nifi::minifi::io {
 
