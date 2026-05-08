@@ -24,8 +24,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
 
 FetchContent_Declare(liblzma
-        URL https://github.com/tukaani-project/xz/releases/download/v5.6.2/xz-5.6.2.tar.gz
-        URL_HASH SHA256=8bfd20c0e1d86f0402f2497cfa71c6ab62d4cd35fd704276e3140bfb71414519
+        URL https://github.com/tukaani-project/xz/archive/refs/tags/v5.8.3.tar.gz
+        URL_HASH SHA256=8ec1767fa517642ecb4cf08b891ce667ba6f143551e382b07c7ef437bda335e2
         PATCH_COMMAND "${PC}"
         SYSTEM)
 
