@@ -668,7 +668,6 @@ MinifiStatus MinifiProcessContextGetProxyData(MinifiProcessContext* process_cont
     MinifiStringView password_holder = basic_auth_data ? minifiStringView(basic_auth_data->password) : MinifiStringView{};
 
     MinifiProxyData proxy_data{
-        .version = 1,
         .hostname = minifiStringView(hostname),
         .port = proxy_service->getPort(),
         .username = basic_auth_data ? &username_holder : nullptr,

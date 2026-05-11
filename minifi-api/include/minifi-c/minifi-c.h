@@ -293,7 +293,6 @@ typedef enum MinifiProxyType : uint8_t {
 } MinifiProxyType;
 
 typedef struct MinifiProxyData {
-  uint8_t version;
   MinifiStringView hostname;
   uint16_t port;
   MinifiStringView* username;
