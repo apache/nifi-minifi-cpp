@@ -40,8 +40,7 @@ class ProcessContext {
 
   [[nodiscard]] virtual std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& prop,
       const FlowFile* ff) const = 0;
-  [[nodiscard]] virtual std::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view name,
-      std::string_view type) const = 0;
+  [[nodiscard]] virtual std::expected<MinifiControllerService*, std::error_code> getControllerService(const minifi::core::PropertyReference& prop) const = 0;
   [[nodiscard]] virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
   [[nodiscard]] virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file) const = 0;
 
@@ -55,8 +54,7 @@ class CffiProcessContext : public ProcessContext {
 
   [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference,
       const FlowFile* flow_file) const override;
-  [[nodiscard]] std::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view name,
-      std::string_view type) const override;
+  [[nodiscard]] std::expected<MinifiControllerService*, std::error_code> getControllerService(const minifi::core::PropertyReference& prop) const override;
   [[nodiscard]] std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file) const override;
   [[nodiscard]] bool hasNonEmptyProperty(std::string_view name) const override;
 

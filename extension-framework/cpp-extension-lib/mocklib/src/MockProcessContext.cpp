@@ -32,7 +32,7 @@ std::expected<std::string, std::error_code> MockProcessContext::getProperty(cons
   return std::unexpected{make_error_code(core::PropertyErrorCode::PropertyNotSet)};
 }
 
-std::expected<MinifiControllerService*, std::error_code> MockProcessContext::getControllerService(std::string_view, std::string_view) const {
+std::expected<MinifiControllerService*, std::error_code> MockProcessContext::getControllerService(const minifi::core::PropertyReference&) const {
   return nullptr;
 }
 
