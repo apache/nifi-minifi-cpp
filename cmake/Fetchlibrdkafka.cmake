@@ -37,8 +37,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
 
 FetchContent_Declare(libkafka
-        URL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.8.0.tar.gz
-        URL_HASH SHA256=5bd1c46f63265f31c6bfcedcde78703f77d28238eadf23821c2b43fc30be3e25
+        URL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.14.1.tar.gz
+        URL_HASH SHA256=bb246e754dee3560e9b42bf4e844dc05de4b146a3cae937e36301ffacdc456e7
         PATCH_COMMAND "${PC}"
         SYSTEM
 )
