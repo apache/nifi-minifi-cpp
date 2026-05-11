@@ -35,22 +35,20 @@ using GCPCredentialsControllerService = minifi_gcp::GCPCredentialsControllerServ
 namespace {
 
 std::string create_mock_service_json() {
-  auto root = rapidjson::Document(rapidjson::kObjectType);
+  rapidjson::Document root = rapidjson::Document(rapidjson::kObjectType);
   root.AddMember("type", "service_account", root.GetAllocator());
   root.AddMember("project_id", "mock_project_id", root.GetAllocator());
   root.AddMember("private_key_id", "my_private_key_id", root.GetAllocator());
-  root.AddMember("private_key",
-      "-----BEGIN PRIVATE KEY-----\n"
-      "MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEAo2Eyw6KfcYOSD0D1\n"
-      "7cw3+M/Qkv5xXwaxxHlAZk+Bscjkm2S37iQwm87mLnhyr7nnAUXZTHsR6SDrBhj7\n"
-      "9xvM1QIDAQABAkB1RTJL7HGn5/myCz27J4fRh1E+AXbc75Av55yLE2yTb+qwfX3m\n"
-      "eAw0dZAIRQ8ZuXw7su71bW2YyB43RwXOnGWtAiEA0zo0bu6h8LPAK9y65zw8KNuF\n"
-      "A+Rif5+7K12uv1XgCWsCIQDGAqSH6JToI7yHOup47XM1CKMnjBDe67ExJPuDH3HS\n"
-      "vwIgAI+RABJmH6t6gSNO47pHNpyOl9oNYOVdq9nN0vg5Zg0CIQDEDjXOg9F8kHXJ\n"
-      "B+LFXYamyiiRrbO+pWvKly2ZRPc0jQIgfZyH0JGjJKZTLog14owyAA+JUkHTh7Em\n"
-      "8o9ev8MeLoM=\n"
-      "-----END PRIVATE KEY-----",
-      root.GetAllocator());
+  root.AddMember("private_key", "-----BEGIN PRIVATE KEY-----\n"
+                                "MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEAo2Eyw6KfcYOSD0D1\n"
+                                "7cw3+M/Qkv5xXwaxxHlAZk+Bscjkm2S37iQwm87mLnhyr7nnAUXZTHsR6SDrBhj7\n"
+                                "9xvM1QIDAQABAkB1RTJL7HGn5/myCz27J4fRh1E+AXbc75Av55yLE2yTb+qwfX3m\n"
+                                "eAw0dZAIRQ8ZuXw7su71bW2YyB43RwXOnGWtAiEA0zo0bu6h8LPAK9y65zw8KNuF\n"
+                                "A+Rif5+7K12uv1XgCWsCIQDGAqSH6JToI7yHOup47XM1CKMnjBDe67ExJPuDH3HS\n"
+                                "vwIgAI+RABJmH6t6gSNO47pHNpyOl9oNYOVdq9nN0vg5Zg0CIQDEDjXOg9F8kHXJ\n"
+                                "B+LFXYamyiiRrbO+pWvKly2ZRPc0jQIgfZyH0JGjJKZTLog14owyAA+JUkHTh7Em\n"
+                                "8o9ev8MeLoM=\n"
+                                "-----END PRIVATE KEY-----", root.GetAllocator());
   root.AddMember("client_email", "my_client_email", root.GetAllocator());
   root.AddMember("client_id", "my_client_id", root.GetAllocator());
   rapidjson::StringBuffer buffer;
@@ -62,7 +60,8 @@ std::string create_mock_service_json() {
 std::optional<std::filesystem::path> create_mock_json_file(const std::filesystem::path& dir_path) {
   std::filesystem::path path = dir_path / "mock_credentials.json";
   std::ofstream p{path};
-  if (!p) { return std::nullopt; }
+  if (!p)
+    return std::nullopt;
   p << create_mock_service_json();
   p.close();
   return path;

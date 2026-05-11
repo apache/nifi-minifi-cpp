@@ -51,7 +51,8 @@ class ListGCSBucketMocked : public ListGCSBucket {
 auto CreateObject(int index, int generation = 1) {
   std::string id = "object-" + std::to_string(index);
   std::string name = id;
-  std::string link = "https://storage.googleapis.com/storage/v1/b/test-bucket/" + id + "#1";
+  std::string link =
+      "https://storage.googleapis.com/storage/v1/b/test-bucket/" + id + "#1";
   nlohmann::json metadata{
       {"bucket", "test-bucket"},
       {"id", id},
@@ -98,7 +99,9 @@ TEST_F(ListGCSBucketTests, ServerGivesPermaError) {
 }
 
 TEST_F(ListGCSBucketTests, ServerGivesTransientErrors) {
-  auto return_temp_error = [](ListObjectsRequest const&) { return google::cloud::StatusOr<ListObjectsResponse>(TransientError()); };
+  auto return_temp_error = [](ListObjectsRequest const&) {
+    return google::cloud::StatusOr<ListObjectsResponse>(TransientError());
+  };
   EXPECT_CALL(*mock_client_, ListObjects).WillOnce(return_temp_error);
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(ListGCSBucket::NumberOfRetries.name, "1"));
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(ListGCSBucket::Bucket.name, "bucket-from-property"));
@@ -107,34 +110,38 @@ TEST_F(ListGCSBucketTests, ServerGivesTransientErrors) {
 }
 
 TEST_F(ListGCSBucketTests, WithoutVersions) {
-  EXPECT_CALL(*mock_client_, ListObjects).WillOnce([](ListObjectsRequest const& req) -> google::cloud::StatusOr<ListObjectsResponse> {
-    EXPECT_EQ("bucket-from-property", req.bucket_name());
-    EXPECT_TRUE(req.HasOption<gcs::Versions>());
-    EXPECT_FALSE(req.GetOption<gcs::Versions>().value());
+  EXPECT_CALL(*mock_client_, ListObjects)
+      .WillOnce([](ListObjectsRequest const& req)
+                    -> google::cloud::StatusOr<ListObjectsResponse> {
+        EXPECT_EQ("bucket-from-property", req.bucket_name());
+        EXPECT_TRUE(req.HasOption<gcs::Versions>());
+        EXPECT_FALSE(req.GetOption<gcs::Versions>().value());
 
-    ListObjectsResponse response;
-    response.items.emplace_back(CreateObject(1, 1));
-    response.items.emplace_back(CreateObject(1, 2));
-    response.items.emplace_back(CreateObject(1, 3));
-    return response;
-  });
+        ListObjectsResponse response;
+        response.items.emplace_back(CreateObject(1, 1));
+        response.items.emplace_back(CreateObject(1, 2));
+        response.items.emplace_back(CreateObject(1, 3));
+        return response;
+      });
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(ListGCSBucket::Bucket.name, "bucket-from-property"));
   const auto& result = test_controller_.trigger();
   EXPECT_EQ(3, result.at(ListGCSBucket::Success).size());
 }
 
 TEST_F(ListGCSBucketTests, WithVersions) {
-  EXPECT_CALL(*mock_client_, ListObjects).WillOnce([](ListObjectsRequest const& req) -> google::cloud::StatusOr<ListObjectsResponse> {
-    EXPECT_EQ("bucket-from-property", req.bucket_name());
-    EXPECT_TRUE(req.HasOption<gcs::Versions>());
-    EXPECT_TRUE(req.GetOption<gcs::Versions>().value());
+  EXPECT_CALL(*mock_client_, ListObjects)
+      .WillOnce([](ListObjectsRequest const& req)
+                    -> google::cloud::StatusOr<ListObjectsResponse> {
+        EXPECT_EQ("bucket-from-property", req.bucket_name());
+        EXPECT_TRUE(req.HasOption<gcs::Versions>());
+        EXPECT_TRUE(req.GetOption<gcs::Versions>().value());
 
-    ListObjectsResponse response;
-    response.items.emplace_back(CreateObject(1));
-    response.items.emplace_back(CreateObject(2));
-    response.items.emplace_back(CreateObject(3));
-    return response;
-  });
+        ListObjectsResponse response;
+        response.items.emplace_back(CreateObject(1));
+        response.items.emplace_back(CreateObject(2));
+        response.items.emplace_back(CreateObject(3));
+        return response;
+      });
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(ListGCSBucket::Bucket.name, "bucket-from-property"));
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(ListGCSBucket::ListAllVersions.name, "true"));
   const auto& result = test_controller_.trigger();

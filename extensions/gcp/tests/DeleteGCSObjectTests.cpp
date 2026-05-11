@@ -82,7 +82,8 @@ TEST_F(DeleteGCSObjectTests, MissingBucket) {
 }
 
 TEST_F(DeleteGCSObjectTests, ServerGivesPermaError) {
-  EXPECT_CALL(*mock_client_, DeleteObject).WillOnce(testing::Return(PermanentError()));
+  EXPECT_CALL(*mock_client_, DeleteObject)
+      .WillOnce(testing::Return(PermanentError()));
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::Bucket.name, "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
@@ -105,13 +106,14 @@ TEST_F(DeleteGCSObjectTests, ServerGivesTransientErrors) {
 }
 
 TEST_F(DeleteGCSObjectTests, HandlingSuccessfullDeletion) {
-  EXPECT_CALL(*mock_client_, DeleteObject).WillOnce([](DeleteObjectRequest const& request) {
-    EXPECT_EQ("bucket-from-attribute", request.bucket_name());
-    EXPECT_TRUE(request.HasOption<gcs::Generation>());
-    EXPECT_TRUE(request.GetOption<gcs::Generation>().has_value());
-    EXPECT_EQ(23, request.GetOption<gcs::Generation>().value());
-    return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
-  });
+  EXPECT_CALL(*mock_client_, DeleteObject)
+      .WillOnce([](DeleteObjectRequest const& request) {
+        EXPECT_EQ("bucket-from-attribute", request.bucket_name());
+        EXPECT_TRUE(request.HasOption<gcs::Generation>());
+        EXPECT_TRUE(request.GetOption<gcs::Generation>().has_value());
+        EXPECT_EQ(23, request.GetOption<gcs::Generation>().value());
+        return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
+      });
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::ObjectGeneration.name, "${gcs.generation}"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23"}});
   ASSERT_EQ(1, result.at(DeleteGCSObject::Success).size());
@@ -120,11 +122,12 @@ TEST_F(DeleteGCSObjectTests, HandlingSuccessfullDeletion) {
 }
 
 TEST_F(DeleteGCSObjectTests, EmptyGeneration) {
-  EXPECT_CALL(*mock_client_, DeleteObject).WillOnce([](DeleteObjectRequest const& request) {
-    EXPECT_EQ("bucket-from-attribute", request.bucket_name());
-    EXPECT_FALSE(request.HasOption<gcs::Generation>());
-    return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
-  });
+  EXPECT_CALL(*mock_client_, DeleteObject)
+      .WillOnce([](DeleteObjectRequest const& request) {
+        EXPECT_EQ("bucket-from-attribute", request.bucket_name());
+        EXPECT_FALSE(request.HasOption<gcs::Generation>());
+        return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
+      });
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(DeleteGCSObject::ObjectGeneration.name, "${gcs.generation}"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   ASSERT_EQ(1, result.at(DeleteGCSObject::Success).size());
