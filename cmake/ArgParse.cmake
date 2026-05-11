@@ -18,8 +18,8 @@
 include(FetchContent)
 FetchContent_Declare(
     argparse
-    URL https://github.com/p-ranav/argparse/archive/refs/tags/v3.0.tar.gz
-    URL_HASH SHA256=ba7b465759bb01069d57302855eaf4d1f7d677f21ad7b0b00b92939645c30f47
+    URL https://github.com/p-ranav/argparse/archive/refs/tags/v3.2.tar.gz
+    URL_HASH SHA256=9dcb3d8ce0a41b2a48ac8baa54b51a9f1b6a2c52dd374e28cc713bab0568ec98
     SYSTEM
 )
 FetchContent_MakeAvailable(argparse)
