@@ -1,0 +1,12 @@
+diff --git a/src/core/util/glob.cc b/src/core/util/glob.cc
+index 1b1c16e23d..555d595722 100644
+--- a/src/core/util/glob.cc
++++ b/src/core/util/glob.cc
+@@ -12,6 +12,7 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++#include <algorithm>
+ #include "absl/strings/string_view.h"
+ 
+ namespace grpc_core {
