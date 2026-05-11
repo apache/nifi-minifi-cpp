@@ -246,7 +246,10 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
     logger_->log_error("Couldn't fetch flow configuration from C2 server");
     return nullptr;
   }
-  root = updateFromPayload(*opt_flow_url, *opt_source);
+  root = flow_configuration_->updateFromPayload(*opt_flow_url, *opt_source, std::nullopt);
+  // prepare to accept the new controller service provider from flow_configuration_
+  clearControllerServices();
+  controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
   if (root) {
     logger_->log_info("Successfully fetched valid flow configuration");
     if (!flow_configuration_->persist(*root)) {
@@ -507,14 +510,6 @@ std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebug
   }
 
   return debug_info;
-}
-
-std::unique_ptr<core::ProcessGroup> FlowController::updateFromPayload(const std::string& url, const std::string& config_payload, const std::optional<std::string>& flow_id) {
-  auto root = flow_configuration_->updateFromPayload(url, config_payload, flow_id);
-  // prepare to accept the new controller service provider from flow_configuration_
-  clearControllerServices();
-  controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-  return root;
 }
 
 }  // namespace org::apache::nifi::minifi

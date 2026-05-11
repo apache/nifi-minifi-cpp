@@ -168,7 +168,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::vector<state::StateController*> getAllComponents();
   state::StateController* getComponent(const std::string& id_or_name);
   gsl::not_null<std::unique_ptr<state::ProcessorController>> createController(core::Processor& processor);
-  std::unique_ptr<core::ProcessGroup> updateFromPayload(const std::string& url, const std::string& config_payload, const std::optional<std::string>& flow_id = std::nullopt);
 
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
   void conditionalReloadScheduler(std::unique_ptr<T>& scheduler, const bool condition) {
