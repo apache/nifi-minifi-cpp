@@ -41,7 +41,8 @@ extern "C" {
 #define MINIFI_REGISTER_EXTENSION_FN MinifiRegisterExtension
 #endif
 
-/// To allow the proper usage of SSLContextServices set the MinifiPropertyDefinition::type to MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE
+/// To declare a processor property that expects an SSLContextService,
+/// use MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE in the type field of the property definition (MinifiPropertyDefinition::type)
 #define MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
 
 enum : uint32_t {
@@ -273,7 +274,6 @@ MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceCo
     void* user_ctx);
 
 typedef struct MinifiSslData {
-  uint8_t version;
   MinifiStringView ca_certificate_file;
   MinifiStringView certificate_file;
   MinifiStringView private_key_file;
