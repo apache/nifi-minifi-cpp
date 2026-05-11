@@ -45,7 +45,7 @@ extern "C" {
 /// use MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE in the type field of the property definition (MinifiPropertyDefinition::type)
 #define MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
 
-/// To allow the proper usage of ProxyConfigurationServices set the MinifiPropertyDefinition::type to MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE
+/// To declare a processor property that expects an ProxyConfigurationService, use MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE in the type field of the property definition (MinifiPropertyDefinition::type)
 #define MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
 
 
