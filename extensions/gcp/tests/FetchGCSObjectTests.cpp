@@ -80,17 +80,21 @@ TEST_F(FetchGCSObjectTests, MissingBucket) {
 }
 
 TEST_F(FetchGCSObjectTests, ServerError) {
-  EXPECT_CALL(*mock_client_, ReadObject).WillOnce([](gcs::internal::ReadObjectRangeRequest const& request) {
-    EXPECT_EQ(request.bucket_name(), "bucket-from-property") << request;
-    auto mock_source = std::make_unique<gcs::testing::MockObjectReadSource>();
-    ::testing::InSequence seq;
-    EXPECT_CALL(*mock_source, IsOpen).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(*mock_source, Read).WillOnce(testing::Return(google::cloud::Status(google::cloud::StatusCode::kInvalidArgument, "Invalid Argument")));
-    EXPECT_CALL(*mock_source, IsOpen).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*mock_client_, ReadObject)
+      .WillOnce([](gcs::internal::ReadObjectRangeRequest const& request) {
+        EXPECT_EQ(request.bucket_name(), "bucket-from-property") << request;
+        auto mock_source = std::make_unique<gcs::testing::MockObjectReadSource>();
+        ::testing::InSequence seq;
+        EXPECT_CALL(*mock_source, IsOpen).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(*mock_source, Read)
+            .WillOnce(testing::Return(google::cloud::Status(
+                google::cloud::StatusCode::kInvalidArgument,
+                "Invalid Argument")));
+        EXPECT_CALL(*mock_source, IsOpen).WillRepeatedly(testing::Return(false));
 
-    std::unique_ptr<gcs::internal::ObjectReadSource> object_read_source = std::move(mock_source);
-    return google::cloud::make_status_or(std::move(object_read_source));
-  });
+        std::unique_ptr<gcs::internal::ObjectReadSource> object_read_source = std::move(mock_source);
+        return google::cloud::make_status_or(std::move(object_read_source));
+      });
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(FetchGCSObject::Bucket.name, "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   EXPECT_EQ(0, result.at(FetchGCSObject::Success).size());
@@ -107,24 +111,27 @@ TEST_F(FetchGCSObjectTests, HappyPath) {
     auto const l = (std::min)(n, text.size() - offset);
     std::memcpy(buf, text.data() + offset, l);
     offset += l;
-    return gcs::internal::ReadSourceResult{l, gcs::internal::HttpResponse{200, {}, {}}};
+    return gcs::internal::ReadSourceResult{
+        l, gcs::internal::HttpResponse{200, {}, {}}};
   };
-  EXPECT_CALL(*mock_client_, ReadObject).WillOnce([&](gcs::internal::ReadObjectRangeRequest const& request) {
-    EXPECT_EQ(request.bucket_name(), "bucket-from-attribute") << request;
-    EXPECT_TRUE(request.HasOption<gcs::Generation>());
-    EXPECT_TRUE(request.GetOption<gcs::Generation>().has_value());
-    EXPECT_EQ(23, request.GetOption<gcs::Generation>().value());
-    auto mock_source = std::make_unique<gcs::testing::MockObjectReadSource>();
-    ::testing::InSequence seq;
-    EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(*mock_source, Read).WillOnce(simulate_read);
-    EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*mock_client_, ReadObject)
+      .WillOnce([&](gcs::internal::ReadObjectRangeRequest const& request) {
+        EXPECT_EQ(request.bucket_name(), "bucket-from-attribute") << request;
+        EXPECT_TRUE(request.HasOption<gcs::Generation>());
+        EXPECT_TRUE(request.GetOption<gcs::Generation>().has_value());
+        EXPECT_EQ(23, request.GetOption<gcs::Generation>().value());
+        auto mock_source = std::make_unique<gcs::testing::MockObjectReadSource>();
+        ::testing::InSequence seq;
+        EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(*mock_source, Read).WillOnce(simulate_read);
+        EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(false));
 
-    return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ObjectReadSource>(std::move(mock_source)));
-  });
+        return google::cloud::make_status_or(
+            std::unique_ptr<gcs::internal::ObjectReadSource>(
+                std::move(mock_source)));
+      });
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(FetchGCSObject::ObjectGeneration.name, "${gcs.generation}"));
-  const auto& result = test_controller_.trigger("hello world",
-      {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23"}});
+  const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23"}});
   ASSERT_EQ(1, result.at(FetchGCSObject::Success).size());
   EXPECT_EQ(0, result.at(FetchGCSObject::Failure).size());
   EXPECT_EQ("stored text", test_controller_.plan->getContent(result.at(FetchGCSObject::Success)[0]));
@@ -138,19 +145,23 @@ TEST_F(FetchGCSObjectTests, EmptyGeneration) {
     auto const l = (std::min)(n, text.size() - offset);
     std::memcpy(buf, text.data() + offset, l);
     offset += l;
-    return gcs::internal::ReadSourceResult{l, gcs::internal::HttpResponse{200, {}, {}}};
+    return gcs::internal::ReadSourceResult{
+        l, gcs::internal::HttpResponse{200, {}, {}}};
   };
-  EXPECT_CALL(*mock_client_, ReadObject).WillOnce([&](gcs::internal::ReadObjectRangeRequest const& request) {
-    EXPECT_EQ(request.bucket_name(), "bucket-from-attribute") << request;
-    EXPECT_FALSE(request.HasOption<gcs::Generation>());
-    auto mock_source = std::make_unique<gcs::testing::MockObjectReadSource>();
-    ::testing::InSequence seq;
-    EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(*mock_source, Read).WillOnce(simulate_read);
-    EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*mock_client_, ReadObject)
+      .WillOnce([&](gcs::internal::ReadObjectRangeRequest const& request) {
+        EXPECT_EQ(request.bucket_name(), "bucket-from-attribute") << request;
+        EXPECT_FALSE(request.HasOption<gcs::Generation>());
+        auto mock_source = std::make_unique<gcs::testing::MockObjectReadSource>();
+        ::testing::InSequence seq;
+        EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(*mock_source, Read).WillOnce(simulate_read);
+        EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(false));
 
-    return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ObjectReadSource>(std::move(mock_source)));
-  });
+        return google::cloud::make_status_or(
+            std::unique_ptr<gcs::internal::ObjectReadSource>(
+                std::move(mock_source)));
+      });
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(FetchGCSObject::ObjectGeneration.name, "${gcs.generation}"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   ASSERT_EQ(1, result.at(FetchGCSObject::Success).size());
@@ -160,8 +171,7 @@ TEST_F(FetchGCSObjectTests, EmptyGeneration) {
 
 TEST_F(FetchGCSObjectTests, InvalidGeneration) {
   EXPECT_TRUE(test_controller_.getProcessor()->setProperty(FetchGCSObject::ObjectGeneration.name, "${gcs.generation}"));
-  const auto& result = test_controller_.trigger("hello world",
-      {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23 banana"}});
+  const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23 banana"}});
   ASSERT_EQ(0, result.at(FetchGCSObject::Success).size());
   EXPECT_EQ(1, result.at(FetchGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(FetchGCSObject::Failure)[0]));
