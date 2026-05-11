@@ -62,14 +62,10 @@ RUN cd $MINIFI_BASE_DIR && \
     export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \
     export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
     cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
-    make -j "$(nproc)" ${DOCKER_MAKE_TARGET}
-
-# Perform RPM build
-RUN if [[ "${DOCKER_CREATE_RPM}" == "ON" ]] ; then  \
-        cd $MINIFI_BASE_DIR && \
-        cd build && \
-        source /opt/rh/gcc-toolset-14/enable && \
+    make -j "$(nproc)" ${DOCKER_MAKE_TARGET} && \
+    if [[ "${DOCKER_CREATE_RPM}" == "ON" ]] ; then \
         cmake -DMINIFI_PACKAGING_TYPE=RPM .. && \
-        make -j "$(nproc)" package&& \
+        make -j "$(nproc)" package && \
         ../packaging/rpm/check_rpm_contents.sh *.rpm expected-rpm-contents.txt; \
     fi
+
