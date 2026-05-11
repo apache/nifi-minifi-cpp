@@ -44,7 +44,7 @@ MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext*, Minifi
   throw std::runtime_error("Not implemented");
 }
 
-MinifiStatus MinifiProcessContextGetControllerService(MinifiProcessContext*, MinifiStringView, MinifiStringView, MinifiControllerService**) {
+MinifiStatus MinifiProcessContextGetControllerServiceFromProperty(MinifiProcessContext*, MinifiStringView, MinifiStringView, MinifiControllerService**) {
   throw std::runtime_error("Not implemented");
 }
 void MinifiProcessContextGetDynamicProperties(MinifiProcessContext*, MinifiFlowFile*,

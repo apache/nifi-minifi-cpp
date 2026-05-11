@@ -169,12 +169,8 @@ std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& context, 
 
 template<typename ControllerServiceType>
 ControllerServiceType* parseOptionalControllerService(const core::ProcessContext& context, const minifi::core::PropertyReference& prop) {
-  const auto controller_service_name = context.getProperty(prop, nullptr);
-  if (!controller_service_name || controller_service_name->empty()) {
-    return nullptr;
-  }
+  auto service = context.getControllerService(prop);
 
-  auto service = context.getControllerService(*controller_service_name, minifi::core::className<ControllerServiceType>());
   if (!service) {
     return nullptr;
   }

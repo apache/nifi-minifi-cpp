@@ -29,8 +29,7 @@ class MockProcessContext : public api::core::ProcessContext {
 
   [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const core::PropertyReference& property_reference,
       const api::core::FlowFile* flow_file) const override;
-  [[nodiscard]] std::expected<MinifiControllerService*, std::error_code> getControllerService(std::string_view controller_service_name,
-      std::string_view controller_service_class) const override;
+  [[nodiscard]] std::expected<MinifiControllerService*, std::error_code> getControllerService(const minifi::core::PropertyReference& prop) const override;
   [[nodiscard]] std::map<std::string, std::string> getDynamicProperties(const api::core::FlowFile* flow_file) const override;
   [[nodiscard]] bool hasNonEmptyProperty(std::string_view name) const override;
 

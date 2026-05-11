@@ -589,9 +589,9 @@ MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceCo
   }
 }
 
-MinifiStatus MinifiProcessContextGetControllerService(
+MinifiStatus MinifiProcessContextGetControllerServiceFromProperty(
     MinifiProcessContext* process_context,
-    const MinifiStringView controller_service_name,
+    const MinifiStringView property_name,
     const MinifiStringView controller_service_type,
     MinifiControllerService** controller_service_out) {
   if (!controller_service_out) {
@@ -600,8 +600,10 @@ MinifiStatus MinifiProcessContextGetControllerService(
 
   gsl_Assert(process_context != MINIFI_NULL);
   const auto context = reinterpret_cast<minifi::core::ProcessContext*>(process_context);
-  const auto name_str = std::string{toStringView(controller_service_name)};
-  const auto service_shared_ptr = context->getControllerService(name_str, context->getProcessorInfo().getUUID());
+  const auto property_name_str = std::string{toStringView(property_name)};
+  const auto name_str = context->getProperty(property_name_str, nullptr);
+  if (!name_str) { return MINIFI_STATUS_PROPERTY_NOT_SET; }
+  const auto service_shared_ptr = context->getControllerService(*name_str, context->getProcessorInfo().getUUID());
   if (!service_shared_ptr) {
     return MINIFI_STATUS_VALIDATION_FAILED;
   }
@@ -656,12 +658,14 @@ MinifiStatus MinifiProcessContextGetSslDataFromProperty(MinifiProcessContext* pr
 }
 
 
-MinifiStatus MinifiProcessContextGetProxyData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
+MinifiStatus MinifiProcessContextGetProxyDataFromProperty(MinifiProcessContext* process_context, MinifiStringView property_name,
     void (*cb)(void* user_ctx, const MinifiProxyData* proxy_data), void* user_ctx) {
   gsl_Assert(process_context != MINIFI_NULL);
   const auto context = reinterpret_cast<minifi::core::ProcessContext*>(process_context);
-  const auto name_str = std::string{toStringView(controller_service_name)};
-  const auto service_shared_ptr = context->getControllerService(name_str, context->getProcessorInfo().getUUID());
+  const auto property_name_str = std::string{toStringView(property_name)};
+  const auto name_str = context->getProperty(property_name_str, nullptr);
+  if (!name_str) { return MINIFI_STATUS_PROPERTY_NOT_SET; }
+  const auto service_shared_ptr = context->getControllerService(*name_str, context->getProcessorInfo().getUUID());
   if (!service_shared_ptr) { return MINIFI_STATUS_VALIDATION_FAILED; }
   if (const auto proxy_service = dynamic_cast<minifi::controllers::ProxyConfigurationServiceInterface*>(service_shared_ptr.get())) {
     const std::string hostname = proxy_service->getHost();
