@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
+#include <cstring>
 #include "unit/Catch.h"
 #include "catch2/matchers/catch_matchers_string.hpp"
 #include "unit/TestBase.h"
@@ -93,6 +95,17 @@ class TestConsumeMQTTProcessor : public minifi::processors::ConsumeMQTT {
 };
 
 REGISTER_RESOURCE(TestConsumeMQTTProcessor, Processor);
+
+static std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>
+makeMallocMqttMessage(const std::string& payload, int struct_version = 0, int qos = 0, int retained = 0, int dup = 0, int msgid = 1) {
+  auto* raw_msg = static_cast<MQTTAsync_message*>(std::malloc(sizeof(MQTTAsync_message)));
+  auto* payload_copy = static_cast<char*>(std::malloc(payload.size()));
+  std::memcpy(payload_copy, payload.data(), payload.size());
+  *raw_msg = MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = struct_version,
+                               .payloadlen = gsl::narrow<int>(payload.size()), .payload = payload_copy,
+                               .qos = qos, .retained = retained, .dup = dup, .msgid = msgid, .properties = {}};
+  return std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(raw_msg);
+}
 
 struct ConsumeMqttTestFixture {
   ConsumeMqttTestFixture()
@@ -251,11 +264,9 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read XML messages and write them to js
   const size_t expected_record_count = 2;
   const std::string payload = R"(<root><int_value>42</int_value><string_value>test</string_value></root>)";
   for (size_t i = 0; i < expected_record_count; ++i) {
-    TestConsumeMQTTProcessor::SmartMessage message{std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(
-        new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = gsl::narrow<int>(i), .payloadlen = gsl::narrow<int>(payload.size()),
-                              .payload = const_cast<char*>(payload.data()), .qos = gsl::narrow<int>(i), .retained = gsl::narrow<int>(i), .dup = gsl::narrow<int>(i),
-                              .msgid = gsl::narrow<int>(i + 1), .properties = {}}),
-      std::string{"mytopic/segment/" + std::to_string(i)}};  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+    TestConsumeMQTTProcessor::SmartMessage message{
+        makeMallocMqttMessage(payload, gsl::narrow<int>(i), gsl::narrow<int>(i), gsl::narrow<int>(i), gsl::narrow<int>(i), gsl::narrow<int>(i + 1)),
+        std::string{"mytopic/segment/" + std::to_string(i)}};
 
     auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
     test_processor.enqueueReceivedMQTTMsg(std::move(message));
@@ -281,10 +292,8 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Invalid XML payload does not result in
 
   const std::string payload = "invalid xml payload";
   TestConsumeMQTTProcessor::SmartMessage message{
-    std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(
-      new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = 1, .payloadlen = gsl::narrow<int>(payload.size()),
-                            .payload = const_cast<char*>(payload.data()), .qos = 1, .retained = 0, .dup = 0, .msgid = 42, .properties = {}}),
-    std::string{"mytopic"}};  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+      makeMallocMqttMessage(payload, 1, 1, 0, 0, 42),
+      std::string{"mytopic"}};
   auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
   test_processor.enqueueReceivedMQTTMsg(std::move(message));
 
@@ -323,10 +332,9 @@ TEST_CASE_METHOD(ConsumeMqttTestFixture, "Read MQTT message and write it to a fl
   const size_t expected_flow_file_count = 2;
   const std::string payload = "test MQTT payload";
   for (size_t i = 0; i < expected_flow_file_count; ++i) {
-    TestConsumeMQTTProcessor::SmartMessage message{std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(
-        new MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = 1, .payloadlen = gsl::narrow<int>(payload.size()),
-                              .payload = const_cast<char*>(payload.data()), .qos = 1, .retained = 0, .dup = 0, .msgid = 42, .properties = {}}),
-      std::string{topic}};  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+    TestConsumeMQTTProcessor::SmartMessage message{
+        makeMallocMqttMessage(payload, 1, 1, 0, 0, 42),
+        std::string{topic}};
     auto& test_processor = dynamic_cast<TestConsumeMQTTProcessor&>(consume_mqtt_processor_->getImpl());
     test_processor.enqueueReceivedMQTTMsg(std::move(message));
   }
