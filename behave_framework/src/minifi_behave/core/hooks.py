@@ -78,6 +78,7 @@ def common_before_scenario(context: Context, scenario: Scenario):
     context.containers = {}
     context.resource_dir = None
     context.root_ca_cert, context.root_ca_key = make_self_signed_cert("root CA")
+    context.override_default_ca_cert_files = True
 
     for step in scenario.steps:
         inject_scenario_id(context, step)

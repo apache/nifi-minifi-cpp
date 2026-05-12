@@ -43,6 +43,7 @@ class MinifiTestContext(Context):
     resource_dir: str | None
     root_ca_key: RSAPrivateKey
     root_ca_cert: Certificate
+    override_default_ca_cert_files: bool
 
     def get_or_create_minifi_container(self, container_name: str) -> MinifiContainer:
         if container_name not in self.containers:
