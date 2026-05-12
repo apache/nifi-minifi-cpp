@@ -102,7 +102,7 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
   if (!impl_) {
     gsl_Expects(columns_.empty());
     // database needs to be (re)opened
-    rocksdb::DB* db_instance = nullptr;
+    std::unique_ptr<rocksdb::DB> db_instance;
     rocksdb::Status result;
 
     std::vector<DBOptionsPatch> dbo_patches;
@@ -202,7 +202,7 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
     gsl_Expects(db_instance);
     // the patches could have internal resources that we need to keep alive
     // as long as the database is open (e.g. custom environment)
-    impl_ = std::make_shared<DbHandle>(std::unique_ptr<rocksdb::DB>(db_instance), std::move(dbo_patches));
+    impl_ = std::make_shared<DbHandle>(std::move(db_instance), std::move(dbo_patches));
     for (size_t cf_idx{0}; cf_idx < column_handles.size(); ++cf_idx) {
       ColumnFamilyOptionsPatch cfo_patch;
       if (auto it = column_configs_.find(column_handles[cf_idx]->GetName()); it != column_configs_.end()) {
