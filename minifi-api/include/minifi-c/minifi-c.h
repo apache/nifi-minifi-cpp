@@ -41,6 +41,10 @@ extern "C" {
 #define MINIFI_REGISTER_EXTENSION_FN MinifiRegisterExtension
 #endif
 
+/// To declare a processor property that expects an SSLContextService,
+/// use MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE in the type field of the property definition (MinifiPropertyDefinition::type)
+#define MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
+
 enum : uint32_t {
   MINIFI_API_VERSION = 3
 };
@@ -231,6 +235,8 @@ MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext* context
 
 MinifiStatus MinifiProcessContextGetControllerService(
     MinifiProcessContext* process_context, MinifiStringView controller_service_name, MinifiStringView controller_service_type, MinifiControllerService** controller_service_out);
+void MinifiProcessContextGetDynamicProperties(MinifiProcessContext* context, MinifiFlowFile* minifi_flow_file,
+    void (*cb)(void* user_ctx, MinifiStringView dynamic_property_name, MinifiStringView dynamic_property_value), void* user_ctx);
 
 void MinifiLoggerSetMaxLogSize(MinifiLogger*, int32_t);
 void MinifiLoggerLogString(MinifiLogger*, MinifiLogLevel, MinifiStringView);
@@ -240,6 +246,7 @@ MinifiLogLevel MinifiLoggerLevel(MinifiLogger*);
 MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionGet(MinifiProcessSession*);
 MINIFI_OWNED MinifiFlowFile* MinifiProcessSessionCreate(MinifiProcessSession* session, MinifiFlowFile* parent_flowfile);
 
+MinifiStatus MinifiProcessSessionPenalize(MinifiProcessSession* session, MinifiFlowFile* flowfile);
 MinifiStatus MinifiProcessSessionTransfer(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile, MinifiStringView relationship_name);
 MinifiStatus MinifiProcessSessionRemove(MinifiProcessSession* session, MINIFI_OWNED MinifiFlowFile* flowfile);
 
@@ -253,15 +260,28 @@ size_t MinifiInputStreamSize(MinifiInputStream*);
 int64_t MinifiInputStreamRead(MinifiInputStream* stream, char* buffer, size_t size);
 int64_t MinifiOutputStreamWrite(MinifiOutputStream* stream, const char* data, size_t size);
 
-MinifiStatus MinifiFlowFileSetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name, const MinifiStringView* attribute_value);
-MinifiBool MinifiFlowFileGetAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name,
+MinifiStatus MinifiProcessSessionSetFlowFileAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name, const MinifiStringView* attribute_value);
+MinifiBool MinifiProcessSessionGetFlowFileAttribute(MinifiProcessSession* session, MinifiFlowFile* flowfile, MinifiStringView attribute_name,
                                       void(*cb)(void* user_ctx, MinifiStringView attribute_value), void* user_ctx);
-void MinifiFlowFileGetAttributes(MinifiProcessSession* session, MinifiFlowFile* flowfile, void(*cb)(void* user_ctx, MinifiStringView attribute_name, MinifiStringView attribute_value), void* user_ctx);
+void MinifiProcessSessionGetFlowFileAttributes(MinifiProcessSession* session, MinifiFlowFile* flowfile,
+    void (*cb)(void* user_ctx, MinifiStringView attribute_name, MinifiStringView attribute_value), void* user_ctx);
+uint64_t MinifiProcessSessionGetFlowFileSize(MinifiProcessSession* session, MinifiFlowFile* flowfile);
+MinifiStatus MinifiProcessSessionGetFlowFileId(MinifiProcessSession* session, MinifiFlowFile* flowfile, void(*cb)(void* user_ctx, MinifiStringView flow_file_id), void* user_ctx);
 
 MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceContext* context,
     MinifiStringView property_name,
     void(*cb)(void* user_ctx, MinifiStringView property_value),
     void* user_ctx);
+
+typedef struct MinifiSslData {
+  MinifiStringView ca_certificate_file;
+  MinifiStringView certificate_file;
+  MinifiStringView private_key_file;
+  MinifiStringView passphrase;
+} MinifiSslData;
+
+MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
+    void (*cb)(void* user_ctx, const MinifiSslData* ssl_data), void* user_ctx);
 
 #ifdef __cplusplus
 }  // extern "C"

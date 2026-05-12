@@ -118,20 +118,20 @@ void ProcessSession::read(FlowFile& flow_file, const io::InputStreamCallback& ca
 
 void ProcessSession::setAttribute(FlowFile& ff, const std::string_view key, std::string value) {  // NOLINT(performance-unnecessary-value-param)
   const MinifiStringView value_ref = utils::toStringView(value);
-  if (MINIFI_STATUS_SUCCESS != MinifiFlowFileSetAttribute(impl_, ff.get(), utils::toStringView(key), &value_ref)) {
+  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionSetFlowFileAttribute(impl_, ff.get(), utils::toStringView(key), &value_ref)) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to set attribute");
   }
 }
 
 void ProcessSession::removeAttribute(FlowFile& ff, const std::string_view key) {
-  if (MINIFI_STATUS_SUCCESS != MinifiFlowFileSetAttribute(impl_, ff.get(), utils::toStringView(key), nullptr)) {
+  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionSetFlowFileAttribute(impl_, ff.get(), utils::toStringView(key), nullptr)) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to remove attribute");
   }
 }
 
 std::optional<std::string> ProcessSession::getAttribute(FlowFile& ff, std::string_view key) {
   std::optional<std::string> result;
-  MinifiFlowFileGetAttribute(impl_, ff.get(), utils::toStringView(key), [] (void* user_ctx, MinifiStringView value) {
+  MinifiProcessSessionGetFlowFileAttribute(impl_, ff.get(), utils::toStringView(key), [] (void* user_ctx, MinifiStringView value) {
     *static_cast<std::optional<std::string>*>(user_ctx) = std::string{value.data, value.length};
   }, &result);
   return result;
@@ -139,8 +139,8 @@ std::optional<std::string> ProcessSession::getAttribute(FlowFile& ff, std::strin
 
 std::map<std::string, std::string> ProcessSession::getAttributes(FlowFile& ff) {
   std::map<std::string, std::string> result;
-  MinifiFlowFileGetAttributes(impl_, ff.get(), [] (void* user_ctx, MinifiStringView value, MinifiStringView key) {
-    static_cast<std::map<std::string, std::string>*>(user_ctx)->insert({std::string{value.data, value.length}, std::string{key.data, key.length}});
+  MinifiProcessSessionGetFlowFileAttributes(impl_, ff.get(), [] (void* user_ctx, const MinifiStringView key, const MinifiStringView value) {
+    static_cast<std::map<std::string, std::string>*>(user_ctx)->insert({std::string{key.data, key.length}, std::string{value.data, value.length}});
   }, &result);
   return result;
 }
