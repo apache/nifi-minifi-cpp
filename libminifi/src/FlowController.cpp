@@ -110,7 +110,8 @@ FlowController::~FlowController() {
 std::expected<void, std::string> FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
-    newRoot = updateFromPayload(source, configurePayload, flow_id);
+    // Parse the new flow here and clear controller services later to avoid race condition with the onScheduleTimer_ callback thread
+    newRoot = flow_configuration_->updateFromPayload(source, configurePayload, flow_id);
   } catch (const std::exception& ex) {
     logger_->log_error("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what());
     return std::unexpected{fmt::format("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what())};
@@ -129,6 +130,10 @@ std::expected<void, std::string> FlowController::applyConfiguration(const std::s
     std::scoped_lock<UpdateState> update_lock(updating_);
     std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
     stop();
+
+    // Clear the controller services now that all timer callback threads have been stopped
+    clearControllerServices();
+    controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
 
     root_wrapper_.setNewRoot(std::move(newRoot));
     initialized_ = false;
@@ -241,7 +246,10 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
     logger_->log_error("Couldn't fetch flow configuration from C2 server");
     return nullptr;
   }
-  root = updateFromPayload(*opt_flow_url, *opt_source);
+  root = flow_configuration_->updateFromPayload(*opt_flow_url, *opt_source, std::nullopt);
+  // prepare to accept the new controller service provider from flow_configuration_
+  clearControllerServices();
+  controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
   if (root) {
     logger_->log_info("Successfully fetched valid flow configuration");
     if (!flow_configuration_->persist(*root)) {
@@ -502,14 +510,6 @@ std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebug
   }
 
   return debug_info;
-}
-
-std::unique_ptr<core::ProcessGroup> FlowController::updateFromPayload(const std::string& url, const std::string& config_payload, const std::optional<std::string>& flow_id) {
-  auto root = flow_configuration_->updateFromPayload(url, config_payload, flow_id);
-  // prepare to accept the new controller service provider from flow_configuration_
-  clearControllerServices();
-  controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-  return root;
 }
 
 }  // namespace org::apache::nifi::minifi

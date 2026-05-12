@@ -26,7 +26,6 @@ CallBackTimer::CallBackTimer(std::chrono::milliseconds interval, const std::func
 
 CallBackTimer::~CallBackTimer() {
   stop();
-  std::lock_guard<std::mutex> guard(mtx_);
   if (thd_.joinable()) {
     thd_.join();
   }

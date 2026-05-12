@@ -239,6 +239,7 @@ class ProcessGroup : public CoreComponentImpl {
   ProcessGroup(const ProcessGroup &parent);
   ProcessGroup &operator=(const ProcessGroup &parent);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+  std::mutex on_schedule_timer_mutex_;
   std::unique_ptr<utils::CallBackTimer> onScheduleTimer_;
 };
 }  // namespace core
