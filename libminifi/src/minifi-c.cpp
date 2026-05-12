@@ -632,7 +632,7 @@ MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext* process_contex
         .certificate_file = minifiStringView(cert_file),
         .private_key_file = minifiStringView(private_key_file),
         .passphrase = minifiStringView(passphrase),
-    };
+      };
       cb(user_ctx, &ssl_data);
       return MINIFI_STATUS_SUCCESS;
     }
