@@ -37,10 +37,15 @@ class MockLlamaContext : public processors::LlamaContext {
     return "Test input";
   }
 
-  std::expected<processors::GenerationResult, std::string> generate(const std::string& input, const std::vector<std::vector<std::byte>>& /*files*/,
+  std::expected<processors::GenerationResult, std::string> generate(const std::string& input, const std::vector<std::vector<std::byte>>& files,
         std::function<void(std::string_view/*token*/)> token_handler) override {
     if (fail_generation_) {
       return std::unexpected{"Generation failed"};
+    }
+    if (multimodal_) {
+      if (files.empty()) {
+        return std::unexpected{"Files empty"};
+      }
     }
     processors::GenerationResult result;
     input_ = input;
@@ -70,7 +75,12 @@ class MockLlamaContext : public processors::LlamaContext {
     fail_apply_template_ = true;
   }
 
+  void setMultimodal() {
+    multimodal_ = true;
+  }
+
  private:
+  bool multimodal_{false};
   bool fail_generation_{false};
   bool fail_apply_template_{false};
   std::vector<processors::LlamaChatMessage> messages_;
@@ -85,7 +95,7 @@ TEST_CASE("Prompt is generated correctly with default parameters") {
   processors::LlamaContextParams test_context_params;
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path& model_path, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
+    [&](const std::filesystem::path& model_path, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
       test_model_path = model_path;
       test_sampler_params = sampler_params;
       test_context_params = context_params;
@@ -131,7 +141,7 @@ TEST_CASE("Prompt is generated correctly with custom parameters") {
   processors::LlamaContextParams test_context_params;
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path& model_path, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
+    [&](const std::filesystem::path& model_path, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
       test_model_path = model_path;
       test_sampler_params = sampler_params;
       test_context_params = context_params;
@@ -183,7 +193,7 @@ TEST_CASE("Empty flow file does not include input data in prompt") {
   auto mock_llama_context_ptr = mock_llama_context.get();
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+    [&](const std::filesystem::path&, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
@@ -207,7 +217,7 @@ TEST_CASE("Empty flow file does not include input data in prompt") {
 TEST_CASE("Invalid values for optional double type properties throw exception") {
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+    [&](const std::filesystem::path&, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
@@ -237,7 +247,7 @@ TEST_CASE("Top K property empty and invalid values are handled properly") {
   std::optional<int32_t> test_top_k = 0;
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams&) {
+    [&](const std::filesystem::path&, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams&) {
       test_top_k = sampler_params.top_k;
       return std::make_unique<MockLlamaContext>();
     }));
@@ -270,7 +280,7 @@ TEST_CASE("Error handling during generation and applying template") {
 
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+    [&](const std::filesystem::path&, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
@@ -288,7 +298,7 @@ TEST_CASE("Error handling during generation and applying template") {
 TEST_CASE("Route flow file to failure when prompt and input data is empty") {
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+    [&](const std::filesystem::path&, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
@@ -308,7 +318,7 @@ TEST_CASE("System prompt is optional") {
   auto mock_llama_context_ptr = mock_llama_context.get();
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+    [&](const std::filesystem::path&, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::move(mock_llama_context);
     }));
   LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
@@ -330,7 +340,7 @@ TEST_CASE("System prompt is optional") {
 TEST_CASE("Test output metrics") {
   auto processor = minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+    [&](const std::filesystem::path&, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
       return std::make_unique<MockLlamaContext>();
     });
   auto processor_metrics = processor->getMetrics();
@@ -356,6 +366,46 @@ TEST_CASE("Test output metrics") {
   CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 2].value.to_string() == "20");
   CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 1].name == "TokensOut");
   CHECK(c2_metrics[0].children[c2_metrics[0].children.size() - 1].value.to_string() == "6");
+}
+
+TEST_CASE("Prompt is generated correctly for multimodal inference") {
+  auto mock_llama_context = std::make_unique<MockLlamaContext>();
+  auto mock_llama_context_ptr = mock_llama_context.get();
+  std::filesystem::path test_model_path;
+  std::optional<std::filesystem::path> test_model_path_option;
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
+    core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
+    [&](const std::filesystem::path& model_path, const std::optional<std::filesystem::path>& multimodal_model_path, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+      test_model_path = model_path;
+      test_model_path_option = multimodal_model_path;
+      if (multimodal_model_path) {
+        mock_llama_context->setMultimodal();
+      }
+      return std::move(mock_llama_context);
+    }));
+  LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MultiModalModelPath.name, "/path/to/mm-model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "What is on the image?"));
+
+
+  SECTION("Flowfile contains data") {
+    auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "<some image data>", .attributes = {}});
+    CHECK(test_model_path == "/path/to/model");
+    CHECK(test_model_path_option == "/path/to/mm-model");
+    REQUIRE(results.at(processors::RunLlamaCppInference::Success).size() == 1);
+    auto& output_flow_file = results.at(processors::RunLlamaCppInference::Success)[0];
+    CHECK(controller.plan->getContent(output_flow_file) == "Test generated content");
+    CHECK(mock_llama_context_ptr->getInput() == "Test input");
+    REQUIRE(mock_llama_context_ptr->getMessages().size() == 2);
+    CHECK(mock_llama_context_ptr->getMessages()[1].role == "user");
+    CHECK(mock_llama_context_ptr->getMessages()[1].content == "Input data (or flow file content):\n<__media__>\n\nWhat is on the image?");
+  }
+
+  SECTION("Flowfile is empty") {
+    auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "", .attributes = {}});
+    REQUIRE(results.at(processors::RunLlamaCppInference::Failure).size() == 1);
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::test

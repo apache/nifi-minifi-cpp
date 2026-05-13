@@ -53,7 +53,7 @@ MinifiStatus RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& con
   llama_ctx_params.n_threads_batch = gsl::narrow<int32_t>(api::utils::parseI64Property(context, ThreadsForBatchProcessing));
 
   if (llama_context_provider_) {
-    llama_ctx_ = llama_context_provider_(model_path_, llama_sampler_params, llama_ctx_params);
+    llama_ctx_ = llama_context_provider_(model_path_, multimodal_model_path_, llama_sampler_params, llama_ctx_params);
   } else {
     llama_ctx_ = std::make_unique<DefaultLlamaContext>(model_path_, multimodal_model_path_, llama_sampler_params, llama_ctx_params, logger_);
   }

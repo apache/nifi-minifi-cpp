@@ -135,41 +135,6 @@ struct mtmd_input_chunks_deleter {
 };
 using unique_mtmd_input_chunks_ptr = std::unique_ptr<mtmd_input_chunks, mtmd_input_chunks_deleter>;
 
-class unique_llama_batch {
- public:
-  explicit unique_llama_batch(std::optional<llama_batch> batch = std::nullopt): batch_(batch) {}
-
-  unique_llama_batch(unique_llama_batch&&) = default;
-  unique_llama_batch& operator=(unique_llama_batch&&) = default;
-  unique_llama_batch(const unique_llama_batch&) = delete;
-  unique_llama_batch& operator=(const unique_llama_batch&) = delete;
-
-  [[nodiscard]] std::optional<llama_batch> get() const {
-    return batch_;
-  }
-
-  std::optional<llama_batch>& operator->() {
-    return batch_;
-  }
-
-  void reset(std::optional<llama_batch> batch = std::nullopt) {
-    if (batch_) {
-      llama_batch_free(batch_.value());
-    }
-    batch_ = batch;
-  }
-
-  ~unique_llama_batch() {
-    if (batch_) {
-      llama_batch_free(batch_.value());
-    }
-    batch_.reset();
-  }
-
- private:
-  std::optional<llama_batch> batch_;
-};
-
 }  // namespace
 
 std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const std::string& prompt, const std::vector<std::vector<std::byte>>& files,
@@ -180,10 +145,17 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
   const llama_vocab * vocab = llama_model_get_vocab(llama_model_);
   llama_pos n_past = 0;
   std::vector<llama_token> tokenized_input;
-  unique_llama_batch batch;
+  llama_batch batch = llama_batch_init(1, 0, 1);
+  auto batch_deleter = gsl::finally([&] {llama_batch_free(batch);});
+  batch.n_tokens = 1;
+  batch.n_seq_id[0] = 1;
+  batch.seq_id[0][0] = 0;
+  batch.logits[0] = true;
   int32_t decode_status = 0;
   if (multimodal_ctx_) {
-    gsl_Assert(!files.empty());
+    if (files.empty()) {
+      return std::unexpected{"Multimodal input requires at least one file"};
+    }
     std::vector<unique_bitmap_ptr> bitmaps;
     for (auto& file : files) {
       unique_bitmap_ptr bitmap{mtmd_helper_bitmap_init_from_buf(multimodal_ctx_, reinterpret_cast<const unsigned char*>(file.data()), file.size())};
@@ -208,12 +180,14 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
       throw Exception(PROCESSOR_EXCEPTION, fmt::format("Failed to eval multimodal chunks, error: {}", status));
     }
   } else {
-    gsl_Assert(files.empty());
+    if (!files.empty()) {
+      return std::unexpected{"Model is not configured for multimodal input"};
+    }
     tokenized_input = tokenizeInput(vocab, prompt);
     n_past = gsl::narrow<llama_pos>(tokenized_input.size());
-    result.num_tokens_in = gsl::narrow<uint64_t>(tokenized_input.size());
     decode_status = llama_decode(llama_ctx_, llama_batch_get_one(tokenized_input.data(), n_past));
   }
+  result.num_tokens_in = gsl::narrow<uint64_t>(n_past);
 
   llama_token new_token_id = 0;
   bool first_token_generated = false;
@@ -239,17 +213,12 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
     gsl_Assert(len < 128);
 
     std::string_view token_str{buf.data(), gsl::narrow<std::string_view::size_type>(len)};
-    batch.reset(llama_batch_init(1, 0, 1));
-    batch->n_tokens = 1;
-    batch->token[0] = new_token_id;
-    batch->pos[0] = n_past;
-    batch->n_seq_id[0] = 1;
-    batch->seq_id[0][0] = 0;
-    batch->logits[0] = true;
+    batch.token[0] = new_token_id;
+    batch.pos[0] = n_past;
     ++n_past;
     token_handler(token_str);
 
-    decode_status = llama_decode(llama_ctx_, batch.get().value());
+    decode_status = llama_decode(llama_ctx_, batch);
   }
 
   if (decode_status == 1) {
