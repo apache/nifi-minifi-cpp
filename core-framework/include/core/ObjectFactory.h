@@ -31,7 +31,7 @@ class ObjectFactoryImpl : public ObjectFactory {
 
   ObjectFactoryImpl() = default;
 
-  std::string getGroupName() const override {
+  std::string getModuleName() const override {
     return group_;
   }
 
@@ -50,8 +50,8 @@ class DefaultObjectFactory : public ObjectFactoryImpl {
       : className(core::className<T>()) {
   }
 
-  explicit DefaultObjectFactory(std::string group_name)
-      : ObjectFactoryImpl(std::move(group_name)),
+  explicit DefaultObjectFactory(std::string module_name)
+      : ObjectFactoryImpl(std::move(module_name)),
       className(core::className<T>()) {
   }
 

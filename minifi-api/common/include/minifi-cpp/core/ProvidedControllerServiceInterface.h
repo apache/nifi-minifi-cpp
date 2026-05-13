@@ -14,26 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <string>
-#include <memory>
-#include <utility>
-#include "Core.h"
+#include <string_view>
+#include <type_traits>
+
+#include "core/ClassName.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class ObjectFactory {
- public:
-  virtual std::unique_ptr<CoreComponent> create(const std::string& /*name*/) = 0;
-  virtual gsl::owner<CoreComponent*> createRaw(const std::string& /*name*/) = 0;
-  virtual std::unique_ptr<CoreComponent> create(const std::string& /*name*/, const utils::Identifier& /*uuid*/) = 0;
-  virtual gsl::owner<CoreComponent*> createRaw(const std::string& /*name*/, const utils::Identifier& /*uuid*/) = 0;
-  virtual std::string getModuleName() const = 0;
-  virtual std::string getClassName() = 0;
-
-  virtual ~ObjectFactory() = default;
+struct ProvidedInterface {
+  std::string_view name;
+  void* (*cast)(void* instance);
 };
+
+template<typename Interface, typename ConcreteService>
+void* castProvidedControllerServiceInterface(void* instance) {
+  auto* concrete = static_cast<ConcreteService*>(instance);
+  auto* interface_ptr = static_cast<Interface*>(concrete);
+  return interface_ptr;
+}
+
+template<typename Interface, typename ConcreteService>
+constexpr ProvidedInterface createProvidedInterface() {
+  return ProvidedInterface{className<Interface>(), &castProvidedControllerServiceInterface<Interface, ConcreteService>};
+}
 
 }  // namespace org::apache::nifi::minifi::core

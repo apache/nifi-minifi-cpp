@@ -112,7 +112,7 @@ TEST_CASE("Manifest indicates property type requirement") {
   auto& type = get(*prop_it, "typeProvidedByValue");
 
   REQUIRE(get(type, "type").value == "test.apple.ExampleService");
-  REQUIRE(get(type, "group").value == GROUP_STR);  // fix string
+  REQUIRE(get(type, "group").value == "test.apple");
   REQUIRE(get(type, "artifact").value == "minifi-system");
 }
 

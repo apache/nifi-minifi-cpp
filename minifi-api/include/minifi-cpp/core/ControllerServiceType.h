@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+
 #include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -27,9 +28,19 @@ struct ControllerServiceType {
   std::string type;
 
   ControllerServiceType(const ControllerServiceTypeDefinition& definition)  // NOLINT(runtime/explicit)
-    : artifact(definition.artifact),
-      group(definition.group),
-      type(definition.type) {}
+      : artifact(definition.artifact),
+        group(definition.group),
+        type(definition.type) {}
+
+  static ControllerServiceType minifiSystemControllerServiceType(std::string type) {
+    return ControllerServiceType("minifi-system", "org.apache.nifi.minifi", std::move(type));
+  }
+
+ private:
+  ControllerServiceType(std::string artifact, std::string group, std::string type)
+      : artifact(std::move(artifact)),
+        group(std::move(group)),
+        type(std::move(type)) {}
 };
 
 }  // namespace org::apache::nifi::minifi::core
