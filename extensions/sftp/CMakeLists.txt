@@ -21,9 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_SFTP))
     return()
 endif()
 
-include(BundledLibSSH2)
-use_bundled_libssh2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libssh2/dummy")
+include(FetchLibSSH2)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(client processors)

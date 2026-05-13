@@ -76,10 +76,9 @@ void serializeClassDescription(const std::vector<ClassDescription>& descriptions
         if (const auto default_value = prop.getDefaultValue()) {
           child.children.push_back({.name = "defaultValue", .value = *default_value});  // NOLINT(cppcoreguidelines-slicing)
         }
-
-        if (!prop.getAllowedValues().empty()) {
+        if (const auto& allowed_values = prop.getAllowedValues(); !allowed_values.empty()) {
           SerializedResponseNode allowedValues{.name = "allowableValues", .array = true};
-          for (const auto &av : prop.getAllowedValues()) {
+          for (const auto &av : allowed_values) {
             SerializedResponseNode allowableValue{
               .name = "allowableValues",
               .children = {

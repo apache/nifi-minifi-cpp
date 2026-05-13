@@ -28,6 +28,12 @@
 
 namespace org::apache::nifi::minifi::aws::processors::test {
 
+// Disable the warning specifically for GCC to bypass the AWS SDK uninitialized member bug
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 class MockKinesisClient final : public Aws::Kinesis::KinesisClient {
  public:
   enum class KinesisBehaviour {
@@ -82,6 +88,11 @@ class MockKinesisClient final : public Aws::Kinesis::KinesisClient {
   KinesisBehaviour behaviour_ = KinesisBehaviour::HappyPath;
   mutable uint32_t sequence_number_ = 0;
 };
+
+// Restore compiler warnings to ensure the rest of your tests remain strict
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 class PutKinesisStreamMocked final : public aws::processors::PutKinesisStream {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:

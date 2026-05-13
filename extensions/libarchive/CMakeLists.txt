@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT ENABLE_LIBARCHIVE)
+if (NOT (ENABLE_ALL OR ENABLE_LIBARCHIVE))
     return()
 endif()
 

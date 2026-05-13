@@ -259,5 +259,6 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     endif()
 
     add_dependencies(OpenSSL::Crypto openssl-fips-external)
+    set(OPENSSL_ROOT_DIR "${OPENSSL_BIN_DIR}" CACHE INTERNAL "Strict single source of truth for bundled OpenSSL")
 
 endfunction(use_openssl)

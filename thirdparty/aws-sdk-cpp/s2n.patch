@@ -1,0 +1,51 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2acb62d91..6470de162 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -264,9 +264,9 @@ if (TARGET crypto)
+     message(STATUS "S2N found target: crypto")
+     set(LINK_LIB "crypto")
+ else()
+-    find_package(crypto REQUIRED)
++    include(${FIND_OPENSSL_PATH})
+     message(STATUS "Using libcrypto from the cmake path")
+-    set(LINK_LIB "AWS::crypto")
++    set(LINK_LIB "OpenSSL::Crypto")
+ endif()
+ 
+ if (S2N_INTERN_LIBCRYPTO)
+@@ -375,11 +375,11 @@ endif()
+ 
+ if (S2N_INTERN_LIBCRYPTO)
+ 
+-    # Check if the AWS::crypto target has been added and handle it
+-    if (TARGET AWS::crypto)
++    # Check if the OpenSSL::Crypto target has been added and handle it
++    if (TARGET OpenSSL::Crypto)
+         # Get the target library type (shared or static)
+-        get_target_property(target_type AWS::crypto TYPE)
+-        message(STATUS "AWS::crypto target type: ${target_type}")
++        get_target_property(target_type OpenSSL::Crypto TYPE)
++        message(STATUS "OpenSSL::Crypto target type: ${target_type}")
+ 
+         # If we didn't find the a target with static library type, fallback to
+         # existing crypto_STATIC_LIBRARY and crypto_INCLUDE_DIR
+@@ -388,8 +388,8 @@ if (S2N_INTERN_LIBCRYPTO)
+             # The finder module defines these appropriately, but if we go through
+             # the target config we need to query this information from the target
+             # first.
+-            get_target_property(crypto_STATIC_LIBRARY AWS::crypto LOCATION)
+-            get_target_property(crypto_INCLUDE_DIR AWS::crypto INTERFACE_INCLUDE_DIRECTORIES)
++            get_target_property(crypto_STATIC_LIBRARY OpenSSL::Crypto LOCATION)
++            get_target_property(crypto_INCLUDE_DIR OpenSSL::Crypto INTERFACE_INCLUDE_DIRECTORIES)
+         endif()
+     endif()
+ 
+@@ -773,7 +773,3 @@ install(EXPORT "${PROJECT_NAME}-targets"
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+         DESTINATION "${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake/"
+         COMPONENT Development)
+-
+-install(FILES "cmake/modules/Findcrypto.cmake"
+-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake/modules/"
+-        COMPONENT Development)

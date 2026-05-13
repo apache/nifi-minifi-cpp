@@ -1,0 +1,42 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5d30c6d..dd20fb4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -128,7 +128,7 @@ endif()
+ if (NOT BYO_CRYPTO)
+     if ((NOT WIN32 AND NOT APPLE) OR AWS_USE_LIBCRYPTO_TO_SUPPORT_ED25519_EVERYWHERE)
+         if (USE_OPENSSL AND NOT ANDROID)
+-            find_package(OpenSSL REQUIRED)
++            include(${FIND_OPENSSL_PATH})
+             find_package(Threads REQUIRED)
+             list(APPEND PLATFORM_LIBS OpenSSL::Crypto Threads::Threads)
+             message(STATUS "Using libcrypto: ${OPENSSL_CRYPTO_LIBRARY}")
+@@ -138,7 +138,7 @@ if (NOT BYO_CRYPTO)
+                 list(APPEND PLATFORM_LIBS  crypto)
+             elseif(AWSLC_PREBUILT)
+                 message(STATUS "Using prebuilt libcrypto from AWS-LC")
+-                find_package(crypto REQUIRED)
++                include(${FIND_CRYPTO_PATH})
+                 list(APPEND PLATFORM_LIBS  AWS::crypto)
+             else()
+                 message(FATAL_ERROR "Target crypto is not defined, failed to find libcrypto.")
+@@ -149,7 +149,7 @@ if (NOT BYO_CRYPTO)
+             if (IN_SOURCE_BUILD)
+                 list(APPEND PLATFORM_LIBS crypto)
+             else()
+-                find_package(crypto REQUIRED)
++                include(${FIND_CRYPTO_PATH})
+                 list(APPEND PLATFORM_LIBS AWS::crypto)
+             endif()
+         endif()
+@@ -216,10 +216,6 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+     COMPONENT Development)
+ 
+-list(APPEND EXPORT_MODULES
+-    "cmake/modules/Findcrypto.cmake"
+-    )
+-
+ install(FILES ${EXPORT_MODULES}
+         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/modules"
+         COMPONENT Development)
