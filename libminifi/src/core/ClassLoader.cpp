@@ -48,7 +48,7 @@ class ClassLoaderImpl : public ClassLoader {
 
   void unregisterClass(const std::string& clazz) override;
 
-  [[nodiscard]] std::optional<std::string> getGroupForClass(const std::string &class_name) const override;
+  [[nodiscard]] std::optional<std::string> getModuleForClass(std::string_view class_name) const override;
 
   [[nodiscard]] std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) override;
 
@@ -61,7 +61,7 @@ class ClassLoaderImpl : public ClassLoader {
   ~ClassLoaderImpl() override = default;
 
  private:
-  std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
+  std::map<std::string, std::unique_ptr<ObjectFactory>, std::less<>> loaded_factories_;
   std::map<std::string, ClassLoaderImpl> class_loaders_;
   mutable std::mutex internal_mutex_;
   std::shared_ptr<logging::Logger> logger_;
@@ -128,7 +128,7 @@ class ProcessorFactoryWrapper : public ObjectFactoryImpl {
     return new Processor(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)}));
   }
 
-  [[nodiscard]] std::string getGroupName() const override {
+  [[nodiscard]] std::string getModuleName() const override {
     return factory_->getGroupName();
   }
 
@@ -143,7 +143,7 @@ class ProcessorFactoryWrapper : public ObjectFactoryImpl {
 class ControllerServiceFactoryWrapper : public ObjectFactoryImpl {
  public:
   explicit ControllerServiceFactoryWrapper(std::unique_ptr<controller::ControllerServiceFactory> factory)
-    : ObjectFactoryImpl(factory->getGroupName()),
+    : ObjectFactoryImpl(factory->getModuleName()),
       factory_(std::move(factory)) {}
 
   [[nodiscard]] std::unique_ptr<CoreComponent> create(const std::string &name) override {
@@ -163,8 +163,8 @@ class ControllerServiceFactoryWrapper : public ObjectFactoryImpl {
     return new controller::ControllerService(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)}));
   }
 
-  [[nodiscard]] std::string getGroupName() const override {
-    return factory_->getGroupName();
+  [[nodiscard]] std::string getModuleName() const override {
+    return factory_->getModuleName();
   }
 
   [[nodiscard]] std::string getClassName() override {
@@ -194,17 +194,17 @@ void ClassLoaderImpl::unregisterClass(const std::string& clazz) {
   }
 }
 
-std::optional<std::string> ClassLoaderImpl::getGroupForClass(const std::string &class_name) const {
+std::optional<std::string> ClassLoaderImpl::getModuleForClass(const std::string_view class_name) const {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   for (const auto& child_loader : class_loaders_) {
-    std::optional<std::string> group = child_loader.second.getGroupForClass(class_name);
+    std::optional<std::string> group = child_loader.second.getModuleForClass(class_name);
     if (group) {
       return group;
     }
   }
   auto factory = loaded_factories_.find(class_name);
   if (factory != loaded_factories_.end()) {
-    return factory->second->getGroupName();
+    return factory->second->getModuleName();
   }
   return {};
 }
