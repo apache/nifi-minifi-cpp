@@ -68,8 +68,8 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
 
     ExternalProject_Add(
             libarchive-external
-            URL "https://github.com/libarchive/libarchive/releases/download/v3.8.1/libarchive-3.8.1.tar.gz"
-            URL_HASH "SHA256=bde832a5e3344dc723cfe9cc37f8e54bde04565bfe6f136bc1bd31ab352e9fab"
+            URL "https://github.com/libarchive/libarchive/archive/refs/tags/v3.8.7.tar.gz"
+            URL_HASH "SHA256=bc942030fe7cb30e04eed31bd5f63c38cdfd712315b303e91b64e58f05db2346"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/libarchive-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${LIBARCHIVE_CMAKE_ARGS}
