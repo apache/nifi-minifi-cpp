@@ -22,8 +22,8 @@ if (WIN32)
 
     FetchContent_Declare(
             wil
-            URL      https://github.com/microsoft/wil/archive/refs/tags/v1.0.250325.1.tar.gz
-            URL_HASH SHA256=c9e667d5f86ded43d17b5669d243e95ca7b437e3a167c170805ffd4aa8a9a786
+            URL      https://github.com/microsoft/wil/archive/refs/tags/v1.0.260126.7.tar.gz
+            URL_HASH SHA256=de9e03b38ff0ff8d22048f00b111cb631d21c550328f12530ccba71c05c9e361
             SYSTEM
     )
     FetchContent_MakeAvailable(wil)
@@ -54,8 +54,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_4}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_4}\\\")")
 
 FetchContent_Declare(asdkext
-    URL https://github.com/Azure/azure-sdk-for-cpp/archive/refs/tags/azure-identity_1.13.0.tar.gz
-    URL_HASH "SHA256=a18ce70f8da11266b6a1aec3c02233ca889ea6137471a9f633131f00dfd386c0"
+    URL https://github.com/Azure/azure-sdk-for-cpp/archive/refs/tags/azure-storage-queues_12.7.0.tar.gz
+    URL_HASH "SHA256=a2d52cf30a36c1000cd6ee87fa60d5e3aa8d5b01a1716e5bc684dd5a507d76d5"
     PATCH_COMMAND "${PC}"
     SYSTEM
 )
