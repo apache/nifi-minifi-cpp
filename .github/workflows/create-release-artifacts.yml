@@ -43,6 +43,16 @@ jobs:
         with:
           name: ${{ matrix.platform.rpm-artifact }}
           path: build/nifi-minifi-cpp-*.rpm
+
+      - id: cargo
+        working-directory: minifi_rust
+        run: |
+          cargo build --release
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: minifi_rust_extensions
+          path: minifi_rust/target/release/*.so
   windows_VS2022:
     name: "Windows Server 2025 x86_64"
     runs-on: windows-2025

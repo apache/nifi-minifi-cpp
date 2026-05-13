@@ -1,0 +1,18 @@
+[package]
+name = "minifi_native_sys"
+version = "0.1.0"
+edition = "2024"
+description = "Raw FFI bindings to the Apache MiNiFi Native C API"
+license = "Apache-2.0"
+links = "minifi"
+
+[features]
+default = ["last-release"]
+
+last-release = []
+local-sdk = []
+local-repo = []
+
+[build-dependencies]
+bindgen = "0.72.0"
+cc = "1.2.41"
