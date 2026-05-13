@@ -154,11 +154,21 @@ void useControllerServiceClassDefinition(Fn&& fn) {
   const auto full_name = minifi::core::className<Class>();
 
   std::vector<MinifiPropertyDefinition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
+  std::vector<MinifiStringView> provided_interfaces;
+  if constexpr (requires { Class::ProvidedInterfaces; }) {
+    provided_interfaces.reserve(Class::ProvidedInterfaces.size());
+    for (const auto& iface : Class::ProvidedInterfaces) {
+      provided_interfaces.push_back(utils::minifiStringView(iface.name));
+    }
+  }
 
   MinifiControllerServiceClassDefinition definition{.full_name = utils::minifiStringView(full_name),
       .description = utils::minifiStringView(Class::Description),
       .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
       .class_properties_ptr = class_properties.data(),
+
+      .provided_interfaces_count = gsl::narrow<uint32_t>(provided_interfaces.size()),
+      .provided_interfaces_ptr = provided_interfaces.data(),
 
       .callbacks = MinifiControllerServiceCallbacks{
           .create = [](MinifiControllerServiceMetadata metadata) -> MINIFI_OWNED void* {
@@ -181,6 +191,20 @@ void useControllerServiceClassDefinition(Fn&& fn) {
               static_cast<Class*>(self)->disable();
             } catch (...) {}
           },
+          .get_interface = [](void* self, MinifiStringView interface_name) -> void* {
+            try {
+              const std::string_view name_view{interface_name.data, interface_name.length};
+
+              if constexpr (requires { Class::ProvidedInterfaces; }) {
+                for (const auto& iface : Class::ProvidedInterfaces) {
+                  if (iface.name == name_view) {
+                    return iface.cast(self);
+                  }
+                }
+              }
+              return nullptr;
+            } catch (...) { return nullptr; }
+            }
       }};
 
   fn(definition);

@@ -21,8 +21,9 @@
 #include <ranges>
 
 #include "core/Resource.h"
-#include "utils/TimeUtil.h"
+#include "minifi-cpp/Exception.h"
 #include "minifi-cpp/utils/gsl.h"
+#include "utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::standard {
 

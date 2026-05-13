@@ -34,13 +34,13 @@ class ControllerServiceFactoryImpl : public ControllerServiceFactory {
       : class_name_(core::className<T>()) {
   }
 
-  explicit ControllerServiceFactoryImpl(std::string group_name)
-      : group_name_(std::move(group_name)),
+  explicit ControllerServiceFactoryImpl(std::string module_name)
+      : module_name_(std::move(module_name)),
         class_name_(core::className<T>()) {
   }
 
-  std::string getGroupName() const override {
-    return group_name_;
+  std::string getModuleName() const override {
+    return module_name_;
   }
 
   std::unique_ptr<ControllerServiceApi> create(ControllerServiceMetadata metadata) override {
@@ -52,7 +52,7 @@ class ControllerServiceFactoryImpl : public ControllerServiceFactory {
   }
 
  protected:
-  std::string group_name_;
+  std::string module_name_;
   std::string_view class_name_;
 };
 

@@ -186,6 +186,7 @@ typedef struct MinifiControllerServiceCallbacks {
   void(*destroy)(MINIFI_OWNED void*);
   MinifiStatus(*enable)(void*, MinifiControllerServiceContext*);
   void(*disable)(void*);
+  void* (*get_interface)(void* ctx, MinifiStringView interface_type);
 } MinifiControllerServiceCallbacks;
 
 typedef struct MinifiProcessorClassDefinition {
@@ -212,6 +213,8 @@ typedef struct MinifiControllerServiceClassDefinition {
   MinifiStringView description;
   size_t class_properties_count;
   const MinifiPropertyDefinition* class_properties_ptr;
+  size_t provided_interfaces_count;
+  const MinifiStringView* provided_interfaces_ptr;
 
   MinifiControllerServiceCallbacks callbacks;
 } MinifiControllerServiceClassDefinition;
