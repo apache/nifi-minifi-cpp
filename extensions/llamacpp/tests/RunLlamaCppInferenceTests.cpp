@@ -408,4 +408,23 @@ TEST_CASE("Prompt is generated correctly for multimodal inference") {
   }
 }
 
+TEST_CASE("Can write content to attribute") {
+  minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
+    core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
+    [&](const std::filesystem::path&, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams&, const processors::LlamaContextParams&) {
+      return std::make_unique<MockLlamaContext>();
+    }));
+  LogTestController::getInstance().setTrace<processors::RunLlamaCppInference>();
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::ModelPath.name, "/path/to/model"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::Prompt.name, "What is love?"));
+  REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::OutputAttributeName.name, "DontHurtMe"));
+
+
+  auto results = controller.trigger(minifi::test::InputFlowFileData{.content = "Some content", .attributes = {}});
+  REQUIRE(results.at(processors::RunLlamaCppInference::Success).size() == 1);
+  auto& output_flow_file = results.at(processors::RunLlamaCppInference::Success)[0];
+  CHECK(controller.plan->getContent(output_flow_file) == "Some content");
+  CHECK(output_flow_file->getAttribute("DontHurtMe") == "Test generated content");
+}
+
 }  // namespace org::apache::nifi::minifi::extensions::llamacpp::test
