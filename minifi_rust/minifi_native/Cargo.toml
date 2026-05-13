@@ -1,0 +1,15 @@
+[package]
+name = "minifi_native"
+version = "0.1.0"
+edition = "2024"
+description = "A safe, idiomatic Rust wrapper for the Apache MiNiFi Native C API"
+license = "Apache-2.0"
+
+[dependencies]
+minifi_native_sys = { path = "../minifi_native_sys" }
+minifi_native_macros = { path = "../minifi_native_macros" }
+strum = "0.28.0"
+strum_macros = "0.28.0"
+humantime = "2.3.0"
+byte-unit = "5.1.6"
+itertools = "0.14.0"
