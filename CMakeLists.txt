@@ -851,3 +851,5 @@ if (MINIFI_ADVANCED_CODE_COVERAGE)
 endif()
 
 add_subdirectory(packaging)
+
+add_subdirectory(minifi_rust)

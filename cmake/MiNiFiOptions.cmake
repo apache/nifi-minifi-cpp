@@ -116,6 +116,7 @@ add_minifi_option(ENABLE_EXECUTE_PROCESS "Enable ExecuteProcess processor" OFF)
 add_minifi_option(ENABLE_CONTROLLER "Enables the build of MiNiFi controller binary." ON)
 add_minifi_option(ENABLE_LLAMACPP "Enables llama.cpp support." ON)
 add_minifi_option(ENABLE_OPC "Instructs the build system to enable the OPC extension" ON)
+add_minifi_option(MINIFI_RUST "Enables the build of rust based extension." ON)
 
 set_minifi_cache_variable(CUSTOM_MALLOC OFF "Overwrite malloc implementation.")
 set_property(CACHE CUSTOM_MALLOC PROPERTY STRINGS "jemalloc" "mimalloc" "rpmalloc" OFF)

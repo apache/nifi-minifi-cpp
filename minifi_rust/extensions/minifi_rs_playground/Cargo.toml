@@ -1,0 +1,20 @@
+[package]
+name = "minifi_rs_playground"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+minifi_native = { path = "../../minifi_native" }
+strum = "0.28.0"
+walkdir = "2.5.0"
+rand = "0.10.0"
+hex = "0.4.3"
+strum_macros = "0.28.0"
+lipsum = "0.9.1"
+
+[dev-dependencies]
+tempfile = "3.22.0"
+filetime = "0.2.26"
