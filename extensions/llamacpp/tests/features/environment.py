@@ -30,8 +30,9 @@ def before_all(context: MinifiTestContext):
 
     dockerfile = dedent("""\
                 FROM {base_image}
-                RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/Qwen2-VL-2B-Instruct-Q3_K_M.gguf --directory-prefix={models_path}
-                RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen2-VL-2B-Instruct-f16.gguf --directory-prefix={models_path}
+                RUN mkdir {models_path}
+                RUN wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/Qwen2-VL-2B-Instruct-Q3_K_M.gguf --directory-prefix={models_path}
+                RUN wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen2-VL-2B-Instruct-f16.gguf --directory-prefix={models_path}
         """.format(base_image=minifi_container_image, models_path='/tmp/models'))
 
     builder = DockerImageBuilder(
