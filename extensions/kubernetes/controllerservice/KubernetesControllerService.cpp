@@ -69,17 +69,17 @@ using v1_pod_list_unique_ptr = std::unique_ptr<v1_pod_list_t, v1_pod_list_t_dele
 v1_pod_list_unique_ptr getPods(gsl::not_null<apiClient_t*> api_client, core::logging::Logger& logger) {
   logger.log_info("Calling Kubernetes API listPodForAllNamespaces...");
   v1_pod_list_unique_ptr pod_list{CoreV1API_listPodForAllNamespaces(api_client,
-                                                                    0,  // allowWatchBookmarks
+                                                                    nullptr,  // allowWatchBookmarks
                                                                     nullptr,  // continue
                                                                     nullptr,  // fieldSelector
                                                                     nullptr,  // labelSelector
-                                                                    0,  // limit
+                                                                    nullptr,  // limit
                                                                     nullptr,  // pretty
                                                                     nullptr,  // resourceVersion
                                                                     nullptr,  // resourceVersionMatch
                                                                     nullptr,  // sendInitialEvents
-                                                                    0,  // timeoutSeconds
-                                                                    0)};  // watch
+                                                                    nullptr,  // timeoutSeconds
+                                                                    nullptr)};  // watch
   logger.log_info("The return code of the Kubernetes API listPodForAllNamespaces call: {}", api_client->response_code);
   return pod_list;
 }

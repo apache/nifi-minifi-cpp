@@ -30,7 +30,7 @@
 namespace org::apache::nifi::minifi {
 
 FlowFileLoader::FlowFileLoader(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo, bool verify_checksums_in_rocksdb_reads)
-  : db_(db),
+  : db_(std::move(db)),
     content_repo_(std::move(content_repo)),
     logger_(core::logging::LoggerFactory<FlowFileLoader>::getLogger()),
     verify_checksums_in_rocksdb_reads_(verify_checksums_in_rocksdb_reads) {}

@@ -28,7 +28,7 @@ namespace org::apache::nifi::minifi::io {
 
 ZlibBaseStream::ZlibBaseStream(gsl::not_null<OutputStream*> output)
     : outputBuffer_(16384U),
-      output_{output} {
+      output_{std::move(output)} {
   strm_.zalloc = Z_NULL;
   strm_.zfree = Z_NULL;
   strm_.opaque = Z_NULL;
@@ -39,10 +39,10 @@ bool ZlibBaseStream::isFinished() const {
 }
 
 ZlibCompressStream::ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format, int level)
-  : ZlibCompressStream(output, format, level, core::logging::LoggerFactory<ZlibCompressStream>::getLogger()) {}
+  : ZlibCompressStream(std::move(output), format, level, core::logging::LoggerFactory<ZlibCompressStream>::getLogger()) {}
 
 ZlibCompressStream::ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format, int level, std::shared_ptr<core::logging::Logger> logger)
-  : ZlibBaseStream(output),
+  : ZlibBaseStream(std::move(output)),
     logger_{std::move(logger)} {
   int ret = deflateInit2(
       &strm_,
@@ -128,7 +128,7 @@ void ZlibCompressStream::close() {
 }
 
 ZlibDecompressStream::ZlibDecompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format)
-    : ZlibBaseStream(output),
+    : ZlibBaseStream(std::move(output)),
       logger_{core::logging::LoggerFactory<ZlibDecompressStream>::getLogger()} {
   int ret = inflateInit2(&strm_, 15 + (format == ZlibCompressionFormat::GZIP ? 16 : 0) /* windowBits */);
   if (ret != Z_OK) {

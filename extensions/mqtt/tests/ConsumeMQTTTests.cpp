@@ -98,13 +98,14 @@ REGISTER_RESOURCE(TestConsumeMQTTProcessor, Processor);
 
 static std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>
 makeMallocMqttMessage(const std::string& payload, int struct_version = 0, int qos = 0, int retained = 0, int dup = 0, int msgid = 1) {
-  auto* raw_msg = static_cast<MQTTAsync_message*>(std::malloc(sizeof(MQTTAsync_message)));
-  auto* payload_copy = static_cast<char*>(std::malloc(payload.size()));
+  auto* raw_msg = static_cast<MQTTAsync_message*>(std::malloc(sizeof(MQTTAsync_message)));  // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
+  auto* payload_copy = static_cast<char*>(std::malloc(payload.size() + 1));  // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
   std::memcpy(payload_copy, payload.data(), payload.size());
+  payload_copy[payload.size()] = '\0';
   *raw_msg = MQTTAsync_message{.struct_id = {'M', 'Q', 'T', 'M'}, .struct_version = struct_version,
                                .payloadlen = gsl::narrow<int>(payload.size()), .payload = payload_copy,
                                .qos = qos, .retained = retained, .dup = dup, .msgid = msgid, .properties = {}};
-  return std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(raw_msg);
+  return std::unique_ptr<MQTTAsync_message, TestConsumeMQTTProcessor::MQTTMessageDeleter>(raw_msg);  // NOLINT(clang-analyzer-unix.Malloc)
 }
 
 struct ConsumeMqttTestFixture {
