@@ -183,7 +183,13 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
     if (!files.empty()) {
       return std::unexpected{"Model is not configured for multimodal input"};
     }
-    tokenized_input = tokenizeInput(vocab, prompt);
+    try {
+      tokenized_input = tokenizeInput(vocab, prompt);
+    } catch (std::exception& e) {
+      return std::unexpected{fmt::format("Error during tokenization: {}", e.what())};
+    } catch (...) {
+      return std::unexpected{"Unknown error during tokenization"};
+    }
     n_past = gsl::narrow<llama_pos>(tokenized_input.size());
     decode_status = llama_decode(llama_ctx_, llama_batch_get_one(tokenized_input.data(), n_past));
   }

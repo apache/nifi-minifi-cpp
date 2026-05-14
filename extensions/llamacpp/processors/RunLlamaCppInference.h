@@ -66,6 +66,7 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto MultiModalModelPath = core::PropertyDefinitionBuilder<>::createProperty("MultiModal Model Path")
       .withDescription("The filesystem path of the multimodal model (visual, audio) file in gguf format.")
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto Temperature = core::PropertyDefinitionBuilder<>::createProperty("Temperature")
       .withDescription("The temperature to use for sampling.")

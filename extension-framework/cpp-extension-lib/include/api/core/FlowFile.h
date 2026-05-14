@@ -26,7 +26,11 @@ namespace org::apache::nifi::minifi::api::core {
 struct EnsureMovedFromDeleter {
   void operator()(MinifiFlowFile* ff) {
     if (ff) {
-      throw std::logic_error("Each flowfile should be either transferred or removed");
+      if (std::uncaught_exceptions()) {
+        // there is already an exception in progress, do not terminate the process (although there are scenarios we could throw here)
+      } else {
+        throw std::logic_error("Each flowfile should be either transferred or removed");
+      }
     }
   }
 };

@@ -14,6 +14,7 @@
 # limitations under the License.
 from textwrap import dedent
 
+from pathlib import Path
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
@@ -27,14 +28,21 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 def before_all(context: MinifiTestContext):
     minifi_container_image = get_minifi_container_image()
 
+    test_image_content = None
+    with open(Path(__file__).resolve().parent / "resources" / "test-image.png", "rb") as f:
+        test_image_content = f.read()
+
     dockerfile = dedent("""\
                 FROM {base_image}
-                RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-0.5B-Instruct-GGUF/resolve/main/Qwen2-0.5B-Instruct-IQ3_M.gguf --directory-prefix={models_path}
+                RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/QQwen2-VL-2B-Instruct-Q3_K_M.gguf --directory-prefix={models_path}
+                RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen2-VL-2B-Instruct-f16.gguf --directory-prefix={models_path}
+                COPY test-image.py /tmp/input/test-image.png
         """.format(base_image=minifi_container_image, models_path='/tmp/models'))
 
     builder = DockerImageBuilder(
         image_tag="apacheminificpp:llama",
-        dockerfile_content=dockerfile
+        dockerfile_content=dockerfile,
+        files_on_context={"test-image.py": test_image_content}
     )
     builder.build()
 
