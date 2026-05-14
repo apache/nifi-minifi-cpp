@@ -30,6 +30,7 @@ Feature: Run language model inference using LlamaCpp processor
 
   Scenario: Test multimodal inference with a small model
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content from "test-image.png"
     And a RunLlamaCppInference processor with the "Model Path" property set to "/tmp/models/Qwen2-VL-2B-Instruct-Q3_K_M.gguf"
     And the "Prompt" property of the RunLlamaCppInference processor is set to "Output only what is written on the image."
     And the "MultiModal Model Path" property of the RunLlamaCppInference processor is set to "/tmp/models/mmproj-Qwen2-VL-2B-Instruct-f16.gguf"

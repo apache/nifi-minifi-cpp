@@ -25,6 +25,7 @@ import uuid
 import humanfriendly
 from behave import when, step, given
 
+from pathlib import Path
 from minifi_behave.containers.http_proxy_container import HttpProxy
 from minifi_behave.containers.nifi_container import NifiContainer
 from minifi_behave.containers.directory import Directory
@@ -79,6 +80,16 @@ def create_file_with_content_in_directory_for_flow(context: MinifiTestContext, d
 @step('a directory at "{directory}" has a file with the content "{content}"')
 @step("a directory at '{directory}' has a file with the content '{content}'")
 def create_file_with_content_in_directory(context: MinifiTestContext, directory: str, content: str):
+    context.execute_steps(f'given a directory at "{directory}" has a file with the content "{content}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
+
+
+@step('a directory at "{directory}" has a file with the content from "{path}"')
+@step("a directory at '{directory}' has a file with the content from '{path}'")
+def create_file_with_content_in_directory(context: MinifiTestContext, directory: str, path: str):
+    assert context.resource_dir is not None or "Cannot copy file if resource_dir is not set for the context"
+    content = None
+    with open(context.resource_dir / path, "rb") as f:
+        content = f.read()
     context.execute_steps(f'given a directory at "{directory}" has a file with the content "{content}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 

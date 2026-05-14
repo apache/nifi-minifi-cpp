@@ -28,21 +28,15 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 def before_all(context: MinifiTestContext):
     minifi_container_image = get_minifi_container_image()
 
-    test_image_content = None
-    with open(Path(__file__).resolve().parent / "resources" / "test-image.png", "rb") as f:
-        test_image_content = f.read()
-
     dockerfile = dedent("""\
                 FROM {base_image}
                 RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/QQwen2-VL-2B-Instruct-Q3_K_M.gguf --directory-prefix={models_path}
                 RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen2-VL-2B-Instruct-f16.gguf --directory-prefix={models_path}
-                COPY test-image.py /tmp/input/test-image.png
         """.format(base_image=minifi_container_image, models_path='/tmp/models'))
 
     builder = DockerImageBuilder(
         image_tag="apacheminificpp:llama",
-        dockerfile_content=dockerfile,
-        files_on_context={"test-image.py": test_image_content}
+        dockerfile_content=dockerfile
     )
     builder.build()
 
@@ -50,6 +44,7 @@ def before_all(context: MinifiTestContext):
 def before_scenario(context: MinifiTestContext, scenario):
     context.minifi_container_image = "apacheminificpp:llama"
     common_before_scenario(context, scenario)
+    context.resource_dir = Path(__file__).resolve().parent / "resources"
 
 
 def after_scenario(context, scenario):
