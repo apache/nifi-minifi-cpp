@@ -26,8 +26,8 @@ set(PC "${Patch_EXECUTABLE}" -p1 -i "${PATCH_FILE}")
 
 FetchContent_Declare(
         curl
-        URL "https://github.com/curl/curl/releases/download/curl-8_19_0/curl-8.19.0.tar.gz"
-        URL_HASH "SHA256=2a2c11db4c122691aa23b4363befda1bfd801770bfebf41e1d21cee4f2ab0f71"
+        URL "https://github.com/curl/curl/archive/refs/tags/curl-8_20_0.tar.gz"
+        URL_HASH "SHA256=738fe8ae973a6f171b4e7cf7146edd19894e19f09cd45a3b673ebdba3549a435"
         PATCH_COMMAND ${PC}
         SYSTEM
         OVERRIDE_FIND_PACKAGE
