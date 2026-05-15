@@ -65,10 +65,10 @@ def __add_directory_with_file_to_container(context: MinifiTestContext, directory
     if isinstance(content, str):
         content = content.replace("\\n", "\n")
     if directory in dirs:
-        dirs[directory].files[file_name] = new_content
+        dirs[directory].files[file_name] = content
         return
     new_dir = Directory(directory)
-    new_dir.files[file_name] = new_content
+    new_dir.files[file_name] = content
     dirs.append(new_dir)
 
 
