@@ -72,22 +72,25 @@ REGISTER_RESOURCE(HTTPClient, InternalResource);
 REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
-Some extensions (e.g. `OpenCVExtension`) require initialization before use.
+Some extensions (e.g. `Python`) require initialization before use.
 You need to define an `MinifiInitCppExtension` function of type `MinifiExtension*(MinifiExtensionContext*)` to be called.
 
 ```C++
-extern "C" void MinifiInitCppExtension(MinifiExtensionContext* /*extension_context*/) {
-  const auto success = org::apache::nifi::minifi::utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
-  if (!success) {
-    return nullptr;
-  }
+extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
+  static PythonLibLoader python_lib_loader([&] (std::string_view key) -> std::optional<std::string> {
+    std::optional<std::string> result;
+    MinifiConfigGet(extension_context, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
+      *static_cast<std::optional<std::string>*>(user_data) = std::string{value.data, value.length};
+    }, &result);
+    return result;
+  });
   MinifiExtensionDefinition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,
-    .user_data = nullptr,
+    .user_data = nullptr
   };
-  minifi::utils::MinifiRegisterCppExtension(extension, &extension_definition);
+  minifi::utils::MinifiRegisterCppExtension(extension_context, &extension_definition);
 }
 ```
 

@@ -128,7 +128,7 @@ We thrive to build all third party dependencies using the [External Projects](ht
 
 There are some exceptions to using External Projects:
  - header only libraries don't require it (you could still use ExternalProject_Add to download and unpack the sources, but it is easier to just include the source in our repository and create an INTERFACE target from them).
- - there are some libraries (notably OpenCV) which generate so many targets in so many configurations and interdependencies between the targets that it is impractical to use imported library targets with them
+ - there are some libraries which generate so many targets in so many configurations and interdependencies between the targets that it is impractical to use imported library targets with them
  - there are a few third parties that have not yet been converted to an External Project, but they will be, eventually
 
 To add a new built-in dependency, the easiest way is to use an already existing one as a template.

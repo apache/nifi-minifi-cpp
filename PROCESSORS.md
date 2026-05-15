@@ -19,7 +19,6 @@ limitations under the License.
 - [ApplyTemplate](#ApplyTemplate)
 - [AttributeRollingWindow](#AttributeRollingWindow)
 - [AttributesToJSON](#AttributesToJSON)
-- [CaptureRTSPFrame](#CaptureRTSPFrame)
 - [CollectKubernetesPodMetrics](#CollectKubernetesPodMetrics)
 - [CompressContent](#CompressContent)
 - [ConsumeJournald](#ConsumeJournald)
@@ -69,7 +68,6 @@ limitations under the License.
 - [LogAttribute](#LogAttribute)
 - [ManipulateArchive](#ManipulateArchive)
 - [MergeContent](#MergeContent)
-- [MotionDetector](#MotionDetector)
 - [PerformanceDataMonitor](#PerformanceDataMonitor)
 - [PostElasticsearch](#PostElasticsearch)
 - [ProcFsMonitor](#ProcFsMonitor)
@@ -214,54 +212,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                  |
 |---------|----------------------------------------------|
 | success | All FlowFiles received are routed to success |
-
-
-## CaptureRTSPFrame
-
-### Description
-
-Captures a frame from the RTSP stream at specified intervals.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name           | Default Value | Allowable Values | Description                                                                            |
-|----------------|---------------|------------------|----------------------------------------------------------------------------------------|
-| RTSP Username  |               |                  | The username for connecting to the RTSP stream                                         |
-| RTSP Password  |               |                  | Password used to connect to the RTSP stream<br/>**Sensitive Property: true**           |
-| RTSP Hostname  |               |                  | Hostname of the RTSP stream we are trying to connect to                                |
-| RTSP URI       |               |                  | URI that should be appended to the RTSP stream hostname                                |
-| RTSP Port      |               |                  | Port that should be connected to to receive RTSP Frames                                |
-| Image Encoding | .jpg          |                  | The encoding that should be applied the the frame images captured from the RTSP stream |
-
-### Relationships
-
-| Name    | Description                      |
-|---------|----------------------------------|
-| success | Successful capture of RTSP frame |
-| failure | Failures to capture RTSP frame   |
-
-
-## CollectKubernetesPodMetrics
-
-### Description
-
-A processor which collects pod metrics when MiNiFi is run inside Kubernetes.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                              | Default Value | Allowable Values | Description                                                |
-|-----------------------------------|---------------|------------------|------------------------------------------------------------|
-| **Kubernetes Controller Service** |               |                  | Controller service which provides Kubernetes functionality |
-
-### Relationships
-
-| Name    | Description                                    |
-|---------|------------------------------------------------|
-| success | All flow files produced are routed to Success. |
 
 
 ## CompressContent
@@ -1914,31 +1864,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | original | The FlowFiles that were used to create the bundle                                                                            |
 | merged   | The FlowFile containing the merged content                                                                                   |
 
-
-## MotionDetector
-
-### Description
-
-Detect motion from captured images.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                           | Default Value | Allowable Values | Description                                                                               |
-|--------------------------------|---------------|------------------|-------------------------------------------------------------------------------------------|
-| **Image Encoding**             | .jpg          | .jpg<br/>.png    | The encoding that should be applied to the output                                         |
-| **Minimum Area**               | 100           |                  | We only consider the movement regions with area greater than this.                        |
-| **Threshold for segmentation** | 42            |                  | Pixel greater than this will be white, otherwise black.                                   |
-| **Dilate iteration**           | 10            |                  | For image processing, if an object is detected as 2 separate objects, increase this value |
-| **Path to background frame**   |               |                  | If not provided then the processor will take the first input frame as background          |
-
-### Relationships
-
-| Name    | Description                 |
-|---------|-----------------------------|
-| success | Successful to detect motion |
-| failure | Failure to detect motion    |
 
 ## PerformanceDataMonitor
 
