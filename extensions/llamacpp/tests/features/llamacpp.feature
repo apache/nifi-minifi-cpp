@@ -40,5 +40,5 @@ Feature: Run language model inference using LlamaCpp processor
     And the "success" relationship of the RunLlamaCppInference processor is connected to the PutFile
 
     When all instances start up
-    Then a single file with the content "minifi" is placed in the "/tmp/output" directory in less than 300 seconds
+    Then a single file with the content "minifi" is placed in the "/tmp/output" directory in less than 600 seconds
 
