@@ -17,6 +17,11 @@
 # under the License.
 #
 
+# SFTPTestServer is not implemented on Windows at the moment
+if (WIN32)
+    return()
+endif()
+
 # Java is required for SFTPTestServer, we will disable tests if we can't find it
 find_package(Java)
 find_package(Maven)
