@@ -40,7 +40,6 @@ set enable_splunk=ON
 set enable_smb=ON
 set enable_ops=ON
 set enable_python_scripting=ON
-set enable_opencv=OFF
 set enable_prometheus=ON
 set enable_gcp=ON
 set enable_elastic=ON
@@ -75,7 +74,6 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NO_ELASTIC]       set enable_elastic=OFF
     if [%%~x] EQU [/M]                set installer_merge_modules=ON
     if [%%~x] EQU [/NO_AZURE]         set enable_azure=OFF
-    if [%%~x] EQU [/O]                set enable_opencv=ON
     if [%%~x] EQU [/NO_PROMETHEUS]    set enable_prometheus=OFF
     if [%%~x] EQU [/BUSTACHE]         set enable_bustache=ON
     if [%%~x] EQU [/NO_ENCRYPT_CONFIG] set enable_encrypt_config=OFF
@@ -112,7 +110,7 @@ echo on
 cmake -G %generator% %build_platform_cmd% -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%enable_sql% -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
         -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_KAFKA=%enable_kafka% ^
         -DENABLE_AWS=%enable_aws% -DENABLE_PDH=%enable_pdh% -DENABLE_AZURE=%enable_azure% -DENABLE_SFTP=%enable_sftp% -DENABLE_SPLUNK=%enable_splunk% -DENABLE_GCP=%enable_gcp% ^
-        -DENABLE_OPENCV=%enable_opencv% -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
+        -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% -DENABLE_SMB=%enable_smb% ^
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPS=%enable_ops% ^
         -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% -DENABLE_COUCHBASE=%enable_couchbase% ^

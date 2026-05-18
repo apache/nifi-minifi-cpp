@@ -81,7 +81,6 @@ After the build directory it will take optional parameters modifying the CMake c
 | /NO_MQTT             | Disables MQTT extension                                                             |
 | /NO_LUA_SCRIPTING    | Disables Lua scripting extension                                                    |
 | /NO_PYTHON_SCRIPTING | Disables Python scripting extension                                                 |
-| /O                   | Enables OpenCV                                                                      |
 | /NO_PROMETHEUS       | Disables Prometheus                                                                 |
 | /RO                  | Use real ODBC driver in tests instead of mock SQL driver                            |
 | /M                   | Creates installer with merge modules                                                |
@@ -122,7 +121,7 @@ A basic working CMake configuration can be inferred from the `win_build_vs.bat`.
 ```
 mkdir build
 cd build
-cmake -G "Visual Studio 17 2022" -A x64 -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODULES=OFF -DTEST_CUSTOM_WEL_PROVIDER=OFF -DENABLE_SQL=OFF -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_KAFKA=OFF -DENABLE_AWS=OFF -DENABLE_PDH= -DENABLE_AZURE=OFF -DENABLE_SFTP=OFF -DENABLE_SPLUNK= -DENABLE_GCP= -DENABLE_OPENCV=OFF -DENABLE_PROMETHEUS=OFF -DENABLE_ELASTICSEARCH= -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=ON -DENABLE_BUSTACHE=OFF -DENABLE_ENCRYPT_CONFIG=OFF -DENABLE_LUA_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_OPC=OFF -DENABLE_OPS=OFF -DENABLE_PYTHON_SCRIPTING= -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DENABLE_COUCHBASE=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
+cmake -G "Visual Studio 17 2022" -A x64 -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODULES=OFF -DTEST_CUSTOM_WEL_PROVIDER=OFF -DENABLE_SQL=OFF -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_KAFKA=OFF -DENABLE_AWS=OFF -DENABLE_PDH= -DENABLE_AZURE=OFF -DENABLE_SFTP=OFF -DENABLE_SPLUNK= -DENABLE_GCP= -DENABLE_PROMETHEUS=OFF -DENABLE_ELASTICSEARCH= -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=ON -DENABLE_BUSTACHE=OFF -DENABLE_ENCRYPT_CONFIG=OFF -DENABLE_LUA_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_OPC=OFF -DENABLE_OPS=OFF -DENABLE_PYTHON_SCRIPTING= -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DENABLE_COUCHBASE=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
 msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release /property:Platform=x64
 copy minifi_main\Release\minifi.exe minifi_main\
 cpack
