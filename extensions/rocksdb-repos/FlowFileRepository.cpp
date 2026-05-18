@@ -152,7 +152,7 @@ void FlowFileRepository::initialize_repository() {
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     utils::Identifier container_id;
     const auto slice = it->value();
-    auto eventRead = FlowFileRecord::DeSerialize(std::span<const std::byte>(reinterpret_cast<const std::byte*>(slice.data()), slice.size()), content_repo_, container_id);
+    auto eventRead = FlowFileRecord::DeSerialize(std::as_bytes(std::span(slice.data(), slice.size())), content_repo_, container_id);
     const std::string key = it->key().ToString();
     if (!eventRead) {
       // failed to deserialize FlowFile, cannot clear claim

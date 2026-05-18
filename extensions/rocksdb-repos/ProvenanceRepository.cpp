@@ -88,7 +88,7 @@ bool ProvenanceRepository::getElements(std::vector<std::shared_ptr<core::Seriali
       break;
     auto eventRead = ProvenanceEventRecord::create();
     const auto slice = it->value();
-    io::BufferStream stream(std::as_bytes(std::span<const std::byte>(reinterpret_cast<const std::byte*>(slice.data()), slice.size())));
+    io::BufferStream stream(std::as_bytes(std::span(slice.data(), slice.size())));
     if (eventRead->deserialize(stream)) {
       max_size++;
       records.push_back(eventRead);
