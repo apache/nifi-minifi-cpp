@@ -50,7 +50,7 @@ MinifiStatus ConsumeKafka::onScheduleImpl(api::core::ProcessContext& context) {
   message_header_encoding_ = utils::parseEnumProperty<KafkaEncoding>(context, MessageHeaderEncoding);
   duplicate_header_handling_ = utils::parseEnumProperty<consume_kafka::MessageHeaderPolicyEnum>(context, DuplicateHeaderHandling);
   max_poll_time_milliseconds_ = utils::parseDurationProperty(context, MaxPollTime);
-  if (max_poll_time_milliseconds_ > 4s) {
+  if (max_poll_time_milliseconds_ >= 4s) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "MaxPollTime is too large (it should be less than 4s)");
   }
   max_poll_records_ = gsl::narrow<uint32_t>(utils::parseU64Property(context, MaxPollRecords));

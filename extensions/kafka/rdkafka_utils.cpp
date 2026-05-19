@@ -18,6 +18,7 @@
 #include "rdkafka_utils.h"
 
 #include <array>
+#include <vector>
 
 #include "minifi-cpp/Exception.h"
 #include "minifi-cpp/core/logging/Logger.h"
