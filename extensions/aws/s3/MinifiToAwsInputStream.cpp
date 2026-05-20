@@ -64,6 +64,9 @@ MinifiInputStreamBuf::pos_type MinifiInputStreamBuf::seekpos(pos_type pos, std::
   if (!(which & std::ios_base::in)) {
     return {off_type(-1)};
   }
+  if (off_type(pos) < 0 || off_type(pos) > static_cast<off_type>(content_length_)) {
+    return {off_type(-1)};
+  }
   stream_->seek(start_pos_ + static_cast<size_t>(off_type(pos)));
   setg(buffer_.data(), buffer_.data(), buffer_.data());  // invalidate read buffer
   return pos;
