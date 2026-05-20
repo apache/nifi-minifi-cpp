@@ -302,7 +302,8 @@ include(GslLite)
 # Add necessary definitions based on the value of STRICT_GSL_CHECKS, see gsl-lite README for more details
 list(APPEND GslDefinitions gsl_CONFIG_DEFAULTS_VERSION=1)
 list(APPEND GslDefinitions gsl_FEATURE_BYTE=1)
-list(APPEND GslDefinitionsNonStrict gsl_CONFIG_CONTRACT_VIOLATION_THROWS gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1)
+list(APPEND GslDefinitions gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1)
+list(APPEND GslDefinitionsNonStrict gsl_CONFIG_CONTRACT_VIOLATION_THROWS)
 # Disable gsl-lite's direct __assert_fail() forward declaration on Linux to avoid conflicts
 # with the system assert.h declaration that includes noexcept (__THROW).
 if (UNIX AND NOT APPLE)
