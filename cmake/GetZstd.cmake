@@ -15,13 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_zstd)
-    if(MINIFI_ZSTD_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install zstd")
-        find_package(zstd REQUIRED)
+if(MINIFI_ZSTD_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install zstd")
+    find_package(zstd REQUIRED)
+    if(NOT TARGET zstd::zstd)
         add_library(zstd::zstd ALIAS zstd::libzstd_static)
-    elseif(MINIFI_ZSTD_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build zstd from source")
-        include(Zstd)
     endif()
-endfunction(get_zstd)
+    set(ZSTD_LIBRARIES "${zstd_LIBRARIES}" CACHE STRING "" FORCE)
+    set(ZSTD_INCLUDE_DIRS "${zstd_INCLUDE_DIRS}" CACHE STRING "" FORCE)
+elseif(MINIFI_ZSTD_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build zstd from source")
+    include(Zstd)
+endif()

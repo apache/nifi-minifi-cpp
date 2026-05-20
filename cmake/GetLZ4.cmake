@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,26 +14,19 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-if (NOT (ENABLE_ALL OR ENABLE_LIBARCHIVE))
-    return()
+if(MINIFI_LZ4_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install lz4")
+    find_package(lz4 REQUIRED)
+    if(NOT TARGET lz4::lz4)
+        add_library(lz4::lz4 ALIAS LZ4::liblz4_static)
+    endif()
+    if(NOT TARGET LZ4::LZ4)
+        add_library(LZ4::LZ4 ALIAS lz4::lz4)
+    endif()
+    set(LZ4_LIBRARIES "${lz4_LIBRARIES}" CACHE STRING "" FORCE)
+    set(LZ4_INCLUDE_DIRS "${lz4_INCLUDE_DIRS}" CACHE STRING "" FORCE)
+elseif(MINIFI_LZ4_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build lz4 from source")
+    include(LZ4)
 endif()
-
-if (ENABLE_LZMA)
-    include(LibLZMA)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/liblzma/dummy")
-endif()
-
-include(GetLibArchive)
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-file(GLOB SOURCES  "*.cpp")
-
-add_minifi_library(minifi-archive-extensions SHARED ${SOURCES})
-
-target_link_libraries(minifi-archive-extensions ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-archive-extensions LibArchive::LibArchive)
-
-register_extension(minifi-archive-extensions "ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "extensions/libarchive/tests")
