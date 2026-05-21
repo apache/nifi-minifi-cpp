@@ -49,7 +49,7 @@ TEST_CASE("Trigger without valid broker", "[PublishKafka]") {
 
   REQUIRE_NOTHROW(publish_kafka.onScheduleImpl(context));
   auto session = mock::MockProcessSession{};
-  session.addInputFlowFile(mock::MockFlowFileData("test_input_flow_file"));
+  session.addInputFlowFile(std::make_unique<MinifiFlowFile>("test_input_flow_file"));
   REQUIRE_NOTHROW(publish_kafka.onTriggerImpl(context, session));
 
   CHECK_FALSE(logger->logs_.empty());
