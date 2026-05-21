@@ -48,8 +48,7 @@ struct ReadUntilItCan {
       if (read_result == 0)
         return minifi::io::IoResult::from(bytes_read);
       bytes_read += read_result;
-      const auto char_view = std::span<const char>(reinterpret_cast<const char*>(buffer.data()), read_result);
-      value_.append(std::begin(char_view), std::end(char_view));
+      value_.append(reinterpret_cast<const char*>(buffer.data()), read_result);
     }
   }
 };
