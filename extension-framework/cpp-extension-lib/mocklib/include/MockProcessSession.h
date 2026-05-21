@@ -24,27 +24,28 @@
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/transform.hpp"
 
-namespace org::apache::nifi::minifi::mock {
-struct MockFlowFileData {
-  explicit MockFlowFileData(std::string content_str) {
+struct MinifiFlowFile {
+  explicit MinifiFlowFile(std::string content_str) {
     this->content = content_str
            | ranges::views::transform([](char c) { return static_cast<std::byte>(c); })
            | ranges::to<std::vector<std::byte>>();
   }
 
-  ~MockFlowFileData() = default;
+  ~MinifiFlowFile() = default;
 
-  MockFlowFileData() = default;
-  MockFlowFileData(const MockFlowFileData&) = default;
-  MockFlowFileData(MockFlowFileData&&) = default;
-  MockFlowFileData& operator=(const MockFlowFileData&) = default;
-  MockFlowFileData& operator=(MockFlowFileData&&) = default;
+  MinifiFlowFile() = default;
+  MinifiFlowFile(const MinifiFlowFile&) = default;
+  MinifiFlowFile(MinifiFlowFile&&) = default;
+  MinifiFlowFile& operator=(const MinifiFlowFile&) = default;
+  MinifiFlowFile& operator=(MinifiFlowFile&&) = default;
 
   std::map<std::string, std::string> attributes;
   std::vector<std::byte> content;
   bool is_penalized = false;
   std::string id;
 };
+
+namespace org::apache::nifi::minifi::mock {
 
 class MockProcessSession : public api::core::ProcessSession {
  public:
@@ -53,8 +54,6 @@ class MockProcessSession : public api::core::ProcessSession {
   MockProcessSession& operator=(const MockProcessSession&) = delete;
   MockProcessSession(MockProcessSession&&) = delete;
   MockProcessSession& operator=(MockProcessSession&&) = delete;
-
-  ~MockProcessSession() override;
 
   api::core::FlowFile create(const api::core::FlowFile* parent) override;
   api::core::FlowFile get() override;
@@ -70,13 +69,12 @@ class MockProcessSession : public api::core::ProcessSession {
   [[nodiscard]] std::string getFlowFileId(const api::core::FlowFile& ff) const override;
   [[nodiscard]] uint64_t getFlowFileSize(const api::core::FlowFile& ff) const override;
 
-  void addInputFlowFile(MockFlowFileData flow_file_data);
+  void addInputFlowFile(std::unique_ptr<MinifiFlowFile> flow_file);
 
  private:
-  std::vector<api::core::FlowFile> input_flow_files_;
-  std::map<MinifiFlowFile*, MockFlowFileData> flow_file_datas;
-  std::map<std::string, std::vector<api::core::FlowFile>> transferred_flow_files_;
-  std::vector<api::core::FlowFile> removed_flow_files_;
+  std::vector<std::unique_ptr<MinifiFlowFile>> input_flow_files_;
+  std::map<std::string, std::vector<std::unique_ptr<MinifiFlowFile>>> transferred_flow_files_;
+  std::vector<std::unique_ptr<MinifiFlowFile>> removed_flow_files_;
 };
 
 }  // namespace org::apache::nifi::minifi::mock
