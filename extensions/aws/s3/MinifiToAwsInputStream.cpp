@@ -64,7 +64,7 @@ MinifiInputStreamBuf::pos_type MinifiInputStreamBuf::seekpos(pos_type pos, std::
   if (!(which & std::ios_base::in)) {
     return {off_type(-1)};
   }
-  if (off_type(pos) < 0 || off_type(pos) > static_cast<off_type>(content_length_)) {
+  if (off_type(pos) < 0 || off_type(pos) > gsl::narrow<off_type>(content_length_)) {
     return {off_type(-1)};
   }
   stream_->seek(start_pos_ + static_cast<size_t>(off_type(pos)));
