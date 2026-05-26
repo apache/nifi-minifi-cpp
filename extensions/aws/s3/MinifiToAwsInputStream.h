@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::aws::s3 {
 
 class MinifiInputStreamBuf : public std::streambuf {
  public:
-  MinifiInputStreamBuf(std::shared_ptr<io::InputStream> stream, uint64_t content_length, gsl::not_null<std::basic_ios<char>*> owner)
+  MinifiInputStreamBuf(std::shared_ptr<io::InputStream> stream, uint64_t content_length, gsl::not_null<std::ios*> owner)
       : stream_(std::move(stream)),
         start_pos_(stream_->tell()),
         content_length_(content_length),
@@ -47,14 +47,14 @@ class MinifiInputStreamBuf : public std::streambuf {
   uint64_t start_pos_;
   uint64_t content_length_;
   std::vector<char> buffer_;
-  gsl::not_null<std::basic_ios<char>*> owner_;
+  gsl::not_null<std::ios*> owner_;
 };
 
-class MinifiToAwsInputStream : private MinifiInputStreamBuf, public std::basic_iostream<char> {
+class MinifiToAwsInputStream : private MinifiInputStreamBuf, public std::iostream {
  public:
   MinifiToAwsInputStream(std::shared_ptr<io::InputStream> stream, uint64_t content_length)
-      : MinifiInputStreamBuf(std::move(stream), content_length, gsl::not_null<std::basic_ios<char>*>(static_cast<std::basic_ios<char>*>(this))),
-        std::basic_iostream<char>(static_cast<MinifiInputStreamBuf*>(this)) {}
+      : MinifiInputStreamBuf(std::move(stream), content_length, gsl::not_null<std::ios*>(static_cast<std::ios*>(this))),
+        std::iostream(static_cast<MinifiInputStreamBuf*>(this)) {}
 };
 
 }  // namespace org::apache::nifi::minifi::aws::s3
