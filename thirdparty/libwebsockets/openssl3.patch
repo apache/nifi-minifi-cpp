@@ -1,3 +1,4 @@
+Manually specifying flags for bundled OpenSSL feature availability; otherwise, libwebsockets attempts to detect these flags by compiling examples against the system-installed OpenSSL.
 diff --git a/lib/tls/CMakeLists.txt b/lib/tls/CMakeLists.txt
 index 13cb71493..c7607fd81 100644
 --- a/lib/tls/CMakeLists.txt
