@@ -22,3 +22,13 @@ index 9a98f204e..95260d243 100644
 -- 
 2.50.1
 
+--- a/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_helper.hpp	2026-05-12 12:38:20.000000000 +0200
++++ b/sdk/storage/azure-storage-common/inc/azure/storage/common/internal/structured_message_helper.hpp	2026-05-19 12:56:55.877826558 +0200
+@@ -7,6 +7,7 @@
+ #include <functional>
+ #include <memory>
+ #include <vector>
++#include <cinttypes>
+
+ namespace Azure { namespace Storage { namespace _internal {
+

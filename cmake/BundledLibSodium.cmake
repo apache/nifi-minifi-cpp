@@ -40,10 +40,10 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
     endif()
 
     # Build project
-    set(LIBSODIUM_OFFICIAL_MIRROR_URL https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz)
-    set(LIBSODIUM_GITHUB_MIRROR_URL https://github.com/jedisct1/libsodium/releases/download/1.0.18-RELEASE/libsodium-1.0.18.tar.gz)
-    set(LIBSODIUM_GENTOO_MIRROR_URL https://gentoo.osuosl.org/distfiles/libsodium-1.0.18.tar.gz)
-    set(LIBSODIUM_URL_HASH "SHA256=6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1")
+    set(LIBSODIUM_OFFICIAL_MIRROR_URL https://download.libsodium.org/libsodium/releases/libsodium-1.0.22.tar.gz)
+    set(LIBSODIUM_GITHUB_MIRROR_URL https://github.com/jedisct1/libsodium/releases/download/1.0.22-RELEASE/libsodium-1.0.22.tar.gz)
+    set(LIBSODIUM_GENTOO_MIRROR_URL https://gentoo.osuosl.org/distfiles/libsodium-1.0.22.tar.gz)
+    set(LIBSODIUM_URL_HASH "SHA256=adbdd8f16149e81ac6078a03aca6fc03b592b89ef7b5ed83841c086191be3349")
 
     if (WIN32)
         ExternalProject_Add(

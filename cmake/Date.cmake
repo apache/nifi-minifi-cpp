@@ -20,8 +20,8 @@ include(FetchContent)
 if (WIN32)
     # tzdata and windowsZones.xml from unicode cldr-common are required to be installed for date-tz operation on Windows
     FetchContent_Declare(tzdata
-        URL         https://data.iana.org/time-zones/releases/tzdata2020e.tar.gz
-        URL_HASH    SHA256=0be1ba329eae29ae1b54057c3547b3e672f73b3ae7643aa87dac85122bec037e
+        URL         https://data.iana.org/time-zones/releases/tzdata2026b.tar.gz
+        URL_HASH    SHA256=114543d9f19a6bfeb5bca43686aea173d38755a3db1f2eec112647ae92c6f544
         SYSTEM
     )
     FetchContent_GetProperties(tzdata)
@@ -47,8 +47,8 @@ if (WIN32)
 endif()
 
 FetchContent_Declare(date_src
-    URL         https://github.com/HowardHinnant/date/archive/1ead6715dec030d340a316c927c877a3c4e5a00c.tar.gz  # master as of 2024-06-28
-    URL_HASH    SHA256=8b4096b7b49e06d756f4aa0949151863ab7b812679a1646039fab6e821d3c049
+    URL         https://github.com/HowardHinnant/date/archive/refs/tags/v3.0.4.tar.gz
+    URL_HASH    SHA256=56e05531ee8994124eeb498d0e6a5e1c3b9d4fccbecdf555fe266631368fb55f
     SYSTEM
 )
 FetchContent_GetProperties(date_src)

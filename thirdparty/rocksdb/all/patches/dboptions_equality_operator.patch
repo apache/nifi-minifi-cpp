@@ -1,8 +1,8 @@
 diff --git a/include/rocksdb/options.h b/include/rocksdb/options.h
-index ae5ed2c26..0038c6bff 100644
+index e99e85c77..e31b374da 100644
 --- a/include/rocksdb/options.h
 +++ b/include/rocksdb/options.h
-@@ -397,6 +397,7 @@ struct DbPath {
+@@ -456,6 +456,7 @@ struct DbPath {
  
    DbPath() : target_size(0) {}
    DbPath(const std::string& p, uint64_t t) : path(p), target_size(t) {}
@@ -10,7 +10,7 @@ index ae5ed2c26..0038c6bff 100644
  };
  
  extern const char* kHostnameForDbHostId;
-@@ -1008,6 +1009,8 @@ struct DBOptions {
+@@ -1214,6 +1215,8 @@ struct DBOptions {
    // Create DBOptions from Options
    explicit DBOptions(const Options& options);
  

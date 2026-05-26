@@ -44,7 +44,7 @@ struct RocksDBTest : TestController {
   }
 
   [[nodiscard]] OpenDatabase openDB(const std::vector<std::string>& cf_names) const {
-    rocksdb::DB* db_ptr = nullptr;
+    std::unique_ptr<rocksdb::DB> db_ptr;
     std::vector<rocksdb::ColumnFamilyHandle*> cf_handle_ptrs;
     std::vector<rocksdb::ColumnFamilyDescriptor> cf_descs;
     cf_descs.reserve(cf_names.size());
@@ -57,7 +57,7 @@ struct RocksDBTest : TestController {
     for (auto cf_ptr : cf_handle_ptrs) {
       cf_handles[cf_ptr->GetName()].reset(cf_ptr);
     }
-    return {std::unique_ptr<rocksdb::DB>(db_ptr), std::move(cf_handles)};
+    return {std::move(db_ptr), std::move(cf_handles)};
   }
 
   std::string db_dir;

@@ -26,8 +26,8 @@ set(LIBXML2_WITH_ICU OFF CACHE BOOL "" FORCE)
 include(FetchContent)
 FetchContent_Declare(
     libxml2
-    URL https://github.com/GNOME/libxml2/archive/refs/tags/v2.15.0.tar.gz
-    URL_HASH SHA256=e24bd5209afefe390e704ebc55649c7ae240e1f157cefd433ccc86c610d20aac
+    URL https://github.com/GNOME/libxml2/archive/refs/tags/v2.15.3.tar.gz
+    URL_HASH SHA256=5c6060277173270356c3f1c321a640ab629bdabc5e5ba9095b99e00759ba0c39
     SYSTEM
 )
 FetchContent_MakeAvailable(libxml2)
