@@ -79,22 +79,25 @@ DefaultLlamaContext::DefaultLlamaContext(const std::filesystem::path& model_path
   }
   llama_sampler_chain_add(llama_sampler_, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
 
-  if (!multimodal_model_path) {
+  if (multimodal_model_path) {
+    initializeMultimodalContext(multimodal_model_path.value());
+    logger->log_info("Successfully loaded multimodal model from '{}'", multimodal_model_path->string());
+  } else {
     logger->log_info("No multimodal model path provided");
-    return;
   }
+}
 
+void DefaultLlamaContext::initializeMultimodalContext(const std::filesystem::path& multimodal_model_path) {
   mtmd_context_params mparams = mtmd_context_params_default();
   mparams.use_gpu = false;
   mparams.flash_attn_type  = LLAMA_FLASH_ATTN_TYPE_DISABLED;
 
-  multimodal_ctx_ = mtmd_init_from_file(multimodal_model_path->string().c_str(), llama_model_, mparams);
+  multimodal_ctx_ = mtmd_init_from_file(multimodal_model_path.string().c_str(), llama_model_, mparams);
   if (!multimodal_ctx_) {
-    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load multimodal model from '{}'", multimodal_model_path->string()));
+    throw Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, fmt::format("Failed to load multimodal model from '{}'", multimodal_model_path.string()));
   }
-
-  logger->log_info("Successfully loaded multimodal model from '{}'", multimodal_model_path->string());
 }
+
 
 DefaultLlamaContext::~DefaultLlamaContext() {
   mtmd_free(multimodal_ctx_);
@@ -135,7 +138,69 @@ struct mtmd_input_chunks_deleter {
 };
 using unique_mtmd_input_chunks_ptr = std::unique_ptr<mtmd_input_chunks, mtmd_input_chunks_deleter>;
 
+class unique_llama_batch {
+ public:
+  unique_llama_batch() {
+    batch_.n_tokens = 1;
+    batch_.n_seq_id[0] = 1;
+    batch_.seq_id[0][0] = 0;
+    batch_.logits[0] = true;
+  }
+  unique_llama_batch(const unique_llama_batch&) = delete;
+  unique_llama_batch(unique_llama_batch&&) = delete;
+  unique_llama_batch& operator=(const unique_llama_batch&) = delete;
+  unique_llama_batch& operator=(unique_llama_batch&&) = delete;
+
+  ~unique_llama_batch() {
+    llama_batch_free(batch_);
+  }
+
+  llama_batch* operator->() {
+    return &batch_;
+  }
+
+  llama_batch& operator*() {
+    return batch_;
+  }
+
+ private:
+  llama_batch batch_{llama_batch_init(1, 0, 1)};
+};
+
 }  // namespace
+
+std::expected<llama_pos, std::string> DefaultLlamaContext::tokenizeAndDecodeMultimodalInput(const std::string& prompt, const std::vector<std::vector<std::byte>>& files) {
+  if (files.empty()) {
+    return std::unexpected{"Multimodal input requires at least one file"};
+  }
+  std::vector<unique_bitmap_ptr> bitmaps;
+  for (auto& file : files) {
+    unique_bitmap_ptr bitmap{mtmd_helper_bitmap_init_from_buf(multimodal_ctx_, reinterpret_cast<const unsigned char*>(file.data()), file.size())};
+    if (!bitmap) {
+      throw Exception(PROCESSOR_EXCEPTION, "Failed to create multimodal bitmap from buffer");
+    }
+    bitmaps.push_back(std::move(bitmap));
+  }
+  mtmd_input_text inp_txt = {
+    .text = prompt.c_str(),
+    .add_special = true,
+    .parse_special = true,
+  };
+  unique_mtmd_input_chunks_ptr chunks{mtmd_input_chunks_init()};
+  auto bitmap_c_ptrs = bitmaps | ranges::views::transform([] (auto& ptr) {return static_cast<const mtmd_bitmap*>(ptr.get());}) | ranges::to<std::vector>();
+  auto tokenized = mtmd_tokenize(multimodal_ctx_, chunks.get(), &inp_txt, bitmap_c_ptrs.data(), bitmap_c_ptrs.size());
+  if (tokenized != 0) {
+    throw Exception(PROCESSOR_EXCEPTION, fmt::format("Failed to tokenize multimodal prompt, error: {}", tokenized));
+  }
+  llama_pos n_past = 0;
+  // this automatically calls llama_decode
+  auto status = mtmd_helper_eval_chunks(multimodal_ctx_, llama_ctx_, chunks.get(), 0, 0, 1, true, &n_past);
+  if (status != 0) {
+    throw Exception(PROCESSOR_EXCEPTION, fmt::format("Failed to eval multimodal chunks, error: {}", status));
+  }
+
+  return n_past;
+}
 
 std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const std::string& prompt, const std::vector<std::vector<std::byte>>& files,
       std::function<void(std::string_view/*token*/)> token_handler) {
@@ -145,40 +210,13 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
   const llama_vocab * vocab = llama_model_get_vocab(llama_model_);
   llama_pos n_past = 0;
   std::vector<llama_token> tokenized_input;
-  llama_batch batch = llama_batch_init(1, 0, 1);
-  auto batch_deleter = gsl::finally([&] {llama_batch_free(batch);});
-  batch.n_tokens = 1;
-  batch.n_seq_id[0] = 1;
-  batch.seq_id[0][0] = 0;
-  batch.logits[0] = true;
   int32_t decode_status = 0;
   if (multimodal_ctx_) {
-    if (files.empty()) {
-      return std::unexpected{"Multimodal input requires at least one file"};
+    auto input_size = tokenizeAndDecodeMultimodalInput(prompt, files);
+    if (!input_size) {
+      return std::unexpected{input_size.error()};
     }
-    std::vector<unique_bitmap_ptr> bitmaps;
-    for (auto& file : files) {
-      unique_bitmap_ptr bitmap{mtmd_helper_bitmap_init_from_buf(multimodal_ctx_, reinterpret_cast<const unsigned char*>(file.data()), file.size())};
-      if (!bitmap) {
-        throw Exception(PROCESSOR_EXCEPTION, "Failed to create multimodal bitmap from buffer");
-      }
-      bitmaps.push_back(std::move(bitmap));
-    }
-    mtmd_input_text inp_txt = {
-      .text = prompt.c_str(),
-      .add_special = true,
-      .parse_special = true,
-    };
-    unique_mtmd_input_chunks_ptr chunks{mtmd_input_chunks_init()};
-    auto bitmap_c_ptrs = bitmaps | ranges::views::transform([] (auto& ptr) {return static_cast<const mtmd_bitmap*>(ptr.get());}) | ranges::to<std::vector>();
-    auto tokenized = mtmd_tokenize(multimodal_ctx_, chunks.get(), &inp_txt, bitmap_c_ptrs.data(), bitmap_c_ptrs.size());
-    if (tokenized != 0) {
-      throw Exception(PROCESSOR_EXCEPTION, fmt::format("Failed to tokenize multimodal prompt, error: {}", tokenized));
-    }
-    auto status = mtmd_helper_eval_chunks(multimodal_ctx_, llama_ctx_, chunks.get(), 0, 0, 1, true, &n_past);
-    if (status != 0) {
-      throw Exception(PROCESSOR_EXCEPTION, fmt::format("Failed to eval multimodal chunks, error: {}", status));
-    }
+    n_past = input_size.value();
   } else {
     if (!files.empty()) {
       return std::unexpected{"Model is not configured for multimodal input"};
@@ -197,6 +235,7 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
 
   llama_token new_token_id = 0;
   bool first_token_generated = false;
+  unique_llama_batch batch;
   while (decode_status == 0) {
     new_token_id = llama_sampler_sample(llama_sampler_, llama_ctx_, -1);
     if (!first_token_generated) {
@@ -219,12 +258,12 @@ std::expected<GenerationResult, std::string> DefaultLlamaContext::generate(const
     gsl_Assert(len < 128);
 
     std::string_view token_str{buf.data(), gsl::narrow<std::string_view::size_type>(len)};
-    batch.token[0] = new_token_id;
-    batch.pos[0] = n_past;
+    batch->token[0] = new_token_id;
+    batch->pos[0] = n_past;
     ++n_past;
     token_handler(token_str);
 
-    decode_status = llama_decode(llama_ctx_, batch);
+    decode_status = llama_decode(llama_ctx_, *batch);
   }
 
   if (decode_status == 1) {

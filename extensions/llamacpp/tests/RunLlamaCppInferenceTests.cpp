@@ -42,10 +42,8 @@ class MockLlamaContext : public processors::LlamaContext {
     if (fail_generation_) {
       return std::unexpected{"Generation failed"};
     }
-    if (multimodal_) {
-      if (files.empty()) {
-        return std::unexpected{"Files empty"};
-      }
+    if (multimodal_ && files.empty()) {
+      return std::unexpected{"Files empty"};
     }
     processors::GenerationResult result;
     input_ = input;

@@ -86,7 +86,7 @@ def create_file_with_content_in_directory(context: MinifiTestContext, directory:
 
 @step('a directory at "{directory}" has a file with the content from "{path}"')
 @step("a directory at '{directory}' has a file with the content from '{path}'")
-def create_file_with_content_in_directory(context: MinifiTestContext, directory: str, path: str):
+def create_file_with_content_from_path_in_directory(context: MinifiTestContext, directory: str, path: str):
     assert context.resource_dir is not None, "Cannot copy file if resource_dir is not set for the context"
     content = None
     with open(context.resource_dir / path, "rb") as f:

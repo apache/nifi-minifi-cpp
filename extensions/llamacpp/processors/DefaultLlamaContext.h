@@ -40,6 +40,9 @@ class DefaultLlamaContext : public LlamaContext {
       std::function<void(std::string_view/*token*/)> token_handler) override;
 
  private:
+  void initializeMultimodalContext(const std::filesystem::path& multimodal_model_path);
+  std::expected<llama_pos, std::string> tokenizeAndDecodeMultimodalInput(const std::string& prompt, const std::vector<std::vector<std::byte>>& files);
+
   const LlamaBackendInitializer& llama_context_initializer_ = LlamaBackendInitializer::get();
   llama_model* llama_model_{};
   common_chat_templates_ptr chat_template_;
