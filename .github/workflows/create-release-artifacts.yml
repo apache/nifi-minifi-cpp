@@ -51,7 +51,7 @@ jobs:
       - name: Support longpaths
         run: git config --system core.longpaths true
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Python
         run: choco -y install python & refreshenv
         shell: cmd
@@ -67,7 +67,7 @@ jobs:
         shell: cmd
         working-directory: bootstrap
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: minifi-x86_64-msi
           path: build/nifi-minifi-cpp.msi
@@ -76,10 +76,10 @@ jobs:
     runs-on: 'ubuntu-24.04-arm'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
@@ -101,7 +101,7 @@ jobs:
           zip -r minifi-native-sdk.zip minifi-native-sdk/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: minifi-native-sdk
           path: minifi-native-sdk.zip
