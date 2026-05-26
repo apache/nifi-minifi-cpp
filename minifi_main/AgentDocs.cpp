@@ -352,6 +352,7 @@ void AgentDocs::generateManifest() {
   auto serialized = minifi::state::response::serializeComponentManifest(all_components);
   for (const auto& ser : serialized) {
     std::cout << ser.to_pretty_string() << std::endl;
-  }}
+  }
+}
 
 }  // namespace org::apache::nifi::minifi::docs
