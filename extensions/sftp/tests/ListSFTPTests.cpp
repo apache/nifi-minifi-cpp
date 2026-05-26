@@ -215,7 +215,6 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list non-readable dir", "[ListS
   REQUIRE(LogTestController::getInstance().contains("There are no files to list. Yielding."));
   std::filesystem::permissions(working_directory / "vfs" / "nifi_test", static_cast<std::filesystem::perms>(0755));
 }
-#endif
 
 TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes", "[ListSFTP][basic]") {
   createFileWithModificationTimeDiff("nifi_test/tstFile.ext", "Test content 1");
@@ -243,6 +242,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes
   REQUIRE(LogTestController::getInstance().contains("key:filename value:tstFile.ext"));
   REQUIRE(LogTestController::getInstance().contains("key:path value:nifi_test"));
 }
+#endif
 
 TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list two files", "[ListSFTP][basic]") {
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");

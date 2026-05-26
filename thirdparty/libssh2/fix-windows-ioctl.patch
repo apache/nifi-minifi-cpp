@@ -1,0 +1,21 @@
+diff --git a/src/session.c b/src/session.c
+index 212560b8..5e4fc8db 100644
+--- a/src/session.c
++++ b/src/session.c
+@@ -291,15 +291,7 @@ session_nonblock(libssh2_socket_t sockfd,   /* operate on this */
+ #define SETBLOCK 1
+ #endif
+ 
+-#if defined(HAVE_FIONBIO) && (SETBLOCK == 0)
+-    /* older unix versions and VMS*/
+-    int flags;
+-
+-    flags = nonblock;
+-    return ioctl(sockfd, FIONBIO, &flags);
+-#undef SETBLOCK
+-#define SETBLOCK 2
+-#endif
++// removed ioctl() method since it is not supported on Windows
+ 
+ #if defined(HAVE_IOCTLSOCKET) && (SETBLOCK == 0)
+     /* Windows? */
