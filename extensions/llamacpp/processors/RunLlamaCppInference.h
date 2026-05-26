@@ -29,7 +29,8 @@
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
 using LlamaContextProvider =
-  std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path& model_path, const std::optional<std::filesystem::path>& multimodal_model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params)>;
+  std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path& model_path, const std::optional<std::filesystem::path>& multimodal_model_path,
+      const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params)>;
 
 class RunLlamaCppInferenceMetrics {
  public:

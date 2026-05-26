@@ -93,7 +93,8 @@ TEST_CASE("Prompt is generated correctly with default parameters") {
   processors::LlamaContextParams test_context_params;
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path& model_path, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
+    [&](const std::filesystem::path& model_path, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams& sampler_params,
+        const processors::LlamaContextParams& context_params) {
       test_model_path = model_path;
       test_sampler_params = sampler_params;
       test_context_params = context_params;
@@ -139,7 +140,8 @@ TEST_CASE("Prompt is generated correctly with custom parameters") {
   processors::LlamaContextParams test_context_params;
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<processors::RunLlamaCppInference>(
     core::ProcessorMetadata{utils::Identifier{}, "RunLlamaCppInference", logging::LoggerFactory<processors::RunLlamaCppInference>::getLogger()},
-    [&](const std::filesystem::path& model_path, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams& sampler_params, const processors::LlamaContextParams& context_params) {
+    [&](const std::filesystem::path& model_path, const std::optional<std::filesystem::path>&, const processors::LlamaSamplerParams& sampler_params,
+        const processors::LlamaContextParams& context_params) {
       test_model_path = model_path;
       test_sampler_params = sampler_params;
       test_context_params = context_params;
