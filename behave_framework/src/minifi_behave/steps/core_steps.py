@@ -25,7 +25,6 @@ import uuid
 import humanfriendly
 from behave import when, step, given
 
-from pathlib import Path
 from minifi_behave.containers.http_proxy_container import HttpProxy
 from minifi_behave.containers.nifi_container import NifiContainer
 from minifi_behave.containers.directory import Directory
