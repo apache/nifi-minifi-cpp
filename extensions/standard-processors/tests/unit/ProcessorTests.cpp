@@ -445,7 +445,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
   for (auto entry : repo->getRepoMap()) {
     minifi::provenance::ProvenanceEventRecordImpl newRecord;
-    minifi::io::BufferStream stream(gsl::make_span(entry.second).as_span<const std::byte>());
+    minifi::io::BufferStream stream(std::as_bytes(std::span(entry.second)));
     newRecord.deserialize(stream);
 
     bool found = false;

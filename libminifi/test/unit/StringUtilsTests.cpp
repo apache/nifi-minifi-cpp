@@ -308,18 +308,15 @@ TEST_CASE("test string::testHexEncode", "[test hex encode]") {
   REQUIRE("" == string::to_hex(""));
   REQUIRE("6f" == string::to_hex("o"));
   REQUIRE("666f6f626172" == string::to_hex("foobar"));
-  REQUIRE("000102030405060708090a0b0c0d0e0f" == string::to_hex(gsl::make_span(std::vector<uint8_t>{
+  const auto test_vector = std::vector<uint8_t>{
       0x00, 0x01, 0x02, 0x03,
       0x04, 0x05, 0x06, 0x07,
       0x08, 0x09, 0x0a, 0x0b,
-      0x0c, 0x0d, 0x0e, 0x0f}).as_span<const std::byte>()));
+      0x0c, 0x0d, 0x0e, 0x0f};
+  REQUIRE("000102030405060708090a0b0c0d0e0f" == string::to_hex(std::as_bytes(std::span(test_vector))));
   REQUIRE("6F" == string::to_hex("o", true /*uppercase*/));
   REQUIRE("666F6F626172" == string::to_hex("foobar", true /*uppercase*/));
-  REQUIRE("000102030405060708090A0B0C0D0E0F" == string::to_hex(gsl::make_span(std::vector<uint8_t>{
-      0x00, 0x01, 0x02, 0x03,
-      0x04, 0x05, 0x06, 0x07,
-      0x08, 0x09, 0x0a, 0x0b,
-      0x0c, 0x0d, 0x0e, 0x0f}).as_span<const std::byte>(), true /*uppercase*/));
+  REQUIRE("000102030405060708090A0B0C0D0E0F" == string::to_hex(std::as_bytes(std::span(test_vector)), true /*uppercase*/));
 }
 
 TEST_CASE("test string::testHexDecode", "[test hex decode]") {

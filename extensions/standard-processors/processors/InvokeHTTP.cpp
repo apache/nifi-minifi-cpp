@@ -345,7 +345,7 @@ void InvokeHTTP::onTriggerWithClient(core::ProcessContext& context, core::Proces
         if (!response_headers.empty()) { response_flow->addAttribute(STATUS_MESSAGE, utils::string::trim(response_headers.at(0))); }
         response_flow->addAttribute(REQUEST_URL, client.getURL());
         response_flow->addAttribute(TRANSACTION_ID, transaction_id);
-        io::BufferStream stream(gsl::make_span(response_body).as_span<const std::byte>());
+        io::BufferStream stream(std::as_bytes(std::span(response_body)));
         // need an import from the data stream.
         session.importFrom(stream, response_flow);
       } else {

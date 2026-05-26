@@ -30,4 +30,5 @@ if(NOT TARGET ZLIB::ZLIB)
     set_target_properties(ZLIB::ZLIB PROPERTIES
             IMPORTED_LINK_INTERFACE_LANGUAGES "C"
             IMPORTED_LOCATION "${ZLIB_LIBRARIES}")
+    add_dependencies(ZLIB::ZLIB zlibstatic)
 endif()

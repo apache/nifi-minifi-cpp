@@ -19,8 +19,8 @@
 include(FetchContent)
 FetchContent_Declare(
         rpmalloc
-        URL      https://github.com/mjansson/rpmalloc/archive/refs/tags/1.4.4.tar.gz
-        URL_HASH SHA256=3859620c03e6473f0b3f16a4e965e7c049594253f70e8370fb9caa0e4118accb
+        URL      https://github.com/mjansson/rpmalloc/archive/refs/tags/1.4.5.tar.gz
+        URL_HASH SHA256=2513626697ef72a60957acc8caed17c39931a55c1a49202707de195742683d69
         SYSTEM
 )
 FetchContent_GetProperties(rpmalloc)

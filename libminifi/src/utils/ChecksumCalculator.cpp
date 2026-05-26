@@ -86,7 +86,7 @@ std::string ChecksumCalculator::computeChecksum(const std::vector<std::filesyste
   std::array<unsigned char, LENGTH_OF_HASH_IN_BYTES> hash{};
   crypto_hash_sha256_final(&state, hash.data());
 
-  return string::to_hex(gsl::make_span(hash).as_span<std::byte>());
+  return string::to_hex(std::as_bytes(std::span(hash)));
 }
 
 }  // namespace org::apache::nifi::minifi::utils

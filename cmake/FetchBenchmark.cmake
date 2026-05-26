@@ -22,8 +22,8 @@ set(BENCHMARK_ENABLE_TESTING "OFF" CACHE STRING "" FORCE)
 
 FetchContent_Declare(
         benchmark
-        URL      https://github.com/google/benchmark/archive/refs/tags/v1.9.1.tar.gz
-        URL_HASH SHA256=32131c08ee31eeff2c8968d7e874f3cb648034377dfc32a4c377fa8796d84981
+        URL      https://github.com/google/benchmark/archive/refs/tags/v1.9.5.tar.gz
+        URL_HASH SHA256=9631341c82bac4a288bef951f8b26b41f69021794184ece969f8473977eaa340
         OVERRIDE_FIND_PACKAGE
         SYSTEM
 )

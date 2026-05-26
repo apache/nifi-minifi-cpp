@@ -1,12 +1,11 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 59ecf010..c5d62b3e 100644
+index b0894e75..e9ae0d15 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1483,566 +1483,3 @@ function(my_install_man COMPONENT SRC_FILE LINK_NAMES)
-         endforeach()
+@@ -1796,741 +1796,3 @@ function(my_install_man COMPONENT SRC_FILE LINK_NAMES)
      endif()
  endfunction()
--
+ 
 -
 -#############################################################################
 -# libgnu (getopt_long)
@@ -51,17 +50,14 @@ index 59ecf010..c5d62b3e 100644
 -    # the Autotools build (m4/getopt.m4).
 -    target_compile_definitions(libgnu PUBLIC "__GETOPT_PREFIX=rpl_")
 -
--    # Create a custom copy command to copy the getopt header to the build
--    # directory and re-copy it if it is updated. (Gnulib does it this way
--    # because it allows choosing which .in.h files to actually use in the
--    # build. We need just getopt.h so this is a bit overcomplicated for
+-    # Copy the getopt header to the build directory and re-copy it
+-    # if it is updated. (Gnulib does it this way because it allows
+-    # choosing which .in.h files to actually use in the build. We
+-    # need just getopt.h so this is a bit overcomplicated for
 -    # a single header file only.)
--    add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/lib/getopt.h"
--        COMMAND "${CMAKE_COMMAND}" -E copy
--            "${CMAKE_CURRENT_SOURCE_DIR}/lib/getopt.in.h"
--            "${CMAKE_CURRENT_BINARY_DIR}/lib/getopt.h"
--        MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/lib/getopt.in.h"
--        VERBATIM)
+-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lib/getopt.in.h"
+-                   "${CMAKE_CURRENT_BINARY_DIR}/lib/getopt.h"
+-                   COPYONLY)
 -
 -    target_sources(libgnu PRIVATE
 -        lib/getopt1.c
@@ -78,15 +74,136 @@ index 59ecf010..c5d62b3e 100644
 -
 -
 -#############################################################################
+-# Sandboxing for the command line tools
+-#############################################################################
+-
+-# auto      Use sandboxing if a supported method is available in the OS.
+-# no        Disable sandboxing.
+-# capsicum  Require Capsicum (FreeBSD >= 10.2) and fail if not found.
+-# pledge    Require pledge(2) (OpenBSD >= 5.9) and fail if not found.
+-# landlock  Require Landlock (Linux >= 5.13) and fail if not found.
+-set(SUPPORTED_SANDBOX_METHODS auto no capsicum pledge landlock)
+-
+-set(XZ_SANDBOX auto CACHE STRING
+-    "Sandboxing method to use in 'xz', 'xzdec', and 'lzmadec'")
+-
+-set_property(CACHE XZ_SANDBOX PROPERTY STRINGS "${SUPPORTED_SANDBOX_METHODS}")
+-
+-if(NOT XZ_SANDBOX IN_LIST SUPPORTED_SANDBOX_METHODS)
+-    message(FATAL_ERROR "'${XZ_SANDBOX}' is not a supported "
+-                        "sandboxing method")
+-endif()
+-
+-# When autodetecting, the search order is fixed and we must not find
+-# more than one method.
+-if(XZ_SANDBOX STREQUAL "no")
+-    set(SANDBOX_FOUND ON)
+-else()
+-    set(SANDBOX_FOUND OFF)
+-endif()
+-
+-# Since xz and xzdec can both use sandboxing, the compile definition needed
+-# to use the sandbox must be added to both targets.
+-set(SANDBOX_COMPILE_DEFINITION OFF)
+-
+-# Sandboxing: Capsicum
+-if(NOT SANDBOX_FOUND AND XZ_SANDBOX MATCHES "^auto$|^capsicum$")
+-    check_symbol_exists(cap_rights_limit sys/capsicum.h
+-                        HAVE_CAP_RIGHTS_LIMIT)
+-    if(HAVE_CAP_RIGHTS_LIMIT)
+-        set(SANDBOX_COMPILE_DEFINITION "HAVE_CAP_RIGHTS_LIMIT")
+-        set(SANDBOX_FOUND ON)
+-    endif()
+-endif()
+-
+-# Sandboxing: pledge(2)
+-if(NOT SANDBOX_FOUND AND XZ_SANDBOX MATCHES "^auto$|^pledge$")
+-    check_symbol_exists(pledge unistd.h HAVE_PLEDGE)
+-    if(HAVE_PLEDGE)
+-        set(SANDBOX_COMPILE_DEFINITION "HAVE_PLEDGE")
+-        set(SANDBOX_FOUND ON)
+-    endif()
+-endif()
+-
+-# Sandboxing: Landlock
+-if(NOT SANDBOX_FOUND AND XZ_SANDBOX MATCHES "^auto$|^landlock$")
+-    # A compile check is done here because some systems have
+-    # linux/landlock.h, but do not have the syscalls defined
+-    # in order to actually use Linux Landlock.
+-    check_c_source_compiles("
+-            #include <linux/landlock.h>
+-            #include <sys/syscall.h>
+-            #include <sys/prctl.h>
+-
+-            int main(void)
+-            {
+-                (void)prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
+-                (void)SYS_landlock_create_ruleset;
+-                (void)SYS_landlock_restrict_self;
+-                (void)LANDLOCK_CREATE_RULESET_VERSION;
+-                return 0;
+-            }
+-        "
+-        HAVE_LINUX_LANDLOCK)
+-
+-    if(HAVE_LINUX_LANDLOCK)
+-        set(SANDBOX_COMPILE_DEFINITION "HAVE_LINUX_LANDLOCK")
+-        set(SANDBOX_FOUND ON)
+-
+-        # Of our three sandbox methods, only Landlock is incompatible
+-        # with -fsanitize. FreeBSD 13.2 with Capsicum was tested with
+-        # -fsanitize=address,undefined and had no issues. OpenBSD (as
+-        # of version 7.4) has minimal support for process instrumentation.
+-        # OpenBSD does not distribute the additional libraries needed
+-        # (libasan, libubsan, etc.) with GCC or Clang needed for runtime
+-        # sanitization support and instead only support
+-        # -fsanitize-minimal-runtime for minimal undefined behavior
+-        # sanitization. This minimal support is compatible with our use
+-        # of the Pledge sandbox. So only Landlock will result in a
+-        # build that cannot compress or decompress a single file to
+-        # standard out.
+-        if(CMAKE_C_FLAGS MATCHES "-fsanitize=")
+-            message(SEND_ERROR
+-                    "CMAKE_C_FLAGS or the environment variable CFLAGS "
+-                    "contains '-fsanitize=' which is incompatible "
+-                    "with Landlock sandboxing. Use -DXZ_SANDBOX=no "
+-                    "as an argument to 'cmake' when using '-fsanitize'.")
+-        endif()
+-    endif()
+-endif()
+-
+-if(NOT SANDBOX_FOUND AND NOT XZ_SANDBOX MATCHES "^auto$|^no$")
+-    message(SEND_ERROR "XZ_SANDBOX=${XZ_SANDBOX} was used but "
+-                        "support for the sandboxing method wasn't found.")
+-endif()
+-
+-
+-#############################################################################
 -# xzdec and lzmadec
 -#############################################################################
 -
--if(HAVE_DECODERS AND (NOT MSVC OR MSVC_VERSION GREATER_EQUAL 1900))
--    foreach(XZDEC xzdec lzmadec)
+-option(XZ_TOOL_XZDEC "Build and install the xzdec command line tool" ON)
+-option(XZ_TOOL_LZMADEC "Build and install the lzmadec command line tool" ON)
+-
+-if(HAVE_DECODERS)
+-    set(XZDEC_TOOLS)
+-
+-    if(XZ_TOOL_XZDEC)
+-        list(APPEND XZDEC_TOOLS xzdec)
+-    endif()
+-
+-    if(XZ_TOOL_LZMADEC)
+-        list(APPEND XZDEC_TOOLS lzmadec)
+-    endif()
+-
+-    foreach(XZDEC ${XZDEC_TOOLS})
 -        add_executable("${XZDEC}"
+-            src/common/my_landlock.h
 -            src/common/sysdefs.h
 -            src/common/tuklib_common.h
 -            src/common/tuklib_config.h
+-            src/common/tuklib_mbstr_nonprint.c
+-            src/common/tuklib_mbstr_nonprint.h
 -            src/common/tuklib_exit.c
 -            src/common/tuklib_exit.h
 -            src/common/tuklib_gettext.h
@@ -102,34 +219,46 @@ index 59ecf010..c5d62b3e 100644
 -
 -        target_link_libraries("${XZDEC}" PRIVATE liblzma libgnu)
 -
--        if(WIN32)
+-        if(WIN32 OR CYGWIN)
 -            # Add the Windows resource file for xzdec.exe or lzmadec.exe.
--            target_sources("${XZDEC}" PRIVATE src/xzdec/xzdec_w32res.rc)
--            set_target_properties("${XZDEC}" PROPERTIES
--                LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/common/common_w32res.rc"
+-            target_sources("${XZDEC}" PRIVATE "src/xzdec/${XZDEC}_w32res.rc")
+-            set_source_files_properties(
+-                "src/xzdec/${XZDEC}_w32res.rc" PROPERTIES
+-                OBJECT_DEPENDS "${W32RES_DEPENDENCIES}"
 -            )
 -        endif()
 -
 -        if(SANDBOX_COMPILE_DEFINITION)
 -            target_compile_definitions("${XZDEC}" PRIVATE
--                                    "${SANDBOX_COMPILE_DEFINITION}")
+-                                       "${SANDBOX_COMPILE_DEFINITION}")
 -        endif()
 -
 -        tuklib_progname("${XZDEC}")
+-        tuklib_mbstr("${XZDEC}")
 -
 -        install(TARGETS "${XZDEC}"
 -                RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
 -                        COMPONENT "${XZDEC}_Runtime")
 -    endforeach()
 -
--    # This is the only build-time difference with lzmadec.
--    target_compile_definitions(lzmadec PRIVATE "LZMADEC")
+-    if(XZ_TOOL_LZMADEC)
+-        # This is the only build-time difference with lzmadec.
+-        target_compile_definitions(lzmadec PRIVATE "LZMADEC")
+-    endif()
 -
--    if(UNIX)
+-    if(UNIX AND XZ_TOOL_XZDEC)
 -        # NOTE: This puts the lzmadec.1 symlinks into xzdec_Documentation.
 -        # This isn't great but doing them separately with translated
 -        # man pages would require extra code. So this has to suffice for now.
--        my_install_man(xzdec_Documentation src/xzdec/xzdec.1 lzmadec)
+-        #
+-        # Also, if xzdec is disabled but lzmadec isn't, then the man page
+-        # isn't installed at all. It could be done but it's not a typical
+-        # situation so let's keep this simpler.
+-        if(XZ_TOOL_LZMADEC)
+-            my_install_man(xzdec_Documentation src/xzdec/xzdec.1 lzmadec)
+-        else()
+-            my_install_man(xzdec_Documentation src/xzdec/xzdec.1 "")
+-        endif()
 -    endif()
 -endif()
 -
@@ -138,11 +267,19 @@ index 59ecf010..c5d62b3e 100644
 -# lzmainfo
 -#############################################################################
 -
--if(HAVE_DECODERS AND (NOT MSVC OR MSVC_VERSION GREATER_EQUAL 1900))
+-option(XZ_TOOL_LZMAINFO "Build and install the lzmainfo command line tool" ON)
+-
+-if(XZ_TOOL_LZMAINFO AND HAVE_DECODERS)
 -    add_executable(lzmainfo
 -        src/common/sysdefs.h
 -        src/common/tuklib_common.h
 -        src/common/tuklib_config.h
+-        src/common/tuklib_mbstr.h
+-        src/common/tuklib_mbstr_nonprint.c
+-        src/common/tuklib_mbstr_nonprint.h
+-        src/common/tuklib_mbstr_width.c
+-        src/common/tuklib_mbstr_wrap.c
+-        src/common/tuklib_mbstr_wrap.h
 -        src/common/tuklib_exit.c
 -        src/common/tuklib_exit.h
 -        src/common/tuklib_gettext.h
@@ -158,19 +295,20 @@ index 59ecf010..c5d62b3e 100644
 -
 -    target_link_libraries(lzmainfo PRIVATE liblzma libgnu)
 -
--    if(WIN32)
+-    if(WIN32 OR CYGWIN)
 -        # Add the Windows resource file for lzmainfo.exe.
 -        target_sources(lzmainfo PRIVATE src/lzmainfo/lzmainfo_w32res.rc)
--        set_target_properties(lzmainfo PROPERTIES
--            LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/common/common_w32res.rc"
+-        set_source_files_properties(src/lzmainfo/lzmainfo_w32res.rc PROPERTIES
+-            OBJECT_DEPENDS "${W32RES_DEPENDENCIES}"
 -        )
 -    endif()
 -
 -    tuklib_progname(lzmainfo)
+-    tuklib_mbstr(lzmainfo)
 -
 -    # NOTE: The translations are in the "xz" domain and the .mo files are
 -    # installed as part of the "xz" target.
--    if(ENABLE_NLS)
+-    if(XZ_NLS)
 -        target_link_libraries(lzmainfo PRIVATE Intl::Intl)
 -
 -        target_compile_definitions(lzmainfo PRIVATE
@@ -194,12 +332,17 @@ index 59ecf010..c5d62b3e 100644
 -# xz
 -#############################################################################
 -
--if(NOT MSVC OR MSVC_VERSION GREATER_EQUAL 1900)
+-option(XZ_TOOL_XZ "Build and install the xz command line tool" ON)
+-
+-if(XZ_TOOL_XZ)
 -    add_executable(xz
+-        src/common/my_landlock.h
 -        src/common/mythread.h
 -        src/common/sysdefs.h
 -        src/common/tuklib_common.h
 -        src/common/tuklib_config.h
+-        src/common/tuklib_mbstr_nonprint.c
+-        src/common/tuklib_mbstr_nonprint.h
 -        src/common/tuklib_exit.c
 -        src/common/tuklib_exit.h
 -        src/common/tuklib_gettext.h
@@ -207,6 +350,8 @@ index 59ecf010..c5d62b3e 100644
 -        src/common/tuklib_mbstr.h
 -        src/common/tuklib_mbstr_fw.c
 -        src/common/tuklib_mbstr_width.c
+-        src/common/tuklib_mbstr_wrap.c
+-        src/common/tuklib_mbstr_wrap.h
 -        src/common/tuklib_open_stdxxx.c
 -        src/common/tuklib_open_stdxxx.h
 -        src/common/tuklib_progname.c
@@ -252,13 +397,28 @@ index 59ecf010..c5d62b3e 100644
 -
 -    target_link_libraries(xz PRIVATE liblzma libgnu)
 -
--    target_compile_definitions(xz PRIVATE ASSUME_RAM=128)
+-    if(USE_POSIX_THREADS)
+-        # src/xz/signals.c uses mythread_sigmask() which with POSIX
+-        # threads calls pthread_sigmask(). Thus, we need the threading
+-        # library as a dependency for xz. The liblzma target links against
+-        # Threads::Threads PRIVATEly, thus that won't provide the pthreads
+-        # symbols for xz.
+-        #
+-        # NOTE: The build may work without this if the symbol is in libc
+-        # but it is mandatory to have this here to keep it working with
+-        # all pthread implementations.
+-        target_link_libraries(xz PRIVATE Threads::Threads)
+-    endif()
 -
--    if(WIN32)
+-    set(XZ_ASSUME_RAM "128" CACHE STRING "Assume that the system has \
+-this many MiB of RAM if xz cannot determine the amount at runtime")
+-    target_compile_definitions(xz PRIVATE "ASSUME_RAM=${XZ_ASSUME_RAM}")
+-
+-    if(WIN32 OR CYGWIN)
 -        # Add the Windows resource file for xz.exe.
 -        target_sources(xz PRIVATE src/xz/xz_w32res.rc)
--        set_target_properties(xz PROPERTIES
--            LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/common/common_w32res.rc"
+-        set_source_files_properties(src/xz/xz_w32res.rc PROPERTIES
+-            OBJECT_DEPENDS "${W32RES_DEPENDENCIES}"
 -        )
 -    endif()
 -
@@ -269,8 +429,13 @@ index 59ecf010..c5d62b3e 100644
 -    tuklib_progname(xz)
 -    tuklib_mbstr(xz)
 -
--    check_symbol_exists(optreset getopt.h HAVE_OPTRESET)
--    tuklib_add_definition_if(xz HAVE_OPTRESET)
+-    if(HAVE_GETOPT_LONG)
+-        check_symbol_exists(optreset getopt.h HAVE_OPTRESET)
+-        tuklib_add_definition_if(xz HAVE_OPTRESET)
+-    endif()
+-
+-    check_symbol_exists(getrlimit sys/resource.h HAVE_GETRLIMIT)
+-    tuklib_add_definition_if(xz HAVE_GETRLIMIT)
 -
 -    check_symbol_exists(posix_fadvise fcntl.h HAVE_POSIX_FADVISE)
 -    tuklib_add_definition_if(xz HAVE_POSIX_FADVISE)
@@ -324,7 +489,7 @@ index 59ecf010..c5d62b3e 100644
 -        endif()
 -    endif()
 -
--    if(ENABLE_NLS)
+-    if(XZ_NLS)
 -        target_link_libraries(xz PRIVATE Intl::Intl)
 -
 -        target_compile_definitions(xz PRIVATE
@@ -335,37 +500,27 @@ index 59ecf010..c5d62b3e 100644
 -
 -        file(STRINGS po/LINGUAS LINGUAS)
 -
--        # Where to find .gmo files. If msgfmt is available, the .po files
--        # will be converted as part of the build. Otherwise we will use
--        # the pre-generated .gmo files which are included in XZ Utils
--        # tarballs by Autotools.
--        set(GMO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/po")
--
--        if(GETTEXT_FOUND)
--            # NOTE: gettext_process_po_files' INSTALL_DESTINATION is
--            # incompatible with how Autotools requires the .po files to
--            # be named. CMake would require each .po file to be named with
--            # the translation domain and thus each .po file would need its
--            # own language-specific directory (like "po/fi/xz.po"). On top
--            # of this, INSTALL_DESTINATION doesn't allow specifying COMPONENT
--            # and thus the .mo files go into "Unspecified" component. So we
--            # can use gettext_process_po_files to convert the .po files but
--            # installation needs to be done with our own code.
--            #
--            # Also, the .gmo files will go to root of the build directory
--            # instead of neatly into a subdirectory. This is hardcoded in
--            # CMake's FindGettext.cmake.
--            foreach(LANG IN LISTS LINGUAS)
--                gettext_process_po_files("${LANG}" ALL
--                        PO_FILES "${CMAKE_CURRENT_SOURCE_DIR}/po/${LANG}.po")
--            endforeach()
--
--            set(GMO_DIR "${CMAKE_CURRENT_BINARY_DIR}")
--        endif()
+-        # NOTE: gettext_process_po_files' INSTALL_DESTINATION is
+-        # incompatible with how Autotools requires the .po files to
+-        # be named. CMake would require each .po file to be named with
+-        # the translation domain and thus each .po file would need its
+-        # own language-specific directory (like "po/fi/xz.po"). On top
+-        # of this, INSTALL_DESTINATION doesn't allow specifying COMPONENT
+-        # and thus the .mo files go into "Unspecified" component. So we
+-        # can use gettext_process_po_files to convert the .po files but
+-        # installation needs to be done with our own code.
+-        #
+-        # Also, the .gmo files will go to root of the build directory
+-        # instead of neatly into a subdirectory. This is hardcoded in
+-        # CMake's FindGettext.cmake.
+-        foreach(LANG IN LISTS LINGUAS)
+-            gettext_process_po_files("${LANG}" ALL
+-                    PO_FILES "${CMAKE_CURRENT_SOURCE_DIR}/po/${LANG}.po")
+-        endforeach()
 -
 -        foreach(LANG IN LISTS LINGUAS)
 -            install(
--                FILES "${GMO_DIR}/${LANG}.gmo"
+-                FILES "${CMAKE_CURRENT_BINARY_DIR}/${LANG}.gmo"
 -                DESTINATION "${CMAKE_INSTALL_LOCALEDIR}/${LANG}/LC_MESSAGES"
 -                RENAME "${TRANSLATION_DOMAIN}.mo"
 -                COMPONENT xz_Runtime)
@@ -394,16 +549,17 @@ index 59ecf010..c5d62b3e 100644
 -                    COMPONENT xz_Runtime)
 -
 -    if(UNIX)
--        option(CREATE_XZ_SYMLINKS "Create unxz and xzcat symlinks" ON)
--        option(CREATE_LZMA_SYMLINKS "Create lzma, unlzma, and lzcat symlinks"
+-        option(XZ_TOOL_SYMLINKS "Create unxz and xzcat symlinks" ON)
+-        option(XZ_TOOL_SYMLINKS_LZMA
+-               "Create 'lzma' and other symlinks for LZMA Utils compatibility"
 -               ON)
 -        set(XZ_LINKS)
 -
--        if(CREATE_XZ_SYMLINKS)
+-        if(XZ_TOOL_SYMLINKS)
 -            list(APPEND XZ_LINKS "unxz" "xzcat")
 -        endif()
 -
--        if(CREATE_LZMA_SYMLINKS)
+-        if(XZ_TOOL_SYMLINKS_LZMA)
 -            list(APPEND XZ_LINKS "lzma" "unlzma" "lzcat")
 -        endif()
 -
@@ -428,7 +584,17 @@ index 59ecf010..c5d62b3e 100644
 -# Scripts
 -#############################################################################
 -
+-set(ENABLE_SCRIPTS OFF)
+-
 -if(UNIX)
+-    # NOTE: These depend on the xz tool and decoder support.
+-    option(XZ_TOOL_SCRIPTS "Install the scripts \
+-xzdiff, xzgrep, xzmore, xzless, and their symlinks" ON)
+-
+-    if(XZ_TOOL_SCRIPTS AND XZ_TOOL_XZ AND HAVE_DECODERS)
+-        set(ENABLE_SCRIPTS ON)
+-    endif()
+-
 -    # NOTE: This isn't as sophisticated as in the Autotools build which
 -    # uses posix-shell.m4 but hopefully this doesn't need to be either.
 -    # CMake likely won't be used on as many (old) obscure systems as the
@@ -439,70 +605,76 @@ index 59ecf010..c5d62b3e 100644
 -        set(POSIX_SHELL_DEFAULT "/bin/sh")
 -    endif()
 -
--    set(POSIX_SHELL "${POSIX_SHELL_DEFAULT}" CACHE STRING
+-    set(XZ_POSIX_SHELL "${POSIX_SHELL_DEFAULT}" CACHE STRING
 -        "Shell to use for scripts (xzgrep and others)")
 -
--    # Guess the extra path to add from POSIX_SHELL. Autotools-based build
--    # has a separate option --enable-path-for-scripts=PREFIX but this is
--    # enough for Solaris.
--    set(enable_path_for_scripts)
--    get_filename_component(POSIX_SHELL_DIR "${POSIX_SHELL}" DIRECTORY)
+-    if(ENABLE_SCRIPTS)
+-        # Guess the extra path to add from XZ_POSIX_SHELL. Autotools-based
+-        # build has a separate option --enable-path-for-scripts=PREFIX but
+-        # this is enough for Solaris.
+-        set(enable_path_for_scripts)
+-        get_filename_component(POSIX_SHELL_DIR "${XZ_POSIX_SHELL}" DIRECTORY)
 -
--    if(NOT POSIX_SHELL_DIR STREQUAL "/bin" AND
--            NOT POSIX_SHELL_DIR STREQUAL "/usr/bin")
--        set(enable_path_for_scripts "PATH=${POSIX_SHELL_DIR}:\$PATH")
+-        if(NOT POSIX_SHELL_DIR MATCHES "^/bin$|^/usr/bin$")
+-            set(enable_path_for_scripts "PATH=${POSIX_SHELL_DIR}:\$PATH")
+-        endif()
+-
+-        set(XZDIFF_LINKS xzcmp)
+-        set(XZGREP_LINKS xzegrep xzfgrep)
+-        set(XZMORE_LINKS)
+-        set(XZLESS_LINKS)
+-
+-        if(XZ_TOOL_SYMLINKS_LZMA)
+-            list(APPEND XZDIFF_LINKS lzdiff lzcmp)
+-            list(APPEND XZGREP_LINKS lzgrep lzegrep lzfgrep)
+-            list(APPEND XZMORE_LINKS lzmore)
+-            list(APPEND XZLESS_LINKS lzless)
+-        endif()
+-
+-        set(xz "xz")
+-        set(POSIX_SHELL "${XZ_POSIX_SHELL}")
+-
+-        foreach(S xzdiff xzgrep xzmore xzless)
+-            configure_file("src/scripts/${S}.in" "${S}"
+-                   @ONLY
+-                   NEWLINE_STYLE LF
+-                   FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+-                                    GROUP_READ GROUP_EXECUTE
+-                                    WORLD_READ WORLD_EXECUTE)
+-
+-            install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/${S}"
+-                    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+-                    COMPONENT scripts_Runtime)
+-        endforeach()
+-
+-        unset(xz)
+-        unset(POSIX_SHELL)
+-        unset(enable_path_for_scripts)
+-
+-        my_install_symlinks(scripts_Runtime "${CMAKE_INSTALL_BINDIR}"
+-                            xzdiff "" "${XZDIFF_LINKS}")
+-
+-        my_install_symlinks(scripts_Runtime "${CMAKE_INSTALL_BINDIR}"
+-                            xzgrep "" "${XZGREP_LINKS}")
+-
+-        my_install_symlinks(scripts_Runtime "${CMAKE_INSTALL_BINDIR}"
+-                            xzmore "" "${XZMORE_LINKS}")
+-
+-        my_install_symlinks(scripts_Runtime "${CMAKE_INSTALL_BINDIR}"
+-                            xzless "" "${XZLESS_LINKS}")
+-
+-        my_install_man(scripts_Documentation
+-                       src/scripts/xzdiff.1 "${XZDIFF_LINKS}")
+-
+-        my_install_man(scripts_Documentation
+-                       src/scripts/xzgrep.1 "${XZGREP_LINKS}")
+-
+-        my_install_man(scripts_Documentation
+-                       src/scripts/xzmore.1 "${XZMORE_LINKS}")
+-
+-        my_install_man(scripts_Documentation
+-                       src/scripts/xzless.1 "${XZLESS_LINKS}")
 -    endif()
--
--    set(XZDIFF_LINKS xzcmp)
--    set(XZGREP_LINKS xzegrep xzfgrep)
--    set(XZMORE_LINKS)
--    set(XZLESS_LINKS)
--
--    if(CREATE_LZMA_SYMLINKS)
--        list(APPEND XZDIFF_LINKS lzdiff lzcmp)
--        list(APPEND XZGREP_LINKS lzgrep lzegrep lzfgrep)
--        list(APPEND XZMORE_LINKS lzmore)
--        list(APPEND XZLESS_LINKS lzless)
--    endif()
--
--    set(xz "xz")
--
--    foreach(S xzdiff xzgrep xzmore xzless)
--        configure_file("src/scripts/${S}.in" "${S}"
--               @ONLY
--               NEWLINE_STYLE LF)
--
--        install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/${S}"
--                DESTINATION "${CMAKE_INSTALL_BINDIR}"
--                COMPONENT scripts_Runtime)
--    endforeach()
--
--    # file(CHMOD ...) would need CMake 3.19 so use execute_process instead.
--    # Using +x is fine even if umask was 077. If execute bit is set at all
--    # then "make install" will set it for group and other access bits too.
--    execute_process(COMMAND chmod +x xzdiff xzgrep xzmore xzless
--                    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
--
--    unset(xz)
--    unset(POSIX_SHELL)
--    unset(enable_path_for_scripts)
--
--    my_install_symlinks(scripts_Runtime "${CMAKE_INSTALL_BINDIR}" xzdiff ""
--                        "${XZDIFF_LINKS}")
--
--    my_install_symlinks(scripts_Runtime "${CMAKE_INSTALL_BINDIR}" xzgrep ""
--                        "${XZGREP_LINKS}")
--
--    my_install_symlinks(scripts_Runtime "${CMAKE_INSTALL_BINDIR}" xzmore ""
--                        "${XZMORE_LINKS}")
--
--    my_install_symlinks(scripts_Runtime "${CMAKE_INSTALL_BINDIR}" xzless ""
--                        "${XZLESS_LINKS}")
--
--    my_install_man(scripts_Documentation src/scripts/xzdiff.1 "${XZDIFF_LINKS}")
--    my_install_man(scripts_Documentation src/scripts/xzgrep.1 "${XZGREP_LINKS}")
--    my_install_man(scripts_Documentation src/scripts/xzmore.1 "${XZMORE_LINKS}")
--    my_install_man(scripts_Documentation src/scripts/xzless.1 "${XZLESS_LINKS}")
 -endif()
 -
 -
@@ -511,9 +683,9 @@ index 59ecf010..c5d62b3e 100644
 -#############################################################################
 -
 -if(UNIX)
--    option(ENABLE_DOXYGEN "Use Doxygen to generate liblzma API docs" OFF)
+-    option(XZ_DOXYGEN "Use Doxygen to generate liblzma API docs" OFF)
 -
--    if (ENABLE_DOXYGEN)
+-    if (XZ_DOXYGEN)
 -        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doc")
 -
 -        add_custom_command(
@@ -539,27 +711,30 @@ index 59ecf010..c5d62b3e 100644
 -    endif()
 -endif()
 -
--install(DIRECTORY doc/examples
--        DESTINATION "${CMAKE_INSTALL_DOCDIR}"
--        COMPONENT liblzma_Documentation)
+-option(XZ_DOC "Install basic documentation, examples, and license files" ON)
+-if(XZ_DOC)
+-    install(DIRECTORY doc/examples
+-            DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+-            COMPONENT liblzma_Documentation)
 -
--# GPLv2 applies to the scripts. If GNU getopt_long is used then
--# LGPLv2.1 applies to the command line tools but, using the
--# section 3 of LGPLv2.1, GNU getopt_long can be handled as GPLv2 too.
--# Thus GPLv2 should be enough here.
--install(FILES AUTHORS
--              COPYING
--              COPYING.0BSD
--              COPYING.GPLv2
--              NEWS
--              README
--              THANKS
--              doc/faq.txt
--              doc/history.txt
--              doc/lzma-file-format.txt
--              doc/xz-file-format.txt
--        DESTINATION "${CMAKE_INSTALL_DOCDIR}"
--        COMPONENT Documentation)
+-    # GPLv2 applies to the scripts. If GNU getopt_long is used then
+-    # LGPLv2.1 applies to the command line tools but, using the
+-    # section 3 of LGPLv2.1, GNU getopt_long can be handled as GPLv2 too.
+-    # Thus GPLv2 should be enough here.
+-    install(FILES AUTHORS
+-                  COPYING
+-                  COPYING.0BSD
+-                  COPYING.GPLv2
+-                  NEWS
+-                  README
+-                  THANKS
+-                  doc/faq.txt
+-                  doc/history.txt
+-                  doc/lzma-file-format.txt
+-                  doc/xz-file-format.txt
+-            DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+-            COMPONENT Documentation)
+-endif()
 -
 -
 -#############################################################################

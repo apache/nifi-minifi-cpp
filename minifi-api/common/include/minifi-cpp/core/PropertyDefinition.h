@@ -37,7 +37,11 @@ struct PropertyDefinition {
   std::array<std::string_view, NumAllowedValues> allowed_values;
   std::span<const std::string_view> allowed_types;
   std::optional<std::string_view> default_value;
+#if defined(__clang__) && (__clang_major__ <= 18)
+  const PropertyValidator* validator;
+#else
   gsl::not_null<const PropertyValidator*> validator;
+#endif
   bool supports_expression_language;
 
   uint8_t version;
@@ -52,7 +56,11 @@ struct PropertyReference {
   std::span<const std::string_view> allowed_values;
   std::span<const std::string_view> allowed_types;
   std::optional<std::string_view> default_value;
+#if defined(__clang__) && (__clang_major__ <= 18)
+  const PropertyValidator* validator;
+#else
   gsl::not_null<const PropertyValidator*> validator;
+#endif
   bool supports_expression_language = false;
 
   template<size_t NumAllowedValues = 0>

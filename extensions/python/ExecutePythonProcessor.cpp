@@ -39,7 +39,7 @@ namespace org::apache::nifi::minifi::extensions::python::processors {
 void ExecutePythonProcessor::initialize() {
   initializeScript();
   // only include supported properties that are defined in the python processor
-  setSupportedProperties(gsl::make_span(python_properties_));
+  setSupportedProperties(std::span(python_properties_));
   setSupportedRelationships(Relationships);
   logger_->log_debug("Processor has been initialized.");
 }
@@ -163,7 +163,7 @@ const core::PropertyValidator& translateCodeToPropertyValidator(const PropertyVa
 }  // namespace
 
 void ExecutePythonProcessor::addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el, bool sensitive,
-    const std::optional<int64_t>& property_type_code, gsl::span<const std::string_view> allowable_values, const std::optional<std::string>& controller_service_type_name) {
+    const std::optional<int64_t>& property_type_code, std::span<const std::string_view> allowable_values, const std::optional<std::string>& controller_service_type_name) {
   auto builder = core::PropertyDefinitionBuilder<>::createProperty(name).withDescription(description).isRequired(required).supportsExpressionLanguage(el).isSensitive(sensitive);
   if (defaultvalue) {
     builder.withDefaultValue(*defaultvalue);

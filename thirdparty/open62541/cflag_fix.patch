@@ -1,0 +1,49 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 89e7d67ae..8a3c39600 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -588,24 +588,21 @@ endif()
+ # Compiler Settings #
+ #####################
+ 
+-# Check if a C compiler flag is supported and add it (if supported)
+-# Taken from https://stackoverflow.com/a/33266748
++# Check if a C compiler flag is supported and collect it for later use with target_compile_options
+ include(CheckCCompilerFlag)
+ function(check_add_cc_flag CC_FLAG)
+-    string(FIND "${CMAKE_C_FLAGS}" "${CC_FLAG}" flag_already_set)
+-    if(flag_already_set EQUAL -1)
++    if(NOT "${CC_FLAG}" IN_LIST UA_C_FLAGS)
+         message(STATUS "Test CC flag ${CC_FLAG}")
+-        check_c_compiler_flag("${CC_FLAG}" flag_supported)
+-        if(flag_supported)
+-            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CC_FLAG}" CACHE INTERNAL "C Compiler Flags")
++        check_c_compiler_flag("${CC_FLAG}" _flag_supported)
++        if(_flag_supported)
++            set(UA_C_FLAGS ${UA_C_FLAGS} ${CC_FLAG} PARENT_SCOPE)
+         endif()
+-        unset(flag_supported CACHE)
++        unset(_flag_supported CACHE)
+     endif()
+ endfunction()
+ function(add_cc_flag CC_FLAG)
+-    string(FIND "${CMAKE_C_FLAGS}" "${CC_FLAG}" flag_already_set)
+-    if(flag_already_set EQUAL -1)
+-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CC_FLAG}" CACHE INTERNAL "C Compiler Flags")
++    if(NOT "${CC_FLAG}" IN_LIST UA_C_FLAGS)
++        set(UA_C_FLAGS ${UA_C_FLAGS} ${CC_FLAG} PARENT_SCOPE)
+     endif()
+ endfunction()
+ 
+@@ -1438,6 +1435,11 @@ else()
+ endif()
+ add_library(open62541 $<TARGET_OBJECTS:open62541-object> $<TARGET_OBJECTS:open62541-plugins>)
+ 
++if(UA_C_FLAGS)
++    target_compile_options(open62541-object  PRIVATE ${UA_C_FLAGS})
++    target_compile_options(open62541-plugins PRIVATE ${UA_C_FLAGS})
++endif()
++
+ add_dependencies(open62541-object open62541-code-generation)
+ add_dependencies(open62541-plugins open62541-code-generation)
+ 

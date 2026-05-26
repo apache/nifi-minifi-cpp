@@ -19,8 +19,8 @@
 include(FetchContent)
 FetchContent_Declare(
         mimalloc
-        URL      https://github.com/microsoft/mimalloc/archive/refs/tags/v2.0.6.tar.gz
-        URL_HASH SHA256=9f05c94cc2b017ed13698834ac2a3567b6339a8bde27640df5a1581d49d05ce5
+        URL      https://github.com/microsoft/mimalloc/archive/refs/tags/v3.3.2.tar.gz
+        URL_HASH SHA256=ca02384e007f46950598500dfaebde5ff9948c1d231f5a81b058799afa64bbbb
         SYSTEM
 )
 FetchContent_MakeAvailable(mimalloc)

@@ -41,7 +41,7 @@ inline io::IoResult pipe(io::InputStream& src, io::OutputStream& dst) {
     auto remaining = readRet;
     size_t transferred = 0;
     while (remaining > 0) {
-      const auto writeRet = dst.write(gsl::make_span(buffer).subspan(transferred, remaining));
+      const auto writeRet = dst.write(std::span(buffer).subspan(transferred, remaining));
       // TODO(adebreceni):
       //   write might return 0, e.g. in case of a congested server
       //   what should we return then?

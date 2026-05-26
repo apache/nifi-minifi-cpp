@@ -96,7 +96,7 @@ class TestRepositoryBase : public T_BaseRepository {
         break;
       }
       const auto eventRead = store.at(max_size);
-      org::apache::nifi::minifi::io::BufferStream stream(gsl::make_span(entry.second).template as_span<const std::byte>());
+      org::apache::nifi::minifi::io::BufferStream stream(std::as_bytes(std::span(entry.second)));
       eventRead->deserialize(stream);
       ++max_size;
     }

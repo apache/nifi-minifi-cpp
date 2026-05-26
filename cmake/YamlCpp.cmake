@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,27 +14,19 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-if (NOT (ENABLE_ALL OR ENABLE_OPC))
-    return()
-endif()
 
-include(MbedTLS)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/mbedtls/dummy")
+include(FetchContent)
 
-include(Open62541)
+set(CMAKE_DEBUG_POSTFIX "" CACHE STRING "" FORCE)
+set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 
-set( CMAKE_VERBOSE_MAKEFILE on )
+FetchContent_Declare(
+    yaml-cpp
+    URL "https://github.com/jbeder/yaml-cpp/archive/refs/tags/yaml-cpp-0.9.0.tar.gz"
+    URL_HASH "SHA256=25cb043240f828a8c51beb830569634bc7ac603978e0f69d6b63558dadefd49a"
+    SYSTEM
+)
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-include_directories(include)
-
-file(GLOB SOURCES "src/*.cpp")
-
-add_minifi_library(minifi-opc-extensions SHARED ${SOURCES})
-
-target_link_libraries(minifi-opc-extensions ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-opc-extensions ${CMAKE_DL_LIBS} spdlog::spdlog open62541::open62541)
-
-register_extension(minifi-opc-extensions "OPC EXTENSIONS" OPC-EXTENSIONS "This enables OPC-UA support" "extensions/opc/tests")
+FetchContent_MakeAvailable(yaml-cpp)

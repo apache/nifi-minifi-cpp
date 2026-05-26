@@ -82,7 +82,11 @@ struct PropertyDefinitionBuilder {
   }
 
   constexpr PropertyDefinitionBuilder<NumAllowedValues> withValidator(const PropertyValidator& property_validator) {
+#if defined(__clang__) && (__clang_major__ <= 18)
+    property.validator = &property_validator;
+#else
     property.validator = gsl::make_not_null(&property_validator);
+#endif
     return *this;
   }
 
@@ -110,7 +114,11 @@ struct PropertyDefinitionBuilder {
     .allowed_values = {},
     .allowed_types = {},
     .default_value = {},
+#if defined(__clang__) && (__clang_major__ <= 18)
+    .validator = &StandardPropertyValidators::ALWAYS_VALID_VALIDATOR,
+#else
     .validator = gsl::make_not_null(&StandardPropertyValidators::ALWAYS_VALID_VALIDATOR),
+#endif
     .supports_expression_language = false,
     .version = 1
   };

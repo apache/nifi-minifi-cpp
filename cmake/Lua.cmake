@@ -18,8 +18,8 @@
 include(FetchContent)
 
 FetchContent_Declare(lua
-    URL         "https://github.com/lua/lua/archive/refs/tags/v5.4.6.tar.gz"
-    URL_HASH    "SHA256=11c228cf9b9564d880b394f8069ad829d01e39756567f79c347a6b89fed44771"
+    URL         "https://github.com/lua/lua/archive/refs/tags/v5.4.8.tar.gz"
+    URL_HASH    "SHA256=d85b70a65f43c5d2254944d58d625e822c8e2e10d9c6a3bd9b5b657e46376a19"
     SYSTEM
 )
 

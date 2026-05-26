@@ -48,7 +48,7 @@ class FetchFromGCSCallback {
     if (!reader)
       return io::IoResult::zero();
     std::string contents{std::istreambuf_iterator<char>{reader}, {}};
-    const auto write_ret = stream->write(gsl::make_span(contents).as_span<std::byte>());
+    const auto write_ret = stream->write(std::as_writable_bytes(std::span(contents)));
     reader.Close();
     return io::IoResult::from(write_ret);
   }

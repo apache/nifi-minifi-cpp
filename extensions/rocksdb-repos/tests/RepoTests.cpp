@@ -667,7 +667,7 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
   auto content_session = content_repo->createSession();
   auto claim = content_session->create();
   auto stream = content_session->write(claim);
-  stream->write(gsl::make_span(content).as_span<const std::byte>());
+  stream->write(std::as_bytes(std::span(content)));
   flow_file->setResourceClaim(claim);
   flow_file->setSize(stream->size());
   flow_file->setOffset(0);

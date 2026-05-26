@@ -15,38 +15,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
-message(STATUS "Using bundled libssh2 via FetchContent")
-
-find_package(OpenSSL REQUIRED)
-find_package(ZLIB REQUIRED)
-
 include(FetchContent)
 
-if (WIN32)
-    set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/libssh2/libssh2-CMAKE_MODULE_PATH.patch")
-    set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/libssh2/fix-windows-ioctl.patch")
-    set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+set(OPEN62541_VERSION "v1.5.4" CACHE STRING "" FORCE)
+set(UA_ENABLE_ENCRYPTION ON CACHE BOOL "" FORCE)
+set(UA_FORCE_WERROR OFF CACHE BOOL "" FORCE)
+set(UA_ENABLE_DEBUG_SANITIZER OFF CACHE BOOL "" FORCE)
+
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/open62541/open62541.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/open62541/cflag_fix.patch")
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
-else()
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/libssh2/libssh2-CMAKE_MODULE_PATH.patch")
-endif()
 
 FetchContent_Declare(
-        libssh2
-        URL "https://github.com/libssh2/libssh2/archive/refs/tags/libssh2-1.11.1.tar.gz"
-        URL_HASH "SHA256=82b35c61c78b475647bdc981a183c5b5ab0d979e1caee94186e8f9150f2b0d0d"
-        PATCH_COMMAND ${PC}
-        SYSTEM
-        OVERRIDE_FIND_PACKAGE
+    open62541
+    URL "https://github.com/open62541/open62541/archive/refs/tags/${OPEN62541_VERSION}.tar.gz"
+    URL_HASH "SHA256=fb5aafc19c67a91368d1f71d9ee4acf0f4b47a0d65c66db4ed738691828779c7"
+    PATCH_COMMAND "${PC}"
+    EXCLUDE_FROM_ALL
+    DOWNLOAD_NO_PROGRESS TRUE
+    TLS_VERIFY TRUE
+    SYSTEM
 )
 
-set(ENABLE_ZLIB_COMPRESSION ON CACHE BOOL "" FORCE)
-set(CRYPTO_BACKEND "OpenSSL" CACHE STRING "" FORCE)
-set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(open62541)
 
-FetchContent_MakeAvailable(libssh2)
-
-target_link_libraries(libssh2_static PUBLIC OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB)
+add_dependencies(open62541 mbedtls)

@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index e9baae1ec..954909854 100644
+index 89e7d67ae..3a09ed900 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -18,7 +18,7 @@ endif()
@@ -11,15 +11,7 @@ index e9baae1ec..954909854 100644
  
  find_package(Python3 REQUIRED)
  find_package(Git)
-@@ -669,7 +669,6 @@ if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang") AND
-     # Threading support
-     if(UA_MULTITHREADING GREATER_EQUAL 100 AND NOT WIN32)
-         check_add_cc_flag("-pthread")
--        check_add_cc_flag("-ftls-model=initial-exec") # Enable thread-local variables in the .so shared object
-     endif()
- 
-     # Force 32bit build
-@@ -691,17 +690,6 @@ if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang") AND
+@@ -717,17 +717,6 @@ if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang") AND
          endif()
      endif()
  
@@ -38,7 +30,7 @@ index e9baae1ec..954909854 100644
      set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "") # cmake sets -rdynamic by default
      if(APPLE)
 diff --git a/arch/posix/eventloop_posix.h b/arch/posix/eventloop_posix.h
-index a5f51383e..0d8b78418 100644
+index ce64f374a..c4b69668c 100644
 --- a/arch/posix/eventloop_posix.h
 +++ b/arch/posix/eventloop_posix.h
 @@ -277,7 +277,9 @@ typedef int SOCKET;

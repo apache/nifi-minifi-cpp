@@ -28,7 +28,7 @@
 #include <vector>
 
 #include "core/Resource.h"
-#include "magic_enum.hpp"
+#include "magic_enum/magic_enum.hpp"
 #include "range/v3/algorithm/all_of.hpp"
 #include "range/v3/action/transform.hpp"
 #include "minifi-cpp/utils/gsl.h"

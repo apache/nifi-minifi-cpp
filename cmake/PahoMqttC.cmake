@@ -22,6 +22,7 @@ set(PAHO_BUILD_STATIC ON CACHE BOOL "" FORCE)
 set(PAHO_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(PAHO_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
+set(PAHO_HIGH_PERFORMANCE ON CACHE BOOL "" FORCE)
 
 set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/cmake-openssl.patch")
 set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/1576-Changed-bool-typedef-to-bit.patch")
@@ -31,8 +32,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
 
 FetchContent_Declare(
         paho.mqtt.c-external
-        URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.14.tar.gz"
-        URL_HASH "SHA256=7af7d906e60a696a80f1b7c2bd7d6eb164aaad908ff4c40c3332ac2006d07346"
+        URL "https://github.com/eclipse-paho/paho.mqtt.c/archive/refs/tags/v1.3.16.tar.gz"
+        URL_HASH "SHA256=8b960f51edc7e03507637d987882bc486d8f4be6e79431bf99e2763344fd14c5"
         PATCH_COMMAND "${PC}"
         SYSTEM
 )

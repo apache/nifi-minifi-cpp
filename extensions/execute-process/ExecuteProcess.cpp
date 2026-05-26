@@ -129,7 +129,7 @@ void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) const {
     }
     flow_file->addAttribute("command", command_);
     flow_file->addAttribute("command.arguments", command_argument_);
-    session.writeBuffer(flow_file, gsl::make_span(buffer.data(), gsl::narrow<size_t>(num_read)));
+    session.writeBuffer(flow_file, std::span(buffer.data(), gsl::narrow<size_t>(num_read)));
     session.transfer(flow_file, Success);
     session.commit();
   }
@@ -177,7 +177,7 @@ void ExecuteProcess::readOutput(core::ProcessSession& session) const {
   if (read_to_buffer > 0) {
     logger_->log_debug("Execute Command Respond {}", read_to_buffer);
     // child exits and close the pipe
-    const auto buffer_span = gsl::make_span(buffer.data(), read_to_buffer);
+    const auto buffer_span = std::span(buffer.data(), read_to_buffer);
     if (!writeToFlowFile(session, flow_file, buffer_span)) {
       return;
     }

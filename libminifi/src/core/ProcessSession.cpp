@@ -498,7 +498,7 @@ void ProcessSessionImpl::importFrom(io::InputStream &stream, const std::shared_p
     const auto max_size = stream.size();
     while (position < max_size) {
       const auto read_size = std::min(max_read, max_size - position);
-      const auto subbuffer = gsl::make_span(buffer).subspan(0, read_size);
+      const auto subbuffer = std::span(buffer).subspan(0, read_size);
       stream.read(subbuffer);
 
       content_stream->write(subbuffer);

@@ -16,7 +16,7 @@
 # under the License.
 #
 
-ARG BASE_IMAGE="alpine:3.19.1"
+ARG BASE_IMAGE="alpine:3.22.4"
 
 # Build image
 FROM ${BASE_IMAGE} AS build

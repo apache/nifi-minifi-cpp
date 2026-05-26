@@ -91,7 +91,7 @@ void TailEventLog::onTrigger(core::ProcessContext& context, core::ProcessSession
       flowFile->addAttribute("event_time", getTimeStamp(event_record->TimeGenerated));
       flowFile->addAttribute("event_type", typeToString(event_record->EventType));
 
-      io::BufferStream stream(gsl::make_span(event_record + event_record->DataOffset, event_record->DataLength).as_span<std::byte>());
+      io::BufferStream stream(std::as_bytes(std::span(event_record + event_record->DataOffset, event_record->DataLength)));
       // need an import from the data stream.
       session.importFrom(stream, flowFile);
       session.transfer(flowFile, Success);

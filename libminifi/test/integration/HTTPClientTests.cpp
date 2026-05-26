@@ -24,7 +24,7 @@
 #include "http/HTTPClient.h"
 #include "CivetServer.h"
 #include "integration/ConnectionCountingServer.h"
-#include "magic_enum.hpp"
+#include "magic_enum/magic_enum.hpp"
 #include "http/BaseHTTPClient.h"
 
 using namespace std::literals::chrono_literals;

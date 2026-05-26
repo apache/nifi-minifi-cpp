@@ -30,7 +30,7 @@
 namespace org::apache::nifi::minifi {
 
 FlowFileLoader::FlowFileLoader(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo, bool verify_checksums_in_rocksdb_reads)
-  : db_(db),
+  : db_(std::move(db)),
     content_repo_(std::move(content_repo)),
     logger_(core::logging::LoggerFactory<FlowFileLoader>::getLogger()),
     verify_checksums_in_rocksdb_reads_(verify_checksums_in_rocksdb_reads) {}
@@ -96,7 +96,7 @@ utils::TaskRescheduleInfo FlowFileLoader::loadImpl(const std::vector<SwappedFlow
       }
       utils::Identifier container_id;
       auto flow_file = FlowFileRecord::DeSerialize(
-          gsl::make_span(serialized_items[idx]).as_span<const std::byte>(), content_repo_, container_id);
+          std::as_bytes(std::span(serialized_items[idx])), content_repo_, container_id);
       if (!flow_file) {
         // corrupted flow file
         logger_->log_error("Failed to deserialize flow file \"{}\"", serialized_keys[idx]);

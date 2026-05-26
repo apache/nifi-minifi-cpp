@@ -22,13 +22,13 @@
 #include "minifi-cpp/Exception.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "core/logging/LoggerFactory.h"
-#include "magic_enum.hpp"
+#include "magic_enum/magic_enum.hpp"
 
 namespace org::apache::nifi::minifi::io {
 
 ZlibBaseStream::ZlibBaseStream(gsl::not_null<OutputStream*> output)
     : outputBuffer_(16384U),
-      output_{output} {
+      output_{std::move(output)} {
   strm_.zalloc = Z_NULL;
   strm_.zfree = Z_NULL;
   strm_.opaque = Z_NULL;
@@ -39,10 +39,10 @@ bool ZlibBaseStream::isFinished() const {
 }
 
 ZlibCompressStream::ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format, int level)
-  : ZlibCompressStream(output, format, level, core::logging::LoggerFactory<ZlibCompressStream>::getLogger()) {}
+  : ZlibCompressStream(std::move(output), format, level, core::logging::LoggerFactory<ZlibCompressStream>::getLogger()) {}
 
 ZlibCompressStream::ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format, int level, std::shared_ptr<core::logging::Logger> logger)
-  : ZlibBaseStream(output),
+  : ZlibBaseStream(std::move(output)),
     logger_{std::move(logger)} {
   int ret = deflateInit2(
       &strm_,
@@ -109,7 +109,7 @@ size_t ZlibCompressStream::write(const uint8_t* value, size_t size, FlushMode mo
     }
     const auto output_size = outputBuffer_.size() - strm_.avail_out;
     logger_->log_trace("deflate produced {} B of output data", output_size);
-    if (output_->write(gsl::make_span(outputBuffer_).subspan(0, output_size)) != output_size) {
+    if (output_->write(std::span(outputBuffer_).subspan(0, output_size)) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
       return STREAM_ERROR;
@@ -128,7 +128,7 @@ void ZlibCompressStream::close() {
 }
 
 ZlibDecompressStream::ZlibDecompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format)
-    : ZlibBaseStream(output),
+    : ZlibBaseStream(std::move(output)),
       logger_{core::logging::LoggerFactory<ZlibDecompressStream>::getLogger()} {
   int ret = inflateInit2(&strm_, 15 + (format == ZlibCompressionFormat::GZIP ? 16 : 0) /* windowBits */);
   if (ret != Z_OK) {
@@ -182,7 +182,7 @@ size_t ZlibDecompressStream::write(const uint8_t* value, size_t size) {
     }
     const auto output_size = outputBuffer_.size() - strm_.avail_out;
     logger_->log_trace("inflate produced {} B of output data", output_size);
-    if (output_->write(gsl::make_span(outputBuffer_).subspan(0, output_size)) != output_size) {
+    if (output_->write(std::span(outputBuffer_).subspan(0, output_size)) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
       return STREAM_ERROR;

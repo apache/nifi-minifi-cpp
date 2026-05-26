@@ -62,11 +62,11 @@ void C2Payload::addContent(C2ContentResponse &&content, bool collapsible) {
 }
 
 void C2Payload::setRawData(const std::string &data) {
-  setRawData(gsl::make_span(data).as_span<const std::byte>());
+  setRawData(std::as_bytes(std::span(data)));
 }
 
 void C2Payload::setRawData(const std::vector<char> &data) {
-  setRawData(gsl::make_span(data).as_span<const std::byte>());
+  setRawData(std::as_bytes(std::span(data)));
 }
 
 void C2Payload::setRawData(std::span<const std::byte> data) {

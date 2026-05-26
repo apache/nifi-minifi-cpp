@@ -36,7 +36,6 @@ using systemd::JournalType;
 using systemd::ConsumeJournald;
 
 namespace {
-namespace gsl = minifi::gsl;
 struct JournalEntry final {
   JournalEntry(const char* const identifier, const char* const message, const int pid = 0, std::vector<std::string> extra_fields = {}, const char* const hostname = "test-pc")
     : fields{std::move(extra_fields)}

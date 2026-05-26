@@ -248,7 +248,7 @@ TEST_CASE("TestSiteToSiteVerifySend using flowfile data", "[S2S]") {
 
   auto flow_file = session->create();
   session->write(flow_file, [&](const std::shared_ptr<io::OutputStream>& output_stream) {
-    std::span<const std::byte> span{reinterpret_cast<const std::byte*>(payload.data()), payload.size()};
+    auto span = std::as_bytes(std::span(payload));
     output_stream->write(span);
     return io::IoResult::from(span.size());
   });
