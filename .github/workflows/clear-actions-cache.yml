@@ -16,5 +16,5 @@ jobs:
         run: |
           python3 -m venv github_env
           source github_env/bin/activate
-          pip install -r github_scripts/requirements.txt
-          python3 github_scripts/github_actions_cache_cleanup.py -t ${{github.token}} -r ${{github.repository}}
+          pip install -r .github/github_scripts/requirements.txt
+          python3 .github/github_scripts/github_actions_cache_cleanup.py -t ${{github.token}} -r ${{github.repository}}

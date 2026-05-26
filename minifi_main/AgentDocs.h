@@ -24,6 +24,7 @@ namespace org::apache::nifi::minifi::docs {
 class AgentDocs {
  public:
   static void generate(const std::filesystem::path& docs_dir);
+  static void generateManifest();
 };
 
 }  // namespace org::apache::nifi::minifi::docs

@@ -28,6 +28,7 @@
 #include "agent/agent_docs.h"
 #include "core/Core.h"
 #include "core/Relationship.h"
+#include "core/state/nodes/AgentInformation.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "range/v3/algorithm/lexicographical_compare.hpp"
@@ -40,6 +41,36 @@
 namespace {
 
 namespace minifi = org::apache::nifi::minifi;
+
+
+void sortClassDescription(minifi::ClassDescription& class_description) {
+  std::ranges::sort(class_description.class_properties_, {}, &minifi::core::Property::getName);
+  std::ranges::sort(class_description.dynamic_properties_, {}, &minifi::core::DynamicProperty::name);
+  std::ranges::sort(class_description.class_relationships_, {}, &minifi::core::Relationship::getName);
+  std::ranges::sort(class_description.output_attributes_, {}, &minifi::core::OutputAttribute::name);
+  std::ranges::sort(class_description.api_implementations, {}, &minifi::core::ControllerServiceType::type);
+}
+
+void sortComponents(minifi::Components& components) {
+  auto lower_case_short_name = [](const auto& b) { return minifi::utils::string::toLower(b.short_name_); };
+  std::ranges::sort(components.processors, {}, lower_case_short_name);
+  std::ranges::sort(components.controller_services, {}, lower_case_short_name);
+  std::ranges::sort(components.parameter_providers, {}, lower_case_short_name);
+  std::ranges::sort(components.other_components, {}, lower_case_short_name);
+
+  for (auto& processors : components.processors) {
+    sortClassDescription(processors);
+  }
+  for (auto& cs : components.controller_services) {
+    sortClassDescription(cs);
+  }
+  for (auto& pp : components.parameter_providers) {
+    sortClassDescription(pp);
+  }
+  for (auto& oc : components.other_components) {
+    sortClassDescription(oc);
+  }
+}
 
 std::string formatName(std::string_view name_view, bool is_required) {
   std::string name{name_view};
@@ -258,13 +289,6 @@ class ModularDocumentation {
   }
 
  private:
-  static void sortComponents(minifi::Components& components) {
-    auto lower_case_short_name = [](const auto& b) { return minifi::utils::string::toLower(b.short_name_); };
-    std::ranges::sort(components.processors, {}, lower_case_short_name);
-    std::ranges::sort(components.controller_services, {}, lower_case_short_name);
-    std::ranges::sort(components.parameter_providers, {}, lower_case_short_name);
-  }
-
   static void writeComponentParts(std::ostream& os, const std::vector<minifi::ClassDescription>& class_descriptions, const std::string_view h3) {
     if (!class_descriptions.empty()) {
       os << fmt::format("### {}\n\n", h3);
@@ -313,6 +337,22 @@ void AgentDocs::generate(const std::filesystem::path& docs_dir) {
   monolith_docs.write(docs_dir);
 
   ModularDocumentation::write(docs_dir);
+}
+
+void AgentDocs::generateManifest() {
+  auto all_components = Components{};
+  for (const auto& components : minifi::ClassDescriptionRegistry::getClassDescriptions() | std::views::values) {
+    std::ranges::copy(components.processors, std::back_inserter(all_components.processors));
+    std::ranges::copy(components.controller_services, std::back_inserter(all_components.controller_services));
+    std::ranges::copy(components.parameter_providers, std::back_inserter(all_components.parameter_providers));
+    std::ranges::copy(components.other_components, std::back_inserter(all_components.other_components));
+  }
+
+  sortComponents(all_components);
+  auto serialized = minifi::state::response::serializeComponentManifest(all_components);
+  for (const auto& ser : serialized) {
+    std::cout << ser.to_pretty_string() << std::endl;
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::docs

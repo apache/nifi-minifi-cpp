@@ -322,6 +322,26 @@ jobs:
           ulimit -c unlimited
           ctest --timeout 300 -j$(nproc) --output-on-failure -LE performance
         working-directory: build
+      - name: Check manifest
+        id: check_manifest
+        working-directory: build
+        run: |
+          sed -i 's|nifi\.extension\.path=\.\./extensions/\*|nifi.extension.path=./*|' conf/minifi.properties
+          ./bin/minifi --manifest | diff -u ../.github/references/ubuntu_22_04_clang_arm_manifest.json - > manifest.patch || {
+            echo "::error::Manifest mismatch! Download the artifact to apply the patch."
+            cat manifest.patch
+            exit 1
+          }
+
+      - name: Upload patch file
+        if: failure() && steps.check_manifest.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: update-manifest.patch
+          path: build/manifest.patch
+          if-no-files-found: ignore
+          retention-days: 5
+
       - name: performance-test
         id: performance-test
         run: ctest -j1 --verbose -L performance
