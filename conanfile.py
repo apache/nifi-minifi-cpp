@@ -7,9 +7,14 @@ import shutil
 
 required_conan_version = ">=2.0"
 
-shared_requires = ("openssl/3.2.1", "libcurl/8.4.0", "civetweb/1.16", "libxml2/2.12.6", "fmt/10.2.1", "spdlog/1.14.0", "catch2/3.5.4", "zlib/1.2.11", "zstd/1.5.2", "bzip2/1.0.8", "rocksdb/8.10.2@minifi/develop")
+shared_requires = ("lz4/1.10.0", "openssl/3.6.2", "libcurl/8.20.0", "civetweb/1.16", "libxml2/2.15.3", "fmt/12.1.0", "spdlog/1.17.0", "catch2/3.14.0", "zlib/1.3.2", "zstd/1.5.7",
+                   "bzip2/1.0.8", "rocksdb/11.1.1@minifi/develop", "libarchive/3.8.7")
 
-shared_sources = ("CMakeLists.txt", "libminifi/*", "extensions/*", "minifi_main/*", "nanofi/*", "bin/*", "bootstrap/*", "cmake/*", "conf/*", "controller/*", "encrypt-config/*", "etc/*", "examples/*", "packaging/msi/*", "thirdparty/*", "docker/*", "LICENSE", "NOTICE", "README.md", "C2.md", "CONFIGURE.md", "CONTRIBUTING.md", "CONTROLLERS.md", "EXPRESSIONS.md", "Extensions.md", "JNI.md", "METRICS.md", "OPS.md", "PROCESSORS.md", "ThirdParties.md", "Windows.md", "CPPLINT.cfg", "generateVersion.sh", "run_clang_tidy.sh", "run_clang_tidy.sh", "run_flake8.sh", "run_shellcheck.sh", "versioninfo.rc.in")
+shared_sources = ("CMakeLists.txt", "libminifi/*", "extensions/*", "minifi_main/*", "behave_framework/*", "bin/*", "bootstrap/*", "cmake/*", "conf/*", "controller/*", "core-framework/*",
+                  "docs/*", "encrypt-config/*", "etc/*", "examples/*", "extension-framework/*", "fips/*", "minifi-api/*", "packaging/*", "thirdparty/*", "docker/*", "LICENSE", "NOTICE",
+                  "README.md", "C2.md", "CONAN.md", "CONFIGURE.md", "CONTRIBUTING.md", "CONTROLLERS.md", "EXPRESSIONS.md", "Extensions.md", "METRICS.md", "OPS.md", "PARAMETER_PROVIDERS.md",
+                  "PROCESSORS.md", "SITE_TO_SITE.md", "ThirdParties.md", "Windows.md", "CPPLINT.cfg", "generateVersion.bat", "generateVersion.sh", "run_clang_tidy.sh", "run_flake8.sh",
+                  "run_shellcheck.sh", "versioninfo.rc.in")
 
 
 class MiNiFiCppMain(ConanFile):
@@ -28,6 +33,7 @@ class MiNiFiCppMain(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
 
+        tc.variables["MINIFI_LZ4_SOURCE"] = "CONAN"
         tc.variables["MINIFI_LIBCURL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_OPENSSL_SOURCE"] = "CONAN"
         tc.variables["MINIFI_ZLIB_SOURCE"] = "CONAN"
@@ -39,13 +45,10 @@ class MiNiFiCppMain(ConanFile):
         tc.variables["MINIFI_FMT_SOURCE"] = "CONAN"
         tc.variables["MINIFI_SPDLOG_SOURCE"] = "CONAN"
         tc.variables["MINIFI_CATCH2_SOURCE"] = "CONAN"
+        tc.variables["MINIFI_LIBARCHIVE_SOURCE"] = "CONAN"
 
-        tc.variables["SKIP_TESTS"] = "OFF"
-        tc.variables["ENABLE_CIVET"] = "ON"
-        tc.variables["ENABLE_LIBARCHIVE"] = "OFF"
         tc.variables["ENABLE_AWS"] = "OFF"
-        tc.variables["ENABLE_SQL"] = "OFF"
-        tc.variables["ENABLE_GCP"] = "OFF"
+        tc.variables["ENABLE_LLAMACPP"] = "OFF"
         tc.variables["ENABLE_LUA_SCRIPTING"] = "OFF"
 
         tc.generate()

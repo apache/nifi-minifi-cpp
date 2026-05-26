@@ -135,10 +135,12 @@ set(STRICT_GSL_CHECKS "DEBUG_ONLY" CACHE STRING "Contract checking and assertion
 list(APPEND STRICT_GSL_CHECKS_Values AUDIT ON DEBUG_ONLY OFF)
 set_property(CACHE STRICT_GSL_CHECKS PROPERTY STRINGS ${STRICT_GSL_CHECKS_Values})
 
+add_minifi_multi_option(MINIFI_PACKAGING_TYPE "Selects the packaging format for the final artifact." "TGZ;RPM" "TGZ")
+
 # BUILD: Fetch and build from source using CMake FetchContent or ExternalProject
 # SYSTEM: Use find_package to use the system version
 # CONAN: Use Conan packages
-add_minifi_multi_option(MINIFI_PACKAGING_TYPE "Selects the packaging format for the final artifact." "TGZ;RPM" "TGZ")
+add_minifi_multi_option(MINIFI_LZ4_SOURCE "Retrieves lz4 from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_LIBCURL_SOURCE "Retrieves LibCURL from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_OPENSSL_SOURCE "Retrieves OpenSSL from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_ZLIB_SOURCE "Retrieves ZLib from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
@@ -150,6 +152,7 @@ add_minifi_multi_option(MINIFI_LIBXML2_SOURCE "Retrieves LibXml2 from provided s
 add_minifi_multi_option(MINIFI_FMT_SOURCE "Retrieves Fmt from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_SPDLOG_SOURCE "Retrieves Spdlog from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_CATCH2_SOURCE "Retrieves Catch2 from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_LIBARCHIVE_SOURCE "Retrieves libarchive from provided source" "BUILD;SYSTEM;CONAN" "BUILD")
 
 # Docker options
 

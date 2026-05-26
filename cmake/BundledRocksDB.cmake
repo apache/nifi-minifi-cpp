@@ -19,8 +19,8 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     message("Using bundled RocksDB")
 
     if (NOT WIN32)
-        include(Zstd)
-        include(LZ4)
+        include(GetZstd)
+        include(GetLZ4)
     endif()
 
     set(PATCH_FILE "${SOURCE_DIR}/thirdparty/rocksdb/all/patches/dboptions_equality_operator.patch")

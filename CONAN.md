@@ -36,26 +36,36 @@ source, it uses CMake to install the third party external libraries that are ena
 
 ## Build MiNiFi C++ with Conan
 
-To build MiNiFi using conan, first we install conan version 2, then we create a **default** conan profile that will later be ignored for our custom conan profile, create a MINIFI_HOME environment variable, then we install prebuilt conan packages representing the MiNiFi external libraries and finally we compile MiNiFi.
+### Install Conan
 
 ~~~bash
-sudo pip install --force-reinstall -v "conan==2.0.17"
+sudo pip install --force-reinstall -v "conan==2.28.1"
 
 # create a "default" conan profile, so conan has it on record in ~/.conan2/, before using your own custom profile.
 conan profile detect
+~~~
 
+### Create Custom RocksDB Conan Package
+The default RocksDB conan package is built with -fno-rtti, which makes it incompatible with MiNiFi. So we need to create a custom RocksDB conan package that is built with -frtti.
+
+~~~bash
+cd $HOME/nifi-minifi-cpp/thirdparty/rocksdb/all
+
+conan create . --user=minifi --channel=develop --test-folder="" --version=11.1.1 --profile=../../../etc/conan/profiles/release-linux
+~~~
+
+### Build MiNiFi
+
+~~~bash
 # conanfile.py is in root dir of MiNiFi C++ project
 cd $HOME/nifi-minifi-cpp
 
-# create MINIFI_HOME env variable for binary executable minifi
-export MINIFI_HOME=$(pwd)
-
 # install conan packages for MiNiFi C++ using conanfile.py invoking Conan
 # since we created default profile earlier, we can override it with our own minifi profile
-conan install . --build=missing --output-folder=build_conan -pr=etc/conan/profiles/release-linux
+conan install . --build=missing --output-folder=build_conan --profile=etc/conan/profiles/release-linux
 
 # build MiNiFi C++ using conanfile.py invoking Conan & CMake
-conan build . --output-folder=build_conan -pr=etc/conan/profiles/release-linux
+conan build . --output-folder=build_conan --profile=etc/conan/profiles/release-linux
 ~~~
 
 - **NOTE**: After building MiNiFi, we must have the MINIFI_HOME environment variable created in order to successfully run the minifi binary executable.
@@ -76,6 +86,10 @@ popd # build_conan/
 
 ~~~bash
 # verify we can run minifi binary executable
+cd $HOME/nifi-minifi-cpp
+
+export MINIFI_HOME=$(pwd)
+
 ./build_conan/bin/minifi
 ~~~
 
@@ -85,7 +99,7 @@ To create a MiNiFi package, we will follow the similar steps we took to build Mi
 
 ~~~bash
 # make sure to install conan2 for your environment
-sudo pip install --force-reinstall -v "conan==2.0.17"
+sudo pip install --force-reinstall -v "conan==2.28.1"
 
 # create a "default" conan profile, so conan has it on record, before using your own custom profile. Gets created in ~/.conan2/
 conan profile detect
@@ -99,10 +113,10 @@ export MINIFI_HOME=$(pwd)
 # install conan packages for MiNiFi C++ using conanfile.py invoking Conan
 # since we created default profile earlier, we can override it with our own minifi profile
 # make sure path is correct
-conan install . --build=missing --output-folder=build_conan -pr=etc/conan/profiles/release-linux
+conan install . --build=missing --output-folder=build_conan --profile=etc/conan/profiles/release-linux
 
 # create MiNiFi C++ conan package using conanfile.py invoking Conan & CMake
-conan create . --user=minifi --channel=develop -pr=etc/conan/profiles/release-linux
+conan create . --user=minifi --channel=develop --profile=etc/conan/profiles/release-linux
 ~~~
 
 - **NOTE**: When we tell conan to create the MiNiFi conan package, conan first installs prebuilt conan packages, then it compiles MiNiFi from source inside `~/.conan2/p/b/minif<UUID>/b`, and then it copies over MiNiFi's libraries and its binary executables into the conan package folder `~/.conan2/p/b/minif<UUID>/p`. Once we have the MiNiFi conan package, we can integrate it into other C++ infrastructure using CMake.
@@ -123,15 +137,3 @@ To have a more consistent quick build process for MiNiFi, we can use conan versi
 There are multiple benefits of having MiNiFi prebuilt conan packages. We can upload these MiNiFi conan packages to a conan repository like jfrog for version management. We can easily integrate MiNiFi's edge data pipeline features into other C++ software infrastructure using conan's CMake support. We can still use MiNiFi for edge data collection from the IoT devices embedded on robotic systems. We can integrate MiNiFi into self-driving cars (sensor examples: cameras, lidar, radar, inertial measurement unit (IMU), electronic speed controller (ESC), steering servo, etc), into medical imaging robots (sensor examples: depth cameras, ultrasound, gamma detector, force/torque sensor, joint position sensor, etc) or some other real-time robotic system.
 
 By leveraging MiNiFi as a conan package, we can leverage MiNiFi that comes with the best practices of building data pipelines from NiFi and bring them into existing C++ real-time robotics infrastructure. Some teams across companies typically have their own custom edge data pipelines that process data for the different events to eventually perform actions on that data. As an alternative to all these companies and their teams having their own custom edge data pipeline libraries, MiNiFi C++, which is like a headless NiFi, can provide a more consistent standard approach for team's to build edge pipelines. Through all stages of the edge data pipelines, MiNiFi can still provide telemetry to NiFi instances running in the cloud.
-
-## Appendix
-
-### Create Custom RocksDB Conan Package
-
-~~~bash
-pushd nifi-minifi-cpp/thirdparty/rocksdb/all
-
-conan create . --user=minifi --channel=develop --version=8.10.2 -pr=../../../etc/conan/profiles/release-linux
-
-popd
-~~~

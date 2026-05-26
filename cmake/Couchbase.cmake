@@ -17,8 +17,8 @@
 
 include(FetchContent)
 
-include(fmt)
-include(Spdlog)
+include(GetFmt)
+include(GetSpdlog)
 include(Asio)
 
 set(COUCHBASE_CXX_CLIENT_BUILD_STATIC ON CACHE BOOL "" FORCE)
