@@ -29,7 +29,8 @@
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
 using LlamaContextProvider =
-  std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path& model_path, const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params)>;
+  std::function<std::unique_ptr<LlamaContext>(const std::filesystem::path& model_path, const std::optional<std::filesystem::path>& multimodal_model_path,
+      const LlamaSamplerParams& llama_sampler_params, const LlamaContextParams& llama_ctx_params)>;
 
 class RunLlamaCppInferenceMetrics {
  public:
@@ -58,6 +59,15 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto ModelPath = core::PropertyDefinitionBuilder<>::createProperty("Model Path")
       .withDescription("The filesystem path of the model file in gguf format.")
       .isRequired(true)
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
+      .build();
+  EXTENSIONAPI static constexpr auto OutputAttributeName = core::PropertyDefinitionBuilder<>::createProperty("Output Attribute Name")
+      .withDescription("Specify the attribute to use as output, if not provided, the content is overridden instead.")
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
+      .build();
+  EXTENSIONAPI static constexpr auto MultiModalModelPath = core::PropertyDefinitionBuilder<>::createProperty("MultiModal Model Path")
+      .withDescription("The filesystem path of the multimodal model (visual, audio) file in gguf format.")
+      .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto Temperature = core::PropertyDefinitionBuilder<>::createProperty("Temperature")
       .withDescription("The temperature to use for sampling.")
@@ -128,6 +138,8 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
 
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
     ModelPath,
+    OutputAttributeName,
+    MultiModalModelPath,
     Temperature,
     TopK,
     TopP,
@@ -167,7 +179,9 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
   void increaseTokensOut(uint64_t token_count);
 
   std::string model_path_;
+  std::optional<std::string> multimodal_model_path_;
   std::string system_prompt_;
+  std::optional<std::string> output_attribute_;
 
   LlamaContextProvider llama_context_provider_;
   std::unique_ptr<LlamaContext> llama_ctx_;

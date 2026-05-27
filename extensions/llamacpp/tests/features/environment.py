@@ -14,6 +14,7 @@
 # limitations under the License.
 from textwrap import dedent
 
+from pathlib import Path
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
@@ -29,7 +30,9 @@ def before_all(context: MinifiTestContext):
 
     dockerfile = dedent("""\
                 FROM {base_image}
-                RUN mkdir {models_path} && wget https://huggingface.co/bartowski/Qwen2-0.5B-Instruct-GGUF/resolve/main/Qwen2-0.5B-Instruct-IQ3_M.gguf --directory-prefix={models_path}
+                RUN mkdir {models_path}
+                RUN wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/Qwen2-VL-2B-Instruct-Q3_K_M.gguf --directory-prefix={models_path}
+                RUN wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen2-VL-2B-Instruct-f16.gguf --directory-prefix={models_path}
         """.format(base_image=minifi_container_image, models_path='/tmp/models'))
 
     builder = DockerImageBuilder(
@@ -42,6 +45,7 @@ def before_all(context: MinifiTestContext):
 def before_scenario(context: MinifiTestContext, scenario):
     context.minifi_container_image = "apacheminificpp:llama"
     common_before_scenario(context, scenario)
+    context.resource_dir = Path(__file__).resolve().parent / "resources"
 
 
 def after_scenario(context, scenario):

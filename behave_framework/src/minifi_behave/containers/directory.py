@@ -16,12 +16,12 @@
 #
 
 class Directory:
-    def __init__(self, path, files: dict[str, str] | None = None, mode="rw"):
+    def __init__(self, path, files: dict[str, str | bytes] | None = None, mode="rw"):
         self.path = path
         self.files: dict[str, str] = {}
         if files is not None:
             self.files = files
         self.mode = mode
 
-    def add_file(self, file_name: str, content: str):
+    def add_file(self, file_name: str, content: str | bytes):
         self.files[file_name] = content

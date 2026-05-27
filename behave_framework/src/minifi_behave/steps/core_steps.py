@@ -59,14 +59,15 @@ def create_file_with_size_in_directory(context: MinifiTestContext, directory: st
     dirs.append(new_dir)
 
 
-def __add_directory_with_file_to_container(context: MinifiTestContext, directory: str, file_name: str, content: str, container_name: str):
+def __add_directory_with_file_to_container(context: MinifiTestContext, directory: str, file_name: str, content: str | bytes, container_name: str):
     dirs = context.get_or_create_minifi_container(container_name).dirs
-    new_content = content.replace("\\n", "\n")
+    if isinstance(content, str):
+        content = content.replace("\\n", "\n")
     if directory in dirs:
-        dirs[directory].files[file_name] = new_content
+        dirs[directory].files[file_name] = content
         return
     new_dir = Directory(directory)
-    new_dir.files[file_name] = new_content
+    new_dir.files[file_name] = content
     dirs.append(new_dir)
 
 
@@ -80,6 +81,16 @@ def create_file_with_content_in_directory_for_flow(context: MinifiTestContext, d
 @step("a directory at '{directory}' has a file with the content '{content}'")
 def create_file_with_content_in_directory(context: MinifiTestContext, directory: str, content: str):
     context.execute_steps(f'given a directory at "{directory}" has a file with the content "{content}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
+
+
+@step('a directory at "{directory}" has a file with the content from "{path}"')
+@step("a directory at '{directory}' has a file with the content from '{path}'")
+def create_file_with_content_from_path_in_directory(context: MinifiTestContext, directory: str, path: str):
+    assert context.resource_dir is not None, "Cannot copy file if resource_dir is not set for the context"
+    content = None
+    with open(context.resource_dir / path, "rb") as f:
+        content = f.read()
+    __add_directory_with_file_to_container(context, directory, str(uuid.uuid4()), content, DEFAULT_MINIFI_CONTAINER_NAME)
 
 
 @step('a directory at "{directory}" has a file "{file_name}" with the content "{content}"')
