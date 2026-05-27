@@ -20,6 +20,7 @@
 cmake_minimum_required(VERSION 3.25)
 cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_VERSION_{MAJOR,MINOR,PATCH,TWEAK}
 cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
+cmake_policy(SET CMP0183 NEW) # add_feature_info() supports full :ref:Condition Syntax
 
 project(nifi-minifi-cpp VERSION 1.0.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
@@ -239,10 +240,8 @@ endif()
 
 # OpenSSL
 include(GetOpenSSL)
-get_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
 
-
+# BZip2
 if (ENABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     include(GetBZip2)
     get_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})

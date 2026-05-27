@@ -35,10 +35,11 @@ if(NOT lua_POPULATED)
     # the github tarball contains onelua.c, which is a concatenated version of all source files, we don't need it
     list(REMOVE_ITEM LUA_SOURCES "${lua_SOURCE_DIR}/${lua_tarball_src_path}onelua.c")
     add_library(lua STATIC ${LUA_SOURCES})
+    add_library(lua::lua ALIAS lua)
 
     file(MAKE_DIRECTORY "${lua_BINARY_DIR}/include")
     foreach(HEADER lua.h luaconf.h lualib.h lauxlib.h)
         file(COPY "${lua_SOURCE_DIR}/${lua_tarball_src_path}${HEADER}" DESTINATION "${lua_BINARY_DIR}/include")
     endforeach()
-    set(LUA_INCLUDE_DIR "${lua_BINARY_DIR}/include" CACHE STRING "" FORCE)
+    set(lua_INCLUDE_DIR "${lua_BINARY_DIR}/include" CACHE STRING "" FORCE)
 endif()
