@@ -41,7 +41,7 @@ COPY . ${MINIFI_BASE_DIR}
 
 # Install the system dependencies needed for a build
 # ccache is in EPEL
-RUN dnf -y install epel-release && dnf -y install gcc-toolset-14 sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake rpmdevtools && \
+RUN dnf -y install epel-release && dnf -y install gcc-toolset-14 gcc-toolset-14-libatomic-devel sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake rpmdevtools && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_ALL=ON\|ENABLE_PYTHON_SCRIPTING=ON\|ENABLE_OPC=ON"; then dnf -y --enablerepo=devel install python3-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SFTP=ON" && [ "${DOCKER_SKIP_TESTS}" == "OFF" ]; then dnf -y install java-1.8.0-openjdk maven; fi
 
