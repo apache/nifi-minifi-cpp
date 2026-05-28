@@ -120,7 +120,7 @@ Communicating with Apache NiFi can be done using the Site-to-Site protocol. More
 ### To build
 
 #### Utilities
-* CMake 3.24 or greater
+* CMake 3.25 or greater
 * Compiler
   * g++ 13 or greater
   * clang 18 or greater

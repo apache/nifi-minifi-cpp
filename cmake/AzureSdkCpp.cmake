@@ -20,10 +20,15 @@ if (WIN32)
     set(WIL_BUILD_TESTS OFF CACHE INTERNAL "")
     set(WIL_BUILD_PACKAGING OFF CACHE INTERNAL "")
 
+    set(WIL_PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/wil/cmake_version.patch")
+    set(WIL_PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${WIL_PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${WIL_PATCH_FILE_1}\\\")")
+
     FetchContent_Declare(
             wil
             URL      https://github.com/microsoft/wil/archive/refs/tags/v1.0.260126.7.tar.gz
             URL_HASH SHA256=de9e03b38ff0ff8d22048f00b111cb631d21c550328f12530ccba71c05c9e361
+            PATCH_COMMAND "${WIL_PC}"
             SYSTEM
     )
     FetchContent_MakeAvailable(wil)
@@ -61,6 +66,11 @@ FetchContent_Declare(asdkext
 )
 
 FetchContent_MakeAvailable(asdkext)
+
+if (WIN32)
+    # Azure SDK changes C++ standard to C++14 which needs to be overridden back to C++17 required by the WIL library on Windows
+    set_target_properties(azure-identity PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+endif()
 
 if (NOT WIN32)
     add_dependencies(azure-storage-common LibXml2::LibXml2)

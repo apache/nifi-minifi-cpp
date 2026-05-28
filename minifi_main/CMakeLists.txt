@@ -17,7 +17,7 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.2)
 cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
 
 include_directories(../libminifi/include)
