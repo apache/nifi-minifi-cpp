@@ -28,7 +28,7 @@ std::optional<api::utils::net::SslData> KafkaProcessorBase::getSslData(api::core
   return context.getSslData(SSLContextService) | utils::toOptional();
 }
 
-void KafkaProcessorBase::setKafkaAuthenticationParameters(api::core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config) {
+void KafkaProcessorBase::setKafkaAuthenticationParameters(api::core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config) {  // NOLINT(performance-unnecessary-value-param)
   security_protocol_ = api::utils::parseEnumProperty<kafka::SecurityProtocolOption>(context, SecurityProtocol);
   utils::setKafkaConfigurationField(*config, "security.protocol", std::string{magic_enum::enum_name(security_protocol_)});
   logger_->log_debug("Kafka security.protocol [{}]", magic_enum::enum_name(security_protocol_));
