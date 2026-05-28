@@ -22,8 +22,7 @@
 namespace org::apache::nifi::minifi::mock {
 
 api::core::FlowFile MockProcessSession::create(const api::core::FlowFile*) {
-  auto new_ff = api::core::FlowFile{new MinifiFlowFile};  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
-  return new_ff;
+  return api::core::FlowFile{new MinifiFlowFile};
 }
 api::core::FlowFile MockProcessSession::get() {
   if (input_flow_files_.empty()) { return nullptr; }
