@@ -32,7 +32,7 @@ MinifiStatus RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& con
   model_path_.clear();
   model_path_ = api::utils::parseProperty(context, ModelPath);
   multimodal_model_path_ = api::utils::parseOptionalProperty(context, MultiModalModelPath);
-  system_prompt_ = context.getProperty(SystemPrompt).value_or("");
+  system_prompt_ = api::utils::parseOptionalProperty(context, SystemPrompt).value_or("");
   output_attribute_ = api::utils::parseOptionalProperty(context, OutputAttributeName);
 
   LlamaSamplerParams llama_sampler_params;

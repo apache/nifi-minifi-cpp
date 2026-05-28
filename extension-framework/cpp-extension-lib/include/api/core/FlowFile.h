@@ -17,8 +17,10 @@
  */
 #pragma once
 
+#include <exception>
 #include <memory>
 #include <stdexcept>
+
 #include "minifi-c.h"
 
 namespace org::apache::nifi::minifi::api::core {
