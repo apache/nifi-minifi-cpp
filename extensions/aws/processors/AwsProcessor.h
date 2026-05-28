@@ -27,13 +27,13 @@
 #include <utility>
 
 #include "aws/core/auth/AWSCredentialsProvider.h"
-#include "AWSCredentialsProvider.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/ProcessorImpl.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 #include "controllers/ProxyConfiguration.h"
+#include "controllerservices/AWSCredentialsService.h"
 
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -108,7 +108,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       .build();
   EXTENSIONAPI static constexpr auto AWSCredentialsProviderService = core::PropertyDefinitionBuilder<>::createProperty("AWS Credentials Provider service")
       .withDescription("The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.")
-      .withAllowedTypes<AWSCredentialsProvider>()
+      .withAllowedTypes<controllers::AWSCredentialsService>()
       .build();
   EXTENSIONAPI static constexpr auto Region = core::PropertyDefinitionBuilder<region::REGIONS.size()>::createProperty("Region")
       .isRequired(true)
