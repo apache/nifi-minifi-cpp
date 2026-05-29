@@ -37,22 +37,20 @@ if(WIN32)
     if(NOT winflexbison_POPULATED)
         FetchContent_Populate("winflexbison")
         execute_process(
-            COMMAND ${CMAKE_COMMAND} .
+            COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release .
             WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
             COMMAND_ERROR_IS_FATAL ANY
         )
 
         execute_process(
-            COMMAND ${CMAKE_COMMAND} --build . --config RelWithDebInfo
+            COMMAND ${CMAKE_COMMAND} --build . --config Release
             WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
             COMMAND_ERROR_IS_FATAL ANY
         )
-
-        file(COPY ${winflexbison_SOURCE_DIR}/bison/Data DESTINATION ${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/)
     endif()
 
-    set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/win_bison.exe" CACHE PATH "bison executable")
-    set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/flex/RelWithDebInfo/win_flex.exe" CACHE PATH "flex executable")
+    set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/bin/Release/win_bison.exe" CACHE PATH "bison executable")
+    set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/bin/Release/win_flex.exe" CACHE PATH "flex executable")
 
     include_directories(${winflexbison_SOURCE_DIR}/flex/src/)
 
