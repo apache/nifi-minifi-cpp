@@ -1198,6 +1198,11 @@
             {
                 "propertyDescriptors": {
                     "Azure Storage Credentials Service": {
+                        "typeProvidedByValue": {
+                            "type": "org.apache.nifi.minifi.azure.controllers.AzureStorageCredentialsService",
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-azure"
+                        },
                         "name": "Azure Storage Credentials Service",
                         "description": "Name of the Azure Storage Credentials Service used to retrieve the connection string from.",
                         "validator": "VALID",
@@ -1353,6 +1358,11 @@
             {
                 "propertyDescriptors": {
                     "Azure Storage Credentials Service": {
+                        "typeProvidedByValue": {
+                            "type": "org.apache.nifi.minifi.azure.controllers.AzureStorageCredentialsService",
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-azure"
+                        },
                         "name": "Azure Storage Credentials Service",
                         "description": "Name of the Azure Storage Credentials Service used to retrieve the connection string from.",
                         "validator": "VALID",
@@ -2237,6 +2247,11 @@
             {
                 "propertyDescriptors": {
                     "Azure Storage Credentials Service": {
+                        "typeProvidedByValue": {
+                            "type": "org.apache.nifi.minifi.azure.controllers.AzureStorageCredentialsService",
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-azure"
+                        },
                         "name": "Azure Storage Credentials Service",
                         "description": "Name of the Azure Storage Credentials Service used to retrieve the connection string from.",
                         "validator": "VALID",
@@ -2385,6 +2400,11 @@
             {
                 "propertyDescriptors": {
                     "Azure Storage Credentials Service": {
+                        "typeProvidedByValue": {
+                            "type": "org.apache.nifi.minifi.azure.controllers.AzureStorageCredentialsService",
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-azure"
+                        },
                         "name": "Azure Storage Credentials Service",
                         "description": "Name of the Azure Storage Credentials Service used to retrieve the connection string from.",
                         "validator": "VALID",
@@ -4405,6 +4425,11 @@
             {
                 "propertyDescriptors": {
                     "Azure Storage Credentials Service": {
+                        "typeProvidedByValue": {
+                            "type": "org.apache.nifi.minifi.azure.controllers.AzureStorageCredentialsService",
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-azure"
+                        },
                         "name": "Azure Storage Credentials Service",
                         "description": "Name of the Azure Storage Credentials Service used to retrieve the connection string from.",
                         "validator": "VALID",
@@ -4552,6 +4577,11 @@
             {
                 "propertyDescriptors": {
                     "Azure Storage Credentials Service": {
+                        "typeProvidedByValue": {
+                            "type": "org.apache.nifi.minifi.azure.controllers.AzureStorageCredentialsService",
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-azure"
+                        },
                         "name": "Azure Storage Credentials Service",
                         "description": "Name of the Azure Storage Credentials Service used to retrieve the connection string from.",
                         "validator": "VALID",
@@ -7317,6 +7347,11 @@
             {
                 "propertyDescriptors": {
                     "Azure Storage Credentials Service": {
+                        "typeProvidedByValue": {
+                            "type": "org.apache.nifi.minifi.azure.controllers.AzureStorageCredentialsService",
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-azure"
+                        },
                         "name": "Azure Storage Credentials Service",
                         "description": "Name of the Azure Storage Credentials Service used to retrieve the connection string from.",
                         "validator": "VALID",
@@ -7458,6 +7493,11 @@
             {
                 "propertyDescriptors": {
                     "Azure Storage Credentials Service": {
+                        "typeProvidedByValue": {
+                            "type": "org.apache.nifi.minifi.azure.controllers.AzureStorageCredentialsService",
+                            "group": "org.apache.nifi.minifi",
+                            "artifact": "minifi-azure"
+                        },
                         "name": "Azure Storage Credentials Service",
                         "description": "Name of the Azure Storage Credentials Service used to retrieve the connection string from.",
                         "validator": "VALID",

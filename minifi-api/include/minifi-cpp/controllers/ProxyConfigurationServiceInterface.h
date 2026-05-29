@@ -18,6 +18,7 @@
 
 #include <string>
 #include <optional>
+#include <cstdint>
 
 #include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 #include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
