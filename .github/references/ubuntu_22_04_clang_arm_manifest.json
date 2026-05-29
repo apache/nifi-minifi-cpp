@@ -1516,9 +1516,9 @@
                 "propertyDescriptors": {
                     "AWS Credentials Provider service": {
                         "typeProvidedByValue": {
-                            "type": "org.apache.nifi.minifi.aws.AWSCredentialsProvider",
+                            "type": "org.apache.nifi.minifi.aws.controllers.AWSCredentialsService",
                             "group": "org.apache.nifi.minifi",
-                            "artifact": "minifi-system"
+                            "artifact": "minifi-aws"
                         },
                         "name": "AWS Credentials Provider service",
                         "description": "The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.",
@@ -2999,9 +2999,9 @@
                 "propertyDescriptors": {
                     "AWS Credentials Provider service": {
                         "typeProvidedByValue": {
-                            "type": "org.apache.nifi.minifi.aws.AWSCredentialsProvider",
+                            "type": "org.apache.nifi.minifi.aws.controllers.AWSCredentialsService",
                             "group": "org.apache.nifi.minifi",
-                            "artifact": "minifi-system"
+                            "artifact": "minifi-aws"
                         },
                         "name": "AWS Credentials Provider service",
                         "description": "The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.",
@@ -5186,9 +5186,9 @@
                 "propertyDescriptors": {
                     "AWS Credentials Provider service": {
                         "typeProvidedByValue": {
-                            "type": "org.apache.nifi.minifi.aws.AWSCredentialsProvider",
+                            "type": "org.apache.nifi.minifi.aws.controllers.AWSCredentialsService",
                             "group": "org.apache.nifi.minifi",
-                            "artifact": "minifi-system"
+                            "artifact": "minifi-aws"
                         },
                         "name": "AWS Credentials Provider service",
                         "description": "The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.",
@@ -7949,9 +7949,9 @@
                 "propertyDescriptors": {
                     "AWS Credentials Provider service": {
                         "typeProvidedByValue": {
-                            "type": "org.apache.nifi.minifi.aws.AWSCredentialsProvider",
+                            "type": "org.apache.nifi.minifi.aws.controllers.AWSCredentialsService",
                             "group": "org.apache.nifi.minifi",
-                            "artifact": "minifi-system"
+                            "artifact": "minifi-aws"
                         },
                         "name": "AWS Credentials Provider service",
                         "description": "The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.",
@@ -8531,9 +8531,9 @@
                 "propertyDescriptors": {
                     "AWS Credentials Provider service": {
                         "typeProvidedByValue": {
-                            "type": "org.apache.nifi.minifi.aws.AWSCredentialsProvider",
+                            "type": "org.apache.nifi.minifi.aws.controllers.AWSCredentialsService",
                             "group": "org.apache.nifi.minifi",
-                            "artifact": "minifi-system"
+                            "artifact": "minifi-aws"
                         },
                         "name": "AWS Credentials Provider service",
                         "description": "The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.",
