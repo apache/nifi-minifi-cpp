@@ -26,6 +26,7 @@ def before_feature(context, feature):
         is_x86 = platform.machine() in ("i386", "AMD64", "x86_64")
         if not is_x86:
             feature.skip("This feature is only x86/x64 compatible")
+            return
 
     docker.from_env().images.pull(SplunkContainer.IMAGE)
 
