@@ -23,6 +23,7 @@
 #include "core/state/nodes/SupportedOperations.h"
 #include "minifi-c/minifi-c.h"
 #include "minifi-cpp/agent/agent_version.h"
+#include "minifi-cpp/controllers/AttributeProviderService.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 #include "minifi-cpp/controllers/RecordSetReader.h"
 #include "minifi-cpp/controllers/RecordSetWriter.h"
@@ -53,7 +54,8 @@ bool minifiSystemAllowedType(const std::string_view allowed_type) {
   return allowed_type == controllers::SSLContextServiceInterface::ProvidesApi.type
       || allowed_type == core::RecordSetWriter::ProvidesApi.type
       || allowed_type == core::RecordSetReader::ProvidesApi.type
-      || allowed_type == controllers::ProxyConfigurationServiceInterface::ProvidesApi.type;
+      || allowed_type == controllers::ProxyConfigurationServiceInterface::ProvidesApi.type
+      || allowed_type == controllers::AttributeProviderService::ProvidesApi.type;
 }
 
 std::string allowedTypeArtifactName(const std::string_view allowed_type, const std::string_view prop_owner_type) {
