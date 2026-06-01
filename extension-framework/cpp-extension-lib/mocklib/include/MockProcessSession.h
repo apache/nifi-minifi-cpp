@@ -73,7 +73,8 @@ class MockProcessSession : public api::core::ProcessSession {
 
  private:
   std::vector<std::unique_ptr<MinifiFlowFile>> input_flow_files_;
-  std::map<std::string, std::vector<std::unique_ptr<MinifiFlowFile>>> transferred_flow_files_;
+  using RelationshipName = std::string;
+  std::map<RelationshipName, std::vector<std::unique_ptr<MinifiFlowFile>>> transferred_flow_files_;
   std::vector<std::unique_ptr<MinifiFlowFile>> removed_flow_files_;
 };
 
