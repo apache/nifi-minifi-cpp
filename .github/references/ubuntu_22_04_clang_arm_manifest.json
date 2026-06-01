@@ -11152,7 +11152,14 @@
                 "typeDescription": "Controller service that provides access to the Kubernetes API",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
-                "type": "org.apache.nifi.minifi.controllers.KubernetesControllerService"
+                "type": "org.apache.nifi.minifi.controllers.KubernetesControllerService",
+                "providedApiImplementations": [
+                    {
+                        "artifact": "minifi-system",
+                        "group": "org.apache.nifi.minifi",
+                        "type": "org.apache.nifi.minifi.controllers.AttributeProviderService"
+                    }
+                ]
             },
             {
                 "propertyDescriptors": {

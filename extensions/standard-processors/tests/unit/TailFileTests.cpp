@@ -1718,6 +1718,8 @@ class TestAttributeProviderService final : public minifi::controllers::Attribute
   static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
+  static constexpr auto ImplementsApis = std::array{ AttributeProviderService::ProvidesApi };
+
   void initialize() override {};
   void onEnable() override {};
   std::optional<std::vector<AttributeMap>> getAttributes() override {
