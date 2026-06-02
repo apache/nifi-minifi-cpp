@@ -22,7 +22,7 @@ namespace org::apache::nifi::minifi::api::core {
 
 std::expected<std::string, std::error_code> ControllerServiceContext::getProperty(const std::string_view name) const {
   std::optional<std::string> value = std::nullopt;
-  const MinifiStatus status = MinifiControllerServiceContextGetProperty(impl_, utils::toStringView(name),
+  const MinifiStatus status = MinifiControllerServiceContextGetProperty(impl_, utils::minifiStringView(name),
     [] (void* data, const MinifiStringView result) {
       (*static_cast<std::optional<std::string>*>(data)) = std::string(result.data, result.length);
     }, &value);

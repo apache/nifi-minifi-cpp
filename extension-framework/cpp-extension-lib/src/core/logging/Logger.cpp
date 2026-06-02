@@ -49,19 +49,19 @@ minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel level) {
 
 }  // namespace
 
-void Logger::set_max_log_size(int size) {
+void CffiLogger::set_max_log_size(const int size) {
   MinifiLoggerSetMaxLogSize(impl_, size);
 }
 
-void Logger::log_string(minifi::core::logging::LOG_LEVEL level, std::string str) {
+void CffiLogger::log_string(const minifi::core::logging::LOG_LEVEL level, const std::string str) {
   MinifiLoggerLogString(impl_, toCLogLevel(level), MinifiStringView{.data = str.data(), .length = str.length()});
 }
 
-bool Logger::should_log(minifi::core::logging::LOG_LEVEL level) {
+bool CffiLogger::should_log(const minifi::core::logging::LOG_LEVEL level) {
   return MinifiLoggerShouldLog(impl_, toCLogLevel(level));
 }
 
-[[nodiscard]] minifi::core::logging::LOG_LEVEL Logger::level() const {
+[[nodiscard]] minifi::core::logging::LOG_LEVEL CffiLogger::level() const {
   return toLogLevel(MinifiLoggerLevel(impl_));
 }
 

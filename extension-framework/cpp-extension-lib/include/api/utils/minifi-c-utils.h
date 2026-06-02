@@ -32,8 +32,16 @@
 
 namespace org::apache::nifi::minifi::api::utils {
 
-inline MinifiStringView toStringView(std::string_view str) {
+inline MinifiStringView minifiStringView(const std::string_view str) {
   return MinifiStringView{.data = str.data(), .length = str.length()};
+}
+
+inline std::string toString(const MinifiStringView sv) {
+  return {sv.data, sv.length};
+}
+
+inline std::string_view toStringView(const MinifiStringView sv) {
+  return {sv.data, sv.length};
 }
 
 template<typename T>
@@ -59,27 +67,27 @@ inline std::vector<MinifiPropertyDefinition> toProperties(std::span<const minifi
       std::vector<MinifiStringView> sv_cache;
       const size_t allowed_values_begin = sv_cache.size();
       for (auto& allowed_value : prop.allowed_values) {
-        sv_cache.emplace_back(toStringView(allowed_value));
+        sv_cache.emplace_back(minifiStringView(allowed_value));
       }
       const std::optional<size_t> allowed_types_begin = [&] () -> std::optional<size_t> {
         if (prop.allowed_types.empty()) {
           return std::nullopt;
         }
         gsl_Expects(prop.allowed_types.size() == 1);
-        sv_cache.emplace_back(toStringView(prop.allowed_types[0]));
+        sv_cache.emplace_back(minifiStringView(prop.allowed_types[0]));
         return sv_cache.size() - 1;
       }();
       const std::optional<size_t> default_value_begin = [&] () -> std::optional<size_t> {
         if (!prop.default_value) {
           return std::nullopt;
         }
-        sv_cache.emplace_back(toStringView(*prop.default_value));
+        sv_cache.emplace_back(minifiStringView(*prop.default_value));
         return sv_cache.size() - 1;
       }();
       properties.push_back(MinifiPropertyDefinition{
-        .name = toStringView(prop.name),
-        .display_name = toStringView(prop.display_name),
-        .description = toStringView(prop.description),
+        .name = minifiStringView(prop.name),
+        .display_name = minifiStringView(prop.display_name),
+        .description = minifiStringView(prop.description),
         .is_required = prop.is_required,
         .is_sensitive = prop.is_sensitive,
 

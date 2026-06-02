@@ -28,8 +28,8 @@ CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_API_VERSION;
 
 CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context) {
   MinifiExtensionDefinition extension_definition{
-    .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
-    .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
+    .name = minifi::api::utils::minifiStringView(MAKESTRING(EXTENSION_NAME)),
+    .version = minifi::api::utils::minifiStringView(MAKESTRING(EXTENSION_VERSION)),
     .deinit = nullptr,
     .user_data = nullptr
   };
