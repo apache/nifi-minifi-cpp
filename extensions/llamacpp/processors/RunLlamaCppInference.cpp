@@ -28,7 +28,7 @@
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
-MinifiStatus RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& context) {
   model_path_.clear();
   model_path_ = api::utils::parseProperty(context, ModelPath);
   multimodal_model_path_ = api::utils::parseOptionalProperty(context, MultiModalModelPath);
@@ -69,7 +69,10 @@ void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
   metrics_.tokens_out += token_count;
 }
 
-MinifiStatus RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+  auto report_metrics = gsl::finally([&](){
+    std::ignore = context.reportMetrics(metrics_.calculateMetrics());
+  });
   auto flow_file = session.get();
   if (!flow_file) {
     return MINIFI_STATUS_PROCESSOR_YIELD;

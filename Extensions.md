@@ -21,33 +21,33 @@ Extensions are dynamic libraries loaded at runtime by the agent.
 
 ## C extensions
 You can build shared libraries using the API defined in `minifi-c.h`
-For the shared library to be considered a valid extension, it must export a global symbol with the name `MinifiApiVersion`
+For the shared library to be considered a valid extension, it must export a global symbol with the name `minifi_api_version`
 with its value equal to the uint32_t constant `MINIFI_API_VERSION` from `minifi-c.h`.
 
 ### Resource Lifetime
 
-Unless otherwise specified, the following lifetime rules apply to all functions called by the agent (e.g., `MinifiInitExtension`, `MinifiProcessorCallbacks::onTrigger`, or other callbacks):
+Unless otherwise specified, the following lifetime rules apply to all functions called by the agent (e.g., `minifi_init_extension`, `MinifiProcessorCallbacks::onTrigger`, or other callbacks):
 
 * Arguments: The lifetime of any resource provided as a function argument is limited to the duration of that function call.
 
 * Created Resources: The lifetime of resources created within these functions (e.g., a handle returned by `MinifiProcessSessionGet` inside `MinifiProcessorCallbacks::onTrigger`)
 is limited to the scope of the innermost callback.
-(the return value of `MinifiRegisterExtension` is only valid during the execution of `MinifiInitExtension`).
+(the return value of `minifi_register_extension` is only valid during the execution of `minifi_init_extension`).
 
-Because of these scoping rules, all processor and controller service registrations must occur within the `MinifiInitExtension` call.
+Because of these scoping rules, all processor and controller service registrations must occur within the `minifi_init_extension` call.
 One possible example of this is:
 
 ```C++
-extern "C" const uint32_t MinifiApiVersion = MINIFI_API_VERSION;
+extern "C" const uint32_t minifi_api_version = MINIFI_API_VERSION;
 
-extern "C" void MinifiInitExtension(MinifiExtensionContext* extension_context) {
+extern "C" void minifi_init_extension(MinifiExtensionContext* extension_context) {
   MinifiExtensionDefinition extension_definition{
     .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
     .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
     .deinit = nullptr,
     .user_data = nullptr
   };
-  auto* extension = MinifiRegisterExtension(extension_context, &extension_definition);
+  auto* extension = minifi_register_extension(extension_context, &extension_definition);
   minifi::api::core::useProcessorClassDefinition<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& definition) {
     MinifiRegisterProcessor(extension, &definition);
   });
@@ -73,10 +73,10 @@ REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
 Some extensions (e.g. `Python`) require initialization before use.
-You need to define an `MinifiInitCppExtension` function of type `MinifiExtension*(MinifiExtensionContext*)` to be called.
+You need to define an `minifi_init_cpp_extension` function of type `MinifiExtension*(MinifiExtensionContext*)` to be called.
 
 ```C++
-extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
+extern "C" void minifi_init_cpp_extension(MinifiExtensionContext* extension_context) {
   static PythonLibLoader python_lib_loader([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
     MinifiConfigGet(extension_context, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {

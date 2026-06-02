@@ -40,17 +40,17 @@ class DummyCProcessor : public minifi::api::core::ProcessorImpl {
   static constexpr bool IsSingleThreaded = true;
 };
 
-CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
+CEXTENSIONAPI const uint32_t minifi_api_version = MINIFI_TEST_API_VERSION;
 
-CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context) {
-  MinifiExtensionDefinition extension_definition{
+CEXTENSIONAPI void minifi_init_extension(minifi_extension_context* extension_context) {
+  minifi_extension_definition extension_definition{
     .name = minifi::api::utils::minifiStringView(MAKESTRING(EXTENSION_NAME)),
     .version = minifi::api::utils::minifiStringView(MAKESTRING(EXTENSION_VERSION)),
     .deinit = nullptr,
     .user_data = nullptr
   };
-  auto extension = MinifiRegisterExtension(extension_context, &extension_definition);
-  minifi::api::core::useProcessorClassDefinition<DummyCProcessor>([&] (const MinifiProcessorClassDefinition& definition) {
-    MinifiRegisterProcessor(extension, &definition);
+  auto extension = minifi_register_extension(extension_context, &extension_definition);
+  minifi::api::core::useProcessorClassDefinition<DummyCProcessor>([&] (const minifi_processor_class_definition& definition) {
+    minifi_register_processor(extension, &definition);
   });
 }

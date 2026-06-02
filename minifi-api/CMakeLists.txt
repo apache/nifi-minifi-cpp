@@ -17,7 +17,7 @@ endif()
 if (WIN32)
   set(IMPORT_LIB_FILE ${CMAKE_CURRENT_BINARY_DIR}/minifi-c-api.lib)
   add_custom_target(minifi_c_api_import_lib
-    COMMAND lib.exe /def:${CMAKE_CURRENT_SOURCE_DIR}/minifi-c-api.def /out:${IMPORT_LIB_FILE} /machine:x64
+    COMMAND lib.exe /def:${CMAKE_CURRENT_SOURCE_DIR}/minifi-api.def /out:${IMPORT_LIB_FILE} /machine:x64
     BYPRODUCTS ${IMPORT_LIB_FILE}
   )
 

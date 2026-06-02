@@ -21,12 +21,12 @@
 #include <memory>
 #include <stdexcept>
 
-#include "minifi-c.h"
+#include "minifi-api.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
 struct EnsureMovedFromDeleter {
-  void operator()(MinifiFlowFile* ff) {
+  void operator()(minifi_flow_file* ff) {
     if (ff) {
       if (std::uncaught_exceptions()) {
         // there is already an exception in progress, do not terminate the process (although there are scenarios we could throw here)
@@ -37,6 +37,6 @@ struct EnsureMovedFromDeleter {
   }
 };
 
-using FlowFile = std::unique_ptr<MinifiFlowFile, EnsureMovedFromDeleter>;
+using FlowFile = std::unique_ptr<minifi_flow_file, EnsureMovedFromDeleter>;
 
 }  // namespace org::apache::nifi::minifi::api::core

@@ -80,7 +80,7 @@ class FetchFromGCSCallback {
 };
 }  // namespace
 
-MinifiStatus FetchGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status FetchGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
   const auto status = GCSProcessor::onScheduleImpl(context);
   if (MINIFI_STATUS_SUCCESS != status) { return status; }
   if (auto encryption_key = context.getProperty(EncryptionKey, nullptr)) {
@@ -94,7 +94,7 @@ MinifiStatus FetchGCSObject::onScheduleImpl(api::core::ProcessContext& context) 
   return MINIFI_STATUS_SUCCESS;
 }
 
-MinifiStatus FetchGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status FetchGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   gsl_Expects(gcp_credentials_);
 
   auto flow_file = session.get();

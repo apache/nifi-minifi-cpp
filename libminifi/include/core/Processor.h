@@ -83,6 +83,7 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   void setMaxConcurrentTasks(uint8_t tasks) override;
   bool isSingleThreaded() const;
   std::string getProcessorType() const;
+  void setTriggerWhenEmpty(bool trigger_when_empty);
   bool getTriggerWhenEmpty() const;
   uint8_t getActiveTasks() const;
   void incrementActiveTasks();

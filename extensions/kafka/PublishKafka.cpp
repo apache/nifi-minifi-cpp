@@ -328,7 +328,7 @@ void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage
 }
 }  // namespace
 
-MinifiStatus PublishKafka::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status PublishKafka::onScheduleImpl(api::core::ProcessContext& context) {
   interrupted_ = false;
 
   // Try to get a KafkaConnection
@@ -607,7 +607,7 @@ std::optional<api::utils::net::SslData> PublishKafka::getSslData(api::core::Proc
   return ssl_data;
 }
 
-MinifiStatus PublishKafka::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   // Check whether we have been interrupted
   if (interrupted_) {
     logger_->log_info("The processor has been interrupted, not running onTrigger");

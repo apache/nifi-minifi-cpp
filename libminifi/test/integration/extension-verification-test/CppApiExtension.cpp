@@ -24,8 +24,8 @@
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
-  MinifiExtensionDefinition extension_definition{
+extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_context) {
+  minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView("1.0.0"),
     .deinit = nullptr,

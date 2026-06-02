@@ -31,7 +31,7 @@ std::shared_ptr<google::cloud::Credentials> GCSProcessor::getCredentials(const a
   return nullptr;
 }
 
-MinifiStatus GCSProcessor::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status GCSProcessor::onScheduleImpl(api::core::ProcessContext& context) {
   if (const auto number_of_retries = api::utils::parseOptionalU64Property(context, NumberOfRetries)) {
     retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(gsl::narrow<int>(*number_of_retries));
   }

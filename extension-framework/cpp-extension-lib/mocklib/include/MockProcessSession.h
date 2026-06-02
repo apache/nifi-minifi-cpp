@@ -24,20 +24,20 @@
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/transform.hpp"
 
-struct MinifiFlowFile {
-  explicit MinifiFlowFile(std::string content_str) {
+struct minifi_flow_file {
+  explicit minifi_flow_file(std::string content_str) {
     this->content = content_str
            | ranges::views::transform([](char c) { return static_cast<std::byte>(c); })
            | ranges::to<std::vector<std::byte>>();
   }
 
-  ~MinifiFlowFile() = default;
+  ~minifi_flow_file() = default;
 
-  MinifiFlowFile() = default;
-  MinifiFlowFile(const MinifiFlowFile&) = default;
-  MinifiFlowFile(MinifiFlowFile&&) = default;
-  MinifiFlowFile& operator=(const MinifiFlowFile&) = default;
-  MinifiFlowFile& operator=(MinifiFlowFile&&) = default;
+  minifi_flow_file() = default;
+  minifi_flow_file(const minifi_flow_file&) = default;
+  minifi_flow_file(minifi_flow_file&&) = default;
+  minifi_flow_file& operator=(const minifi_flow_file&) = default;
+  minifi_flow_file& operator=(minifi_flow_file&&) = default;
 
   std::map<std::string, std::string> attributes;
   std::vector<std::byte> content;
@@ -69,13 +69,13 @@ class MockProcessSession : public api::core::ProcessSession {
   [[nodiscard]] std::string getFlowFileId(const api::core::FlowFile& ff) const override;
   [[nodiscard]] uint64_t getFlowFileSize(const api::core::FlowFile& ff) const override;
 
-  void addInputFlowFile(std::unique_ptr<MinifiFlowFile> flow_file);
+  void addInputFlowFile(std::unique_ptr<minifi_flow_file> flow_file);
 
  private:
-  std::vector<std::unique_ptr<MinifiFlowFile>> input_flow_files_;
+  std::vector<std::unique_ptr<minifi_flow_file>> input_flow_files_;
   using RelationshipName = std::string;
-  std::map<RelationshipName, std::vector<std::unique_ptr<MinifiFlowFile>>> transferred_flow_files_;
-  std::vector<std::unique_ptr<MinifiFlowFile>> removed_flow_files_;
+  std::map<RelationshipName, std::vector<std::unique_ptr<minifi_flow_file>>> transferred_flow_files_;
+  std::vector<std::unique_ptr<minifi_flow_file>> removed_flow_files_;
 };
 
 }  // namespace org::apache::nifi::minifi::mock

@@ -43,7 +43,7 @@ class DogController : public api::core::ControllerServiceImpl, public CanFlyCont
           core::createProvidedInterface<NumberOfLegsControllerApi, DogController>()});
 
   using ControllerServiceImpl::ControllerServiceImpl;
-  MinifiStatus enableImpl(api::core::ControllerServiceContext& ctx) override;
+  minifi_status enableImpl(api::core::ControllerServiceContext& ctx) override;
 
   uint8_t numberOfLegs() const override { return 4; }
   bool canFly() const override { return has_jetpack_; }
@@ -61,7 +61,7 @@ class DuckController : public api::core::ControllerServiceImpl, public CanFlyCon
       std::to_array<core::ProvidedInterface>({core::createProvidedInterface<CanFlyControllerApi, DuckController>(),
           core::createProvidedInterface<NumberOfLegsControllerApi, DuckController>()});
   using ControllerServiceImpl::ControllerServiceImpl;
-  MinifiStatus enableImpl(api::core::ControllerServiceContext&) override { return MINIFI_STATUS_SUCCESS; }
+  minifi_status enableImpl(api::core::ControllerServiceContext&) override { return MINIFI_STATUS_SUCCESS; }
 
   uint8_t numberOfLegs() const override { return 2; }
   bool canFly() const override { return true; }

@@ -32,7 +32,7 @@ ControllerServiceImpl::~ControllerServiceImpl() {
   logger_->log_debug("Destroying controller service {} with uuid {}", getName(), getUUIDStr());
 }
 
-MinifiStatus ControllerServiceImpl::enable(ControllerServiceContext& ctx) {
+minifi_status ControllerServiceImpl::enable(ControllerServiceContext& ctx) {
   try {
     return enableImpl(ctx);
   } catch (const std::exception& e) {

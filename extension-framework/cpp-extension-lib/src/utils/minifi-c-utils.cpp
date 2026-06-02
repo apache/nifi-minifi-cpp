@@ -20,7 +20,7 @@
 
 namespace org::apache::nifi::minifi::api::utils {
 
-std::error_code make_error_code(MinifiStatus status) {
+std::error_code make_error_code(minifi_status status) {
   switch (status) {
     case MINIFI_STATUS_NOT_SUPPORTED_PROPERTY: return make_error_code(minifi::core::PropertyErrorCode::NotSupportedProperty);
     case MINIFI_STATUS_DYNAMIC_PROPERTIES_NOT_SUPPORTED: return make_error_code(minifi::core::PropertyErrorCode::DynamicPropertiesNotSupported);
@@ -30,7 +30,7 @@ std::error_code make_error_code(MinifiStatus status) {
   }
 }
 
-MinifiValidator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator) {
+minifi_validator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator) {
   if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
     return MINIFI_VALIDATOR_ALWAYS_VALID;
   }

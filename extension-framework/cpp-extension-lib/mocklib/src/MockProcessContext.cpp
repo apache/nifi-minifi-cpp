@@ -32,16 +32,12 @@ std::expected<std::string, std::error_code> MockProcessContext::getProperty(cons
   return std::unexpected{make_error_code(core::PropertyErrorCode::PropertyNotSet)};
 }
 
-std::expected<MinifiControllerService*, std::error_code> MockProcessContext::getControllerService(const minifi::core::PropertyReference&) const {
+std::expected<minifi_controller_service*, std::error_code> MockProcessContext::getControllerService(const minifi::core::PropertyReference&) const {
   return nullptr;
 }
 
 std::map<std::string, std::string> MockProcessContext::getDynamicProperties(const api::core::FlowFile*) const {
   return {};
-}
-
-bool MockProcessContext::hasNonEmptyProperty(const std::string_view name) const {
-  return properties_.contains(name);
 }
 
 std::expected<std::optional<api::utils::net::SslData>, std::error_code> MockProcessContext::getSslData(const minifi::core::PropertyReference&) const {

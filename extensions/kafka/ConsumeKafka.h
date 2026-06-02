@@ -284,8 +284,8 @@ class ConsumeKafka final : public KafkaProcessorBase {
   ConsumeKafka& operator=(ConsumeKafka&&) = delete;
   ~ConsumeKafka() override = default;
 
-  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
-  MinifiStatus onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  minifi_status onScheduleImpl(api::core::ProcessContext& context) override;
+  minifi_status onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
 
  private:
   struct KafkaMessageLocation {
@@ -321,8 +321,8 @@ class ConsumeKafka final : public KafkaProcessorBase {
   std::vector<std::pair<std::string, std::string>> getFlowFilesAttributesFromMessageHeaders(const rd_kafka_message_t& message) const;
   void addAttributesToSingleMessageFlowFile(api::core::ProcessSession& session, api::core::FlowFile& flow_file, const rd_kafka_message_t& message) const;
   void addAttributesToMessageBundleFlowFile(api::core::ProcessSession& session, api::core::FlowFile& flow_file, const MessageBundle& message_bundle) const;
-  MinifiStatus processMessages(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const;
-  MinifiStatus processMessageBundles(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles,
+  minifi_status processMessages(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const;
+  minifi_status processMessageBundles(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles,
       std::string_view message_demarcator) const;
 
   void commitOffsetsFromMessages(const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const;

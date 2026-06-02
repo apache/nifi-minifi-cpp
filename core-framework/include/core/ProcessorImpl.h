@@ -87,7 +87,7 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   std::string getProcessorType() const override = 0;
 
-  void setTriggerWhenEmpty(bool trigger_when_empty) {
+  void setTriggerWhenEmpty(const bool trigger_when_empty) override {
     trigger_when_empty_ = trigger_when_empty;
   }
 

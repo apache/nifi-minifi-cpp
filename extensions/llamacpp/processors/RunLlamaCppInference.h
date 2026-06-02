@@ -169,10 +169,9 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
 
-  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
-  MinifiStatus onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  minifi_status onScheduleImpl(api::core::ProcessContext& context) override;
+  minifi_status onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
   void onUnSchedule() override;
-  minifi::api::core::PublishedMetrics calculateMetrics() const override {return metrics_.calculateMetrics();}
 
  private:
   void increaseTokensIn(uint64_t token_count);

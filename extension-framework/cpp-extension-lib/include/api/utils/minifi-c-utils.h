@@ -16,13 +16,14 @@
  */
 #pragma once
 
-#include "minifi-c.h"
 #include <string_view>
-#include "minifi-cpp/core/Annotation.h"
-#include "minifi-cpp/utils/gsl.h"
+
 #include "core/ClassName.h"
-#include "utils/StringUtils.h"
+#include "minifi-api.h"
+#include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
+#include "minifi-cpp/utils/gsl.h"
+#include "utils/StringUtils.h"
 
 #ifdef WIN32
   #define CEXTENSIONAPI extern "C" __declspec(dllexport)
@@ -32,15 +33,15 @@
 
 namespace org::apache::nifi::minifi::api::utils {
 
-inline MinifiStringView minifiStringView(const std::string_view str) {
-  return MinifiStringView{.data = str.data(), .length = str.length()};
+inline minifi_string_view minifiStringView(const std::string_view str) {
+  return minifi_string_view{.data = str.data(), .length = str.length()};
 }
 
-inline std::string toString(const MinifiStringView sv) {
+inline std::string toString(const minifi_string_view sv) {
   return {sv.data, sv.length};
 }
 
-inline std::string_view toStringView(const MinifiStringView sv) {
+inline std::string_view toStringView(const minifi_string_view sv) {
   return {sv.data, sv.length};
 }
 
@@ -50,9 +51,9 @@ std::string classNameWithDots() {
   return minifi::utils::string::replaceAll(class_name, "::", ".");
 }
 
-MinifiValidator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator);
+minifi_validator toStandardPropertyValidator(const minifi::core::PropertyValidator* validator);
 
-inline MinifiInputRequirement toInputRequirement(minifi::core::annotation::Input req) {
+inline minifi_input_requirement toInputRequirement(minifi::core::annotation::Input req) {
   switch (req) {
     case minifi::core::annotation::Input::INPUT_REQUIRED: return MINIFI_INPUT_REQUIRED;
     case minifi::core::annotation::Input::INPUT_ALLOWED: return MINIFI_INPUT_ALLOWED;
@@ -61,10 +62,10 @@ inline MinifiInputRequirement toInputRequirement(minifi::core::annotation::Input
   gsl_FailFast();
 }
 
-inline std::vector<MinifiPropertyDefinition> toProperties(std::span<const minifi::core::PropertyReference> props, std::vector<std::vector<MinifiStringView>>& cache) {
-  std::vector<MinifiPropertyDefinition> properties;
+inline std::vector<minifi_property_definition> toProperties(std::span<const minifi::core::PropertyReference> props, std::vector<std::vector<minifi_string_view>>& cache) {
+  std::vector<minifi_property_definition> properties;
     for (auto& prop : props) {
-      std::vector<MinifiStringView> sv_cache;
+      std::vector<minifi_string_view> sv_cache;
       const size_t allowed_values_begin = sv_cache.size();
       for (auto& allowed_value : prop.allowed_values) {
         sv_cache.emplace_back(minifiStringView(allowed_value));
@@ -84,7 +85,7 @@ inline std::vector<MinifiPropertyDefinition> toProperties(std::span<const minifi
         sv_cache.emplace_back(minifiStringView(*prop.default_value));
         return sv_cache.size() - 1;
       }();
-      properties.push_back(MinifiPropertyDefinition{
+      properties.push_back(minifi_property_definition{
         .name = minifiStringView(prop.name),
         .display_name = minifiStringView(prop.display_name),
         .description = minifiStringView(prop.description),
@@ -96,7 +97,7 @@ inline std::vector<MinifiPropertyDefinition> toProperties(std::span<const minifi
         .allowed_values_ptr = sv_cache.data() + allowed_values_begin,
         .validator = toStandardPropertyValidator(prop.validator),
 
-        .type = allowed_types_begin ? sv_cache.data() + allowed_types_begin.value() : nullptr,
+        .allowed_type = allowed_types_begin ? sv_cache.data() + allowed_types_begin.value() : nullptr,
         .supports_expression_language = prop.supports_expression_language
       });
       cache.emplace_back(std::move(sv_cache));
@@ -104,6 +105,6 @@ inline std::vector<MinifiPropertyDefinition> toProperties(std::span<const minifi
   return properties;
 }
 
-std::error_code make_error_code(MinifiStatus status);
+std::error_code make_error_code(minifi_status status);
 
 }  // namespace org::apache::nifi::minifi::api::utils

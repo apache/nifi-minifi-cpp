@@ -28,16 +28,16 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-MinifiStatus ListGCSBucket::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status ListGCSBucket::onScheduleImpl(api::core::ProcessContext& context) {
   const auto status = GCSProcessor::onScheduleImpl(context);
-  if (status != MinifiStatus::MINIFI_STATUS_SUCCESS) {
+  if (status != minifi_status::MINIFI_STATUS_SUCCESS) {
     return status;
   }
   bucket_ = api::utils::parseProperty(context, Bucket);
-  return MinifiStatus::MINIFI_STATUS_SUCCESS;
+  return minifi_status::MINIFI_STATUS_SUCCESS;
 }
 
-MinifiStatus ListGCSBucket::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status ListGCSBucket::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   gsl_Expects(gcp_credentials_);
 
   gcs::Client client = getClient();
@@ -54,7 +54,7 @@ MinifiStatus ListGCSBucket::onTriggerImpl(api::core::ProcessContext& context, ap
       logger_->log_error("Invalid object in bucket {}", bucket_);
     }
   }
-  return MinifiStatus::MINIFI_STATUS_SUCCESS;
+  return minifi_status::MINIFI_STATUS_SUCCESS;
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp

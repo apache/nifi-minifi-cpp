@@ -63,7 +63,7 @@ class GCSProcessor : public api::core::ProcessorImpl {
   });
 
  protected:
-  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
+  minifi_status onScheduleImpl(api::core::ProcessContext& context) override;
 
   virtual google::cloud::storage::Client getClient() const;
   static std::shared_ptr<google::cloud::Credentials> getCredentials(const api::core::ProcessContext& context);

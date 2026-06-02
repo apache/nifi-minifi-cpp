@@ -51,17 +51,9 @@ class ProcessorImpl {
 
   virtual ~ProcessorImpl();
 
-  void setTriggerWhenEmpty(const bool trigger_when_empty) {
-    trigger_when_empty_ = trigger_when_empty;
-  }
+  minifi_status onTrigger(ProcessContext&, ProcessSession&);
 
-  virtual bool getTriggerWhenEmpty() const {
-    return trigger_when_empty_;
-  }
-
-  MinifiStatus onTrigger(ProcessContext&, ProcessSession&);
-
-  MinifiStatus onSchedule(ProcessContext&);
+  minifi_status onSchedule(ProcessContext&);
 
   virtual void onUnSchedule() {}
 
@@ -73,16 +65,12 @@ class ProcessorImpl {
   minifi::utils::Identifier getUUID() const;
   minifi::utils::SmallString<36> getUUIDStr() const;
 
-  virtual PublishedMetrics calculateMetrics() const {return {};}
-
  protected:
-  virtual MinifiStatus onTriggerImpl(ProcessContext&, ProcessSession&) {return MINIFI_STATUS_SUCCESS;}
+  virtual minifi_status onTriggerImpl(ProcessContext&, ProcessSession&) {return MINIFI_STATUS_SUCCESS;}
 
-  virtual MinifiStatus onScheduleImpl(ProcessContext&) {return MINIFI_STATUS_SUCCESS;}
+  virtual minifi_status onScheduleImpl(ProcessContext&) {return MINIFI_STATUS_SUCCESS;}
 
   minifi::core::ProcessorMetadata metadata_;
-
-  std::atomic<bool> trigger_when_empty_;
 
   std::shared_ptr<minifi::core::logging::Logger> logger_;
 };

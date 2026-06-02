@@ -29,10 +29,10 @@ namespace {
 
 class MinifiOutputStreamWrapper : public io::OutputStreamImpl {
  public:
-  explicit MinifiOutputStreamWrapper(MinifiOutputStream* impl): impl_(impl) {}
+  explicit MinifiOutputStreamWrapper(minifi_output_stream* impl): impl_(impl) {}
 
   size_t write(const uint8_t *value, size_t len) override {
-    return MinifiOutputStreamWrite(impl_, reinterpret_cast<const char*>(value), len);
+    return minifi_output_stream_write(impl_, reinterpret_cast<const char*>(value), len);
   }
 
   void close() override {gsl_FailFast();}
@@ -42,19 +42,19 @@ class MinifiOutputStreamWrapper : public io::OutputStreamImpl {
   [[nodiscard]] std::span<const std::byte> getBuffer() const override {gsl_FailFast();}
 
  private:
-  MinifiOutputStream* impl_;
+  minifi_output_stream* impl_;
 };
 
 class MinifiInputStreamWrapper : public io::InputStreamImpl {
  public:
-  explicit MinifiInputStreamWrapper(MinifiInputStream* impl): impl_(impl) {}
+  explicit MinifiInputStreamWrapper(minifi_input_stream* impl): impl_(impl) {}
 
   size_t read(std::span<std::byte> out_buffer) override {
-    return MinifiInputStreamRead(impl_, reinterpret_cast<char*>(out_buffer.data()), out_buffer.size());
+    return minifi_input_stream_read(impl_, reinterpret_cast<char*>(out_buffer.data()), out_buffer.size());
   }
 
   [[nodiscard]] size_t size() const override {
-    return MinifiInputStreamSize(impl_);
+    return minifi_input_stream_size(impl_);
   }
 
   void close() override {gsl_FailFast();}
@@ -64,43 +64,43 @@ class MinifiInputStreamWrapper : public io::InputStreamImpl {
   [[nodiscard]] std::span<const std::byte> getBuffer() const override {gsl_FailFast();}
 
  private:
-  MinifiInputStream* impl_;
+  minifi_input_stream* impl_;
 };
 
 }  // namespace
 
 FlowFile CffiProcessSession::get() {
-  return FlowFile{MinifiProcessSessionGet(impl_)};
+  return FlowFile{minifi_process_session_get(impl_)};
 }
 
 FlowFile CffiProcessSession::create(const FlowFile* parent) {
-  return FlowFile{MinifiProcessSessionCreate(impl_, parent ? parent->get() : MINIFI_NULL)};
+  return FlowFile{minifi_process_session_create(impl_, parent ? parent->get() : nullptr)};
 }
 
 void CffiProcessSession::penalize(FlowFile& ff) {
-  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionPenalize(impl_, ff.get())) {
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_penalize(impl_, ff.get())) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to penalize flowfile");
   }
 }
 
 void CffiProcessSession::transfer(FlowFile ff, const minifi::core::Relationship& relationship) {
   const auto rel_name = relationship.getName();
-  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionTransfer(impl_, ff.release(), utils::minifiStringView(rel_name))) {
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_transfer(impl_, ff.release(), utils::minifiStringView(rel_name))) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to transfer flowfile");
   }
 }
 
 void CffiProcessSession::remove(FlowFile ff) {
-  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionRemove(impl_, ff.release())) {
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_remove(impl_, ff.release())) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to remove flowfile");
   }
 }
 
 void CffiProcessSession::write(FlowFile& flow_file, const io::OutputStreamCallback& callback) {
-  const auto status = MinifiProcessSessionWrite(
+  const auto status = minifi_process_session_write(
       impl_,
       flow_file.get(),
-      [](void* data, MinifiOutputStream* output) -> int64_t {
+      [](void* data, minifi_output_stream* output) -> int64_t {
         const auto result =
             (*static_cast<const io::OutputStreamCallback*>(data))(std::make_shared<MinifiOutputStreamWrapper>(output));
         return result.toI64();
@@ -110,10 +110,10 @@ void CffiProcessSession::write(FlowFile& flow_file, const io::OutputStreamCallba
 }
 
 void CffiProcessSession::read(FlowFile& flow_file, const io::InputStreamCallback& callback) {
-  const auto status = MinifiProcessSessionRead(
+  const auto status = minifi_process_session_read(
       impl_,
       flow_file.get(),
-      [](void* data, MinifiInputStream* input) -> int64_t {
+      [](void* data, minifi_input_stream* input) -> int64_t {
         const auto result =
             (*static_cast<const io::InputStreamCallback*>(data))(std::make_shared<MinifiInputStreamWrapper>(input));
         return result.toI64();
@@ -123,21 +123,21 @@ void CffiProcessSession::read(FlowFile& flow_file, const io::InputStreamCallback
 }
 
 void CffiProcessSession::setAttribute(FlowFile& ff, const std::string_view key, std::string value) {  // NOLINT(performance-unnecessary-value-param)
-  const MinifiStringView value_ref = utils::minifiStringView(value);
-  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionSetFlowFileAttribute(impl_, ff.get(), utils::minifiStringView(key), &value_ref)) {
+  const minifi_string_view value_ref = utils::minifiStringView(value);
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_set_flow_file_attribute(impl_, ff.get(), utils::minifiStringView(key), &value_ref)) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to set attribute");
   }
 }
 
 void CffiProcessSession::removeAttribute(FlowFile& ff, const std::string_view key) {
-  if (MINIFI_STATUS_SUCCESS != MinifiProcessSessionSetFlowFileAttribute(impl_, ff.get(), utils::minifiStringView(key), nullptr)) {
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_set_flow_file_attribute(impl_, ff.get(), utils::minifiStringView(key), nullptr)) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to remove attribute");
   }
 }
 
 std::optional<std::string> CffiProcessSession::getAttribute(FlowFile& ff, std::string_view key) {
   std::optional<std::string> result;
-  MinifiProcessSessionGetFlowFileAttribute(impl_, ff.get(), utils::minifiStringView(key), [] (void* user_ctx, MinifiStringView value) {
+  minifi_process_session_get_flow_file_attribute(impl_, ff.get(), utils::minifiStringView(key), [] (void* user_ctx, minifi_string_view value) {
     *static_cast<std::optional<std::string>*>(user_ctx) = std::string{value.data, value.length};
   }, &result);
   return result;
@@ -145,7 +145,7 @@ std::optional<std::string> CffiProcessSession::getAttribute(FlowFile& ff, std::s
 
 std::map<std::string, std::string> CffiProcessSession::getAttributes(const FlowFile& ff) const {
   std::map<std::string, std::string> result;
-  MinifiProcessSessionGetFlowFileAttributes(impl_, ff.get(), [] (void* user_ctx, const MinifiStringView key, const MinifiStringView value) {
+  minifi_process_session_get_flow_file_attributes(impl_, ff.get(), [] (void* user_ctx, const minifi_string_view key, const minifi_string_view value) {
     static_cast<std::map<std::string, std::string>*>(user_ctx)->insert({std::string{key.data, key.length}, std::string{value.data, value.length}});
   }, &result);
   return result;
@@ -153,14 +153,14 @@ std::map<std::string, std::string> CffiProcessSession::getAttributes(const FlowF
 
 std::string CffiProcessSession::getFlowFileId(const FlowFile& ff) const {
   std::string result;
-  MinifiProcessSessionGetFlowFileId(impl_, ff.get(), [](void* user_ctx, const MinifiStringView value) {
+  minifi_process_session_get_flow_file_id(impl_, ff.get(), [](void* user_ctx, const minifi_string_view value) {
       *static_cast<std::string*>(user_ctx) = std::string{value.data, value.length};
   }, &result);
   return result;
 }
 
 uint64_t CffiProcessSession::getFlowFileSize(const FlowFile& ff) const {
-  return MinifiProcessSessionGetFlowFileSize(impl_, ff.get());
+  return minifi_process_session_get_flow_file_size(impl_, ff.get());
 }
 
 void ProcessSession::writeBuffer(FlowFile& flow_file, std::span<const char> buffer) {

@@ -22,7 +22,7 @@
 
 namespace org::apache::nifi::minifi::api_testing {
 
-MinifiStatus ZooProcessor::onTriggerImpl(api::core::ProcessContext& process_context, api::core::ProcessSession& process_session) {
+minifi_status ZooProcessor::onTriggerImpl(api::core::ProcessContext& process_context, api::core::ProcessSession& process_session) {
   if (const auto can_fly_opaque = process_context.getControllerService(CanFlyService)) {
     if (*can_fly_opaque) {
       const auto can_fly_controller_name = process_context.getProperty(CanFlyService, nullptr) | utils::orThrow("Should be here");
@@ -40,7 +40,7 @@ MinifiStatus ZooProcessor::onTriggerImpl(api::core::ProcessContext& process_cont
   return ProcessorImpl::onTriggerImpl(process_context, process_session);
 }
 
-MinifiStatus ZooProcessor::onScheduleImpl(api::core::ProcessContext& process_context) {
+minifi_status ZooProcessor::onScheduleImpl(api::core::ProcessContext& process_context) {
   return ProcessorImpl::onScheduleImpl(process_context);
 }
 }  // namespace org::apache::nifi::minifi::api_testing
