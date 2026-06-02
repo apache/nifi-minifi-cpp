@@ -421,7 +421,7 @@ MinifiLogLevel MinifiLoggerLevel(MinifiLogger* logger) {
 }
 
 MINIFI_OWNED gsl::owner<MinifiPublishedMetrics*> MinifiPublishedMetricsCreate(const size_t count, const MinifiStringView* metric_names, const double* metric_values) {
-  const gsl::owner<std::vector<minifi::state::PublishedMetric>*> metrics = new std::vector<minifi::state::PublishedMetric>();  // NOLINT(modernize-use-auto)
+  gsl::owner<std::vector<minifi::state::PublishedMetric>*> metrics = new std::vector<minifi::state::PublishedMetric>();  // NOLINT(modernize-use-auto, cppcoreguidelines-owning-memory)
   metrics->reserve(count);
   for (size_t i = 0; i < count; i++) {
     metrics->emplace_back(minifi::state::PublishedMetric{toString(metric_names[i]), metric_values[i], {}});
