@@ -20,20 +20,16 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
 #include <optional>
-#include <utility>
 #include <tuple>
 
-#include "minifi-cpp/core/PropertyDefinition.h"
-#include "minifi-cpp/core/Property.h"
-#include "core/PropertyDefinitionBuilder.h"
-#include "core/ProcessorImpl.h"
-#include "minifi-cpp/core/logging/Logger.h"
-#include "storage/AzureStorageCredentials.h"
-#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 #include "controllers/ProxyConfiguration.h"
+#include "controllerservices/AzureStorageCredentialsService.h"
+#include "core/ProcessorImpl.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "storage/AzureStorageCredentials.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -41,6 +37,7 @@ class AzureStorageProcessorBase : public core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr auto AzureStorageCredentialsService = core::PropertyDefinitionBuilder<>::createProperty("Azure Storage Credentials Service")
       .withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
+      .withAllowedTypes<azure::controllers::AzureStorageCredentialsService>()
       .build();
   EXTENSIONAPI static constexpr auto ProxyConfigurationService = core::PropertyDefinitionBuilder<>::createProperty("Proxy Configuration Service")
       .withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests.")
@@ -61,7 +58,6 @@ class AzureStorageProcessorBase : public core::ProcessorImpl {
 
   std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(core::ProcessContext &context) const;
 
- protected:
   minifi::controllers::ProxyConfiguration proxy_configuration_;
 };
 
