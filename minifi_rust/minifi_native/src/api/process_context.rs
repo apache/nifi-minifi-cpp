@@ -119,6 +119,6 @@ where
     where
         Cs: EnableControllerService + ComponentIdentifier + 'static,
     {
-        self.get_controller_service(property)
+        ProcessContext::get_controller_service::<Cs>(self, property)
     }
 }
