@@ -17,11 +17,12 @@
 
 #include <cstring>
 #include <memory>
-#include "utils/AWSSdkLogger.h"
+
 #include "aws/core/Aws.h"
-#include "minifi-c/minifi-c.h"
-#include "utils/ExtensionInitUtils.h"
+#include "minifi-c/minifi-api.h"
 #include "minifi-cpp/agent/agent_version.h"
+#include "utils/AWSSdkLogger.h"
+#include "utils/ExtensionInitUtils.h"
 
 #define MKSOC(x) #x
 #define MAKESTRING(x) MKSOC(x)  // NOLINT(cppcoreguidelines-macro-usage)
@@ -31,14 +32,14 @@ namespace minifi = org::apache::nifi::minifi;
 namespace org::apache::nifi::minifi::aws::init {
 namespace {
 template<size_t N>
-MinifiStringView toStringView(const char (&s)[N]) {  // NOLINT(cppcoreguidelines-avoid-c-arrays): using template argument deduction for string literal length requires reference to array
-  return MinifiStringView{.data = s, .length = N};
+minifi_string_view toStringView(const char (&s)[N]) {  // NOLINT(cppcoreguidelines-avoid-c-arrays): using template argument deduction for string literal length requires reference to array
+  return minifi_string_view{.data = s, .length = N};
 }
-MinifiStringView toStringView(const char* s) {
+minifi_string_view toStringView(const char* s) {
   if (!s) {
-    return MinifiStringView{.data = nullptr, .length = 0};
+    return minifi_string_view{.data = nullptr, .length = 0};
   }
-  return MinifiStringView{.data = s, .length = std::strlen(s)};
+  return minifi_string_view{.data = s, .length = std::strlen(s)};
 }
 }  // namespace
 
@@ -50,13 +51,13 @@ void deinit(gsl::owner<void*> sdk_opts_ptr) {
 }
 }  // namespace org::apache::nifi::minifi::aws::init
 
-extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
+extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_context) {
   using minifi::aws::init::toStringView;
   auto sdk_options = std::make_unique<Aws::SDKOptions>();
   Aws::InitAPI(*sdk_options);
   Aws::Utils::Logging::InitializeAWSLogging(std::make_shared<minifi::aws::utils::AWSSdkLogger>());
 
-  MinifiExtensionDefinition ext_definition{.name = toStringView(MAKESTRING(MODULE_NAME)),
+  minifi_extension_definition ext_definition{.name = toStringView(MAKESTRING(MODULE_NAME)),
       .version = toStringView(minifi::AgentBuild::VERSION),
       .deinit = &minifi::aws::init::deinit,
       .user_data = sdk_options.get()};

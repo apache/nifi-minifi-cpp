@@ -29,25 +29,21 @@ std::expected<std::string, std::error_code> CffiProcessContext::getProperty(cons
 
 std::expected<std::string, std::error_code> CffiProcessContext::getProperty(std::string_view name, const FlowFile* flow_file) const {
   std::optional<std::string> value;
-  const MinifiStatus status = MinifiProcessContextGetProperty(
+  const minifi_status status = minifi_process_context_get_property(
       impl_,
       utils::minifiStringView(name),
-      flow_file ? flow_file->get() : MINIFI_NULL,
-      [](void* data, const MinifiStringView result) { (*static_cast<std::optional<std::string>*>(data)) = std::string(result.data, result.length); },
+      flow_file ? flow_file->get() : nullptr,
+      [](void* data, const minifi_string_view result) { (*static_cast<std::optional<std::string>*>(data)) = std::string(result.data, result.length); },
       &value);
 
   if (!value) { return std::unexpected{utils::make_error_code(status)}; }
   return value.value();
 }
 
-bool CffiProcessContext::hasNonEmptyProperty(std::string_view name) const {
-  return MinifiProcessContextHasNonEmptyProperty(impl_, utils::minifiStringView(name));
-}
-
-std::expected<MinifiControllerService*, std::error_code> CffiProcessContext::getControllerService(const minifi::core::PropertyReference& prop) const {
-  MinifiControllerService* controller_service = nullptr;
+std::expected<minifi_controller_service*, std::error_code> CffiProcessContext::getControllerService(const minifi::core::PropertyReference& prop) const {
+  minifi_controller_service* controller_service = nullptr;
   gsl_Assert(prop.allowed_types.size() == 1);
-  const MinifiStatus status = MinifiProcessContextGetControllerServiceFromProperty(impl_,
+  const minifi_status status = minifi_process_context_get_controller_service_from_property(impl_,
           utils::minifiStringView(prop.name),
           utils::minifiStringView(prop.allowed_types[0]),
           &controller_service);
@@ -62,10 +58,10 @@ std::expected<MinifiControllerService*, std::error_code> CffiProcessContext::get
 
 std::map<std::string, std::string> CffiProcessContext::getDynamicProperties(const FlowFile* flow_file) const {
   std::map<std::string, std::string> result;
-  MinifiProcessContextGetDynamicProperties(
+  minifi_process_context_get_dynamic_properties(
       impl_,
-      flow_file ? flow_file->get() : MINIFI_NULL,
-      [](void* user_ctx, const MinifiStringView key, const MinifiStringView value) {
+      flow_file ? flow_file->get() : nullptr,
+      [](void* user_ctx, const minifi_string_view key, const minifi_string_view value) {
         static_cast<std::map<std::string, std::string>*>(user_ctx)->emplace(utils::toString(key), utils::toString(value));
       },
       &result);
@@ -73,12 +69,9 @@ std::map<std::string, std::string> CffiProcessContext::getDynamicProperties(cons
 }
 
 std::expected<std::optional<utils::net::SslData>, std::error_code> CffiProcessContext::getSslData(const minifi::core::PropertyReference& prop) const {
-  const auto controller_name = getProperty(prop, nullptr);
-  if (!controller_name) { return std::nullopt; }
-
   auto ssl_data = utils::net::SslData{};
 
-  if (const auto status = MinifiProcessContextGetSslDataFromProperty(impl_, utils::minifiStringView(prop.name), [](void* data, const MinifiSslData* minifi_ssl_data) {
+  if (const auto status = minifi_process_context_get_ssl_data_from_property(impl_, utils::minifiStringView(prop.name), [](void* data, const minifi_ssl_data* minifi_ssl_data) {
       auto* my_ssl_data = static_cast<utils::net::SslData*>(data);
       my_ssl_data->ca_loc = utils::toString(minifi_ssl_data->ca_certificate_file);
       my_ssl_data->cert_loc = utils::toString(minifi_ssl_data->certificate_file);
@@ -94,10 +87,10 @@ std::expected<std::optional<utils::net::SslData>, std::error_code> CffiProcessCo
 
 std::expected<std::optional<utils::ProxyData>, std::error_code> CffiProcessContext::getProxyData(const minifi::core::PropertyReference& prop) const {
   auto proxy_data = utils::ProxyData{};
-  const auto status = MinifiProcessContextGetProxyDataFromProperty(
+  const auto status = minifi_process_context_get_proxy_data_from_property(
       impl_,
       utils::minifiStringView(prop.name),
-      [](void* data, const MinifiProxyData* minifi_proxy_data) {
+      [](void* data, const minifi_proxy_data* minifi_proxy_data) {
         auto* proxy = static_cast<utils::ProxyData*>(data);
         proxy->host = utils::toString(minifi_proxy_data->hostname);
         proxy->port = minifi_proxy_data->port;
@@ -118,5 +111,34 @@ std::expected<std::optional<utils::ProxyData>, std::error_code> CffiProcessConte
   if (status == MINIFI_STATUS_SUCCESS) { return proxy_data; }
   return std::unexpected{utils::make_error_code(status)};
 }
+
+std::expected<void, std::error_code> CffiProcessContext::reportMetrics(const PublishedMetrics& metrics) const {
+  const auto metrics_size = metrics.size();
+  std::vector<minifi_string_view> keys;
+  std::vector<double> values;
+
+  keys.reserve(metrics_size);
+  values.reserve(metrics_size);
+
+  for (const auto& [name, value] : metrics) {
+    keys.push_back(utils::minifiStringView(name));
+    values.push_back(value);
+  }
+
+  const auto status = minifi_process_context_report_metrics(impl_, metrics_size, keys.data(), values.data());
+  if (status != MINIFI_STATUS_SUCCESS) {
+    return std::unexpected{utils::make_error_code(status)};
+  }
+  return {};
+}
+
+std::expected<void, std::error_code> CffiProcessContext::setTriggerWhenEmpty(bool trigger_when_empty) {
+  const auto status = minifi_process_context_set_trigger_when_empty(impl_, trigger_when_empty);
+  if (status != MINIFI_STATUS_SUCCESS) {
+    return std::unexpected{utils::make_error_code(status)};
+  }
+  return {};
+}
+
 
 }  // namespace org::apache::nifi::minifi::api::core

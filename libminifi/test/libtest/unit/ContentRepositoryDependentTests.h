@@ -26,7 +26,7 @@
 #include "core/ProcessSession.h"
 #include "core/Processor.h"
 #include "io/StreamPipe.h"
-#include "minifi-c/minifi-c.h"
+#include "minifi-c/minifi-api.h"
 #include "unit/DummyProcessor.h"
 #include "unit/TestBase.h"
 

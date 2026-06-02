@@ -448,6 +448,10 @@ std::string Processor::getProcessorType() const {
   return impl_->getProcessorType();
 }
 
+void Processor::setTriggerWhenEmpty(bool trigger_when_empty) {
+  impl_->setTriggerWhenEmpty(trigger_when_empty);
+}
+
 bool Processor::getTriggerWhenEmpty() const {
   return impl_->getTriggerWhenEmpty();
 }

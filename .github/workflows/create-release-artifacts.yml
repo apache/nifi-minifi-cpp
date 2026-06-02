@@ -95,8 +95,8 @@ jobs:
           mkdir minifi-native-sdk
           
           cp behave_framework/dist/*.whl minifi-native-sdk/
-          cp minifi-api/minifi-c-api.def minifi-native-sdk/
-          cp minifi-api/include/minifi-c/minifi-c.h minifi-native-sdk/
+          cp minifi-api/minifi-api.def minifi-native-sdk/
+          cp minifi-api/include/minifi-c/minifi-api.h minifi-native-sdk/
           
           zip -r minifi-native-sdk.zip minifi-native-sdk/
 

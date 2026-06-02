@@ -20,10 +20,10 @@
 #include <map>
 #include <span>
 
-#include "minifi-c.h"
+#include "FlowFile.h"
+#include "minifi-api.h"
 #include "minifi-cpp/core/Relationship.h"
 #include "minifi-cpp/io/StreamCallback.h"
-#include "FlowFile.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
@@ -61,7 +61,7 @@ class ProcessSession {
 
 class CffiProcessSession : public ProcessSession {
  public:
-  explicit CffiProcessSession(MinifiProcessSession* impl): impl_(impl) {}
+  explicit CffiProcessSession(minifi_process_session* impl): impl_(impl) {}
 
   FlowFile create(const FlowFile* parent = nullptr) override;
   FlowFile get() override;
@@ -79,7 +79,7 @@ class CffiProcessSession : public ProcessSession {
   [[nodiscard]] uint64_t getFlowFileSize(const FlowFile& ff) const override;
 
  private:
-  MinifiProcessSession* impl_;
+  minifi_process_session* impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::api::core

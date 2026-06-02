@@ -250,8 +250,8 @@ class PublishKafka final : public KafkaProcessorBase {
   PublishKafka& operator=(PublishKafka&&) = delete;
   ~PublishKafka() override = default;
 
-  MinifiStatus onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
-  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
+  minifi_status onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  minifi_status onScheduleImpl(api::core::ProcessContext& context) override;
   void onUnSchedule() override;
 
   class Messages;

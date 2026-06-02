@@ -26,7 +26,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "rdkafka_utils.h"
 #include "utils/Enum.h"
-#include "minifi-c.h"
+#include "minifi-api.h"
 
 namespace org::apache::nifi::minifi::processors {
 

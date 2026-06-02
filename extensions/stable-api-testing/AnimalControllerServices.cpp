@@ -20,7 +20,7 @@
 #include "api/utils/ProcessorConfigUtils.h"
 namespace org::apache::nifi::minifi::api_testing {
 
-MinifiStatus DogController::enableImpl(api::core::ControllerServiceContext& ctx) {
+minifi_status DogController::enableImpl(api::core::ControllerServiceContext& ctx) {
   this->has_jetpack_ = ctx.getProperty(HasJetpack) | minifi::utils::andThen(parsing::parseBool) |
       minifi::utils::orThrow(fmt::format("Expected parsable bool from \"{}\"", HasJetpack.name));
 

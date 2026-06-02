@@ -20,14 +20,14 @@
 #include <iostream>
 #include <string>
 
-#include "minifi-c.h"
+#include "minifi-api.h"
 #include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::api::core::logging {
 
 class CffiLogger : public minifi::core::logging::Logger {
  public:
-  explicit CffiLogger(MinifiLogger* impl): impl_(impl) {}
+  explicit CffiLogger(minifi_logger* impl): impl_(impl) {}
 
   void set_max_log_size(int size) override;
   void log_string(minifi::core::logging::LOG_LEVEL level, std::string str) override;
@@ -35,7 +35,7 @@ class CffiLogger : public minifi::core::logging::Logger {
   [[nodiscard]] minifi::core::logging::LOG_LEVEL level() const override;
 
  private:
-  MinifiLogger* impl_;
+  minifi_logger* impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::api::core::logging

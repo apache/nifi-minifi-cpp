@@ -5,10 +5,11 @@ AlignConsecutiveAssignments: None
 AlignOperands: DontAlign
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowAllConstructorInitializersOnNextLine: false
-AllowShortBlocksOnASingleLine: Always
-AllowShortCaseLabelsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterReturnType: None

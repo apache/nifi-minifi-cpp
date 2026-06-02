@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "minifi-c/minifi-c.h"
-#include "utils/ExtensionInitUtils.h"
-#include "minifi-cpp/agent/agent_version.h"
 #include "core/Resource.h"
+#include "minifi-c/minifi-api.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "utils/ExtensionInitUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
-  MinifiExtensionDefinition extension_definition{
+extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_context) {
+  minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,

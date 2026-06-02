@@ -16,16 +16,18 @@
  * limitations under the License.
  */
 #include <dlfcn.h>
+
+#include <array>
 #include <cstdio>
 #include <iostream>
 #include <string>
-#include <array>
-#include "utils/StringUtils.h"
-#include "core/logging/LoggerFactory.h"
-#include "minifi-cpp/agent/agent_version.h"
-#include "minifi-c/minifi-c.h"
-#include "utils/ExtensionInitUtils.h"
+
 #include "core/Resource.h"
+#include "core/logging/LoggerFactory.h"
+#include "minifi-c/minifi-api.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "utils/ExtensionInitUtils.h"
+#include "utils/StringUtils.h"
 
 #if defined(WIN32)
 static_assert(false, "The Python library loader should only be used on Linux or macOS.");
@@ -98,15 +100,15 @@ class PythonLibLoader {
   std::shared_ptr<minifi::core::logging::Logger> logger_ = minifi::core::logging::LoggerFactory<PythonLibLoader>::getLogger();
 };
 
-extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
+extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_context) {
   static PythonLibLoader python_lib_loader([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
-    MinifiConfigGet(extension_context, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
+    minifi_config_get(extension_context, minifi::utils::toStringView(key), [] (void* user_data, minifi_string_view value) {
       *static_cast<std::optional<std::string>*>(user_data) = std::string{value.data, value.length};
     }, &result);
     return result;
   });
-  MinifiExtensionDefinition extension_definition{
+  minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,

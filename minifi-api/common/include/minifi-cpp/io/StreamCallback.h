@@ -20,7 +20,7 @@
 #include <functional>
 #include <memory>
 
-#include "../../minifi-api/include/minifi-c/minifi-c.h"
+#include "../../minifi-api/include/minifi-c/minifi-api.h"
 #include "Stream.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/expected.h"
@@ -51,7 +51,7 @@ class IoResult {
 
     if constexpr (std::is_same_v<T, int64_t>) {
       if (val < 0) {
-        return IoResult(std::unexpected{static_cast<MinifiIoStatus>(val)});
+        return IoResult(std::unexpected{static_cast<minifi_io_status>(val)});
       }
     } else if constexpr (std::is_same_v<T, size_t>) {
       if (isError(val)) {
@@ -75,12 +75,12 @@ class IoResult {
 
   uint64_t operator*() const { return *result_; }
 
-  std::expected<uint64_t, MinifiIoStatus> inner() const { return result_; }
+  std::expected<uint64_t, minifi_io_status> inner() const { return result_; }
 
  private:
-  explicit IoResult(std::expected<uint64_t, MinifiIoStatus> result) : result_(std::move(result)) {}
+  explicit IoResult(std::expected<uint64_t, minifi_io_status> result) : result_(std::move(result)) {}
 
-  std::expected<uint64_t, MinifiIoStatus> result_;
+  std::expected<uint64_t, minifi_io_status> result_;
 };
 
 class ReadWriteResult {
@@ -111,9 +111,9 @@ class ReadWriteResult {
     uint64_t bytes_read;
     uint64_t bytes_written;
   };
-  explicit ReadWriteResult(std::expected<ReadWrite, MinifiIoStatus> result) : result_(std::move(result)) {}
+  explicit ReadWriteResult(std::expected<ReadWrite, minifi_io_status> result) : result_(std::move(result)) {}
 
-  std::expected<ReadWrite, MinifiIoStatus> result_;
+  std::expected<ReadWrite, minifi_io_status> result_;
 };
 
 using OutputStreamCallback = std::function<IoResult(const std::shared_ptr<OutputStream>& output_stream)>;
