@@ -23,6 +23,7 @@
 
 #include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 #include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
+#include "minifi-cpp/agent/agent_version.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
