@@ -102,3 +102,70 @@ jobs:
         with:
           name: ${{ matrix.platform.id }}_${{ matrix.arch }}_behavex_output_modular${{ (github.event_name != 'workflow_dispatch' || inputs.enable_fips) && '_fips' || '' }}
           path: build/behavex_output_modular
+
+  rust-tests:
+    name: "Rusty ${{ matrix.platform.name }} (${{ matrix.arch }})"
+    needs: [check-artifacts-workflow]
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ${{ matrix.arch == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+        platform: [
+          { name: "Rocky Linux 9 modular", id: "rocky9", build_cmd: "make rocky9_from_rocky_package && docker tag apacheminificpp:rocky9_from_rocky_package apacheminificpp:behave" },
+          { name: "Rocky Linux 10 modular", id: "rocky10", build_cmd: "make rocky10_from_rocky_package && docker tag apacheminificpp:rocky10_from_rocky_package apacheminificpp:behave" },
+          { name: "Rocky Linux 9 from RPM modular", id: "rocky9-rpm", build_cmd: "make rocky9_from_rpm_package && docker tag apacheminificpp:rocky9_from_rocky_package apacheminificpp:behave" },
+          { name: "Rocky Linux 10 from RPM modular", id: "rocky10-rpm", build_cmd: "make rocky10_from_rpm_package && docker tag apacheminificpp:rocky10_from_rpm_package apacheminificpp:behave" },
+          { name: "Ubuntu 22.04 modular", id: "ubuntu_jammy", build_cmd: "make jammy_from_rocky_package && docker tag apacheminificpp:jammy_from_rocky_package apacheminificpp:behave" },
+          { name: "Ubuntu 24.04 modular", id: "ubuntu_noble", build_cmd: "make noble_from_rocky_package && docker tag apacheminificpp:noble_from_rocky_package apacheminificpp:behave" },
+          { name: "Debian 12 modular", id: "debian_bookworm", build_cmd: "make bookworm_from_rocky_package && docker tag apacheminificpp:bookworm_from_rocky_package apacheminificpp:behave" },
+          { name: "Debian 13 modular", id: "debian_trixie", build_cmd: "make trixie_from_rocky_package && docker tag apacheminificpp:trixie_from_rocky_package apacheminificpp:behave" },
+        ]
+    permissions:
+      contents: read
+    steps:
+      - id: checkout
+        uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v8
+        with:
+          run-id: ${{ inputs.artifacts_workflow_id || github.event.workflow_run.id }}
+          name: minifi-${{ matrix.arch }}-tar
+          path: build
+          github-token: ${{ github.token }}
+
+      - uses: actions/download-artifact@v8
+        with:
+          run-id: ${{ inputs.artifacts_workflow_id || github.event.workflow_run.id }}
+          name: minifi-${{ matrix.arch }}-rpm
+          path: build
+          github-token: ${{ github.token }}
+
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+
+      - id: test
+        name: Docker Verify
+        working-directory: ./minifi_rust
+        run: cargo behave-debian
+
+      - name: Test Reporter
+        if: always()
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3
+        with:
+          name: Docker integration tests
+          path: minifi_rust/minifi_rs_behave/output/behave/*.xml
+          reporter: java-junit
+          only-summary: 'true'
+          list-tests: 'failed'
+          list-suites: 'failed'
+      - name: Upload artifact
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.platform.id }}_${{ matrix.arch }}_rusty_behave
+          path: minifi_rust/minifi_rs_behave/output

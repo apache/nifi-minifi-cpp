@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT (ENABLE_ALL OR MINIFI_RUST))
+if (NOT MINIFI_RUST)
     return()
 endif()
 
