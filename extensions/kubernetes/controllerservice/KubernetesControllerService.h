@@ -57,6 +57,8 @@ class KubernetesControllerService : public AttributeProviderServiceImpl {
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
+  static constexpr auto ImplementsApis = std::array{ AttributeProviderService::ProvidesApi };
+
   void initialize() final;
   void onEnable() override;
   std::optional<std::vector<AttributeMap>> getAttributes() override;
