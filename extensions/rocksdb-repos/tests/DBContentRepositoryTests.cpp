@@ -363,9 +363,12 @@ TEST_CASE("DBContentRepository can clear orphan entries") {
 }
 
 TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size default") {
+  TestController testController;
+  const auto content_repo_dir = testController.createTempDirectory();
   LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
 
   const auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_dir.string());
   const auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
   REQUIRE(content_repo->initialize(configuration));
 
@@ -373,9 +376,12 @@ TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size default") {
 }
 
 TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size override") {
+  TestController testController;
+  const auto content_repo_dir = testController.createTempDirectory();
   LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
 
   const auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_dir.string());
   configuration->set("nifi.database.content.repository.optimize.for.small.db.cache.size", "100 MB");
   const auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
   REQUIRE(content_repo->initialize(configuration));
@@ -384,9 +390,12 @@ TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size override") {
 }
 
 TEST_CASE("nifi_dbcontent_optimize_for_small_db_cache_size disable") {
+  TestController testController;
+  const auto content_repo_dir = testController.createTempDirectory();
   LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
 
   const auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_dir.string());
   configuration->set("nifi.database.content.repository.optimize.for.small.db.cache.size", "");
   const auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
   REQUIRE(content_repo->initialize(configuration));
