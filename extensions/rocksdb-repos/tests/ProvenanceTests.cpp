@@ -34,13 +34,15 @@ namespace provenance = minifi::provenance;
 using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
-  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah", "blahblah");
+  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
+      utils::Identifier::parse("00000000-0000-0000-0000-000000000001").value(), "blahblah");
   REQUIRE(record1->getAttributes().empty());
   REQUIRE(record1->getAlternateIdentifierUri().empty());
 }
 
 TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
-  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
+  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
+        utils::Identifier::parse("00000000-0000-0000-0000-000000000002").value(), "componenttype");
 
   utils::Identifier eventId = record1->getEventId();
 
@@ -52,7 +54,7 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
   record1->setEventDuration(sample);
 
   testRepository->storeElement(record1);
-  auto record2 = std::make_shared<provenance::ProvenanceEventRecordImpl>();
+  auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == true);
   REQUIRE(record2->getEventId() == record1->getEventId());
@@ -64,7 +66,8 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
 }
 
 TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
-  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid", "componenttype");
+  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE,
+      utils::Identifier::parse("00000000-0000-0000-0000-000000000003").value(), "componenttype");
   utils::Identifier eventId = record1->getEventId();
   std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecordImpl>();
   ffr1->setAttribute("potato", "potatoe");
@@ -77,19 +80,18 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   record1->setEventDuration(sample);
 
   testRepository->storeElement(record1);
-  auto record2 = std::make_shared<provenance::ProvenanceEventRecordImpl>();
+  auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == true);
   REQUIRE(record1->getChildrenUuids().size() == 1);
   REQUIRE(record2->getChildrenUuids().size() == 1);
   utils::Identifier childId = record2->getChildrenUuids().at(0);
   REQUIRE(childId == ffr1->getUUID());
-  record2->removeChildUuid(childId);
-  REQUIRE(record2->getChildrenUuids().empty());
 }
 
 TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
-  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
+  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
+      utils::Identifier::parse("00000000-0000-0000-0000-000000000004").value(), "componenttype");
 
   utils::Identifier eventId = record1->getEventId();
 
@@ -103,7 +105,7 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
   record1->setEventDuration(sample);
 
   testRepository->storeElement(record1);
-  auto record2 = std::make_shared<provenance::ProvenanceEventRecordImpl>();
+  auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == true);
   REQUIRE(record2->getEventId() == record1->getEventId());
@@ -115,7 +117,8 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
 }
 
 TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[TestFlowAndProv1]") {
-  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid", "componenttype");
+  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE,
+      utils::Identifier::parse("00000000-0000-0000-0000-000000000005").value(), "componenttype");
   utils::Identifier eventId = record1->getEventId();
   std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecordImpl>();
   ffr1->setAttribute("potato", "potatoe");
@@ -129,19 +132,18 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
   record1->setEventDuration(sample);
 
   testRepository->storeElement(record1);
-  auto record2 = std::make_shared<provenance::ProvenanceEventRecordImpl>();
+  auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == true);
   REQUIRE(record1->getChildrenUuids().size() == 1);
   REQUIRE(record2->getChildrenUuids().size() == 1);
   utils::Identifier childId = record2->getChildrenUuids().at(0);
   REQUIRE(childId == ffr1->getUUID());
-  record2->removeChildUuid(childId);
-  REQUIRE(record2->getChildrenUuids().empty());
 }
 
 TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
-  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
+  auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
+      utils::Identifier::parse("00000000-0000-0000-0000-000000000006").value(), "componenttype");
 
   utils::Identifier eventId = record1->getEventId();
 
@@ -155,7 +157,7 @@ TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::Provena
   record1->setEventDuration(sample);
 
   REQUIRE(testRepository->storeElement(record1));
-  auto record2 = std::make_shared<provenance::ProvenanceEventRecordImpl>();
+  auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == false);
 }

@@ -154,7 +154,7 @@ class ProvenanceEventRecord : public virtual core::SerializableComponent {
   virtual uint64_t getFileSize() const = 0;
   virtual uint64_t getFileOffset() const = 0;
   virtual std::chrono::system_clock::time_point getFlowFileEntryDate() const = 0;
-  virtual std::chrono::system_clock::time_point getlineageStartDate() const = 0;
+  virtual std::chrono::system_clock::time_point getLineageStartDate() const = 0;
   virtual std::chrono::system_clock::time_point getEventTime() const = 0;
   virtual std::chrono::milliseconds getEventDuration() const = 0;
   virtual void setEventDuration(std::chrono::milliseconds duration) = 0;
@@ -173,13 +173,9 @@ class ProvenanceEventRecord : public virtual core::SerializableComponent {
   virtual std::vector<utils::Identifier> getParentUuids() const = 0;
   virtual void addParentUuid(const utils::Identifier& uuid) = 0;
   virtual void addParentFlowFile(const core::FlowFile& flow_file) = 0;
-  virtual void removeParentUuid(const utils::Identifier& uuid) = 0;
-  virtual void removeParentFlowFile(const core::FlowFile& flow_file) = 0;
   virtual std::vector<utils::Identifier> getChildrenUuids() const = 0;
   virtual void addChildUuid(const utils::Identifier& uuid) = 0;
   virtual void addChildFlowFile(const core::FlowFile& flow_file) = 0;
-  virtual void removeChildUuid(const utils::Identifier& uuid) = 0;
-  virtual void removeChildFlowFile(const core::FlowFile& flow_file) = 0;
   virtual std::string getAlternateIdentifierUri() const = 0;
   virtual void setAlternateIdentifierUri(const std::string& uri) = 0;
   virtual std::string getRelationship() const = 0;

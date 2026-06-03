@@ -69,7 +69,7 @@ ProcessSessionImpl::ProcessSessionImpl(std::shared_ptr<ProcessContext> processCo
           stateManager_(process_context_->getStateManager()) {
   logger_->log_trace("ProcessSession created for {}", process_context_->getProcessor().getName());
   auto repo = process_context_->getProvenanceRepository();
-  provenance_report_ = std::make_shared<provenance::ProvenanceReporterImpl>(repo, process_context_->getProcessor().getName(), process_context_->getProcessor().getName());
+  provenance_report_ = std::make_shared<provenance::ProvenanceReporterImpl>(repo, process_context_->getProcessor().getUUID(), process_context_->getProcessor().getName());
   content_session_ = process_context_->getContentRepository()->createSession();
 
   if (stateManager_ && !stateManager_->beginTransaction()) {
@@ -113,7 +113,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::create(const core::FlowFile*
       }
       record->setAttribute(attribute.first, attribute.second);
     }
-    record->setLineageStartDate(parent->getlineageStartDate());
+    record->setLineageStartDate(parent->getLineageStartDate());
     record->setLineageIdentifiers(parent->getlineageIdentifiers());
     record->getlineageIdentifiers().push_back(parent->getUUID());
   }
@@ -163,7 +163,7 @@ std::shared_ptr<core::FlowFile> ProcessSessionImpl::cloneDuringTransfer(const co
     }
     record->setAttribute(attribute.first, attribute.second);
   }
-  record->setLineageStartDate(parent.getlineageStartDate());
+  record->setLineageStartDate(parent.getLineageStartDate());
   record->setLineageIdentifiers(parent.getlineageIdentifiers());
   record->getlineageIdentifiers().push_back(parent.getUUID());
 

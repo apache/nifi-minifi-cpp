@@ -54,7 +54,7 @@ class Repository : public virtual core::CoreComponent, public virtual core::Repo
 
   virtual bool Get(const std::string& /*key*/, std::string& /*value*/) = 0;
 
-  virtual bool getElements(std::vector<std::shared_ptr<core::SerializableComponent>>& /*store*/, size_t& /*max_size*/) = 0;
+  virtual std::vector<std::shared_ptr<core::SerializableComponent>> getElements(size_t max_size) = 0;
 
   virtual bool storeElement(const std::shared_ptr<core::SerializableComponent>& element) = 0;
 

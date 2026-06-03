@@ -133,7 +133,7 @@ std::string PushGrafanaLokiREST::createLokiJson(const std::vector<std::shared_pt
   for (const auto& flow_file : batched_flow_files) {
     rapidjson::Value log_line(rapidjson::kArrayType);
 
-    auto timestamp_str = std::to_string(flow_file->getlineageStartDate().time_since_epoch() / std::chrono::nanoseconds(1));
+    auto timestamp_str = std::to_string(flow_file->getLineageStartDate().time_since_epoch() / std::chrono::nanoseconds(1));
     rapidjson::Value timestamp;
     timestamp.SetString(timestamp_str.c_str(), gsl::narrow<rapidjson::SizeType>(timestamp_str.length()), allocator);
     rapidjson::Value log_line_value;

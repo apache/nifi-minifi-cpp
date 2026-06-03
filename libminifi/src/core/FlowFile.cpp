@@ -131,7 +131,7 @@ std::chrono::system_clock::time_point FlowFileImpl::getEventTime() const {
   return event_time_;
 }
 // ! Get Lineage Start Date
-std::chrono::system_clock::time_point FlowFileImpl::getlineageStartDate() const {
+std::chrono::system_clock::time_point FlowFileImpl::getLineageStartDate() const {
   return lineage_start_date_;
 }
 

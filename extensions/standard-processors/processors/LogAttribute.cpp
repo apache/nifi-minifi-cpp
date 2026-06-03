@@ -82,7 +82,7 @@ std::string LogAttribute::generateLogMessage(core::ProcessSession& session, cons
   message << "\nStandard FlowFile Attributes";
   message << "\n" << "UUID:" << flow_file->getUUIDStr();
   message << "\n" << "EntryDate:" << utils::timeutils::getTimeStr(flow_file->getEntryDate());
-  message << "\n" << "lineageStartDate:" << utils::timeutils::getTimeStr(flow_file->getlineageStartDate());
+  message << "\n" << "lineageStartDate:" << utils::timeutils::getTimeStr(flow_file->getLineageStartDate());
   message << "\n" << "Size:" << flow_file->getSize() << " Offset:" << flow_file->getOffset();
   message << "\nFlowFile Attributes Map Content";
   for (const auto& [attr_key, attr_value] : flow_file->getAttributes()) {
