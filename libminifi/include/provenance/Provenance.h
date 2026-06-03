@@ -45,12 +45,12 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
  public:
   static const char *ProvenanceEventTypeStr[REPLAY + 1];
 
-  ProvenanceEventRecordImpl(ProvenanceEventType event, std::string componentId, std::string componentType);
+  ProvenanceEventRecordImpl(ProvenanceEventType event, utils::Identifier component_id, std::string component_type);
 
-  ProvenanceEventRecordImpl()
-      : core::SerializableComponentImpl(core::className<ProvenanceEventRecord>()) {
-    event_time_ = std::chrono::system_clock::now();
-  }
+  ProvenanceEventRecordImpl(const ProvenanceEventRecordImpl&) = delete;
+  ProvenanceEventRecordImpl(ProvenanceEventRecordImpl&&) = delete;
+  ProvenanceEventRecordImpl& operator=(const ProvenanceEventRecordImpl&) = delete;
+  ProvenanceEventRecordImpl& operator=(ProvenanceEventRecordImpl&&) = delete;
 
   ~ProvenanceEventRecordImpl() override = default;
 
@@ -245,20 +245,22 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
   std::string alternate_identifier_uri_;
 
  private:
-  ProvenanceEventRecordImpl(const ProvenanceEventRecordImpl &parent);
-  ProvenanceEventRecordImpl &operator=(const ProvenanceEventRecordImpl &parent);
   static std::shared_ptr<core::logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 class ProvenanceReporterImpl : public virtual ProvenanceReporter {
  public:
-  ProvenanceReporterImpl(std::shared_ptr<core::Repository> repo, std::string componentId, std::string componentType)
-      : logger_(core::logging::LoggerFactory<ProvenanceReporter>::getLogger()) {
-    component_id_ = componentId;
-    component_type_ = componentType;
-    repo_ = repo;
-  }
+  ProvenanceReporterImpl(std::shared_ptr<core::Repository> repo, utils::Identifier component_id, std::string component_type)
+      : component_id_(component_id),
+        component_type_(std::move(component_type)),
+        logger_(core::logging::LoggerFactory<ProvenanceReporter>::getLogger()),
+        repo_(std::move(repo)) {}
+
+  ProvenanceReporterImpl(const ProvenanceReporterImpl&) = delete;
+  ProvenanceReporterImpl(ProvenanceReporterImpl&&) = delete;
+  ProvenanceReporterImpl& operator=(const ProvenanceReporterImpl&) = delete;
+  ProvenanceReporterImpl& operator=(ProvenanceReporterImpl&&) = delete;
 
   ~ProvenanceReporterImpl() override {
     clear();
@@ -273,12 +275,10 @@ class ProvenanceReporterImpl : public virtual ProvenanceReporter {
   }
 
   void remove(const std::shared_ptr<ProvenanceEventRecord> &event) override {
-    if (events_.find(event) != events_.end()) {
-      events_.erase(event);
-    }
+    events_.erase(event);
   }
 
-  void clear() override {
+  void clear() final {
     events_.clear();
   }
 
@@ -308,16 +308,13 @@ class ProvenanceReporterImpl : public virtual ProvenanceReporter {
     return event;
   }
 
-  std::string component_id_;
+  utils::Identifier component_id_;
   std::string component_type_;
 
  private:
   std::shared_ptr<core::logging::Logger> logger_;
   std::set<std::shared_ptr<ProvenanceEventRecord>> events_;
   std::shared_ptr<core::Repository> repo_;
-
-  ProvenanceReporterImpl(const ProvenanceReporterImpl &parent);
-  ProvenanceReporterImpl &operator=(const ProvenanceReporterImpl &parent);
 };
 
 }  // namespace org::apache::nifi::minifi::provenance

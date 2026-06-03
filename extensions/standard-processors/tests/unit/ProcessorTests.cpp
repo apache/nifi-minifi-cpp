@@ -444,18 +444,18 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   REQUIRE(2 == repo->getRepoMap().size());
 
   for (auto entry : repo->getRepoMap()) {
-    minifi::provenance::ProvenanceEventRecordImpl newRecord;
+    auto newRecord = minifi::provenance::ProvenanceEventRecordImpl::create();
     minifi::io::BufferStream stream(std::as_bytes(std::span(entry.second)));
-    newRecord.deserialize(stream);
+    newRecord->deserialize(stream);
 
     bool found = false;
     for (const auto& provRec : records) {
-      if (provRec->getEventId() == newRecord.getEventId()) {
-        REQUIRE(provRec->getEventId() == newRecord.getEventId());
-        REQUIRE(provRec->getComponentId() == newRecord.getComponentId());
-        REQUIRE(provRec->getComponentType() == newRecord.getComponentType());
-        REQUIRE(provRec->getDetails() == newRecord.getDetails());
-        REQUIRE(provRec->getEventDuration() == newRecord.getEventDuration());
+      if (provRec->getEventId() == newRecord->getEventId()) {
+        REQUIRE(provRec->getEventId() == newRecord->getEventId());
+        REQUIRE(provRec->getComponentId() == newRecord->getComponentId());
+        REQUIRE(provRec->getComponentType() == newRecord->getComponentType());
+        REQUIRE(provRec->getDetails() == newRecord->getDetails());
+        REQUIRE(provRec->getEventDuration() == newRecord->getEventDuration());
         found = true;
         break;
       }
