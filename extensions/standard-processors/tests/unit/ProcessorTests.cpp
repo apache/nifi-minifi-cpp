@@ -466,19 +466,15 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   }
   auto taskReport = &processorReport.get();
   taskReport->setBatchSize(1);
-  std::vector<std::shared_ptr<core::SerializableComponent>> recordsReport;
-  recordsReport.push_back(std::make_shared<minifi::provenance::ProvenanceEventRecordImpl>());
   processorReport->incrementActiveTasks();
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
-  std::string jsonStr;
-  std::size_t deserialized = 0;
-  repo->getElements(recordsReport, deserialized);
+  auto recordsReport = repo->getElements(1);
   std::function<void(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession>&)> verifyReporter =
       [&](const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-        taskReport->getJsonReport(*context, *session, recordsReport, jsonStr);
+        auto json_str = taskReport->getJsonReport(*context, *session, recordsReport);
         REQUIRE(recordsReport.size() == 1);
         REQUIRE(taskReport->getName() == std::string(minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
-        REQUIRE(jsonStr.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
+        REQUIRE(json_str.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
       };
 
   testController.runSession(plan, false, verifyReporter);

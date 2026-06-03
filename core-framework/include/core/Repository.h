@@ -106,8 +106,8 @@ class RepositoryImpl : public core::CoreComponentImpl, public core::RepositoryMe
     return false;
   }
 
-  bool getElements(std::vector<std::shared_ptr<core::SerializableComponent>>& /*store*/, size_t& /*max_size*/) override {
-    return true;
+  std::vector<std::shared_ptr<core::SerializableComponent>> getElements(size_t /*max_size*/) override {
+    return {};
   }
 
   bool storeElement(const std::shared_ptr<core::SerializableComponent>& element) override;
