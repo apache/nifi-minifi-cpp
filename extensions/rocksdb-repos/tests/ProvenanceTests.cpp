@@ -84,8 +84,6 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   REQUIRE(record2->getChildrenUuids().size() == 1);
   utils::Identifier childId = record2->getChildrenUuids().at(0);
   REQUIRE(childId == ffr1->getUUID());
-  record2->removeChildUuid(childId);
-  REQUIRE(record2->getChildrenUuids().empty());
 }
 
 TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
@@ -136,8 +134,6 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
   REQUIRE(record2->getChildrenUuids().size() == 1);
   utils::Identifier childId = record2->getChildrenUuids().at(0);
   REQUIRE(childId == ffr1->getUUID());
-  record2->removeChildUuid(childId);
-  REQUIRE(record2->getChildrenUuids().empty());
 }
 
 TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {

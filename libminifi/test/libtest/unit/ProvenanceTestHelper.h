@@ -34,6 +34,7 @@
 #include "properties/Configure.h"
 #include "minifi-cpp/SwapManager.h"
 #include "io/BufferStream.h"
+#include "minifi-cpp/provenance/Provenance.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -88,19 +89,23 @@ class TestRepositoryBase : public T_BaseRepository {
     }
   }
 
-  bool getElements(std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>> &store, size_t &max_size) override {
-    std::lock_guard<std::mutex> lock{repository_results_mutex_};
-    max_size = 0;
-    for (const auto &entry : repository_results_) {
-      if (max_size >= store.size()) {
-        break;
-      }
-      const auto eventRead = store.at(max_size);
-      org::apache::nifi::minifi::io::BufferStream stream(std::as_bytes(std::span(entry.second)));
-      eventRead->deserialize(stream);
-      ++max_size;
+  std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>> getElements(size_t max_size) override {
+    if (max_size == 0) {
+      return {};
     }
-    return true;
+    std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>> store;
+    std::lock_guard<std::mutex> lock{repository_results_mutex_};
+    for (const auto &entry : repository_results_) {
+      const auto eventRead = org::apache::nifi::minifi::provenance::ProvenanceEventRecord::create();
+      org::apache::nifi::minifi::io::BufferStream stream(std::as_bytes(std::span(entry.second)));
+      if (eventRead->deserialize(stream)) {
+        store.push_back(std::move(eventRead));
+        if (--max_size == 0) {
+          break;
+        }
+      }
+    }
+    return store;
   }
 
   std::map<std::string, std::string> getRepoMap() const {

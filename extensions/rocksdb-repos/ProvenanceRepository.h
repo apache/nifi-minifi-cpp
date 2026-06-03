@@ -72,7 +72,7 @@ class ProvenanceRepository : public core::repository::RocksDbRepository {
     // The repo is cleaned up by itself, there is no need to delete items.
     return true;
   }
-  bool getElements(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size) override;
+  std::vector<std::shared_ptr<core::SerializableComponent>> getElements(size_t max_size) override;
 
   void destroy();
 
