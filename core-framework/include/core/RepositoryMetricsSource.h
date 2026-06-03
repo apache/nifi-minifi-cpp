@@ -20,6 +20,7 @@
 
 #include <string>
 #include <optional>
+#include <cstdint>
 
 #include "minifi-cpp/core/RepositoryMetricsSource.h"
 
