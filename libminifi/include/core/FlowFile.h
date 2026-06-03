@@ -115,7 +115,7 @@ class FlowFileImpl : public CoreComponentImpl, public ReferenceContainerImpl, pu
    * Get lineage start date
    * @return lineage start date uint64_t
    */
-  [[nodiscard]] std::chrono::system_clock::time_point getlineageStartDate() const override;
+  [[nodiscard]] std::chrono::system_clock::time_point getLineageStartDate() const override;
 
   /**
    * Sets the lineage start date
