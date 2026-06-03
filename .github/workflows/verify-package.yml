@@ -148,6 +148,10 @@ jobs:
           sudo apt update
           sudo apt install -y python3-virtualenv
 
+      - run: |
+          cd build && cmake ${DOCKER_CMAKE_FLAGS} ..
+          ${{ matrix.platform.build_cmd }}
+
       - id: test
         name: Docker Verify
         working-directory: ./minifi_rust
