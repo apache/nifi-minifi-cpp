@@ -31,8 +31,14 @@ def before_all(context: MinifiTestContext):
     dockerfile = dedent("""\
                 FROM {base_image}
                 RUN mkdir {models_path}
-                RUN wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/Qwen2-VL-2B-Instruct-Q3_K_M.gguf --directory-prefix={models_path}
-                RUN wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen2-VL-2B-Instruct-f16.gguf --directory-prefix={models_path}
+                RUN for i in 1 2 3 4 5 6; do \\
+                    wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/Qwen2-VL-2B-Instruct-Q3_K_M.gguf --directory-prefix={models_path} && break \\
+                        || ([ $i -lt 6 ] && sleep $((i * 5)) && echo "Attempt $i failed, retrying in $((i * 5))s..."); \\
+                    done && [ -f {models_path}/Qwen2-VL-2B-Instruct-Q3_K_M.gguf ] || exit 1
+                RUN for i in 1 2 3 4 5 6; do \\
+                    wget https://huggingface.co/bartowski/Qwen2-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen2-VL-2B-Instruct-f16.gguf --directory-prefix={models_path} && break \\
+                        || ([ $i -lt 6 ] && sleep $((i * 5)) && echo "Attempt $i failed, retrying in $((i * 5))s..."); \\
+                    done && [ -f {models_path}/mmproj-Qwen2-VL-2B-Instruct-f16.gguf ] || exit 1
         """.format(base_image=minifi_container_image, models_path='/tmp/models'))
 
     builder = DockerImageBuilder(
