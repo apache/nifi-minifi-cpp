@@ -155,8 +155,8 @@ class CProcessorFactory : public minifi::core::ProcessorFactory {
 
 class CControllerServiceFactory : public minifi::core::controller::ControllerServiceFactory {
  public:
-  CControllerServiceFactory(std::string group_name, std::string class_name, minifi::utils::CControllerServiceClassDescription class_description)
-      : group_name_(std::move(group_name)),
+  CControllerServiceFactory(std::string module_name, std::string class_name, minifi::utils::CControllerServiceClassDescription class_description)
+      : module_name_(std::move(module_name)),
         class_name_(std::move(class_name)),
         class_description_(std::move(class_description)) {}
 
@@ -164,7 +164,7 @@ class CControllerServiceFactory : public minifi::core::controller::ControllerSer
     return std::make_unique<minifi::utils::CControllerService>(class_description_, std::move(metadata));
   }
 
-  [[nodiscard]] std::string getModuleName() const override { return group_name_; }
+  [[nodiscard]] std::string getModuleName() const override { return module_name_; }
 
   [[nodiscard]] std::string getClassName() const override { return class_name_; }
 
@@ -176,7 +176,7 @@ class CControllerServiceFactory : public minifi::core::controller::ControllerSer
   ~CControllerServiceFactory() override = default;
 
  private:
-  std::string group_name_;
+  std::string module_name_;
   std::string class_name_;
   minifi::utils::CControllerServiceClassDescription class_description_;
 };
