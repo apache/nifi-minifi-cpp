@@ -34,8 +34,6 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-#define GROUP_STR "org.apache.nifi.minifi"
-
 std::vector<SerializedResponseNode> serializeComponentManifest(const Components& components);
 
 class Bundles : public DeviceInformation {

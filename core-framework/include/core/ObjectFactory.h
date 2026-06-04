@@ -27,16 +27,16 @@ namespace org::apache::nifi::minifi::core {
 
 class ObjectFactoryImpl : public ObjectFactory {
  public:
-  explicit ObjectFactoryImpl(std::string group) : group_(std::move(group)) {}
+  explicit ObjectFactoryImpl(std::string module_name) : module_name_(std::move(module_name)) {}
 
   ObjectFactoryImpl() = default;
 
-  std::string getGroupName() const override {
-    return group_;
+  std::string getModuleName() const override {
+    return module_name_;
   }
 
  protected:
-  std::string group_;
+  std::string module_name_;
 };
 
 /**
@@ -50,8 +50,8 @@ class DefaultObjectFactory : public ObjectFactoryImpl {
       : className(core::className<T>()) {
   }
 
-  explicit DefaultObjectFactory(std::string group_name)
-      : ObjectFactoryImpl(std::move(group_name)),
+  explicit DefaultObjectFactory(std::string module_name)
+      : ObjectFactoryImpl(std::move(module_name)),
       className(core::className<T>()) {
   }
 

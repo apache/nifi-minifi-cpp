@@ -72,7 +72,7 @@ class ClassLoader {
 
   virtual void unregisterClass(const std::string& clazz) = 0;
 
-  [[nodiscard]] virtual std::optional<std::string> getGroupForClass(const std::string &class_name) const = 0;
+  [[nodiscard]] virtual std::optional<std::string> getModuleForClass(std::string_view class_name) const = 0;
 
   [[nodiscard]] virtual std::unique_ptr<CoreComponent> instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) = 0;
 

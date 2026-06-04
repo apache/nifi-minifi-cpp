@@ -27,6 +27,7 @@
 #include "core/Resource.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "core/ProcessorImpl.h"
+#include "range/v3/algorithm/find_if.hpp"
 
 using minifi::state::response::SerializedResponseNode;
 
@@ -37,6 +38,25 @@ SerializedResponseNode& get(SerializedResponseNode& node, const std::string& fie
   }
   throw std::logic_error("No field '" + field + "'");
 }
+
+namespace org::apache::nifi::minifi::test::apple {
+class ExampleApacheService : public core::controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
+ public:
+  using ControllerServiceBase::ControllerServiceBase;
+
+  void initialize() override {}
+  void onEnable() override {}
+
+  [[nodiscard]] ControllerServiceHandle* getControllerServiceHandle() override { return this; }
+
+  static constexpr const char* Description = "An example service";
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+};
+
+REGISTER_RESOURCE(ExampleApacheService, ControllerService);
+}  // namespace org::apache::nifi::minifi::test::apple
 
 namespace test::apple {
 
@@ -67,7 +87,12 @@ class ExampleProcessor : public core::ProcessorImpl {
       .isRequired(false)
       .withAllowedTypes<ExampleService>()
       .build();
-  static constexpr auto Properties = std::to_array<core::PropertyReference>({ExampleProperty});
+  static constexpr auto ExampleApacheProperty = core::PropertyDefinitionBuilder<>::createProperty("Example Apache Property")
+      .withDescription("An example property")
+      .isRequired(false)
+      .withAllowedTypes<org::apache::nifi::minifi::test::apple::ExampleApacheService>()
+      .build();
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({ExampleProperty, ExampleApacheProperty});
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
@@ -93,27 +118,38 @@ TEST_CASE("Manifest indicates property type requirement") {
 
   auto& processors = get(nodes.at(0), "processors").children;
 
-  auto example_proc_it = std::find_if(processors.begin(), processors.end(), [&] (auto& proc) {
+  auto example_proc_it = std::find_if(processors.begin(), processors.end(), [&](auto& proc) {
     return get(proc, "type").value == "test.apple.ExampleProcessor";
   });
   REQUIRE(example_proc_it != processors.end());
 
   auto& properties = get(*example_proc_it, "propertyDescriptors").children;
 
-  auto prop_it = std::find_if(properties.begin(), properties.end(), [&] (auto& prop) {
-    return get(prop, "name").value == "Example Property";
-  });
+  {
+    auto prop_it = std::find_if(properties.begin(), properties.end(), [&](auto& prop) { return get(prop, "name").value == "Example Property"; });
 
-  REQUIRE(prop_it != properties.end());
+    REQUIRE(prop_it != properties.end());
 
-  // TODO(adebreceni): based on Property::types_ a property could accept
-  //    multiple types, these would be dumped into the same object as the type of
-  //    field "typeProvidedByValue" is not an array but an object
-  auto& type = get(*prop_it, "typeProvidedByValue");
+    // TODO(adebreceni): based on Property::types_ a property could accept
+    //    multiple types, these would be dumped into the same object as the type of
+    //    field "typeProvidedByValue" is not an array but an object
+    auto& type = get(*prop_it, "typeProvidedByValue");
 
-  REQUIRE(get(type, "type").value == "test.apple.ExampleService");
-  REQUIRE(get(type, "group").value == GROUP_STR);  // fix string
-  REQUIRE(get(type, "artifact").value == "minifi-system");
+    CHECK(get(type, "type").value == "test.apple.ExampleService");
+    CHECK(get(type, "group").value == "test.apple");
+    CHECK(get(type, "artifact").value == "minifi-system");
+  }
+  {
+    auto prop_it = ranges::find_if(properties, [&](auto& prop) { return get(prop, "name").value == "Example Apache Property"; });
+    REQUIRE(prop_it != properties.end());
+
+    auto& type = get(*prop_it, "typeProvidedByValue");
+
+    CHECK(get(type, "type").value == "org.apache.nifi.minifi.test.apple.ExampleApacheService");
+    // Backward compatibility test, if the group starts with org.apache.nifi.minifi we use that
+    CHECK(get(type, "group").value == "org.apache.nifi.minifi");
+    CHECK(get(type, "artifact").value == "minifi-system");
+  }
 }
 
 TEST_CASE("Processors do not get instantiated during manifest creation") {
