@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "RunLlamaCppInference.h"
 #include "api/core/Resource.h"
 #include "api/utils/minifi-c-utils.h"
+#include "processors/RunLlamaCppInference.h"
 
 #define MKSOC(x) #x
 #define MAKESTRING(x) MKSOC(x)  // NOLINT(cppcoreguidelines-macro-usage)
@@ -34,7 +34,5 @@ CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context
     .user_data = nullptr
   };
   auto* extension = MinifiRegisterExtension(extension_context, &extension_definition);
-  minifi::api::core::useProcessorClassDefinition<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& definition) {
-    MinifiRegisterProcessor(extension, &definition);
-  });
+  minifi::api::core::registerProcessors<minifi::extensions::llamacpp::processors::RunLlamaCppInference>(extension);
 }

@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
+* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,31 +16,27 @@
  */
 #pragma once
 
-#include <string>
 #include <filesystem>
+#include <optional>
+#include <string>
 
-namespace org::apache::nifi::minifi::api::utils::net {
+namespace org::apache::nifi::minifi::api::utils {
 
-enum class ClientAuthOption {
-  NONE,
-  WANT,
-  REQUIRED
+enum class ProxyType {
+  DIRECT,
+  HTTP
 };
 
-struct SslData {
-  std::filesystem::path ca_loc;
-  std::filesystem::path cert_loc;
-  std::filesystem::path key_loc;
-  std::string key_pw;
-
-  bool isValid() const {
-    return !cert_loc.empty() && !key_loc.empty();
-  }
+struct BasicAuthCredentials {
+  std::string username;
+  std::string password;
 };
 
-struct SslServerOptions {
-  SslData cert_data;
-  ClientAuthOption client_auth_option;
+struct ProxyData {
+  std::string host;
+  uint16_t port;
+  std::optional<BasicAuthCredentials> proxy_credentials;
+  ProxyType proxy_type;
 };
 
-}  // namespace org::apache::nifi::minifi::api::utils::net
+}  // namespace org::apache::nifi::minifi::api::utils

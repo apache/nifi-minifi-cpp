@@ -4,7 +4,7 @@ EXPORTS
   MinifiRegisterProcessor
   MinifiRegisterControllerService
   MinifiPublishedMetricsCreate
-  MinifiProcessContextGetControllerService
+  MinifiProcessContextGetControllerServiceFromProperty
   MinifiProcessContextGetProperty
   MinifiProcessContextHasNonEmptyProperty
   MinifiControllerServiceContextGetProperty
@@ -30,3 +30,4 @@ EXPORTS
   MinifiProcessSessionGetFlowFileId
   MinifiProcessContextGetDynamicProperties
   MinifiProcessContextGetSslData
+  MinifiProcessContextGetProxyDataFromProperty

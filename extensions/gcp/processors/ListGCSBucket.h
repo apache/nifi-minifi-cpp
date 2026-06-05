@@ -17,19 +17,17 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
-#include <utility>
 
 #include "../GCPAttributes.h"
 #include "GCSProcessor.h"
-#include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/core/OutputAttributeDefinition.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
+#include "minifi-cpp/core/Annotation.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
@@ -44,7 +42,6 @@ inline constexpr auto FILENAME_OUTPUT_ATTRIBUTE_DESCRIPTION = utils::array_to_st
 class ListGCSBucket : public GCSProcessor {
  public:
   using GCSProcessor::GCSProcessor;
-  ~ListGCSBucket() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of objects from an GCS bucket. "
       "For each object that is listed, creates a FlowFile that represents the object so that it can be fetched in conjunction with FetchGCSObject.";
@@ -120,11 +117,9 @@ class ListGCSBucket : public GCSProcessor {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
 
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  void initialize() override;
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
-  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
+ protected:
+  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
+  MinifiStatus onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
 
  private:
   std::string bucket_;

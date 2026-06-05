@@ -119,7 +119,7 @@ def verify_minifi_logs_match_regex(context, regex, duration):
 @step('no errors were generated on the http-proxy regarding "{url}"')
 def verify_no_errors_on_http_proxy(context: MinifiTestContext, url: str):
     http_proxy_container = next(container for container in context.containers.values() if isinstance(container, HttpProxy))
-    assert http_proxy_container.check_http_proxy_access(url) or http_proxy_container.log_app_output()
+    assert http_proxy_container.check_http_proxy_access(url) or log_due_to_failure(context)
 
 
 @then('in the "{container}" container no files are placed in the "{directory}" directory in {duration} of running time')

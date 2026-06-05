@@ -16,24 +16,21 @@
  */
 #pragma once
 
-#include <string>
 #include <memory>
-#include <utility>
 #include <optional>
+#include <string>
 
 #include "../controllerservices/GCPCredentialsControllerService.h"
-#include "minifi-cpp/core/logging/Logger.h"
-#include "core/ProcessorImpl.h"
-#include "minifi-cpp/core/PropertyDefinition.h"
+#include "api/core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "minifi-cpp/core/PropertyValidator.h"
 #include "google/cloud/credentials.h"
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"
-#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "minifi-cpp/core/PropertyValidator.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-class GCSProcessor : public core::ProcessorImpl {
+class GCSProcessor : public api::core::ProcessorImpl {
  public:
   using ProcessorImpl::ProcessorImpl;
 
@@ -56,7 +53,7 @@ class GCSProcessor : public core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto ProxyConfigurationService = core::PropertyDefinitionBuilder<>::createProperty("Proxy Configuration Service")
       .withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests.")
-      .withAllowedTypes<minifi::controllers::ProxyConfigurationServiceInterface>()
+      .withAllowedType<MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE>()
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       GCPCredentials,
@@ -65,12 +62,11 @@ class GCSProcessor : public core::ProcessorImpl {
       ProxyConfigurationService
   });
 
-
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
-
  protected:
+  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
+
   virtual google::cloud::storage::Client getClient() const;
-  std::shared_ptr<google::cloud::Credentials> getCredentials(core::ProcessContext& context) const;
+  static std::shared_ptr<google::cloud::Credentials> getCredentials(const api::core::ProcessContext& context);
 
   std::optional<std::string> endpoint_url_;
   std::shared_ptr<google::cloud::Credentials> gcp_credentials_;
