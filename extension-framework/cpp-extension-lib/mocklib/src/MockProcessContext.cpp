@@ -44,7 +44,7 @@ bool MockProcessContext::hasNonEmptyProperty(const std::string_view name) const 
   return properties_.contains(name);
 }
 
-std::expected<api::utils::net::SslData, std::error_code> MockProcessContext::getSslData(std::string_view) const {
+std::expected<api::utils::net::SslData, std::error_code> MockProcessContext::getSslData(const minifi::core::PropertyReference&) const {
   return api::utils::net::SslData{};
 }
 }  // namespace org::apache::nifi::minifi::mock

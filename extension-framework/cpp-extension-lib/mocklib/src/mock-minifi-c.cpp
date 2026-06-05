@@ -19,6 +19,7 @@
 
 #include "minifi-c.h"
 
+extern "C" {
 MinifiExtension* MINIFI_REGISTER_EXTENSION_FN(MinifiExtensionContext*, const MinifiExtensionDefinition*) {
   throw std::runtime_error("Not implemented");
 }
@@ -51,7 +52,7 @@ void MinifiProcessContextGetDynamicProperties(MinifiProcessContext*, MinifiFlowF
   throw std::runtime_error("Not implemented");
 }
 
-MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext*, MinifiStringView,
+MinifiStatus MinifiProcessContextGetSslDataFromProperty(MinifiProcessContext*, MinifiStringView,
     void (*)(void* user_ctx, const MinifiSslData* ssl_data), void*) {
   throw std::runtime_error("Not implemented");
 }
@@ -133,3 +134,4 @@ MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceCo
     void (*)(void* user_ctx, MinifiStringView property_value), void*) {
   throw std::runtime_error("Not implemented");
 }
+}  // extern "C"
