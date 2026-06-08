@@ -88,8 +88,7 @@ void appendJsonStr(const utils::SmallString<N>& value, rapidjson::Value& parent,
   parent.PushBack(valueVal, alloc);
 }
 
-void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, core::ProcessSession&,
-                                                      std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report) {
+std::string SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, core::ProcessSession&, const std::vector<std::shared_ptr<core::SerializableComponent>> &records) {
   rapidjson::Document array(rapidjson::kArrayType);
   rapidjson::Document::AllocatorType &alloc = array.GetAllocator();
 
@@ -106,7 +105,7 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, cor
 
     recordJson.AddMember("timestampMillis", int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(record->getEventTime().time_since_epoch()).count()}, alloc);
     recordJson.AddMember("durationMillis", int64_t{record->getEventDuration().count()}, alloc);
-    recordJson.AddMember("lineageStart", int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(record->getlineageStartDate().time_since_epoch()).count()}, alloc);
+    recordJson.AddMember("lineageStart", int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(record->getLineageStartDate().time_since_epoch()).count()}, alloc);
     recordJson.AddMember("entitySize", record->getFileSize(), alloc);
     recordJson.AddMember("entityOffset", record->getFileOffset(), alloc);
 
@@ -148,24 +147,27 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, cor
   rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
   array.Accept(writer);
 
-  report = buffer.GetString();
-}
-
-void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {
+  return buffer.GetString();
 }
 
 void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  logger_->log_debug("SiteToSiteProvenanceReportingTask -- onTrigger");
-  std::vector<std::shared_ptr<core::SerializableComponent>> records;
-  logger_->log_debug("batch size {} records", batch_size_);
-  size_t deserialized = batch_size_;
-  std::shared_ptr<core::Repository> repo = context.getProvenanceRepository();
-  if (!repo->getElements(records, deserialized) && deserialized == 0) {
+  auto* state_manager = context.getStateManager();
+  if (!state_manager) {
+    logger_->log_error("Failed to get StateManager");
+    context.yield();
     return;
   }
-  logger_->log_debug("Captured {} records", deserialized);
-  std::string jsonStr;
-  this->getJsonReport(context, session, records, jsonStr);
+  std::shared_ptr<core::Repository> repo = context.getProvenanceRepository();
+  if (!repo) {
+    throw minifi::Exception(ExceptionType::REPOSITORY_EXCEPTION, "Failed to retrieve provenance repository");
+  }
+  auto records = repo->getElements(batch_size_);
+  if (records.empty()) {
+    logger_->log_debug("No new provenance records");
+    return;
+  }
+  logger_->log_debug("Captured {} records", records.size());
+  std::string jsonStr = getJsonReport(context, session, records);
   if (jsonStr.empty()) {
     return;
   }
