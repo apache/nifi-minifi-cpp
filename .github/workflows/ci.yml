@@ -11,7 +11,7 @@ concurrency:
 env:
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
-    -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DENABLE_LLAMACPP=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON
+    -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DENABLE_LLAMACPP=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON -DMINIFI_RUST=OFF
   CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
   macos_xcode:
@@ -52,6 +52,7 @@ jobs:
         -DENABLE_SFTP=ON
         -DENABLE_SPLUNK=ON
         -DENABLE_SQL=ON
+        -DMINIFI_RUST=ON
         -DENABLE_TEST_PROCESSORS=OFF
         -DFORCE_COLORED_OUTPUT=OFF
         -DLIBC_STATIC=OFF
@@ -161,6 +162,7 @@ jobs:
         -DENABLE_SQL=ON
         -DENABLE_TEST_PROCESSORS=OFF
         -DENABLE_WEL=ON
+        -DMINIFI_RUST=ON
         -DFORCE_COLORED_OUTPUT=ON
         -DINSTALLER_MERGE_MODULES=OFF
         -DMINIFI_FAIL_ON_WARNINGS=ON
@@ -261,6 +263,7 @@ jobs:
         -DENABLE_SPLUNK=ON
         -DENABLE_SQL=ON
         -DENABLE_SYSTEMD=ON
+        -DMINIFI_RUST=ON
         -DENABLE_TEST_PROCESSORS=OFF
         -DFORCE_COLORED_OUTPUT=ON
         -DMINIFI_FAIL_ON_WARNINGS=ON
@@ -552,8 +555,55 @@ jobs:
         with:
           name: behavex_output_modular
           path: build/behavex_output_modular
+  rusty_docker_tests:
+    name: "Rusty Docker integration tests (x86_64)"
+    needs: docker_build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - id: checkout
+        uses: actions/checkout@v6
+      - id: run_cmake
+        name: Run CMake
+        run: |
+          mkdir build
+          cd build
+          cmake ${DOCKER_CMAKE_FLAGS} ..
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: minifi_docker
+          path: build
+      - name: Load Docker image
+        run: |
+          docker load --input ./build/minifi_docker.tar && docker tag apacheminificpp:1.0.0 apacheminificpp:behave
+      - id: install_deps
+        name: Install dependencies for Docker Verify
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+      - id: test
+        name: Docker Verify
+        working-directory: ./minifi_rust
+        run: cargo behave-alpine
+      - name: Test Reporter
+        if: always()
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3
+        with:
+          name: Docker integration tests
+          path: minifi_rust/minifi_rs_behave/output/behave/*.xml
+          reporter: java-junit
+          only-summary: 'true'
+          list-tests: 'failed'
+          list-suites: 'failed'
+      - name: Upload artifact
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: minifi_rs_behave
+          path: minifi_rust/minifi_rs_behave/output
   linters:
-    name: "C++ lint + Shellcheck + Flake8"
+    name: "C++ lint + Shellcheck + Flake8 + Cargo check"
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 15
     steps:
@@ -578,8 +628,14 @@ jobs:
         continue-on-error: true
         run: ./run_flake8.sh .
 
+      - id: cargo_check
+        name: Cargo check
+        continue-on-error: true
+        run: cargo fmt --check
+        working-directory: minifi_rust
+
       - name: Check Linter Statuses
-        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.flake8_check.outcome == 'failure'
+        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.flake8_check.outcome == 'failure' || steps.cargo_check.outcome == 'failure'
         run: |
           echo "One or more linters failed. Failing the workflow."
           exit 1
