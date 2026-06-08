@@ -20,7 +20,6 @@
 cmake_minimum_required(VERSION 3.25)
 cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_VERSION_{MAJOR,MINOR,PATCH,TWEAK}
 cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
-cmake_policy(SET CMP0183 NEW) # add_feature_info() supports full :ref:Condition Syntax
 
 project(nifi-minifi-cpp VERSION 1.0.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
