@@ -1,5 +1,4 @@
 # Licensed to the Apache Software Foundation (ASF) under one
-#
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
 # regarding copyright ownership.  The ASF licenses this file
@@ -15,8 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-add_library(libminifi-c-unittest INTERFACE)
-target_link_libraries(libminifi-c-unittest INTERFACE minifi-cpp-extension-lib core-minifi)
-target_include_directories(libminifi-c-unittest INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+if(MINIFI_SOL2_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install Sol2")
+    find_package(sol2 REQUIRED)
+elseif(MINIFI_SOL2_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build Sol2 from source")
+    include(Sol2)
+endif()

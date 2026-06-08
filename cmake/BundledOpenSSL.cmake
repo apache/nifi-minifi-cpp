@@ -260,5 +260,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     add_dependencies(OpenSSL::Crypto openssl-fips-external)
     set(OPENSSL_ROOT_DIR "${OPENSSL_BIN_DIR}" CACHE INTERNAL "Strict single source of truth for bundled OpenSSL")
+    set(FIND_OPENSSL_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl/FindOpenSSL.cmake" CACHE INTERNAL "Location of the FindOpenSSL file, for other dependencies")
+    set(FIND_CRYPTO_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl/FindCrypto.cmake" CACHE INTERNAL "Location of the FindCrypto file, for other dependencies")
 
 endfunction(use_openssl)

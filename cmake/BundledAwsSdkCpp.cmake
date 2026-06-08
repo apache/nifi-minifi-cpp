@@ -87,8 +87,8 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/libaws-install"
             "-DCMAKE_MODULE_PATH=${ESCAPED_CMAKE_MODULE_PATH}"
             "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}"
-            "-DFIND_OPENSSL_PATH=${SOURCE_DIR}/cmake/ssl/FindOpenSSL.cmake"
-            "-DFIND_CRYPTO_PATH=${SOURCE_DIR}/cmake/ssl/FindCrypto.cmake"
+            "-DFIND_OPENSSL_PATH=${FIND_OPENSSL_PATH}"
+            "-DFIND_CRYPTO_PATH=${FIND_CRYPTO_PATH}"
             "-DCURL_ROOT_DIR=${CURL_ROOT_DIR}"
             "-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}"
             "-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIRS}"
@@ -110,7 +110,8 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             aws-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/aws/aws-sdk-cpp.git"
             GIT_TAG "1.11.807"
-            UPDATE_COMMAND git submodule update --init --recursive
+            GIT_SHALLOW TRUE
+            UPDATE_COMMAND git submodule update --init --recursive --depth=1
             SOURCE_DIR "${BINARY_DIR}/thirdparty/aws-sdk-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists

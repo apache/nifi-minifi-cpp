@@ -1,11 +1,9 @@
 Thank you for submitting a contribution to Apache NiFi - MiNiFi C++.
 
-In order to streamline the review of the contribution we ask you
-to ensure the following steps have been taken:
+In order to streamline the review of the contribution we ask you to ensure the following steps have been taken:
 
 ### For all changes:
-- [ ] Is there a JIRA ticket associated with this PR? Is it referenced
-     in the commit message?
+- [ ] Is there a JIRA ticket associated with this PR? Is it referenced in the commit message?
 
 - [ ] Does your PR title start with MINIFICPP-XXXX where XXXX is the JIRA number you are trying to resolve? Pay particular attention to the hyphen "-" character.
 
