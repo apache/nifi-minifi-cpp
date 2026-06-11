@@ -19,6 +19,7 @@
 #pragma once
 
 #include <memory>
+#include <cstdint>
 
 #include "../Common.h"
 #include "minifi-cpp/utils/gsl.h"
