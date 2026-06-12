@@ -29,7 +29,9 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(zlib)
 
-if(WIN32)
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(_zlib_static_suffix "sd")
+elseif(WIN32)
     set(_zlib_static_suffix "s")
 else()
     set(_zlib_static_suffix "")
