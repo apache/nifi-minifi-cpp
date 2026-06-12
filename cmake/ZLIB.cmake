@@ -29,12 +29,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(zlib)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(WIN32)
-        set(_zlib_debug_suffix "d")
-    else()
-        set(_zlib_debug_suffix "")
-    endif()
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(_zlib_debug_suffix "d")
+else()
+    set(_zlib_debug_suffix "")
 endif()
 
 if(WIN32)
