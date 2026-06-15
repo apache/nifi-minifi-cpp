@@ -410,7 +410,7 @@ MinifiLogLevel MinifiLoggerLevel(MinifiLogger* logger) {
 }
 
 MINIFI_OWNED gsl::owner<MinifiPublishedMetrics*> MinifiPublishedMetricsCreate(const size_t count, const MinifiStringView* metric_names, const double* metric_values) {
-  const gsl::owner<std::vector<minifi::state::PublishedMetric>*> metrics = new std::vector<minifi::state::PublishedMetric>();  // NOLINT(modernize-use-auto)
+  gsl::owner<std::vector<minifi::state::PublishedMetric>*> metrics = new std::vector<minifi::state::PublishedMetric>();  // NOLINT(modernize-use-auto, cppcoreguidelines-owning-memory)
   metrics->reserve(count);
   for (size_t i = 0; i < count; i++) {
     metrics->emplace_back(minifi::state::PublishedMetric{toString(metric_names[i]), metric_values[i], {}});
@@ -613,13 +613,15 @@ void MinifiProcessContextGetDynamicProperties(MinifiProcessContext* context, Min
   }
 }
 
-MinifiStatus MinifiProcessContextGetSslData(MinifiProcessContext* process_context, MinifiStringView controller_service_name,
+MinifiStatus MinifiProcessContextGetSslDataFromProperty(MinifiProcessContext* process_context, MinifiStringView property_name,
     void (*cb)(void* user_ctx, const MinifiSslData* ssl_data), void* user_ctx) {
   gsl_Assert(process_context != MINIFI_NULL);
   try {
     const auto context = reinterpret_cast<minifi::core::ProcessContext*>(process_context);
-    const auto name_str = std::string{toStringView(controller_service_name)};
-    const auto service_shared_ptr = context->getControllerService(name_str, context->getProcessorInfo().getUUID());
+    const auto property_name_str = std::string{toStringView(property_name)};
+    const auto name_str = context->getProperty(property_name_str, nullptr);
+    if (!name_str) { return MINIFI_STATUS_PROPERTY_NOT_SET; }
+    const auto service_shared_ptr = context->getControllerService(*name_str, context->getProcessorInfo().getUUID());
     if (!service_shared_ptr) { return MINIFI_STATUS_VALIDATION_FAILED; }
     if (const auto ssl_context_service = dynamic_cast<minifi::controllers::SSLContextServiceInterface*>(service_shared_ptr.get())) {
       const std::string ca_cert_file = ssl_context_service->getCACertificate().string();

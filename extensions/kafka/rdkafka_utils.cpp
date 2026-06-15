@@ -18,8 +18,10 @@
 #include "rdkafka_utils.h"
 
 #include <array>
+#include <vector>
 
 #include "minifi-cpp/Exception.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::utils {
@@ -34,11 +36,69 @@ void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::strin
   }
 }
 
-void print_topics_list(core::logging::Logger& logger, const rd_kafka_topic_partition_list_t& kf_topic_partition_list) {
+void KafkaOpaque::printTopicsList(const rd_kafka_topic_partition_list_t& kf_topic_partition_list) const {
+  if (!logger_.should_log(core::logging::debug))
+    return;
   for (int i = 0; i < kf_topic_partition_list.cnt; ++i) {
-    logger.log_debug("kf_topic_partition_list: topic: {}, partition: {}, offset: {}.", kf_topic_partition_list.elems[i].topic,
+    logger_.log_debug("kf_topic_partition_list: topic: {}, partition: {}, offset: {}.", kf_topic_partition_list.elems[i].topic,
         kf_topic_partition_list.elems[i].partition, kf_topic_partition_list.elems[i].offset);
   }
+}
+void KafkaOpaque::logCallback(const rd_kafka_t* rk, const int level, const char*, const char* buf) {
+  const auto kafka_opaque = static_cast<KafkaOpaque*>(rd_kafka_opaque(rk));
+
+  if (!kafka_opaque) { return; }
+
+  switch (level) {
+    case 0:  // LOG_EMERG
+    case 1:  // LOG_ALERT
+    case 2:  // LOG_CRIT
+      kafka_opaque->logger_.log_critical("{}", buf);
+      break;
+    case 3:  // LOG_ERR
+      kafka_opaque->logger_.log_error("{}", buf);
+      break;
+    case 4:  // LOG_WARNING
+      kafka_opaque->logger_.log_warn("{}", buf);
+      break;
+    case 5:  // LOG_NOTICE
+    case 6:  // LOG_INFO
+      kafka_opaque->logger_.log_info("{}", buf);
+      break;
+    case 7:  // LOG_DEBUG
+      kafka_opaque->logger_.log_debug("{}", buf);
+      break;
+    default: gsl_FailFast();
+  }
+}
+void KafkaOpaque::rebalanceCallback(rd_kafka_t* rk, const rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* opaque_ptr) {
+  const auto* kafka_opaque = static_cast<KafkaOpaque*>(opaque_ptr);
+  if (!kafka_opaque) {
+    return;
+  }
+  kafka_opaque->logger_.log_debug("Rebalance triggered.");
+  rd_kafka_resp_err_t assign_error = RD_KAFKA_RESP_ERR_NO_ERROR;
+  switch (trigger) {
+    case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
+      kafka_opaque->logger_.log_debug("assigned:");
+      kafka_opaque->printTopicsList(*partitions);
+      assign_error = rd_kafka_assign(rk, partitions);
+      break;
+
+    case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
+      kafka_opaque->logger_.log_debug("revoked:");
+      rd_kafka_commit(rk, partitions, /* async = */ 0);  // Sync commit, maybe unnecessary
+      kafka_opaque->printTopicsList(*partitions);
+
+      assign_error = rd_kafka_assign(rk, nullptr);
+      break;
+
+    default:
+      kafka_opaque->logger_.log_debug("failed: {}", rd_kafka_err2str(trigger));
+      assign_error = rd_kafka_assign(rk, nullptr);
+      break;
+  }
+  kafka_opaque->logger_.log_debug("assign failure: {}", rd_kafka_err2str(assign_error));
 }
 
 std::string get_human_readable_kafka_message_timestamp(const rd_kafka_message_t& rkmessage) {

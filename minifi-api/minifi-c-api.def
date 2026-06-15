@@ -29,4 +29,4 @@ EXPORTS
   MinifiProcessSessionGetFlowFileSize
   MinifiProcessSessionGetFlowFileId
   MinifiProcessContextGetDynamicProperties
-  MinifiProcessContextGetSslData
+  MinifiProcessContextGetSslDataFromProperty

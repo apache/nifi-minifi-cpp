@@ -21,14 +21,15 @@
 #include <string>
 #include <vector>
 
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
-#include "core/Resource.h"
+#include "api/core/ProcessSession.h"
+#include "api/core/Resource.h"
+#include "api/utils/ProcessorConfigUtils.h"
+#include "minifi-cpp/io/InputStream.h"
+#include "minifi-cpp/io/Stream.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "range/v3/algorithm/all_of.hpp"
 #include "rdkafka_utils.h"
-#include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
-#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -158,12 +159,13 @@ class ReadCallback {
     });
   }
 
-  static utils::rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file,
+  static utils::rd_kafka_headers_unique_ptr make_headers(const api::core::FlowFile& flow_file,
+      const api::core::ProcessSession& session,
       const std::optional<utils::Regex>& attribute_name_regex) {
     utils::rd_kafka_headers_unique_ptr result{rd_kafka_headers_new(8)};
     if (!result) { throw std::bad_alloc{}; }
 
-    for (const auto& [attribute_key, attribute_value]: flow_file.getAttributes()) {
+    for (const auto& [attribute_key, attribute_value]: session.getAttributes(flow_file)) {
       if (attribute_name_regex && utils::regexMatch(attribute_key, *attribute_name_regex)) {
         rd_kafka_header_add(result.get(),
             attribute_key.c_str(),
@@ -228,15 +230,15 @@ class ReadCallback {
 
  public:
   ReadCallback(const uint64_t max_seg_size, std::string key, rd_kafka_topic_t* const rkt, rd_kafka_t* const rk,
-      const core::FlowFile& flowFile, const std::optional<utils::Regex>& attributeNameRegex,
-      std::shared_ptr<PublishKafka::Messages> messages, const size_t flow_file_index, const bool fail_empty_flow_files,
-      std::shared_ptr<core::logging::Logger> logger)
-      : flow_size_(flowFile.getSize()),
+      uint64_t flow_file_size, const api::core::FlowFile& flowFile, const api::core::ProcessSession& session,
+      const std::optional<utils::Regex>& attributeNameRegex, std::shared_ptr<PublishKafka::Messages> messages,
+      const size_t flow_file_index, const bool fail_empty_flow_files, std::shared_ptr<core::logging::Logger> logger)
+      : flow_size_(flow_file_size),
         max_seg_size_(max_seg_size == 0 || flow_size_ < max_seg_size ? flow_size_ : max_seg_size),
         key_(std::move(key)),
         rkt_(rkt),
         rk_(rk),
-        hdrs(make_headers(flowFile, attributeNameRegex)),
+        hdrs(make_headers(flowFile, session, attributeNameRegex)),
         messages_(std::move(messages)),
         flow_file_index_(flow_file_index),
         fail_empty_flow_files_(fail_empty_flow_files),
@@ -326,33 +328,28 @@ void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage
 }
 }  // namespace
 
-void PublishKafka::initialize() {
-  setSupportedProperties(Properties);
-  setSupportedRelationships(Relationships);
-}
-
-void PublishKafka::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+MinifiStatus PublishKafka::onScheduleImpl(api::core::ProcessContext& context) {
   interrupted_ = false;
 
   // Try to get a KafkaConnection
-  std::string client_id = utils::parseProperty(context, ClientName);
-  std::string brokers = utils::parseProperty(context, SeedBrokers);
+  std::string client_id = api::utils::parseProperty(context, ClientName);
+  std::string brokers = api::utils::parseProperty(context, SeedBrokers);
   // Get some properties not (only) used directly to set up librdkafka
 
   // Batch Size
-  batch_size_ = utils::parseU64Property(context, BatchSize);
+  batch_size_ = api::utils::parseU64Property(context, BatchSize);
   logger_->log_debug("PublishKafka: Batch Size [{}]", batch_size_);
 
   // Target Batch Payload Size
-  target_batch_payload_size_ = utils::parseDataSizeProperty(context, TargetBatchPayloadSize);
+  target_batch_payload_size_ = api::utils::parseDataSizeProperty(context, TargetBatchPayloadSize);
   logger_->log_debug("PublishKafka: Target Batch Payload Size [{}]", target_batch_payload_size_);
 
   // Max Flow Segment Size
-  max_flow_seg_size_ = utils::parseDataSizeProperty(context, MaxFlowSegSize);
+  max_flow_seg_size_ = api::utils::parseDataSizeProperty(context, MaxFlowSegSize);
   logger_->log_debug("PublishKafka: Max Flow Segment Size [{}]", max_flow_seg_size_);
 
   // Attributes to Send as Headers
-  attributeNameRegex_ = context.getProperty(AttributeNameRegex)
+  attributeNameRegex_ = context.getProperty(AttributeNameRegex, nullptr)
     | utils::transform([](auto pattern_str) { return utils::Regex{std::move(pattern_str)}; })
     | utils::toOptional();
 
@@ -362,15 +359,16 @@ void PublishKafka::onSchedule(core::ProcessContext& context, core::ProcessSessio
   conn_ = std::make_unique<KafkaConnection>(key_);
   configureNewConnection(context);
 
-  if (const auto message_key_field = context.getProperty(MessageKeyField); message_key_field && !message_key_field->empty()) {
+  if (const auto message_key_field = context.getProperty(MessageKeyField, nullptr); message_key_field && !message_key_field->empty()) {
     logger_->log_error("The {} property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", MessageKeyField.name);
   }
 
   logger_->log_debug("Successfully configured PublishKafka");
+  return MINIFI_STATUS_SUCCESS;
 }
 
-void PublishKafka::notifyStop() {
-  logger_->log_debug("notifyStop called");
+void PublishKafka::onUnSchedule() {
+  logger_->log_debug("onUnSchedule called");
   interrupted_ = true;
   {
     // Normally when we need both connection_mutex_ and messages_mutex_, we need to take connection_mutex_ first to avoid a
@@ -386,18 +384,20 @@ void PublishKafka::notifyStop() {
   conn_.reset();
 }
 
-bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
+void PublishKafka::configureNewConnection(api::core::ProcessContext& context) {
   std::array<char, 512U> err_chars{};
   rd_kafka_conf_res_t result = RD_KAFKA_CONF_OK;
   constexpr std::string_view PREFIX_ERROR_MSG = "PublishKafka: configure error result: ";
 
-  utils::rd_kafka_conf_unique_ptr conf_{rd_kafka_conf_new()};
-  if (conf_ == nullptr) { throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create rd_kafka_conf_t object"); }
+  utils::rd_kafka_conf_unique_ptr conf{rd_kafka_conf_new()};
+  if (conf == nullptr) { throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create rd_kafka_conf_t object"); }
+
+  rd_kafka_conf_set_opaque(conf.get(), &kafka_opaque_);
 
   const auto* const key = conn_->getKey();
 
   if (key->brokers_.empty()) { throw Exception(PROCESS_SCHEDULE_EXCEPTION, "There are no brokers"); }
-  result = rd_kafka_conf_set(conf_.get(), "bootstrap.servers", key->brokers_.c_str(), err_chars.data(), err_chars.size());
+  result = rd_kafka_conf_set(conf.get(), "bootstrap.servers", key->brokers_.c_str(), err_chars.data(), err_chars.size());
   logger_->log_debug("PublishKafka: bootstrap.servers [{}]", key->brokers_);
   if (result != RD_KAFKA_CONF_OK) {
     auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
@@ -405,15 +405,15 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
   }
 
   if (key->client_id_.empty()) { throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Client id is empty"); }
-  result = rd_kafka_conf_set(conf_.get(), "client.id", key->client_id_.c_str(), err_chars.data(), err_chars.size());
+  result = rd_kafka_conf_set(conf.get(), "client.id", key->client_id_.c_str(), err_chars.data(), err_chars.size());
   logger_->log_debug("PublishKafka: client.id [{}]", key->client_id_);
   if (result != RD_KAFKA_CONF_OK) {
     auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
-  if (const auto debug_context = context.getProperty(DebugContexts)) {
-    result = rd_kafka_conf_set(conf_.get(), "debug", debug_context->c_str(), err_chars.data(), err_chars.size());
+  if (const auto debug_context = context.getProperty(DebugContexts, nullptr)) {
+    result = rd_kafka_conf_set(conf.get(), "debug", debug_context->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: debug [{}]", *debug_context);
     if (result != RD_KAFKA_CONF_OK) {
       auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
@@ -421,8 +421,8 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (const auto max_message_size = context.getProperty(MaxMessageSize); max_message_size && !max_message_size->empty()) {
-    result = rd_kafka_conf_set(conf_.get(), "message.max.bytes", max_message_size->c_str(), err_chars.data(), err_chars.size());
+  if (const auto max_message_size = context.getProperty(MaxMessageSize, nullptr); max_message_size && !max_message_size->empty()) {
+    result = rd_kafka_conf_set(conf.get(), "message.max.bytes", max_message_size->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: message.max.bytes [{}]", *max_message_size);
     if (result != RD_KAFKA_CONF_OK) {
       auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
@@ -430,13 +430,13 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (const auto queue_buffer_max_message = utils::parseOptionalU64Property(context, QueueBufferMaxMessage)) {
+  if (const auto queue_buffer_max_message = api::utils::parseOptionalU64Property(context, QueueBufferMaxMessage)) {
     if (*queue_buffer_max_message < batch_size_) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid configuration: Batch Size cannot be larger than Queue Max Message");
     }
 
     const auto value = std::to_string(*queue_buffer_max_message);
-    result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.messages", value.c_str(), err_chars.data(), err_chars.size());
+    result = rd_kafka_conf_set(conf.get(), "queue.buffering.max.messages", value.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.messages [{}]", value);
     if (result != RD_KAFKA_CONF_OK) {
       auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
@@ -444,10 +444,10 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (const auto queue_buffer_max_size = utils::parseOptionalDataSizeProperty(context, QueueBufferMaxSize)) {
+  if (const auto queue_buffer_max_size = api::utils::parseOptionalDataSizeProperty(context, QueueBufferMaxSize)) {
     auto valInt = *queue_buffer_max_size / 1024;
     auto valueConf = std::to_string(valInt);
-    result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.kbytes", valueConf.c_str(), err_chars.data(), err_chars.size());
+    result = rd_kafka_conf_set(conf.get(), "queue.buffering.max.kbytes", valueConf.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.kbytes [{}]", valueConf);
     if (result != RD_KAFKA_CONF_OK) {
       auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
@@ -455,9 +455,9 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (const auto queue_buffer_max_time = utils::parseOptionalDurationProperty(context, QueueBufferMaxTime)) {
+  if (const auto queue_buffer_max_time = api::utils::parseOptionalDurationProperty(context, QueueBufferMaxTime)) {
     auto valueConf = std::to_string(queue_buffer_max_time->count());
-    result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.ms", valueConf.c_str(), err_chars.data(), err_chars.size());
+    result = rd_kafka_conf_set(conf.get(), "queue.buffering.max.ms", valueConf.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.ms [{}]", valueConf);
     if (result != RD_KAFKA_CONF_OK) {
       auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
@@ -465,9 +465,9 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (const auto batch_size = utils::parseOptionalU64Property(context, BatchSize)) {
+  if (const auto batch_size = api::utils::parseOptionalU64Property(context, BatchSize)) {
     auto value = std::to_string(*batch_size);
-    result = rd_kafka_conf_set(conf_.get(), "batch.num.messages", value.c_str(), err_chars.data(), err_chars.size());
+    result = rd_kafka_conf_set(conf.get(), "batch.num.messages", value.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: batch.num.messages [{}]", value);
     if (result != RD_KAFKA_CONF_OK) {
       auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
@@ -475,8 +475,8 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  if (const auto compress_codec = context.getProperty(CompressCodec); compress_codec && !compress_codec->empty() && *compress_codec != "none") {
-    result = rd_kafka_conf_set(conf_.get(), "compression.codec", compress_codec->c_str(), err_chars.data(), err_chars.size());
+  if (const auto compress_codec = context.getProperty(CompressCodec, nullptr); compress_codec && !compress_codec->empty() && *compress_codec != "none") {
+    result = rd_kafka_conf_set(conf.get(), "compression.codec", compress_codec->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: compression.codec [{}]", *compress_codec);
     if (result != RD_KAFKA_CONF_OK) {
       auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
@@ -484,49 +484,47 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     }
   }
 
-  setKafkaAuthenticationParameters(context, gsl::make_not_null(conf_.get()));
+  setKafkaAuthenticationParameters(context, gsl::make_not_null(conf.get()));
 
   // Add all the dynamic properties as librdkafka configurations
-  const auto& dynamic_prop_keys = context.getDynamicPropertyKeys();
-  logger_->log_info("PublishKafka registering {} librdkafka dynamic properties", dynamic_prop_keys.size());
 
-  for (const auto& prop_key : dynamic_prop_keys) {
-    if (const auto dynamic_property_value = context.getDynamicProperty(prop_key, nullptr); dynamic_property_value && !dynamic_property_value->empty()) {
-      logger_->log_debug("PublishKafka: DynamicProperty: [{}] -> [{}]", prop_key, *dynamic_property_value);
-      result = rd_kafka_conf_set(conf_.get(), prop_key.c_str(), dynamic_property_value->c_str(), err_chars.data(), err_chars.size());
-      if (result != RD_KAFKA_CONF_OK) {
-        auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-      }
-    } else {
+  std::optional<std::string> error_during_on_dyn_props = std::nullopt;
+  for (auto [prop_key, prop_value] : context.getDynamicProperties(nullptr)) {
+    if (prop_value.empty()) {
       logger_->log_warn(
-          "PublishKafka Dynamic Property '{}' is empty and therefore will not "
-          "be configured",
+          "PublishKafka Dynamic Property '{}' is empty and therefore will not be configured",
           prop_key);
+      continue;
     }
+    logger_->log_debug("PublishKafka: DynamicProperty: [{}] -> [{}]", prop_key, prop_value);
+    result = rd_kafka_conf_set(conf.get(), prop_key.data(), prop_value.data(), err_chars.data(), err_chars.size());
+    if (result != RD_KAFKA_CONF_OK) {
+      error_during_on_dyn_props = utils::string::join_pack(PREFIX_ERROR_MSG, err_chars.data());
+    }
+  }
+  if (error_during_on_dyn_props) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, *error_during_on_dyn_props);
   }
 
   // Set the delivery callback
-  rd_kafka_conf_set_dr_msg_cb(conf_.get(), &messageDeliveryCallback);
+  rd_kafka_conf_set_dr_msg_cb(conf.get(), &messageDeliveryCallback);
 
   // Set the logger callback
-  rd_kafka_conf_set_log_cb(conf_.get(), &KafkaConnection::logCallback);
+  rd_kafka_conf_set_log_cb(conf.get(), &utils::KafkaOpaque::logCallback);
 
   // The producer takes ownership of the configuration, we must not free it
   utils::rd_kafka_producer_unique_ptr producer{
-      rd_kafka_new(RD_KAFKA_PRODUCER, conf_.release(), err_chars.data(), err_chars.size())};
+      rd_kafka_new(RD_KAFKA_PRODUCER, conf.release(), err_chars.data(), err_chars.size())};
   if (producer == nullptr) {
     auto error_msg = utils::string::join_pack("Failed to create Kafka producer ", err_chars.data());
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
   conn_->setConnection(std::move(producer));
-
-  return true;
 }
 
-bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::string& topic_name,
-    const std::shared_ptr<core::FlowFile>& flow_file) const {
+bool PublishKafka::createNewTopic(const api::core::ProcessContext& context, const std::string& topic_name,
+    const api::core::FlowFile& flow_file) const {
   utils::rd_kafka_topic_conf_unique_ptr topic_conf_{rd_kafka_topic_conf_new()};
   if (topic_conf_ == nullptr) {
     logger_->log_error("Failed to create rd_kafka_topic_conf_t object");
@@ -536,7 +534,7 @@ bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::stri
   rd_kafka_conf_res_t result = RD_KAFKA_CONF_OK;
   std::array<char, 512U> err_chars{};
 
-  if (auto delivery_guarantee = context.getProperty(DeliveryGuarantee, flow_file.get())) {
+  if (auto delivery_guarantee = api::utils::parseOptionalProperty(context, DeliveryGuarantee, &flow_file)) {
     /*
      * Because of a previous error in this processor, the default value of this property was "DELIVERY_ONE_NODE".
      * As this is not a valid value for "request.required.acks", the following rd_kafka_topic_conf_set call failed,
@@ -560,7 +558,7 @@ bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::stri
     }
   }
 
-  if (const auto request_timeout = utils::parseOptionalDurationProperty(context, RequestTimeOut)) {
+  if (const auto request_timeout = api::utils::parseOptionalDurationProperty(context, RequestTimeOut)) {
     auto valueConf = std::to_string(request_timeout->count());
     result = rd_kafka_topic_conf_set(topic_conf_.get(), "request.timeout.ms", valueConf.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: request.timeout.ms [{}]", valueConf);
@@ -570,7 +568,7 @@ bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::stri
     }
   }
 
-  if (const auto message_timeout = utils::parseOptionalDurationProperty(context, MessageTimeOut)) {
+  if (const auto message_timeout = api::utils::parseOptionalDurationProperty(context, MessageTimeOut)) {
     auto valueConf = std::to_string(message_timeout->count());
     result = rd_kafka_topic_conf_set(topic_conf_.get(), "message.timeout.ms", valueConf.c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: message.timeout.ms [{}]", valueConf);
@@ -596,25 +594,24 @@ bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::stri
   return true;
 }
 
-std::optional<utils::net::SslData> PublishKafka::getSslData(core::ProcessContext& context) const {
-  if (auto result = KafkaProcessorBase::getSslData(context); result) { return result; }
+std::optional<api::utils::net::SslData> PublishKafka::getSslData(api::core::ProcessContext& context) const {
+  if (auto result = context.getSslData(SSLContextService); result) { return *result; }
 
-  utils::net::SslData ssl_data;
-  if (auto security_ca = context.getProperty(SecurityCA)) { ssl_data.ca_loc = *security_ca; }
-  if (auto security_cert = context.getProperty(SecurityCert)) { ssl_data.cert_loc = *security_cert; }
-  if (auto security_private_key = context.getProperty(SecurityPrivateKey)) { ssl_data.key_loc = *security_private_key; }
-  if (auto security_private_key_pass = context.getProperty(SecurityPrivateKeyPassWord)) {
+  api::utils::net::SslData ssl_data;
+  if (auto security_ca = context.getProperty(SecurityCA, nullptr)) { ssl_data.ca_loc = *security_ca; }
+  if (auto security_cert = context.getProperty(SecurityCert, nullptr)) { ssl_data.cert_loc = *security_cert; }
+  if (auto security_private_key = context.getProperty(SecurityPrivateKey, nullptr)) { ssl_data.key_loc = *security_private_key; }
+  if (auto security_private_key_pass = context.getProperty(SecurityPrivateKeyPassWord, nullptr)) {
     ssl_data.key_pw = *security_private_key_pass;
   }
   return ssl_data;
 }
 
-void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+MinifiStatus PublishKafka::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   // Check whether we have been interrupted
   if (interrupted_) {
     logger_->log_info("The processor has been interrupted, not running onTrigger");
-    context.yield();
-    return;
+    return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
   std::lock_guard<std::mutex> lock_connection(connection_mutex_);
@@ -622,17 +619,16 @@ void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession
 
   // Collect FlowFiles to process
   uint64_t actual_bytes = 0U;
-  std::vector<std::shared_ptr<core::FlowFile>> flowFiles;
+  std::vector<api::core::FlowFile> flowFiles;
   for (uint64_t i = 0; i < batch_size_; i++) {
-    std::shared_ptr<core::FlowFile> flowFile = session.get();
+    auto flowFile = session.get();
     if (flowFile == nullptr) { break; }
-    actual_bytes += flowFile->getSize();
+    actual_bytes += session.getFlowFileSize(flowFile);
     flowFiles.emplace_back(std::move(flowFile));
     if (target_batch_payload_size_ != 0U && actual_bytes >= target_batch_payload_size_) { break; }
   }
   if (flowFiles.empty()) {
-    context.yield();
-    return;
+    return MINIFI_STATUS_PROCESSOR_YIELD;
   }
   logger_->log_debug("Processing {} flow files with a total size of {} B", flowFiles.size(), actual_bytes);
 
@@ -649,15 +645,17 @@ void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession
   });
 
   // Process FlowFiles
-  for (auto& flowFile: flowFiles) {
+  for (auto& flow_file: flowFiles) {
     const size_t flow_file_index = messages->addFlowFile();
 
     // Get Topic (FlowFile-dependent EL property)
-    const auto topic = context.getProperty(Topic, flowFile.get());
+    const auto topic = api::utils::parseOptionalProperty(context, Topic, &flow_file);
+    const std::string flow_file_id = session.getFlowFileId(flow_file);
+    const uint64_t flow_file_size = session.getFlowFileSize(flow_file);
     if (topic) {
-      logger_->log_debug("PublishKafka: topic for flow file {} is '{}'", flowFile->getUUIDStr(), *topic);
+      logger_->log_debug("PublishKafka: topic for flow file {} is '{}'", flow_file_id, *topic);
     } else {
-      logger_->log_error("Flow file {} does not have a valid Topic", flowFile->getUUIDStr());
+      logger_->log_error("Flow file {} does not have a valid Topic", flow_file_id);
       messages->modifyResult(flow_file_index,
           [](FlowFileResult& flow_file_result) { flow_file_result.flow_file_error = true; });
       continue;
@@ -665,7 +663,7 @@ void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession
 
     // Add topic to the connection if needed
     if (!conn_->hasTopic(*topic)) {
-      if (!createNewTopic(context, *topic, flowFile)) {
+      if (!createNewTopic(context, *topic, flow_file)) {
         logger_->log_error("Failed to add topic {}", *topic);
         messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
           flow_file_result.flow_file_error = true;
@@ -674,7 +672,7 @@ void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession
       }
     }
 
-    std::string kafkaKey = context.getProperty(KafkaKey, flowFile.get()).value_or(flowFile->getUUIDStr());
+    std::string kafkaKey = api::utils::parseOptionalProperty(context, KafkaKey, &flow_file).value_or(flow_file_id);
 
     logger_->log_debug("PublishKafka: Message Key [{}]", kafkaKey);
 
@@ -687,30 +685,33 @@ void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession
       continue;
     }
 
-    bool failEmptyFlowFiles = utils::parseBoolProperty(context, FailEmptyFlowFiles);
+    bool failEmptyFlowFiles = api::utils::parseBoolProperty(context, FailEmptyFlowFiles);
+
 
     ReadCallback callback(max_flow_seg_size_,
         kafkaKey,
         thisTopic->getTopic(),
         conn_->getConnection(),
-        *flowFile,
+        flow_file_size,
+        flow_file,
+        session,
         attributeNameRegex_,
         messages,
         flow_file_index,
         failEmptyFlowFiles,
         logger_);
-    session.read(flowFile, std::ref(callback));
+    session.read(flow_file, std::ref(callback));
 
     if (!callback.called_) {
       // workaround: call callback since ProcessSession doesn't do so for empty flow files without resource claims
       callback(nullptr);
     }
 
-    if (flowFile->getSize() == 0 && failEmptyFlowFiles) {
+    if (flow_file_size == 0 && failEmptyFlowFiles) {
       logger_->log_debug(
           "Deprecated behavior, use connections to drop empty flow files! "
           "Failing empty flow file with uuid: {}",
-          flowFile->getUUIDStr());
+          flow_file_id);
       messages->modifyResult(flow_file_index,
           [](FlowFileResult& flow_file_result) { flow_file_result.flow_file_error = true; });
     }
@@ -748,33 +749,32 @@ void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession
             logger_->log_error(
                 "Waiting for delivery confirmation was interrupted for flow "
                 "file {} segment {}",
-                flowFiles[index]->getUUIDStr(),
+                session.getFlowFileId(flowFiles[index]),
                 segment_num);
             break;
           case MessageStatus::Error:
             success = false;
             logger_->log_error("Failed to deliver flow file {} segment {}, error: {}",
-                flowFiles[index]->getUUIDStr(),
+                session.getFlowFileId(flowFiles[index]),
                 segment_num,
                 rd_kafka_err2str(message.err_code));
             break;
           case MessageStatus::Success:
             logger_->log_debug("Successfully delivered flow file {} segment {}",
-                flowFiles[index]->getUUIDStr(),
+                session.getFlowFileId(flowFiles[index]),
                 segment_num);
             break;
         }
       }
     }
     if (success) {
-      session.transfer(flowFiles[index], Success);
+      session.transfer(std::move(flowFiles[index]), Success);
     } else {
       session.penalize(flowFiles[index]);
-      session.transfer(flowFiles[index], Failure);
+      session.transfer(std::move(flowFiles[index]), Failure);
     }
   });
+  return MINIFI_STATUS_SUCCESS;
 }
-
-REGISTER_RESOURCE(PublishKafka, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors
