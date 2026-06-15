@@ -36,7 +36,7 @@ void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::strin
   }
 }
 
-void KafkaOpaque::print_topics_list(const rd_kafka_topic_partition_list_t& kf_topic_partition_list) const {
+void KafkaOpaque::printTopicsList(const rd_kafka_topic_partition_list_t& kf_topic_partition_list) const {
   if (!logger_.should_log(core::logging::debug))
     return;
   for (int i = 0; i < kf_topic_partition_list.cnt; ++i) {
@@ -71,7 +71,7 @@ void KafkaOpaque::logCallback(const rd_kafka_t* rk, const int level, const char*
     default: gsl_FailFast();
   }
 }
-void KafkaOpaque::rebalance_cb(rd_kafka_t* rk, const rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* opaque_ptr) {
+void KafkaOpaque::rebalanceCallback(rd_kafka_t* rk, const rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* opaque_ptr) {
   const auto* kafka_opaque = static_cast<KafkaOpaque*>(opaque_ptr);
   if (!kafka_opaque) {
     return;
@@ -81,14 +81,14 @@ void KafkaOpaque::rebalance_cb(rd_kafka_t* rk, const rd_kafka_resp_err_t trigger
   switch (trigger) {
     case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
       kafka_opaque->logger_.log_debug("assigned:");
-      kafka_opaque->print_topics_list(*partitions);
+      kafka_opaque->printTopicsList(*partitions);
       assign_error = rd_kafka_assign(rk, partitions);
       break;
 
     case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
       kafka_opaque->logger_.log_debug("revoked:");
       rd_kafka_commit(rk, partitions, /* async = */ 0);  // Sync commit, maybe unnecessary
-      kafka_opaque->print_topics_list(*partitions);
+      kafka_opaque->printTopicsList(*partitions);
 
       assign_error = rd_kafka_assign(rk, nullptr);
       break;

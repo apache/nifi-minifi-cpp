@@ -100,9 +100,9 @@ class KafkaOpaque {
  public:
   explicit KafkaOpaque(core::logging::Logger& logger) : logger_(logger) {}
 
-  void print_topics_list(const rd_kafka_topic_partition_list_t& kf_topic_partition_list) const;
+  void printTopicsList(const rd_kafka_topic_partition_list_t& kf_topic_partition_list) const;
   static void logCallback(const rd_kafka_t* rk, int level, const char* /*fac*/, const char* buf);
-  static void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* opaque_ptr);
+  static void rebalanceCallback(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* opaque_ptr);
 
  private:
   core::logging::Logger& logger_;

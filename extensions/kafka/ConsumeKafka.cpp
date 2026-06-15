@@ -114,7 +114,7 @@ void ConsumeKafka::configureNewConnection(api::core::ProcessContext& context) {
   // Registering a rebalance_cb turns off librdkafka's automatic partition assignment/revocation and instead delegates that
   // responsibility to the application's rebalance_cb.
   if (commit_policy_ != consume_kafka::CommitPolicyEnum::CommitFromIncomingFlowFiles) {
-    rd_kafka_conf_set_rebalance_cb(conf_.get(), utils::KafkaOpaque::rebalance_cb);
+    rd_kafka_conf_set_rebalance_cb(conf_.get(), utils::KafkaOpaque::rebalanceCallback);
   }
 
   setKafkaAuthenticationParameters(context, gsl::make_not_null(conf_.get()));

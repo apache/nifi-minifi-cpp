@@ -595,7 +595,7 @@ bool PublishKafka::createNewTopic(const api::core::ProcessContext& context, cons
 }
 
 std::optional<api::utils::net::SslData> PublishKafka::getSslData(api::core::ProcessContext& context) const {
-  if (auto result = KafkaProcessorBase::getSslData(context); result) { return result; }
+  if (auto result = context.getSslData(SSLContextService); result) { return *result; }
 
   api::utils::net::SslData ssl_data;
   if (auto security_ca = context.getProperty(SecurityCA, nullptr)) { ssl_data.ca_loc = *security_ca; }
