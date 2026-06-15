@@ -25,7 +25,7 @@ KafkaProcessorBase::KafkaProcessorBase(core::ProcessorMetadata metadata) : Proce
 }
 
 std::optional<api::utils::net::SslData> KafkaProcessorBase::getSslData(api::core::ProcessContext& context) const {
-  return context.getSslData(SSLContextService) | utils::toOptional();
+  return context.getSslData(SSLContextService).value_or(std::nullopt);
 }
 
 void KafkaProcessorBase::setKafkaAuthenticationParameters(api::core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config) {  // NOLINT(performance-unnecessary-value-param)
@@ -33,7 +33,7 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(api::core::ProcessCont
   utils::setKafkaConfigurationField(*config, "security.protocol", std::string{magic_enum::enum_name(security_protocol_)});
   logger_->log_debug("Kafka security.protocol [{}]", magic_enum::enum_name(security_protocol_));
   if (security_protocol_ == kafka::SecurityProtocolOption::ssl || security_protocol_ == kafka::SecurityProtocolOption::sasl_ssl) {
-    if (auto ssl_data = context.getSslData(SSLContextService) | utils::toOptional()) {
+    if (auto ssl_data = getSslData(context)) {
       if (ssl_data->ca_loc.empty() && ssl_data->cert_loc.empty() && ssl_data->key_loc.empty() && ssl_data->key_pw.empty()) {
         logger_->log_warn("Security protocol is set to {}, but no valid security parameters are set in the properties or in the SSL Context Service.",
             magic_enum::enum_name(security_protocol_));

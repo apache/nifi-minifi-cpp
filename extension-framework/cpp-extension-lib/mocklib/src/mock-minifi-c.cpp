@@ -134,4 +134,9 @@ MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceCo
     void (*)(void* user_ctx, MinifiStringView property_value), void*) {
   throw std::runtime_error("Not implemented");
 }
+
+MinifiStatus MinifiProcessContextGetProxyDataFromProperty(MinifiProcessContext*, MinifiStringView,
+    void (*)(void* user_ctx, const MinifiProxyData* proxy_data), void*) {
+  throw std::runtime_error("Not implemented");
+}
 }  // extern "C"

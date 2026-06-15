@@ -25,6 +25,7 @@
 #include "rdkafka.h"
 #include "api/utils/Ssl.h"
 #include "minifi-cpp/core/logging/Logger.h"
+#include "magic_enum/magic_enum.hpp"
 
 namespace org::apache::nifi::minifi::utils {
 
