@@ -29,6 +29,12 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(zlib)
 
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(_zlib_debug_suffix "d")
+else()
+    set(_zlib_debug_suffix "")
+endif()
+
 if(WIN32)
     set(_zlib_static_suffix "s")
 else()
@@ -37,7 +43,7 @@ endif()
 
 set(ZLIB_FOUND "YES" CACHE STRING "" FORCE)
 set(ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR}" CACHE STRING "" FORCE)
-set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${_zlib_static_suffix}${CMAKE_STATIC_LIBRARY_SUFFIX}" CACHE STRING "" FORCE)
+set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${_zlib_static_suffix}${_zlib_debug_suffix}${CMAKE_STATIC_LIBRARY_SUFFIX}" CACHE STRING "" FORCE)
 set(ZLIB_LIBRARIES "${ZLIB_LIBRARY}" CACHE STRING "" FORCE)
 
 # Set exported variables for FindPackage.cmake
