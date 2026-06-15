@@ -1,5 +1,4 @@
 # Licensed to the Apache Software Foundation (ASF) under one
-#
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
 # regarding copyright ownership.  The ASF licenses this file
@@ -15,8 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-add_library(libminifi-c-unittest INTERFACE)
-target_link_libraries(libminifi-c-unittest INTERFACE minifi-cpp-extension-lib core-minifi)
-target_include_directories(libminifi-c-unittest INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+if(MINIFI_LUA_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install Lua")
+    find_package(lua REQUIRED)
+elseif(MINIFI_LUA_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build Lua from source")
+    include(Lua)
+endif()
