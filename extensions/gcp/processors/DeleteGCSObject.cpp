@@ -17,7 +17,6 @@
 
 #include "DeleteGCSObject.h"
 
-
 #include "../GCPAttributes.h"
 #include "api/core/ProcessContext.h"
 #include "api/core/ProcessSession.h"
@@ -56,7 +55,7 @@ MinifiStatus DeleteGCSObject::onTriggerImpl(api::core::ProcessContext& context, 
     } else {
       logger_->log_error("Invalid generation: {}", *object_generation_str);
       session.transfer(std::move(flow_file), Failure);
-    return MINIFI_STATUS_SUCCESS;
+      return MINIFI_STATUS_SUCCESS;
     }
   }
 

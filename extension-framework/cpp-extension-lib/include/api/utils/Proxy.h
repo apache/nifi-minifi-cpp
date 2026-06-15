@@ -33,10 +33,10 @@ struct BasicAuthCredentials {
 };
 
 struct ProxyData {
+  ProxyType proxy_type;
   std::string host;
   uint16_t port;
   std::optional<BasicAuthCredentials> proxy_credentials;
-  ProxyType proxy_type;
 };
 
 }  // namespace org::apache::nifi::minifi::api::utils

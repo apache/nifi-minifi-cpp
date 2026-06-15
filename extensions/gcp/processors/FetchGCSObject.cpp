@@ -82,9 +82,7 @@ class FetchFromGCSCallback {
 
 MinifiStatus FetchGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
   const auto status = GCSProcessor::onScheduleImpl(context);
-  if (MINIFI_STATUS_SUCCESS != status) {
-    return status;
-  }
+  if (MINIFI_STATUS_SUCCESS != status) { return status; }
   if (auto encryption_key = context.getProperty(EncryptionKey, nullptr)) {
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
@@ -121,7 +119,7 @@ MinifiStatus FetchGCSObject::onTriggerImpl(api::core::ProcessContext& context, a
   FetchFromGCSCallback callback(client, *bucket, *object_name);
   callback.setEncryptionKey(encryption_key_);
 
-  if (const auto object_generation_str =  api::utils::parseOptionalProperty(context, ObjectGeneration, &flow_file); object_generation_str && !object_generation_str->empty()) {
+  if (const auto object_generation_str = api::utils::parseOptionalProperty(context, ObjectGeneration, &flow_file); object_generation_str && !object_generation_str->empty()) {
     if (const auto geni64 = parsing::parseIntegral<int64_t>(*object_generation_str)) {
       gcs::Generation generation = gcs::Generation{*geni64};
       callback.setGeneration(generation);
@@ -129,10 +127,9 @@ MinifiStatus FetchGCSObject::onTriggerImpl(api::core::ProcessContext& context, a
     } else {
       logger_->log_error("Invalid generation: {}", *object_generation_str);
       session.transfer(std::move(flow_file), Failure);
-    return MINIFI_STATUS_SUCCESS;
+      return MINIFI_STATUS_SUCCESS;
     }
   }
-
 
   session.write(flow_file, std::ref(callback));
   if (!callback.getStatus().ok()) {
@@ -144,12 +141,15 @@ MinifiStatus FetchGCSObject::onTriggerImpl(api::core::ProcessContext& context, a
     return MINIFI_STATUS_SUCCESS;
   }
 
-  if (auto generation = callback.getGeneration())
+  if (auto generation = callback.getGeneration()) {
     session.setAttribute(flow_file, GCS_GENERATION, std::to_string(*generation));
-  if (auto meta_generation = callback.getMetaGeneration())
+  }
+  if (auto meta_generation = callback.getMetaGeneration()) {
     session.setAttribute(flow_file, GCS_META_GENERATION, std::to_string(*meta_generation));
-  if (auto storage_class = callback.getStorageClass())
+  }
+  if (auto storage_class = callback.getStorageClass()) {
     session.setAttribute(flow_file, GCS_STORAGE_CLASS, *storage_class);
+  }
   session.transfer(std::move(flow_file), Success);
   return MINIFI_STATUS_SUCCESS;
 }
