@@ -1005,6 +1005,9 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
   }
   std::string base;
   if (configuration_->get(Configuration::nifi_c2_rest_path_base, base)) {
+    if (!base.empty() && base.back() == '/') {
+      base.pop_back();
+    }
     return base + url;
   }
   if (!configuration_->get(Configuration::nifi_c2_rest_url, "c2.rest.url", base)) {
