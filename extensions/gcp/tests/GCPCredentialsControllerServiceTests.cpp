@@ -16,19 +16,20 @@
  */
 #define EXTENSION_LIST "minifi-gcp"  // NOLINT(cppcoreguidelines-macro-usage)
 
-#include "unit/TestBase.h"
-#include "gtest/gtest.h"
 #include "../controllerservices/GCPCredentialsControllerService.h"
-#include "core/Resource.h"
+#include "CProcessorTestUtils.h"
 #include "core/Processor.h"
+#include "core/Resource.h"
 #include "core/controller/ControllerServiceNode.h"
+#include "gtest/gtest.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stream.h"
 #include "rapidjson/writer.h"
 #include "unit/DummyProcessor.h"
+#include "unit/TestBase.h"
 #include "utils/Environment.h"
 
-namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
+namespace minifi_gcp = minifi::extensions::gcp;
 using GCPCredentialsControllerService = minifi_gcp::GCPCredentialsControllerService;
 
 namespace {
@@ -70,14 +71,20 @@ std::optional<std::filesystem::path> create_mock_json_file(const std::filesystem
 class GCPCredentialsTests : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_TRUE(gcp_credentials_node_);
-    ASSERT_TRUE(gcp_credentials_);
     plan_->addProcessor("DummyProcessor", "dummy_processor");
+    auto gcp_credential_controller_service =
+        minifi::test::utils::make_custom_c_controller_service<GCPCredentialsControllerService>(core::ControllerServiceMetadata{utils::Identifier{},
+            "GCPCredentialsControllerService",
+            logging::LoggerFactory<GCPCredentialsControllerService>::getLogger()});
+    gcp_credentials_node_ = plan_->addController("gcp_credentials_controller_service", gcp_credential_controller_service);
+    gcp_credentials_ = static_cast<GCPCredentialsControllerService*>(
+        gcp_credentials_node_->getControllerServiceImplementation<utils::CControllerService>()->getImpl());
   }
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_ = test_controller_.createPlan();
-  std::shared_ptr<minifi::core::controller::ControllerServiceNode> gcp_credentials_node_ = plan_->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
-  std::shared_ptr<GCPCredentialsControllerService> gcp_credentials_ = gcp_credentials_node_->getControllerServiceImplementation<GCPCredentialsControllerService>();
+
+  std::shared_ptr<minifi::core::controller::ControllerServiceNode> gcp_credentials_node_;
+  GCPCredentialsControllerService* gcp_credentials_ = nullptr;
 };
 
 TEST_F(GCPCredentialsTests, DefaultGCPCredentialsWithEnv) {
@@ -85,13 +92,17 @@ TEST_F(GCPCredentialsTests, DefaultGCPCredentialsWithEnv) {
   auto path = create_mock_json_file(temp_directory);
   ASSERT_TRUE(path.has_value());
   minifi::utils::Environment::setEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path->string().c_str());
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc, magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_DEFAULT_CREDENTIALS));
+  EXPECT_TRUE(plan_->setProperty(gcp_credentials_node_,
+      GCPCredentialsControllerService::CredentialsLoc,
+      magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_DEFAULT_CREDENTIALS)));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_NE(nullptr, gcp_credentials_->getCredentials());
 }
 
 TEST_F(GCPCredentialsTests, CredentialsFromJsonWithoutProperty) {
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc, magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_FILE));
+  EXPECT_TRUE(plan_->setProperty(gcp_credentials_node_,
+      GCPCredentialsControllerService::CredentialsLoc,
+      magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_FILE)));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_EQ(nullptr, gcp_credentials_->getCredentials());
 }
@@ -100,8 +111,10 @@ TEST_F(GCPCredentialsTests, CredentialsFromJsonWithProperty) {
   auto temp_directory = test_controller_.createTempDirectory();
   auto path = create_mock_json_file(temp_directory);
   ASSERT_TRUE(path.has_value());
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc, magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_FILE));
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::JsonFilePath, path->string());
+  EXPECT_TRUE(plan_->setProperty(gcp_credentials_node_,
+      GCPCredentialsControllerService::CredentialsLoc,
+      magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_FILE)));
+  ASSERT_TRUE(plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::JsonFilePath, path->string()));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_NE(nullptr, gcp_credentials_->getCredentials());
 }
@@ -110,32 +123,42 @@ TEST_F(GCPCredentialsTests, CredentialsFromJsonWithInvalidPath) {
   auto temp_directory = test_controller_.createTempDirectory();
   auto path = create_mock_json_file(temp_directory);
   ASSERT_TRUE(path.has_value());
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc, magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_FILE));
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::JsonFilePath, "/invalid/path/to/credentials.json");
+  EXPECT_TRUE(plan_->setProperty(gcp_credentials_node_,
+      GCPCredentialsControllerService::CredentialsLoc,
+      magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_FILE)));
+  ASSERT_TRUE(plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::JsonFilePath, "/invalid/path/to/credentials.json"));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_EQ(nullptr, gcp_credentials_->getCredentials());
 }
 
 TEST_F(GCPCredentialsTests, CredentialsFromComputeEngineVM) {
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc, magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_COMPUTE_ENGINE_CREDENTIALS));
+  EXPECT_TRUE(plan_->setProperty(gcp_credentials_node_,
+      GCPCredentialsControllerService::CredentialsLoc,
+      magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_COMPUTE_ENGINE_CREDENTIALS)));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_NE(nullptr, gcp_credentials_->getCredentials());
 }
 
 TEST_F(GCPCredentialsTests, AnonymousCredentials) {
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc, magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
+  EXPECT_TRUE(plan_->setProperty(gcp_credentials_node_,
+      GCPCredentialsControllerService::CredentialsLoc,
+      magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS)));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_NE(nullptr, gcp_credentials_->getCredentials());
 }
 
 TEST_F(GCPCredentialsTests, CredentialsFromJsonContentsWithoutProperty) {
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc, magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_CONTENTS));
+  EXPECT_TRUE(plan_->setProperty(gcp_credentials_node_,
+      GCPCredentialsControllerService::CredentialsLoc,
+      magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_CONTENTS)));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_EQ(nullptr, gcp_credentials_->getCredentials());
 }
 
 TEST_F(GCPCredentialsTests, CredentialsFromJsonContentsWithProperty) {
-  plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc, magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_CONTENTS));
+  EXPECT_TRUE(plan_->setProperty(gcp_credentials_node_,
+      GCPCredentialsControllerService::CredentialsLoc,
+      magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_JSON_CONTENTS)));
   plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::JsonContents, create_mock_service_json());
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_NE(nullptr, gcp_credentials_->getCredentials());

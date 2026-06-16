@@ -45,6 +45,11 @@ extern "C" {
 /// use MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE in the type field of the property definition (MinifiPropertyDefinition::type)
 #define MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
 
+/// To declare a processor property that expects an ProxyConfigurationService,
+/// use MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE in the type field of the property definition (MinifiPropertyDefinition::type)
+#define MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
+
+
 enum : uint32_t {
   MINIFI_API_VERSION = 3
 };
@@ -233,8 +238,8 @@ MinifiStatus MinifiProcessContextGetProperty(MinifiProcessContext* context, Mini
                                              void(*cb)(void* user_ctx, MinifiStringView property_value), void* user_ctx);
 MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext* context, MinifiStringView property_name);
 
-MinifiStatus MinifiProcessContextGetControllerService(
-    MinifiProcessContext* process_context, MinifiStringView controller_service_name, MinifiStringView controller_service_type, MinifiControllerService** controller_service_out);
+MinifiStatus MinifiProcessContextGetControllerServiceFromProperty(
+    MinifiProcessContext* process_context, MinifiStringView property_name, MinifiStringView controller_service_type, MinifiControllerService** controller_service_out);
 void MinifiProcessContextGetDynamicProperties(MinifiProcessContext* context, MinifiFlowFile* minifi_flow_file,
     void (*cb)(void* user_ctx, MinifiStringView dynamic_property_name, MinifiStringView dynamic_property_value), void* user_ctx);
 
@@ -282,6 +287,22 @@ typedef struct MinifiSslData {
 
 MinifiStatus MinifiProcessContextGetSslDataFromProperty(MinifiProcessContext* process_context, MinifiStringView property_name,
     void (*cb)(void* user_ctx, const MinifiSslData* ssl_data), void* user_ctx);
+
+typedef enum MinifiProxyType : uint8_t {
+  MINIFI_PROXY_TYPE_DIRECT,
+  MINIFI_PROXY_TYPE_HTTP
+} MinifiProxyType;
+
+typedef struct MinifiProxyData {
+  MinifiStringView hostname;
+  uint16_t port;
+  MinifiStringView* username;
+  MinifiStringView* password;
+  MinifiProxyType proxy_type;
+} MinifiProxyData;
+
+MinifiStatus MinifiProcessContextGetProxyDataFromProperty(MinifiProcessContext* process_context, MinifiStringView property_name,
+  void (*cb)(void* user_ctx, const MinifiProxyData* proxy_data), void* user_ctx);
 
 #ifdef __cplusplus
 }  // extern "C"

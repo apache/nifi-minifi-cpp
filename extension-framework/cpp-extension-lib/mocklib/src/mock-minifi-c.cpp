@@ -44,7 +44,7 @@ MinifiBool MinifiProcessContextHasNonEmptyProperty(MinifiProcessContext*, Minifi
   throw std::runtime_error("Not implemented");
 }
 
-MinifiStatus MinifiProcessContextGetControllerService(MinifiProcessContext*, MinifiStringView, MinifiStringView, MinifiControllerService**) {
+MinifiStatus MinifiProcessContextGetControllerServiceFromProperty(MinifiProcessContext*, MinifiStringView, MinifiStringView, MinifiControllerService**) {
   throw std::runtime_error("Not implemented");
 }
 void MinifiProcessContextGetDynamicProperties(MinifiProcessContext*, MinifiFlowFile*,
@@ -132,6 +132,11 @@ MinifiStatus MinifiProcessSessionGetFlowFileId(MinifiProcessSession*, MinifiFlow
 
 MinifiStatus MinifiControllerServiceContextGetProperty(MinifiControllerServiceContext*, MinifiStringView,
     void (*)(void* user_ctx, MinifiStringView property_value), void*) {
+  throw std::runtime_error("Not implemented");
+}
+
+MinifiStatus MinifiProcessContextGetProxyDataFromProperty(MinifiProcessContext*, MinifiStringView,
+    void (*)(void* user_ctx, const MinifiProxyData* proxy_data), void*) {
   throw std::runtime_error("Not implemented");
 }
 }  // extern "C"

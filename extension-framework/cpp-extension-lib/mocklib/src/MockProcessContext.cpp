@@ -32,7 +32,7 @@ std::expected<std::string, std::error_code> MockProcessContext::getProperty(cons
   return std::unexpected{make_error_code(core::PropertyErrorCode::PropertyNotSet)};
 }
 
-std::expected<MinifiControllerService*, std::error_code> MockProcessContext::getControllerService(std::string_view, std::string_view) const {
+std::expected<MinifiControllerService*, std::error_code> MockProcessContext::getControllerService(const minifi::core::PropertyReference&) const {
   return nullptr;
 }
 
@@ -44,7 +44,11 @@ bool MockProcessContext::hasNonEmptyProperty(const std::string_view name) const 
   return properties_.contains(name);
 }
 
-std::expected<api::utils::net::SslData, std::error_code> MockProcessContext::getSslData(const minifi::core::PropertyReference&) const {
-  return api::utils::net::SslData{};
+std::expected<std::optional<api::utils::net::SslData>, std::error_code> MockProcessContext::getSslData(const minifi::core::PropertyReference&) const {
+  return std::nullopt;
+}
+
+[[nodiscard]] std::expected<std::optional<api::utils::ProxyData>, std::error_code> MockProcessContext::getProxyData(const minifi::core::PropertyReference&) const {
+  return std::nullopt;
 }
 }  // namespace org::apache::nifi::minifi::mock

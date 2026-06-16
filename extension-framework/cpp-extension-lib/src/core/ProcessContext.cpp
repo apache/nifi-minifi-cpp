@@ -44,14 +44,17 @@ bool CffiProcessContext::hasNonEmptyProperty(std::string_view name) const {
   return MinifiProcessContextHasNonEmptyProperty(impl_, utils::minifiStringView(name));
 }
 
-std::expected<MinifiControllerService*, std::error_code> CffiProcessContext::getControllerService(const std::string_view name,
-    const std::string_view type) const {
+std::expected<MinifiControllerService*, std::error_code> CffiProcessContext::getControllerService(const minifi::core::PropertyReference& prop) const {
   MinifiControllerService* controller_service = nullptr;
-  if (const MinifiStatus status = MinifiProcessContextGetControllerService(impl_,
-          utils::minifiStringView(name),
-          utils::minifiStringView(type),
+  gsl_Assert(prop.allowed_types.size() == 1);
+  const MinifiStatus status = MinifiProcessContextGetControllerServiceFromProperty(impl_,
+          utils::minifiStringView(prop.name),
+          utils::minifiStringView(prop.allowed_types[0]),
           &controller_service);
-      status != MINIFI_STATUS_SUCCESS) {
+  if (status == MINIFI_STATUS_PROPERTY_NOT_SET) {
+    return nullptr;
+  }
+  if (status != MINIFI_STATUS_SUCCESS) {
     return std::unexpected{utils::make_error_code(status)};
   }
   return controller_service;
@@ -69,7 +72,10 @@ std::map<std::string, std::string> CffiProcessContext::getDynamicProperties(cons
   return result;
 }
 
-std::expected<utils::net::SslData, std::error_code> CffiProcessContext::getSslData(const minifi::core::PropertyReference& prop) const {
+std::expected<std::optional<utils::net::SslData>, std::error_code> CffiProcessContext::getSslData(const minifi::core::PropertyReference& prop) const {
+  const auto controller_name = getProperty(prop, nullptr);
+  if (!controller_name) { return std::nullopt; }
+
   auto ssl_data = utils::net::SslData{};
 
   if (const auto status = MinifiProcessContextGetSslDataFromProperty(impl_, utils::minifiStringView(prop.name), [](void* data, const MinifiSslData* minifi_ssl_data) {
@@ -84,6 +90,33 @@ std::expected<utils::net::SslData, std::error_code> CffiProcessContext::getSslDa
   }
 
   return ssl_data;
+}
+
+std::expected<std::optional<utils::ProxyData>, std::error_code> CffiProcessContext::getProxyData(const minifi::core::PropertyReference& prop) const {
+  auto proxy_data = utils::ProxyData{};
+  const auto status = MinifiProcessContextGetProxyDataFromProperty(
+      impl_,
+      utils::minifiStringView(prop.name),
+      [](void* data, const MinifiProxyData* minifi_proxy_data) {
+        auto* proxy = static_cast<utils::ProxyData*>(data);
+        proxy->host = utils::toString(minifi_proxy_data->hostname);
+        proxy->port = minifi_proxy_data->port;
+        if (minifi_proxy_data->password && minifi_proxy_data->username) {
+          proxy->proxy_credentials = utils::BasicAuthCredentials{.username = utils::toString(*minifi_proxy_data->username),
+              .password = utils::toString(*minifi_proxy_data->password)};
+        } else {
+          proxy->proxy_credentials = std::nullopt;
+        }
+        if (minifi_proxy_data->proxy_type == MINIFI_PROXY_TYPE_HTTP) {
+          proxy->proxy_type = utils::ProxyType::HTTP;
+        } else {
+          proxy->proxy_type = utils::ProxyType::DIRECT;
+        }
+      },
+      &proxy_data);
+  if (status == MINIFI_STATUS_PROPERTY_NOT_SET) { return std::nullopt; }
+  if (status == MINIFI_STATUS_SUCCESS) { return proxy_data; }
+  return std::unexpected{utils::make_error_code(status)};
 }
 
 }  // namespace org::apache::nifi::minifi::api::core
