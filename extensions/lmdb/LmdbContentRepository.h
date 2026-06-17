@@ -28,40 +28,35 @@
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/utils/Export.h"
 #include "minifi-cpp/utils/Id.h"
-#include "lmdb.h"
+#include "LmdbWrapper.h"
 
-namespace org::apache::nifi::minifi::core::repository {
+namespace org::apache::nifi::minifi::extensions::lmdb {
 
 class LmdbContentRepository : public core::ContentRepositoryImpl {
  public:
-  explicit LmdbContentRepository(std::string_view name = className<LmdbContentRepository>(), const utils::Identifier& uuid = {})
+  explicit LmdbContentRepository(std::string_view name = core::className<LmdbContentRepository>(), const utils::Identifier& uuid = {})
       : core::ContentRepositoryImpl(name, uuid) {}
 
   LmdbContentRepository(const LmdbContentRepository&) = delete;
   LmdbContentRepository(LmdbContentRepository&&) = delete;
   LmdbContentRepository& operator=(const LmdbContentRepository&) = delete;
   LmdbContentRepository& operator=(LmdbContentRepository&&) = delete;
-
-  ~LmdbContentRepository() noexcept override {
-    LmdbContentRepository::stop();
-    if (lmdb_env_) {
-      mdb_dbi_close(lmdb_env_, lmdb_handle_);
-      mdb_env_close(lmdb_env_);
-    }
+  ~LmdbContentRepository() override {
+    stop();
   }
 
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
-  class Session : public BufferedContentSession {
+  class Session : public core::BufferedContentSession {
    public:
     explicit Session(std::shared_ptr<LmdbContentRepository> repository);
 
     void commit() override;
   };
 
-  std::shared_ptr<ContentSession> createSession() override;
+  std::shared_ptr<core::ContentSession> createSession() override;
   bool initialize(const std::shared_ptr<minifi::Configure>& configuration) override;
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim& claim, bool append) override;
   std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim& claim) override;
@@ -72,8 +67,8 @@ class LmdbContentRepository : public core::ContentRepositoryImpl {
 
   void clearOrphans() override;
 
-  void start() override;
-  void stop() override;
+  void start() override {}
+  void stop() override {}
 
   uint64_t getRepositorySize() const override;
   uint64_t getRepositoryEntryCount() const override;
@@ -82,11 +77,8 @@ class LmdbContentRepository : public core::ContentRepositoryImpl {
   bool removeKey(const std::string& content_path) override;
 
  private:
-  MDB_stat getDbStat() const;
-
-  MDB_env* lmdb_env_{nullptr};
-  MDB_dbi lmdb_handle_{};
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<LmdbContentRepository>::getLogger()};
+  LmdbWrapper lmdb_wrapper_;
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<LmdbContentRepository>::getLogger()};
 };
 
-}  // namespace org::apache::nifi::minifi::core::repository
+}  // namespace org::apache::nifi::minifi::extensions::lmdb
