@@ -79,6 +79,7 @@ class Configuration : public virtual Properties {
   static constexpr const char *nifi_dbcontent_optimize_for_small_db_cache_size = "nifi.database.content.repository.optimize.for.small.db.cache.size";
 
   static constexpr const char *nifi_content_repository_lmdb_max_db_size = "nifi.content.repository.lmdb.max.db.size";
+  static constexpr const char *nifi_flowfile_repository_lmdb_max_db_size = "nifi.flowfile.repository.lmdb.max.db.size";
 
   static constexpr const char *nifi_remote_input_secure = "nifi.remote.input.secure";
   static constexpr const char *nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
