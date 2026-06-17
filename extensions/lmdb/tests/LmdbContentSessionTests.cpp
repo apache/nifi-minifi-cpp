@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::test {
 
 class LmdbContentSessionController : public TestController {
  public:
-  LmdbContentSessionController() : content_repository_(std::make_shared<core::repository::LmdbContentRepository>()) {
+  LmdbContentSessionController() : content_repository_(std::make_shared<extensions::lmdb::LmdbContentRepository>()) {
     auto content_repo_path = createTempDirectory();
     auto config = std::make_shared<ConfigureImpl>();
     config->set(Configure::nifi_dbcontent_repository_directory_default, content_repo_path.string());
@@ -294,7 +294,7 @@ TEST_CASE("LmdbContentRepository::Session commit throws when underlying reposito
   auto unrelated_repository = std::make_shared<core::repository::VolatileContentRepository>();
   unrelated_repository->initialize(std::make_shared<ConfigureImpl>());
 
-  core::repository::LmdbContentRepository::Session session(unrelated_repository);
+  extensions::lmdb::LmdbContentRepository::Session session(unrelated_repository);
   REQUIRE_THROWS_WITH(session.commit(), Catch::Matchers::ContainsSubstring("Session's repository is not an LmdbContentRepository"));
 }
 
