@@ -193,9 +193,8 @@ void useControllerServiceClassDefinition(Fn&& fn) {
           },
           .get_interface = [](void* self, MinifiStringView interface_name) -> void* {
             try {
-              const std::string_view name_view{interface_name.data, interface_name.length};
-
               if constexpr (requires { Class::ProvidedInterfaces; }) {
+                const std::string_view name_view{interface_name.data, interface_name.length};
                 for (const auto& iface : Class::ProvidedInterfaces) {
                   if (iface.name == name_view) {
                     return iface.cast(self);

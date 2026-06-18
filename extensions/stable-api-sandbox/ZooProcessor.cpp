@@ -26,14 +26,14 @@ MinifiStatus ZooProcessor::onTriggerImpl(api::core::ProcessContext& process_cont
   if (const auto can_fly_opaque = process_context.getControllerService(CanFlyService)) {
     if (*can_fly_opaque) {
       const auto can_fly_controller_name = process_context.getProperty(CanFlyService, nullptr) | utils::orThrow("Should be here");
-      const CanFlyControllerApi* can_fly = reinterpret_cast<CanFlyControllerApi*>(*can_fly_opaque);
+      const CanFlyControllerApi* const can_fly = reinterpret_cast<CanFlyControllerApi*>(*can_fly_opaque);
       logger_->log_critical("Can {} fly? {}", can_fly_controller_name, can_fly->canFly());
     }
   }
   if (const auto num_of_legs_opaque = process_context.getControllerService(NumberOfLegsService)) {
     if (*num_of_legs_opaque) {
       const auto num_of_legs_name = process_context.getProperty(NumberOfLegsService, nullptr) | utils::orThrow("Should be here");
-      const NumberOfLegsControllerApi* num_legs = reinterpret_cast<NumberOfLegsControllerApi*>(*num_of_legs_opaque);
+      const NumberOfLegsControllerApi* const num_legs = reinterpret_cast<NumberOfLegsControllerApi*>(*num_of_legs_opaque);
       logger_->log_critical("{} has {} legs", num_of_legs_name, num_legs->numberOfLegs());
     }
   }

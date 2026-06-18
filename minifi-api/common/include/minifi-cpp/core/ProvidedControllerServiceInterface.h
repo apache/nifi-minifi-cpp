@@ -24,12 +24,15 @@
 namespace org::apache::nifi::minifi::core {
 
 struct ProvidedInterface {
+  /// fully-qualified class name of the implemented ControllerService interface
   std::string_view name;
+  /// casts a pointer of the ControllerService from its dynamic type to a pointer of an implemented interface type. Needed to support cases where they are not the same, like multiple inheritance, virtual inheritance, or contained non-first member implementing the interface
   void* (*cast)(void* instance);
 };
 
+/// casts a pointer of the ControllerService from its dynamic type to a pointer of an implemented interface type. Needed to support cases where they are not the same, like multiple inheritance, virtual inheritance, or contained non-first member implementing the interface
 template<typename Interface, typename ConcreteService>
-void* castProvidedControllerServiceInterface(void* instance) {
+void* castProvidedControllerServiceToInterface(void* instance) {
   auto* concrete = static_cast<ConcreteService*>(instance);
   auto* interface_ptr = static_cast<Interface*>(concrete);
   return interface_ptr;
@@ -37,7 +40,7 @@ void* castProvidedControllerServiceInterface(void* instance) {
 
 template<typename Interface, typename ConcreteService>
 constexpr ProvidedInterface createProvidedInterface() {
-  return ProvidedInterface{className<Interface>(), &castProvidedControllerServiceInterface<Interface, ConcreteService>};
+  return ProvidedInterface{className<Interface>(), &castProvidedControllerServiceToInterface<Interface, ConcreteService>};
 }
 
 }  // namespace org::apache::nifi::minifi::core
