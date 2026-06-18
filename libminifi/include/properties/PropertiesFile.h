@@ -42,7 +42,6 @@ class PropertiesFile {
     static bool isValidKey(const std::string& key);
 
    private:
-    friend bool operator==(const Line&, const Line&);
     // NOTE(fgerlits): having both line_ and { key_, value } is redundant in many cases, but
     // * we need the original line_ in order to preserve formatting, comments and blank lines
     // * we could get rid of key_ and value_ and parse them each time from line_, but I think the code is clearer this way

@@ -25,7 +25,7 @@ namespace org::apache::nifi::minifi::encrypt_config {
 
 class EncryptConfig {
  public:
-  explicit EncryptConfig(const std::string& minifi_home);
+  explicit EncryptConfig(std::filesystem::path minifi_home);
 
   void encryptSensitiveValuesInMinifiProperties() const;
   void encryptSensitiveValuesInFlowConfig(
