@@ -41,7 +41,7 @@ where
         + ProcessorDefinition,
     L: Logger,
 {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &mut self,
         context: &mut PC,
         session: &mut PS,
@@ -69,7 +69,7 @@ where
         + ProcessorDefinition,
     L: Logger,
 {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &self,
         context: &mut PC,
         session: &mut PS,

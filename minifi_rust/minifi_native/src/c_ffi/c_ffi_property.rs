@@ -64,7 +64,13 @@ impl Property {
     fn create_c_allowed_types_vec(properties: &[Self]) -> Vec<minifi_string_view> {
         properties
             .iter()
-            .map(|p| p.allowed_type.as_minifi_c_type())
+            .map(|p| match p.allowed_type {
+                Some(dv) => dv.as_minifi_c_type(),
+                None => minifi_string_view {
+                    data: ptr::null(),
+                    length: 0,
+                },
+            })
             .collect()
     }
 
@@ -88,11 +94,11 @@ impl Property {
                     description: property.description.as_minifi_c_type(),
                     is_required: property.is_required,
                     is_sensitive: property.is_sensitive,
-                    default_value: def_value,
+                    default_value: if def_value.data == std::ptr::null() { std::ptr::null() } else { def_value },
                     allowed_values_count: allowed_values.len(),
                     allowed_values_ptr: allowed_values.as_ptr(),
                     validator: property.validator.as_minifi_c_type(),
-                    allowed_type,
+                    allowed_type: if allowed_type.data == std::ptr::null() { std::ptr::null() } else { allowed_type },
                     supports_expression_language: property.supports_expr_lang,
                 }
             })

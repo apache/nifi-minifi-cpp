@@ -1,6 +1,8 @@
 mod controller_services;
 mod processors;
 
+use crate::controller_services::dog_controller_service::DogController;
+use crate::controller_services::duck_controller_service::DuckController;
 use crate::controller_services::dummy_controller_service::DummyControllerService;
 use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;
 use crate::processors::asciify_german::AsciifyGerman;
@@ -12,6 +14,7 @@ use crate::processors::kamikaze_processor::KamikazeProcessorRs;
 use crate::processors::log_attribute::LogAttributeRs;
 use crate::processors::lorem_ipsum_cs_user::LoremIpsumCSUser;
 use crate::processors::put_file::PutFileRs;
+use crate::processors::zoo_processor::ZooProcessor;
 
 use minifi_native::{
     ComplexProcessorType, Concurrent, Exclusive, FlowFileSourceProcessorType,
@@ -29,9 +32,12 @@ processors: [
     (FlowFileTransformProcessorType, Concurrent, PutFileRs),
     (FlowFileStreamTransformProcessorType, Concurrent, AsciifyGerman),
     (FlowFileStreamTransformProcessorType, Exclusive, DuplicateStreamText),
+    (ComplexProcessorType, Concurrent, ZooProcessor),
 ],
 controllers: [
     LoremIpsumControllerService,
     DummyControllerService,
+    DogController,
+    DuckController
 ]
 );

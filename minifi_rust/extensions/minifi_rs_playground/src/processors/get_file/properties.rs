@@ -9,7 +9,7 @@ pub(crate) const DIRECTORY: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::NonBlankValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const RECURSE: Property = Property {
@@ -21,7 +21,7 @@ pub(crate) const RECURSE: Property = Property {
     default_value: Some("true"),
     validator: StandardPropertyValidator::BoolValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const KEEP_SOURCE_FILE: Property = Property {
@@ -33,7 +33,7 @@ pub(crate) const KEEP_SOURCE_FILE: Property = Property {
     default_value: Some("false"),
     validator: StandardPropertyValidator::BoolValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const MIN_AGE: Property = Property {
@@ -45,7 +45,7 @@ pub(crate) const MIN_AGE: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::TimePeriodValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const MAX_AGE: Property = Property {
@@ -57,7 +57,7 @@ pub(crate) const MAX_AGE: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::TimePeriodValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const MIN_SIZE: Property = Property {
@@ -69,7 +69,7 @@ pub(crate) const MIN_SIZE: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::DataSizeValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const MAX_SIZE: Property = Property {
@@ -81,7 +81,7 @@ pub(crate) const MAX_SIZE: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::DataSizeValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const IGNORE_HIDDEN_FILES: Property = Property {
@@ -93,7 +93,7 @@ pub(crate) const IGNORE_HIDDEN_FILES: Property = Property {
     default_value: Some("true"),
     validator: StandardPropertyValidator::BoolValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const POLLING_INTERVAL: Property = Property {
@@ -105,7 +105,7 @@ pub(crate) const POLLING_INTERVAL: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::TimePeriodValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const BATCH_SIZE: Property = Property {
@@ -117,5 +117,5 @@ pub(crate) const BATCH_SIZE: Property = Property {
     default_value: Some("10"),
     validator: StandardPropertyValidator::U64Validator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };

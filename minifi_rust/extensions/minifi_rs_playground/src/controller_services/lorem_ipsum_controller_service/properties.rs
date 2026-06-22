@@ -9,5 +9,5 @@ pub(crate) const LENGTH: Property = Property {
     default_value: Some("25"),
     validator: StandardPropertyValidator::U64Validator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };

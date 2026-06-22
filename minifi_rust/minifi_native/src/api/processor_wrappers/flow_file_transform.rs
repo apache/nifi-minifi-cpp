@@ -13,7 +13,7 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub struct TransformedFlowFile<'a> {
     target_relationship_name: &'static str,
-    new_content: Option<Content<'a>>,
+    new_content: Option<Content<'a>>,  // If None the content doesn't change
     attributes_to_add: HashMap<String, String>,
 }
 
@@ -107,7 +107,7 @@ where
                     session.write(&flow_file, &buffer)?;
                 }
                 Some(Content::Stream(stream)) => {
-                    session.write_lazy(&flow_file, stream)?;
+                    session.write_from_stream(&flow_file, stream)?;
                 }
             };
 
@@ -135,7 +135,7 @@ where
     Implementation: Schedule + FlowFileTransform,
     L: Logger,
 {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &self,
         context: &mut PC,
         session: &mut PS,
@@ -162,7 +162,7 @@ where
     Implementation: Schedule + MutFlowFileTransform,
     L: Logger,
 {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &mut self,
         context: &mut PC,
         session: &mut PS,

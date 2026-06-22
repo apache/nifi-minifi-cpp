@@ -18,7 +18,7 @@ const _: () = {
 
 pub struct CffiProcessSession<'a> {
     ptr: *mut minifi_process_session,
-    // The lifetime ensures the session cannot outlive the `on_trigger` call.
+    // The lifetime ensures the session cannot outlive the `trigger` call.
     _lifetime: std::marker::PhantomData<&'a ()>,
 }
 
@@ -84,7 +84,7 @@ impl<'a> CffiProcessSession<'a> {
                 #[allow(non_upper_case_globals)]
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 error_code => Err(MinifiError::StatusError((
-                    "MinifiProcessSessionWrite".into(),
+                    "minifi_process_session_write".into(),
                     NonZeroU32::new_unchecked(error_code),
                 ))),
             }
@@ -127,7 +127,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 #[allow(non_upper_case_globals)]
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 err_code => Err(MinifiError::StatusError((
-                    "MinifiProcessSessionTransfer".into(),
+                    "minifi_process_session_transfer".into(),
                     NonZeroU32::new_unchecked(err_code),
                 ))),
             }
@@ -140,7 +140,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 #[allow(non_upper_case_globals)]
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 err_code => Err(MinifiError::StatusError((
-                    "MinifiProcessSessionRemove".into(),
+                    "minifi_process_session_remove".into(),
                     NonZeroU32::new_unchecked(err_code),
                 ))),
             }
@@ -166,7 +166,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 err_code => Err(MinifiError::StatusError((
                     format!(
-                        "MinifiProcessSessionFlowFileSetAttribute({}, {})",
+                        "minifi_process_session_set_flow_file_attribute({}, {})",
                         attr_key, attr_value
                     )
                     .into(),
@@ -274,14 +274,14 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 #[allow(non_upper_case_globals)]
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 err_code => Err(MinifiError::StatusError((
-                    "MinifiProcessSessionWrite".into(),
+                    "minifi_process_session_write".into(),
                     NonZeroU32::new_unchecked(err_code),
                 ))),
             }
         }
     }
 
-    fn write_lazy<'b>(
+    fn write_from_stream<'b>(
         &self,
         flow_file: &Self::FlowFile,
         mut stream: Box<dyn Read + 'b>,
@@ -349,7 +349,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             );
             if session_status != minifi_status_MINIFI_STATUS_SUCCESS {
                 return Err(MinifiError::StatusError((
-                    "MinifiProcessSessionWrite".into(),
+                    "minifi_process_session_write".into(),
                     NonZeroU32::new_unchecked(session_status),
                 )));
             }

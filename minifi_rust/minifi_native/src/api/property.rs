@@ -1,7 +1,7 @@
 use crate::StandardPropertyValidator::{
     BoolValidator, DataSizeValidator, TimePeriodValidator, U64Validator,
 };
-use crate::{ComponentIdentifier, EnableControllerService, MinifiError};
+use crate::{ComponentIdentifier, ControllerServiceDefinition, EnableControllerService, MinifiError};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -27,7 +27,7 @@ pub struct Property {
     pub default_value: Option<&'static str>,
     pub validator: StandardPropertyValidator,
     pub allowed_values: &'static [&'static str],
-    pub allowed_type: &'static str,
+    pub allowed_type: Option<&'static str>,
 }
 
 pub trait GetProperty {
@@ -94,5 +94,5 @@ pub trait GetProperty {
 pub trait GetControllerService {
     fn get_controller_service<Cs>(&self, property: &Property) -> Result<Option<&Cs>, MinifiError>
     where
-        Cs: EnableControllerService + ComponentIdentifier + 'static;
+        Cs: EnableControllerService + ComponentIdentifier + ControllerServiceDefinition + 'static;
 }

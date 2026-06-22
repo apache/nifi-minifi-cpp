@@ -70,7 +70,7 @@ impl ProcessSession for MockProcessSession {
         Ok(())
     }
 
-    fn write_lazy<'a>(
+    fn write_from_stream<'a>(
         &self,
         flow_file: &Self::FlowFile,
         mut stream: Box<dyn Read + 'a>,

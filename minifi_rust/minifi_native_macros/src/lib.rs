@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, parse_macro_input};
+use syn::{DeriveInput, parse_macro_input, ItemTrait};
 
 #[proc_macro_derive(ComponentIdentifier)]
 pub fn derive_component_identifier(input: TokenStream) -> TokenStream {
@@ -13,6 +13,23 @@ pub fn derive_component_identifier(input: TokenStream) -> TokenStream {
             const CLASS_NAME: &'static str = concat!(module_path!(), "::", #name_str);
             const GROUP_NAME: &'static str = env!("CARGO_PKG_NAME");
             const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_attribute]
+pub fn controller_service_api(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemTrait);
+    let name = &input.ident;
+    let name_str = name.to_string();
+
+    let expanded = quote! {
+        #input
+
+        impl ::minifi_native::ControllerServiceApi for dyn #name {
+            const INTERFACE_NAME: &'static str = concat!(module_path!(), "::", #name_str);
         }
     };
 

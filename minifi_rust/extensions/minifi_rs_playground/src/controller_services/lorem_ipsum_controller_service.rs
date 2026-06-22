@@ -3,10 +3,7 @@ mod properties;
 use crate::controller_services::lorem_ipsum_controller_service::properties::LENGTH;
 use lipsum::lipsum;
 use minifi_native::macros::ComponentIdentifier;
-use minifi_native::{
-    ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
-    Property,
-};
+use minifi_native::{ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError, Property, ProvidedInterface};
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct LoremIpsumControllerService {
@@ -30,4 +27,5 @@ impl EnableControllerService for LoremIpsumControllerService {
 impl ControllerServiceDefinition for LoremIpsumControllerService {
     const DESCRIPTION: &'static str = "Simple Rusty Controller Service to test API";
     const PROPERTIES: &'static [Property] = &[LENGTH];
+    const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
 }

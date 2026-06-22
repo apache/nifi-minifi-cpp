@@ -2,14 +2,8 @@ use crate::api::RawControllerService;
 use crate::c_ffi::c_ffi_controller_service_context::CffiControllerServiceContext;
 use crate::c_ffi::c_ffi_property::CProperties;
 use crate::c_ffi::{CffiLogger, StaticStrAsMinifiCStr};
-use crate::{
-    ComponentIdentifier, ControllerService, ControllerServiceDefinition, EnableControllerService,
-    LogLevel, Property,
-};
-use minifi_native_sys::{
-    minifi_controller_service_callbacks, minifi_controller_service_class_definition,
-    minifi_controller_service_context, minifi_controller_service_metadata, minifi_status,
-};
+use crate::{ComponentIdentifier, ControllerService, ControllerServiceDefinition, EnableControllerService, LogLevel, Property, ProvidedInterface};
+use minifi_native_sys::{minifi_controller_service_callbacks, minifi_controller_service_class_definition, minifi_controller_service_context, minifi_controller_service_metadata, minifi_status, minifi_string_view};
 use std::ffi::c_void;
 
 #[derive(Debug)]
@@ -31,30 +25,39 @@ impl<'a> ControllerServiceClassDefinition<'a> {
     }
 }
 
-pub struct CffiControllerServiceDefinition<T>
+pub struct CffiControllerServiceDefinition<T, P>
 where
     T: RawControllerService + ComponentIdentifier,
+    P: ControllerServiceDefinition
 {
     name: &'static str,
     description_text: &'static str,
 
     c_properties: CProperties,
+    c_provided_interfaces: Vec<minifi_string_view>,
 
     _phantom: std::marker::PhantomData<T>,
+    _phantom_2: std::marker::PhantomData<P>,
 }
 
-impl<T> CffiControllerServiceDefinition<T>
+impl<T, P> CffiControllerServiceDefinition<T,P>
 where
     T: RawControllerService<LoggerType = CffiLogger> + ComponentIdentifier,
+    P: ControllerServiceDefinition
 {
-    pub fn new(description_text: &'static str, properties: &'static [Property]) -> Self {
+    pub fn new(description_text: &'static str, properties: &'static [Property], provided_interfaces: &'static [ProvidedInterface<P>]) -> Self {
         let c_properties = Property::create_c_properties(properties);
-
+        let mut c_provided_apis = Vec::new();
+        for provided_interface in provided_interfaces {
+            c_provided_apis.push(provided_interface.name.as_minifi_c_type());
+        }
         Self {
             name: T::CLASS_NAME,
             description_text,
             c_properties,
+            c_provided_interfaces: c_provided_apis,
             _phantom: std::marker::PhantomData,
+            _phantom_2: std::marker::PhantomData
         }
     }
 
@@ -97,15 +100,42 @@ where
             controller_service.disable()
         }
     }
+
+    extern "C" fn get_interface<C: ControllerServiceDefinition + EnableControllerService + ComponentIdentifier>(
+        self_ptr: *mut std::ffi::c_void,
+        interface_name: minifi_native_sys::minifi_string_view,
+    ) -> *mut std::ffi::c_void {
+        let name = unsafe {
+            let slice = std::slice::from_raw_parts(
+                interface_name.data as *const u8,
+                interface_name.length
+            );
+            std::str::from_utf8_unchecked(slice)
+        };
+
+        let wrapper = unsafe {
+            &*(self_ptr as *const ControllerService<C, CffiLogger>)
+        };
+
+        if let Some(inner_instance) = wrapper.get_implementation() {
+            for iface in C::PROVIDED_APIS {
+                if iface.name == name {
+                    return (iface.cast)(inner_instance);
+                }
+            }
+        }
+
+        std::ptr::null_mut()
+    }
 }
 
 pub trait DynRawControllerServiceDefinition {
     fn class_description(&'_ self) -> ControllerServiceClassDefinition<'_>;
 }
 
-impl<T> DynRawControllerServiceDefinition for CffiControllerServiceDefinition<T>
+impl<Impl> DynRawControllerServiceDefinition for CffiControllerServiceDefinition<ControllerService<Impl, CffiLogger>, Impl>
 where
-    T: RawControllerService<LoggerType = CffiLogger> + ComponentIdentifier,
+    Impl: EnableControllerService + ComponentIdentifier + ControllerServiceDefinition + 'static,
 {
     fn class_description(&'_ self) -> ControllerServiceClassDefinition<'_> {
         unsafe {
@@ -119,10 +149,10 @@ where
                     destroy: Some(Self::destroy_controller_service),
                     enable: Some(Self::enable_controller_service),
                     disable: Some(Self::disable_controller_service),
-                    get_interface: None, // TODO(mzink)
+                    get_interface: Some(Self::get_interface::<Impl>)
                 },
-                provided_interfaces_count: 0,
-                provided_interfaces_ptr: std::ptr::null_mut()  // TODO(mzink)
+                provided_interfaces_count: self.c_provided_interfaces.len(),
+                provided_interfaces_ptr: self.c_provided_interfaces.as_ptr()
             })
         }
     }
@@ -132,21 +162,6 @@ pub trait RegisterableControllerService {
     fn get_definition() -> Box<dyn DynRawControllerServiceDefinition>;
 }
 
-impl<T> RegisterableControllerService for T
-where
-    T: ComponentIdentifier
-        + ControllerServiceDefinition
-        + RawControllerService<LoggerType = CffiLogger>
-        + 'static,
-{
-    fn get_definition() -> Box<dyn DynRawControllerServiceDefinition> {
-        Box::new(CffiControllerServiceDefinition::<T>::new(
-            T::DESCRIPTION,
-            T::PROPERTIES,
-        ))
-    }
-}
-
 impl<Implementation> RegisterableControllerService for ControllerService<Implementation, CffiLogger>
 where
     Implementation:
@@ -154,9 +169,9 @@ where
 {
     fn get_definition() -> Box<dyn DynRawControllerServiceDefinition> {
         Box::new(CffiControllerServiceDefinition::<
-            ControllerService<Implementation, CffiLogger>,
+            ControllerService<Implementation, CffiLogger>, Implementation
         >::new(
-            Implementation::DESCRIPTION, Implementation::PROPERTIES
+            Implementation::DESCRIPTION, Implementation::PROPERTIES, Implementation::PROVIDED_APIS
         ))
     }
 }

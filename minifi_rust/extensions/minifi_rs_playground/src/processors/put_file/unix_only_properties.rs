@@ -9,7 +9,7 @@ pub(crate) const PERMISSIONS: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const DIRECTORY_PERMISSIONS: Property = Property {
@@ -21,5 +21,5 @@ pub(crate) const DIRECTORY_PERMISSIONS: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };

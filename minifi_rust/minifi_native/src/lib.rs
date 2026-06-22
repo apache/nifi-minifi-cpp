@@ -30,6 +30,8 @@ pub use api::logger::{LogLevel, Logger};
 
 pub use api::property::{GetControllerService, GetProperty, Property};
 
+pub use api::provided_interface::{ProvidedInterface, ControllerServiceApi};
+
 pub use api::process_session::IoState;
 
 pub use api::attribute::{GetAttribute, OutputAttribute};
@@ -51,7 +53,7 @@ pub use mock::{
 #[cfg_attr(target_os = "linux", unsafe(link_section = ".rodata"))]
 #[cfg_attr(target_os = "macos", unsafe(link_section = "__DATA,__const"))]
 #[cfg_attr(target_os = "windows", unsafe(link_section = ".rdata"))]
-pub static MinifiApiVersion: u32 = minifi_native_sys::MINIFI_API_VERSION;
+pub static minifi_api_version: u32 = minifi_native_sys::MINIFI_API_VERSION;
 
 /// Defines the required MinifiInitExtension C function to register the listed processors and controller services
 #[macro_export]

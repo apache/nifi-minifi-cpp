@@ -48,23 +48,23 @@ elif [ -d "$RESOLVED_SDK_PATH" ]; then
     mkdir -p "$DOCKER_SDK_DIR"
 
     # Case A: It's a flat SDK layout
-    if [ -f "$RESOLVED_SDK_PATH/minifi-c.h" ]; then
-        cp "$RESOLVED_SDK_PATH/minifi-c.h" "$DOCKER_SDK_DIR/"
-        cp "$RESOLVED_SDK_PATH/minifi-c-api.def" "$DOCKER_SDK_DIR/" 2>/dev/null || true
+    if [ -f "$RESOLVED_SDK_PATH/minifi-api.h" ]; then
+        cp "$RESOLVED_SDK_PATH/minifi-api.h" "$DOCKER_SDK_DIR/"
+        cp "$RESOLVED_SDK_PATH/minifi-api.def" "$DOCKER_SDK_DIR/" 2>/dev/null || true
         cp "$RESOLVED_SDK_PATH"/*.whl "$DOCKER_SDK_DIR/" 2>/dev/null || true
 
     # Case B: It's a raw repository layout
-    elif [ -f "$RESOLVED_SDK_PATH/minifi-api/include/minifi-c/minifi-c.h" ]; then
+    elif [ -f "$RESOLVED_SDK_PATH/minifi-api/include/minifi-c/minifi-api.h" ]; then
         mkdir -p "$DOCKER_SDK_DIR/minifi-api/include/minifi-c"
 
-        cp "$RESOLVED_SDK_PATH/minifi-api/include/minifi-c/minifi-c.h" "$DOCKER_SDK_DIR/minifi-api/include/minifi-c/"
-        cp "$RESOLVED_SDK_PATH/minifi-api/minifi-c-api.def" "$DOCKER_SDK_DIR/minifi-api/" 2>/dev/null || true
+        cp "$RESOLVED_SDK_PATH/minifi-api/include/minifi-c/minifi-api.h" "$DOCKER_SDK_DIR/minifi-api/include/minifi-c/"
+        cp "$RESOLVED_SDK_PATH/minifi-api/minifi-api.def" "$DOCKER_SDK_DIR/minifi-api/" 2>/dev/null || true
 
         if [ -d "$RESOLVED_SDK_PATH/behave_framework" ]; then
             cp -R "$RESOLVED_SDK_PATH/behave_framework" "$DOCKER_SDK_DIR/"
         fi
     else
-        echo "ERROR: Could not find minifi-c.h in $RESOLVED_SDK_PATH"
+        echo "ERROR: Could not find minifi-api.h in $RESOLVED_SDK_PATH"
         exit 1
     fi
 

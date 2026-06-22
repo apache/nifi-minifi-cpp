@@ -10,7 +10,7 @@ pub(crate) const LOG_LEVEL: Property = Property {
     default_value: Some("Info"), // todo! it would be nicer to come from enum value but wasnt able to use into_const_str from another crate
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &LogLevel::VARIANTS,
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const ATTRIBUTES_TO_LOG: Property = Property {
@@ -22,7 +22,7 @@ pub(crate) const ATTRIBUTES_TO_LOG: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const ATTRIBUTES_TO_IGNORE: Property = Property {
@@ -34,7 +34,7 @@ pub(crate) const ATTRIBUTES_TO_IGNORE: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const LOG_PAYLOAD: Property = Property {
@@ -46,7 +46,7 @@ pub(crate) const LOG_PAYLOAD: Property = Property {
     default_value: Some("false"),
     validator: StandardPropertyValidator::BoolValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const LOG_PREFIX: Property = Property {
@@ -58,7 +58,7 @@ pub(crate) const LOG_PREFIX: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const FLOW_FILES_TO_LOG: Property = Property {
@@ -70,7 +70,7 @@ pub(crate) const FLOW_FILES_TO_LOG: Property = Property {
     default_value: Some("1"),
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const HEX_ENCODE_PAYLOAD: Property = Property {
@@ -82,5 +82,5 @@ pub(crate) const HEX_ENCODE_PAYLOAD: Property = Property {
     default_value: Some("false"),
     validator: StandardPropertyValidator::BoolValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };

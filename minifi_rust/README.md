@@ -19,7 +19,7 @@ The framework completely encapsulates the unsafe C FFI (Foreign Function Interfa
 
 The project is structured as a Cargo workspace with a clear, layered architecture:
 ### [minifi-native-sys](minifi_native_sys)
-Contains the raw, unsafe FFI bindings to the minifi-c.h C API.
+Contains the raw, unsafe FFI bindings to the minifi-api.h C API.
 ### [minifi-native](minifi_native)
 Provides the public, safe, and idiomatic Rust API. This is the crate that developers will use to build their processors.
 #### API Traits

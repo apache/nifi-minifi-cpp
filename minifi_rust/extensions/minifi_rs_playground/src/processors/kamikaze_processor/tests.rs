@@ -1,6 +1,6 @@
 use super::*;
 use crate::processors::kamikaze_processor::properties::{
-    ON_SCHEDULE_BEHAVIOUR, ON_TRIGGER_BEHAVIOUR,
+    SCHEDULE_BEHAVIOUR, TRIGGER_BEHAVIOUR,
 };
 use minifi_native::MinifiError::{ScheduleError, TriggerError};
 use minifi_native::{MockLogger, MockProcessContext, MockProcessSession};
@@ -17,7 +17,7 @@ fn on_schedule_ok() {
 fn on_schedule_err() {
     let mut context = MockProcessContext::new();
     context.properties.insert(
-        ON_SCHEDULE_BEHAVIOUR.name.to_string(),
+        SCHEDULE_BEHAVIOUR.name.to_string(),
         "ReturnErr".to_string(),
     );
     let processor = KamikazeProcessorRs::schedule(&context, &MockLogger::new());
@@ -29,7 +29,7 @@ fn on_schedule_panic() {
     let mut context = MockProcessContext::new();
     context
         .properties
-        .insert(ON_SCHEDULE_BEHAVIOUR.name.to_string(), "Panic".to_string());
+        .insert(SCHEDULE_BEHAVIOUR.name.to_string(), "Panic".to_string());
 
     let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
         KamikazeProcessorRs::schedule(&context, &MockLogger::new())
@@ -55,7 +55,7 @@ fn on_trigger_ok() {
 fn on_trigger_err() {
     let mut context = MockProcessContext::new();
     context.properties.insert(
-        ON_TRIGGER_BEHAVIOUR.name.to_string(),
+        TRIGGER_BEHAVIOUR.name.to_string(),
         "ReturnErr".to_string(),
     );
     let processor = KamikazeProcessorRs::schedule(&context, &MockLogger::new()).unwrap();
@@ -72,7 +72,7 @@ fn on_trigger_panic() {
     let mut context = MockProcessContext::new();
     context
         .properties
-        .insert(ON_TRIGGER_BEHAVIOUR.name.to_string(), "Panic".to_string());
+        .insert(TRIGGER_BEHAVIOUR.name.to_string(), "Panic".to_string());
     let processor = KamikazeProcessorRs::schedule(&context, &MockLogger::new()).unwrap();
 
     let mut session = MockProcessSession::new();

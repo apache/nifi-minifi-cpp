@@ -11,7 +11,8 @@ pub(crate) mod processor_wrappers;
 pub(crate) mod property;
 pub(crate) mod raw_controller_service;
 pub(crate) mod raw_processor;
-mod relationship;
+pub(crate) mod relationship;
+pub(crate) mod provided_interface;
 
 pub use flow_file::FlowFile;
 pub use logger::{LogLevel, Logger};

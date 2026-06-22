@@ -19,14 +19,18 @@ limitations under the License.
 
 - [AsciifyGerman](#AsciifyGerman)
 - [CountActualLogging](#CountActualLogging)
+- [DuplicateStreamText](#DuplicateStreamText)
 - [GenerateFlowFileRs](#GenerateFlowFileRs)
 - [GetFileRs](#GetFileRs)
 - [KamikazeProcessorRs](#KamikazeProcessorRs)
 - [LogAttributeRs](#LogAttributeRs)
 - [LoremIpsumCSUser](#LoremIpsumCSUser)
 - [PutFileRs](#PutFileRs)
+- [ZooProcessor](#ZooProcessor)
 ### Controller Services
 
+- [DogController](#DogController)
+- [DuckController](#DuckController)
 - [DummyControllerService](#DummyControllerService)
 - [LoremIpsumControllerService](#LoremIpsumControllerService)
 
@@ -48,8 +52,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name    | Description                             |
 |---------|-----------------------------------------|
-| success | All asciified flowfiles are routed here |
 | failure | Non-german flowfiles are routed here    |
+| success | All asciified flowfiles are routed here |
 
 
 ## CountActualLogging
@@ -71,6 +75,26 @@ In the list below, the names of required properties appear in bold. Any other pr
 |------|-------------|
 
 
+## DuplicateStreamText
+
+### Description
+
+Duplicate text
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+|------|---------------|------------------|-------------|
+
+### Relationships
+
+| Name    | Description |
+|---------|-------------|
+| success |             |
+
+
 ## GenerateFlowFileRs
 
 ### Description
@@ -83,11 +107,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                 | Default Value | Allowable Values | Description                                                                                                                                                                                                                                                                                                                      |
 |----------------------|---------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **File Size**        | 1 kB          |                  | The size of the file that will be used<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                |
 | **Batch Size**       | 1             |                  | The number of FlowFiles to be transferred in each invocation                                                                                                                                                                                                                                                                     |
-| **Data Format**      | Binary        | Text<br/>Binary  | Specifies whether the data should be Text or Binary                                                                                                                                                                                                                                                                              |
-| **Unique FlowFiles** | true          | true<br/>false   | If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles will get the same content but this offers much higher throughput (but see the description of Custom Text for special non-random use cases)                                                                 |
 | Custom Text          |               |                  | If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles<br/>**Supports Expression Language: true** |
+| **Data Format**      | Binary        | Text<br/>Binary  | Specifies whether the data should be Text or Binary                                                                                                                                                                                                                                                                              |
+| **File Size**        | 1 kB          |                  | The size of the file that will be used<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                |
+| **Unique FlowFiles** | true          | true<br/>false   | If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles will get the same content but this offers much higher throughput (but see the description of Custom Text for special non-random use cases)                                                                 |
 
 ### Relationships
 
@@ -108,16 +132,16 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                    | Default Value | Allowable Values | Description                                                                                                                                                |
 |-------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Batch Size**          | 10            |                  | The maximum number of files to pull in each iteration                                                                                                      |
+| **Ignore Hidden Files** | true          | true<br/>false   | Indicates whether or not hidden files should be ignored                                                                                                    |
 | **Input Directory**     |               |                  | The input directory from which to pull files<br/>**Supports Expression Language: true**                                                                    |
+| Keep Source File        | false         | true<br/>false   | If true, the file is not deleted after it has been copied to the Content Repository                                                                        |
+| Maximum File Age        |               |                  | The maximum age that a file must be in order to be pulled;  any file older than this amount of time (according to last modification date) will be ignored  |
+| Maximum File Size       |               |                  | The maximum size that a file can be in order to be pulled                                                                                                  |
+| Minimum File Age        |               |                  | The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored |
+| Minimum File Size       |               |                  | The minimum size that a file can be in order to be pulled                                                                                                  |
 | Polling Interval        |               |                  | Indicates how long to wait before performing a directory listing                                                                                           |
 | Recurse Subdirectories  | true          | true<br/>false   | Indicates whether or not to pull files from subdirectories                                                                                                 |
-| Keep Source File        | false         | true<br/>false   | If true, the file is not deleted after it has been copied to the Content Repository                                                                        |
-| Minimum File Age        |               |                  | The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored |
-| Maximum File Age        |               |                  | The maximum age that a file must be in order to be pulled;  any file older than this amount of time (according to last modification date) will be ignored  |
-| Minimum File Size       |               |                  | The minimum size that a file can be in order to be pulled                                                                                                  |
-| Maximum File Size       |               |                  | The maximum size that a file can be in order to be pulled                                                                                                  |
-| **Ignore Hidden Files** | true          | true<br/>false   | Indicates whether or not hidden files should be ignored                                                                                                    |
-| **Batch Size**          | 10            |                  | The maximum number of files to pull in each iteration                                                                                                      |
 
 ### Relationships
 
@@ -143,10 +167,10 @@ This processor can fail or panic in on_trigger and on_schedule calls based on co
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                      | Default Value | Allowable Values                                                                              | Description                              |
-|---------------------------|---------------|-----------------------------------------------------------------------------------------------|------------------------------------------|
-| **On Schedule Behaviour** | ReturnOk      | ReturnErr<br/>ReturnOk<br/>GetNotRegisteredProperty<br/>GetInvalidControllerService<br/>Panic | What to do during the on_schedule method |
-| **On Trigger Behaviour**  | ReturnOk      | ReturnErr<br/>ReturnOk<br/>GetNotRegisteredProperty<br/>GetInvalidControllerService<br/>Panic | What to do during the on_trigger method  |
+| Name                   | Default Value | Allowable Values                                                                              | Description                              |
+|------------------------|---------------|-----------------------------------------------------------------------------------------------|------------------------------------------|
+| **Schedule Behaviour** | ReturnOk      | ReturnErr<br/>ReturnOk<br/>GetNotRegisteredProperty<br/>GetInvalidControllerService<br/>Panic | What to do during the on_schedule method |
+| **Trigger Behaviour**  | ReturnOk      | ReturnErr<br/>ReturnOk<br/>GetNotRegisteredProperty<br/>GetInvalidControllerService<br/>Panic | What to do during the trigger method     |
 
 ### Relationships
 
@@ -167,13 +191,13 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                  | Default Value | Allowable Values                                                 | Description                                                                                                                                                    |
 |-----------------------|---------------|------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Log Level**         | Info          | Trace<br/>Debug<br/>Info<br/>Warn<br/>Error<br/>Critical<br/>Off | The Log Level to use when logging the Attributes                                                                                                               |
-| Attributes to Log     |               |                                                                  | A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.                                                                  |
 | Attributes to Ignore  |               |                                                                  | A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.                                                               |
-| **Log Payload**       | false         | true<br/>false                                                   | If true, the FlowFile's payload will be logged, in addition to its attributes. Otherwise, just the Attributes will be logged.                                  |
-| Log Prefix            |               |                                                                  | Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.                                                  |
+| Attributes to Log     |               |                                                                  | A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.                                                                  |
 | **FlowFiles To Log**  | 1             |                                                                  | Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously. |
 | **Hexencode Payload** | false         | true<br/>false                                                   | If true, the FlowFile's payload will be logged in a hexencoded format                                                                                          |
+| **Log Level**         | Info          | Trace<br/>Debug<br/>Info<br/>Warn<br/>Error<br/>Critical<br/>Off | The Log Level to use when logging the Attributes                                                                                                               |
+| **Log Payload**       | false         | true<br/>false                                                   | If true, the FlowFile's payload will be logged, in addition to its attributes. Otherwise, just the Attributes will be logged.                                  |
+| Log Prefix            |               |                                                                  | Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.                                                  |
 
 ### Relationships
 
@@ -216,19 +240,70 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                             | Default Value | Allowable Values            | Description                                                                                                                                                                          |
 |----------------------------------|---------------|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Directory**                    | .             |                             | The output directory to which to put files<br/>**Supports Expression Language: true**                                                                                                |
 | **Conflict Resolution Strategy** | fail          | fail<br/>replace<br/>ignore | Indicates what should happen when a file with the same name already exists in the output directory                                                                                   |
 | **Create Missing Directories**   | true          | true<br/>false              | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.                                                                |
+| **Directory**                    | .             |                             | The output directory to which to put files<br/>**Supports Expression Language: true**                                                                                                |
+| Directory Permissions            |               |                             | Sets the permissions on the directories being created if 'Create Missing Directories' property is set. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems. |
 | Maximum File Count               |               |                             | Specifies the maximum number of files that can exist in the output directory                                                                                                         |
 | Permissions                      |               |                             | Sets the permissions on the output file to the value of this attribute. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.                                |
-| Directory Permissions            |               |                             | Sets the permissions on the directories being created if 'Create Missing Directories' property is set. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems. |
 
 ### Relationships
 
 | Name    | Description                                                                       |
 |---------|-----------------------------------------------------------------------------------|
-| success | Flowfiles that are successfully written to a file are routed to this relationship |
 | failure | Failed files (conflict, write failure, etc.) are transferred to failure           |
+| success | Flowfiles that are successfully written to a file are routed to this relationship |
+
+
+## ZooProcessor
+
+### Description
+
+Test ZooProcessor
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                       | Default Value | Allowable Values | Description              |
+|----------------------------|---------------|------------------|--------------------------|
+| **Can fly service**        |               |                  | Test CanFlyService       |
+| **Number of Legs Service** |               |                  | Test NumberOfLegsService |
+
+### Relationships
+
+| Name | Description |
+|------|-------------|
+
+
+## DogController
+
+### Description
+
+Test DogController
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name              | Default Value | Allowable Values | Description                                           |
+|-------------------|---------------|------------------|-------------------------------------------------------|
+| Extra information |               |                  | We need this to verify the casting was done correctly |
+| **Has Jetpack**   | false         | true<br/>false   | Whether or not the dog has a jetpack                  |
+
+
+## DuckController
+
+### Description
+
+Test DuckController
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+|------|---------------|------------------|-------------|
 
 
 ## DummyControllerService
@@ -255,6 +330,6 @@ Simple Rusty Controller Service to test API
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name       | Default Value | Allowable Values | Description                                                 |
-|------------|---------------|------------------|-------------------------------------------------------------|
-| **Length** | 25            |                  | How many words to generate<br/>**Sensitive Property: true** |
+| Name       | Default Value | Allowable Values | Description                |
+|------------|---------------|------------------|----------------------------|
+| **Length** | 25            |                  | How many words to generate |
