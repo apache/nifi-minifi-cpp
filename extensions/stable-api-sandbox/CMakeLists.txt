@@ -24,8 +24,8 @@ endif ()
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 file(GLOB SOURCES "*.cpp")
 
-add_minifi_library(minifi-stable-api-sandbox SHARED ${SOURCES})
+add_minifi_library(minifi-stable-api-testing SHARED ${SOURCES})
 
-target_link_libraries(minifi-stable-api-sandbox minifi-cpp-extension-lib)
+target_link_libraries(minifi-stable-api-testing minifi-cpp-extension-lib)
 
-register_c_api_extension(minifi-stable-api-sandbox "Stable API Sandbox" SANDBOX-EXTENSION "Stable API Sandbox" "extensions/stable-api-sandbox/tests")
+register_c_api_extension(minifi-stable-api-testing "Stable API Sandbox" SANDBOX-EXTENSION "Stable API Sandbox" "extensions/stable-api-testing/tests")

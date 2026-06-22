@@ -29,17 +29,19 @@ class ZooProcessor : public api::core::ProcessorImpl {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Test ZooProcessor";
 
-  EXTENSIONAPI static constexpr auto CanFlyService = core::PropertyDefinitionBuilder<>::createProperty("Can fly service")
-                                                         .withDescription("Test CanFlyService")
-                                                         .isRequired(true)
-                                                         .withAllowedTypes<CanFlyControllerApi>()
-                                                         .build();
+  EXTENSIONAPI static constexpr auto CanFlyService =
+      core::PropertyDefinitionBuilder<>::createProperty("Can fly service")
+          .withDescription("Test CanFlyService")
+          .isRequired(true)
+          .withAllowedTypes<CanFlyControllerApi>()
+          .build();
 
-  EXTENSIONAPI static constexpr auto NumberOfLegsService = core::PropertyDefinitionBuilder<>::createProperty("Number of legs service")
-                                                               .withDescription("Test NumberOfLegsService")
-                                                               .isRequired(true)
-                                                               .withAllowedTypes<NumberOfLegsControllerApi>()
-                                                               .build();
+  EXTENSIONAPI static constexpr auto NumberOfLegsService =
+      core::PropertyDefinitionBuilder<>::createProperty("Number of legs service")
+          .withDescription("Test NumberOfLegsService")
+          .isRequired(true)
+          .withAllowedTypes<NumberOfLegsControllerApi>()
+          .build();
 
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       CanFlyService,
