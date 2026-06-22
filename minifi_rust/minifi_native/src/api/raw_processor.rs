@@ -20,8 +20,8 @@ pub trait RawProcessor: Sized {
 
     fn new(logger: Self::LoggerType) -> Self;
     fn log(&self, log_level: LogLevel, args: std::fmt::Arguments);
-    fn on_schedule<P: ProcessContext>(&mut self, context: &P) -> Result<(), MinifiError>;
-    fn on_unschedule(&mut self);
+    fn schedule<P: ProcessContext>(&mut self, context: &P) -> Result<(), MinifiError>;
+    fn unschedule(&mut self);
 }
 
 /// To differentiate between single and multithreaded processors
@@ -48,7 +48,7 @@ mod sealed {
 }
 
 pub trait SingleThreadedTrigger: RawProcessor<Threading = Exclusive> {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &mut self,
         context: &mut PC,
         session: &mut PS,
@@ -59,7 +59,7 @@ pub trait SingleThreadedTrigger: RawProcessor<Threading = Exclusive> {
 }
 
 pub trait MultiThreadedTrigger: RawProcessor<Threading = Concurrent> {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &self,
         context: &mut PC,
         session: &mut PS,

@@ -1,8 +1,5 @@
 use minifi_native::macros::ComponentIdentifier;
-use minifi_native::{
-    ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
-    Property,
-};
+use minifi_native::{ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError, Property, ProvidedInterface};
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct DummyControllerService {}
@@ -19,4 +16,5 @@ impl EnableControllerService for DummyControllerService {
 impl ControllerServiceDefinition for DummyControllerService {
     const DESCRIPTION: &'static str = "Dummy Controller Service";
     const PROPERTIES: &'static [Property] = &[];
+    const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
 }

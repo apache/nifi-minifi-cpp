@@ -11,7 +11,7 @@ impl ProcessorDefinition for KamikazeProcessorRs {
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[relationships::SUCCESS];
     const PROPERTIES: &'static [Property] = &[
-        properties::ON_SCHEDULE_BEHAVIOUR,
-        properties::ON_TRIGGER_BEHAVIOUR,
+        properties::SCHEDULE_BEHAVIOUR,
+        properties::TRIGGER_BEHAVIOUR,
     ];
 }

@@ -7,3 +7,4 @@ pub(crate) mod kamikaze_processor;
 pub(crate) mod log_attribute;
 pub(crate) mod lorem_ipsum_cs_user;
 pub(crate) mod put_file;
+pub(crate) mod zoo_processor;

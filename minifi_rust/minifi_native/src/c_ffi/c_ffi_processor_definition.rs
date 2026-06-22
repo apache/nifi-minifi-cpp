@@ -37,13 +37,13 @@ where
             let processor = &*(processor_ptr as *const T);
             let mut context = CffiProcessContext::new(context_ptr);
             let mut session = CffiProcessSession::new(session_ptr);
-            match processor.on_trigger(&mut context, &mut session) {
+            match processor.trigger(&mut context, &mut session) {
                 Ok(OnTriggerResult::Ok) => minifi_status_MINIFI_STATUS_SUCCESS,
                 Ok(OnTriggerResult::Yield) => minifi_status_MINIFI_STATUS_PROCESSOR_YIELD,
                 Err(minifi_error) => {
                     processor.log(
                         LogLevel::Error,
-                        format_args!("Error during on_trigger {}", minifi_error),
+                        format_args!("Error during trigger {}", minifi_error),
                     );
                     minifi_error.to_status()
                 }
@@ -65,7 +65,7 @@ where
             let processor = &mut *(processor_ptr as *mut T);
             let mut context = CffiProcessContext::new(context_ptr);
             let mut session = CffiProcessSession::new(session_ptr);
-            match processor.on_trigger(&mut context, &mut session) {
+            match processor.trigger(&mut context, &mut session) {
                 Ok(OnTriggerResult::Ok) => minifi_status_MINIFI_STATUS_SUCCESS,
                 Ok(OnTriggerResult::Yield) => minifi_status_MINIFI_STATUS_PROCESSOR_YIELD,
                 Err(error_code) => error_code.to_status(),
@@ -136,7 +136,7 @@ where
         }
     }
 
-    unsafe extern "C" fn on_trigger_processor(
+    unsafe extern "C" fn trigger_processor(
         processor_ptr: *mut c_void,
         context_ptr: *mut minifi_process_context,
         session_ptr: *mut minifi_process_session,
@@ -150,19 +150,19 @@ where
         }
     }
 
-    unsafe extern "C" fn on_schedule_processor(
+    unsafe extern "C" fn schedule_processor(
         processor_ptr: *mut c_void,
         context_ptr: *mut minifi_process_context,
     ) -> minifi_status {
         unsafe {
             let processor = &mut *(processor_ptr as *mut T);
             let context = CffiProcessContext::new(context_ptr);
-            match processor.on_schedule(&context) {
+            match processor.schedule(&context) {
                 Ok(_) => 0,
                 Err(error_code) => {
                     processor.log(
                         LogLevel::Error,
-                        format_args!("Error during on_schedule: {}", error_code),
+                        format_args!("Error during schedule: {}", error_code),
                     );
                     error_code.to_status()
                 }
@@ -170,10 +170,10 @@ where
         }
     }
 
-    unsafe extern "C" fn on_unschedule_processor(processor_ptr: *mut c_void) {
+    unsafe extern "C" fn unschedule_processor(processor_ptr: *mut c_void) {
         unsafe {
             let processor = &mut *(processor_ptr as *mut T);
-            processor.on_unschedule();
+            processor.unschedule();
         }
     }
 }
@@ -225,9 +225,9 @@ where
                 callbacks: minifi_processor_callbacks {
                     create: Some(Self::create_processor),
                     destroy: Some(Self::destroy_processor),
-                    trigger: Some(Self::on_trigger_processor),
-                    schedule: Some(Self::on_schedule_processor),
-                    unschedule: Some(Self::on_unschedule_processor),
+                    trigger: Some(Self::trigger_processor),
+                    schedule: Some(Self::schedule_processor),
+                    unschedule: Some(Self::unschedule_processor),
                 },
             })
         }

@@ -123,7 +123,7 @@ where
         Schedule + FlowFileStreamTransform,
     L: Logger,
 {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &self,
         context: &mut PC,
         session: &mut PS,
@@ -152,7 +152,7 @@ where
         Schedule + MutFlowFileStreamTransform,
     L: Logger,
 {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &mut self,
         context: &mut PC,
         session: &mut PS,

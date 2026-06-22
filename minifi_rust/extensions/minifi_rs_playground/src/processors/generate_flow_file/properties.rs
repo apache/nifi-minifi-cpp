@@ -9,7 +9,7 @@ pub(crate) const FILE_SIZE: Property = Property {
     default_value: Some("1 kB"),
     validator: StandardPropertyValidator::DataSizeValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const BATCH_SIZE: Property = Property {
@@ -21,7 +21,7 @@ pub(crate) const BATCH_SIZE: Property = Property {
     default_value: Some("1"),
     validator: StandardPropertyValidator::U64Validator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const DATA_FORMAT: Property = Property {
@@ -33,7 +33,7 @@ pub(crate) const DATA_FORMAT: Property = Property {
     default_value: Some("Binary"),
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &["Text", "Binary"],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const UNIQUE_FLOW_FILES: Property = Property {
@@ -45,7 +45,7 @@ pub(crate) const UNIQUE_FLOW_FILES: Property = Property {
     default_value: Some("true"),
     validator: StandardPropertyValidator::BoolValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const CUSTOM_TEXT: Property = Property {
@@ -57,5 +57,5 @@ pub(crate) const CUSTOM_TEXT: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };

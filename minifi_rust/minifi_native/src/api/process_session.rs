@@ -33,7 +33,7 @@ pub trait ProcessSession {
     ) -> bool;
 
     fn write(&self, flow_file: &Self::FlowFile, data: &[u8]) -> Result<(), MinifiError>;
-    fn write_lazy<'a>(
+    fn write_from_stream<'a>(
         &self,
         flow_file: &Self::FlowFile,
         stream: Box<dyn std::io::Read + 'a>,

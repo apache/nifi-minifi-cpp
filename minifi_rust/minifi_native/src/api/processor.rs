@@ -47,12 +47,12 @@ where
         self.logger.log(log_level, args);
     }
 
-    fn on_schedule<P: ProcessContext>(&mut self, context: &P) -> Result<(), MinifiError> {
+    fn schedule<P: ProcessContext>(&mut self, context: &P) -> Result<(), MinifiError> {
         self.scheduled_impl = Some(Impl::schedule(context, &self.logger)?);
         Ok(())
     }
 
-    fn on_unschedule(&mut self) {
+    fn unschedule(&mut self) {
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
             scheduled_impl.unschedule()
         }

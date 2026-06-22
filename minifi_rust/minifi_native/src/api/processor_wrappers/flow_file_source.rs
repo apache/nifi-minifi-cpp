@@ -64,7 +64,7 @@ where
         match new_flow_file_data.new_content {
             None => {}
             Some(Content::Buffer(buffer)) => session.write(&mut ff, &buffer)?,
-            Some(Content::Stream(stream)) => session.write_lazy(&mut ff, stream)?,
+            Some(Content::Stream(stream)) => session.write_from_stream(&mut ff, stream)?,
         }
         for (k, v) in &new_flow_file_data.attributes_to_add {
             session.set_attribute(&mut ff, k, v)?;
@@ -82,7 +82,7 @@ where
     Implementation: Schedule + FlowFileSource,
     L: Logger,
 {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &self,
         context: &mut PC,
         session: &mut PS,
@@ -108,7 +108,7 @@ where
     Implementation: Schedule + MutFlowFileSource,
     L: Logger,
 {
-    fn on_trigger<PC, PS>(
+    fn trigger<PC, PS>(
         &mut self,
         context: &mut PC,
         session: &mut PS,

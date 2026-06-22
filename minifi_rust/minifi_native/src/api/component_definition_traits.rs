@@ -1,4 +1,5 @@
 use crate::{OutputAttribute, ProcessorInputRequirement, Property, Relationship};
+use crate::api::provided_interface::ProvidedInterface;
 
 pub trait ComponentIdentifier {
     const CLASS_NAME: &'static str;
@@ -16,7 +17,8 @@ pub trait ProcessorDefinition {
     const PROPERTIES: &'static [Property];
 }
 
-pub trait ControllerServiceDefinition {
+pub trait ControllerServiceDefinition: Sized + 'static {
     const DESCRIPTION: &'static str;
     const PROPERTIES: &'static [Property];
+    const PROVIDED_APIS: &'static [ProvidedInterface<Self>];
 }

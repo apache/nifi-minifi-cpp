@@ -12,7 +12,7 @@ pub(crate) const CONTROLLER_SERVICE: Property = Property {
     default_value: None,
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &[],
-    allowed_type: LoremIpsumControllerService::CLASS_NAME,
+    allowed_type: Some(LoremIpsumControllerService::CLASS_NAME),
 };
 
 pub(crate) const WRITE_METHOD: Property = Property {
@@ -24,5 +24,5 @@ pub(crate) const WRITE_METHOD: Property = Property {
     default_value: Some(super::WriteMethod::Buffer.into_str()),
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: super::WriteMethod::VARIANTS,
-    allowed_type: "",
+    allowed_type: None,
 };

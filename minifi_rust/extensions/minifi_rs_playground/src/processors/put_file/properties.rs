@@ -11,7 +11,7 @@ pub(crate) const DIRECTORY: Property = Property {
     default_value: Some("."),
     validator: StandardPropertyValidator::NonBlankValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const CONFLICT_RESOLUTION: Property = Property {
@@ -23,7 +23,7 @@ pub(crate) const CONFLICT_RESOLUTION: Property = Property {
     default_value: Some(ConflictResolutionStrategy::Fail.into_str()),
     validator: StandardPropertyValidator::AlwaysValidValidator,
     allowed_values: &ConflictResolutionStrategy::VARIANTS,
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const CREATE_DIRS: Property = Property {
@@ -35,7 +35,7 @@ pub(crate) const CREATE_DIRS: Property = Property {
     default_value: Some("true"),
     validator: StandardPropertyValidator::BoolValidator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };
 
 pub(crate) const MAX_FILE_COUNT: Property = Property {
@@ -47,5 +47,5 @@ pub(crate) const MAX_FILE_COUNT: Property = Property {
     default_value: None, // Diverged from the original implementation, u64 with no default describes the behavior better
     validator: StandardPropertyValidator::U64Validator,
     allowed_values: &[],
-    allowed_type: "",
+    allowed_type: None,
 };

@@ -15,48 +15,48 @@ Feature: API error handling and logging
     And the Minifi logs do not contain errors
     And the Minifi logs do not contain warnings
 
-  Scenario: Minifi handles errors from on_schedule
-    Given a KamikazeProcessorRs processor with the "On Schedule Behaviour" property set to "ReturnErr"
+  Scenario: Minifi handles errors from schedule
+    Given a KamikazeProcessorRs processor with the "Schedule Behaviour" property set to "ReturnErr"
     And KamikazeProcessorRs's success relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
-    Then the Minifi logs contain the following message: "KamikazeProcessorRs] [error] Error during on_schedule: ScheduleError("it was designed to fail during schedule")" in less than 10 seconds
+    Then the Minifi logs contain the following message: "KamikazeProcessorRs] [error] Error during schedule: ScheduleError("it was designed to fail during schedule")" in less than 10 seconds
     And the Minifi logs contain the following message: "(KamikazeProcessorRs): Process Schedule Operation: Error while scheduling processor" in less than 10 seconds
 
-  Scenario: Minifi handles errors from on_trigger
-    Given a KamikazeProcessorRs processor with the "On Schedule Behaviour" property set to "ReturnOk"
-    And the "On Trigger Behaviour" property of the KamikazeProcessorRs processor is set to "ReturnErr"
+  Scenario: Minifi handles errors from trigger
+    Given a KamikazeProcessorRs processor with the "Schedule Behaviour" property set to "ReturnOk"
+    And the "Trigger Behaviour" property of the KamikazeProcessorRs processor is set to "ReturnErr"
     And KamikazeProcessorRs's success relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
-    Then the Minifi logs contain the following message: "KamikazeProcessorRs] [error] Error during on_trigger TriggerError("it was designed to fail in trigger")" in less than 10 seconds
+    Then the Minifi logs contain the following message: "KamikazeProcessorRs] [error] Error during trigger TriggerError("it was designed to fail in trigger")" in less than 10 seconds
     And the Minifi logs contain the following message: "Trigger and commit failed for processor KamikazeProcessorRs" in less than 10 seconds
 
-  Scenario: Panic in extension's on_schedule crashes the agent aswell
-    Given a KamikazeProcessorRs processor with the "On Schedule Behaviour" property set to "Panic"
+  Scenario: Panic in extension's schedule crashes the agent aswell
+    Given a KamikazeProcessorRs processor with the "Schedule Behaviour" property set to "Panic"
     And KamikazeProcessorRs's success relationship is auto-terminated
 
     When the MiNiFi instance is started without assertions
-    Then Minifi crashes with the following "KamikazeProcessor::on_schedule panic" in less than 10 seconds
+    Then Minifi crashes with the following "KamikazeProcessor::schedule panic" in less than 10 seconds
 
-  Scenario: Panic in extension's on_trigger crashes the agent aswell
-    Given a KamikazeProcessorRs processor with the "On Schedule Behaviour" property set to "ReturnOk"
-    And the "On Trigger Behaviour" property of the KamikazeProcessorRs processor is set to "Panic"
+  Scenario: Panic in extension's trigger crashes the agent aswell
+    Given a KamikazeProcessorRs processor with the "Schedule Behaviour" property set to "ReturnOk"
+    And the "Trigger Behaviour" property of the KamikazeProcessorRs processor is set to "Panic"
     And KamikazeProcessorRs's success relationship is auto-terminated
 
     When the MiNiFi instance is started without assertions
-    Then Minifi crashes with the following "KamikazeProcessor::on_trigger panic" in less than 10 seconds
+    Then Minifi crashes with the following "KamikazeProcessor::trigger panic" in less than 10 seconds
 
   Scenario: Get not supported property
-    Given a KamikazeProcessorRs processor with the "On Schedule Behaviour" property set to "ReturnOk"
-    And the "On Trigger Behaviour" property of the KamikazeProcessorRs processor is set to "GetNotRegisteredProperty"
+    Given a KamikazeProcessorRs processor with the "Schedule Behaviour" property set to "ReturnOk"
+    And the "Trigger Behaviour" property of the KamikazeProcessorRs processor is set to "GetNotRegisteredProperty"
     And KamikazeProcessorRs's success relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
-    Then the Minifi logs contain the following message: "MinifiProcessContextGetProperty("Kamikaze Processor Property"), not supported property" in less than 10 seconds
+    Then the Minifi logs contain the following message: "minifi_process_context_get_property("Kamikaze Processor Property"), not supported property" in less than 10 seconds
     And the Minifi logs contain the following message: "Trigger and commit failed for processor KamikazeProcessorRs" in less than 10 seconds
 
   Scenario: Get wrong typed Controller Service
@@ -66,5 +66,5 @@ Feature: API error handling and logging
 
     When the MiNiFi instance starts up
 
-    Then the Minifi logs contain the following message: "MinifiProcessContextGetControllerService::<"minifi_rs_playground::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService">("My Controller Service"), validation failed" in less than 10 seconds
+    Then the Minifi logs contain the following message: "Error during trigger minifi_process_context_get_controller_service_from_property::<"minifi_rs_playground::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService">" in less than 10 seconds
     And the Minifi logs contain the following message: "Trigger and commit failed for processor LoremIpsumCSUser" in less than 10 seconds

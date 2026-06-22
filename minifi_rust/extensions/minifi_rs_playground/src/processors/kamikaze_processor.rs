@@ -22,7 +22,7 @@ enum KamikazeBehaviour {
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct KamikazeProcessorRs {
-    on_trigger_behaviour: KamikazeBehaviour,
+    trigger_behaviour: KamikazeBehaviour,
 }
 
 impl Schedule for KamikazeProcessorRs {
@@ -30,31 +30,31 @@ impl Schedule for KamikazeProcessorRs {
     where
         Self: Sized,
     {
-        let on_trigger_behaviour = context
-            .get_property(&properties::ON_TRIGGER_BEHAVIOUR)?
+        let trigger_behaviour = context
+            .get_property(&properties::TRIGGER_BEHAVIOUR)?
             .expect("required property")
             .parse::<KamikazeBehaviour>()?;
 
-        let on_schedule_behaviour = context
-            .get_property(&properties::ON_SCHEDULE_BEHAVIOUR)?
+        let schedule_behaviour = context
+            .get_property(&properties::SCHEDULE_BEHAVIOUR)?
             .expect("required property")
             .parse::<KamikazeBehaviour>()?;
 
-        match on_schedule_behaviour {
+        match schedule_behaviour {
             KamikazeBehaviour::ReturnErr => Err(MinifiError::schedule_err(
                 "it was designed to fail during schedule",
             )),
             KamikazeBehaviour::ReturnOk => Ok(KamikazeProcessorRs {
-                on_trigger_behaviour,
+                trigger_behaviour,
             }),
             KamikazeBehaviour::GetNotRegisteredProperty => {
                 let _ = context.get_property(&NOT_REGISTERED_PROPERTY)?;
                 Ok(KamikazeProcessorRs {
-                    on_trigger_behaviour,
+                    trigger_behaviour,
                 })
             }
             KamikazeBehaviour::Panic => {
-                panic!("KamikazeProcessor::on_schedule panic")
+                panic!("KamikazeProcessor::schedule panic")
             }
             KamikazeBehaviour::GetInvalidControllerService => {
                 unimplemented!("KamikazeProcessor::get_invalid_controller_service");
@@ -75,13 +75,13 @@ impl Trigger for KamikazeProcessorRs {
         PS: ProcessSession<FlowFile = PC::FlowFile>,
         L: Logger,
     {
-        match self.on_trigger_behaviour {
+        match self.trigger_behaviour {
             KamikazeBehaviour::ReturnErr => Err(MinifiError::trigger_err(
                 "it was designed to fail in trigger",
             )),
             KamikazeBehaviour::ReturnOk => Ok(OnTriggerResult::Ok),
             KamikazeBehaviour::Panic => {
-                panic!("KamikazeProcessor::on_trigger panic")
+                panic!("KamikazeProcessor::trigger panic")
             }
             KamikazeBehaviour::GetNotRegisteredProperty => {
                 let _ = context.get_property(&NOT_REGISTERED_PROPERTY, None)?;

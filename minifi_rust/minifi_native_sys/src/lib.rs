@@ -6,6 +6,6 @@
 
 //! This crate provides raw, unsafe FFI bindings for the Apache NiFi MiNiFi C API.
 //!
-//! The bindings are generated automatically by `bindgen` from the `minifi-c.h` header.
+//! The bindings are generated automatically by `bindgen` from the `minifi-api.h` header.
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

@@ -101,9 +101,7 @@ impl Trigger for LogAttributeRs {
 }
 
 impl Schedule for LogAttributeRs {
-    fn schedule<P: GetProperty, L: Logger>(context: &P, _logger: &L) -> Result<Self, MinifiError>
-    where
-        Self: Sized,
+    fn schedule<P: GetProperty, L>(context: &P, _logger: &L) -> Result<Self, MinifiError>
     {
         let log_level = context
             .get_property(&LOG_LEVEL)?

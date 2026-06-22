@@ -3,7 +3,7 @@ use super::c_ffi_primitives::StringView;
 use crate::api::ProcessContext;
 use crate::api::controller_service::ControllerService;
 use crate::c_ffi::{CffiLogger, StaticStrAsMinifiCStr};
-use crate::{ComponentIdentifier, EnableControllerService, MinifiError, Property};
+use crate::{ComponentIdentifier, ControllerServiceApi, EnableControllerService, MinifiError, Property};
 use minifi_native_sys::*;
 use std::borrow::Cow;
 use std::ffi::c_void;
@@ -125,6 +125,50 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
         match self.get_raw_controller_service::<ControllerService<Cs, CffiLogger>>(property)? {
             None => Ok(None),
             Some(f) => Ok(f.get_implementation()),
+        }
+    }
+
+    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi>(
+        &self,
+        property: &Property,
+    ) -> Result<Option<Box<&Trait>>, MinifiError> {
+        let str_view = StringView::new(property.name);
+        let interface_view = StringView::new(Trait::INTERFACE_NAME);
+
+        let mut interface_ptr: *mut minifi_controller_service = std::ptr::null_mut();
+
+        unsafe {
+            let get_cs_status = minifi_process_context_get_controller_service_from_property(
+                self.ptr,
+                str_view.as_raw(),
+                interface_view.as_raw(),
+                &mut interface_ptr,
+            );
+
+            if get_cs_status == minifi_status_MINIFI_STATUS_PROPERTY_NOT_SET {
+                return Ok(None);
+            }
+
+            if get_cs_status != minifi_status_MINIFI_STATUS_SUCCESS {
+                return Err(MinifiError::StatusError((
+                    format!(
+                        "Failed to get controller service interface <{}> for property {:?}",
+                        Trait::INTERFACE_NAME, property.name
+                    )
+                        .into(),
+                    NonZeroU32::new_unchecked(get_cs_status),
+                )));
+            }
+
+            if interface_ptr.is_null() {
+                return Ok(None);
+            }
+
+            // MAGIC: We receive the thin void pointer from the C API,
+            // cast it back to a Box of a Fat Pointer, and unbox it!
+            let boxed_ref = Box::from_raw(interface_ptr as *mut &Trait);
+
+            Ok(Some(boxed_ref))
         }
     }
 
