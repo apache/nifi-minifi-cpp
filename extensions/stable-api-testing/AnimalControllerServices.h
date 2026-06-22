@@ -28,11 +28,12 @@ namespace org::apache::nifi::minifi::api_testing {
 class DogController : public api::core::ControllerServiceImpl, public CanFlyControllerApi, public NumberOfLegsControllerApi {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Test DogController";
-  EXTENSIONAPI static constexpr auto HasJetpack = core::PropertyDefinitionBuilder<>::createProperty("Has Jetpack")
-                                                      .withDescription("Whether or not the dog has a jetpack")
-                                                      .withDefaultValue("false")
-                                                      .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
-                                                      .build();
+  EXTENSIONAPI static constexpr auto HasJetpack =
+      core::PropertyDefinitionBuilder<>::createProperty("Has Jetpack")
+          .withDescription("Whether or not the dog has a jetpack")
+          .withDefaultValue("false")
+          .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
+          .build();
 
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       HasJetpack,

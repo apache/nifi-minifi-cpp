@@ -31,10 +31,8 @@ namespace org::apache::nifi::minifi::api_testing::test {
 TEST_CASE("ZooTest") {
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<ZooProcessor>(
       core::ProcessorMetadata{utils::Identifier{}, "ZooProcessor", logging::LoggerFactory<ZooProcessor>::getLogger()}));
-  const auto dog_with_jetpack = minifi::test::utils::make_custom_c_controller_service<DogController>(core::ControllerServiceMetadata{
-      utils::Identifier{},
-      "DogController",
-      logging::LoggerFactory<DogController>::getLogger()});
+  const auto dog_with_jetpack = minifi::test::utils::make_custom_c_controller_service<DogController>(
+      core::ControllerServiceMetadata{utils::Identifier{}, "DogController", logging::LoggerFactory<DogController>::getLogger()});
   auto dog_with_jetpack_node = controller.plan->addController("dog_with_jetpack", dog_with_jetpack);
   CHECK(dog_with_jetpack->setProperty(DogController::HasJetpack.name, "true"));
 
