@@ -20,7 +20,7 @@
 #include "AnimalControllerServices.h"
 #include "api/core/ProcessContext.h"
 
-namespace org::apache::nifi::minifi::api_sandbox {
+namespace org::apache::nifi::minifi::api_testing {
 
 MinifiStatus ZooProcessor::onTriggerImpl(api::core::ProcessContext& process_context, api::core::ProcessSession& process_session) {
   if (const auto can_fly_opaque = process_context.getControllerService(CanFlyService)) {
@@ -43,4 +43,4 @@ MinifiStatus ZooProcessor::onTriggerImpl(api::core::ProcessContext& process_cont
 MinifiStatus ZooProcessor::onScheduleImpl(api::core::ProcessContext& process_context) {
   return ProcessorImpl::onScheduleImpl(process_context);
 }
-}  // namespace org::apache::nifi::minifi::api_sandbox
+}  // namespace org::apache::nifi::minifi::api_testing

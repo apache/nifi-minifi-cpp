@@ -27,7 +27,7 @@
 #include "unit/TestUtils.h"
 #include "utils/CProcessor.h"
 
-namespace org::apache::nifi::minifi::api_sandbox::test {
+namespace org::apache::nifi::minifi::api_testing::test {
 TEST_CASE("ZooTest") {
   minifi::test::SingleProcessorTestController controller(minifi::test::utils::make_custom_c_processor<ZooProcessor>(
       core::ProcessorMetadata{utils::Identifier{}, "ZooProcessor", logging::LoggerFactory<ZooProcessor>::getLogger()}));
@@ -48,24 +48,24 @@ TEST_CASE("ZooTest") {
     CHECK(controller.getProcessor()->setProperty(ZooProcessor::NumberOfLegsService.name, "duck"));
     controller.trigger();
     CHECK(LogTestController::getInstance()
-            .contains("[org::apache::nifi::minifi::api_sandbox::ZooProcessor] [critical] Can dog_with_jetpack fly? true"));
-    CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_sandbox::ZooProcessor] [critical] duck has 2 legs"));
+            .contains("[org::apache::nifi::minifi::api_testing::ZooProcessor] [critical] Can dog_with_jetpack fly? true"));
+    CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_testing::ZooProcessor] [critical] duck has 2 legs"));
   }
   {
     LogTestController::getInstance().clear();
     CHECK(controller.getProcessor()->setProperty(ZooProcessor::CanFlyService.name, "duck"));
     CHECK(controller.getProcessor()->setProperty(ZooProcessor::NumberOfLegsService.name, "dog_with_jetpack"));
     controller.trigger();
-    CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_sandbox::ZooProcessor] [critical] Can duck fly? true"));
-    CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_sandbox::ZooProcessor] [critical] dog_with_jetpack has 4 legs"));
+    CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_testing::ZooProcessor] [critical] Can duck fly? true"));
+    CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_testing::ZooProcessor] [critical] dog_with_jetpack has 4 legs"));
   }
   {
     LogTestController::getInstance().clear();
     CHECK(controller.getProcessor()->setProperty(ZooProcessor::CanFlyService.name, "duck"));
     CHECK(controller.getProcessor()->setProperty(ZooProcessor::NumberOfLegsService.name, "invalid"));
     controller.trigger();
-    CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_sandbox::ZooProcessor] [critical] Can duck fly? true"));
+    CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_testing::ZooProcessor] [critical] Can duck fly? true"));
   }
 }
 
-}  // namespace org::apache::nifi::minifi::api_sandbox::test
+}  // namespace org::apache::nifi::minifi::api_testing::test

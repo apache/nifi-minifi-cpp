@@ -15,16 +15,21 @@
  * limitations under the License.
  */
 
-#include "AnimalControllerServices.h"
+#pragma once
 
-#include "api/utils/ProcessorConfigUtils.h"
-namespace org::apache::nifi::minifi::api_sandbox {
+#include <cinttypes>
 
-MinifiStatus DogController::enableImpl(api::core::ControllerServiceContext& ctx) {
-  this->has_jetpack_ = ctx.getProperty(HasJetpack) | minifi::utils::andThen(parsing::parseBool) |
-      minifi::utils::orThrow(fmt::format("Expected parsable bool from \"{}\"", HasJetpack.name));
+namespace org::apache::nifi::minifi::api_testing {
+class NumberOfLegsControllerApi {
+ public:
+  virtual ~NumberOfLegsControllerApi() = default;
+  virtual uint8_t numberOfLegs() const = 0;
+};
 
-  return MINIFI_STATUS_SUCCESS;
-}
+class CanFlyControllerApi {
+ public:
+  virtual ~CanFlyControllerApi() = default;
+  virtual bool canFly() const = 0;
+};
 
-}  // namespace org::apache::nifi::minifi::api_sandbox
+}  // namespace org::apache::nifi::minifi::api_testing

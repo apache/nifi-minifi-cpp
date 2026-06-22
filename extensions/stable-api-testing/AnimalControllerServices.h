@@ -23,7 +23,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/ProvidedControllerServiceInterface.h"
 
-namespace org::apache::nifi::minifi::api_sandbox {
+namespace org::apache::nifi::minifi::api_testing {
 class DogController : public api::core::ControllerServiceImpl, public CanFlyControllerApi, public NumberOfLegsControllerApi {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Test DogController";
@@ -64,4 +64,4 @@ class DuckController : public api::core::ControllerServiceImpl, public CanFlyCon
   uint8_t numberOfLegs() const override { return 2; }
   bool canFly() const override { return true; }
 };
-}  // namespace org::apache::nifi::minifi::api_sandbox
+}  // namespace org::apache::nifi::minifi::api_testing

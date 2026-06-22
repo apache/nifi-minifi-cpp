@@ -33,6 +33,6 @@ CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* extension_context
       .deinit = nullptr,
       .user_data = nullptr};
   auto* extension = MinifiRegisterExtension(extension_context, &extension_definition);
-  minifi::api::core::registerProcessors<minifi::api_sandbox::ZooProcessor>(extension);
-  minifi::api::core::registerControllerServices<minifi::api_sandbox::DogController, minifi::api_sandbox::DuckController>(extension);
+  minifi::api::core::registerProcessors<minifi::api_testing::ZooProcessor>(extension);
+  minifi::api::core::registerControllerServices<minifi::api_testing::DogController, minifi::api_testing::DuckController>(extension);
 }

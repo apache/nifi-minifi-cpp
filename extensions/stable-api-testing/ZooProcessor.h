@@ -23,7 +23,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/Annotation.h"
 
-namespace org::apache::nifi::minifi::api_sandbox {
+namespace org::apache::nifi::minifi::api_testing {
 
 class ZooProcessor : public api::core::ProcessorImpl {
  public:
@@ -62,4 +62,4 @@ class ZooProcessor : public api::core::ProcessorImpl {
   MinifiStatus onScheduleImpl(api::core::ProcessContext&) override;
 };
 
-}  // namespace org::apache::nifi::minifi::api_sandbox
+}  // namespace org::apache::nifi::minifi::api_testing
