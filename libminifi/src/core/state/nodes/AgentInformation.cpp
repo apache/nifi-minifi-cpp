@@ -97,7 +97,6 @@ void serializeClassDescription(const std::vector<ClassDescription>& descriptions
           SerializedResponseNode allowed_type_node;
           allowed_type_node.name = "typeProvidedByValue";
           for (const auto &allowed_type : allowed_types) {
-            std::string class_name = utils::string::split(allowed_type, "::").back();
             std::string typeClazz = allowed_type;
             utils::string::replaceAll(typeClazz, "::", ".");
             allowed_type_node.children.push_back({.name = "type", .value = typeClazz});
