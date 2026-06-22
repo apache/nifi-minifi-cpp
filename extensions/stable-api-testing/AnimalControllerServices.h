@@ -24,6 +24,7 @@
 #include "minifi-cpp/core/ProvidedControllerServiceInterface.h"
 
 namespace org::apache::nifi::minifi::api_testing {
+/// DogController and DuckController are testing that one ControllerService type can implement multiple interfaces
 class DogController : public api::core::ControllerServiceImpl, public CanFlyControllerApi, public NumberOfLegsControllerApi {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Test DogController";
