@@ -37,19 +37,19 @@ utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
 std::mutex AgentStatus::cpu_load_tracker_mutex_;
 
 namespace {
+constexpr std::string_view shortNameFromFullName(std::string_view sv) {
+  auto pos = sv.rfind('.');
+  return (pos == std::string_view::npos) ? sv : sv.substr(pos + 1);
+}
 
 std::string allowedTypeGroupName(const std::string_view allowed_type) {
   constexpr std::string_view APACHE_GROUP_STR = "org.apache.nifi.minifi";
   if (allowed_type.starts_with(APACHE_GROUP_STR)) {
     return std::string{APACHE_GROUP_STR};
   }
-  return std::string{allowed_type.substr(0, allowed_type.find_last_of('.'))};
+  return std::string{shortNameFromFullName(allowed_type)};
 }
 
-constexpr std::string_view shortNameFromFullName(std::string_view sv) {
-  auto pos = sv.rfind('.');
-  return (pos == std::string_view::npos) ? sv : sv.substr(pos + 1);
-}
 
 bool minifiSystemAllowedType(const std::string_view allowed_type) {
   constexpr auto system_allowed_types = std::to_array<std::string_view>({
