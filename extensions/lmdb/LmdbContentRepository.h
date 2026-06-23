@@ -39,8 +39,10 @@ class LmdbContentRepository : public core::ContentRepositoryImpl {
 
   ~LmdbContentRepository() override {
     stop();
-    mdb_dbi_close(lmdb_env_, lmdb_handle_);
-    mdb_env_close(lmdb_env_);
+    if (lmdb_env_) {
+      mdb_dbi_close(lmdb_env_, lmdb_handle_);
+      mdb_env_close(lmdb_env_);
+    }
   }
 
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
