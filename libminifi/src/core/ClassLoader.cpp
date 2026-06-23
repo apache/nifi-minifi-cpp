@@ -18,14 +18,13 @@
 #include "core/ClassLoader.h"
 
 #include <memory>
+#include <ranges>
 #include <string>
 
-#include "core/logging/LoggerFactory.h"
-#include "range/v3/action/sort.hpp"
-#include "range/v3/action/unique.hpp"
+#include "core/ObjectFactory.h"
 #include "core/Processor.h"
 #include "core/controller/ControllerService.h"
-#include "core/ObjectFactory.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -125,7 +124,7 @@ class ProcessorFactoryWrapper : public ObjectFactoryImpl {
 
   [[nodiscard]] gsl::owner<CoreComponent*> createRaw(const std::string &name, const utils::Identifier &uuid) override {
     auto logger = logging::LoggerFactoryBase::getAliasedLogger(getClassName(), uuid);
-    return new Processor(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)}));
+    return gsl::owner<CoreComponent*>{new Processor(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)}))};
   }
 
   [[nodiscard]] std::string getModuleName() const override {
@@ -160,7 +159,7 @@ class ControllerServiceFactoryWrapper : public ObjectFactoryImpl {
 
   [[nodiscard]] gsl::owner<CoreComponent*> createRaw(const std::string &name, const utils::Identifier &uuid) override {
     auto logger = logging::LoggerFactoryBase::getAliasedLogger(getClassName(), uuid);
-    return new controller::ControllerService(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)}));
+    return gsl::owner<CoreComponent*>{new controller::ControllerService(name, uuid, factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)}))};
   }
 
   [[nodiscard]] std::string getModuleName() const override {
@@ -196,9 +195,8 @@ void ClassLoaderImpl::unregisterClass(const std::string& clazz) {
 
 std::optional<std::string> ClassLoaderImpl::getModuleForClass(const std::string_view class_name) const {
   std::lock_guard<std::mutex> lock(internal_mutex_);
-  for (const auto& child_loader : class_loaders_) {
-    std::optional<std::string> group = child_loader.second.getModuleForClass(class_name);
-    if (group) {
+  for (const auto &val : class_loaders_ | std::views::values) {
+    if (std::optional<std::string> group = val.getModuleForClass(class_name)) {
       return group;
     }
   }
@@ -212,8 +210,8 @@ std::optional<std::string> ClassLoaderImpl::getModuleForClass(const std::string_
 std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   // allow subsequent classes to override functionality
-  for (auto& child_loader : class_loaders_) {
-    if (auto result = child_loader.second.instantiate(class_name, name, filter)) {
+  for (auto &val : class_loaders_ | std::views::values) {
+    if (auto result = val.instantiate(class_name, name, filter)) {
       return result;
     }
   }
@@ -230,8 +228,8 @@ std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &c
 std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &class_name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   // allow subsequent classes to override functionality
-  for (auto& child_loader : class_loaders_) {
-    if (auto result = child_loader.second.instantiate(class_name, uuid, filter)) {
+  for (auto &val : class_loaders_ | std::views::values) {
+    if (auto result = val.instantiate(class_name, uuid, filter)) {
       return result;
     }
   }
@@ -248,8 +246,8 @@ std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &c
 std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &class_name, const std::string &name, const utils::Identifier &uuid, std::function<bool(CoreComponent*)> filter) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   // allow subsequent classes to override functionality
-  for (auto& child_loader : class_loaders_) {
-    if (auto result = child_loader.second.instantiate(class_name, name, uuid, filter)) {
+  for (auto &val : class_loaders_ | std::views::values) {
+    if (auto result = val.instantiate(class_name, name, uuid, filter)) {
       return result;
     }
   }
@@ -266,8 +264,8 @@ std::unique_ptr<CoreComponent> ClassLoaderImpl::instantiate(const std::string &c
 gsl::owner<CoreComponent*> ClassLoaderImpl::instantiateRaw(const std::string &class_name, const std::string &name, std::function<bool(CoreComponent*)> filter) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   // allow subsequent classes to override functionality
-  for (auto& child_loader : class_loaders_) {
-    if (gsl::owner<CoreComponent*> result = child_loader.second.instantiateRaw(class_name, name, filter)) {
+  for (auto &val : class_loaders_ | std::views::values) {
+    if (gsl::owner<CoreComponent*> result = val.instantiateRaw(class_name, name, filter)) {
       return result;
     }
   }
@@ -277,7 +275,7 @@ gsl::owner<CoreComponent*> ClassLoaderImpl::instantiateRaw(const std::string &cl
     if (filter(obj)) {
       return obj;
     }
-    delete obj;
+    delete gsl::owner<CoreComponent*>{obj};
   }
   return nullptr;
 }
