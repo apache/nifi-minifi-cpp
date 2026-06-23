@@ -29,7 +29,6 @@
 #include "minifi-cpp/controllers/RecordSetWriter.h"
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "utils/OsUtils.h"
-#include "range/v3/algorithm/contains.hpp"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -52,13 +51,11 @@ constexpr std::string_view shortNameFromFullName(std::string_view sv) {
 }
 
 bool minifiSystemAllowedType(const std::string_view allowed_type) {
-  constexpr auto system_allowed_types = std::to_array<std::string_view>({
-      controllers::SSLContextServiceInterface::ProvidesApi.type,
-      core::RecordSetWriter::ProvidesApi.type,
-      core::RecordSetReader::ProvidesApi.type,
-      controllers::ProxyConfigurationServiceInterface::ProvidesApi.type,
-      controllers::AttributeProviderService::ProvidesApi.type});
-  return ranges::contains(system_allowed_types, allowed_type);
+  return allowed_type == controllers::SSLContextServiceInterface::ProvidesApi.type
+      || allowed_type == core::RecordSetWriter::ProvidesApi.type
+      || allowed_type == core::RecordSetReader::ProvidesApi.type
+      || allowed_type == controllers::ProxyConfigurationServiceInterface::ProvidesApi.type
+      || allowed_type == controllers::AttributeProviderService::ProvidesApi.type;
 }
 
 std::string allowedTypeArtifactName(const std::string_view allowed_type, const std::string_view prop_owner_type) {
