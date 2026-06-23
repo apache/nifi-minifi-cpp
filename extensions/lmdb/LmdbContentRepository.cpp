@@ -18,9 +18,11 @@
 #include "LmdbContentRepository.h"
 
 #include <filesystem>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "LmdbStream.h"
 #include "core/Resource.h"
@@ -79,6 +81,7 @@ bool LmdbContentRepository::initialize(const std::shared_ptr<minifi::Configure>&
   if (!max_db_size) {
     logger_->log_error("Invalid max DB size configuration for LMDB Content Repository");
     mdb_env_close(lmdb_env_);
+    lmdb_env_ = nullptr;
     return false;
   }
 
@@ -100,12 +103,16 @@ bool LmdbContentRepository::initialize(const std::shared_ptr<minifi::Configure>&
     logger_->log_info("Creating LMDB Content Repository directory at {}", directory_);
     if (!std::filesystem::create_directories(directory_)) {
       logger_->log_error("Failed to create LMDB Content Repository directory at {}", directory_);
+      mdb_env_close(lmdb_env_);
+      lmdb_env_ = nullptr;
       return false;
     }
   }
 
   if (const int rc = mdb_env_open(lmdb_env_, directory_.c_str(), MDB_NOTLS, 0664)) {
     logger_->log_error("Failed to open LMDB environment: {}", mdb_strerror(rc));
+    mdb_env_close(lmdb_env_);
+    lmdb_env_ = nullptr;
     return false;
   }
 
@@ -113,18 +120,21 @@ bool LmdbContentRepository::initialize(const std::shared_ptr<minifi::Configure>&
   if (const int rc = mdb_txn_begin(lmdb_env_, nullptr, 0, &init_txn); rc != MDB_SUCCESS) {
     logger_->log_error("Failed to begin LMDB transaction during initialize: {}", mdb_strerror(rc));
     mdb_env_close(lmdb_env_);
+    lmdb_env_ = nullptr;
     return false;
   }
   if (const int rc = mdb_dbi_open(init_txn, nullptr, 0, &lmdb_handle_); rc != MDB_SUCCESS) {
     logger_->log_error("Failed to open LMDB database: {}", mdb_strerror(rc));
     mdb_txn_abort(init_txn);
     mdb_env_close(lmdb_env_);
+    lmdb_env_ = nullptr;
     return false;
   }
 
   if (const int rc = mdb_txn_commit(init_txn); rc != MDB_SUCCESS) {
     logger_->log_error("Failed to commit LMDB transaction during initialize: {}", mdb_strerror(rc));
     mdb_env_close(lmdb_env_);
+    lmdb_env_ = nullptr;
     return false;
   }
 
@@ -195,41 +205,41 @@ bool LmdbContentRepository::removeKey(const std::string& content_path) {
 void LmdbContentRepository::clearOrphans() {
   std::vector<std::string> keys_to_be_deleted;
 
-  MDB_txn* txn = nullptr;
-  if (const int rc = mdb_txn_begin(lmdb_env_, nullptr, MDB_RDONLY, &txn); rc != MDB_SUCCESS) {
-    logger_->log_error("Failed to begin LMDB read transaction in clearOrphans: {}", mdb_strerror(rc));
-    return;
-  }
-
-  MDB_cursor* cursor = nullptr;
-  if (const int rc = mdb_cursor_open(txn, lmdb_handle_, &cursor); rc != MDB_SUCCESS) {
-    logger_->log_error("Failed to open LMDB cursor in clearOrphans: {}", mdb_strerror(rc));
-    mdb_txn_abort(txn);
-    return;
-  }
-
-  MDB_val key{};
-  MDB_val val{};
-  int rc = mdb_cursor_get(cursor, &key, &val, MDB_FIRST);
-
-  while (rc == MDB_SUCCESS) {
-    std::string key_string = std::string(static_cast<char*>(key.mv_data), key.mv_size);
-
-    std::lock_guard<std::mutex> lock(count_map_mutex_);
-    auto claim_it = count_map_.find(key_string);
-    if (claim_it == count_map_.end() || claim_it->second == 0) {
-      logger_->log_error("Deleting orphan resource {}", key_string);
-      keys_to_be_deleted.push_back(key_string);
+  {
+    MDB_txn* txn = nullptr;
+    if (const int rc = mdb_txn_begin(lmdb_env_, nullptr, MDB_RDONLY, &txn); rc != MDB_SUCCESS) {
+      logger_->log_error("Failed to begin LMDB read transaction in clearOrphans: {}", mdb_strerror(rc));
+      return;
     }
-    rc = mdb_cursor_get(cursor, &key, &val, MDB_NEXT);
-  }
+    auto txn_guard = gsl::finally([txn] { mdb_txn_abort(txn); });
 
-  mdb_cursor_close(cursor);
-  mdb_txn_abort(txn);
+    MDB_cursor* cursor = nullptr;
+    if (const int rc = mdb_cursor_open(txn, lmdb_handle_, &cursor); rc != MDB_SUCCESS) {
+      logger_->log_error("Failed to open LMDB cursor in clearOrphans: {}", mdb_strerror(rc));
+      return;
+    }
+    auto cursor_guard = gsl::finally([cursor] { mdb_cursor_close(cursor); });
 
-  if (rc != MDB_NOTFOUND) {
-    logger_->log_error("Failed to iterate over LMDB database: {}", mdb_strerror(rc));
-    return;
+    MDB_val key{};
+    MDB_val val{};
+    int rc = mdb_cursor_get(cursor, &key, &val, MDB_FIRST);
+
+    while (rc == MDB_SUCCESS) {
+      std::string key_string = std::string(static_cast<char*>(key.mv_data), key.mv_size);
+
+      std::lock_guard<std::mutex> lock(count_map_mutex_);
+      auto claim_it = count_map_.find(key_string);
+      if (claim_it == count_map_.end() || claim_it->second == 0) {
+        logger_->log_debug("Deleting orphan resource {}", key_string);
+        keys_to_be_deleted.push_back(key_string);
+      }
+      rc = mdb_cursor_get(cursor, &key, &val, MDB_NEXT);
+    }
+
+    if (rc != MDB_NOTFOUND) {
+      logger_->log_error("Failed to iterate over LMDB database: {}", mdb_strerror(rc));
+      return;
+    }
   }
 
   std::vector<std::string> failed_deletions;

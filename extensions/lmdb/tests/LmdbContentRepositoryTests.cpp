@@ -17,6 +17,7 @@
  */
 
 #include <filesystem>
+#include <fstream>
 
 #include "LmdbContentRepository.h"
 #include "ResourceClaim.h"
@@ -84,6 +85,22 @@ TEST_CASE("Initialize succeeds when target directory already exists", "[lmdb]") 
   auto content_repo = std::make_shared<core::repository::LmdbContentRepository>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, db_path.string());
   REQUIRE(content_repo->initialize(configuration));
+}
+
+TEST_CASE("Initialize fails and is safe to destroy when the directory path is a regular file", "[lmdb]") {
+  TestController controller;
+  const auto file_path = controller.createTempDirectory() / "not_a_directory";
+  {
+    std::ofstream file(file_path);
+    file << "this is a regular file, not a directory";
+  }
+  REQUIRE(std::filesystem::is_regular_file(file_path));
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, file_path.string());
+
+  auto content_repo = std::make_shared<core::repository::LmdbContentRepository>();
+  REQUIRE_FALSE(content_repo->initialize(configuration));
 }
 
 TEST_CASE_METHOD(LmdbContentRepositoryTests, "Key does not exist in empty database", "[lmdb]") {
