@@ -1,0 +1,112 @@
+diff --git a/libraries/liblmdb/mdb.c b/libraries/liblmdb/mdb.c
+index 5a06d7b..2c35abf 100644
+--- a/libraries/liblmdb/mdb.c
++++ b/libraries/liblmdb/mdb.c
+@@ -42,6 +42,7 @@
+ #include <malloc.h>
+ #include <windows.h>
+ #include <wchar.h>				/* get wcscpy() */
++#include <winternl.h>
+ 
+ /* We use native NT APIs to setup the memory map, so that we can
+  * let the DB file grow incrementally instead of always preallocating
+@@ -52,31 +53,31 @@
+  * NTDLL.DLL at runtime, to avoid buildtime dependencies on any
+  * NTDLL import libraries.
+  */
+-typedef NTSTATUS (WINAPI NtCreateSectionFunc)
++typedef NTSTATUS (WINAPI MDB_NtCreateSectionFunc)
+   (OUT PHANDLE sh, IN ACCESS_MASK acc,
+   IN void * oa OPTIONAL,
+   IN PLARGE_INTEGER ms OPTIONAL,
+   IN ULONG pp, IN ULONG aa, IN HANDLE fh OPTIONAL);
+ 
+-static NtCreateSectionFunc *NtCreateSection;
++static MDB_NtCreateSectionFunc *MDB_NtCreateSection;
+ 
+ typedef enum _SECTION_INHERIT {
+ 	ViewShare = 1,
+ 	ViewUnmap = 2
+ } SECTION_INHERIT;
+ 
+-typedef NTSTATUS (WINAPI NtMapViewOfSectionFunc)
++typedef NTSTATUS (WINAPI MDB_NtMapViewOfSectionFunc)
+   (IN PHANDLE sh, IN HANDLE ph,
+   IN OUT PVOID *addr, IN ULONG_PTR zbits,
+   IN SIZE_T cs, IN OUT PLARGE_INTEGER off OPTIONAL,
+   IN OUT PSIZE_T vs, IN SECTION_INHERIT ih,
+   IN ULONG at, IN ULONG pp);
+ 
+-static NtMapViewOfSectionFunc *NtMapViewOfSection;
++static MDB_NtMapViewOfSectionFunc *MDB_NtMapViewOfSection;
+ 
+-typedef NTSTATUS (WINAPI NtCloseFunc)(HANDLE h);
++typedef NTSTATUS (WINAPI MDB_NtCloseFunc)(HANDLE h);
+ 
+-static NtCloseFunc *NtClose;
++static MDB_NtCloseFunc *MDB_NtClose;
+ 
+ /** getpid() returns int; MinGW defines pid_t but MinGW64 typedefs it
+  *  as int64 which is wrong. MSVC doesn't define it at all, so just
+@@ -5060,22 +5061,22 @@ mdb_env_map(MDB_env *env, void *addr)
+ 	LARGE_INTEGER fsize;
+ 	fsize.LowPart = msize & 0xffffffff;
+ 	fsize.HighPart = msize >> 16 >> 16;
+-	rc = NtCreateSection(&mh, access, NULL, &fsize, secprot, SEC_RESERVE, env->me_fd);
++	rc = MDB_NtCreateSection(&mh, access, NULL, &fsize, secprot, SEC_RESERVE, env->me_fd);
+ #else
+-	rc = NtCreateSection(&mh, access, NULL, NULL, secprot, SEC_RESERVE, env->me_fd);
++	rc = MDB_NtCreateSection(&mh, access, NULL, NULL, secprot, SEC_RESERVE, env->me_fd);
+ #endif
+ 	if (rc)
+ 		return mdb_nt2win32(rc);
+ 	map = addr;
+ 	if (MDB_REMAPPING(env->me_flags))
+ 		msize = NUM_METAS * env->me_psize;
+-	rc = NtMapViewOfSection(mh, GetCurrentProcess(), &map, 0, 0, NULL, &msize, ViewUnmap, alloctype, pageprot);
++	rc = MDB_NtMapViewOfSection(mh, GetCurrentProcess(), &map, 0, 0, NULL, &msize, ViewUnmap, alloctype, pageprot);
+ #if MDB_RPAGE_CACHE
+ 	if (MDB_REMAPPING(env->me_flags))
+ 		env->me_fmh = mh;
+ 	else
+ #endif
+-		NtClose(mh);
++		MDB_NtClose(mh);
+ 	if (rc)
+ 		return mdb_nt2win32(rc);
+ 	env->me_map = map;
+@@ -5435,18 +5436,18 @@ mdb_env_open2(MDB_env *env, int prev)
+ 	else
+ 		env->me_pidquery = PROCESS_QUERY_INFORMATION;
+ 	/* Grab functions we need from NTDLL */
+-	if (!NtCreateSection) {
++	if (!MDB_NtCreateSection) {
+ 		HMODULE h = GetModuleHandleW(L"NTDLL.DLL");
+ 		if (!h)
+ 			return MDB_PROBLEM;
+-		NtClose = (NtCloseFunc *)GetProcAddress(h, "NtClose");
+-		if (!NtClose)
++		MDB_NtClose = (MDB_NtCloseFunc *)GetProcAddress(h, "NtClose");
++		if (!MDB_NtClose)
+ 			return MDB_PROBLEM;
+-		NtMapViewOfSection = (NtMapViewOfSectionFunc *)GetProcAddress(h, "NtMapViewOfSection");
+-		if (!NtMapViewOfSection)
++		MDB_NtMapViewOfSection = (MDB_NtMapViewOfSectionFunc *)GetProcAddress(h, "NtMapViewOfSection");
++		if (!MDB_NtMapViewOfSection)
+ 			return MDB_PROBLEM;
+-		NtCreateSection = (NtCreateSectionFunc *)GetProcAddress(h, "NtCreateSection");
+-		if (!NtCreateSection)
++		MDB_NtCreateSection = (MDB_NtCreateSectionFunc *)GetProcAddress(h, "NtCreateSection");
++		if (!MDB_NtCreateSection)
+ 			return MDB_PROBLEM;
+ 	}
+ 	env->me_ovs = 0;
+@@ -6909,7 +6910,7 @@ mdb_rpage_get(MDB_txn *txn, pgno_t pg0, int numpgs, MDB_page **ret)
+ #define SET_OFF(off,val)	off.QuadPart = val
+ #define MAP(rc,env,addr,len,off)	\
+ 	addr = NULL; \
+-	rc = NtMapViewOfSection(env->me_fmh, GetCurrentProcess(), &addr, 0, \
++	rc = MDB_NtMapViewOfSection(env->me_fmh, GetCurrentProcess(), &addr, 0, \
+ 		len, &off, &len, ViewUnmap, (env->me_flags & MDB_RDONLY) ? 0 : MEM_RESERVE, PAGE_READONLY); \
+ 	if (rc) rc = mdb_nt2win32(rc)
+ #else

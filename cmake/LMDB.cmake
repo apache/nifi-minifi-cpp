@@ -17,9 +17,16 @@
 
 include(FetchContent)
 
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/lmdb/add-cmake-file.patch")
-set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/lmdb/add-cmake-file.patch")
+if (WIN32)
+    set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/lmdb/fix-windows-symbols.patch")
+    set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
+else()
+    set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\")")
+endif()
 
 FetchContent_Declare(
         lmdb
@@ -30,15 +37,6 @@ FetchContent_Declare(
         SYSTEM
 )
 
-if (WIN32)
-    get_directory_property(MINIFI_SAVED_COMPILE_DEFS COMPILE_DEFINITIONS)
-    remove_definitions(-DWIN32_LEAN_AND_MEAN)
-endif()
-
 FetchContent_MakeAvailable(lmdb)
-
-if (WIN32)
-    set_directory_properties(PROPERTIES COMPILE_DEFINITIONS "${MINIFI_SAVED_COMPILE_DEFS}")
-endif()
 
 set(LMDB_INCLUDE_DIR "${lmdb_SOURCE_DIR}/libraries/liblmdb")
