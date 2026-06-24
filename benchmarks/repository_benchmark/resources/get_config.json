@@ -1,0 +1,69 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "{{ get_file_interval }} sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Update flow file attributes",
+                "identifier": "69ea76e6-e872-460f-8d24-ef8fc80b51b6",
+                "type": "org.apache.nifi.processors.standard.UpdateAttribute",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "flow_file_count": "${nextInt()}"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "LogAttribute",
+                "identifier": "e143601d-de4f-44ba-a6ec-d1f97d77ec94",
+                "type": "org.apache.nifi.processors.standard.LogAttribute",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                },
+                "autoTerminatedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "098a56ba-f4bf-4323-a3f3-6f8a5e3586bf",
+                "name": "GetFile/success/UpdateAttribute",
+                "source": {
+                    "id": "2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27"
+                },
+                "destination": {
+                    "id": "69ea76e6-e872-460f-8d24-ef8fc80b51b6"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            },
+            {
+                "identifier": "198a56ba-f4bf-4323-a3f3-6f8a5e3586bf",
+                "name": "UpdateAttribute/success/LogAttribute",
+                "source": {
+                    "id": "69ea76e6-e872-460f-8d24-ef8fc80b51b6"
+                },
+                "destination": {
+                    "id": "e143601d-de4f-44ba-a6ec-d1f97d77ec94"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}
