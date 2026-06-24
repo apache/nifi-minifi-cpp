@@ -65,12 +65,12 @@ bool operator!=(const PropertiesFile& left, const PropertiesFile& right) { retur
 
 TEST_CASE("PropertiesFileEncryptor can find the list of sensitive properties", "[encrypt-config][getSensitiveProperties]") {
   SECTION("default properties") {
-    const auto sensitive_properties = minifi::encrypt_config::getSensitiveProperties(std::filesystem::path{"resources"} / "minifi.properties");
+    const auto sensitive_properties = minifi::encrypt_config::getSensitiveProperties(std::filesystem::path("resources") / "minifi.properties");
     CHECK(sensitive_properties == std::vector<std::string>{Configuration::nifi_rest_api_password});
   }
 
   SECTION("with additional properties") {
-    const auto sensitive_properties = minifi::encrypt_config::getSensitiveProperties(std::filesystem::path{"resources"} / "with-additional-sensitive-props.minifi.properties");
+    const auto sensitive_properties = minifi::encrypt_config::getSensitiveProperties(std::filesystem::path("resources") / "with-additional-sensitive-props.minifi.properties");
     CHECK(sensitive_properties == std::vector<std::string>{Configuration::nifi_c2_enable, Configuration::nifi_flow_configuration_file,
         Configuration::nifi_rest_api_password, Configuration::nifi_security_client_pass_phrase});
   }
