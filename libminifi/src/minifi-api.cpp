@@ -23,7 +23,6 @@
 #include "core/ProcessorMetrics.h"
 #include "core/extension/ExtensionManager.h"
 #include "minifi-c/minifi-api.h"
-#include "minifi-cpp/Exception.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "minifi-cpp/core/Annotation.h"
@@ -226,7 +225,7 @@ void useCProcessorClassDescription(const minifi_processor_class_definition& clas
     output_attribute.description = toString(class_description.output_attributes_ptr[attribute_idx].description);
     for (size_t rel_idx = 0; rel_idx < class_description.output_attributes_ptr[attribute_idx].relationships_count; ++rel_idx) {
       auto output_attribute_rel_name = toStringView(class_description.output_attributes_ptr[attribute_idx].relationships_ptr[rel_idx]);
-      auto rel_it = std::find(relationships.begin(), relationships.end(), minifi::core::Relationship{std::string{output_attribute_rel_name}, ""});
+      auto rel_it = std::ranges::find(relationships, minifi::core::Relationship{std::string{output_attribute_rel_name}, ""});
       gsl_Assert(rel_it != relationships.end());
       output_attribute.relationships.push_back(*rel_it);
     }
@@ -266,7 +265,7 @@ void useCProcessorClassDescription(const minifi_processor_class_definition& clas
   fn(description, c_class_description);
 }
 
-void useCControllerServiceClassDescription(const minifi_controller_service_class_definition& class_description,
+void useCControllerServiceClassDescription(const std::string_view bundle_name, const minifi_controller_service_class_definition& class_description,
     const std::function<void(const ClassDescription&, CControllerServiceClassDescription)>& fn) {
   std::vector<minifi::core::Property> properties;
   properties.reserve(class_description.properties_count);
@@ -281,7 +280,10 @@ void useCControllerServiceClassDescription(const minifi_controller_service_class
   implements_apis.reserve(class_description.provided_interfaces_count);
   for (size_t i = 0; i < class_description.provided_interfaces_count; ++i) {
     auto api_segments = string::split(toStringView(class_description.provided_interfaces_ptr[i]), "::");
-    implements_apis.push_back(core::ControllerServiceType::minifiSystemControllerServiceType(string::join(".", api_segments)));
+    std::string type_name = string::join(".", api_segments);
+    api_segments.pop_back();
+    std::string group_name = string::join(".", api_segments);
+    implements_apis.emplace_back(std::string{bundle_name}, std::move(group_name), std::move(type_name));
   }
 
   ClassDescription description{
@@ -354,7 +356,7 @@ minifi_status minifi_register_controller_service(minifi_extension* extension, co
     .version = extension_info->version
   };
   auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[bundle];
-  minifi::utils::useCControllerServiceClassDescription(*controller_service, [&] (const auto& description, const auto& c_class_description) {
+  minifi::utils::useCControllerServiceClassDescription(bundle.name, *controller_service, [&] (const auto& description, const auto& c_class_description) {
     minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_info->name).registerClass(
       description.short_name_,
       std::make_unique<CControllerServiceFactory>(extension_info->name, toString(controller_service->full_name), c_class_description));
