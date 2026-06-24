@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -15,25 +15,16 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "AnimalControllerServices.h"
 
-#include <memory>
-#include <string>
-#include <utility>
+#include "api/utils/ProcessorConfigUtils.h"
+namespace org::apache::nifi::minifi::api_testing {
 
-#include "minifi-cpp/core/ControllerServiceMetadata.h"
+MinifiStatus DogController::enableImpl(api::core::ControllerServiceContext& ctx) {
+  this->has_jetpack_ = ctx.getProperty(HasJetpack) | minifi::utils::andThen(parsing::parseBool) |
+      minifi::utils::orThrow(fmt::format("Expected parsable bool from \"{}\"", HasJetpack.name));
 
-namespace org::apache::nifi::minifi::core::controller {
+  return MINIFI_STATUS_SUCCESS;
+}
 
-class ControllerServiceApi;
-
-class ControllerServiceFactory {
- public:
-  virtual std::unique_ptr<ControllerServiceApi> create(ControllerServiceMetadata metadata) = 0;
-  virtual std::string getModuleName() const = 0;
-  virtual std::string getClassName() const = 0;
-
-  virtual ~ControllerServiceFactory() = default;
-};
-
-}  // namespace org::apache::nifi::minifi::core::controller
+}  // namespace org::apache::nifi::minifi::api_testing

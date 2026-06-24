@@ -1,6 +1,6 @@
 BasedOnStyle: Google
 AccessModifierOffset: -1
-AlignAfterOpenBracket: DontAlign
+AlignAfterOpenBracket: false
 AlignConsecutiveAssignments: None
 AlignOperands: DontAlign
 AllowAllParametersOfDeclarationOnNextLine: true
@@ -31,7 +31,7 @@ MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: false
-PenaltyIndentedWhitespace: 1
+PenaltyIndentedWhitespace: 10
 PointerAlignment: Left
 ReferenceAlignment: Left
 ReflowComments: true

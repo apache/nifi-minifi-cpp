@@ -155,8 +155,8 @@ class CProcessorFactory : public minifi::core::ProcessorFactory {
 
 class CControllerServiceFactory : public minifi::core::controller::ControllerServiceFactory {
  public:
-  CControllerServiceFactory(std::string group_name, std::string class_name, minifi::utils::CControllerServiceClassDescription class_description)
-      : group_name_(std::move(group_name)),
+  CControllerServiceFactory(std::string module_name, std::string class_name, minifi::utils::CControllerServiceClassDescription class_description)
+      : module_name_(std::move(module_name)),
         class_name_(std::move(class_name)),
         class_description_(std::move(class_description)) {}
 
@@ -164,7 +164,7 @@ class CControllerServiceFactory : public minifi::core::controller::ControllerSer
     return std::make_unique<minifi::utils::CControllerService>(class_description_, std::move(metadata));
   }
 
-  [[nodiscard]] std::string getGroupName() const override { return group_name_; }
+  [[nodiscard]] std::string getModuleName() const override { return module_name_; }
 
   [[nodiscard]] std::string getClassName() const override { return class_name_; }
 
@@ -176,7 +176,7 @@ class CControllerServiceFactory : public minifi::core::controller::ControllerSer
   ~CControllerServiceFactory() override = default;
 
  private:
-  std::string group_name_;
+  std::string module_name_;
   std::string class_name_;
   minifi::utils::CControllerServiceClassDescription class_description_;
 };
@@ -277,15 +277,23 @@ void useCControllerServiceClassDescription(const MinifiControllerServiceClassDef
   auto name_segments = minifi::utils::string::split(toStringView(class_description.full_name), "::");
   gsl_Assert(!name_segments.empty());
 
-  minifi::ClassDescription description{
-    .type_ = minifi::ResourceType::ControllerService,
-    .short_name_ = name_segments.back(),
-    .full_name_ = minifi::utils::string::join(".", name_segments),
-    .description_ = toString(class_description.description),
-    .class_properties_ = properties,
+  std::vector<core::ControllerServiceType> implements_apis;
+  implements_apis.reserve(class_description.provided_interfaces_count);
+  for (size_t i = 0; i < class_description.provided_interfaces_count; ++i) {
+    auto api_segments = string::split(toStringView(class_description.provided_interfaces_ptr[i]), "::");
+    implements_apis.push_back(core::ControllerServiceType::minifiSystemControllerServiceType(string::join(".", api_segments)));
+  }
+
+  ClassDescription description{
+      .type_ = ResourceType::ControllerService,
+      .short_name_ = name_segments.back(),
+      .full_name_ = string::join(".", name_segments),
+      .description_ = toString(class_description.description),
+      .class_properties_ = properties,
+      .api_implementations = implements_apis,
   };
 
-  minifi::utils::CControllerServiceClassDescription c_class_description{
+  CControllerServiceClassDescription c_class_description{
     .full_name = toString(class_description.full_name),
     .class_properties = properties,
     .callbacks = class_description.callbacks
@@ -611,6 +619,14 @@ MinifiStatus MinifiProcessContextGetControllerServiceFromProperty(
     const auto class_description = c_controller_service->getClassDescription();
     if (class_description.full_name == toStringView(controller_service_type)) {
       *controller_service_out = static_cast<MinifiControllerService*>(c_controller_service->getImpl());
+      return MINIFI_STATUS_SUCCESS;
+    }
+    if (class_description.callbacks.get_interface) {
+      const auto interface_res = class_description.callbacks.get_interface(c_controller_service->getImpl(), controller_service_type);
+      if (!interface_res) {
+        return MINIFI_STATUS_VALIDATION_FAILED;
+      }
+      *controller_service_out = static_cast<MinifiControllerService*>(interface_res);
       return MINIFI_STATUS_SUCCESS;
     }
   }

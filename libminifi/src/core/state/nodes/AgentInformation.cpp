@@ -17,12 +17,18 @@
  */
 #include "core/state/nodes/AgentInformation.h"
 
-#include "minifi-cpp/agent/agent_version.h"
-#include "core/Resource.h"
 #include "core/ClassLoader.h"
-#include "utils/OsUtils.h"
+#include "core/Resource.h"
 #include "core/state/nodes/SchedulingNodes.h"
 #include "core/state/nodes/SupportedOperations.h"
+#include "minifi-c/minifi-c.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "minifi-cpp/controllers/AttributeProviderService.h"
+#include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
+#include "minifi-cpp/controllers/RecordSetReader.h"
+#include "minifi-cpp/controllers/RecordSetWriter.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
+#include "utils/OsUtils.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -30,33 +36,71 @@ utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
 std::mutex AgentStatus::cpu_load_tracker_mutex_;
 
 namespace {
+
+std::string allowedTypeGroupName(const std::string_view allowed_type) {
+  constexpr std::string_view APACHE_GROUP_STR = "org.apache.nifi.minifi";
+  if (allowed_type.starts_with(APACHE_GROUP_STR)) {
+    return std::string{APACHE_GROUP_STR};
+  }
+  return std::string{allowed_type.substr(0, allowed_type.find_last_of('.'))};
+}
+
+constexpr std::string_view shortNameFromFullName(std::string_view sv) {
+  auto pos = sv.rfind('.');
+  return (pos == std::string_view::npos) ? sv : sv.substr(pos + 1);
+}
+
+bool minifiSystemAllowedType(const std::string_view allowed_type) {
+  return allowed_type == controllers::SSLContextServiceInterface::ProvidesApi.type
+      || allowed_type == core::RecordSetWriter::ProvidesApi.type
+      || allowed_type == core::RecordSetReader::ProvidesApi.type
+      || allowed_type == controllers::ProxyConfigurationServiceInterface::ProvidesApi.type
+      || allowed_type == controllers::AttributeProviderService::ProvidesApi.type;
+}
+
+std::string allowedTypeArtifactName(const std::string_view allowed_type, const std::string_view prop_owner_type) {
+  if (minifiSystemAllowedType(allowed_type)) {
+    return "minifi-system";
+  }
+
+  auto& class_loader = core::ClassLoader::getDefaultClassLoader();
+
+  if (auto allowed_type_artifact = class_loader.getModuleForClass(shortNameFromFullName(allowed_type))) {
+    return *allowed_type_artifact;
+  }
+  if (auto prop_owner_artifact = class_loader.getModuleForClass(shortNameFromFullName(prop_owner_type))) {
+    return *prop_owner_artifact;
+  }
+
+  return "minifi-system";
+}
+
 void serializeClassDescription(const std::vector<ClassDescription>& descriptions, const std::string& name, SerializedResponseNode& response) {
   if (descriptions.empty()) {
     return;
   }
   SerializedResponseNode type{.name = name, .array = true};
   std::vector<SerializedResponseNode> serialized;
-  for (const auto& group : descriptions) {
-    SerializedResponseNode desc{.name = group.full_name_};
+  for (const auto& class_description : descriptions) {
+    SerializedResponseNode desc{.name = class_description.full_name_};
 
-    if (!group.class_properties_.empty()) {
+    if (!class_description.class_properties_.empty()) {
       SerializedResponseNode props{.name = "propertyDescriptors"};
-      for (auto&& prop : group.class_properties_) {
+      for (auto&& prop : class_description.class_properties_) {
         SerializedResponseNode child = {.name = prop.getName()};
 
         const auto &allowed_types = prop.getAllowedTypes();
         if (!allowed_types.empty()) {
-          SerializedResponseNode allowed_type;
-          allowed_type.name = "typeProvidedByValue";
-          for (const auto &type : allowed_types) {
-            std::string class_name = utils::string::split(type, "::").back();
-            std::string typeClazz = type;
+          SerializedResponseNode allowed_type_node;
+          allowed_type_node.name = "typeProvidedByValue";
+          for (const auto &allowed_type : allowed_types) {
+            std::string typeClazz = allowed_type;
             utils::string::replaceAll(typeClazz, "::", ".");
-            allowed_type.children.push_back({.name = "type", .value = typeClazz});
-            allowed_type.children.push_back({.name = "group", .value = GROUP_STR});
-            allowed_type.children.push_back({.name = "artifact", .value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(class_name).value_or("minifi-system")});
+            allowed_type_node.children.push_back({.name = "type", .value = typeClazz});
+            allowed_type_node.children.push_back({.name = "group", .value = allowedTypeGroupName(typeClazz)});
+            allowed_type_node.children.push_back({.name = "artifact", .value = allowedTypeArtifactName(typeClazz, class_description.full_name_)});
           }
-          child.children.push_back(allowed_type);
+          child.children.push_back(allowed_type_node);
         }
 
         child.children.push_back({.name = "name", .value = prop.getName()});
@@ -99,12 +143,12 @@ void serializeClassDescription(const std::vector<ClassDescription>& descriptions
     }
 
     // only for processors
-    if (!group.class_relationships_.empty()) {
-      desc.children.push_back({.name = "inputRequirement", .value = group.inputRequirement_});
-      desc.children.push_back({.name = "isSingleThreaded", .value = group.isSingleThreaded_});
+    if (!class_description.class_relationships_.empty()) {
+      desc.children.push_back({.name = "inputRequirement", .value = class_description.inputRequirement_});
+      desc.children.push_back({.name = "isSingleThreaded", .value = class_description.isSingleThreaded_});
 
       SerializedResponseNode relationships{.name = "supportedRelationships", .array = true};
-      for (const auto &relationship : group.class_relationships_) {
+      for (const auto &relationship : class_description.class_relationships_) {
         SerializedResponseNode child{.name = "supportedRelationships"};
         child.children.push_back({.name = "name", .value = relationship.getName()});
         child.children.push_back({.name = "description", .value = relationship.getDescription()});
@@ -114,13 +158,13 @@ void serializeClassDescription(const std::vector<ClassDescription>& descriptions
       desc.children.push_back(relationships);
     }
 
-    desc.children.push_back({.name = "typeDescription", .value = group.description_});
-    desc.children.push_back({.name = "supportsDynamicRelationships", .value = group.supports_dynamic_relationships_});
-    desc.children.push_back({.name = "supportsDynamicProperties", .value = group.supports_dynamic_properties_});
-    desc.children.push_back({.name = "type", .value = group.full_name_});
-    if (!group.api_implementations.empty()) {
+    desc.children.push_back({.name = "typeDescription", .value = class_description.description_});
+    desc.children.push_back({.name = "supportsDynamicRelationships", .value = class_description.supports_dynamic_relationships_});
+    desc.children.push_back({.name = "supportsDynamicProperties", .value = class_description.supports_dynamic_properties_});
+    desc.children.push_back({.name = "type", .value = class_description.full_name_});
+    if (!class_description.api_implementations.empty()) {
       SerializedResponseNode provided_api_impls{.name = "providedApiImplementations", .array = true};
-      for (const auto& api_implementation : group.api_implementations) {
+      for (const auto& api_implementation : class_description.api_implementations) {
         SerializedResponseNode child{.name = std::string(api_implementation.type)};
         child.children.push_back({.name = "artifact", .value = std::string(api_implementation.artifact)});
         child.children.push_back({.name = "group", .value = std::string(api_implementation.group)});
@@ -154,12 +198,12 @@ std::vector<SerializedResponseNode> Bundles::serialize() {
     if (serialized_components[0].children.empty()) {
       continue;
     }
-
+    std::string serialized_comp_name = serialized_components[0].name;
     SerializedResponseNode serialized_bundle {
       .name = "bundles",
       .children = {
         serialized_components[0],
-        {.name = "group", .value = GROUP_STR},
+        {.name = "group", .value = allowedTypeGroupName(serialized_comp_name)},
         {.name = "artifact", .value = bundle.name},
         {.name = "version", .value = bundle.version},
       }

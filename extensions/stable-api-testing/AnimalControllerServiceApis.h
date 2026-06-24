@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -17,23 +17,19 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <utility>
+#include <cinttypes>
 
-#include "minifi-cpp/core/ControllerServiceMetadata.h"
-
-namespace org::apache::nifi::minifi::core::controller {
-
-class ControllerServiceApi;
-
-class ControllerServiceFactory {
+namespace org::apache::nifi::minifi::api_testing {
+class NumberOfLegsControllerApi {
  public:
-  virtual std::unique_ptr<ControllerServiceApi> create(ControllerServiceMetadata metadata) = 0;
-  virtual std::string getModuleName() const = 0;
-  virtual std::string getClassName() const = 0;
-
-  virtual ~ControllerServiceFactory() = default;
+  virtual ~NumberOfLegsControllerApi() = default;
+  virtual uint8_t numberOfLegs() const = 0;
 };
 
-}  // namespace org::apache::nifi::minifi::core::controller
+class CanFlyControllerApi {
+ public:
+  virtual ~CanFlyControllerApi() = default;
+  virtual bool canFly() const = 0;
+};
+
+}  // namespace org::apache::nifi::minifi::api_testing

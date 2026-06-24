@@ -1,5 +1,5 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,13 +16,12 @@
  */
 #pragma once
 
-#include "minifi-cpp/core/controller/ControllerServiceHandle.h"
+#include <expected>
+
 #include "minifi-cpp/core/ControllerServiceTypeDefinition.h"
 #include "minifi-cpp/core/Record.h"
-#include "utils/Enum.h"
-#include "utils/ProcessorConfigUtils.h"
+#include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 #include "minifi-cpp/io/InputStream.h"
-#include "minifi-cpp/agent/agent_version.h"
 
 namespace org::apache::nifi::minifi::core {
 
