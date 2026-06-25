@@ -203,6 +203,11 @@ void EncryptConfig::writeEncryptionKeyToBootstrapFile(const std::string& encrypt
 
 void EncryptConfig::encryptSensitiveValuesInMinifiProperties() const {
   const auto base_properties_file = propertiesFilePath();
+  if (!utils::file::exists(base_properties_file)) {
+    std::cout << "The minifi properties file " << base_properties_file.string() << " does not exist. Did you specify the minifi home directory correctly?\n";
+    return;
+  }
+
   const std::vector<std::string> sensitive_properties = getSensitiveProperties(base_properties_file);
   const EncryptionKeys keys = getEncryptionKeys(ENCRYPTION_KEY_PROPERTY_NAME);
 
