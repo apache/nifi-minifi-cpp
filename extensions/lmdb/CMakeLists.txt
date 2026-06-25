@@ -34,4 +34,4 @@ target_link_libraries(minifi-lmdb PUBLIC lmdb)
 target_link_libraries(minifi-lmdb PUBLIC minifi-api minifi-extension-framework)
 target_link_libraries(minifi-lmdb PRIVATE $<LINK_ONLY:core-minifi>)
 
-register_extension(minifi-lmdb "LMDB" LMDB "This Enables persistent provenance, flowfile, and content repositories using LMDB" "extensions/lmdb/tests")
+register_extension(minifi-lmdb "LMDB" LMDB "This enables persistent repositories using LMDB" "extensions/lmdb/tests")

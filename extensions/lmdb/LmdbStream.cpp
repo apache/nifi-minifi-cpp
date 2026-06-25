@@ -18,6 +18,8 @@
 
 #include "LmdbStream.h"
 
+#include <cstring>
+#include <algorithm>
 #include <string>
 #include <utility>
 
@@ -60,7 +62,6 @@ void LmdbStream::close() {
 
 bool LmdbStream::commit() {
   if (!write_enable_ || !dirty_) { return false; }
-  dirty_ = false;
 
   MDB_txn* txn = nullptr;
   auto rc = mdb_txn_begin(lmdb_env_, nullptr, 0, &txn);
@@ -83,6 +84,8 @@ bool LmdbStream::commit() {
     logger_->log_error("Failed to commit LMDB transaction during close: {}", mdb_strerror(rc));
     return false;
   }
+
+  dirty_ = false;
   return true;
 }
 
