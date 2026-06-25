@@ -1,7 +1,7 @@
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext,
-    ProcessSession, Schedule, Trigger,
+    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
+    Trigger,
 };
 use rand::RngExt;
 use rand::distr::Alphanumeric;

@@ -1,9 +1,8 @@
 use crate::api::processor_wrappers::utils::flow_file_content::Content;
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
-    Concurrent, Exclusive, GetControllerService, GetProperty, Logger,
-    MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Processor, Relationship,
-    Schedule,
+    Concurrent, Exclusive, GetControllerService, GetProperty, Logger, MinifiError, OnTriggerResult,
+    ProcessContext, ProcessSession, Processor, Relationship, Schedule,
 };
 use std::collections::HashMap;
 

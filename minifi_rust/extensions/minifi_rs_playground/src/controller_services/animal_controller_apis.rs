@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use minifi_native::macros::controller_service_api;
+use std::fmt::Debug;
 
 #[controller_service_api]
 pub trait NumberOfLegsControllerApi: Debug {

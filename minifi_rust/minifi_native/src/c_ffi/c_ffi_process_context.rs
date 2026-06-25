@@ -3,7 +3,9 @@ use super::c_ffi_primitives::StringView;
 use crate::api::ProcessContext;
 use crate::api::controller_service::ControllerService;
 use crate::c_ffi::{CffiLogger, StaticStrAsMinifiCStr};
-use crate::{ComponentIdentifier, ControllerServiceApi, EnableControllerService, MinifiError, Property};
+use crate::{
+    ComponentIdentifier, ControllerServiceApi, EnableControllerService, MinifiError, Property,
+};
 use minifi_native_sys::*;
 use std::borrow::Cow;
 use std::ffi::c_void;
@@ -153,9 +155,10 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
                 return Err(MinifiError::StatusError((
                     format!(
                         "Failed to get controller service interface <{}> for property {:?}",
-                        Trait::INTERFACE_NAME, property.name
+                        Trait::INTERFACE_NAME,
+                        property.name
                     )
-                        .into(),
+                    .into(),
                     NonZeroU32::new_unchecked(get_cs_status),
                 )));
             }
@@ -172,7 +175,7 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
         }
     }
 
-    fn report_metrics(&self, metrics: Vec<(String, f64)>) -> Result<(), MinifiError>{
+    fn report_metrics(&self, metrics: Vec<(String, f64)>) -> Result<(), MinifiError> {
         let mut keys = Vec::new();
         let mut values = Vec::new();
         for (key, value) in &metrics {
@@ -180,9 +183,17 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
             values.push(*value);
         }
         unsafe {
-            let err_code = minifi_process_context_report_metrics(self.ptr, keys.len(), keys.as_ptr() as *const minifi_string_view, values.as_ptr());
+            let err_code = minifi_process_context_report_metrics(
+                self.ptr,
+                keys.len(),
+                keys.as_ptr() as *const minifi_string_view,
+                values.as_ptr(),
+            );
             if err_code != minifi_status_MINIFI_STATUS_SUCCESS {
-                return Err(MinifiError::StatusError(("report_metrics".into(), NonZeroU32::new_unchecked(err_code))));
+                return Err(MinifiError::StatusError((
+                    "report_metrics".into(),
+                    NonZeroU32::new_unchecked(err_code),
+                )));
             }
         }
         Ok(())

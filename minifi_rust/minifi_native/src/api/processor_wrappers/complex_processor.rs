@@ -35,10 +35,7 @@ pub struct ComplexProcessorType {}
 impl<Implementation, L> SingleThreadedTrigger
     for Processor<Implementation, ComplexProcessorType, Exclusive, L>
 where
-    Implementation: Schedule
-        + MutTrigger
-        + ComponentIdentifier
-        + ProcessorDefinition,
+    Implementation: Schedule + MutTrigger + ComponentIdentifier + ProcessorDefinition,
     L: Logger,
 {
     fn trigger<PC, PS>(
@@ -63,10 +60,7 @@ where
 impl<Implementation, L> MultiThreadedTrigger
     for Processor<Implementation, ComplexProcessorType, Concurrent, L>
 where
-    Implementation: Schedule
-        + Trigger
-        + ComponentIdentifier
-        + ProcessorDefinition,
+    Implementation: Schedule + Trigger + ComponentIdentifier + ProcessorDefinition,
     L: Logger,
 {
     fn trigger<PC, PS>(

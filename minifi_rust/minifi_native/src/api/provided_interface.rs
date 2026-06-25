@@ -6,11 +6,8 @@ pub trait ControllerServiceApi {
 macro_rules! impl_interface_fqn {
     ($trait_name:ident) => {
         impl ControllerServiceApi for dyn $trait_name {
-            const INTERFACE_NAME: &'static str = concat!(
-                module_path!(),
-                "::",
-                stringify!($trait_name)
-            );
+            const INTERFACE_NAME: &'static str =
+                concat!(module_path!(), "::", stringify!($trait_name));
         }
     };
 }

@@ -1,6 +1,13 @@
 use super::c_ffi_primitives::StaticStrAsMinifiCStr;
 use crate::{Property, StandardPropertyValidator};
-use minifi_native_sys::{minifi_property_definition, minifi_validator, minifi_string_view, minifi_validator_MINIFI_VALIDATOR_ALWAYS_VALID, minifi_validator_MINIFI_VALIDATOR_BOOLEAN, minifi_validator_MINIFI_VALIDATOR_DATA_SIZE, minifi_validator_MINIFI_VALIDATOR_INTEGER, minifi_validator_MINIFI_VALIDATOR_NON_BLANK, minifi_validator_MINIFI_VALIDATOR_PORT, minifi_validator_MINIFI_VALIDATOR_TIME_PERIOD, minifi_validator_MINIFI_VALIDATOR_UNSIGNED_INTEGER};
+use minifi_native_sys::{
+    minifi_property_definition, minifi_string_view, minifi_validator,
+    minifi_validator_MINIFI_VALIDATOR_ALWAYS_VALID, minifi_validator_MINIFI_VALIDATOR_BOOLEAN,
+    minifi_validator_MINIFI_VALIDATOR_DATA_SIZE, minifi_validator_MINIFI_VALIDATOR_INTEGER,
+    minifi_validator_MINIFI_VALIDATOR_NON_BLANK, minifi_validator_MINIFI_VALIDATOR_PORT,
+    minifi_validator_MINIFI_VALIDATOR_TIME_PERIOD,
+    minifi_validator_MINIFI_VALIDATOR_UNSIGNED_INTEGER,
+};
 use std::ptr;
 
 #[allow(dead_code)] // these c_ vecs are holding the values referenced from the properties, so they live long enough for registration
@@ -94,11 +101,19 @@ impl Property {
                     description: property.description.as_minifi_c_type(),
                     is_required: property.is_required,
                     is_sensitive: property.is_sensitive,
-                    default_value: if def_value.data == std::ptr::null() { std::ptr::null() } else { def_value },
+                    default_value: if def_value.data == std::ptr::null() {
+                        std::ptr::null()
+                    } else {
+                        def_value
+                    },
                     allowed_values_count: allowed_values.len(),
                     allowed_values_ptr: allowed_values.as_ptr(),
                     validator: property.validator.as_minifi_c_type(),
-                    allowed_type: if allowed_type.data == std::ptr::null() { std::ptr::null() } else { allowed_type },
+                    allowed_type: if allowed_type.data == std::ptr::null() {
+                        std::ptr::null()
+                    } else {
+                        allowed_type
+                    },
                     supports_expression_language: property.supports_expr_lang,
                 }
             })

@@ -1,6 +1,9 @@
 use crate::api::LogLevel;
 use crate::api::Logger;
-use minifi_native_sys::{minifi_log_level, minifi_logger, minifi_logger_log_string, minifi_logger_should_log, minifi_string_view};
+use minifi_native_sys::{
+    minifi_log_level, minifi_logger, minifi_logger_log_string, minifi_logger_should_log,
+    minifi_string_view,
+};
 use std::ffi::CString;
 use std::fmt;
 

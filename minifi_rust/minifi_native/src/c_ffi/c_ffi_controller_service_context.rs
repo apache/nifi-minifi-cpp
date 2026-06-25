@@ -1,8 +1,7 @@
 use crate::c_ffi::c_ffi_primitives::StringView;
 use crate::{GetProperty, MinifiError, Property};
 use minifi_native_sys::{
-    minifi_controller_service_context,
-    minifi_controller_service_context_get_property,
+    minifi_controller_service_context, minifi_controller_service_context_get_property,
     minifi_status_MINIFI_STATUS_SUCCESS, minifi_string_view,
 };
 use std::borrow::Cow;

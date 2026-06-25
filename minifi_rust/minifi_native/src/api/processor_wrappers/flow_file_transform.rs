@@ -1,19 +1,19 @@
 use crate::api::InputStream;
-use crate::api::processor::{Processor};
+use crate::api::processor::Processor;
 use crate::api::processor_wrappers::utils::context_session_flowfile_bundle::ContextSessionFlowFileBundle;
 use crate::api::processor_wrappers::utils::flow_file_content::Content;
 use crate::api::property::{GetControllerService, GetProperty};
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
-    Concurrent, Exclusive, GetAttribute, LogLevel, Logger, MinifiError,
-    OnTriggerResult, ProcessContext, ProcessSession, Relationship, Schedule, info,
+    Concurrent, Exclusive, GetAttribute, LogLevel, Logger, MinifiError, OnTriggerResult,
+    ProcessContext, ProcessSession, Relationship, Schedule, info,
 };
 use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct TransformedFlowFile<'a> {
     target_relationship_name: &'static str,
-    new_content: Option<Content<'a>>,  // If None the content doesn't change
+    new_content: Option<Content<'a>>, // If None the content doesn't change
     attributes_to_add: HashMap<String, String>,
 }
 

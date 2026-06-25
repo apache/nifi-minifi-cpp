@@ -1,13 +1,15 @@
+use crate::controller_services::animal_controller_apis::{
+    CanFlyControllerApi, NumberOfLegsControllerApi,
+};
 use minifi_native::ControllerServiceApi;
-use minifi_native::{create_provided_interface, ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError, Property, ProvidedInterface};
 use minifi_native::macros::ComponentIdentifier;
-use crate::controller_services::animal_controller_apis::{CanFlyControllerApi, NumberOfLegsControllerApi};
+use minifi_native::{
+    ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
+    Property, ProvidedInterface, create_provided_interface,
+};
 
 #[derive(Debug, ComponentIdentifier)]
-pub(crate) struct DuckController {
-    
-}
-
+pub(crate) struct DuckController {}
 
 impl NumberOfLegsControllerApi for DuckController {
     fn number_of_legs(&self) -> u8 {
@@ -24,9 +26,9 @@ impl CanFlyControllerApi for DuckController {
 impl EnableControllerService for DuckController {
     fn enable<Ctx: GetProperty, L: Logger>(_context: &Ctx, _logger: &L) -> Result<Self, MinifiError>
     where
-        Self: Sized
+        Self: Sized,
     {
-        Ok(Self{})
+        Ok(Self {})
     }
 }
 

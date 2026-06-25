@@ -1,5 +1,5 @@
 use crate::processors::asciify_german::relationships::FAILURE;
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileStreamTransform, GetProperty, InputStream, Logger, MinifiError, OutputStream, Schedule,
     TransformStreamResult,

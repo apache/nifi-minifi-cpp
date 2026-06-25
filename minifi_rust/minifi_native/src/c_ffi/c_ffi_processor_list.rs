@@ -1,6 +1,6 @@
-use minifi_native_sys::minifi_processor_class_definition;
 use crate::c_ffi::RawRegisterableProcessor;
 use crate::c_ffi::c_ffi_processor_definition::DynRawProcessorDefinition;
+use minifi_native_sys::minifi_processor_class_definition;
 
 pub struct CffiProcessorList {
     processor_definitions: Vec<Box<dyn DynRawProcessorDefinition>>,
