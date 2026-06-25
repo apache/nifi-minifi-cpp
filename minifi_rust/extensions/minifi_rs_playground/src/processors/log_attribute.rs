@@ -1,5 +1,5 @@
 use crate::processors::log_attribute::properties::{FLOW_FILES_TO_LOG, LOG_LEVEL, LOG_PAYLOAD};
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetProperty, LogLevel, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
     Property, Schedule, Trigger, debug, log, trace,
@@ -101,8 +101,7 @@ impl Trigger for LogAttributeRs {
 }
 
 impl Schedule for LogAttributeRs {
-    fn schedule<P: GetProperty, L>(context: &P, _logger: &L) -> Result<Self, MinifiError>
-    {
+    fn schedule<P: GetProperty, L>(context: &P, _logger: &L) -> Result<Self, MinifiError> {
         let log_level = context
             .get_property(&LOG_LEVEL)?
             .expect("required property")

@@ -1,7 +1,7 @@
 use std::ffi::c_void;
 use std::ptr;
 
-use super::c_ffi_primitives::{StaticStrAsMinifiCStr};
+use super::c_ffi_primitives::StaticStrAsMinifiCStr;
 use super::c_ffi_process_context::CffiProcessContext;
 use super::c_ffi_process_session::CffiProcessSession;
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
@@ -10,8 +10,8 @@ use crate::c_ffi::CffiLogger;
 use crate::c_ffi::c_ffi_output_attribute::COutputAttributes;
 use crate::c_ffi::c_ffi_property::CProperties;
 use crate::{
-    ComponentIdentifier, Concurrent, Exclusive,
-    LogLevel, OutputAttribute, Processor, ProcessorDefinition, Property, Schedule,
+    ComponentIdentifier, Concurrent, Exclusive, LogLevel, OutputAttribute, Processor,
+    ProcessorDefinition, Property, Schedule,
 };
 use crate::{OnTriggerResult, Relationship};
 use minifi_native_sys::*;
@@ -242,10 +242,7 @@ impl<Implementation, Kind: 'static, Threading> RawRegisterableProcessor
     for Processor<Implementation, Kind, Threading, CffiLogger>
 where
     Threading: ThreadingModel + 'static,
-    Implementation: Schedule
-        + ComponentIdentifier
-        + ProcessorDefinition
-        + 'static,
+    Implementation: Schedule + ComponentIdentifier + ProcessorDefinition + 'static,
     Processor<Implementation, Kind, Threading, CffiLogger>:
         RawProcessor<Threading = Threading, LoggerType = CffiLogger> + DispatchOnTrigger<Threading>,
 {

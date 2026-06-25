@@ -1,5 +1,5 @@
 use crate::processors::put_file::relationships::{FAILURE, SUCCESS};
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetProperty, InputStream, Logger,
     MinifiError, Schedule, TransformedFlowFile, trace, warn,

@@ -1,5 +1,8 @@
 use crate::api::{ProcessContext, RawControllerService};
-use crate::{ComponentIdentifier, ControllerServiceApi, EnableControllerService, GetAttribute, MinifiError, MockFlowFile, Property};
+use crate::{
+    ComponentIdentifier, ControllerServiceApi, EnableControllerService, GetAttribute, MinifiError,
+    MockFlowFile, Property,
+};
 use std::any::Any;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -97,7 +100,10 @@ impl ProcessContext for MockProcessContext {
         }
     }
 
-    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi>(&self, _property: &Property) -> Result<Option<Box<&Trait>>, MinifiError> {
+    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi>(
+        &self,
+        _property: &Property,
+    ) -> Result<Option<Box<&Trait>>, MinifiError> {
         todo!()
     }
 

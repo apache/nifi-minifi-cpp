@@ -1,5 +1,9 @@
 use crate::ProcessorInputRequirement;
-use minifi_native_sys::{minifi_string_view, minifi_input_requirement_MINIFI_INPUT_REQUIRED, minifi_input_requirement_MINIFI_INPUT_ALLOWED, minifi_input_requirement_MINIFI_INPUT_FORBIDDEN, minifi_input_requirement};
+use minifi_native_sys::{
+    minifi_input_requirement, minifi_input_requirement_MINIFI_INPUT_ALLOWED,
+    minifi_input_requirement_MINIFI_INPUT_FORBIDDEN,
+    minifi_input_requirement_MINIFI_INPUT_REQUIRED, minifi_string_view,
+};
 use std::os::raw::c_char;
 
 #[derive(Debug)]
@@ -8,7 +12,7 @@ pub enum FfiConversionError {
     InvalidUtf8,
 }
 
-#[repr(transparent)]  // This allows us to pass Vec<StringView> as a pointer to minifi_string_view array
+#[repr(transparent)] // This allows us to pass Vec<StringView> as a pointer to minifi_string_view array
 #[derive(Debug)]
 pub(crate) struct StringView<'a> {
     inner: minifi_string_view,

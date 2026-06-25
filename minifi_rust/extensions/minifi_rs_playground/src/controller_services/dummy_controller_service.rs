@@ -1,5 +1,8 @@
 use minifi_native::macros::ComponentIdentifier;
-use minifi_native::{ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError, Property, ProvidedInterface};
+use minifi_native::{
+    ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
+    Property, ProvidedInterface,
+};
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct DummyControllerService {}

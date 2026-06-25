@@ -3,7 +3,7 @@ mod properties;
 use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;
 use crate::processors::lorem_ipsum_cs_user::properties::CONTROLLER_SERVICE;
 use crate::processors::lorem_ipsum_cs_user::relationships::SUCCESS;
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     Content, FlowFileSource, GeneratedFlowFile, GetControllerService, GetProperty, Logger,
     MinifiError, Schedule, trace,

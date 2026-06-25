@@ -1,4 +1,4 @@
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetProperty, Logger, MinifiError, MutTrigger, OnTriggerResult, OutputAttribute, ProcessContext,
     ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,

@@ -3,10 +3,10 @@ mod relationships;
 
 use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;
 use crate::processors::kamikaze_processor::properties::NOT_REGISTERED_PROPERTY;
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext,
-    ProcessSession, Schedule, Trigger,
+    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
+    Trigger,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
@@ -44,14 +44,10 @@ impl Schedule for KamikazeProcessorRs {
             KamikazeBehaviour::ReturnErr => Err(MinifiError::schedule_err(
                 "it was designed to fail during schedule",
             )),
-            KamikazeBehaviour::ReturnOk => Ok(KamikazeProcessorRs {
-                trigger_behaviour,
-            }),
+            KamikazeBehaviour::ReturnOk => Ok(KamikazeProcessorRs { trigger_behaviour }),
             KamikazeBehaviour::GetNotRegisteredProperty => {
                 let _ = context.get_property(&NOT_REGISTERED_PROPERTY)?;
-                Ok(KamikazeProcessorRs {
-                    trigger_behaviour,
-                })
+                Ok(KamikazeProcessorRs { trigger_behaviour })
             }
             KamikazeBehaviour::Panic => {
                 panic!("KamikazeProcessor::schedule panic")

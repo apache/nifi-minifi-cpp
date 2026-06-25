@@ -1,4 +1,4 @@
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetAttribute, GetControllerService, GetProperty, InputStream, Logger, MinifiError,
     MutFlowFileStreamTransform, OutputAttribute, OutputStream, ProcessorDefinition,

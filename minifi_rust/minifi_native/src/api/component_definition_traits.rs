@@ -1,5 +1,5 @@
-use crate::{OutputAttribute, ProcessorInputRequirement, Property, Relationship};
 use crate::api::provided_interface::ProvidedInterface;
+use crate::{OutputAttribute, ProcessorInputRequirement, Property, Relationship};
 
 pub trait ComponentIdentifier {
     const CLASS_NAME: &'static str;

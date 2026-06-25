@@ -1,7 +1,9 @@
 use crate::StandardPropertyValidator::{
     BoolValidator, DataSizeValidator, TimePeriodValidator, U64Validator,
 };
-use crate::{ComponentIdentifier, ControllerServiceDefinition, EnableControllerService, MinifiError};
+use crate::{
+    ComponentIdentifier, ControllerServiceDefinition, EnableControllerService, MinifiError,
+};
 use std::str::FromStr;
 use std::time::Duration;
 

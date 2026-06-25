@@ -30,7 +30,7 @@ pub use api::logger::{LogLevel, Logger};
 
 pub use api::property::{GetControllerService, GetProperty, Property};
 
-pub use api::provided_interface::{ProvidedInterface, ControllerServiceApi};
+pub use api::provided_interface::{ControllerServiceApi, ProvidedInterface};
 
 pub use api::process_session::IoState;
 

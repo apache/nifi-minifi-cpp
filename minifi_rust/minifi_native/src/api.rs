@@ -9,10 +9,10 @@ pub(crate) mod process_session;
 pub(crate) mod processor;
 pub(crate) mod processor_wrappers;
 pub(crate) mod property;
+pub(crate) mod provided_interface;
 pub(crate) mod raw_controller_service;
 pub(crate) mod raw_processor;
 pub(crate) mod relationship;
-pub(crate) mod provided_interface;
 
 pub use flow_file::FlowFile;
 pub use logger::{LogLevel, Logger};

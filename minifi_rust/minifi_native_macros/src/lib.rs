@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, parse_macro_input, ItemTrait};
+use syn::{DeriveInput, ItemTrait, parse_macro_input};
 
 #[proc_macro_derive(ComponentIdentifier)]
 pub fn derive_component_identifier(input: TokenStream) -> TokenStream {

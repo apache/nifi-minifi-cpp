@@ -1,7 +1,13 @@
-use crate::controller_services::animal_controller_apis::{CanFlyControllerApi, NumberOfLegsControllerApi};
-use minifi_native::{critical, info, GetProperty, Logger, MinifiError, OnTriggerResult, OutputAttribute, ProcessContext, ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship, Schedule, StandardPropertyValidator, Trigger};
+use crate::controller_services::animal_controller_apis::{
+    CanFlyControllerApi, NumberOfLegsControllerApi,
+};
 use minifi_native::ControllerServiceApi;
 use minifi_native::macros::ComponentIdentifier;
+use minifi_native::{
+    GetProperty, Logger, MinifiError, OnTriggerResult, OutputAttribute, ProcessContext,
+    ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
+    Schedule, StandardPropertyValidator, Trigger, critical, info,
+};
 
 pub(crate) const CAN_FLY_SERVICE: Property = Property {
     name: "Can fly service",
@@ -28,31 +34,46 @@ pub(crate) const NUMBER_OF_LEGS: Property = Property {
 };
 
 #[derive(Debug, ComponentIdentifier)]
-pub(crate) struct ZooProcessor {
-
-}
+pub(crate) struct ZooProcessor {}
 
 impl Schedule for ZooProcessor {
-    fn schedule<Ctx: GetProperty, L: Logger>(_context: &Ctx, _logger: &L) -> Result<Self, MinifiError>
+    fn schedule<Ctx: GetProperty, L: Logger>(
+        _context: &Ctx,
+        _logger: &L,
+    ) -> Result<Self, MinifiError>
     where
-        Self: Sized
+        Self: Sized,
     {
-        Ok(Self{})
+        Ok(Self {})
     }
 }
 
 impl Trigger for ZooProcessor {
-    fn trigger<Context, Session, Lggr>(&self, context: &mut Context, _session: &mut Session, logger: &Lggr) -> Result<OnTriggerResult, MinifiError>
+    fn trigger<Context, Session, Lggr>(
+        &self,
+        context: &mut Context,
+        _session: &mut Session,
+        logger: &Lggr,
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         Context: ProcessContext,
-        Session: ProcessSession<FlowFile=Context::FlowFile>,
-        Lggr: Logger
+        Session: ProcessSession<FlowFile = Context::FlowFile>,
+        Lggr: Logger,
     {
         info!(logger, "{:?}", self);
-        if let Some(maybe_flyer) = context.get_controller_service_api::<dyn CanFlyControllerApi>(&CAN_FLY_SERVICE)? {
-            critical!(logger, "Can {:?} fly? {}", maybe_flyer, maybe_flyer.can_fly());
+        if let Some(maybe_flyer) =
+            context.get_controller_service_api::<dyn CanFlyControllerApi>(&CAN_FLY_SERVICE)?
+        {
+            critical!(
+                logger,
+                "Can {:?} fly? {}",
+                maybe_flyer,
+                maybe_flyer.can_fly()
+            );
         }
-        if let Some(legged) = context.get_controller_service_api::<dyn NumberOfLegsControllerApi>(&NUMBER_OF_LEGS)? {
+        if let Some(legged) =
+            context.get_controller_service_api::<dyn NumberOfLegsControllerApi>(&NUMBER_OF_LEGS)?
+        {
             critical!(logger, "{:?} has {} legs", legged, legged.number_of_legs());
         }
         Ok(OnTriggerResult::Ok)

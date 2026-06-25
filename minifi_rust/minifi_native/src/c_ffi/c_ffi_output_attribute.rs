@@ -1,6 +1,6 @@
 use crate::OutputAttribute;
 use crate::c_ffi::StaticStrAsMinifiCStr;
-use minifi_native_sys::{minifi_string_view, minifi_output_attribute_definition};
+use minifi_native_sys::{minifi_output_attribute_definition, minifi_string_view};
 
 #[allow(dead_code)] // the c_ vecs are holding the values referenced from the output attributes
 pub struct COutputAttributes {

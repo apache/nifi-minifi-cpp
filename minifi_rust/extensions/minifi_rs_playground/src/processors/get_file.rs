@@ -5,10 +5,10 @@ use crate::processors::get_file::properties::{
     BATCH_SIZE, DIRECTORY, IGNORE_HIDDEN_FILES, KEEP_SOURCE_FILE, MAX_AGE, MAX_SIZE, MIN_AGE,
     MIN_SIZE, RECURSE,
 };
-use minifi_native::macros::{ComponentIdentifier};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext,
-    ProcessSession, Schedule, Trigger, debug, info, trace, warn,
+    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
+    Schedule, Trigger, debug, info, trace, warn,
 };
 use std::collections::VecDeque;
 use std::error;

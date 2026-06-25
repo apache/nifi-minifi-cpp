@@ -4,7 +4,8 @@ use minifi_native_sys::minifi_controller_service_class_definition;
 
 pub struct CffiControllerServiceList {
     controller_service_definitions: Vec<Box<dyn DynRawControllerServiceDefinition>>,
-    minifi_controller_service_class_description_list: Vec<minifi_controller_service_class_definition>,
+    minifi_controller_service_class_description_list:
+        Vec<minifi_controller_service_class_definition>,
 }
 
 impl CffiControllerServiceList {

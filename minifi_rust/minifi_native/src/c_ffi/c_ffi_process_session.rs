@@ -4,7 +4,16 @@ use crate::api::process_session::{IoState, OutputStream};
 use crate::api::{InputStream, ProcessSession};
 use crate::c_ffi::c_ffi_primitives::{ConvertMinifiStringView, StringView};
 use crate::c_ffi::c_ffi_streams::{CffiInputStream, CffiOutputStream};
-use minifi_native_sys::{minifi_status_MINIFI_STATUS_SUCCESS, minifi_string_view, minifi_process_session, minifi_output_stream, minifi_output_stream_write, minifi_io_status_MINIFI_IO_ERROR, minifi_process_session_write, minifi_process_session_create, minifi_process_session_get, minifi_process_session_transfer, minifi_process_session_remove, minifi_process_session_set_flow_file_attribute, minifi_process_session_get_flow_file_attribute, minifi_process_session_get_flow_file_attributes, minifi_io_status_MINIFI_IO_CANCEL, minifi_input_stream, minifi_input_stream_size, minifi_input_stream_read, minifi_process_session_read, minifi_process_session_get_flow_file_id};
+use minifi_native_sys::{
+    minifi_input_stream, minifi_input_stream_read, minifi_input_stream_size,
+    minifi_io_status_MINIFI_IO_CANCEL, minifi_io_status_MINIFI_IO_ERROR, minifi_output_stream,
+    minifi_output_stream_write, minifi_process_session, minifi_process_session_create,
+    minifi_process_session_get, minifi_process_session_get_flow_file_attribute,
+    minifi_process_session_get_flow_file_attributes, minifi_process_session_get_flow_file_id,
+    minifi_process_session_read, minifi_process_session_remove,
+    minifi_process_session_set_flow_file_attribute, minifi_process_session_transfer,
+    minifi_process_session_write, minifi_status_MINIFI_STATUS_SUCCESS, minifi_string_view,
+};
 use std::ffi::{CString, c_void};
 use std::io::Read;
 use std::num::NonZeroU32;

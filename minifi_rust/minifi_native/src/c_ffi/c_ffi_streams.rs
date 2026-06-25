@@ -1,5 +1,7 @@
+use minifi_native_sys::{
+    minifi_input_stream, minifi_input_stream_read, minifi_output_stream, minifi_output_stream_write,
+};
 use std::io::{BufRead, Error, ErrorKind, Read};
-use minifi_native_sys::{minifi_input_stream, minifi_input_stream_read, minifi_output_stream, minifi_output_stream_write};
 
 #[derive(Debug)]
 pub struct CffiInputStream<'a> {
