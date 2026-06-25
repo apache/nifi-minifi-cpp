@@ -38,7 +38,7 @@ class LmdbContentRepositoryTests : TestController {
 
  protected:
   static constexpr std::string_view test_content_ = "well hello there";
-  std::shared_ptr<core::repository::LmdbContentRepository> content_repo_ = std::make_shared<core::repository::LmdbContentRepository>();
+  std::shared_ptr<extensions::lmdb::LmdbContentRepository> content_repo_ = std::make_shared<extensions::lmdb::LmdbContentRepository>();
 
   void writeContent(const minifi::ResourceClaim& claim) {
     auto stream = content_repo_->write(claim);
@@ -49,10 +49,10 @@ class LmdbContentRepositoryTests : TestController {
 
 TEST_CASE("Invalid or empty dbsize configuration value is set", "[lmdb]") {
   TestController controller;
-  LogTestController::getInstance().setDebug<core::repository::LmdbContentRepository>();
+  LogTestController::getInstance().setDebug<extensions::lmdb::LmdbWrapper>();
   auto db_path = controller.createTempDirectory().string();
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  auto content_repo = std::make_shared<core::repository::LmdbContentRepository>();
+  auto content_repo = std::make_shared<extensions::lmdb::LmdbContentRepository>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, db_path);
   SECTION("Invalid value") {
     configuration->set(minifi::Configure::nifi_content_repository_lmdb_max_db_size, "invalid");
@@ -68,9 +68,9 @@ TEST_CASE("Invalid or empty dbsize configuration value is set", "[lmdb]") {
 
 TEST_CASE("Valid dbsize configuration value is set", "[lmdb]") {
   TestController controller;
-  LogTestController::getInstance().setDebug<core::repository::LmdbContentRepository>();
+  LogTestController::getInstance().setDebug<extensions::lmdb::LmdbWrapper>();
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  auto content_repo = std::make_shared<core::repository::LmdbContentRepository>();
+  auto content_repo = std::make_shared<extensions::lmdb::LmdbContentRepository>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, controller.createTempDirectory().string());
   configuration->set(minifi::Configure::nifi_content_repository_lmdb_max_db_size, "100 MB");
   REQUIRE(content_repo->initialize(configuration));
@@ -82,7 +82,7 @@ TEST_CASE("Initialize succeeds when target directory already exists", "[lmdb]") 
   auto db_path = controller.createTempDirectory();
   REQUIRE(std::filesystem::exists(db_path));
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
-  auto content_repo = std::make_shared<core::repository::LmdbContentRepository>();
+  auto content_repo = std::make_shared<extensions::lmdb::LmdbContentRepository>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, db_path.string());
   REQUIRE(content_repo->initialize(configuration));
 }
@@ -99,7 +99,7 @@ TEST_CASE("Initialize fails and is safe to destroy when the directory path is a 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, file_path.string());
 
-  auto content_repo = std::make_shared<core::repository::LmdbContentRepository>();
+  auto content_repo = std::make_shared<extensions::lmdb::LmdbContentRepository>();
   REQUIRE_FALSE(content_repo->initialize(configuration));
 }
 
@@ -215,7 +215,7 @@ TEST_CASE("Content persists across LmdbContentRepository re-initialization", "[l
   std::string claim_path;
   static constexpr std::string_view content = "persisted content";
   {
-    auto content_repo = std::make_shared<core::repository::LmdbContentRepository>();
+    auto content_repo = std::make_shared<extensions::lmdb::LmdbContentRepository>();
     REQUIRE(content_repo->initialize(configuration));
     auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
     claim_path = claim->getContentFullPath();
@@ -226,7 +226,7 @@ TEST_CASE("Content persists across LmdbContentRepository re-initialization", "[l
     content_repo->incrementStreamCount(*claim);
   }
 
-  auto reopened_repo = std::make_shared<core::repository::LmdbContentRepository>();
+  auto reopened_repo = std::make_shared<extensions::lmdb::LmdbContentRepository>();
   REQUIRE(reopened_repo->initialize(configuration));
   auto reopened_claim = std::make_shared<minifi::ResourceClaimImpl>(claim_path, reopened_repo);
   REQUIRE(reopened_repo->exists(*reopened_claim));
@@ -237,22 +237,22 @@ TEST_CASE("Content persists across LmdbContentRepository re-initialization", "[l
 }
 
 TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[lmdb]") {
-  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::LmdbContentRepository>());
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<extensions::lmdb::LmdbContentRepository>());
 }
 
 TEST_CASE("ProcessSession::append should append to the flowfile and set its size correctly", "[lmdb]") {
-  ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<core::repository::LmdbContentRepository>());
-  ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<core::repository::LmdbContentRepository>());
+  ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<extensions::lmdb::LmdbContentRepository>());
+  ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<extensions::lmdb::LmdbContentRepository>());
 }
 
 TEST_CASE("ProcessSession::read can read zero length flowfiles without crash", "[lmdb]") {
-  ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::LmdbContentRepository>());
+  ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<extensions::lmdb::LmdbContentRepository>());
 }
 
 TEST_CASE("ProcessSession::write can be cancelled", "[lmdb]") {
-  ContentRepositoryDependentTests::testOkWrite(std::make_shared<core::repository::LmdbContentRepository>());
-  ContentRepositoryDependentTests::testErrWrite(std::make_shared<core::repository::LmdbContentRepository>());
-  ContentRepositoryDependentTests::testCancelWrite(std::make_shared<core::repository::LmdbContentRepository>());
+  ContentRepositoryDependentTests::testOkWrite(std::make_shared<extensions::lmdb::LmdbContentRepository>());
+  ContentRepositoryDependentTests::testErrWrite(std::make_shared<extensions::lmdb::LmdbContentRepository>());
+  ContentRepositoryDependentTests::testCancelWrite(std::make_shared<extensions::lmdb::LmdbContentRepository>());
 }
 
 }  // namespace org::apache::nifi::minifi::test
