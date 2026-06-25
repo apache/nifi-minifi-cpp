@@ -449,11 +449,11 @@ std::string Processor::getProcessorType() const {
 }
 
 void Processor::setTriggerWhenEmpty(bool trigger_when_empty) {
-  impl_->setTriggerWhenEmpty(trigger_when_empty);
+  trigger_when_empty_ = trigger_when_empty;
 }
 
 bool Processor::getTriggerWhenEmpty() const {
-  return impl_->getTriggerWhenEmpty();
+  return trigger_when_empty_;
 }
 
 uint8_t Processor::getActiveTasks() const {

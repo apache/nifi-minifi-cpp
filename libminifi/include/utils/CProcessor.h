@@ -114,14 +114,6 @@ class CProcessor : public minifi::core::ProcessorApi {
     return class_description_.name;
   }
 
-  bool getTriggerWhenEmpty() const override {
-    return trigger_when_empty_;
-  }
-
-  void setTriggerWhenEmpty(bool set_trigger_when_empty) override {
-    trigger_when_empty_ = set_trigger_when_empty;
-  }
-
   void onTrigger(minifi::core::ProcessContext& process_context, minifi::core::ProcessSession& process_session) override {
     std::optional<std::string> error;
     auto status = class_description_.callbacks.trigger(impl_, reinterpret_cast<minifi_process_context*>(&process_context), reinterpret_cast<minifi_process_session*>(&process_session));

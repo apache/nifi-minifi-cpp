@@ -148,6 +148,7 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   std::atomic<std::chrono::steady_clock::duration> yield_period_;
 
   std::atomic<uint8_t> active_tasks_;
+  std::atomic<bool> trigger_when_empty_;
 
   std::string cron_period_;
 
