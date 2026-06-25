@@ -418,11 +418,6 @@ void minifi_config_get(minifi_extension_context* extension_context, minifi_strin
   }
 }
 
-void MinifiLoggerSetMaxLogSize(minifi_logger* logger, int32_t max_size) {
-  gsl_Assert(logger);
-  (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->set_max_log_size(max_size);
-}
-
 void minifi_logger_log_string(minifi_logger* logger, minifi_log_level level, minifi_string_view msg) {
   gsl_Assert(logger);
   (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->log_string(toLogLevel(level), toString(msg));
