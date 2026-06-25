@@ -42,11 +42,11 @@ extern "C" {
 #endif
 
 /// To declare a processor property that expects an SSLContextService,
-/// use MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::type)
+/// use MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::allowed_type)
 #define MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
 
 /// To declare a processor property that expects an ProxyConfigurationService,
-/// use MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::type)
+/// use MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::allowed_type)
 #define MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
 
 enum : uint32_t {

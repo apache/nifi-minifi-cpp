@@ -71,14 +71,21 @@ std::map<std::string, std::string> CffiProcessContext::getDynamicProperties(cons
 std::expected<std::optional<utils::net::SslData>, std::error_code> CffiProcessContext::getSslData(const minifi::core::PropertyReference& prop) const {
   auto ssl_data = utils::net::SslData{};
 
-  if (const auto status = minifi_process_context_get_ssl_data_from_property(impl_, utils::minifiStringView(prop.name), [](void* data, const minifi_ssl_data* minifi_ssl_data) {
-      auto* my_ssl_data = static_cast<utils::net::SslData*>(data);
-      my_ssl_data->ca_loc = utils::toString(minifi_ssl_data->ca_certificate_file);
-      my_ssl_data->cert_loc = utils::toString(minifi_ssl_data->certificate_file);
-      my_ssl_data->key_loc = utils::toString(minifi_ssl_data->private_key_file);
-      my_ssl_data->key_pw = utils::toString(minifi_ssl_data->passphrase);
-  }, &ssl_data);
+  if (const auto status = minifi_process_context_get_ssl_data_from_property(
+          impl_,
+          utils::minifiStringView(prop.name),
+          [](void* data, const minifi_ssl_data* minifi_ssl_data) {
+            auto* my_ssl_data = static_cast<utils::net::SslData*>(data);
+            my_ssl_data->ca_loc = utils::toString(minifi_ssl_data->ca_certificate_file);
+            my_ssl_data->cert_loc = utils::toString(minifi_ssl_data->certificate_file);
+            my_ssl_data->key_loc = utils::toString(minifi_ssl_data->private_key_file);
+            my_ssl_data->key_pw = utils::toString(minifi_ssl_data->passphrase);
+          },
+          &ssl_data);
       status != MINIFI_STATUS_SUCCESS) {
+    if (status == MINIFI_STATUS_PROPERTY_NOT_SET) {
+      return std::nullopt;
+    }
     return std::unexpected{utils::make_error_code(status)};
   }
 
