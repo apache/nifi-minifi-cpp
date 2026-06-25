@@ -21,6 +21,7 @@
 #include "EncryptConfig.h"
 #include "argparse/argparse.hpp"
 #include "minifi-cpp/agent/agent_version.h"
+#include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -68,7 +69,12 @@ int main(int argc, char* argv[]) try {
     return 1;
   }
 
-  EncryptConfig encrypt_config{argument_parser.get("-m")};
+  std::filesystem::path minifi_home{argument_parser.get("-m")};
+  if (!minifi::utils::file::exists(minifi_home)) {
+    std::cerr << "The minifi home directory " << minifi_home.string() << " does not exist!\n";
+    return 7;
+  }
+  EncryptConfig encrypt_config{std::move(minifi_home)};
 
   std::string operation = argument_parser.get("operation");
   const auto re_encrypt = argument_parser.get<bool>("--re-encrypt");
