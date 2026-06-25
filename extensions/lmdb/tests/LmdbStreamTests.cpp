@@ -29,7 +29,9 @@ class LmdbStreamTest : TestController {
     if (const int rc = mdb_env_create(&lmdb_env_)) {
       throw std::runtime_error("Failed to create LMDB environment: " + std::string(mdb_strerror(rc)));
     }
-    mdb_env_set_mapsize(lmdb_env_, 100ULL * 1024 * 1024);  // 100 MB
+    if (const int rc = mdb_env_set_mapsize(lmdb_env_, 100ULL * 1024 * 1024); rc != MDB_SUCCESS) {
+      throw std::runtime_error("Failed to set LMDB map size: " + std::string(mdb_strerror(rc)));
+    }
 
     if (const int rc = mdb_env_open(lmdb_env_, db_path_.c_str(), MDB_NOTLS, 0664)) {
       throw std::runtime_error("Failed to open LMDB environment " + db_path_ + ": " + std::string(mdb_strerror(rc)));

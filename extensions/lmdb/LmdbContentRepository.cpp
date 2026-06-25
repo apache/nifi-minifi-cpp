@@ -86,7 +86,12 @@ bool LmdbContentRepository::initialize(const std::shared_ptr<minifi::Configure>&
   }
 
   logger_->log_info("Setting LMDB max DB size to {} bytes", *max_db_size);
-  mdb_env_set_mapsize(lmdb_env_, gsl::narrow<size_t>(*max_db_size));
+  if (const auto rc = mdb_env_set_mapsize(lmdb_env_, gsl::narrow<size_t>(*max_db_size)); rc != MDB_SUCCESS) {
+    logger_->log_error("Failed to set LMDB map size: {}", mdb_strerror(rc));
+    mdb_env_close(lmdb_env_);
+    lmdb_env_ = nullptr;
+    return false;
+  }
 
   const auto working_dir = utils::getMinifiDir();
 
