@@ -65,13 +65,17 @@ uint32_t encryptSensitiveValuesInMinifiPropertiesFile(const std::filesystem::pat
 
 namespace org::apache::nifi::minifi::encrypt_config {
 
-EncryptConfig::EncryptConfig(std::filesystem::path minifi_home) : minifi_home_(std::move(minifi_home)) {
+EncryptConfig::EncryptConfig(std::filesystem::path minifi_home) : minifi_home_(std::move(minifi_home)), prev_current_path_(std::filesystem::current_path()) {
   if (sodium_init() < 0) {
     // encryption/decryption depends on the libsodium library which needs to be initialized
     throw std::runtime_error{"Could not initialize the libsodium library!"};
   }
 
   std::filesystem::current_path(minifi_home_);
+}
+
+EncryptConfig::~EncryptConfig() {
+  std::filesystem::current_path(prev_current_path_);
 }
 
 bool EncryptConfig::isReEncrypting() const {

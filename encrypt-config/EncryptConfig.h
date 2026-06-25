@@ -26,6 +26,7 @@ namespace org::apache::nifi::minifi::encrypt_config {
 class EncryptConfig {
  public:
   explicit EncryptConfig(std::filesystem::path minifi_home);
+  ~EncryptConfig();
 
   void encryptSensitiveValuesInMinifiProperties() const;
   void encryptSensitiveValuesInFlowConfig(
@@ -44,6 +45,7 @@ class EncryptConfig {
   void writeEncryptionKeyToBootstrapFile(const std::string& encryption_key_name, const utils::crypto::Bytes& encryption_key) const;
 
   const std::filesystem::path minifi_home_;
+  const std::filesystem::path prev_current_path_;
 };
 
 }  // namespace org::apache::nifi::minifi::encrypt_config
