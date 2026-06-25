@@ -20,6 +20,7 @@
 namespace org::apache::nifi::minifi::utils {
 
 std::vector<minifi::state::PublishedMetric> CProcessor::getCustomMetrics() const {
+  std::lock_guard guard(metrics_mutex_);
   return reported_metrics_;
 }
 

@@ -20,17 +20,17 @@ To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR sel
 Extensions are dynamic libraries loaded at runtime by the agent.
 
 ## C extensions
-You can build shared libraries using the API defined in `minifi-c.h`
+You can build shared libraries using the API defined in `minifi-api.h`
 For the shared library to be considered a valid extension, it must export a global symbol with the name `minifi_api_version`
-with its value equal to the uint32_t constant `MINIFI_API_VERSION` from `minifi-c.h`.
+with its value equal to the uint32_t constant `MINIFI_API_VERSION` from `minifi-api.h`.
 
 ### Resource Lifetime
 
-Unless otherwise specified, the following lifetime rules apply to all functions called by the agent (e.g., `minifi_init_extension`, `MinifiProcessorCallbacks::onTrigger`, or other callbacks):
+Unless otherwise specified, the following lifetime rules apply to all functions called by the agent (e.g., `minifi_init_extension`, `minifi_processor_callbacks::trigger`, or other callbacks):
 
 * Arguments: The lifetime of any resource provided as a function argument is limited to the duration of that function call.
 
-* Created Resources: The lifetime of resources created within these functions (e.g., a handle returned by `MinifiProcessSessionGet` inside `MinifiProcessorCallbacks::onTrigger`)
+* Created Resources: The lifetime of resources created within these functions (e.g., a handle returned by `minifi_process_session_get` inside `minifi_processor_callbacks::trigger`)
 is limited to the scope of the innermost callback.
 (the return value of `minifi_register_extension` is only valid during the execution of `minifi_init_extension`).
 
@@ -40,16 +40,16 @@ One possible example of this is:
 ```C++
 extern "C" const uint32_t minifi_api_version = MINIFI_API_VERSION;
 
-extern "C" void minifi_init_extension(MinifiExtensionContext* extension_context) {
-  MinifiExtensionDefinition extension_definition{
+extern "C" void minifi_init_extension(minifi_extension_context* extension_context) {
+  minifi_extension_definition extension_definition{
     .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
     .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
     .deinit = nullptr,
     .user_data = nullptr
   };
   auto* extension = minifi_register_extension(extension_context, &extension_definition);
-  minifi::api::core::useProcessorClassDefinition<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const MinifiProcessorClassDefinition& definition) {
-    MinifiRegisterProcessor(extension, &definition);
+  minifi::api::core::useProcessorClassDefinition<minifi::extensions::llamacpp::processors::RunLlamaCppInference>([&] (const minifi_processor_class_definition& definition) {
+    minifi_register_processor(extension, &definition);
   });
 }
 ```
@@ -73,18 +73,18 @@ REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
 Some extensions (e.g. `Python`) require initialization before use.
-You need to define an `minifi_init_cpp_extension` function of type `MinifiExtension*(MinifiExtensionContext*)` to be called.
+You need to define an `minifi_init_cpp_extension` function with signature `void minifi_init_cpp_extension(minifi_extension_context*)` to be called.
 
 ```C++
-extern "C" void minifi_init_cpp_extension(MinifiExtensionContext* extension_context) {
+extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_context) {
   static PythonLibLoader python_lib_loader([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
-    MinifiConfigGet(extension_context, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
+    minifi_config_get(extension_context, minifi::utils::toStringView(key), [] (void* user_data, minifi_string_view value) {
       *static_cast<std::optional<std::string>*>(user_data) = std::string{value.data, value.length};
     }, &result);
     return result;
   });
-  MinifiExtensionDefinition extension_definition{
+  minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,

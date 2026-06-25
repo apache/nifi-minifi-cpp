@@ -12,7 +12,6 @@ EXPORTS
     minifi_process_context_get_property
     minifi_process_context_get_proxy_data_from_property
     minifi_process_context_get_ssl_data_from_property
-    minifi_process_context_has_non_empty_property
     minifi_process_context_report_metrics
     minifi_process_context_set_trigger_when_empty
     minifi_process_session_create
@@ -27,7 +26,6 @@ EXPORTS
     minifi_process_session_set_flow_file_attribute
     minifi_process_session_transfer
     minifi_process_session_write
-    minifi_published_metrics_create
     minifi_register_controller_service
     minifi_register_extension
     minifi_register_processor

@@ -170,7 +170,10 @@ class CProcessor : public minifi::core::ProcessorApi {
     return metadata_.uuid;
   }
 
-  void reportMetrics(std::vector<minifi::state::PublishedMetric> metrics) { reported_metrics_ = std::move(metrics); }
+  void reportMetrics(std::vector<minifi::state::PublishedMetric> metrics) {
+    std::lock_guard guard(metrics_mutex_);
+    reported_metrics_ = std::move(metrics);
+  }
 
  private:
   CProcessorClassDescription class_description_;
@@ -178,6 +181,8 @@ class CProcessor : public minifi::core::ProcessorApi {
   minifi::core::ProcessorMetadata metadata_;
   gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetricsExtension>> metrics_extension_;
   bool trigger_when_empty_ = false;
+
+  mutable std::mutex metrics_mutex_;
   std::vector<minifi::state::PublishedMetric> reported_metrics_;
 };
 

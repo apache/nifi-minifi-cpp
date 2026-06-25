@@ -410,11 +410,6 @@ minifi_status minifi_process_context_get_property(minifi_process_context* contex
   }
 }
 
-bool minifi_process_context_has_non_empty_property(minifi_process_context* context, minifi_string_view property_name) {
-  gsl_Assert(context);
-  return reinterpret_cast<minifi::core::ProcessContext*>(context)->hasNonEmptyProperty(toString(property_name));
-}
-
 void minifi_config_get(minifi_extension_context* extension_context, minifi_string_view key, void(*cb)(void* user_ctx, minifi_string_view result), void* user_ctx) {
   gsl_Assert(extension_context);
   auto value = reinterpret_cast<org::apache::nifi::minifi::core::extension::Extension::Context*>(extension_context)->config->get(toString(key));
