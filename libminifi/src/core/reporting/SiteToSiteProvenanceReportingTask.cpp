@@ -151,7 +151,8 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, cor
   report = buffer.GetString();
 }
 
-void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {
+void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  context.setTriggerWhenEmpty(true);
 }
 
 void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {

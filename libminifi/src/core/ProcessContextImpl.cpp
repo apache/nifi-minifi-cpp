@@ -178,6 +178,9 @@ StateManager* ProcessContextImpl::getStateManager() {
 void ProcessContextImpl::setSessionStateManager(std::unique_ptr<StateManager> state_manager) {
   session_state_manager_ = std::move(state_manager);
 }
+void ProcessContextImpl::setTriggerWhenEmpty(bool trigger_when_empty) {
+  processor_.setTriggerWhenEmpty(trigger_when_empty);
+}
 
 bool ProcessContextImpl::hasIncomingConnections() const {
   return getProcessor().hasIncomingConnections();

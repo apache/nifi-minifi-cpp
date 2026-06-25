@@ -41,7 +41,7 @@ void DefragmentText::initialize() {
 void DefragmentText::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   if (auto max_buffer_age = context.getProperty(MaxBufferAge) | utils::andThen(parsing::parseDuration<std::chrono::milliseconds>)) {
     max_age_ = *max_buffer_age;
-    setTriggerWhenEmpty(true);
+    context.setTriggerWhenEmpty(true);
     logger_->log_trace("The Buffer maximum age is configured to be {}", max_age_);
   }
   if (auto max_buffer_size = context.getProperty(MaxBufferSize) | utils::andThen(parsing::parseDataSize)) {

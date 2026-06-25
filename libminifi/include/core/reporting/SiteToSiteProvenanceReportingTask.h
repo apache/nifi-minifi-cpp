@@ -36,7 +36,6 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessGroupPort 
   explicit SiteToSiteProvenanceReportingTask(std::shared_ptr<Configure> configure)
       : minifi::RemoteProcessGroupPort(ReportTaskName, "", std::move(configure),
         utils::IdGenerator::getIdGenerator()->generate(), logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
-    this->setTriggerWhenEmpty(true);
     batch_size_ = 100;
   }
 
