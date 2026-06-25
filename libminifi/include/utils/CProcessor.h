@@ -172,7 +172,6 @@ class CProcessor : public minifi::core::ProcessorApi {
   gsl::owner<void*> impl_;
   minifi::core::ProcessorMetadata metadata_;
   gsl::not_null<std::shared_ptr<minifi::core::ProcessorMetricsExtension>> metrics_extension_;
-  bool trigger_when_empty_ = false;
 
   mutable std::mutex metrics_mutex_;
   std::vector<minifi::state::PublishedMetric> reported_metrics_;

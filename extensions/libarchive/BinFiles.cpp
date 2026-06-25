@@ -72,7 +72,7 @@ void BinFiles::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
 
   if (auto max_bin_age = utils::parseOptionalDurationProperty(context, MaxBinAge)) {
     // We need to trigger the processor even when there are no incoming flow files so that it can flush the bins.
-    setTriggerWhenEmpty(true);
+    context.setTriggerWhenEmpty(true);
     this->binManager_.setBinAge(*max_bin_age);
     logger_->log_debug("BinFiles: MaxBinAge [{}]", *max_bin_age);
   }

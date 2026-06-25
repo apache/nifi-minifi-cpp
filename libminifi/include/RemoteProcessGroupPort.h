@@ -105,11 +105,6 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
 
   void setDirection(sitetosite::TransferDirection direction) {
     direction_ = direction;
-    if (direction_ == sitetosite::TransferDirection::RECEIVE) {
-      setTriggerWhenEmpty(true);
-    } else {
-      setTriggerWhenEmpty(false);
-    }
   }
 
   void setTimeout(std::chrono::milliseconds timeout) {

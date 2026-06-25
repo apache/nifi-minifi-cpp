@@ -128,6 +128,12 @@ void RemoteProcessGroupPort::initialize() {
 }
 
 void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  if (direction_ == sitetosite::TransferDirection::RECEIVE) {
+    context.setTriggerWhenEmpty(true);
+  } else {
+    context.setTriggerWhenEmpty(false);
+  }
+
   if (auto protocol_uuid = context.getProperty(portUUID)) {
     protocol_uuid_ = *protocol_uuid;
   }

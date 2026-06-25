@@ -129,7 +129,6 @@ class InvokeHTTP : public core::ProcessorImpl {
 
   explicit InvokeHTTP(core::ProcessorMetadata metadata)
       : ProcessorImpl(metadata) {
-      setTriggerWhenEmpty(true);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
