@@ -40,9 +40,8 @@ std::vector<std::string> getSensitiveProperties(const std::filesystem::path& pro
   auto sensitive_properties = Configuration::getSensitiveProperties([&minifi_properties](const std::string& property_name) {
     return minifi_properties.getString(property_name);
   });
-  const auto not_found = [&minifi_properties](const std::string& property_name) { return !minifi_properties.getString(property_name).has_value(); };
-  const auto new_end = std::remove_if(sensitive_properties.begin(), sensitive_properties.end(), not_found);
-  sensitive_properties.erase(new_end, sensitive_properties.end());
+  auto not_found = [&minifi_properties](const std::string& property_name) { return !minifi_properties.getString(property_name).has_value(); };
+  std::erase_if(sensitive_properties, not_found);
 
   return sensitive_properties;
 }
