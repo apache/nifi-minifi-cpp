@@ -111,7 +111,7 @@ inline LOG_LEVEL mapStringToLogLevel(const std::string& level_str) {
   throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", level_str));
 }
 
-class LoggerBase : public Logger {
+class LoggerBase : public AdvancedLogger {
  public:
   LoggerBase(LoggerBase const&) = delete;
   LoggerBase& operator=(LoggerBase const&) = delete;
@@ -119,11 +119,11 @@ class LoggerBase : public Logger {
   void set_max_log_size(int size) override {
     max_log_size_ = size;
   }
+  LOG_LEVEL level() const override;
 
   virtual std::optional<std::string> get_id() = 0;
   bool should_log(LOG_LEVEL level) override;
   void log_string(LOG_LEVEL level, std::string str) override;
-  LOG_LEVEL level() const override;
   void setLogCallback(const std::function<void(LOG_LEVEL level, const std::string&)>& callback);
 
  private:
