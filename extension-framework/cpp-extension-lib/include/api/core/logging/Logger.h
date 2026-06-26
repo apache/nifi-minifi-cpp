@@ -29,10 +29,8 @@ class CffiLogger : public minifi::core::logging::Logger {
  public:
   explicit CffiLogger(minifi_logger* impl): impl_(impl) {}
 
-  void set_max_log_size(int size) override;
   void log_string(minifi::core::logging::LOG_LEVEL level, std::string str) override;
   bool should_log(minifi::core::logging::LOG_LEVEL level) override;
-  [[nodiscard]] minifi::core::logging::LOG_LEVEL level() const override;
 
  private:
   minifi_logger* impl_;

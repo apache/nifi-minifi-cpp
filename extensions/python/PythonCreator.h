@@ -53,7 +53,7 @@ class DummyProcessorDescriptor : public core::ProcessorDescriptor {
   void setSupportedProperties(std::span<const core::Property> /*properties*/) override {}
 };
 
-class DummyLogger : public core::logging::Logger {
+class DummyLogger : public core::logging::AdvancedLogger {
  public:
   void set_max_log_size(int /*size*/) override {}
   void log_string(core::logging::LOG_LEVEL /*level*/, std::string /*str*/) override {}

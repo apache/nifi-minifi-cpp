@@ -84,10 +84,8 @@ class Logger {
     log(LOG_LEVEL::trace, std::move(fmt), std::forward<Args>(args)...);
   }
 
-  virtual void set_max_log_size(int size) = 0;
   virtual void log_string(LOG_LEVEL level, std::string str) = 0;
   virtual bool should_log(LOG_LEVEL level) = 0;
-  [[nodiscard]] virtual LOG_LEVEL level() const = 0;
 
   virtual ~Logger() = default;
 
@@ -98,6 +96,27 @@ class Logger {
       return;
     }
     log_string(level, fmt::format(std::move(fmt), map_args(std::forward<Args>(args))...));
+  }
+};
+
+class AdvancedLogger : public Logger {
+ public:
+  virtual void set_max_log_size(int size) = 0;
+  [[nodiscard]] virtual LOG_LEVEL level() const = 0;
+
+  static std::expected<void, std::error_code> setMaxLogSize(Logger* logger, int size) {
+    if (const auto advanced_logger = dynamic_cast<AdvancedLogger*>(logger)) {
+      advanced_logger->set_max_log_size(size);
+      return {};
+    }
+    return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
+  }
+
+  static std::expected<LOG_LEVEL, std::error_code> getLevel(Logger* logger) {
+    if (const auto advanced_logger = dynamic_cast<AdvancedLogger*>(logger)) {
+      return advanced_logger->level();
+    }
+    return std::unexpected{std::make_error_code(std::errc::invalid_argument)};
   }
 };
 

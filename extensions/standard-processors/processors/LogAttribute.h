@@ -41,7 +41,7 @@ class LogAttribute : public core::ProcessorImpl {
  public:
   explicit LogAttribute(core::ProcessorMetadata metadata)
       : ProcessorImpl(metadata) {
-    logger_->set_max_log_size(-1);
+    gsl_Assert(core::logging::AdvancedLogger::setMaxLogSize(logger_.get(), -1));
   }
 
   ~LogAttribute() override = default;

@@ -35,9 +35,6 @@ minifi_log_level toCLogLevel(minifi::core::logging::LOG_LEVEL lvl) {
 }
 }  // namespace
 
-void CffiLogger::set_max_log_size(const int) {
-  throw std::runtime_error("Unimplemented C Api");
-}
 
 void CffiLogger::log_string(const minifi::core::logging::LOG_LEVEL level, const std::string str) {
   minifi_logger_log_string(impl_, toCLogLevel(level), minifi_string_view{.data = str.data(), .length = str.length()});
@@ -46,10 +43,5 @@ void CffiLogger::log_string(const minifi::core::logging::LOG_LEVEL level, const 
 bool CffiLogger::should_log(const minifi::core::logging::LOG_LEVEL level) {
   return minifi_logger_should_log(impl_, toCLogLevel(level));
 }
-
-[[nodiscard]] minifi::core::logging::LOG_LEVEL CffiLogger::level() const {
-  throw std::runtime_error("Unimplemented C API");
-}
-
 
 }  // namespace org::apache::nifi::minifi::api::core::logging
