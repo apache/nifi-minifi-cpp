@@ -52,7 +52,7 @@ uint32_t encryptSensitivePropertiesInFile(PropertiesFile& properties_file, const
 }
 
 uint32_t encryptSensitivePropertiesInFile(PropertiesFile& properties_file, const std::vector<std::string>& sensitive_properties, const EncryptionKeys& keys) {
-  int num_properties_encrypted = 0;
+  uint32_t num_properties_encrypted = 0;
 
   for (const auto& property_key : sensitive_properties) {
     std::optional<std::string> property_value = properties_file.getValue(property_key);
