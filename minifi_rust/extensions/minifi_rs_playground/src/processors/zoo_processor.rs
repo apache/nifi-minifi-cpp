@@ -22,7 +22,7 @@ pub(crate) const CAN_FLY_SERVICE: Property = Property {
 };
 
 pub(crate) const NUMBER_OF_LEGS: Property = Property {
-    name: "Number of Legs Service",
+    name: "Number of Legs service",
     description: "Test NumberOfLegsService",
     is_required: true,
     is_sensitive: false,
@@ -34,9 +34,9 @@ pub(crate) const NUMBER_OF_LEGS: Property = Property {
 };
 
 #[derive(Debug, ComponentIdentifier)]
-pub(crate) struct ZooProcessor {}
+pub(crate) struct ZooProcessorRs {}
 
-impl Schedule for ZooProcessor {
+impl Schedule for ZooProcessorRs {
     fn schedule<Ctx: GetProperty, L: Logger>(
         _context: &Ctx,
         _logger: &L,
@@ -48,7 +48,7 @@ impl Schedule for ZooProcessor {
     }
 }
 
-impl Trigger for ZooProcessor {
+impl Trigger for ZooProcessorRs {
     fn trigger<Context, Session, Lggr>(
         &self,
         context: &mut Context,
@@ -80,8 +80,8 @@ impl Trigger for ZooProcessor {
     }
 }
 
-impl ProcessorDefinition for ZooProcessor {
-    const DESCRIPTION: &'static str = "Test ZooProcessor";
+impl ProcessorDefinition for ZooProcessorRs {
+    const DESCRIPTION: &'static str = "Test ZooProcessorRs";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Forbidden;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

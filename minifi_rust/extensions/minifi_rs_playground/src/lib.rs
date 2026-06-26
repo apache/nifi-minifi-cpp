@@ -14,7 +14,7 @@ use crate::processors::kamikaze_processor::KamikazeProcessorRs;
 use crate::processors::log_attribute::LogAttributeRs;
 use crate::processors::lorem_ipsum_cs_user::LoremIpsumCSUser;
 use crate::processors::put_file::PutFileRs;
-use crate::processors::zoo_processor::ZooProcessor;
+use crate::processors::zoo_processor::ZooProcessorRs;
 
 use minifi_native::{
     ComplexProcessorType, Concurrent, Exclusive, FlowFileSourceProcessorType,
@@ -32,7 +32,7 @@ processors: [
     (FlowFileTransformProcessorType, Concurrent, PutFileRs),
     (FlowFileStreamTransformProcessorType, Concurrent, AsciifyGerman),
     (FlowFileStreamTransformProcessorType, Exclusive, DuplicateStreamText),
-    (ComplexProcessorType, Concurrent, ZooProcessor),
+    (ComplexProcessorType, Concurrent, ZooProcessorRs),
 ],
 controllers: [
     LoremIpsumControllerService,

@@ -31,7 +31,13 @@ FetchContent_Declare(Corrosion
 
 FetchContent_MakeAvailable(Corrosion)
 
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
 corrosion_import_crate(MANIFEST_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml)
+
+if (NOT ENABLE_TEST_PROCESSORS)
+    set_target_properties(cargo-build_minifi_rs_playground PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
 
 include(CTest)
 
