@@ -26,7 +26,7 @@ limitations under the License.
 - [LogAttributeRs](#LogAttributeRs)
 - [LoremIpsumCSUser](#LoremIpsumCSUser)
 - [PutFileRs](#PutFileRs)
-- [ZooProcessor](#ZooProcessor)
+- [ZooProcessorRs](#ZooProcessorRs)
 ### Controller Services
 
 - [DogController](#DogController)
@@ -255,11 +255,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | Flowfiles that are successfully written to a file are routed to this relationship |
 
 
-## ZooProcessor
+## ZooProcessorRs
 
 ### Description
 
-Test ZooProcessor
+Test ZooProcessorRs
 
 ### Properties
 
@@ -268,7 +268,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name                       | Default Value | Allowable Values | Description              |
 |----------------------------|---------------|------------------|--------------------------|
 | **Can fly service**        |               |                  | Test CanFlyService       |
-| **Number of Legs Service** |               |                  | Test NumberOfLegsService |
+| **Number of Legs service** |               |                  | Test NumberOfLegsService |
 
 ### Relationships
 
