@@ -74,6 +74,10 @@ int main(int argc, char* argv[]) try {
     std::cerr << "The minifi home directory " << minifi_home.string() << " does not exist!\n";
     return 7;
   }
+  if (!minifi::utils::file::is_directory(minifi_home)) {
+    std::cerr << "The minifi home is set to " << minifi_home.string() << ", which is not a directory!\n";
+    return 8;
+  }
   EncryptConfig encrypt_config{std::move(minifi_home)};
 
   std::string operation = argument_parser.get("operation");
