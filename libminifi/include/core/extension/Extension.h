@@ -25,7 +25,7 @@
 #include <string>
 
 #include "ApiVersion.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/properties/Configure.h"
 

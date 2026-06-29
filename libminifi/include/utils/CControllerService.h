@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/Exception.h"
 #include "minifi-cpp/core/ControllerServiceMetadata.h"
 #include "minifi-cpp/core/Property.h"

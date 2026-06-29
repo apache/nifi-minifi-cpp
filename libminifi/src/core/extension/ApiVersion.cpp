@@ -17,7 +17,7 @@
 
 #include "core/extension/ApiVersion.h"
 
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 

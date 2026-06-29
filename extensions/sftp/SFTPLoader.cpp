@@ -18,7 +18,7 @@
 
 #include "client/SFTPClient.h"
 #include "core/Resource.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "minifi-cpp/properties/Configure.h"
 #include "utils/ExtensionInitUtils.h"

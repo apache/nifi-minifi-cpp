@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include "core/Resource.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "utils/ExtensionInitUtils.h"
 

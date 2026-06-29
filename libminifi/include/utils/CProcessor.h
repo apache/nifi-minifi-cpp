@@ -21,7 +21,7 @@
 #include <utility>
 
 #include "core/ProcessorMetrics.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/agent/agent_docs.h"
 #include "minifi-cpp/core/Annotation.h"
 #include "minifi-cpp/core/ProcessContext.h"

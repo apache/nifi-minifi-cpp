@@ -21,7 +21,7 @@
 #include "core/Resource.h"
 #include "core/state/nodes/SchedulingNodes.h"
 #include "core/state/nodes/SupportedOperations.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "minifi-cpp/controllers/AttributeProviderService.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"

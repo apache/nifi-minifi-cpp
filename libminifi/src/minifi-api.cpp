@@ -22,7 +22,7 @@
 #include "core/Processor.h"
 #include "core/ProcessorMetrics.h"
 #include "core/extension/ExtensionManager.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/controllers/ProxyConfigurationServiceInterface.h"
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "minifi-cpp/core/Annotation.h"

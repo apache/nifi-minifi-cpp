@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "aws/core/Aws.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "utils/AWSSdkLogger.h"
 #include "utils/ExtensionInitUtils.h"
