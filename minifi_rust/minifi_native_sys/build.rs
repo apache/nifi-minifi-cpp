@@ -17,9 +17,7 @@ impl SDK {
             repo_root, canon
         );
 
-        let header_path = canon
-            .to_path_buf()
-            .join("minifi-api/include/minifi-api.h");
+        let header_path = canon.to_path_buf().join("minifi-api/include/minifi-api.h");
         let def_path = canon.to_path_buf().join("minifi-api/minifi-api.def");
         let behave_path = canon.to_path_buf().join("behave_framework");
 

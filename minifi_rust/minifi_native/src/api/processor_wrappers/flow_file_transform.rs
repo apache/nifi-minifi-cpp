@@ -1,4 +1,5 @@
 use crate::api::InputStream;
+use crate::api::flow_file::GetId;
 use crate::api::processor::Processor;
 use crate::api::processor_wrappers::utils::context_session_flowfile_bundle::ContextSessionFlowFileBundle;
 use crate::api::processor_wrappers::utils::flow_file_content::Content;
@@ -9,7 +10,6 @@ use crate::{
     ProcessContext, ProcessSession, Relationship, Schedule, info,
 };
 use std::collections::HashMap;
-use crate::api::flow_file::GetId;
 
 #[derive(Debug)]
 pub struct TransformedFlowFile<'a> {

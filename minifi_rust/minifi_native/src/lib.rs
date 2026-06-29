@@ -37,8 +37,7 @@ pub use api::process_session::IoState;
 pub use api::attribute::{GetAttribute, OutputAttribute};
 
 pub use api::{
-    GetId, 
-    FlowFile, InputStream, OnTriggerResult, OutputStream, ProcessContext, ProcessSession,
+    FlowFile, GetId, InputStream, OnTriggerResult, OutputStream, ProcessContext, ProcessSession,
     ProcessorInputRequirement, Relationship, StandardPropertyValidator,
 };
 
