@@ -19,25 +19,25 @@
  */
 #pragma once
 
+#include <memory>
+#include <mutex>
+#include <stack>
 #include <string>
 #include <utility>
 #include <vector>
-#include <mutex>
-#include <memory>
-#include <stack>
 
-#include "http/BaseHTTPClient.h"
 #include "concurrentqueue.h"
-#include "core/ProcessorImpl.h"
-#include "core/ProcessSession.h"
-#include "minifi-cpp/core/PropertyDefinition.h"
-#include "core/PropertyDefinitionBuilder.h"
-#include "minifi-cpp/core/RelationshipDefinition.h"
-#include "sitetosite/SiteToSiteClient.h"
-#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
-#include "core/logging/LoggerFactory.h"
-#include "minifi-cpp/utils/Export.h"
 #include "core/ClassLoader.h"
+#include "core/ProcessSession.h"
+#include "core/ProcessorImpl.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/logging/LoggerFactory.h"
+#include "http/BaseHTTPClient.h"
+#include "minifi-cpp/controllers/SSLContextServiceInterface.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "minifi-cpp/core/RelationshipDefinition.h"
+#include "minifi-cpp/utils/Export.h"
+#include "sitetosite/SiteToSiteClient.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -49,8 +49,11 @@ struct RPG {
 
 class RemoteProcessGroupPort : public core::ProcessorImpl {
  public:
-  RemoteProcessGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid, sitetosite::TransferDirection direction, std::shared_ptr<core::logging::Logger> logger = nullptr)
-      : core::ProcessorImpl({.uuid = uuid, .name = std::string{name}, .logger = logger ? logger : core::logging::LoggerFactory<RemoteProcessGroupPort>::getLogger(uuid)}),
+  RemoteProcessGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier& uuid,
+      sitetosite::TransferDirection direction, std::shared_ptr<core::logging::Logger> logger = nullptr)
+      : core::ProcessorImpl({.uuid = uuid,
+            .name = std::string{name},
+            .logger = logger ? logger : core::logging::LoggerFactory<RemoteProcessGroupPort>::getLogger(uuid)}),
         configure_(std::move(configure)),
         direction_(direction),
         transmitting_(false),
@@ -62,32 +65,24 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
   }
   virtual ~RemoteProcessGroupPort() = default;
 
-  MINIFIAPI static constexpr auto hostName = core::PropertyDefinitionBuilder<>::createProperty("Host Name")
-      .withDescription("Remote Host Name.")
-      .build();
-  MINIFIAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
-      .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
-      .build();
-  MINIFIAPI static constexpr auto port = core::PropertyDefinitionBuilder<>::createProperty("Port")
-      .withDescription("Remote Port")
-      .build();
-  MINIFIAPI static constexpr auto portUUID = core::PropertyDefinitionBuilder<>::createProperty("Port UUID")
-      .withDescription("Specifies remote NiFi Port UUID.")
-      .build();
-  MINIFIAPI static constexpr auto idleTimeout = core::PropertyDefinitionBuilder<>::createProperty("Idle Timeout")
-    .withDescription("Max idle time for remote service")
-    .isRequired(true)
-    .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
-    .withDefaultValue("15 s")
-    .build();
+  MINIFIAPI static constexpr auto hostName =
+      core::PropertyDefinitionBuilder<>::createProperty("Host Name").withDescription("Remote Host Name.").build();
+  MINIFIAPI static constexpr auto SSLContext =
+      core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
+          .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
+          .build();
+  MINIFIAPI static constexpr auto port = core::PropertyDefinitionBuilder<>::createProperty("Port").withDescription("Remote Port").build();
+  MINIFIAPI static constexpr auto portUUID =
+      core::PropertyDefinitionBuilder<>::createProperty("Port UUID").withDescription("Specifies remote NiFi Port UUID.").build();
+  MINIFIAPI static constexpr auto idleTimeout =
+      core::PropertyDefinitionBuilder<>::createProperty("Idle Timeout")
+          .withDescription("Max idle time for remote service")
+          .isRequired(true)
+          .withValidator(core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)
+          .withDefaultValue("15 s")
+          .build();
 
-  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
-      hostName,
-      SSLContext,
-      port,
-      portUUID,
-      idleTimeout
-  });
+  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({hostName, SSLContext, port, portUUID, idleTimeout});
 
   MINIFIAPI static constexpr auto DefaultRelationship = core::RelationshipDefinition{"undefined", ""};
   MINIFIAPI static constexpr auto Relationships = std::array{DefaultRelationship};
@@ -115,7 +110,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     transmitting_ = val;
   }
 
-  void setInterface(const std::string &ifc) {
+  void setInterface(const std::string& ifc) {
     local_network_interface_ = ifc;
   }
 
@@ -125,7 +120,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     return nifi_instances_;
   }
 
-  void setHTTPProxy(const http::HTTPProxy &proxy) {
+  void setHTTPProxy(const http::HTTPProxy& proxy) {
     proxy_ = proxy;
   }
 
