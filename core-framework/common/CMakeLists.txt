@@ -13,7 +13,7 @@ file(GLOB SOURCES
 
 add_minifi_library(minifi-core-framework-common STATIC ${SOURCES})
 target_include_directories(minifi-core-framework-common PUBLIC include)
-target_link_libraries(minifi-core-framework-common PUBLIC minifi-api-common ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite libsodium range-v3 date::date date::tz asio magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON)
+target_link_libraries(minifi-core-framework-common PUBLIC minifi-api-common ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite::gsl-lite libsodium::libsodium range-v3::range-v3 date::date date::tz asio::asio magic_enum::magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON)
 if(NOT WIN32)
     target_link_libraries(minifi-core-framework-common PUBLIC OSSP::libuuid++)
 endif()

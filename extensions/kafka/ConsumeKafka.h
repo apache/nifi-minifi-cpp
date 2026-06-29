@@ -28,7 +28,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
-#include "rdkafka.h"
+#include "librdkafka/rdkafka.h"
 #include "rdkafka_utils.h"
 #include "utils/ArrayUtils.h"
 #include "api/core/ProcessSession.h"

@@ -21,7 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_KAFKA))
     return()
 endif ()
 
-include(Fetchlibrdkafka)
+include(Getlibrdkafka)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
@@ -30,10 +30,6 @@ file(GLOB SOURCES "*.cpp")
 add_minifi_library(minifi-kafka SHARED ${SOURCES})
 
 target_link_libraries(minifi-kafka minifi-cpp-extension-lib Threads::Threads)
-
-get_target_property(RDKAFKA_INCLUDE_DIRS rdkafka INCLUDE_DIRECTORIES)
-target_include_directories(minifi-kafka SYSTEM PUBLIC ${RDKAFKA_INCLUDE_DIRS})
-target_link_libraries(minifi-kafka rdkafka)
+target_link_libraries(minifi-kafka RdKafka::rdkafka++)
 
 register_c_api_extension(minifi-kafka "RDKAFKA EXTENSIONS" RDKAFKA-EXTENSIONS "This Enables librdkafka functionality including PublishKafka" "extensions/kafka/tests")
-

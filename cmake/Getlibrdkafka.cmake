@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,12 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-include(FetchContent)
-FetchContent_Declare(Uvc
-        URL  https://github.com/libuvc/libuvc/archive/refs/tags/v0.0.7.tar.gz
-        URL_HASH SHA256=7c6ba79723ad5d0ccdfbe6cadcfbd03f9f75b701d7ba96631eb1fd929a86ee72
-        OVERRIDE_FIND_PACKAGE
-        SYSTEM
-)
-FetchContent_MakeAvailable(Uvc)
+
+if(MINIFI_KAFKA_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install librdkafka")
+    find_package(RdKafka REQUIRED)
+elseif(MINIFI_KAFKA_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build librdkafka from source")
+    include(Fetchlibrdkafka)
+endif()

@@ -50,3 +50,8 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(libssh2)
 
 target_link_libraries(libssh2_static PUBLIC OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB)
+
+if (NOT TARGET Libssh2::libssh2)
+    add_library(Libssh2::libssh2 ALIAS libssh2_static)
+endif()
+

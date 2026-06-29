@@ -241,11 +241,7 @@ setlocal EnableDelayedExpansion
   set PATH=!PATH:C:\\Strawberry\\c\\bin;=!;C:\\Program Files\\NASM;
 endlocal & set PATH=%PATH%
 set build_platform=x64
-IF "%VIRTUALENV%"=="" (
-  echo already in venv
-) ELSE (
-  {_get_activate_venv_path()}
-)
+call {_get_activate_venv_path()}
 
 """
 

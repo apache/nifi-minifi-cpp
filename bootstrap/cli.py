@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import os
+import platform
 import inquirer
+import yaml
+from pathlib import Path
 
 from minifi_option import MinifiOptions
 from package_manager import PackageManager
@@ -28,24 +30,88 @@ def install_dependencies(minifi_options: MinifiOptions, package_manager: Package
     return res
 
 
+def export_custom_conan_recipes(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
+    thirdparty_dir = minifi_options.source_dir / "thirdparty"
+    for root, _, files in os.walk(thirdparty_dir):
+        for file in files:
+            if file == "conanfile.py":
+                config_yaml = os.path.join(Path(root).parent, "config.yml")
+
+                with open(config_yaml) as f:
+                    data = yaml.safe_load(f)
+
+                version = next(iter(data["versions"]))
+
+                print(f"Exporting the custom Conan recipe {root} with version {version}")
+                if not package_manager.run_cmd(f"conan export {root} --version={version} --user=minifi --channel=develop"):
+                    print(f"Exporting the custom Conan recipe {root} failed")
+                    return False
+    return True
+
+
+def add_conan_options_from_cmake_options(extension_options: list[str], minifi_options: MinifiOptions) -> str:
+    conan_options = ""
+    for extension_option in extension_options:
+        if minifi_options.bool_options[extension_option.upper()].value not in (None, "OFF"):
+            conan_options += f' -o "&:{extension_option.lower()}=True"'
+    return conan_options
+
+
+def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
+    if not minifi_options.use_conan.value == "ON":
+        print("Conan install skipped because USE_CONAN is OFF")
+        return True
+    conan_options = add_conan_options_from_cmake_options(["ENABLE_ALL", "ENABLE_ROCKSDB", "ENABLE_SFTP", "ENABLE_PROMETHEUS", "ENABLE_BZIP2", "ENABLE_LZMA", "ENABLE_MQTT", "ENABLE_COUCHBASE",
+                                                          "ENABLE_KAFKA", "ENABLE_OPC", "SKIP_TESTS"], minifi_options)
+    if minifi_options.custom_malloc is not None and minifi_options.custom_malloc.value not in (None, "OFF"):
+        conan_options += f' -o "&:custom_malloc={minifi_options.custom_malloc.value}"'
+
+    if not package_manager.run_cmd("conan profile detect --exist-ok"):
+        print("Conan default profile detection failed")
+        return False
+
+    if not export_custom_conan_recipes(minifi_options, package_manager):
+        return False
+
+    compiler_settings = " --settings=compiler.cppstd=23"
+    generator_setting = " -c tools.cmake.cmaketoolchain:generator=Ninja" if minifi_options.use_ninja.value == "ON" else ""
+    conan_remote_add_cmd = "conan remote add nifi-conan https://apache.jfrog.io/artifactory/api/conan/nifi-conan --force"
+    if not package_manager.run_cmd(conan_remote_add_cmd):
+        print("Adding the nifi-conan remote failed")
+        return False
+    build_cmd = f"conan install {minifi_options.source_dir} --output-folder={minifi_options.build_dir} --build=missing {conan_options} " \
+                f"--settings=build_type={minifi_options.build_type.value}{generator_setting}{compiler_settings}"
+    res = package_manager.run_cmd(build_cmd)
+    print("Conan install was successful" if res else "Conan install was unsuccessful")
+    return res
+
+
+def _conan_build_env_prefix(minifi_options: MinifiOptions) -> str:
+    if minifi_options.use_conan.value == "ON" and platform.system() == "Windows":
+        conanbuild = os.path.join(str(minifi_options.build_dir), "conanbuild.bat")
+        return f'call "{conanbuild}" && '
+    return ""
+
+
 def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
     if not os.path.exists(minifi_options.build_dir):
         os.mkdir(minifi_options.build_dir)
-    cmake_cmd = f"cmake {minifi_options.create_cmake_generator_str()} {minifi_options.create_cmake_options_str()} {minifi_options.source_dir} -B {minifi_options.build_dir}"
+    cmake_cmd = f"{_conan_build_env_prefix(minifi_options)}cmake {minifi_options.create_cmake_generator_str()} {minifi_options.create_cmake_use_conan_str()} " \
+                f"{minifi_options.create_cmake_options_str()} {minifi_options.source_dir} -B {minifi_options.build_dir}"
     res = package_manager.run_cmd(cmake_cmd)
     print("CMake command run successfully" if res else "CMake command run unsuccessfully")
     return res
 
 
 def do_build(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"cmake --build {str(minifi_options.build_dir)} {minifi_options.create_cmake_build_flags_str()}"
+    build_cmd = f"{_conan_build_env_prefix(minifi_options)}cmake --build {str(minifi_options.build_dir)} {minifi_options.create_cmake_build_flags_str()}"
     res = package_manager.run_cmd(build_cmd)
     print("Build was successful" if res else "Build was unsuccessful")
     return res
 
 
 def do_package(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"cmake --build {str(minifi_options.build_dir)} --target package {minifi_options.create_cmake_build_flags_str()}"
+    build_cmd = f"{_conan_build_env_prefix(minifi_options)}cmake --build {str(minifi_options.build_dir)} --target package {minifi_options.create_cmake_build_flags_str()}"
     return package_manager.run_cmd(build_cmd)
 
 
@@ -56,6 +122,7 @@ def do_docker_build(minifi_options: MinifiOptions, package_manager: PackageManag
 
 def do_one_click_build(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     assert install_dependencies(minifi_options, package_manager)
+    assert run_conan_install(minifi_options, package_manager)
     assert run_cmake(minifi_options, package_manager)
     assert do_build(minifi_options, package_manager)
     assert do_package(minifi_options, package_manager)
@@ -64,6 +131,7 @@ def do_one_click_build(minifi_options: MinifiOptions, package_manager: PackageMa
 
 def do_one_click_configuration(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     assert install_dependencies(minifi_options, package_manager)
+    assert run_conan_install(minifi_options, package_manager)
     assert run_cmake(minifi_options, package_manager)
     return True
 
@@ -75,6 +143,7 @@ def main_menu(minifi_options: MinifiOptions, package_manager: PackageManager):
             # All menu options' functions return True if the bootstrap should exit after execution
             f"Build dir: {minifi_options.build_dir}": build_dir_menu,
             f"Build type: {minifi_options.build_type.value}": build_type_menu,
+            f"Custom malloc: {minifi_options.custom_malloc.value if minifi_options.custom_malloc is not None else 'N/A'}": custom_malloc_menu,
             "Build options": build_options_menu,
             "Extension options": extension_options_menu,
             "One click build": do_one_click_build,
@@ -109,6 +178,25 @@ def build_type_menu(minifi_options: MinifiOptions, _package_manager: PackageMana
     if answers is None:
         return True
     minifi_options.build_type.value = answers["build_type"]
+    minifi_options.save_option_state()
+    return False
+
+
+def custom_malloc_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
+    if minifi_options.custom_malloc is None:
+        return False
+    questions = [
+        inquirer.List(
+            "custom_malloc",
+            message="Custom malloc implementation (only jemalloc and mimalloc are provided via Conan)",
+            choices=minifi_options.custom_malloc.possible_values,
+        ),
+    ]
+
+    answers = inquirer.prompt(questions)
+    if answers is None:
+        return True
+    minifi_options.custom_malloc.value = answers["custom_malloc"]
     minifi_options.save_option_state()
     return False
 
@@ -185,6 +273,7 @@ def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageMan
             # All menu options' functions return True if the bootstrap should exit after execution
             f"Build dir: {minifi_options.build_dir}": build_dir_menu,
             "Install dependencies": install_dependencies,
+            "Run conan install": run_conan_install,
             "Run cmake": run_cmake,
             "Build": do_build,
             "Package": do_package,

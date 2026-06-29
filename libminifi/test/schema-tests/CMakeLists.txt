@@ -17,7 +17,7 @@
 # under the License.
 #
 
-include(JsonSchemaValidator)
+include(GetJsonSchemaValidator)
 
 file(GLOB SCHEMA_TESTS  "*.cpp")
 SET(SCHEMA_TEST_COUNT 0)

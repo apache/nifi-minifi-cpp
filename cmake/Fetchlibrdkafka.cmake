@@ -37,8 +37,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
 
 FetchContent_Declare(libkafka
-        URL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.14.1.tar.gz
-        URL_HASH SHA256=bb246e754dee3560e9b42bf4e844dc05de4b146a3cae937e36301ffacdc456e7
+        URL https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.14.2.tar.gz
+        URL_HASH SHA256=d7eec9c31c817fa44402f679c252dfbf97e4c338a849a25c3579a31fd127beb8
         PATCH_COMMAND "${PC}"
         SYSTEM
 )
@@ -55,3 +55,16 @@ target_include_directories(rdkafka SYSTEM PRIVATE ${ZSTD_INCLUDE_DIRS})
 target_include_directories(rdkafka SYSTEM PRIVATE ${LZ4_INCLUDE_DIRS})
 
 target_link_libraries(rdkafka INTERFACE zstd::zstd lz4::lz4)
+
+if (NOT TARGET RdKafka::rdkafka++)
+    add_library(RdKafka::rdkafka++ ALIAS rdkafka)
+endif()
+
+set(RDKAFKA_PUBLIC_INCLUDE_DIR "${libkafka_BINARY_DIR}/include")
+foreach(RDKAFKA_PUBLIC_HEADER rdkafka.h rdkafka_mock.h)
+    configure_file(
+            "${libkafka_SOURCE_DIR}/src/${RDKAFKA_PUBLIC_HEADER}"
+            "${RDKAFKA_PUBLIC_INCLUDE_DIR}/librdkafka/${RDKAFKA_PUBLIC_HEADER}"
+            COPYONLY)
+endforeach()
+target_include_directories(rdkafka SYSTEM INTERFACE "$<BUILD_INTERFACE:${RDKAFKA_PUBLIC_INCLUDE_DIR}>")

@@ -21,7 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_SFTP))
     return()
 endif()
 
-include(FetchLibSSH2)
+include(GetLibSSH2)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(client processors)
@@ -32,6 +32,6 @@ add_minifi_library(minifi-sftp SHARED ${SOURCES})
 set_target_properties(minifi-sftp PROPERTIES HAS_CUSTOM_INITIALIZER TRUE)
 
 target_link_libraries(minifi-sftp ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-sftp libssh2 RapidJSON)
+target_link_libraries(minifi-sftp Libssh2::libssh2 RapidJSON)
 
 register_extension(minifi-sftp "SFTP EXTENSIONS" SFTP "This enables SFTP support" "extensions/sftp/tests")

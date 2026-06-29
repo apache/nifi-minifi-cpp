@@ -105,7 +105,7 @@ void XMLRecordSetWriter::convertRecordField(const std::string& field_name, const
   pugi::xml_node field_node = parent_node.append_child(field_name.c_str());
   std::visit(utils::overloaded {
     [&field_node](const std::string& str_val) {
-      field_node.text().set(str_val);
+      field_node.text().set(str_val.c_str());
     },
     [&field_node](int64_t i64_val) {
       field_node.text().set(std::to_string(i64_val).c_str());

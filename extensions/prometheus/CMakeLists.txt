@@ -21,14 +21,14 @@ if (NOT (ENABLE_PROMETHEUS OR ENABLE_ALL))
     return()
 endif()
 
-include(Prometheus)
+include(GetPrometheus)
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "*.cpp")
 
 add_minifi_library(minifi-prometheus SHARED ${SOURCES})
 
-target_link_libraries(minifi-prometheus ${LIBMINIFI} prometheus-cpp::core  prometheus-cpp::pull)
+target_link_libraries(minifi-prometheus ${LIBMINIFI} ${_prometheus_targets})
 target_include_directories(minifi-prometheus PUBLIC ${prometheus-cpp_INCLUDE_DIRS})
 
 register_extension(minifi-prometheus "PROMETHEUS EXTENSIONS" PROMETHEUS-EXTENSIONS "This enables Prometheus support" "extensions/prometheus/tests")

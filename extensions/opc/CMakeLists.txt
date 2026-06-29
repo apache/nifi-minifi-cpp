@@ -20,10 +20,7 @@ if (NOT (ENABLE_ALL OR ENABLE_OPC))
     return()
 endif()
 
-include(MbedTLS)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/mbedtls/dummy")
-
-include(Open62541)
+include(GetOpen62541)
 
 set( CMAKE_VERBOSE_MAKEFILE on )
 

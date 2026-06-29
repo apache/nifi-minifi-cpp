@@ -30,3 +30,7 @@ if(NOT asio_POPULATED)
     find_package(Threads)
     target_link_libraries(asio INTERFACE Threads::Threads OpenSSL::SSL OpenSSL::Crypto)
 endif()
+
+if (NOT TARGET asio::asio)
+    add_library(asio::asio ALIAS asio)
+endif()

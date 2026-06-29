@@ -22,7 +22,7 @@
 #include <thread>
 #include <span>
 
-#include "rdkafka.h"
+#include "librdkafka/rdkafka.h"
 #include "api/utils/Ssl.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "magic_enum/magic_enum.hpp"

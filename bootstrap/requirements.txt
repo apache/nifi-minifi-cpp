@@ -4,3 +4,5 @@ pathlib==1.0.1
 distro==1.8.0
 ninja==1.11.1
 argparse==1.4.0
+conan==2.30.0
+PyYAML==6.0.3

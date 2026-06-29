@@ -87,8 +87,12 @@ endif()
 # Use ccache if present
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    if(NOT CMAKE_C_COMPILER_LAUNCHER)
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_FOUND}")
+    endif()
+    if(NOT CMAKE_CXX_COMPILER_LAUNCHER)
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_FOUND}")
+    endif()
     message("-- Found ccache: ${CCACHE_FOUND}")
 endif(CCACHE_FOUND)
 
@@ -197,6 +201,7 @@ set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
     -DANDROID_NDK=${ANDROID_NDK}
     -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
     -DCMAKE_POLICY_VERSION_MINIMUM=${CMAKE_POLICY_VERSION_MINIMUM}
+    -DCMAKE_POLICY_DEFAULT_CMP0091=NEW
     -DCMAKE_C_FLAGS=${PASSTHROUGH_CMAKE_C_FLAGS}
     -DCMAKE_CXX_FLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS}
     -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
@@ -221,12 +226,12 @@ set(MINIFI_CPP_COMPILE_DEFINITIONS "")
 
 if(CUSTOM_MALLOC)
     if (CUSTOM_MALLOC STREQUAL jemalloc)
-        include(BundledJemalloc)
-        use_bundled_jemalloc(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-        set(CUSTOM_MALLOC_LIB JeMalloc::JeMalloc)
+        include(GetJemalloc)
+        get_jemalloc(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+        set(CUSTOM_MALLOC_LIB jemalloc::jemalloc)
     elseif (CUSTOM_MALLOC STREQUAL mimalloc)
-        include(MiMalloc)
-        set(CUSTOM_MALLOC_LIB mimalloc)
+        include(GetMiMalloc)
+        set(CUSTOM_MALLOC_LIB mimalloc-static)
     elseif (CUSTOM_MALLOC STREQUAL rpmalloc)
         include(RpMalloc)
         set(CUSTOM_MALLOC_LIB rpmalloc)
@@ -259,8 +264,8 @@ if(NOT WIN32)
 endif()
 
 # libsodium
-include(BundledLibSodium)
-use_bundled_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+include(GetLibSodium)
+get_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
 
 list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS SODIUM_STATIC=1)
 list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS "RPM_CONFIG_DIR=\"/${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}\"")
@@ -283,7 +288,7 @@ include(GetSpdlog)
 get_spdlog()
 
 # yaml-cpp
-include(YamlCpp)
+include(GetYamlCpp)
 
 # concurrentqueue
 add_library(concurrentqueue INTERFACE)
@@ -295,7 +300,7 @@ target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DI
 target_compile_definitions(RapidJSON INTERFACE RAPIDJSON_HAS_STDSTRING)
 
 # gsl-lite
-include(GslLite)
+include(GetGslLite)
 
 # Add necessary definitions based on the value of STRICT_GSL_CHECKS, see gsl-lite README for more details
 list(APPEND GslDefinitions gsl_CONFIG_DEFAULTS_VERSION=1)
@@ -314,13 +319,17 @@ endif()
 if (STRICT_GSL_CHECKS STREQUAL "DEBUG_ONLY")
     list(APPEND GslDefinitions $<$<NOT:$<CONFIG:Debug>>:${GslDefinitionsNonStrict}>)
 endif()
-target_compile_definitions(gsl-lite INTERFACE ${GslDefinitions})
 
-# date
+get_target_property(_gsl_lite_real_target gsl-lite::gsl-lite ALIASED_TARGET)
+if (NOT _gsl_lite_real_target)
+    set(_gsl_lite_real_target gsl-lite::gsl-lite)
+endif()
+target_compile_definitions(${_gsl_lite_real_target} INTERFACE ${GslDefinitions})
+
 include(Date)
-
-# magic_enum
-include(MagicEnum)
+include(GetMagicEnum)
+include(GetRangeV3)
+include(GetAsio)
 
 # Setup warning flags
 if(MSVC)
@@ -371,7 +380,7 @@ endif()
 ## Add extensions
 
 # PugiXML required for standard processors and WEL extension
-include(PugiXml)
+include(GetPugiXml)
 
 file(GLOB extension-directories "extensions/*")
 foreach(extension-dir ${extension-directories})

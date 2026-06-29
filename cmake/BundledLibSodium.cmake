@@ -94,8 +94,8 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
     # Create imported targets
     file(MAKE_DIRECTORY ${LIBSODIUM_INCLUDE_DIRS})
 
-    add_library(libsodium STATIC IMPORTED)
-    set_target_properties(libsodium PROPERTIES IMPORTED_LOCATION "${LIBSODIUM_LIBRARIES}")
-    add_dependencies(libsodium libsodium-external)
-    set_property(TARGET libsodium APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LIBSODIUM_INCLUDE_DIRS}")
+    add_library(libsodium::libsodium STATIC IMPORTED)
+    set_target_properties(libsodium::libsodium PROPERTIES IMPORTED_LOCATION "${LIBSODIUM_LIBRARIES}")
+    add_dependencies(libsodium::libsodium libsodium-external)
+    set_property(TARGET libsodium::libsodium APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LIBSODIUM_INCLUDE_DIRS}")
 endfunction(use_bundled_libsodium)

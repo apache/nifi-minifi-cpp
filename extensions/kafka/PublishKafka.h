@@ -35,7 +35,7 @@
 #include "minifi-cpp/core/RelationshipDefinition.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/PropertyValidator.h"
-#include "rdkafka.h"
+#include "librdkafka/rdkafka.h"
 #include "utils/ArrayUtils.h"
 #include "utils/RegexUtils.h"
 #include "minifi-cpp/core/Annotation.h"
