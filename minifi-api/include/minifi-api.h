@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef MINIFI_API_INCLUDE_MINIFI_C_MINIFI_API_H_
-#define MINIFI_API_INCLUDE_MINIFI_C_MINIFI_API_H_
+#ifndef MINIFI_API_INCLUDE_MINIFI_API_H_
+#define MINIFI_API_INCLUDE_MINIFI_API_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -310,4 +310,4 @@ enum minifi_status minifi_process_context_get_proxy_data_from_property(struct mi
 }  // extern "C"
 #endif  // __cplusplus
 
-#endif  // MINIFI_API_INCLUDE_MINIFI_C_MINIFI_API_H_
+#endif  // MINIFI_API_INCLUDE_MINIFI_API_H_
