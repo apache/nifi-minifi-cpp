@@ -34,24 +34,24 @@ pub(crate) const EXTRA_INFO: Property = Property {
 
 #[allow(dead_code)] // extra_info is only used by {:?}
 #[derive(Debug, ComponentIdentifier)]
-pub(crate) struct DogController {
+pub(crate) struct DogControllerRs {
     has_jetpack: bool,
     extra_info: String,
 }
 
-impl NumberOfLegsControllerApi for DogController {
+impl NumberOfLegsControllerApi for DogControllerRs {
     fn number_of_legs(&self) -> u8 {
         4
     }
 }
 
-impl CanFlyControllerApi for DogController {
+impl CanFlyControllerApi for DogControllerRs {
     fn can_fly(&self) -> bool {
         self.has_jetpack
     }
 }
 
-impl EnableControllerService for DogController {
+impl EnableControllerService for DogControllerRs {
     fn enable<Ctx: GetProperty, L: Logger>(context: &Ctx, _logger: &L) -> Result<Self, MinifiError>
     where
         Self: Sized,
@@ -69,8 +69,8 @@ impl EnableControllerService for DogController {
     }
 }
 
-impl ControllerServiceDefinition for DogController {
-    const DESCRIPTION: &'static str = "Test DogController";
+impl ControllerServiceDefinition for DogControllerRs {
+    const DESCRIPTION: &'static str = "Test DogControllerRs";
     const PROPERTIES: &'static [Property] = &[HAS_JETPACK, EXTRA_INFO];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[
         create_provided_interface!(dyn CanFlyControllerApi),

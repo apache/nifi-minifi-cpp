@@ -29,8 +29,8 @@ limitations under the License.
 - [ZooProcessorRs](#ZooProcessorRs)
 ### Controller Services
 
-- [DogController](#DogController)
-- [DuckController](#DuckController)
+- [DogControllerRs](#DogControllerRs)
+- [DuckControllerRs](#DuckControllerRs)
 - [DummyControllerService](#DummyControllerService)
 - [LoremIpsumControllerService](#LoremIpsumControllerService)
 
@@ -276,11 +276,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 |------|-------------|
 
 
-## DogController
+## DogControllerRs
 
 ### Description
 
-Test DogController
+Test DogControllerRs
 
 ### Properties
 
@@ -292,11 +292,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Has Jetpack**   | false         | true<br/>false   | Whether or not the dog has a jetpack                  |
 
 
-## DuckController
+## DuckControllerRs
 
 ### Description
 
-Test DuckController
+Test DuckControllerRs
 
 ### Properties
 

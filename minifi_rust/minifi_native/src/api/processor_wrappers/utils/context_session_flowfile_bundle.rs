@@ -4,6 +4,7 @@ use crate::{
     ComponentIdentifier, EnableControllerService, MinifiError, ProcessContext, ProcessSession,
     Property,
 };
+use crate::api::flow_file::GetId;
 
 pub struct ContextSessionFlowFileBundle<'a, PC, PS>
 where
@@ -65,6 +66,18 @@ where
             Ok(self.session.get_attribute(ff, name))
         } else {
             Ok(None)
+        }
+    }
+}
+
+impl<'a, PC, PS> GetId for ContextSessionFlowFileBundle<'a, PC, PS>
+where PC: ProcessContext,
+    PS: ProcessSession<FlowFile = PC::FlowFile> {
+    fn get_id(&self) -> Result<String, MinifiError> {
+        if let Some(ff) = self.flow_file {
+            self.session.get_flow_file_id(ff)
+        } else {
+            Err(MinifiError::MissingFlowFileError)
         }
     }
 }
