@@ -15,12 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_curl SOURCE_DIR BINARY_DIR)
-    if(MINIFI_LIBCURL_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install libcurl")
-        find_package(CURL REQUIRED)
-    elseif(MINIFI_LIBCURL_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build libcurl from source")
-        include(FetchLibcURL)
-    endif()
-endfunction(get_curl SOURCE_DIR BINARY_DIR)
+if(MINIFI_LIBCURL_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install libcurl")
+    find_package(CURL REQUIRED)
+elseif(MINIFI_LIBCURL_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build libcurl from source")
+    include(FetchLibcURL)
+endif()

@@ -22,7 +22,6 @@ if (NOT ENABLE_ROCKSDB)
 endif()
 
 include(GetRocksDB)
-get_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 

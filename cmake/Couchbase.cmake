@@ -19,7 +19,7 @@ include(FetchContent)
 
 include(GetFmt)
 include(GetSpdlog)
-include(Asio)
+include(GetAsio)
 
 set(COUCHBASE_CXX_CLIENT_BUILD_STATIC ON CACHE BOOL "" FORCE)
 set(COUCHBASE_CXX_CLIENT_BUILD_SHARED OFF CACHE BOOL "" FORCE)
@@ -35,9 +35,9 @@ if(MSVC)
     add_compile_definitions(ASIO_DISABLE_CONCEPTS)
 endif()
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/remove-thirdparty.patch")
-set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/c++23_fixes.patch")
-set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/use_fmt_instead_of_spdlog_fmt.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/all/patches/remove-thirdparty.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/all/patches/c++23_fixes.patch")
+set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/couchbase/all/patches/use_fmt_instead_of_spdlog_fmt.patch")
 
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
             (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
@@ -52,4 +52,6 @@ FetchContent_Declare(couchbase-cxx-client
 )
 FetchContent_MakeAvailable(couchbase-cxx-client)
 
-set(COUCHBASE_INCLUDE_DIR "${couchbase-cxx-client_SOURCE_DIR}" CACHE STRING "" FORCE)
+if (NOT TARGET couchbase_cxx_client::couchbase_cxx_client)
+    add_library(couchbase_cxx_client::couchbase_cxx_client ALIAS couchbase_cxx_client_static_intermediate)
+endif()

@@ -25,10 +25,8 @@ file(GLOB SOURCES "processors/*.cpp" "controllers/*.cpp" "utils/*.cpp" "modbus/*
 add_minifi_library(minifi-standard-processors SHARED ${SOURCES})
 target_include_directories(minifi-standard-processors PUBLIC "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
 
-include(RangeV3)
-include(Asio)
-include(Jsoncons)
-target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3 asio pugixml jsoncons)
+include(GetJsoncons)
+target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3::range-v3 asio::asio pugixml::pugixml jsoncons::jsoncons)
 
 
 register_extension(minifi-standard-processors "STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors" "extensions/standard-processors/tests/")

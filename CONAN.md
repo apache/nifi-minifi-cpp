@@ -36,7 +36,11 @@ source, it uses CMake to install the third party external libraries that are ena
 
 ## Build MiNiFi C++ with Conan
 
-### Install Conan
+### Using the bootstrap python script
+
+The easiest way to build MiNiFi C++ using Conan is by using the the bootstrap script. Run the bootstrap script either with `bootstrap/py_bootstrap.sh` or `bootstrap/py_bootstrap.bat` and the bootstrap installs the conan package manager automatically. In the bootstrap script under Build options menu select the `USE_CONAN` option. Running the one click build with the option selected, it will download the available thirdparty dependencies from the conan repository, otherwise it will build the thirdparty dependency from source (either with the available conan recipe or using the bundled cmake script).
+
+### Install Conan manually
 
 ~~~bash
 sudo pip install --force-reinstall -v "conan==2.28.1"
@@ -45,13 +49,27 @@ sudo pip install --force-reinstall -v "conan==2.28.1"
 conan profile detect
 ~~~
 
-### Create Custom RocksDB Conan Package
-The default RocksDB conan package is built with -fno-rtti, which makes it incompatible with MiNiFi. So we need to create a custom RocksDB conan package that is built with -frtti.
+### Create Custom Conan Package
+Some packages need custom versions built for MiNiFi specifically. This could be due patched source code, different compile options, or different dependency library versions.
+
+For example the default RocksDB conan package is built with -fno-rtti, which makes it incompatible with MiNiFi. So we need to create a custom RocksDB conan package that is built with -frtti.
 
 ~~~bash
 cd $HOME/nifi-minifi-cpp/thirdparty/rocksdb/all
 
 conan create . --user=minifi --channel=develop --test-folder="" --version=11.1.1 --profile=../../../etc/conan/profiles/release-linux
+~~~
+
+If you want to use conan to build these custom libraries as part of the MiNiFi build you only need to export these libraries instead of creating them.
+
+~~~bash
+conan export $HOME/nifi-minifi-cpp/thirdparty/rocksdb/all --version=11.1.1 --user=minifi --channel=develop
+~~~
+
+You can add the official NiFi remote Conan repository to download the custom Conan packages and recipes manually:
+
+~~~bash
+conan remote add nifi-conan https://apache.jfrog.io/artifactory/api/conan/nifi-conan
 ~~~
 
 ### Build MiNiFi
@@ -66,6 +84,12 @@ conan install . --build=missing --output-folder=build_conan --profile=etc/conan/
 
 # build MiNiFi C++ using conanfile.py invoking Conan & CMake
 conan build . --output-folder=build_conan --profile=etc/conan/profiles/release-linux
+~~~
+
+After `conan install` command you can also use the conan generated `conan_toolchain.cmake` file with the CMake command to build with Conan packages:
+
+~~~bash
+cmake -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake .. && ninja
 ~~~
 
 - **NOTE**: After building MiNiFi, we must have the MINIFI_HOME environment variable created in order to successfully run the minifi binary executable.

@@ -15,12 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_zlib SOURCE_DIR BINARY_DIR)
-    if(MINIFI_ZLIB_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install zlib")
-        find_package(ZLIB REQUIRED)
-    elseif(MINIFI_ZLIB_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build zlib from source")
-        include(ZLIB)
-    endif()
-endfunction(get_zlib)
+if(MINIFI_ZLIB_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install zlib")
+    find_package(ZLIB REQUIRED)
+elseif(MINIFI_ZLIB_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build zlib from source")
+    include(ZLIB)
+endif()

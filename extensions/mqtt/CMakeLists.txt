@@ -30,7 +30,7 @@ add_minifi_library(minifi-mqtt-extensions SHARED ${SOURCES})
 
 target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
 
-include(PahoMqttC)
-target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
+include(GetPahoMqttC)
+target_link_libraries(minifi-mqtt-extensions eclipse-paho-mqtt-c::paho-mqtt3as-static)
 
 register_extension(minifi-mqtt-extensions "MQTT EXTENSIONS" MQTT-EXTENSIONS "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "${CMAKE_CURRENT_SOURCE_DIR}/tests")

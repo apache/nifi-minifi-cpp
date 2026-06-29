@@ -25,10 +25,8 @@ set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
 set(PAHO_HIGH_PERFORMANCE ON CACHE BOOL "" FORCE)
 
 set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/cmake-openssl.patch")
-set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/1576-Changed-bool-typedef-to-bit.patch")
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\")")
 
 FetchContent_Declare(
         paho.mqtt.c-external
@@ -40,6 +38,4 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(paho.mqtt.c-external)
 
-# Set dependencies and target to link to
-add_library(paho.mqtt.c ALIAS paho-mqtt3as-static)
 target_link_libraries(common_ssl_obj_static PUBLIC OpenSSL::SSL OpenSSL::Crypto)

@@ -19,14 +19,13 @@ include(FetchContent)
 
 set(OPEN62541_VERSION "v1.5.4" CACHE STRING "" FORCE)
 set(UA_ENABLE_ENCRYPTION ON CACHE BOOL "" FORCE)
+set(UA_ENABLE_ENCRYPTION_OPENSSL ON CACHE BOOL "" FORCE)
 set(UA_FORCE_WERROR OFF CACHE BOOL "" FORCE)
 set(UA_ENABLE_DEBUG_SANITIZER OFF CACHE BOOL "" FORCE)
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/open62541/open62541.patch")
-set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/open62541/cflag_fix.patch")
+set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/open62541/all/patches/open62541.patch")
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
 
 FetchContent_Declare(
     open62541
@@ -41,4 +40,9 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(open62541)
 
-add_dependencies(open62541 mbedtls)
+add_dependencies(open62541 OpenSSL::Crypto OpenSSL::SSL)
+
+if(TARGET openssl-external)
+    add_dependencies(open62541-object openssl-external)
+    add_dependencies(open62541-plugins openssl-external)
+endif()

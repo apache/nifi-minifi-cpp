@@ -1,7 +1,16 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 89e7d67ae..8a3c39600 100644
+index 89e7d67ae..ebc16a748 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
+@@ -18,7 +18,7 @@ endif()
+ 
+ # set(CMAKE_VERBOSE_MAKEFILE ON)
+ 
+-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
++list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
+ 
+ find_package(Python3 REQUIRED)
+ find_package(Git)
 @@ -588,24 +588,21 @@ endif()
  # Compiler Settings #
  #####################
@@ -35,7 +44,25 @@ index 89e7d67ae..8a3c39600 100644
      endif()
  endfunction()
  
-@@ -1438,6 +1435,11 @@ else()
+@@ -717,17 +714,6 @@ if((CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang") AND
+         endif()
+     endif()
+ 
+-    # Inter Procedural Optimization / Link Time Optimization (should be same as -flto)
+-    # IPO requires too much memory for unit tests
+-    # GCC docu recommends to compile all files with the same options, therefore ignore it completely
+-    if(NOT UA_BUILD_UNIT_TESTS AND NOT DEFINED CMAKE_INTERPROCEDURAL_OPTIMIZATION)
+-        include(CheckIPOSupported)
+-        check_ipo_supported(RESULT CC_HAS_IPO)
+-        if(CC_HAS_IPO)
+-            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+-        endif()
+-    endif()
+-
+     # Linker
+     set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "") # cmake sets -rdynamic by default
+     if(APPLE)
+@@ -1438,6 +1424,11 @@ else()
  endif()
  add_library(open62541 $<TARGET_OBJECTS:open62541-object> $<TARGET_OBJECTS:open62541-plugins>)
  
@@ -46,4 +73,18 @@ index 89e7d67ae..8a3c39600 100644
 +
  add_dependencies(open62541-object open62541-code-generation)
  add_dependencies(open62541-plugins open62541-code-generation)
+ 
+diff --git a/arch/posix/eventloop_posix.h b/arch/posix/eventloop_posix.h
+index ce64f374a..c4b69668c 100644
+--- a/arch/posix/eventloop_posix.h
++++ b/arch/posix/eventloop_posix.h
+@@ -277,7 +277,9 @@ typedef int SOCKET;
+ 
+ #ifndef __ANDROID__
+ #ifndef __APPLE__
++#ifdef __GLIBC__
+ #include <bits/stdio_lim.h>
++#endif
+ #endif /* !__APPLE__ */
+ #endif /* !__ANDROID__ */
  

@@ -47,8 +47,13 @@ target_link_libraries(civetweb-cpp PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
 target_compile_definitions(civetweb-c-library PRIVATE SOCKET_TIMEOUT_QUANTUM=200)
 
-add_library(civetweb::c-library ALIAS civetweb-c-library)
-add_library(civetweb::civetweb-cpp ALIAS civetweb-cpp)
+if (NOT TARGET civetweb::c-library)
+    add_library(civetweb::c-library ALIAS civetweb-c-library)
+endif()
+
+if (NOT TARGET civetweb::civetweb-cpp)
+    add_library(civetweb::civetweb-cpp ALIAS civetweb-cpp)
+endif()
 
 set(CIVETWEB_INCLUDE_DIR "${civetweb_SOURCE_DIR}/include")
 set(CIVETWEB_INCLUDE_DIRS "${CIVETWEB_INCLUDE_DIR}")

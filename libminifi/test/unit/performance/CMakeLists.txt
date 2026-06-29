@@ -21,7 +21,7 @@ if (NOT MINIFI_PERFORMANCE_TESTS)
     return()
 endif()
 
-include(FetchBenchmark)
+include(GetBenchmark)
 
 GETSOURCEFILES(PERF_TESTS "${TEST_DIR}/unit/performance")
 

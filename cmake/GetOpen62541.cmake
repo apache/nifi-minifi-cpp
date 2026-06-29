@@ -15,11 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if(NOT MBEDTLS_FOUND)
-    set(MBEDTLS_FOUND "YES" CACHE STRING "" FORCE)
-    set(MBEDTLS_INCLUDE_DIRS "${EXPORTED_MBEDTLS_INCLUDE_DIRS}" CACHE STRING "" FORCE)
-    set(MBEDTLS_LIBRARIES ${EXPORTED_MBEDTLS_LIBRARIES} CACHE STRING "" FORCE)
-    set(MBEDTLS_LIBRARY "${EXPORTED_MBEDTLS_LIBRARY}" CACHE STRING "" FORCE)
-    set(MBEDX509_LIBRARY "${EXPORTED_MBEDX509_LIBRARY}" CACHE STRING "" FORCE)
-    set(MBEDCRYPTO_LIBRARY "${EXPORTED_MBEDCRYPTO_LIBRARY}" CACHE STRING "" FORCE)
+if(MINIFI_OPC_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install open62541")
+    find_package(open62541 REQUIRED)
+elseif(MINIFI_OPC_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build open62541 from source")
+    include(Open62541)
 endif()

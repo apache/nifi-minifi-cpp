@@ -18,7 +18,6 @@
 #
 
 include(GetCivetWeb)
-get_civetweb()
 
 add_subdirectory(unit)
 add_subdirectory(integration)

@@ -16,7 +16,6 @@
 # under the License.
 
 include(GetCatch2)
-get_catch2()
 
 ### test functions
 MACRO(GETSOURCEFILES result curdir)
@@ -79,7 +78,7 @@ function(createTests testName)
 
     target_link_libraries(${testName} ${CMAKE_DL_LIBS})
     target_wholearchive_library(${testName} libminifi-unittest)
-    target_link_libraries(${testName} core-minifi yaml-cpp spdlog Threads::Threads)
+    target_link_libraries(${testName} core-minifi yaml-cpp::yaml-cpp spdlog Threads::Threads)
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test/libtest/")
     target_compile_definitions(${testName} PRIVATE LOAD_EXTENSIONS)
     set_target_properties(${testName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -91,7 +90,7 @@ function(createIntegrationTests testName)
 
     target_link_libraries(${testName} ${CMAKE_DL_LIBS})
     target_wholearchive_library(${testName} libminifi-integrationtest)
-    target_link_libraries(${testName} core-minifi yaml-cpp spdlog Threads::Threads)
+    target_link_libraries(${testName} core-minifi yaml-cpp::yaml-cpp spdlog Threads::Threads)
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test/libtest/")
     target_compile_definitions(${testName} PRIVATE LOAD_EXTENSIONS)
     set_target_properties(${testName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")

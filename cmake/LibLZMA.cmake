@@ -31,7 +31,9 @@ FetchContent_Declare(liblzma
 
 FetchContent_MakeAvailable(liblzma)
 
-add_library(LibLZMA::LibLZMA ALIAS liblzma)
+if (NOT TARGET LibLZMA::LibLZMA)
+    add_library(LibLZMA::LibLZMA ALIAS liblzma)
+endif()
 
 # Set exported variables for FindPackage.cmake
 
@@ -44,3 +46,5 @@ else()
     set(LIBLZMA_LIBRARY "${liblzma_BINARY_DIR}/liblzma.a" CACHE STRING "" FORCE)
     set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_LIBLZMA_LIBRARY=${LIBLZMA_LIBRARY}" CACHE STRING "" FORCE)
 endif()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/liblzma/dummy")

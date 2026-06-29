@@ -28,4 +28,7 @@ FetchContent_Declare(
         SYSTEM
 )
 FetchContent_MakeAvailable(crc32c)
-add_library(Crc32c::crc32c ALIAS crc32c)
+
+if (NOT TARGET Crc32c::crc32c)
+    add_library(Crc32c::crc32c ALIAS crc32c)
+endif()
