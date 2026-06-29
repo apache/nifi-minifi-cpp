@@ -118,7 +118,7 @@ jobs:
   windows_VS2022:
     name: "Windows Server 2025 x86_64"
     runs-on: windows-2025
-    timeout-minutes: 240
+    timeout-minutes: 300
     env:
       WINDOWS_MINIFI_OPTIONS: >-
         -DCMAKE_BUILD_TYPE=Release
