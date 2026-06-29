@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
+#include "client/SFTPClient.h"
+#include "core/Resource.h"
+#include "minifi-api.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "minifi-cpp/properties/Configure.h"
-#include "client/SFTPClient.h"
-#include "minifi-c/minifi-c.h"
 #include "utils/ExtensionInitUtils.h"
-#include "core/Resource.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
-extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
+extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_context) {
   if (libssh2_init(0) != 0) {
     return;
   }
@@ -33,7 +33,7 @@ extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context
     libssh2_exit();
     return;
   }
-  MinifiExtensionDefinition extension_definition{
+  minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = [] (void* /*user_data*/) {

@@ -24,10 +24,10 @@
 #include <optional>
 #include <string>
 
-#include "minifi-c/minifi-c.h"
+#include "ApiVersion.h"
+#include "minifi-api.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/properties/Configure.h"
-#include "ApiVersion.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 

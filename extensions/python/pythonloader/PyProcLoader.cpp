@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "minifi-c/minifi-c.h"
-#include "utils/ExtensionInitUtils.h"
-#include "PythonCreator.h"
-#include "minifi-cpp/agent/agent_version.h"
 #include "PythonBindings.h"
+#include "PythonCreator.h"
 #include "core/Resource.h"
+#include "minifi-api.h"
+#include "minifi-cpp/agent/agent_version.h"
+#include "utils/ExtensionInitUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -33,15 +33,15 @@ static minifi::extensions::python::PythonCreator& getPythonCreator() {
 // the symbols of the python library
 extern "C" const int LOAD_MODULE_AS_GLOBAL = 1;
 
-extern "C" void MinifiInitCppExtension(MinifiExtensionContext* extension_context) {
+extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_context) {
   getPythonCreator().configure([&] (std::string_view key) -> std::optional<std::string> {
     std::optional<std::string> result;
-    MinifiConfigGet(extension_context, minifi::utils::toStringView(key), [] (void* user_data, MinifiStringView value) {
+    minifi_config_get(extension_context, minifi::utils::toStringView(key), [] (void* user_data, minifi_string_view value) {
       *static_cast<std::optional<std::string>*>(user_data) = std::string{value.data, value.length};
     }, &result);
     return result;
   });
-  MinifiExtensionDefinition extension_definition{
+  minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
     .deinit = nullptr,

@@ -87,14 +87,6 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   std::string getProcessorType() const override = 0;
 
-  void setTriggerWhenEmpty(bool trigger_when_empty) {
-    trigger_when_empty_ = trigger_when_empty;
-  }
-
-  bool getTriggerWhenEmpty() const override {
-    return trigger_when_empty_;
-  }
-
   void initialize(ProcessorDescriptor& self) final;
 
   void setSupportedRelationships(std::span<const RelationshipDefinition> relationships);
@@ -139,8 +131,6 @@ class ProcessorImpl : public virtual ProcessorApi {
   }
 
   ProcessorMetadata metadata_;
-
-  std::atomic<bool> trigger_when_empty_;
 
   std::shared_ptr<ProcessorMetricsExtension> metrics_extension_;
 

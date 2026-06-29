@@ -190,6 +190,7 @@ gsl::not_null<std::unique_ptr<http::HTTPClient>> InvokeHTTP::createHTTPClientFro
 
 
 void InvokeHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  context.setTriggerWhenEmpty(true);
   setupMembersFromProperties(context);
 
   auto create_client = [this](const std::string& url) -> gsl::not_null<std::unique_ptr<minifi::http::HTTPClient>> {

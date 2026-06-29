@@ -11083,13 +11083,13 @@
                 "type": "org.apache.nifi.minifi.api_testing.DogController",
                 "providedApiImplementations": [
                     {
-                        "artifact": "minifi-system",
-                        "group": "org.apache.nifi.minifi",
+                        "artifact": "minifi-stable-api-testing",
+                        "group": "org.apache.nifi.minifi.api_testing",
                         "type": "org.apache.nifi.minifi.api_testing.CanFlyControllerApi"
                     },
                     {
-                        "artifact": "minifi-system",
-                        "group": "org.apache.nifi.minifi",
+                        "artifact": "minifi-stable-api-testing",
+                        "group": "org.apache.nifi.minifi.api_testing",
                         "type": "org.apache.nifi.minifi.api_testing.NumberOfLegsControllerApi"
                     }
                 ]
@@ -11101,13 +11101,13 @@
                 "type": "org.apache.nifi.minifi.api_testing.DuckController",
                 "providedApiImplementations": [
                     {
-                        "artifact": "minifi-system",
-                        "group": "org.apache.nifi.minifi",
+                        "artifact": "minifi-stable-api-testing",
+                        "group": "org.apache.nifi.minifi.api_testing",
                         "type": "org.apache.nifi.minifi.api_testing.CanFlyControllerApi"
                     },
                     {
-                        "artifact": "minifi-system",
-                        "group": "org.apache.nifi.minifi",
+                        "artifact": "minifi-stable-api-testing",
+                        "group": "org.apache.nifi.minifi.api_testing",
                         "type": "org.apache.nifi.minifi.api_testing.NumberOfLegsControllerApi"
                     }
                 ]

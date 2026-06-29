@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "minifi-c.h"
 #include "api/utils/minifi-c-utils.h"
+#include "minifi-api.h"
 
-CEXTENSIONAPI const uint32_t MinifiApiVersion = MINIFI_TEST_API_VERSION;
+CEXTENSIONAPI const uint32_t minifi_api_version = MINIFI_TEST_API_VERSION;
 
-CEXTENSIONAPI void MinifiInitExtension(MinifiExtensionContext* /*extension_context*/) {
+CEXTENSIONAPI void minifi_init_extension(minifi_extension_context* /*extension_context*/) {
   // NOT CALLING CREATE
 }

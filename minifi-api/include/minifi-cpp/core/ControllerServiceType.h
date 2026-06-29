@@ -27,16 +27,11 @@ struct ControllerServiceType {
   std::string group;
   std::string type;
 
-  ControllerServiceType(const ControllerServiceTypeDefinition& definition)  // NOLINT(runtime/explicit)
+  explicit ControllerServiceType(const ControllerServiceTypeDefinition& definition)
       : artifact(definition.artifact),
         group(definition.group),
         type(definition.type) {}
 
-  static ControllerServiceType minifiSystemControllerServiceType(std::string type) {
-    return ControllerServiceType("minifi-system", "org.apache.nifi.minifi", std::move(type));
-  }
-
- private:
   ControllerServiceType(std::string artifact, std::string group, std::string type)
       : artifact(std::move(artifact)),
         group(std::move(group)),

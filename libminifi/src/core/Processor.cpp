@@ -59,6 +59,7 @@ Processor::Processor(std::string_view name, std::unique_ptr<ProcessorApi> impl)
       run_duration_(DEFAULT_RUN_DURATION),
       yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
       active_tasks_(0),
+      trigger_when_empty_(false),
       logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
       metrics_(gsl::make_not_null(std::make_shared<ProcessorMetrics>(*this))),
       impl_(std::move(impl)) {
@@ -78,6 +79,7 @@ Processor::Processor(std::string_view name, const utils::Identifier& uuid, std::
       run_duration_(DEFAULT_RUN_DURATION),
       yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
       active_tasks_(0),
+      trigger_when_empty_(false),
       logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
       metrics_(gsl::make_not_null(std::make_shared<ProcessorMetrics>(*this))),
       impl_(std::move(impl)) {
@@ -448,8 +450,12 @@ std::string Processor::getProcessorType() const {
   return impl_->getProcessorType();
 }
 
+void Processor::setTriggerWhenEmpty(bool trigger_when_empty) {
+  trigger_when_empty_ = trigger_when_empty;
+}
+
 bool Processor::getTriggerWhenEmpty() const {
-  return impl_->getTriggerWhenEmpty();
+  return trigger_when_empty_;
 }
 
 uint8_t Processor::getActiveTasks() const {

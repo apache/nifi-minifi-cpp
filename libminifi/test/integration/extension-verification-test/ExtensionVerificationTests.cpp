@@ -28,8 +28,8 @@
 
 
 extern "C" {
-MinifiExtension* MinifiRegisterCppExtension_MatchingBuildId(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition) {
-  return MinifiRegisterExtension(extension_context, extension_definition);
+minifi_extension* MinifiRegisterCppExtension_MatchingBuildId(minifi_extension_context* extension_context, const minifi_extension_definition* extension_definition) {
+  return minifi_register_extension(extension_context, extension_definition);
 }
 }  // extern "C"
 
@@ -88,12 +88,12 @@ TEST_CASE("Can't load c-api extensions with smaller version") {
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Api version is no longer supported, application supports 5-10 while extension is 4"));
 }
 
-TEST_CASE("Can't load c-api extensions with no MinifiInitExtension function") {
+TEST_CASE("Can't load c-api extensions with no minifi_init_extension function") {
   ExtensionLoadingTestController controller{"*test-extension-loading-missing-init*"};
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to load as c extension 'test-extension-loading-missing-init'"));
 }
 
-TEST_CASE("Can't load c-api extensions with no MinifiRegisterExtension call") {
+TEST_CASE("Can't load c-api extensions with no minifi_register_extension call") {
   ExtensionLoadingTestController controller{"*test-extension-loading-create-not-called*"};
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Failed to initialize extension 'test-extension-loading-create-not-called'"));
 }

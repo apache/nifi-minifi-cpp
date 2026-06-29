@@ -21,7 +21,7 @@ namespace org::apache::nifi::minifi::api::core::logging {
 
 namespace {
 
-MinifiLogLevel toCLogLevel(minifi::core::logging::LOG_LEVEL lvl) {
+minifi_log_level toCLogLevel(minifi::core::logging::LOG_LEVEL lvl) {
   switch (lvl) {
     case minifi::core::logging::trace: return MINIFI_LOG_LEVEL_TRACE;
     case minifi::core::logging::debug: return MINIFI_LOG_LEVEL_DEBUG;
@@ -33,37 +33,15 @@ MinifiLogLevel toCLogLevel(minifi::core::logging::LOG_LEVEL lvl) {
   }
   gsl_FailFast();
 }
-
-minifi::core::logging::LOG_LEVEL toLogLevel(MinifiLogLevel level) {
-  switch (level) {
-    case MINIFI_LOG_LEVEL_TRACE: return minifi::core::logging::trace;
-    case MINIFI_LOG_LEVEL_DEBUG: return minifi::core::logging::debug;
-    case MINIFI_LOG_LEVEL_INFO: return minifi::core::logging::info;
-    case MINIFI_LOG_LEVEL_WARNING: return minifi::core::logging::warn;
-    case MINIFI_LOG_LEVEL_ERROR: return minifi::core::logging::err;
-    case MINIFI_LOG_LEVEL_CRITICAL: return minifi::core::logging::critical;
-    case MINIFI_LOG_LEVEL_OFF: return minifi::core::logging::off;
-  }
-  gsl_FailFast();
-}
-
 }  // namespace
 
-void CffiLogger::set_max_log_size(const int size) {
-  MinifiLoggerSetMaxLogSize(impl_, size);
-}
 
 void CffiLogger::log_string(const minifi::core::logging::LOG_LEVEL level, const std::string str) {
-  MinifiLoggerLogString(impl_, toCLogLevel(level), MinifiStringView{.data = str.data(), .length = str.length()});
+  minifi_logger_log_string(impl_, toCLogLevel(level), minifi_string_view{.data = str.data(), .length = str.length()});
 }
 
 bool CffiLogger::should_log(const minifi::core::logging::LOG_LEVEL level) {
-  return MinifiLoggerShouldLog(impl_, toCLogLevel(level));
+  return minifi_logger_should_log(impl_, toCLogLevel(level));
 }
-
-[[nodiscard]] minifi::core::logging::LOG_LEVEL CffiLogger::level() const {
-  return toLogLevel(MinifiLoggerLevel(impl_));
-}
-
 
 }  // namespace org::apache::nifi::minifi::api::core::logging

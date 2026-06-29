@@ -118,8 +118,8 @@ class ListGCSBucket : public GCSProcessor {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
 
  protected:
-  MinifiStatus onScheduleImpl(api::core::ProcessContext& context) override;
-  MinifiStatus onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  minifi_status onScheduleImpl(api::core::ProcessContext& context) override;
+  minifi_status onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
 
  private:
   std::string bucket_;

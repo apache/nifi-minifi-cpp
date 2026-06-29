@@ -71,9 +71,7 @@ class MockControllerService : public minifi::core::controller::ControllerService
 class MockProcessor : public minifi::core::ProcessorImpl {
  public:
   explicit MockProcessor(minifi::core::ProcessorMetadata metadata)
-      : ProcessorImpl(metadata) {
-    setTriggerWhenEmpty(true);
-  }
+      : ProcessorImpl(metadata) {}
 
   ~MockProcessor() override = default;
 
@@ -95,6 +93,10 @@ class MockProcessor : public minifi::core::ProcessorImpl {
 
   void initialize() override {
     setSupportedProperties(Properties);
+  }
+
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override {
+    context.setTriggerWhenEmpty(true);
   }
 
   void onTrigger(minifi::core::ProcessContext& context, minifi::core::ProcessSession& session) override {

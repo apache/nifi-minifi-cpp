@@ -33,13 +33,13 @@
 #define RTLD_LOCAL  (1 << 2)
 #endif
 
-#include "core/extension/Extension.h"
-#include "utils/GeneralUtils.h"
-#include "core/logging/LoggerFactory.h"
-#include "minifi-c/minifi-c.h"
-#include "minifi-cpp/agent/agent_docs.h"
-#include "utils/RegexUtils.h"
 #include "core/ClassLoader.h"
+#include "core/extension/Extension.h"
+#include "core/logging/LoggerFactory.h"
+#include "minifi-api.h"
+#include "minifi-cpp/agent/agent_docs.h"
+#include "utils/GeneralUtils.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::core::extension {
 
@@ -61,17 +61,17 @@ bool Extension::load(bool global) {
     return false;
   }
   logger_->log_trace("Dlopen succeeded for extension '{}' at '{}'", library_name_, library_path_);
-  if (findSymbol("MinifiInitCppExtension")) {
+  if (findSymbol("minifi_init_cpp_extension")) {
     logger_->log_trace("Loaded cpp extension '{}' at '{}'", library_name_, library_path_);
     return true;
   }
-  if (!findSymbol("MinifiInitExtension")) {
+  if (!findSymbol("minifi_init_extension")) {
     logger_->log_error("Failed to load as c extension '{}' at '{}': No initializer found", library_name_, library_path_);
     return false;
   }
-  auto api_version_ptr = reinterpret_cast<const uint32_t*>(findSymbol("MinifiApiVersion"));
+  auto api_version_ptr = reinterpret_cast<const uint32_t*>(findSymbol("minifi_api_version"));
   if (!api_version_ptr) {
-    logger_->log_error("Failed to load c extension '{}' at '{}': No MinifiApiVersion symbol found", library_name_, library_path_);
+    logger_->log_error("Failed to load c extension '{}' at '{}': No minifi_api_version symbol found", library_name_, library_path_);
     return false;
   }
   api_version_ = *api_version_ptr;
@@ -147,9 +147,9 @@ Extension::~Extension() {
 
 bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) {
   logger_->log_trace("Initializing extension '{}'", library_name_);
-  void* init_symbol_ptr = findSymbol("MinifiInitCppExtension");
+  void* init_symbol_ptr = findSymbol("minifi_init_cpp_extension");
   if (!init_symbol_ptr) {
-    init_symbol_ptr = findSymbol("MinifiInitExtension");
+    init_symbol_ptr = findSymbol("minifi_init_extension");
   }
   if (!init_symbol_ptr) {
     logger_->log_error("No initializer for '{}'", library_name_);
@@ -157,7 +157,7 @@ bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) 
   }
   logger_->log_debug("Found initializer for '{}'", library_name_);
 
-  auto init_fn = reinterpret_cast<void(*)(MinifiExtensionContext*)>(init_symbol_ptr);
+  auto init_fn = reinterpret_cast<void(*)(minifi_extension_context*)>(init_symbol_ptr);
   Context extension_context{
     .config = configure,
     .create = [&] (Info info) -> Extension* {
@@ -168,7 +168,7 @@ bool Extension::initialize(const std::shared_ptr<minifi::Configure>& configure) 
       return this;
     }
   };
-  init_fn(reinterpret_cast<MinifiExtensionContext*>(&extension_context));
+  init_fn(reinterpret_cast<minifi_extension_context*>(&extension_context));
   if (!info_) {
     logger_->log_error("Failed to initialize extension '{}'", library_name_);
     return false;

@@ -51,7 +51,6 @@ class ProcessorApi {
   virtual void initialize(ProcessorDescriptor& descriptor) = 0;
   virtual bool isSingleThreaded() const = 0;
   virtual std::string getProcessorType() const = 0;
-  virtual bool getTriggerWhenEmpty() const = 0;
   virtual void onTrigger(ProcessContext&, ProcessSession&) = 0;
   virtual void onSchedule(ProcessContext&, ProcessSessionFactory&) = 0;
   virtual void onUnSchedule() = 0;

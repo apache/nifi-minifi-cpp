@@ -56,7 +56,7 @@ std::shared_ptr<google::cloud::Credentials> GCPCredentialsControllerService::cre
   return google::cloud::MakeServiceAccountCredentials(*json_contents);
 }
 
-MinifiStatus GCPCredentialsControllerService::enableImpl(api::core::ControllerServiceContext& ctx) {
+minifi_status GCPCredentialsControllerService::enableImpl(api::core::ControllerServiceContext& ctx) {
   std::optional<CredentialsLocation> credentials_location;
   if (const auto value = ctx.getProperty(CredentialsLoc.name)) {
     credentials_location = magic_enum::enum_cast<CredentialsLocation>(*value);

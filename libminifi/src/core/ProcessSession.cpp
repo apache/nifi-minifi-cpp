@@ -34,7 +34,7 @@
 #include "core/Processor.h"
 #include "io/StreamPipe.h"
 #include "io/StreamSlice.h"
-#include "minifi-c/minifi-c.h"
+#include "minifi-api.h"
 #include "minifi-cpp/utils/gsl.h"
 
 /* This implementation is only for native Windows systems.  */

@@ -31,7 +31,6 @@ namespace org::apache::nifi::minifi::api::core {
 
 ProcessorImpl::ProcessorImpl(minifi::core::ProcessorMetadata metadata)
     : metadata_(std::move(metadata)),
-      trigger_when_empty_(false),
       logger_(metadata_.logger) {
   logger_->log_debug("Processor {} created with uuid {}", getName(), getUUIDStr());
 }
@@ -52,7 +51,7 @@ utils::SmallString<36> ProcessorImpl::getUUIDStr() const {
   return getUUID().to_string();
 }
 
-MinifiStatus ProcessorImpl::onSchedule(ProcessContext& ctx) {
+minifi_status ProcessorImpl::onSchedule(ProcessContext& ctx) {
   try {
     return onScheduleImpl(ctx);
   } catch (const std::exception& e) {
@@ -61,7 +60,7 @@ MinifiStatus ProcessorImpl::onSchedule(ProcessContext& ctx) {
   }
 }
 
-MinifiStatus ProcessorImpl::onTrigger(ProcessContext& ctx, ProcessSession& session) {
+minifi_status ProcessorImpl::onTrigger(ProcessContext& ctx, ProcessSession& session) {
   try {
     return onTriggerImpl(ctx, session);
   } catch (const std::exception& e) {

@@ -39,7 +39,7 @@ struct std::hash<org::apache::nifi::minifi::processors::ConsumeKafka::KafkaMessa
 
 namespace org::apache::nifi::minifi::processors {
 
-MinifiStatus ConsumeKafka::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status ConsumeKafka::onScheduleImpl(api::core::ProcessContext& context) {
   using utils::KafkaEncoding;
   namespace utils = api::utils;
   // Required properties
@@ -66,7 +66,7 @@ MinifiStatus ConsumeKafka::onScheduleImpl(api::core::ProcessContext& context) {
 
   configureNewConnection(context);
   if (commit_policy_ == consume_kafka::CommitPolicyEnum::CommitFromIncomingFlowFiles) {
-    setTriggerWhenEmpty(true);
+    std::ignore = context.setTriggerWhenEmpty(true);
   }
   return MINIFI_STATUS_SUCCESS;
 }
@@ -339,7 +339,7 @@ void ConsumeKafka::commitOffsetsFromIncomingFlowFiles(api::core::ProcessSession&
   for (auto& [ff, relationship]: flow_files) { session.transfer(std::move(ff), relationship); }
 }
 
-MinifiStatus ConsumeKafka::processMessages(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const {
+minifi_status ConsumeKafka::processMessages(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const {
   for (const auto& msg_bundle: message_bundles | std::views::values) {
     for (const auto& message: msg_bundle.getMessages()) {
       std::string message_content = extractMessage(*message);
@@ -353,7 +353,7 @@ MinifiStatus ConsumeKafka::processMessages(api::core::ProcessSession& session, c
   return MINIFI_STATUS_SUCCESS;
 }
 
-MinifiStatus ConsumeKafka::processMessageBundles(api::core::ProcessSession& session,
+minifi_status ConsumeKafka::processMessageBundles(api::core::ProcessSession& session,
     const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles, const std::string_view message_demarcator) const {
   for (const auto& msg_bundle: message_bundles | std::views::values) {
     auto flow_file = session.create();
@@ -367,7 +367,7 @@ MinifiStatus ConsumeKafka::processMessageBundles(api::core::ProcessSession& sess
   return MINIFI_STATUS_SUCCESS;
 }
 
-MinifiStatus ConsumeKafka::onTriggerImpl(api::core::ProcessContext&, api::core::ProcessSession& session) {
+minifi_status ConsumeKafka::onTriggerImpl(api::core::ProcessContext&, api::core::ProcessSession& session) {
   if (commit_policy_ == consume_kafka::CommitPolicyEnum::CommitFromIncomingFlowFiles) { commitOffsetsFromIncomingFlowFiles(session); }
   const auto message_bundles = pollKafkaMessages();
   if (message_bundles.empty()) {

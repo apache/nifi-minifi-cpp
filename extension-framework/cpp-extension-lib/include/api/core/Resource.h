@@ -33,7 +33,7 @@
 #include "api/utils/minifi-c-utils.h"
 #include "core/ClassName.h"
 #include "logging/Logger.h"
-#include "minifi-c.h"
+#include "minifi-api.h"
 #include "minifi-cpp/core/ControllerServiceMetadata.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
 
@@ -41,35 +41,35 @@ namespace org::apache::nifi::minifi::api::core {
 
 template<typename Class, typename Fn>
 void useProcessorClassDefinition(Fn&& fn) {
-  std::vector<std::vector<MinifiStringView>> string_vector_cache;
+  std::vector<std::vector<minifi_string_view>> string_vector_cache;
 
   const auto full_name = minifi::core::className<Class>();
 
-  std::vector<MinifiPropertyDefinition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
-  std::vector<MinifiDynamicPropertyDefinition> dynamic_properties;
+  std::vector<minifi_property_definition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
+  std::vector<minifi_dynamic_property_definition> dynamic_properties;
   for (auto& prop : Class::DynamicProperties) {
-    dynamic_properties.push_back(MinifiDynamicPropertyDefinition {
+    dynamic_properties.push_back(minifi_dynamic_property_definition {
       .name = utils::minifiStringView(prop.name),
       .value = utils::minifiStringView(prop.value),
       .description = utils::minifiStringView(prop.description),
       .supports_expression_language = prop.supports_expression_language
     });
   }
-  std::vector<MinifiRelationshipDefinition> relationships;
+  std::vector<minifi_relationship_definition> relationships;
   for (auto& rel : Class::Relationships) {
-    relationships.push_back(MinifiRelationshipDefinition{
+    relationships.push_back(minifi_relationship_definition{
       .name = utils::minifiStringView(rel.name),
       .description = utils::minifiStringView(rel.description)
     });
   }
-  std::vector<std::vector<MinifiStringView>> attribute_relationships_cache;
-  std::vector<MinifiOutputAttributeDefinition> output_attributes;
+  std::vector<std::vector<minifi_string_view>> attribute_relationships_cache;
+  std::vector<minifi_output_attribute_definition> output_attributes;
   for (auto& attr : Class::OutputAttributes) {
-    std::vector<MinifiStringView> rel_cache;
+    std::vector<minifi_string_view> rel_cache;
     for (auto& rel : attr.relationships) {
       rel_cache.push_back(utils::minifiStringView(rel.name));
     }
-    output_attributes.push_back(MinifiOutputAttributeDefinition {
+    output_attributes.push_back(minifi_output_attribute_definition {
       .name = utils::minifiStringView(attr.name),
       .relationships_count = gsl::narrow<uint32_t>(attr.relationships.size()),
       .relationships_ptr = rel_cache.data(),
@@ -78,15 +78,15 @@ void useProcessorClassDefinition(Fn&& fn) {
     attribute_relationships_cache.push_back(std::move(rel_cache));
   }
 
-  MinifiProcessorClassDefinition definition{
+  minifi_processor_class_definition definition{
     .full_name = utils::minifiStringView(full_name),
     .description = utils::minifiStringView(Class::Description),
-    .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
-    .class_properties_ptr = class_properties.data(),
+    .properties_count = gsl::narrow<uint32_t>(class_properties.size()),
+    .properties_ptr = class_properties.data(),
     .dynamic_properties_count = gsl::narrow<uint32_t>(dynamic_properties.size()),
     .dynamic_properties_ptr = dynamic_properties.data(),
-    .class_relationships_count = gsl::narrow<uint32_t>(relationships.size()),
-    .class_relationships_ptr = relationships.data(),
+    .relationships_count = gsl::narrow<uint32_t>(relationships.size()),
+    .relationships_ptr = relationships.data(),
     .output_attributes_count = gsl::narrow<uint32_t>(output_attributes.size()),
     .output_attributes_ptr = output_attributes.data(),
     .supports_dynamic_properties = Class::SupportsDynamicProperties,
@@ -94,8 +94,8 @@ void useProcessorClassDefinition(Fn&& fn) {
     .input_requirement = utils::toInputRequirement(Class::InputRequirement),
     .is_single_threaded = Class::IsSingleThreaded,
 
-    .callbacks = MinifiProcessorCallbacks{
-      .create = [] (MinifiProcessorMetadata metadata) -> MINIFI_OWNED void* {
+    .callbacks = minifi_processor_callbacks{
+      .create = [] (minifi_processor_metadata metadata) -> MINIFI_OWNED void* {
         try {
           return new Class{minifi::core::ProcessorMetadata{
               .uuid = minifi::utils::Identifier::parse(std::string{metadata.uuid.data, metadata.uuid.length}).value(),
@@ -106,10 +106,7 @@ void useProcessorClassDefinition(Fn&& fn) {
       .destroy = [] (MINIFI_OWNED void* self) -> void {
         delete static_cast<Class*>(self);
       },
-      .getTriggerWhenEmpty = [] (void* self) -> MinifiBool {
-        return static_cast<Class*>(self)->getTriggerWhenEmpty();
-      },
-      .onTrigger = [] (void* self, MinifiProcessContext* context, MinifiProcessSession* session) -> MinifiStatus {
+      .trigger = [] (void* self, minifi_process_context* context, minifi_process_session* session) -> minifi_status {
         CffiProcessContext context_wrapper(context);
         CffiProcessSession session_wrapper(session);
         try {
@@ -118,7 +115,7 @@ void useProcessorClassDefinition(Fn&& fn) {
           return MINIFI_STATUS_UNKNOWN_ERROR;
         }
       },
-      .onSchedule = [] (void* self, MinifiProcessContext* context) -> MinifiStatus {
+      .schedule = [] (void* self, minifi_process_context* context) -> minifi_status {
         CffiProcessContext context_wrapper(context);
         try {
           return static_cast<Class*>(self)->onSchedule(context_wrapper);
@@ -126,20 +123,10 @@ void useProcessorClassDefinition(Fn&& fn) {
           return MINIFI_STATUS_UNKNOWN_ERROR;
         }
       },
-      .onUnSchedule = [] (void* self) -> void {
+      .unschedule = [] (void* self) -> void {
         try {
           static_cast<Class*>(self)->onUnSchedule();
         } catch (...) {}
-      },
-      .calculateMetrics = [] (void* self) -> MINIFI_OWNED MinifiPublishedMetrics* {
-        auto metrics = static_cast<Class*>(self)->calculateMetrics();
-        std::vector<MinifiStringView> names;
-        std::vector<double> values;
-        for (auto& [name, val] : metrics) {
-          names.push_back(utils::minifiStringView(name));
-          values.push_back(val);
-        }
-        return MinifiPublishedMetricsCreate(gsl::narrow<uint32_t>(metrics.size()), names.data(), values.data());
       }
     }
   };
@@ -149,12 +136,12 @@ void useProcessorClassDefinition(Fn&& fn) {
 
 template<typename Class, typename Fn>
 void useControllerServiceClassDefinition(Fn&& fn) {
-  std::vector<std::vector<MinifiStringView>> string_vector_cache;
+  std::vector<std::vector<minifi_string_view>> string_vector_cache;
 
   const auto full_name = minifi::core::className<Class>();
 
-  std::vector<MinifiPropertyDefinition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
-  std::vector<MinifiStringView> provided_interfaces;
+  std::vector<minifi_property_definition> class_properties = utils::toProperties(Class::Properties, string_vector_cache);
+  std::vector<minifi_string_view> provided_interfaces;
   if constexpr (requires { Class::ProvidedInterfaces; }) {
     provided_interfaces.reserve(Class::ProvidedInterfaces.size());
     for (const auto& iface : Class::ProvidedInterfaces) {
@@ -162,16 +149,16 @@ void useControllerServiceClassDefinition(Fn&& fn) {
     }
   }
 
-  MinifiControllerServiceClassDefinition definition{.full_name = utils::minifiStringView(full_name),
+  minifi_controller_service_class_definition definition{.full_name = utils::minifiStringView(full_name),
       .description = utils::minifiStringView(Class::Description),
-      .class_properties_count = gsl::narrow<uint32_t>(class_properties.size()),
-      .class_properties_ptr = class_properties.data(),
+      .properties_count = gsl::narrow<uint32_t>(class_properties.size()),
+      .properties_ptr = class_properties.data(),
 
       .provided_interfaces_count = gsl::narrow<uint32_t>(provided_interfaces.size()),
       .provided_interfaces_ptr = provided_interfaces.data(),
 
-      .callbacks = MinifiControllerServiceCallbacks{
-          .create = [](MinifiControllerServiceMetadata metadata) -> MINIFI_OWNED void* {
+      .callbacks = minifi_controller_service_callbacks{
+          .create = [](minifi_controller_service_metadata metadata) -> MINIFI_OWNED void* {
             try {
               return new Class{minifi::core::ControllerServiceMetadata{
                   .uuid = minifi::utils::Identifier::parse(std::string{metadata.uuid.data, metadata.uuid.length}).value(),
@@ -180,7 +167,7 @@ void useControllerServiceClassDefinition(Fn&& fn) {
             } catch (...) { return nullptr; }
           },
           .destroy = [](MINIFI_OWNED void* self) -> void { delete static_cast<Class*>(self); },
-          .enable = [](void* self, MinifiControllerServiceContext* context) -> MinifiStatus {
+          .enable = [](void* self, minifi_controller_service_context* context) -> minifi_status {
             ControllerServiceContext context_wrapper(context);
             try {
               return static_cast<Class*>(self)->enable(context_wrapper);
@@ -191,7 +178,7 @@ void useControllerServiceClassDefinition(Fn&& fn) {
               static_cast<Class*>(self)->disable();
             } catch (...) {}
           },
-          .get_interface = [](void* self, MinifiStringView interface_name) -> void* {
+          .get_interface = [](void* self, minifi_string_view interface_name) -> void* {
             try {
               if constexpr (requires { Class::ProvidedInterfaces; }) {
                 const std::string_view name_view{interface_name.data, interface_name.length};
@@ -210,16 +197,16 @@ void useControllerServiceClassDefinition(Fn&& fn) {
 }
 
 template <typename... Processors>
-void registerProcessors(MinifiExtension* extension) {
-  (core::useProcessorClassDefinition<Processors>([&](const MinifiProcessorClassDefinition& definition) {
-      MinifiRegisterProcessor(extension, &definition);
+void registerProcessors(minifi_extension* extension) {
+  (core::useProcessorClassDefinition<Processors>([&](const minifi_processor_class_definition& definition) {
+      minifi_register_processor(extension, &definition);
   }), ...);
 }
 
 template <typename... ControllerServices>
-void registerControllerServices(MinifiExtension* extension) {
-  (core::useControllerServiceClassDefinition<ControllerServices>([&](const MinifiControllerServiceClassDefinition& definition) {
-      MinifiRegisterControllerService(extension, &definition);
+void registerControllerServices(minifi_extension* extension) {
+  (core::useControllerServiceClassDefinition<ControllerServices>([&](const minifi_controller_service_class_definition& definition) {
+      minifi_register_controller_service(extension, &definition);
   }), ...);
 }
 

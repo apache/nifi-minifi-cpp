@@ -27,7 +27,7 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-MinifiStatus DeleteGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status DeleteGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   gsl_Expects(gcp_credentials_);
 
   auto flow_file = session.get();

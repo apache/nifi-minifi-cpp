@@ -32,7 +32,7 @@ template<typename T, typename... Args>
 std::unique_ptr<minifi::core::Processor> make_custom_c_processor(minifi::core::ProcessorMetadata metadata,
     Args&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
   std::unique_ptr<minifi::core::ProcessorApi> processor_impl;
-  minifi::api::core::useProcessorClassDefinition<T>([&](const MinifiProcessorClassDefinition& definition) {
+  minifi::api::core::useProcessorClassDefinition<T>([&](const minifi_processor_class_definition& definition) {
     minifi::utils::useCProcessorClassDescription(definition, [&](const auto&, auto c_description) {
       processor_impl = std::make_unique<minifi::utils::CProcessor>(std::move(c_description), metadata, new T(metadata, std::forward<Args>(args)...));
     });
@@ -44,8 +44,8 @@ template<typename T, typename... Args>
 std::shared_ptr<minifi::core::controller::ControllerService> make_custom_c_controller_service(minifi::core::ControllerServiceMetadata metadata,
     Args&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
   std::unique_ptr<minifi::core::controller::ControllerServiceApi> controller_service_impl;
-  minifi::api::core::useControllerServiceClassDefinition<T>([&](const MinifiControllerServiceClassDefinition& definition) {
-    minifi::utils::useCControllerServiceClassDescription(definition, [&](const auto&, auto c_description) {
+  minifi::api::core::useControllerServiceClassDefinition<T>([&](const minifi_controller_service_class_definition& definition) {
+    minifi::utils::useCControllerServiceClassDescription("test_bundle", definition, [&](const auto&, auto c_description) {
       controller_service_impl = std::make_unique<minifi::utils::CControllerService>(std::move(c_description),
           metadata,
           new T(metadata, std::forward<Args>(args)...));

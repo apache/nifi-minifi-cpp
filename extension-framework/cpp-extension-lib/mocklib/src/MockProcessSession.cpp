@@ -22,7 +22,7 @@
 namespace org::apache::nifi::minifi::mock {
 
 api::core::FlowFile MockProcessSession::create(const api::core::FlowFile*) {
-  return api::core::FlowFile{new MinifiFlowFile};
+  return api::core::FlowFile{new minifi_flow_file};
 }
 api::core::FlowFile MockProcessSession::get() {
   if (input_flow_files_.empty()) { return nullptr; }
@@ -38,11 +38,11 @@ void MockProcessSession::penalize(api::core::FlowFile& ff) {
 }
 
 void MockProcessSession::transfer(api::core::FlowFile ff, const minifi::core::Relationship& relationship) {
-  transferred_flow_files_[relationship.getName()].push_back(std::unique_ptr<MinifiFlowFile>(ff.release()));
+  transferred_flow_files_[relationship.getName()].push_back(std::unique_ptr<minifi_flow_file>(ff.release()));
 }
 
 void MockProcessSession::remove(api::core::FlowFile ff) {
-  removed_flow_files_.push_back(std::unique_ptr<MinifiFlowFile>(ff.release()));
+  removed_flow_files_.push_back(std::unique_ptr<minifi_flow_file>(ff.release()));
 }
 
 void MockProcessSession::write(api::core::FlowFile& ff, const io::OutputStreamCallback& callback) {
@@ -81,7 +81,7 @@ uint64_t MockProcessSession::getFlowFileSize(const api::core::FlowFile& ff) cons
   return ff->content.size();
 }
 
-void MockProcessSession::addInputFlowFile(std::unique_ptr<MinifiFlowFile> flow_file) {
+void MockProcessSession::addInputFlowFile(std::unique_ptr<minifi_flow_file> flow_file) {
   input_flow_files_.push_back(std::move(flow_file));
 }
 }  // namespace org::apache::nifi::minifi::mock

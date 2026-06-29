@@ -17,17 +17,17 @@
 
 #pragma once
 
-#include <string>
 #include <expected>
+#include <string>
 
-#include "minifi-c.h"
+#include "minifi-api.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
 class ControllerServiceContext {
  public:
-  explicit ControllerServiceContext(MinifiControllerServiceContext* impl) : impl_(impl) {}
+  explicit ControllerServiceContext(minifi_controller_service_context* impl) : impl_(impl) {}
 
   [[nodiscard]] std::expected<std::string, std::error_code> getProperty(std::string_view name) const;
   [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& property_reference) const {
@@ -35,7 +35,7 @@ class ControllerServiceContext {
   }
 
  private:
-  MinifiControllerServiceContext* impl_;
+  minifi_controller_service_context* impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::api::core

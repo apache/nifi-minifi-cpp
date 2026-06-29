@@ -193,6 +193,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   }
 
   gsl::not_null<Configure*> getConfiguration() const override { return gsl::make_not_null(configure_.get()); }
+  void setTriggerWhenEmpty(bool trigger_when_empty) override;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

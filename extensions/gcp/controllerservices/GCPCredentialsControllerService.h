@@ -92,7 +92,7 @@ class GCPCredentialsControllerService : public api::core::ControllerServiceImpl 
 
   using ControllerServiceImpl::ControllerServiceImpl;
 
-  MinifiStatus enableImpl(api::core::ControllerServiceContext& ctx) override;
+  minifi_status enableImpl(api::core::ControllerServiceContext& ctx) override;
 
   [[nodiscard]] const auto& getCredentials() const { return credentials_; }
 

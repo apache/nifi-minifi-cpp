@@ -16,21 +16,22 @@
  */
 #pragma once
 
+#include <functional>
+#include <optional>
 #include <string>
 #include <string_view>
-#include <optional>
-#include <functional>
-#include "minifi-c/minifi-c.h"
+
+#include "minifi-api.h"
 
 namespace org::apache::nifi::minifi::utils {
 
-inline MinifiStringView toStringView(std::string_view str) {
-  return MinifiStringView{.data = str.data(), .length = str.length()};
+inline minifi_string_view toStringView(std::string_view str) {
+  return minifi_string_view{.data = str.data(), .length = str.length()};
 }
 
 using ConfigReader = std::function<std::optional<std::string>(std::string_view key)>;
 
-static inline void MinifiRegisterCppExtension(MinifiExtensionContext* extension_context, const MinifiExtensionDefinition* extension_definition) {
+static inline void MinifiRegisterCppExtension(minifi_extension_context* extension_context, const minifi_extension_definition* extension_definition) {
   MINIFI_REGISTER_EXTENSION_FN(extension_context, extension_definition);
 }
 

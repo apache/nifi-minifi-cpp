@@ -102,9 +102,9 @@ class UploadToGCSCallback {
 }  // namespace
 
 
-MinifiStatus PutGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status PutGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
   const auto status = GCSProcessor::onScheduleImpl(context);
-  if (status != MinifiStatus::MINIFI_STATUS_SUCCESS) {
+  if (status != minifi_status::MINIFI_STATUS_SUCCESS) {
     return status;
   }
 
@@ -119,7 +119,7 @@ MinifiStatus PutGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
   return MINIFI_STATUS_SUCCESS;
 }
 
-MinifiStatus PutGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status PutGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
   gsl_Expects(gcp_credentials_);
 
   auto flow_file = session.get();
