@@ -31,6 +31,14 @@
 #include "utils/StringUtils.h"
 #include "minifi-cpp/properties/Properties.h"
 
+namespace org::apache::nifi::minifi::properties {
+
+std::vector<std::filesystem::path> getExtraPropertiesFileNames(const std::filesystem::path& extra_properties_files_dir, const std::shared_ptr<core::logging::Logger>& logger);
+
+std::filesystem::path extraPropertiesFilesDirName(const std::filesystem::path& base_properties_file);
+
+}  // namespace org::apache::nifi::minifi::properties
+
 namespace org::apache::nifi::minifi {
 
 class PropertiesImpl : public virtual Properties {

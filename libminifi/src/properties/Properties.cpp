@@ -160,20 +160,6 @@ void fixValidatedProperty(const std::string& property_name,
   }
 }
 
-auto getExtraPropertiesFileNames(const std::filesystem::path& extra_properties_files_dir, const std::shared_ptr<core::logging::Logger>& logger) {
-  std::vector<std::filesystem::path> extra_properties_file_names;
-  if (utils::file::exists(extra_properties_files_dir) && utils::file::is_directory(extra_properties_files_dir)) {
-    utils::file::list_dir(extra_properties_files_dir, [&](const std::filesystem::path&, const std::filesystem::path& file_name) {
-      if (file_name.string().ends_with(".properties")) {
-        extra_properties_file_names.push_back(file_name);
-      }
-      return true;
-    }, logger, /* recursive = */ false);
-  }
-  std::ranges::sort(extra_properties_file_names);
-  return extra_properties_file_names;
-}
-
 void updateChangedPropertiesInPropertiesFile(minifi::PropertiesFile& current_content, const auto& properties) {
   for (const auto& prop : properties) {
     if (!prop.second.need_to_persist_new_value) {
@@ -188,10 +174,28 @@ void updateChangedPropertiesInPropertiesFile(minifi::PropertiesFile& current_con
 }
 }  // namespace
 
-std::filesystem::path PropertiesImpl::extraPropertiesFilesDirName() const {
-  auto extra_properties_files_dir = base_properties_file_;
+std::vector<std::filesystem::path> properties::getExtraPropertiesFileNames(const std::filesystem::path& extra_properties_files_dir, const std::shared_ptr<core::logging::Logger>& logger) {
+  std::vector<std::filesystem::path> extra_properties_file_names;
+  if (utils::file::exists(extra_properties_files_dir) && utils::file::is_directory(extra_properties_files_dir)) {
+    utils::file::list_dir(extra_properties_files_dir, [&](const std::filesystem::path&, const std::filesystem::path& file_name) {
+      if (file_name.string().ends_with(".properties")) {
+        extra_properties_file_names.push_back(file_name);
+      }
+      return true;
+    }, logger, /* recursive = */ false);
+  }
+  std::ranges::sort(extra_properties_file_names);
+  return extra_properties_file_names;
+}
+
+std::filesystem::path properties::extraPropertiesFilesDirName(const std::filesystem::path& base_properties_file) {
+  auto extra_properties_files_dir = base_properties_file;
   extra_properties_files_dir += ".d";
   return extra_properties_files_dir;
+}
+
+std::filesystem::path PropertiesImpl::extraPropertiesFilesDirName() const {
+  return properties::extraPropertiesFilesDirName(base_properties_file_);
 }
 
 void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
@@ -217,7 +221,7 @@ void PropertiesImpl::loadConfigureFile(const std::filesystem::path& configuratio
 
   properties_files_ = { base_properties_file_ };
   const auto extra_properties_files_dir = extraPropertiesFilesDirName();
-  const auto extra_properties_file_names = getExtraPropertiesFileNames(extra_properties_files_dir, logger_);
+  const auto extra_properties_file_names = properties::getExtraPropertiesFileNames(extra_properties_files_dir, logger_);
   for (const auto& file_name : extra_properties_file_names) {
     properties_files_.push_back(extra_properties_files_dir / file_name);
   }

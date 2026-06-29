@@ -24,15 +24,17 @@
 #include <stdexcept>
 
 #include "../core-framework/include/Defaults.h"
-#include "ConfigFile.h"
-#include "ConfigFileEncryptor.h"
 #include "FlowConfigEncryptor.h"
-#include "utils/Enum.h"
+#include "PropertiesFileEncryptor.h"
+#include "properties/Properties.h"
+#include "properties/PropertiesFile.h"
 #include "utils/file/FileUtils.h"
 
 namespace {
 constexpr std::string_view ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 constexpr std::string_view SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.properties.key";
+
+namespace minifi = org::apache::nifi::minifi;
 
 std::string readFile(const std::filesystem::path& file_path) {
   try {
@@ -43,11 +45,27 @@ std::string readFile(const std::filesystem::path& file_path) {
     throw std::runtime_error("Error while reading file \"" + file_path.string() + "\"");
   }
 }
+
+uint32_t encryptSensitiveValuesInMinifiPropertiesFile(const std::filesystem::path& file_path, const std::vector<std::string>& sensitive_properties,
+    const minifi::encrypt_config::EncryptionKeys& keys) {
+  minifi::PropertiesFile properties_file{std::ifstream{file_path}};
+  if (properties_file.size() == 0) {
+    std::cout << "Properties file " + file_path.string() + " is missing or empty!\n";
+    return 0;
+  }
+
+  uint32_t num_properties_encrypted = minifi::encrypt_config::encryptSensitivePropertiesInFile(properties_file, sensitive_properties, keys);
+  if (num_properties_encrypted > 0) {
+    properties_file.writeTo(file_path);
+    std::cout << "Encrypted " << num_properties_encrypted << " sensitive " << (num_properties_encrypted == 1 ? "property" : "properties") << " in " << file_path.string() << '\n';
+  }
+  return num_properties_encrypted;
+}
 }  // namespace
 
 namespace org::apache::nifi::minifi::encrypt_config {
 
-EncryptConfig::EncryptConfig(const std::string& minifi_home) : minifi_home_(minifi_home) {
+EncryptConfig::EncryptConfig(std::filesystem::path minifi_home) : minifi_home_(std::move(minifi_home)), prev_current_path_(std::filesystem::current_path()) {
   if (sodium_init() < 0) {
     // encryption/decryption depends on the libsodium library which needs to be initialized
     throw std::runtime_error{"Could not initialize the libsodium library!"};
@@ -56,8 +74,12 @@ EncryptConfig::EncryptConfig(const std::string& minifi_home) : minifi_home_(mini
   std::filesystem::current_path(minifi_home_);
 }
 
+EncryptConfig::~EncryptConfig() {
+  std::filesystem::current_path(prev_current_path_);
+}
+
 bool EncryptConfig::isReEncrypting() const {
-  encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
+  PropertiesFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
 
   std::string decryption_key_name = utils::string::join_pack(ENCRYPTION_KEY_PROPERTY_NAME, ".old");
   std::optional<std::string> decryption_key_hex = bootstrap_file.getValue(decryption_key_name);
@@ -66,7 +88,7 @@ bool EncryptConfig::isReEncrypting() const {
 }
 
 std::filesystem::path EncryptConfig::flowConfigPath() const {
-  encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
+  PropertiesFile properties_file{std::ifstream{propertiesFilePath()}};
   std::optional<std::filesystem::path> config_path{properties_file.getValue(Configure::nifi_flow_configuration_file)};
   if (!config_path) {
     config_path = utils::file::PathUtils::resolve(minifi_home_, "conf/config.yml");
@@ -123,7 +145,7 @@ std::filesystem::path EncryptConfig::propertiesFilePath() const {
 }
 
 EncryptionKeys EncryptConfig::getEncryptionKeys(std::string_view property_name) const {
-  encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
+  PropertiesFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
 
   std::string decryption_key_name = utils::string::join_pack(property_name, ".old");
   std::optional<std::string> decryption_key_hex = bootstrap_file.getValue(decryption_key_name);
@@ -168,7 +190,7 @@ std::string EncryptConfig::hexDecodeAndValidateKey(const std::string& key, const
 
 void EncryptConfig::writeEncryptionKeyToBootstrapFile(const std::string& encryption_key_name, const utils::crypto::Bytes& encryption_key) const {
   std::string key_encoded = utils::string::to_hex(utils::crypto::bytesToString(encryption_key));
-  encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
+  PropertiesFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
 
   if (bootstrap_file.hasValue(encryption_key_name)) {
     bootstrap_file.update(encryption_key_name, key_encoded);
@@ -180,22 +202,28 @@ void EncryptConfig::writeEncryptionKeyToBootstrapFile(const std::string& encrypt
 }
 
 void EncryptConfig::encryptSensitiveValuesInMinifiProperties() const {
-  EncryptionKeys keys = getEncryptionKeys(ENCRYPTION_KEY_PROPERTY_NAME);
-
-  encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
-  if (properties_file.size() == 0) {
-    throw std::runtime_error{"Properties file " + propertiesFilePath().string() + " not found!"};
-  }
-
-  uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(properties_file, keys);
-  if (num_properties_encrypted == 0) {
-    std::cout << "Could not find any (new) sensitive properties to encrypt in " << propertiesFilePath() << '\n';
+  const auto base_properties_file = propertiesFilePath();
+  if (!utils::file::exists(base_properties_file)) {
+    std::cout << "The minifi properties file " << base_properties_file.string() << " does not exist. Did you specify the minifi home directory correctly?\n";
     return;
   }
 
-  properties_file.writeTo(propertiesFilePath());
-  std::cout << "Encrypted " << num_properties_encrypted << " sensitive "
-      << (num_properties_encrypted == 1 ? "property" : "properties") << " in " << propertiesFilePath() << '\n';
+  const std::vector<std::string> sensitive_properties = getSensitiveProperties(base_properties_file);
+  const EncryptionKeys keys = getEncryptionKeys(ENCRYPTION_KEY_PROPERTY_NAME);
+
+  uint32_t num_properties_encrypted = encryptSensitiveValuesInMinifiPropertiesFile(base_properties_file, sensitive_properties, keys);
+
+  const auto extra_properties_files_dir = properties::extraPropertiesFilesDirName(base_properties_file);
+  const auto logger = core::logging::LoggerFactory<EncryptConfig>::getLogger();
+  const auto extra_properties_file_names = properties::getExtraPropertiesFileNames(extra_properties_files_dir, logger);
+
+  for (const auto& file_name : extra_properties_file_names) {
+    num_properties_encrypted += encryptSensitiveValuesInMinifiPropertiesFile(extra_properties_files_dir / file_name, sensitive_properties, keys);
+  }
+
+  if (num_properties_encrypted == 0) {
+    std::cout << "Could not find any (new) sensitive properties to encrypt.\n";
+  }
 }
 
 void EncryptConfig::encryptSensitiveValuesInFlowConfig(

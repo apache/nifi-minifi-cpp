@@ -16,14 +16,16 @@
  */
 #pragma once
 
-#include "ConfigFile.h"
+#include "properties/PropertiesFile.h"
 #include "utils/crypto/EncryptionUtils.h"
 #include "Utils.h"
 
 namespace org::apache::nifi::minifi::encrypt_config {
 
-uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const utils::crypto::Bytes& encryption_key);
+std::vector<std::string> getSensitiveProperties(const std::filesystem::path& properties_file_path);
 
-uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const EncryptionKeys& keys);
+uint32_t encryptSensitivePropertiesInFile(PropertiesFile& properties_file, const std::vector<std::string>& sensitive_properties, const utils::crypto::Bytes& encryption_key);
+
+uint32_t encryptSensitivePropertiesInFile(PropertiesFile& properties_file, const std::vector<std::string>& sensitive_properties, const EncryptionKeys& keys);
 
 }  // namespace org::apache::nifi::minifi::encrypt_config

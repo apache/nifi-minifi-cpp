@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
-#include "ConfigFile.h"
 #include "properties/Configuration.h"
+#include "properties/PropertiesFile.h"
 
 #include "minifi-cpp/utils/gsl.h"
 
@@ -29,13 +29,13 @@
 #include "unit/Catch.h"
 #include "utils/file/FileUtils.h"
 
-using org::apache::nifi::minifi::encrypt_config::ConfigFile;
+using org::apache::nifi::minifi::PropertiesFile;
 using org::apache::nifi::minifi::Configuration;
 
-TEST_CASE("ConfigLine can be constructed from a line", "[encrypt-config][constructor]") {
+TEST_CASE("PropertiesFile::Line can be constructed from a line", "[constructor]") {
   auto line_is_parsed_correctly = [](const std::string& line, const std::string& expected_key, const std::string& expected_value) {
-    ConfigFile::Line config_line{line};
-    return config_line.getKey() == expected_key && config_line.getValue() == expected_value;
+    PropertiesFile::Line properties_file_line{line};
+    return properties_file_line.getKey() == expected_key && properties_file_line.getValue() == expected_value;
   };
 
   REQUIRE(line_is_parsed_correctly("", "", ""));
@@ -54,21 +54,21 @@ TEST_CASE("ConfigLine can be constructed from a line", "[encrypt-config][constru
   REQUIRE(line_is_parsed_correctly("nifi.some.key=value=with=equals=signs=", "nifi.some.key", "value=with=equals=signs="));
 }
 
-TEST_CASE("ConfigLine can be constructed from a key-value pair", "[encrypt-config][constructor]") {
+TEST_CASE("PropertiesFile::Line can be constructed from a key-value pair", "[constructor]") {
   auto can_construct_from_kv = [](const std::string& key, const std::string& value, const std::string& expected_line) {
-    ConfigFile::Line config_line{key, value};
-    return config_line.getLine() == expected_line;
+    PropertiesFile::Line properties_file_line{key, value};
+    return properties_file_line.getLine() == expected_line;
   };
 
   REQUIRE(can_construct_from_kv("nifi.some.key", "", "nifi.some.key="));
   REQUIRE(can_construct_from_kv("nifi.some.key", "some_value", "nifi.some.key=some_value"));
 }
 
-TEST_CASE("ConfigLine can update the value", "[encrypt-config][updateValue]") {
+TEST_CASE("PropertiesFile::Line can update the value", "[updateValue]") {
   auto can_update_value = [](const std::string& original_line, const std::string& new_value, const std::string& expected_line) {
-    ConfigFile::Line config_line{original_line};
-    config_line.updateValue(new_value);
-    return config_line.getLine() == expected_line;
+    PropertiesFile::Line properties_file_line{original_line};
+    properties_file_line.updateValue(new_value);
+    return properties_file_line.getLine() == expected_line;
   };
 
   REQUIRE(can_update_value("nifi.some.key=some_value", "new_value", "nifi.some.key=new_value"));
@@ -83,25 +83,25 @@ TEST_CASE("ConfigLine can update the value", "[encrypt-config][updateValue]") {
   REQUIRE(can_update_value("  nifi.some.key =\tsome_value\r", "some_value", "  nifi.some.key =some_value"));
 }
 
-TEST_CASE("ConfigFile creates an empty object from a nonexistent file", "[encrypt-config][constructor]") {
-  ConfigFile test_file{std::ifstream{"resources/nonexistent-minifi.properties"}};
+TEST_CASE("PropertiesFile creates an empty object from a nonexistent file", "[constructor]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "nonexistent-minifi.properties"}};
   REQUIRE(test_file.size() == 0);
 }
 
-TEST_CASE("ConfigFile can parse a simple config file", "[encrypt-config][constructor]") {
-  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+TEST_CASE("PropertiesFile can parse a simple config file", "[constructor]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
   REQUIRE(test_file.size() == 108);
 }
 
-TEST_CASE("ConfigFile can test whether a key is present", "[encrypt-config][hasValue]") {
-  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+TEST_CASE("PropertiesFile can test whether a key is present", "[hasValue]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
   REQUIRE(test_file.hasValue(Configuration::nifi_c2_flow_id));  // present but blank
   REQUIRE(!test_file.hasValue(Configuration::nifi_remote_input_secure));  // commented out
   REQUIRE(!test_file.hasValue("nifi.this.property.does.not.exist"));
 }
 
-TEST_CASE("ConfigFile can read empty properties correctly", "[encrypt-config][constructor]") {
-  ConfigFile test_file{std::ifstream{"resources/with-additional-sensitive-props.minifi.properties"}};
+TEST_CASE("PropertiesFile can read empty properties correctly", "[constructor]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "with-additional-sensitive-props.minifi.properties"}};
   REQUIRE(test_file.size() == 104);
 
   auto empty_property = test_file.getValue(Configuration::nifi_security_need_ClientAuth);
@@ -113,8 +113,8 @@ TEST_CASE("ConfigFile can read empty properties correctly", "[encrypt-config][co
   REQUIRE(whitespace_property->empty());
 }
 
-TEST_CASE("ConfigFile can find the value for a key", "[encrypt-config][getValue]") {
-  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+TEST_CASE("PropertiesFile can find the value for a key", "[getValue]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
 
   SECTION("valid key") {
     REQUIRE(test_file.getValue(Configuration::nifi_bored_yield_duration) == "10 millis");
@@ -125,8 +125,8 @@ TEST_CASE("ConfigFile can find the value for a key", "[encrypt-config][getValue]
   }
 }
 
-TEST_CASE("ConfigFile can update the value for a key", "[encrypt-config][update]") {
-  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+TEST_CASE("PropertiesFile can update the value for a key", "[update]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
 
   SECTION("valid key") {
     test_file.update(Configuration::nifi_bored_yield_duration, "20 millis");
@@ -138,8 +138,8 @@ TEST_CASE("ConfigFile can update the value for a key", "[encrypt-config][update]
   }
 }
 
-TEST_CASE("ConfigFile can add a new setting after an existing setting", "[encrypt-config][insertAfter]") {
-  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+TEST_CASE("PropertiesFile can add a new setting after an existing setting", "[insertAfter]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
 
   SECTION("valid key") {
     test_file.insertAfter(Configuration::nifi_rest_api_password, "nifi.rest.api.password.protected", "my-cipher-name");
@@ -152,8 +152,8 @@ TEST_CASE("ConfigFile can add a new setting after an existing setting", "[encryp
   }
 }
 
-TEST_CASE("ConfigFile can add a new setting at the end", "[encrypt-config][append]") {
-  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+TEST_CASE("PropertiesFile can add a new setting at the end", "[append]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
 
   const std::string KEY = "nifi.bootstrap.sensitive.key";
   const std::string VALUE = "aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab";
@@ -162,8 +162,8 @@ TEST_CASE("ConfigFile can add a new setting at the end", "[encrypt-config][appen
   REQUIRE(test_file.getValue(KEY) == std::make_optional(VALUE));
 }
 
-TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
-  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+TEST_CASE("PropertiesFile can write to a new file", "[writeTo]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
   test_file.update(Configuration::nifi_bored_yield_duration, "20 millis");
 
   TestController test_controller;
@@ -173,29 +173,13 @@ TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
 
   test_file.writeTo(file_path);
 
-  ConfigFile test_file_copy{std::ifstream{file_path}};
+  PropertiesFile test_file_copy{std::ifstream{file_path}};
   REQUIRE(test_file.size() == test_file_copy.size());
   REQUIRE(test_file_copy.getValue(Configuration::nifi_bored_yield_duration) == "20 millis");
 }
 
-TEST_CASE("ConfigFile will throw if we try to write to an invalid file name", "[encrypt-config][writeTo]") {
-  ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
+TEST_CASE("PropertiesFile will throw if we try to write to an invalid file name", "[writeTo]") {
+  PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
   const char* file_path = "/tmp/3915913c-b37d-4adc-b6a8-b8e36e44c639/6ede949c-12b3-4a91-8956-71bc6ab6f73e/some.file";
   REQUIRE_THROWS(test_file.writeTo(file_path));
-}
-
-TEST_CASE("ConfigFile can find the list of sensitive properties", "[encrypt-config][getSensitiveProperties]") {
-  SECTION("default properties") {
-    ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
-    std::vector<std::string> expected_properties{Configuration::nifi_rest_api_password};
-    REQUIRE(test_file.getSensitiveProperties() == expected_properties);
-  }
-
-  SECTION("with additional properties") {
-    ConfigFile test_file{std::ifstream{"resources/with-additional-sensitive-props.minifi.properties"}};
-    std::vector<std::string> expected_properties{
-        Configuration::nifi_c2_enable, Configuration::nifi_flow_configuration_file,
-        Configuration::nifi_rest_api_password, Configuration::nifi_security_client_pass_phrase};
-    REQUIRE(test_file.getSensitiveProperties() == expected_properties);
-  }
 }
