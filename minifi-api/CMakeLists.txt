@@ -9,7 +9,7 @@ target_link_libraries(minifi-api INTERFACE minifi-api-common)
 target_compile_definitions(minifi-api INTERFACE MINIFI_REGISTER_EXTENSION_FN=MinifiRegisterCppExtension_${BUILD_IDENTIFIER})
 
 add_library(minifi-c-api INTERFACE)
-target_include_directories(minifi-c-api INTERFACE include/minifi-c)
+target_include_directories(minifi-c-api INTERFACE include)
 if (APPLE)
   target_link_options(minifi-c-api INTERFACE -undefined dynamic_lookup)
 endif()

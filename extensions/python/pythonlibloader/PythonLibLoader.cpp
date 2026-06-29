@@ -24,7 +24,7 @@
 
 #include "core/Resource.h"
 #include "core/logging/LoggerFactory.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/agent/agent_version.h"
 #include "utils/ExtensionInitUtils.h"
 #include "utils/StringUtils.h"

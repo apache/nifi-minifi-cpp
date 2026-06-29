@@ -21,7 +21,7 @@
 #include <string>
 #include <string_view>
 
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 
 namespace org::apache::nifi::minifi::utils {
 

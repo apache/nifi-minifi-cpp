@@ -36,7 +36,7 @@
 #include "core/ClassLoader.h"
 #include "core/extension/Extension.h"
 #include "core/logging/LoggerFactory.h"
-#include "minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "minifi-cpp/agent/agent_docs.h"
 #include "utils/GeneralUtils.h"
 #include "utils/RegexUtils.h"

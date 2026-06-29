@@ -49,10 +49,10 @@ struct RPG {
 
 class RemoteProcessGroupPort : public core::ProcessorImpl {
  public:
-  RemoteProcessGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid, std::shared_ptr<core::logging::Logger> logger = nullptr)
+  RemoteProcessGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid, sitetosite::TransferDirection direction, std::shared_ptr<core::logging::Logger> logger = nullptr)
       : core::ProcessorImpl({.uuid = uuid, .name = std::string{name}, .logger = logger ? logger : core::logging::LoggerFactory<RemoteProcessGroupPort>::getLogger(uuid)}),
         configure_(std::move(configure)),
-        direction_(sitetosite::TransferDirection::SEND),
+        direction_(direction),
         transmitting_(false),
         protocol_uuid_(uuid),
         client_type_(sitetosite::ClientType::RAW),
@@ -102,10 +102,6 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
-
-  void setDirection(sitetosite::TransferDirection direction) {
-    direction_ = direction;
-  }
 
   void setTimeout(std::chrono::milliseconds timeout) {
     timeout_ = timeout;
@@ -183,7 +179,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
 
   moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
   std::shared_ptr<Configure> configure_;
-  sitetosite::TransferDirection direction_;
+  const sitetosite::TransferDirection direction_;
   std::atomic<bool> transmitting_;
   std::optional<std::chrono::milliseconds> timeout_;
   std::string local_network_interface_;

@@ -20,7 +20,7 @@
 #include <functional>
 #include <memory>
 
-#include "../../minifi-api/include/minifi-c/minifi-api.h"
+#include "minifi-api.h"
 #include "Stream.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/expected.h"
