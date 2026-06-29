@@ -9,21 +9,21 @@ use minifi_native::{
 };
 
 #[derive(Debug, ComponentIdentifier)]
-pub(crate) struct DuckController {}
+pub(crate) struct DuckControllerRs {}
 
-impl NumberOfLegsControllerApi for DuckController {
+impl NumberOfLegsControllerApi for DuckControllerRs {
     fn number_of_legs(&self) -> u8 {
         2
     }
 }
 
-impl CanFlyControllerApi for DuckController {
+impl CanFlyControllerApi for DuckControllerRs {
     fn can_fly(&self) -> bool {
         true
     }
 }
 
-impl EnableControllerService for DuckController {
+impl EnableControllerService for DuckControllerRs {
     fn enable<Ctx: GetProperty, L: Logger>(_context: &Ctx, _logger: &L) -> Result<Self, MinifiError>
     where
         Self: Sized,
@@ -32,8 +32,8 @@ impl EnableControllerService for DuckController {
     }
 }
 
-impl ControllerServiceDefinition for DuckController {
-    const DESCRIPTION: &'static str = "Test DuckController";
+impl ControllerServiceDefinition for DuckControllerRs {
+    const DESCRIPTION: &'static str = "Test DuckControllerRs";
     const PROPERTIES: &'static [Property] = &[];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[
         create_provided_interface!(dyn CanFlyControllerApi),

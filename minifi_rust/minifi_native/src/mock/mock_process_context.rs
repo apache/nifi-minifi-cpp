@@ -1,4 +1,4 @@
-use crate::api::{ProcessContext, RawControllerService};
+use crate::api::{GetId, ProcessContext, RawControllerService};
 use crate::{
     ComponentIdentifier, ControllerServiceApi, EnableControllerService, GetAttribute, MinifiError,
     MockFlowFile, Property,
@@ -125,5 +125,11 @@ impl MockProcessContext {
 impl GetAttribute for MockProcessContext {
     fn get_attribute(&self, name: &str) -> Result<Option<String>, MinifiError> {
         Ok(self.attributes.get(name).cloned())
+    }
+}
+
+impl GetId for MockProcessContext {
+    fn get_id(&self) -> Result<String, MinifiError> {
+        Ok("mock_flow_file_id".into())
     }
 }

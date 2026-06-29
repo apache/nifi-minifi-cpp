@@ -1,8 +1,8 @@
 mod controller_services;
 mod processors;
 
-use crate::controller_services::dog_controller_service::DogController;
-use crate::controller_services::duck_controller_service::DuckController;
+use crate::controller_services::dog_controller_service::DogControllerRs;
+use crate::controller_services::duck_controller_service::DuckControllerRs;
 use crate::controller_services::dummy_controller_service::DummyControllerService;
 use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;
 use crate::processors::asciify_german::AsciifyGerman;
@@ -37,7 +37,7 @@ processors: [
 controllers: [
     LoremIpsumControllerService,
     DummyControllerService,
-    DogController,
-    DuckController
+    DogControllerRs,
+    DuckControllerRs
 ]
 );

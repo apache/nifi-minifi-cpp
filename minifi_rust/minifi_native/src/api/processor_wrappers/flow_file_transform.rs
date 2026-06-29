@@ -9,6 +9,7 @@ use crate::{
     ProcessContext, ProcessSession, Relationship, Schedule, info,
 };
 use std::collections::HashMap;
+use crate::api::flow_file::GetId;
 
 #[derive(Debug)]
 pub struct TransformedFlowFile<'a> {
@@ -54,7 +55,7 @@ impl<'a> TransformedFlowFile<'a> {
 pub trait FlowFileTransform {
     fn transform<
         'a,
-        Context: GetProperty + GetControllerService + GetAttribute,
+        Context: GetProperty + GetControllerService + GetAttribute + GetId,
         LoggerImpl: Logger,
     >(
         &self,

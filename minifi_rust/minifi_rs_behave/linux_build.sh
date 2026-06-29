@@ -54,10 +54,10 @@ elif [ -d "$RESOLVED_SDK_PATH" ]; then
         cp "$RESOLVED_SDK_PATH"/*.whl "$DOCKER_SDK_DIR/" 2>/dev/null || true
 
     # Case B: It's a raw repository layout
-    elif [ -f "$RESOLVED_SDK_PATH/minifi-api/include/minifi-c/minifi-api.h" ]; then
-        mkdir -p "$DOCKER_SDK_DIR/minifi-api/include/minifi-c"
+    elif [ -f "$RESOLVED_SDK_PATH/minifi-api/include/minifi-api.h" ]; then
+        mkdir -p "$DOCKER_SDK_DIR/minifi-api/include"
 
-        cp "$RESOLVED_SDK_PATH/minifi-api/include/minifi-c/minifi-api.h" "$DOCKER_SDK_DIR/minifi-api/include/minifi-c/"
+        cp "$RESOLVED_SDK_PATH/minifi-api/include/minifi-api.h" "$DOCKER_SDK_DIR/minifi-api/include/"
         cp "$RESOLVED_SDK_PATH/minifi-api/minifi-api.def" "$DOCKER_SDK_DIR/minifi-api/" 2>/dev/null || true
 
         if [ -d "$RESOLVED_SDK_PATH/behave_framework" ]; then

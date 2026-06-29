@@ -1,9 +1,6 @@
 use crate::processors::put_file::relationships::{FAILURE, SUCCESS};
 use minifi_native::macros::ComponentIdentifier;
-use minifi_native::{
-    FlowFileTransform, GetAttribute, GetControllerService, GetProperty, InputStream, Logger,
-    MinifiError, Schedule, TransformedFlowFile, trace, warn,
-};
+use minifi_native::{FlowFileTransform, GetAttribute, GetControllerService, GetProperty, InputStream, Logger, MinifiError, Schedule, TransformedFlowFile, trace, warn, GetId};
 use std::path::{Path, PathBuf};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 use walkdir::WalkDir;
@@ -87,7 +84,7 @@ impl PutFileRs {
 
     fn get_destination_path<Ctx>(context: &Ctx) -> Result<PathBuf, MinifiError>
     where
-        Ctx: GetProperty + GetAttribute,
+        Ctx: GetProperty + GetAttribute + GetId,
     {
         let directory = context
             .get_property(&properties::DIRECTORY)?
@@ -95,7 +92,7 @@ impl PutFileRs {
 
         let file_name = context
             .get_attribute("filename")?
-            .unwrap_or("foo.txt".to_string()); // TODO fallback to UUID
+            .unwrap_or(context.get_id()?);
         Ok(PathBuf::from(directory + "/" + file_name.as_str()))
     }
 
@@ -192,7 +189,7 @@ impl Schedule for PutFileRs {
 impl FlowFileTransform for PutFileRs {
     fn transform<
         'a,
-        Context: GetProperty + GetControllerService + GetAttribute,
+        Context: GetProperty + GetControllerService + GetAttribute + GetId,
         LoggerImpl: Logger,
     >(
         &self,

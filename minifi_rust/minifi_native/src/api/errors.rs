@@ -26,6 +26,7 @@ pub enum MinifiError {
     ScheduleError(Cow<'static, str>),
     TriggerError(Cow<'static, str>),
     Parse(ParseError),
+    MissingFlowFileError,
     IoError(std::io::Error),
 }
 

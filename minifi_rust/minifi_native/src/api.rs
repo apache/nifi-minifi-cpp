@@ -14,7 +14,7 @@ pub(crate) mod raw_controller_service;
 pub(crate) mod raw_processor;
 pub(crate) mod relationship;
 
-pub use flow_file::FlowFile;
+pub use flow_file::{FlowFile, GetId};
 pub use logger::{LogLevel, Logger};
 pub use process_context::ProcessContext;
 pub use process_session::{InputStream, OutputStream, ProcessSession};
