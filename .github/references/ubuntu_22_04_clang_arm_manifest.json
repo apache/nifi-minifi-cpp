@@ -4418,6 +4418,9 @@
                         "defaultValue": "false"
                     }
                 },
+                "inputRequirement": "INPUT_ALLOWED",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [],
                 "typeDescription": "This processor can throw exceptions in onTrigger and onSchedule calls based on configuration. Only for testing purposes.",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
@@ -6033,6 +6036,9 @@
                 "type": "org.apache.nifi.minifi.processors.LogAttribute"
             },
             {
+                "inputRequirement": "INPUT_ALLOWED",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [],
                 "typeDescription": "This processor logs a message on destruction. Only for testing purposes.",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",

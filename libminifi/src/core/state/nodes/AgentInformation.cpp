@@ -75,7 +75,10 @@ std::string allowedTypeArtifactName(const std::string_view allowed_type, const s
   return "minifi-system";
 }
 
-void serializeClassDescription(const std::vector<ClassDescription>& descriptions, const std::string& name, SerializedResponseNode& response) {
+void serializeClassDescription(const std::vector<ClassDescription>& descriptions,
+    const std::string& name,
+    SerializedResponseNode& response,
+    bool include_processor_only_attributes) {
   if (descriptions.empty()) {
     return;
   }
@@ -142,8 +145,7 @@ void serializeClassDescription(const std::vector<ClassDescription>& descriptions
       desc.children.push_back(props);
     }
 
-    // only for processors
-    if (!class_description.class_relationships_.empty()) {
+    if (include_processor_only_attributes) {
       desc.children.push_back({.name = "inputRequirement", .value = class_description.inputRequirement_});
       desc.children.push_back({.name = "isSingleThreaded", .value = class_description.isSingleThreaded_});
 
@@ -184,8 +186,8 @@ std::vector<SerializedResponseNode> serializeComponentManifest(const Components&
   std::vector<SerializedResponseNode> serialized;
   SerializedResponseNode resp;
   resp.name = "componentManifest";
-  serializeClassDescription(components.processors, "processors", resp);
-  serializeClassDescription(components.controller_services, "controllerServices", resp);
+  serializeClassDescription(components.processors, "processors", resp, true);
+  serializeClassDescription(components.controller_services, "controllerServices", resp, false);
   serialized.push_back(resp);
   return serialized;
 }
