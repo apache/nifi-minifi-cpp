@@ -39,10 +39,20 @@ if (NOT ENABLE_TEST_PROCESSORS)
     set_target_properties(cargo-build_minifi_rs_playground PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
+if (NOT MINIFI_EXTENSION_PGP)
+    set_target_properties(cargo-build_minifi_pgp PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
+
 include(CTest)
+
+# Build the test binaries during the build
+add_custom_target(cargo_build_tests ALL
+        COMMAND "${Rust_CARGO_CACHED}" test --no-run
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Building Rust test binaries")
 
 add_test(
         NAME cargo_tests
-        COMMAND cargo test
+        COMMAND "${Rust_CARGO_CACHED}" test
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )

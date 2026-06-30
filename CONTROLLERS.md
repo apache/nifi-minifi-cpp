@@ -27,6 +27,8 @@ limitations under the License.
 - [NetworkPrioritizerService](#NetworkPrioritizerService)
 - [ODBCService](#ODBCService)
 - [PersistentMapStateStorage](#PersistentMapStateStorage)
+- [PGPPrivateKeyService](#PGPPrivateKeyService)
+- [PGPPublicKeyService](#PGPPublicKeyService)
 - [ProxyConfigurationService](#ProxyConfigurationService)
 - [RocksDbStateStorage](#RocksDbStateStorage)
 - [SmbConnectionControllerService](#SmbConnectionControllerService)
@@ -245,6 +247,39 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **File**                  |               |                  | Path to a file to store state                                                                                                                          |
 
 
+## PGPPrivateKeyService
+
+### Description
+
+PGP Private Key Service provides Private Keys loaded from files or properties
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name         | Default Value | Allowable Values | Description                                                                                                                                                |
+|--------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Key Password |               |                  | Password used for decrypting Private Keys. Multiple passwords may be supplied one per line, each of them is tried in turn<br/>**Sensitive Property: true** |
+| Keyring      |               |                  | Secret Key encoded in ASCII Armor<br/>**Sensitive Property: true**                                                                                         |
+| Keyring File |               |                  | File path to PGP Secret Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true**                                                    |
+
+
+## PGPPublicKeyService
+
+### Description
+
+PGP Public Key Service providing Public Keys loaded from files
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name         | Default Value | Allowable Values | Description                                                                                                        |
+|--------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------|
+| Keyring      |               |                  | PGP Keyring or Public Key encoded in ASCII Armor                                                                   |
+| Keyring File |               |                  | File path to PGP Keyring or Public Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true** |
+
+
 ## ProxyConfigurationService
 
 ### Description
@@ -393,4 +428,3 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Pretty Print XML**        | false         | true<br/>false                                                        | Specifies whether or not the XML should be pretty printed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **Name of Record Tag**      |               |                                                                       | Specifies the name of the XML record tag wrapping the record fields.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **Name of Root Tag**        |               |                                                                       | Specifies the name of the XML root tag wrapping the record set.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-

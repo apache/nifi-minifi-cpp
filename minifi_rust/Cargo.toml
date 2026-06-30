@@ -7,3 +7,9 @@ panic = "abort"
 
 [profile.dev]
 panic = "abort"
+
+# The PGP tests unlock passphrase-protected secret keys, which costs a full S2K hash
+# chain per key. Unoptimized that dominates the test suite (6.4s -> 0.4s with this).
+# Workspace members are not matched by "*", so our own code stays at opt-level 0.
+[profile.dev.package."*"]
+opt-level = 2
