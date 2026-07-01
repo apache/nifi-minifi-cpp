@@ -631,13 +631,13 @@ jobs:
       - id: cargo_check
         name: Cargo check
         continue-on-error: true
-        run: cargo fmt --check
+        run: cargo fmt --all --check
         working-directory: minifi_rust
 
       - id: clippy_check
         name: Clippy check
         continue-on-error: true
-        run: cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
         working-directory: minifi_rust
 
       - name: Check Linter Statuses
