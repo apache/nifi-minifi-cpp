@@ -1,7 +1,7 @@
 use minifi_native_sys::{
     minifi_input_stream, minifi_input_stream_read, minifi_output_stream, minifi_output_stream_write,
 };
-use std::io::{BufRead, Error, ErrorKind, Read};
+use std::io::{BufRead, Error, Read};
 
 #[derive(Debug)]
 pub struct CffiInputStream<'a> {
@@ -54,7 +54,7 @@ impl<'a> BufRead for CffiInputStream<'a> {
                     self.buffer.len(),
                 );
                 if ret < 0 {
-                    return Err(Error::new(ErrorKind::Other, "Minifi Read Error"));
+                    return Err(Error::other("Minifi Read Error"));
                 }
                 self.cap = ret as usize;
                 self.pos = 0;
@@ -104,7 +104,7 @@ impl<'a> std::io::Write for CffiOutputStream<'a> {
                 buf.len(),
             );
             if ret < 0 {
-                return Err(Error::new(ErrorKind::Other, "Minifi Write Error"));
+                return Err(Error::other("Minifi Write Error"));
             }
             self.written_bytes += ret as usize;
             Ok(ret as usize)

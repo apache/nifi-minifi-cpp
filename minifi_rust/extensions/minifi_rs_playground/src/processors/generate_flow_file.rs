@@ -146,14 +146,14 @@ impl Trigger for GenerateFlowFileRs {
         }
 
         for _ in 0..self.batch_size {
-            let mut ff = session.create()?;
+            let ff = session.create()?;
             if self.mode != Mode::Empty {
                 if self.is_unique() {
                     let mut unique_data: Vec<u8> = vec![0; self.file_size as usize];
                     Self::generate_data(&mut unique_data, self.is_text());
-                    session.write(&mut ff, unique_data.as_slice())?;
+                    session.write(&ff, unique_data.as_slice())?;
                 } else {
-                    session.write(&mut ff, non_unique_data_buffer)?;
+                    session.write(&ff, non_unique_data_buffer)?;
                 }
             }
             session.transfer(ff, relationships::SUCCESS.name)?;

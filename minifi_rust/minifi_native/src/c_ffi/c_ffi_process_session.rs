@@ -225,7 +225,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             process_attr,
         };
 
-        unsafe extern "C" fn get_attributes_callback<'b, F: FnMut(&str, &str)>(
+        unsafe extern "C" fn get_attributes_callback<F: FnMut(&str, &str)>(
             user_ctx: *mut c_void,
             minifi_attr_key: minifi_string_view,
             minifi_attr_val: minifi_string_view,
@@ -508,7 +508,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
 
                         buffer.set_len(bytes_read as usize);
 
-                        match (batch_helper.process_batch)(&*buffer) {
+                        match (batch_helper.process_batch)(&buffer) {
                             Ok(_) => {}
                             Err(err) => {
                                 eprintln!("Error during read_in_batch {:?}", err);

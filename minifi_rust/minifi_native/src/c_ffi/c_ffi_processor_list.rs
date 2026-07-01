@@ -7,6 +7,12 @@ pub struct CffiProcessorList {
     minifi_processor_class_description_list: Vec<minifi_processor_class_definition>,
 }
 
+impl Default for CffiProcessorList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CffiProcessorList {
     pub fn new() -> Self {
         Self {
@@ -43,6 +49,10 @@ impl CffiProcessorList {
         self.minifi_processor_class_description_list.len()
     }
 
+    /// # Safety
+    ///
+    /// The returned *minifi_processor_class_definition only valid until self lives
+    /// TODO(mzink) maybe some lifetimes?
     pub unsafe fn get_processor_ptr(&self) -> *const minifi_processor_class_definition {
         self.minifi_processor_class_description_list.as_ptr()
     }

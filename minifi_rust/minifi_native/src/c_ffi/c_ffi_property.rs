@@ -101,7 +101,7 @@ impl Property {
                     description: property.description.as_minifi_c_type(),
                     is_required: property.is_required,
                     is_sensitive: property.is_sensitive,
-                    default_value: if def_value.data == std::ptr::null() {
+                    default_value: if def_value.data.is_null() {
                         std::ptr::null()
                     } else {
                         def_value
@@ -109,7 +109,7 @@ impl Property {
                     allowed_values_count: allowed_values.len(),
                     allowed_values_ptr: allowed_values.as_ptr(),
                     validator: property.validator.as_minifi_c_type(),
-                    allowed_type: if allowed_type.data == std::ptr::null() {
+                    allowed_type: if allowed_type.data.is_null() {
                         std::ptr::null()
                     } else {
                         allowed_type

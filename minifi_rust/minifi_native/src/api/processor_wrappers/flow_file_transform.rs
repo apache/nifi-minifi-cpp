@@ -34,7 +34,7 @@ impl<'a> TransformedFlowFile<'a> {
     ) -> Self {
         Self {
             target_relationship_name: target_relationship.name,
-            new_content: new_content.map(|b| Content::Buffer(b)),
+            new_content: new_content.map(Content::Buffer),
             attributes_to_add,
         }
     }

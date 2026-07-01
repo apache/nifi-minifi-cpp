@@ -10,7 +10,7 @@ pub(crate) const SCHEDULE_BEHAVIOUR: Property = Property {
     supports_expr_lang: false,
     default_value: Some(KamikazeBehaviour::ReturnOk.into_str()),
     validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &KamikazeBehaviour::VARIANTS,
+    allowed_values: KamikazeBehaviour::VARIANTS,
     allowed_type: None,
 };
 
@@ -22,7 +22,7 @@ pub(crate) const TRIGGER_BEHAVIOUR: Property = Property {
     supports_expr_lang: false,
     default_value: Some(KamikazeBehaviour::ReturnOk.into_str()),
     validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &KamikazeBehaviour::VARIANTS,
+    allowed_values: KamikazeBehaviour::VARIANTS,
     allowed_type: None,
 };
 

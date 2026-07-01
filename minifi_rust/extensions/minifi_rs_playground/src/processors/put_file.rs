@@ -31,14 +31,14 @@ struct PutFileUnixPermissions {
 #[cfg(unix)]
 impl PutFileUnixPermissions {
     fn set_directory_permissions(&self, path: &Path) -> std::io::Result<()> {
-        if let Some(permissions) = self.directory_permissions.as_ref().map(|p| p.clone()) {
+        if let Some(permissions) = self.directory_permissions.clone() {
             return std::fs::set_permissions(path, permissions);
         }
         Ok(())
     }
 
     fn set_file_permissions(&self, file: &Path) -> std::io::Result<()> {
-        if let Some(permissions) = self.file_permissions.as_ref().map(|p| p.clone()) {
+        if let Some(permissions) = self.file_permissions.clone() {
             return std::fs::set_permissions(file, permissions);
         }
         Ok(())
@@ -100,12 +100,11 @@ impl PutFileRs {
     }
 
     fn prepare_destination(&self, destination: &Path) -> std::io::Result<()> {
-        if let Some(parent) = destination.parent() {
-            if self.try_make_dirs {
+        if let Some(parent) = destination.parent()
+            && self.try_make_dirs {
                 std::fs::create_dir_all(parent)?;
                 self.unix_permissions.set_directory_permissions(parent)?;
             }
-        }
         Ok(())
     }
 
@@ -143,10 +142,10 @@ impl PutFileRs {
         let parse_permission =
             |property: &minifi_native::Property| -> Result<Option<std::fs::Permissions>, MinifiError> {
                 Ok(context
-                    .get_property(&property)?
+                    .get_property(property)?
                     .map(|perm_str| u32::from_str_radix(&perm_str, 8))
                     .transpose()?
-                    .map(|perm| std::fs::Permissions::from_mode(perm)))
+                    .map(std::fs::Permissions::from_mode))
             };
         let file_permissions = parse_permission(&unix_only_properties::PERMISSIONS)?;
         let directory_permissions = parse_permission(&unix_only_properties::DIRECTORY_PERMISSIONS)?;

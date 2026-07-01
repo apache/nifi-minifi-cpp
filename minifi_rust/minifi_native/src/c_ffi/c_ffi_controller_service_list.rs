@@ -8,6 +8,12 @@ pub struct CffiControllerServiceList {
         Vec<minifi_controller_service_class_definition>,
 }
 
+impl Default for CffiControllerServiceList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CffiControllerServiceList {
     pub fn new() -> Self {
         Self {
@@ -45,6 +51,10 @@ impl CffiControllerServiceList {
         self.minifi_controller_service_class_description_list.len()
     }
 
+    /// # Safety
+    ///
+    /// The returned *minifi_controller_service_class_definition only valid until self lives
+    /// TODO(mzink) maybe some lifetimes?
     pub unsafe fn get_controller_service_ptr(
         &self,
     ) -> *const minifi_controller_service_class_definition {

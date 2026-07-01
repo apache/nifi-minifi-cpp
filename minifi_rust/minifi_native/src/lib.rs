@@ -66,7 +66,7 @@ macro_rules! declare_minifi_extension {
     ) => {
 
         #[unsafe(no_mangle)]
-        pub extern "C" fn minifi_init_extension(
+        pub unsafe extern "C" fn minifi_init_extension(
             extension_context: *mut minifi_native::sys::minifi_extension_context
         ) {
 

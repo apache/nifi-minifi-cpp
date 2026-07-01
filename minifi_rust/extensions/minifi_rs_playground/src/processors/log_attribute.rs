@@ -30,16 +30,14 @@ impl LogAttributeRs {
 
         log_msg.push_str("\nFlowFile Attributes Map Content");
         session.on_attributes(flow_file, |key, value| {
-            if let Some(attributes_to_ignore) = &self.attributes_to_ignore {
-                if attributes_to_ignore.iter().any(|ign| ign == key) {
+            if let Some(attributes_to_ignore) = &self.attributes_to_ignore
+                && attributes_to_ignore.iter().any(|ign| ign == key) {
                     return;
                 }
-            }
-            if let Some(attributes_to_log) = &self.attributes_to_log {
-                if !attributes_to_log.iter().any(|ign| ign == key) {
+            if let Some(attributes_to_log) = &self.attributes_to_log
+                && !attributes_to_log.iter().any(|ign| ign == key) {
                     return;
                 }
-            }
             log_msg.push_str(format!("\nkey:{} value:{}", &key, &value).as_str());
         });
         if self.log_payload {
@@ -50,13 +48,13 @@ impl LogAttributeRs {
                 } else {
                     log_msg.push_str(
                         String::from_utf8(flow_file_payload)
-                            .unwrap_or(String::new())
+                            .unwrap_or_default()
                             .as_str(),
                     );
                 }
             }
         }
-        log_msg.push_str("\n");
+        log_msg.push('\n');
         log_msg.push_str(self.dash_line.as_str());
         log_msg
     }
@@ -85,8 +83,8 @@ impl Trigger for LogAttributeRs {
         };
         let mut flow_files_processed = 0usize;
         for _ in 0..max_flow_files_to_process {
-            if let Some(mut flow_file) = session.get() {
-                let log_msg = self.generate_log_message(session, &mut flow_file);
+            if let Some(flow_file) = session.get() {
+                let log_msg = self.generate_log_message(session, &flow_file);
                 log!(logger, self.log_level, "{}", log_msg);
                 session.transfer(flow_file, relationships::SUCCESS.name)?;
                 flow_files_processed += 1;
@@ -121,8 +119,7 @@ impl Schedule for LogAttributeRs {
             property: &Property,
         ) -> Result<Option<Vec<String>>, MinifiError> {
             Ok(context
-                .get_property(property)?
-                .and_then(|s| Some(s.split(",").map(|s| s.to_string()).collect::<Vec<String>>())))
+                .get_property(property)?.map(|s| s.split(",").map(|s| s.to_string()).collect::<Vec<String>>()))
         }
 
         let attributes_to_log = get_csv_property(context, &properties::ATTRIBUTES_TO_LOG)?;

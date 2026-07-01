@@ -22,7 +22,7 @@ pub(crate) const CONFLICT_RESOLUTION: Property = Property {
     supports_expr_lang: false,
     default_value: Some(ConflictResolutionStrategy::Fail.into_str()),
     validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &ConflictResolutionStrategy::VARIANTS,
+    allowed_values: ConflictResolutionStrategy::VARIANTS,
     allowed_type: None,
 };
 

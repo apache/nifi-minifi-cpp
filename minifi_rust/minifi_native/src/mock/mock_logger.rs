@@ -22,6 +22,12 @@ impl Logger for MockLogger {
     }
 }
 
+impl Default for MockLogger {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockLogger {
     pub fn new() -> Self {
         MockLogger {

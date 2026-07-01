@@ -36,8 +36,8 @@ impl MutFlowFileStreamTransform for DuplicateStreamText {
     ) -> Result<TransformStreamResult, MinifiError> {
         let mut byte = [0u8; 1];
         while input_stream.read(&mut byte)? > 0 {
-            output_stream.write(&byte)?;
-            output_stream.write(&byte)?;
+            let _ = output_stream.write(&byte)?;
+            let _ = output_stream.write(&byte)?;
         }
         Ok(TransformStreamResult::new(&SUCCESS, HashMap::new()))
     }
