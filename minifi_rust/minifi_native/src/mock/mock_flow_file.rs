@@ -10,6 +10,12 @@ pub struct MockFlowFile {
 
 impl FlowFile for MockFlowFile {}
 
+impl Default for MockFlowFile {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockFlowFile {
     pub fn new() -> MockFlowFile {
         MockFlowFile {

@@ -125,6 +125,12 @@ impl ProcessSession for MockProcessSession {
     }
 }
 
+impl Default for MockProcessSession {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockProcessSession {
     pub fn new() -> Self {
         Self {

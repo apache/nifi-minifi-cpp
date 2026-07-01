@@ -11,6 +11,12 @@ impl GetProperty for MockControllerServiceContext {
     }
 }
 
+impl Default for MockControllerServiceContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockControllerServiceContext {
     pub fn new() -> Self {
         Self {

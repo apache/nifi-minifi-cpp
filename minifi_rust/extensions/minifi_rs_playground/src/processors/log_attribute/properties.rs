@@ -9,7 +9,7 @@ pub(crate) const LOG_LEVEL: Property = Property {
     supports_expr_lang: false,
     default_value: Some("Info"), // todo! it would be nicer to come from enum value but wasnt able to use into_const_str from another crate
     validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &LogLevel::VARIANTS,
+    allowed_values: LogLevel::VARIANTS,
     allowed_type: None,
 };
 

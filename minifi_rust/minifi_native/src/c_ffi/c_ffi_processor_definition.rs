@@ -17,6 +17,9 @@ use crate::{OnTriggerResult, Relationship};
 use minifi_native_sys::*;
 
 pub trait DispatchOnTrigger<M: ThreadingModel> {
+    /// # Safety
+    ///
+    /// This function calls C functions
     unsafe fn dispatch_on_trigger(
         processor: *mut c_void,
         context: *mut minifi_process_context,
@@ -95,6 +98,7 @@ impl<T> RawProcessorDefinition<T>
 where
     T: RawProcessor<LoggerType = CffiLogger> + DispatchOnTrigger<T::Threading>,
 {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         name: &'static str,
         description_text: &'static str,

@@ -2,16 +2,16 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-struct SDK {
+struct Sdk {
     header_path: PathBuf,
     #[cfg_attr(not(windows), allow(dead_code))]
     def_path: PathBuf,
     behave_path: PathBuf,
 }
 
-impl SDK {
+impl Sdk {
     fn from_local_repo(repo_root: &Path) -> Option<Self> {
-        let canon = std::fs::canonicalize(&repo_root).ok()?;
+        let canon = std::fs::canonicalize(repo_root).ok()?;
         println!(
             "cargo:info=MINIFI_SDK_PATH from from_local_repo: {:?} -> {:?}",
             repo_root, canon
@@ -168,7 +168,7 @@ fn generate_minifi_c_api_lib(def_path: &Path) {
 fn main() {
     println!("cargo:rerun-if-env-changed=MINIFI_SDK_PATH");
 
-    let sdk = SDK::new_from_env_variable()
+    let sdk = Sdk::new_from_env_variable()
         .expect("Couldn't find valid SDK. Ensure MINIFI_SDK_PATH is set correctly.");
 
     #[cfg(windows)]

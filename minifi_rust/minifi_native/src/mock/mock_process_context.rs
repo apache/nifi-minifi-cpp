@@ -112,6 +112,12 @@ impl ProcessContext for MockProcessContext {
     }
 }
 
+impl Default for MockProcessContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockProcessContext {
     pub fn new() -> Self {
         Self {

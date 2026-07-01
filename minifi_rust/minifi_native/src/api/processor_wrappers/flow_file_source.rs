@@ -62,8 +62,8 @@ where
         let mut ff = session.create()?;
         match new_flow_file_data.new_content {
             None => {}
-            Some(Content::Buffer(buffer)) => session.write(&mut ff, &buffer)?,
-            Some(Content::Stream(stream)) => session.write_from_stream(&mut ff, stream)?,
+            Some(Content::Buffer(buffer)) => session.write(&ff, &buffer)?,
+            Some(Content::Stream(stream)) => session.write_from_stream(&ff, stream)?,
         }
         for (k, v) in &new_flow_file_data.attributes_to_add {
             session.set_attribute(&mut ff, k, v)?;
@@ -75,7 +75,7 @@ where
 
 pub struct FlowFileSourceProcessorType {}
 
-impl<'a, Implementation, L> MultiThreadedTrigger
+impl<Implementation, L> MultiThreadedTrigger
     for Processor<Implementation, FlowFileSourceProcessorType, Concurrent, L>
 where
     Implementation: Schedule + FlowFileSource,
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl<'a, Implementation, L> SingleThreadedTrigger
+impl<Implementation, L> SingleThreadedTrigger
     for Processor<Implementation, FlowFileSourceProcessorType, Exclusive, L>
 where
     Implementation: Schedule + MutFlowFileSource,

@@ -116,7 +116,7 @@ where
 }
 
 // Concurrent Implementation (Multi-Threaded)
-impl<'a, Implementation, L> MultiThreadedTrigger
+impl<Implementation, L> MultiThreadedTrigger
     for Processor<Implementation, FlowFileStreamTransformProcessorType, Concurrent, L>
 where
     Implementation: Schedule + FlowFileStreamTransform,
@@ -144,7 +144,7 @@ where
 }
 
 // Exclusive Implementation (Single-Threaded)
-impl<'a, Implementation, L> SingleThreadedTrigger
+impl<Implementation, L> SingleThreadedTrigger
     for Processor<Implementation, FlowFileStreamTransformProcessorType, Exclusive, L>
 where
     Implementation: Schedule + MutFlowFileStreamTransform,

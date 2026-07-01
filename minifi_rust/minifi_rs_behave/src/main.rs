@@ -73,7 +73,7 @@ impl BehaveRunner {
     }
 
     fn install_minifi_behave(&self) -> ExitStatus {
-        Command::new(&self.get_venv_python())
+        Command::new(self.get_venv_python())
             .arg("-m")
             .arg("pip")
             .arg("install")
@@ -101,9 +101,9 @@ impl BehaveRunner {
     }
 
     fn run_tests(&self, root: &Path) -> ExitStatus {
-        let mut cmd = Command::new(&self.get_venv_behave());
+        let mut cmd = Command::new(self.get_venv_behave());
 
-        cmd.args(&Self::find_features(root));
+        cmd.args(Self::find_features(root));
 
         cmd.arg("--show-progress-bar");
         cmd.arg("--parallel-processes");
@@ -150,6 +150,6 @@ fn main() {
     let install_status = behave_runner.install_minifi_behave();
     assert!(install_status.success(), "Pip install failed");
 
-    let status = behave_runner.run_tests(&root);
+    let status = behave_runner.run_tests(root);
     assert!(status.success(), "Behave tests failed");
 }

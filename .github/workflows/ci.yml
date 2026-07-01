@@ -634,8 +634,14 @@ jobs:
         run: cargo fmt --check
         working-directory: minifi_rust
 
+      - id: clippy_check
+        name: Clippy check
+        continue-on-error: true
+        run: cargo clippy
+        working-directory: minifi_rust
+
       - name: Check Linter Statuses
-        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.flake8_check.outcome == 'failure' || steps.cargo_check.outcome == 'failure'
+        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.flake8_check.outcome == 'failure' || steps.cargo_check.outcome == 'failure' || steps.clippy_check.outcome == 'failure'
         run: |
           echo "One or more linters failed. Failing the workflow."
           exit 1
