@@ -238,7 +238,7 @@ fn decryption_of_not_encrypted_data() {
     let mut flow_file_stream = std::io::Cursor::new("something not encrypted".as_bytes());
     let res = decrypt_content
         .transform(
-            &mut processor_context,
+            &processor_context,
             &mut flow_file_stream,
             &mut result,
             &logger,

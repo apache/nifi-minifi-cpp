@@ -40,10 +40,10 @@ fn encrypts_via_passphrase() {
     let mut result: Vec<u8> = Vec::new();
     let mut input_stream = std::io::Cursor::new("foo".as_bytes());
     let processor =
-        EncryptContentPGP::schedule(&mut context, &MockLogger::new()).expect("should schedule");
+        EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
     let transformed_ff = processor
         .transform(
-            &mut context,
+            &context,
             &mut input_stream,
             &mut result,
             &MockLogger::new(),
@@ -60,8 +60,8 @@ fn public_key_service() -> PGPPublicKeyService {
         "Keyring File".to_string(),
         test_utils::get_test_key_path("keyring.asc"),
     );
-    let service = PGPPublicKeyService::enable(&context, &MockLogger::new()).expect("should enable");
-    service
+    
+    PGPPublicKeyService::enable(&context, &MockLogger::new()).expect("should enable")
 }
 
 #[test]
@@ -81,10 +81,10 @@ fn encrypts_ascii_for_alice() {
     let mut result: Vec<u8> = Vec::new();
     let mut input_stream = std::io::Cursor::new("foo".as_bytes());
     let processor =
-        EncryptContentPGP::schedule(&mut context, &MockLogger::new()).expect("should schedule");
+        EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
     let transformed_ff = processor
         .transform(
-            &mut context,
+            &context,
             &mut input_stream,
             &mut result,
             &MockLogger::new(),
@@ -112,10 +112,10 @@ fn encrypts_binary_for_bob() {
     let mut result: Vec<u8> = Vec::new();
     let mut input_stream = std::io::Cursor::new("foo".as_bytes());
     let processor =
-        EncryptContentPGP::schedule(&mut context, &MockLogger::new()).expect("should schedule");
+        EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
     let transformed_ff = processor
         .transform(
-            &mut context,
+            &context,
             &mut input_stream,
             &mut result,
             &MockLogger::new(),
@@ -142,10 +142,10 @@ fn cannot_encrypt_for_carol() {
     let mut result: Vec<u8> = Vec::new();
     let mut input_stream = std::io::Cursor::new("foo".as_bytes());
     let processor =
-        EncryptContentPGP::schedule(&mut context, &MockLogger::new()).expect("should schedule");
+        EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
     let transformed_ff = processor
         .transform(
-            &mut context,
+            &context,
             &mut input_stream,
             &mut result,
             &MockLogger::new(),
