@@ -1,0 +1,12 @@
+[package]
+name = "minifi_rs_behave"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+glob = "0.3.3"
+minifi_rs_playground = { path = "../extensions/minifi_rs_playground" }
+minifi_native_sys = { path = "../minifi_native_sys" }
+
+[lints.rust]
+unused_crate_dependencies = "allow"

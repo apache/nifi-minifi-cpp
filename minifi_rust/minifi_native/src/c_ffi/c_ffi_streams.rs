@@ -1,0 +1,126 @@
+use minifi_native_sys::{
+    minifi_input_stream, minifi_input_stream_read, minifi_output_stream, minifi_output_stream_write,
+};
+use std::io::{BufRead, Error, Read};
+
+#[derive(Debug)]
+pub struct CffiInputStream<'a> {
+    ptr: *mut minifi_input_stream,
+    buffer: [u8; 8192],
+    pos: usize,
+    cap: usize,
+    total_read: usize,
+    _marker: std::marker::PhantomData<&'a ()>,
+}
+
+// SAFETY: The wrapped `minifi_input_stream*` points at a
+// `minifi::io::InputStream` on the C++ side. That interface has no
+// thread-affine state (no `thread_local`, no owning-thread assertions in the
+// concrete implementations — see
+// `minifi-api/common/include/minifi-cpp/io/InputStream.h` and the impls under
+// `libminifi/src/core/`). The stream also cannot escape the FFI callback it
+// was constructed in: the `'a` lifetime is bound to that call frame.
+unsafe impl<'a> Send for CffiInputStream<'a> {}
+
+impl<'a> CffiInputStream<'a> {
+    pub fn new(ptr: *mut minifi_input_stream) -> Self {
+        Self {
+            ptr,
+            buffer: [0u8; 8192],
+            pos: 0,
+            cap: 0,
+            total_read: 0,
+            _marker: std::marker::PhantomData,
+        }
+    }
+
+    pub fn total_bytes_read(&self) -> usize {
+        self.total_read
+    }
+}
+
+impl<'a> Read for CffiInputStream<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        // Delegate to the BufRead implementation to ensure consistency
+        let nread = {
+            let mut rem = self.fill_buf()?;
+            rem.read(buf)?
+        };
+        self.consume(nread);
+        Ok(nread)
+    }
+}
+
+impl<'a> BufRead for CffiInputStream<'a> {
+    fn fill_buf(&mut self) -> std::io::Result<&[u8]> {
+        if self.pos >= self.cap {
+            unsafe {
+                let ret = minifi_input_stream_read(
+                    self.ptr,
+                    self.buffer.as_mut_ptr() as *mut std::ffi::c_char,
+                    self.buffer.len(),
+                );
+                if ret < 0 {
+                    return Err(Error::other("Minifi Read Error"));
+                }
+                self.cap = ret as usize;
+                self.pos = 0;
+            }
+        }
+        Ok(&self.buffer[self.pos..self.cap])
+    }
+
+    fn consume(&mut self, amount: usize) {
+        let actual_consumed = std::cmp::min(amount, self.cap - self.pos);
+        self.pos += actual_consumed;
+        self.total_read += actual_consumed;
+    }
+}
+
+#[derive(Debug)]
+pub struct CffiOutputStream<'a> {
+    ptr: *mut minifi_output_stream,
+    written_bytes: usize,
+    _marker: std::marker::PhantomData<&'a ()>,
+}
+
+impl<'a> CffiOutputStream<'a> {
+    pub(crate) fn new(ptr: *mut minifi_output_stream) -> Self {
+        Self {
+            ptr,
+            written_bytes: 0,
+            _marker: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<'a> CffiOutputStream<'a> {
+    pub fn written_bytes(&self) -> usize {
+        self.written_bytes
+    }
+}
+
+// SAFETY: Same reasoning as `CffiInputStream` above — the underlying
+// `minifi::io::OutputStream` has no thread affinity, and the `'a` lifetime keeps
+// the stream inside its FFI callback frame.
+unsafe impl<'a> Send for CffiOutputStream<'a> {}
+
+impl<'a> std::io::Write for CffiOutputStream<'a> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        unsafe {
+            let ret = minifi_output_stream_write(
+                self.ptr,
+                buf.as_ptr() as *const std::ffi::c_char,
+                buf.len(),
+            );
+            if ret < 0 {
+                return Err(Error::other("Minifi Write Error"));
+            }
+            self.written_bytes += ret as usize;
+            Ok(ret as usize)
+        }
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(()) // Handled by C++ session commit
+    }
+}
