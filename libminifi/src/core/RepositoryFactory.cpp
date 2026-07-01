@@ -50,6 +50,8 @@ std::unique_ptr<ContentRepository> createContentRepository(const std::string& co
   logger.log_critical("Could not create the configured content repository ({})", configuration_class_name);
   if (class_name_lc == "databasecontentrepository") {
     logger.log_error("To use DatabaseContentRepository MiNiFi needs RocksDB extension, please check the extension path configured in minifi.properties");
+  } else if (class_name_lc == "lmdbcontentrepository") {
+    logger.log_error("To use LmdbContentRepository MiNiFi needs LMDB extension, please check the extension path configured in minifi.properties");
   }
 
   throw std::runtime_error("Support for the provided configuration class could not be found, check logs for more details");

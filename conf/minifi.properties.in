@@ -54,6 +54,9 @@ nifi.content.repository.class.name=DatabaseContentRepository
 # nifi.database.content.repository.rocksdb.compaction.period=2 min
 # nifi.database.content.repository.optimize.for.small.db.cache.size=8 MB
 
+## Relates to the internal workings of the LMDB backend
+# nifi.content.repository.lmdb.max.db.size=10 GB
+
 # setting this value to "0" enables synchronous deletion
 # nifi.database.content.repository.purge.period = 1 sec
 

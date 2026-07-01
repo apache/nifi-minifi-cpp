@@ -34,14 +34,14 @@ template<typename ContentRepositoryClass>
 class ContentSessionController : public TestController {
  public:
   ContentSessionController()
-      : contentRepository(std::make_shared<ContentRepositoryClass>()) {
+      : content_repository_(std::make_shared<ContentRepositoryClass>()) {
     auto contentRepoPath = createTempDirectory();
     auto config = std::make_shared<minifi::ConfigureImpl>();
     config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, contentRepoPath.string());
-    contentRepository->initialize(config);
+    content_repository_->initialize(config);
   }
 
-  ~ContentSessionController() {
+  ~ContentSessionController() override {
     log.reset();
   }
 
@@ -50,7 +50,7 @@ class ContentSessionController : public TestController {
   ContentSessionController& operator=(ContentSessionController&&) = delete;
   ContentSessionController& operator=(const ContentSessionController&) = delete;
 
-  std::shared_ptr<core::ContentRepository> contentRepository;
+  std::shared_ptr<core::ContentRepository> content_repository_;
 };
 
 std::shared_ptr<minifi::io::OutputStream> operator<<(std::shared_ptr<minifi::io::OutputStream> stream, const std::string& str) {
@@ -80,7 +80,7 @@ void NO_CREATE(const std::shared_ptr<minifi::ResourceClaim>&) {
 template<typename ContentRepositoryClass>
 void test_template() {
   ContentSessionController<ContentRepositoryClass> controller;
-  std::shared_ptr<core::ContentRepository> contentRepository = controller.contentRepository;
+  std::shared_ptr<core::ContentRepository> contentRepository = controller.content_repository_;
 
   std::shared_ptr<minifi::ResourceClaim> oldClaim;
   {
