@@ -45,30 +45,46 @@ impl<'a> CffiProcessSession<'a> {
         produce_batch: F,
     ) -> Result<(), MinifiError>
     where
-        F: FnMut(&mut [u8]) -> Option<usize>,
+        F: FnMut(&mut [u8]) -> Result<Option<usize>, MinifiError>,
     {
         unsafe {
-            struct State<'b, F: FnMut(&mut [u8]) -> Option<usize>> {
+            struct State<'b, F>
+            where
+                F: FnMut(&mut [u8]) -> Result<Option<usize>, MinifiError>,
+            {
                 callback: F,
                 buffer: &'b mut [u8],
+                error: Option<MinifiError>,
             }
 
             let mut buffer = [0u8; 8192];
             let mut state = State {
                 callback: produce_batch,
                 buffer: &mut buffer,
+                error: None,
             };
 
-            unsafe extern "C" fn cb<F: FnMut(&mut [u8]) -> Option<usize>>(
+            unsafe extern "C" fn cb<F>(
                 user_ctx: *mut c_void,
                 output_stream: *mut minifi_output_stream,
-            ) -> i64 {
+            ) -> i64
+            where
+                F: FnMut(&mut [u8]) -> Result<Option<usize>, MinifiError>,
+            {
                 unsafe {
                     let state = &mut *(user_ctx as *mut State<F>);
                     let mut overall_writes = 0;
 
-                    // The user fills our provided buffer
-                    while let Some(n) = (state.callback)(state.buffer) {
+                    loop {
+                        let n = match (state.callback)(state.buffer) {
+                            Ok(Some(n)) => n,
+                            Ok(None) => break, // EOF
+                            Err(err) => {
+                                state.error = Some(err);
+                                return minifi_io_status_MINIFI_IO_ERROR;
+                            }
+                        };
+
                         let written = minifi_output_stream_write(
                             output_stream,
                             state.buffer.as_ptr() as *const c_char,
@@ -84,12 +100,18 @@ impl<'a> CffiProcessSession<'a> {
                 }
             }
 
-            match minifi_process_session_write(
+            let status = minifi_process_session_write(
                 self.ptr,
                 flow_file.get_ptr(),
                 Some(cb::<F>),
                 &mut state as *mut _ as *mut c_void,
-            ) {
+            );
+
+            if let Some(err) = state.error.take() {
+                return Err(err);
+            }
+
+            match status {
                 #[allow(non_upper_case_globals)]
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 error_code => Err(MinifiError::StatusError((
@@ -295,12 +317,10 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
         flow_file: &Self::FlowFile,
         mut stream: Box<dyn Read + 'b>,
     ) -> Result<(), MinifiError> {
-        self.write_in_batches(flow_file, |buffer| {
-            match stream.read(buffer) {
-                Ok(0) => None, // EOF
-                Ok(n) => Some(n),
-                Err(_e) => None, // Signal failure/EOF
-            }
+        self.write_in_batches(flow_file, |buffer| match stream.read(buffer) {
+            Ok(0) => Ok(None), // EOF
+            Ok(n) => Ok(Some(n)),
+            Err(e) => Err(MinifiError::IoError(e)),
         })
     }
 
@@ -349,23 +369,32 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             }
         }
 
-        unsafe {
-            let session_status = minifi_process_session_write(
+        let session_status = unsafe {
+            minifi_process_session_write(
                 self.ptr,
                 flow_file.get_ptr(),
                 Some(write_cb::<F, R>),
                 &mut ctx as *mut _ as *mut c_void,
-            );
-            if session_status != minifi_status_MINIFI_STATUS_SUCCESS {
-                return Err(MinifiError::StatusError((
-                    "minifi_process_session_write".into(),
-                    NonZeroU32::new_unchecked(session_status),
-                )));
-            }
+            )
+        };
+
+        // If the user closure ran, its outcome (including a deliberate
+        // Ok((_, IoState::Cancel))) always wins over the C session status:
+        // MINIFI_IO_CANCEL from the callback makes the session return
+        // non-success even though from Rust's perspective the write succeeded.
+        if let Some(result) = ctx.result.take() {
+            return result;
         }
 
-        ctx.result
-            .expect("Agent returned with success, so ctx.result should be set")
+        // Callback never ran — surface the raw C status.
+        if session_status != minifi_status_MINIFI_STATUS_SUCCESS {
+            return Err(MinifiError::StatusError((
+                "minifi_process_session_write".into(),
+                unsafe { NonZeroU32::new_unchecked(session_status) },
+            )));
+        }
+
+        Err(MinifiError::UnknownError)
     }
 
     fn read(&self, flow_file: &Self::FlowFile) -> Option<Vec<u8>> {
@@ -380,7 +409,8 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
 
                     let stream_size = minifi_input_stream_size(input_stream);
                     if stream_size == 0 {
-                        *result_target = None;
+                        // Empty content is a legal state, not an error
+                        *result_target = Some(Vec::new());
                         return 0;
                     }
                     let mut buffer: Vec<u8> = Vec::with_capacity(stream_size);

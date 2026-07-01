@@ -76,10 +76,10 @@ impl Sdk {
         if sdk_path.starts_with("https://") {
             let zip_path = out_dir.join("downloaded-sdk.zip");
             let extract_dir = out_dir.join("extracted-sdk");
-            if !extract_dir.exists() {
+            Self::ensure_extracted(&extract_dir, || {
                 Self::download_file(&sdk_path, &zip_path);
                 Self::extract_zip(&zip_path, &extract_dir);
-            }
+            });
             Self::from_local_sdk_path(&extract_dir)
         } else {
             let local_path = if sdk_path.starts_with(".") {
@@ -89,15 +89,39 @@ impl Sdk {
             };
             if local_path.is_file() && local_path.extension().unwrap_or_default() == "zip" {
                 let extract_dir = out_dir.join("extracted-local-sdk");
-                if !extract_dir.exists() {
+                Self::ensure_extracted(&extract_dir, || {
                     Self::extract_zip(&local_path, &extract_dir);
-                }
+                });
                 Self::from_local_sdk_path(&extract_dir)
             } else {
                 Self::from_local_sdk_path(&local_path)
                     .or_else(|| Self::from_local_repo(&local_path))
             }
         }
+    }
+
+    /// Run `extract` unless a previous run completed successfully (marked by a
+    /// sentinel file inside `dest_dir`). A partial extraction — for example if
+    /// `curl`/`tar` panicked mid-way — leaves `dest_dir` on disk without the
+    /// sentinel, so the next build reruns the extraction rather than working
+    /// with a broken tree.
+    fn ensure_extracted<F: FnOnce()>(dest_dir: &Path, extract: F) {
+        let sentinel = dest_dir.join(".extraction-complete");
+        if sentinel.exists() {
+            return;
+        }
+        if dest_dir.exists() {
+            std::fs::remove_dir_all(dest_dir).unwrap_or_else(|e| {
+                panic!(
+                    "Failed to clean up stale extraction directory {:?}: {}",
+                    dest_dir, e
+                )
+            });
+        }
+        extract();
+        std::fs::write(&sentinel, b"ok").unwrap_or_else(|e| {
+            panic!("Failed to write extraction sentinel {:?}: {}", sentinel, e)
+        });
     }
 
     fn download_file(url: &str, dest: &Path) {
@@ -175,10 +199,15 @@ fn main() {
     generate_minifi_c_api_lib(&sdk.def_path);
 
     println!("cargo:rerun-if-changed={}", sdk.header_path.display());
-    println!(
-        "cargo:behave_path={}",
-        sdk.behave_path.canonicalize().unwrap().display()
-    );
+    println!("cargo:rerun-if-changed={}", sdk.def_path.display());
+    let behave_path_canonical = sdk.behave_path.canonicalize().unwrap_or_else(|e| {
+        panic!(
+            "Failed to canonicalize behave path {:?}: {}. Ensure the behave framework \
+             is present alongside the SDK (set MINIFI_SDK_PATH to a full SDK checkout).",
+            sdk.behave_path, e
+        )
+    });
+    println!("cargo:behave_path={}", behave_path_canonical.display());
 
     let bindings = bindgen::Builder::default()
         .header(sdk.header_path.to_str().unwrap())

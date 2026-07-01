@@ -75,8 +75,10 @@ impl ProcessSession for MockProcessSession {
         flow_file: &Self::FlowFile,
         mut stream: Box<dyn Read + 'a>,
     ) -> Result<(), MinifiError> {
+        let mut buf = flow_file.content.borrow_mut();
+        buf.clear();
         stream
-            .read_to_end(&mut flow_file.content.borrow_mut())
+            .read_to_end(&mut buf)
             .expect("Mock data should be readable");
         Ok(())
     }
@@ -98,11 +100,13 @@ impl ProcessSession for MockProcessSession {
         Some(flow_file.content.borrow().clone())
     }
 
-    fn read_stream<F, R>(&self, _flow_file: &Self::FlowFile, _callback: F) -> Result<R, MinifiError>
+    fn read_stream<F, R>(&self, flow_file: &Self::FlowFile, callback: F) -> Result<R, MinifiError>
     where
         F: FnOnce(&mut dyn InputStream) -> Result<R, MinifiError>,
     {
-        unimplemented!("Not implemented yet")
+        let bytes = flow_file.content.borrow().clone();
+        let mut cursor = std::io::Cursor::new(bytes);
+        callback(&mut cursor)
     }
 
     fn read_in_batches<F>(
@@ -166,6 +170,20 @@ mod tests {
 
         assert_eq!(vec.len(), 13);
         assert_eq!(vec, b"Hello, World!");
+    }
+
+    #[test]
+    fn test_write_from_stream_replaces_content() {
+        let session = MockProcessSession::new();
+        let flow_file = MockFlowFile::new();
+        *flow_file.content.borrow_mut() = b"Hello, World!".to_vec();
+
+        let source: &[u8] = b"Hi";
+        session
+            .write_from_stream(&flow_file, Box::new(source))
+            .expect("write_from_stream should succeed");
+
+        assert_eq!(*flow_file.content.borrow(), b"Hi");
     }
 
     #[test]

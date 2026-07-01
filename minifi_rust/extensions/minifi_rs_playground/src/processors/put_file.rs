@@ -75,6 +75,7 @@ impl PutFileRs {
         {
             parent.exists()
                 && WalkDir::new(parent)
+                    .max_depth(1)
                     .into_iter()
                     .filter_map(Result::ok)
                     .filter(|e| e.file_type().is_file())
@@ -96,15 +97,16 @@ impl PutFileRs {
         let file_name = context
             .get_attribute("filename")?
             .unwrap_or(context.get_id()?);
-        Ok(PathBuf::from(directory + "/" + file_name.as_str()))
+        Ok(PathBuf::from(directory).join(file_name))
     }
 
     fn prepare_destination(&self, destination: &Path) -> std::io::Result<()> {
         if let Some(parent) = destination.parent()
-            && self.try_make_dirs {
-                std::fs::create_dir_all(parent)?;
-                self.unix_permissions.set_directory_permissions(parent)?;
-            }
+            && self.try_make_dirs
+        {
+            std::fs::create_dir_all(parent)?;
+            self.unix_permissions.set_directory_permissions(parent)?;
+        }
         Ok(())
     }
 

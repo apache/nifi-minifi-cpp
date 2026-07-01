@@ -1,6 +1,7 @@
 use crate::api::FlowFile;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 pub struct MockFlowFile {
     pub content: RefCell<Vec<u8>>,
@@ -16,12 +17,18 @@ impl Default for MockFlowFile {
     }
 }
 
+fn next_mock_flow_file_id() -> String {
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let n = COUNTER.fetch_add(1, Ordering::Relaxed);
+    format!("mock-flow-file-{:016x}", n)
+}
+
 impl MockFlowFile {
     pub fn new() -> MockFlowFile {
         MockFlowFile {
             content: RefCell::new(Vec::new()),
             attributes: HashMap::new(),
-            id: "67e55044-10b1-426f-9247-bb680e5fe0c8".to_string(), // TODO generate something?
+            id: next_mock_flow_file_id(),
         }
     }
 
@@ -29,7 +36,7 @@ impl MockFlowFile {
         Self {
             content: RefCell::new(content.to_vec()),
             attributes: HashMap::new(),
-            id: "67e55044-10b1-426f-9247-bb680e5fe0c8".to_string(), // TODO generate something?
+            id: next_mock_flow_file_id(),
         }
     }
 

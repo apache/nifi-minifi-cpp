@@ -37,17 +37,19 @@ impl FlowFileStreamTransform for AsciifyGerman {
                 }
                 0xC3 => {
                     let mut next = [0u8; 1];
-                    if input_stream.read(&mut next)? > 0 {
-                        match next[0] {
-                            0xA4 => output_stream.write_all(b"ae")?, // ä
-                            0xB6 => output_stream.write_all(b"oe")?, // ö
-                            0xBC => output_stream.write_all(b"ue")?, // ü
-                            0x84 => output_stream.write_all(b"Ae")?, // Ä
-                            0x96 => output_stream.write_all(b"Oe")?, // Ö
-                            0x9C => output_stream.write_all(b"Ue")?, // Ü
-                            0x9F => output_stream.write_all(b"ss")?, // ß
-                            _ => return Ok(TransformStreamResult::route_without_changes(&FAILURE)),
-                        }
+                    if input_stream.read(&mut next)? == 0 {
+                        // Truncated multi-byte sequence at EOF — treat as malformed input.
+                        return Ok(TransformStreamResult::route_without_changes(&FAILURE));
+                    }
+                    match next[0] {
+                        0xA4 => output_stream.write_all(b"ae")?, // ä
+                        0xB6 => output_stream.write_all(b"oe")?, // ö
+                        0xBC => output_stream.write_all(b"ue")?, // ü
+                        0x84 => output_stream.write_all(b"Ae")?, // Ä
+                        0x96 => output_stream.write_all(b"Oe")?, // Ö
+                        0x9C => output_stream.write_all(b"Ue")?, // Ü
+                        0x9F => output_stream.write_all(b"ss")?, // ß
+                        _ => return Ok(TransformStreamResult::route_without_changes(&FAILURE)),
                     }
                 }
                 _ => return Ok(TransformStreamResult::route_without_changes(&FAILURE)),

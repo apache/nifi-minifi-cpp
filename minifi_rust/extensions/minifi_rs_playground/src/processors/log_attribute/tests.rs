@@ -92,6 +92,35 @@ Payload:
 }
 
 #[test]
+fn attributes_to_log_csv_trims_whitespace() {
+    let mut flow_file = MockFlowFile::with_content(b"payload");
+    flow_file
+        .attributes
+        .insert(String::from("apple"), String::from("apfel"));
+    flow_file
+        .attributes
+        .insert(String::from("pear"), String::from("birne"));
+    flow_file
+        .attributes
+        .insert(String::from("cherry"), String::from("kirsche"));
+    let vec = vec![flow_file];
+
+    // Value with spaces around commas: filter must match on trimmed names.
+    let expected = "Logging for flow file
+--------------------------------------------------
+FlowFile Attributes Map Content
+key:apple value:apfel
+key:pear value:birne
+--------------------------------------------------"
+        .to_string();
+    let properties_set = [
+        ("Log Payload", "false"),
+        ("Attributes to Log", "apple, pear"),
+    ];
+    tester(vec, LogLevel::Info, Box::new(properties_set), expected);
+}
+
+#[test]
 fn default_level_multiple_attributes() {
     let mut flow_file = MockFlowFile::with_content("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis diam sit amet nisl interdum, vitae interdum arcu viverra. Nam placerat mi in erat pellentesque, at ultrices orci faucibus. Cras sollicitudin iaculis posuere. Sed tempus, dolor nec lacinia suscipit, tellus odio venenatis odio, nec sollicitudin dolor augue non urna. Aliquam tincidunt viverra ipsum eget hendrerit. Suspendisse varius, augue vel fermentum varius, velit elit euismod lacus, a placerat purus est a lacus. Aenean nibh neque, consectetur hendrerit egestas vitae, commodo non quam. Nullam luctus tempor ante, sed tempus quam imperdiet in. Maecenas gravida erat orci, in consequat urna pretium nec. In sodales iaculis magna at vehicula.".as_bytes());
     flow_file

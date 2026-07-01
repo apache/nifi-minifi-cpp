@@ -52,3 +52,23 @@ fn simple_failure_test() {
     }
     assert_eq!(output_vec, "Ueldoeg".as_bytes());
 }
+
+#[test]
+fn truncated_umlaut_at_eof_routes_to_failure() {
+    let context = MockProcessContext::new();
+    let logger = MockLogger::new();
+
+    let asciify_german = AsciifyGerman::schedule(&context, &logger).expect("Should succeed");
+    // A lone 0xC3 is the leading byte of every German umlaut in UTF-8; on EOF the
+    // sequence is incomplete and the processor must report failure rather than
+    // silently truncating.
+    let input_bytes: &[u8] = &[b'a', 0xC3];
+    let mut input_stream = BufReader::new(input_bytes);
+    let mut output_vec: Vec<u8> = Vec::new();
+
+    let result = asciify_german
+        .transform(&context, &mut input_stream, &mut output_vec, &logger)
+        .expect("Should succeed");
+    assert_eq!(result.write_status(), IoState::Cancel);
+    assert_eq!(result.target_relationship_name(), FAILURE.name);
+}
