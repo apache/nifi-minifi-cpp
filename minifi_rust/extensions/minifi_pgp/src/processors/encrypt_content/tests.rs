@@ -42,12 +42,7 @@ fn encrypts_via_passphrase() {
     let processor =
         EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
     let transformed_ff = processor
-        .transform(
-            &context,
-            &mut input_stream,
-            &mut result,
-            &MockLogger::new(),
-        )
+        .transform(&context, &mut input_stream, &mut result, &MockLogger::new())
         .expect("should transform");
 
     assert!(!result.is_ascii());
@@ -60,7 +55,7 @@ fn public_key_service() -> PGPPublicKeyService {
         "Keyring File".to_string(),
         test_utils::get_test_key_path("keyring.asc"),
     );
-    
+
     PGPPublicKeyService::enable(&context, &MockLogger::new()).expect("should enable")
 }
 
@@ -83,12 +78,7 @@ fn encrypts_ascii_for_alice() {
     let processor =
         EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
     let transformed_ff = processor
-        .transform(
-            &context,
-            &mut input_stream,
-            &mut result,
-            &MockLogger::new(),
-        )
+        .transform(&context, &mut input_stream, &mut result, &MockLogger::new())
         .expect("should transform");
 
     assert!(result.is_ascii());
@@ -114,12 +104,7 @@ fn encrypts_binary_for_bob() {
     let processor =
         EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
     let transformed_ff = processor
-        .transform(
-            &context,
-            &mut input_stream,
-            &mut result,
-            &MockLogger::new(),
-        )
+        .transform(&context, &mut input_stream, &mut result, &MockLogger::new())
         .expect("should transform");
 
     assert!(!result.is_ascii());
@@ -144,12 +129,7 @@ fn cannot_encrypt_for_carol() {
     let processor =
         EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
     let transformed_ff = processor
-        .transform(
-            &context,
-            &mut input_stream,
-            &mut result,
-            &MockLogger::new(),
-        )
+        .transform(&context, &mut input_stream, &mut result, &MockLogger::new())
         .expect("should transform");
 
     assert_eq!(transformed_ff.target_relationship_name(), FAILURE.name);
