@@ -24,4 +24,4 @@ RUN cargo build --release
 
 # Export Stage
 FROM scratch AS bin-export
-COPY --from=builder /app/target/release/libminifi_rs_playground.so /
+COPY --from=builder /app/target/release/libminifi_*.so /
