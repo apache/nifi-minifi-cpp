@@ -18,7 +18,7 @@ Feature: Test PGP extension's encryption and decryption capabilities
 
   Scenario: Encrypted for Alice but not for Bob
     Given log property "logger.minifi_pgp::processors::decrypt_content::DecryptContentPGP" is set to "TRACE,stderr"
-    And log property "logger.minigi_pgp::processors::encrypt_content::EncryptContentPGP" is set to "TRACE,stderr"
+    And log property "logger.minifi_pgp::processors::encrypt_content::EncryptContentPGP" is set to "TRACE,stderr"
 
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And an EncryptContentPGP processor with a PGPPublicKeyService is set up

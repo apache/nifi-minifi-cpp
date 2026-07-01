@@ -108,7 +108,7 @@ fn test_decryption(
     }
 
     let decrypt_content = DecryptContentPGP::schedule(&processor_context, &MockLogger::new())
-        .expect("Should schedule without any properties");
+        .expect("Should schedule with the configured properties");
     let mut output: Vec<u8> = Vec::new();
     let mut flow_file_stream = std::io::Cursor::new(get_test_message(message_file_name));
     let res = decrypt_content
