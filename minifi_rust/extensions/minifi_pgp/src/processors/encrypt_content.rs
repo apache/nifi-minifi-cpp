@@ -56,7 +56,7 @@ impl EncryptContentPGP {
         );
 
         if let Some(pub_key) = pub_key {
-            builder.encrypt_to_key(rand::thread_rng(), &pub_key)?;
+            builder.encrypt_to_key(rand::thread_rng(), pub_key)?;
         }
 
         if let Some(passphrase) = passphrase {
@@ -89,9 +89,8 @@ impl Schedule for EncryptContentPGP {
             && context.get_property(&PUBLIC_KEY_SEARCH)?.is_some();
 
         if !has_password && !has_public_key {
-            Err(MinifiError::ScheduleError(
-                "Either a password or Public Key Service with Public Key Search should be configured to encrypt files"
-                    .into(),
+            Err(MinifiError::schedule_err(
+                "Either a password or Public Key Service with Public Key Search should be configured to encrypt files",
             ))
         } else {
             Ok(EncryptContentPGP { file_encoding })
@@ -147,4 +146,4 @@ impl FlowFileStreamTransform for EncryptContentPGP {
 #[cfg(test)]
 mod tests;
 
-mod processor_definition;
+pub(crate) mod processor_definition;

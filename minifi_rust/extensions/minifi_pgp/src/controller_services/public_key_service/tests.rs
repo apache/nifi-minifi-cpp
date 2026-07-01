@@ -4,6 +4,7 @@ use minifi_native::MinifiError::ControllerServiceError;
 use minifi_native::{
     ComponentIdentifier, EnableControllerService, MockControllerServiceContext, MockLogger,
 };
+use pgp::types::KeyDetails;
 
 fn assert_public_key_service_enable_fails_with_no_valid_keys(
     context: &MockControllerServiceContext,
@@ -213,4 +214,32 @@ fn private_ascii_key() {
         .insert("Keyring".to_string(), file_content);
 
     assert_public_key_service_enable_fails_with_no_valid_keys(&context);
+}
+
+#[test]
+fn looks_up_by_key_id_hex() {
+    let mut context = MockControllerServiceContext::new();
+    context
+        .properties
+        .insert("Keyring File".to_string(), get_test_key_path("alice.asc"));
+
+    let controller_service =
+        PGPPublicKeyService::enable(&context, &MockLogger::new()).expect("enable should succeed");
+
+    // Get Alice's Key ID from the loaded key so the test doesn't hard-code hex bytes.
+    let alice = controller_service.get("Alice").expect("Alice should exist");
+    let key_id_hex = alice.primary_key.legacy_key_id().to_string();
+    assert_eq!(key_id_hex.len(), 16);
+
+    // Full 16-char hex, both cases, should match.
+    assert!(controller_service.get(&key_id_hex).is_some());
+    assert!(
+        controller_service
+            .get(&key_id_hex.to_ascii_uppercase())
+            .is_some()
+    );
+
+    // A partial or unrelated hex string should not.
+    assert!(controller_service.get(&key_id_hex[..8]).is_none());
+    assert!(controller_service.get("0123456789abcdef").is_none());
 }

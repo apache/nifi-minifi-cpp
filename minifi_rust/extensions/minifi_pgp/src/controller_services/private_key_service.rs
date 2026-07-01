@@ -1,9 +1,13 @@
 mod controller_service_definition;
 mod properties;
 
+#[cfg(test)]
+use crate::controller_services::key_lookup::key_matches;
 use minifi_native::macros::ComponentIdentifier;
-use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError};
+use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError, warn};
 use pgp::composed::{Deserializable, SignedSecretKey, TheRing};
+#[cfg(test)]
+use pgp::types::KeyDetails;
 use pgp::types::Password;
 
 #[derive(Debug, ComponentIdentifier)]
@@ -13,7 +17,7 @@ pub(crate) struct PGPPrivateKeyService {
 }
 
 impl EnableControllerService for PGPPrivateKeyService {
-    fn enable<P: GetProperty, L: Logger>(context: &P, _logger: &L) -> Result<Self, MinifiError>
+    fn enable<P: GetProperty, L: Logger>(context: &P, logger: &L) -> Result<Self, MinifiError>
     where
         Self: Sized,
     {
@@ -21,15 +25,15 @@ impl EnableControllerService for PGPPrivateKeyService {
         if let Some(keyring_file_path) = context.get_property(&properties::KEY_FILE)? {
             if let Ok((keys, _headers)) = SignedSecretKey::from_armor_file_many(&keyring_file_path)
             {
-                private_keys.extend(keys.filter_map(|key| key.ok()));
+                collect_keys(keys, &mut private_keys, logger);
             } else if let Ok(keys) = SignedSecretKey::from_file_many(keyring_file_path) {
-                private_keys.extend(keys.filter_map(|key| key.ok()));
+                collect_keys(keys, &mut private_keys, logger);
             }
         }
         if let Some(keyring_ascii) = context.get_property(&properties::KEY)? {
             if let Ok((keys, _headers)) = SignedSecretKey::from_armor_many(keyring_ascii.as_bytes())
             {
-                private_keys.extend(keys.filter_map(|key| key.ok()));
+                collect_keys(keys, &mut private_keys, logger);
             }
         }
 
@@ -66,13 +70,25 @@ impl PGPPrivateKeyService {
     #[cfg(test)]
     pub fn get_secret_key(&self, target_id: &str) -> Option<&SignedSecretKey> {
         self.private_keys.iter().find(|private_key| {
-            private_key.details.users.iter().any(|user| {
-                user.id
-                    .as_str()
-                    .map(|user_id| user_id.contains(target_id))
-                    .unwrap_or(false)
-            })
+            key_matches(
+                &private_key.primary_key.legacy_key_id(),
+                &private_key.details,
+                target_id,
+            )
         })
+    }
+}
+
+fn collect_keys<I, L>(keys: I, out: &mut Vec<SignedSecretKey>, logger: &L)
+where
+    I: Iterator<Item = pgp::errors::Result<SignedSecretKey>>,
+    L: Logger,
+{
+    for key in keys {
+        match key {
+            Ok(k) => out.push(k),
+            Err(e) => warn!(logger, "Skipping unparseable private key: {}", e),
+        }
     }
 }
 

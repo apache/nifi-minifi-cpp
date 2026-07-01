@@ -57,19 +57,11 @@ impl Schedule for DecryptContentPGP {
 }
 
 impl DecryptContentPGP {
-    fn decrypt_msg<'a, PC, L>(
-        &self,
+    fn decrypt_msg<'a>(
+        &'a self,
         msg: Message<'a>,
-        ctx: &PC,
-        _logger: &L,
-    ) -> pgp::errors::Result<Message<'a>>
-    where
-        PC: GetProperty + GetControllerService,
-        L: Logger,
-    {
-        let private_key_service = ctx
-            .get_controller_service::<PGPPrivateKeyService>(&PRIVATE_KEY_SERVICE)
-            .unwrap_or(None);
+        private_key_service: Option<&'a PGPPrivateKeyService>,
+    ) -> pgp::errors::Result<Message<'a>> {
         let mut ring = if let Some(pks) = private_key_service {
             pks.get_the_ring()
         } else {
@@ -118,7 +110,10 @@ impl FlowFileStreamTransform for DecryptContentPGP {
             return Ok(TransformStreamResult::route_without_changes(&FAILURE));
         };
 
-        let Ok(mut decrypted_msg) = self.decrypt_msg(msg, context, logger) else {
+        let private_key_service =
+            context.get_controller_service::<PGPPrivateKeyService>(&PRIVATE_KEY_SERVICE)?;
+
+        let Ok(mut decrypted_msg) = self.decrypt_msg(msg, private_key_service) else {
             warn!(logger, "Failed to decrypt data");
             return Ok(TransformStreamResult::route_without_changes(&FAILURE));
         };
@@ -149,4 +144,4 @@ impl FlowFileStreamTransform for DecryptContentPGP {
 #[cfg(test)]
 mod tests;
 
-mod processor_definition;
+pub(crate) mod processor_definition;

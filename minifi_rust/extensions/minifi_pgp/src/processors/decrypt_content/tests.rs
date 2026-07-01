@@ -46,6 +46,22 @@ fn schedules_with_controller() {
     assert!(decrypt_content.is_ok());
 }
 
+#[test]
+fn schedule_rejects_invalid_strategy_without_panicking() {
+    let mut context = MockProcessContext::new();
+    context.properties.insert(
+        super::properties::DECRYPTION_STRATEGY.name.to_string(),
+        "NOT_A_STRATEGY".to_string(),
+    );
+    context.properties.insert(
+        super::properties::SYMMETRIC_PASSWORD.name.to_string(),
+        "my_secret_password".to_string(),
+    );
+    // Must return Err, not panic.
+    let result = DecryptContentPGP::schedule(&context, &MockLogger::new());
+    assert!(result.is_err(), "expected schedule to fail on bad strategy");
+}
+
 #[derive(Copy, Clone)]
 struct PrivateKeyData {
     key_filename: &'static str,
