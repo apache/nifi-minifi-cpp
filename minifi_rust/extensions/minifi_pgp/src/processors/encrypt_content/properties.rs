@@ -12,7 +12,7 @@ pub(crate) const FILE_ENCODING: Property = Property {
     supports_expr_lang: false,
     default_value: Some(FileEncoding::Binary.into_str()),
     validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &FileEncoding::VARIANTS,
+    allowed_values: FileEncoding::VARIANTS,
     allowed_type: None,
 };
 

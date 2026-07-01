@@ -30,11 +30,10 @@ impl EnableControllerService for PGPPrivateKeyService {
                 collect_keys(keys, &mut private_keys, logger);
             }
         }
-        if let Some(keyring_ascii) = context.get_property(&properties::KEY)? {
-            if let Ok((keys, _headers)) = SignedSecretKey::from_armor_many(keyring_ascii.as_bytes())
-            {
-                collect_keys(keys, &mut private_keys, logger);
-            }
+        if let Some(keyring_ascii) = context.get_property(&properties::KEY)?
+            && let Ok((keys, _headers)) = SignedSecretKey::from_armor_many(keyring_ascii.as_bytes())
+        {
+            collect_keys(keys, &mut private_keys, logger);
         }
 
         let passphrase =

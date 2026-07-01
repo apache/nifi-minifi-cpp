@@ -27,11 +27,10 @@ impl EnableControllerService for PGPPublicKeyService {
                 collect_keys(keys, &mut public_keys, logger);
             }
         }
-        if let Some(keyring_ascii) = context.get_property(&KEYRING)? {
-            if let Ok((keys, _headers)) = SignedPublicKey::from_armor_many(keyring_ascii.as_bytes())
-            {
-                collect_keys(keys, &mut public_keys, logger);
-            }
+        if let Some(keyring_ascii) = context.get_property(&KEYRING)?
+            && let Ok((keys, _headers)) = SignedPublicKey::from_armor_many(keyring_ascii.as_bytes())
+        {
+            collect_keys(keys, &mut public_keys, logger);
         }
 
         if public_keys.is_empty() {

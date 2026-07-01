@@ -11,7 +11,7 @@ pub(crate) const DECRYPTION_STRATEGY: Property = Property {
     supports_expr_lang: false,
     default_value: Some(super::DecryptionStrategy::Decrypted.into_str()),
     validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &super::DecryptionStrategy::VARIANTS,
+    allowed_values: super::DecryptionStrategy::VARIANTS,
     allowed_type: None,
 };
 

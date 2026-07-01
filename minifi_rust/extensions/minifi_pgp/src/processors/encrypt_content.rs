@@ -124,7 +124,7 @@ impl FlowFileStreamTransform for EncryptContentPGP {
         match self.encrypt_bytes(
             input_stream,
             output_stream,
-            public_key.as_deref(),
+            public_key,
             password.as_deref(),
             file_name,
         ) {
