@@ -75,7 +75,9 @@ std::string allowedTypeArtifactName(const std::string_view allowed_type, const s
   return "minifi-system";
 }
 
-void serializeClassDescription(const std::vector<ClassDescription>& descriptions, const std::string& name, SerializedResponseNode& response) {
+void serializeClassDescription(const std::vector<ClassDescription>& descriptions,
+    const std::string& name,
+    SerializedResponseNode& response) {
   if (descriptions.empty()) {
     return;
   }
@@ -142,8 +144,7 @@ void serializeClassDescription(const std::vector<ClassDescription>& descriptions
       desc.children.push_back(props);
     }
 
-    // only for processors
-    if (!class_description.class_relationships_.empty()) {
+    if (class_description.type_ == ResourceType::Processor) {
       desc.children.push_back({.name = "inputRequirement", .value = class_description.inputRequirement_});
       desc.children.push_back({.name = "isSingleThreaded", .value = class_description.isSingleThreaded_});
 
