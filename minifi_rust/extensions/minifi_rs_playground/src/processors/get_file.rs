@@ -13,7 +13,7 @@ use minifi_native::{
 use std::collections::VecDeque;
 use std::error;
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::{Duration, Instant, SystemTime};
 use walkdir::{DirEntry, WalkDir};
@@ -92,27 +92,32 @@ impl GetFileRs {
     }
 
     fn perform_listing(&self) {
-        let mut directory_listings = self.directory_listing.lock().unwrap();
         let mut walker = WalkDir::new(&self.input_directory);
-
         if !self.recursive {
             walker = walker.max_depth(1);
         }
 
+        let mut new_paths: VecDeque<PathBuf> = VecDeque::new();
         let mut files_added = 0u32;
         let mut bytes_added = 0u64;
         for entry in walker.into_iter().filter_map(Result::ok) {
             if self.entry_matches_criteria(&entry).unwrap_or(false) {
                 let file_size = entry.metadata().map(|m| m.len()).unwrap_or(0);
-                directory_listings.paths.push_back(entry.into_path());
+                new_paths.push_back(entry.into_path());
                 files_added += 1;
                 bytes_added += file_size;
             }
         }
+
+        {
+            let mut directory_listings = self.directory_listing.lock().unwrap();
+            directory_listings.paths.extend(new_paths);
+            directory_listings.last_polling_time = Some(Instant::now());
+        }
+
         let mut metrics = self.metrics.lock().unwrap();
         metrics.accepted_files += files_added;
         metrics.input_bytes += bytes_added;
-        directory_listings.last_polling_time = Some(Instant::now());
     }
 
     fn entry_matches_criteria(&self, dir_entry: &DirEntry) -> Result<bool, Box<dyn error::Error>> {
@@ -153,9 +158,9 @@ impl GetFileRs {
         &self,
         session: &mut PS,
         logger: &L,
-        path: PathBuf,
+        path: &Path,
     ) -> Result<(), MinifiError> {
-        info!(logger, "GetFile process {:?}", &path);
+        info!(logger, "GetFile process {:?}", path);
         let mut ff = session
             .create()
             .expect("Successful FlowFile creation is expected");
@@ -172,17 +177,14 @@ impl GetFileRs {
         )?;
 
         session.write_stream(&ff, |output_stream| {
-            let mut file = File::open(&path)?;
+            let mut file = File::open(path)?;
             std::io::copy(&mut file, output_stream)?;
             Ok(((), IoState::Ok))
         })?;
-        if !self.keep_source_file {
-            match std::fs::remove_file(&path) {
-                Ok(_) => {}
-                Err(err) => {
-                    warn!(logger, "Failed to remove source file {:?}", err);
-                }
-            }
+        if !self.keep_source_file
+            && let Err(err) = std::fs::remove_file(path)
+        {
+            warn!(logger, "Failed to remove source file {:?}", err);
         }
         session.transfer(ff, relationships::SUCCESS.name)?;
         Ok(())
@@ -289,7 +291,12 @@ impl Trigger for GetFileRs {
 
         let files = self.poll_listing(self.batch_size);
         for file in files {
-            self.get_single_file(session, logger, file)?;
+            // A single mid-batch failure (deleted, permission flipped,
+            // transient I/O) should not orphan the flow files already
+            // transferred earlier in the same trigger. Log and continue.
+            if let Err(err) = self.get_single_file(session, logger, &file) {
+                warn!(logger, "Failed to ingest {:?}: {}", file, err);
+            }
         }
         context.report_metrics(self.calculate_metrics())?;
         Ok(OnTriggerResult::Ok)

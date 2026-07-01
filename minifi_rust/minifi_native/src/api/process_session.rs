@@ -1,9 +1,9 @@
 use crate::MinifiError;
 use crate::api::flow_file::FlowFile;
-pub trait InputStream: std::io::BufRead + Send + std::fmt::Debug {}
-pub trait OutputStream: std::io::Write + Send + std::fmt::Debug {}
-impl<T: std::io::Write + Send + std::fmt::Debug> OutputStream for T {}
-impl<T: std::io::BufRead + Send + std::fmt::Debug> InputStream for T {}
+pub trait InputStream: std::io::BufRead + std::fmt::Debug {}
+pub trait OutputStream: std::io::Write + std::fmt::Debug {}
+impl<T: std::io::Write + std::fmt::Debug> OutputStream for T {}
+impl<T: std::io::BufRead + std::fmt::Debug> InputStream for T {}
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum IoState {

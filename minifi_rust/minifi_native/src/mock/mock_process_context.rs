@@ -78,12 +78,21 @@ impl ProcessContext for MockProcessContext {
 
     fn get_raw_controller_service<Cs>(
         &self,
-        _property: &Property,
+        property: &Property,
     ) -> Result<Option<&Cs>, MinifiError>
     where
         Cs: RawControllerService + ComponentIdentifier + 'static,
     {
-        panic!("Not implemented yet");
+        // Mirror `get_controller_service`: resolve the property to a
+        // service name and downcast the registered `Box<dyn Any>`.
+        if let Some(service_name) = self.get_property(property, None)? {
+            Ok(self
+                .controller_services
+                .get(&service_name)
+                .and_then(|c| c.downcast_ref::<Cs>()))
+        } else {
+            Ok(None)
+        }
     }
 
     fn get_controller_service<Cs>(&self, property: &Property) -> Result<Option<&Cs>, MinifiError>
@@ -104,7 +113,14 @@ impl ProcessContext for MockProcessContext {
         &self,
         _property: &Property,
     ) -> Result<Option<Box<&Trait>>, MinifiError> {
-        todo!()
+        // A fully-typed mock for `dyn Trait` interfaces would need per-property
+        // registration keyed by both property name and interface name; the
+        // combination of `?Sized + ControllerServiceApi` (no `'static`, no
+        // `Any`) makes safe storage awkward. Return `None` by default so
+        // processors that call this method can still be scheduled and
+        // triggered under the mock — tests that need a live implementation
+        // should exercise it in the FFI path via `cargo behave`.
+        Ok(None)
     }
 
     fn report_metrics(&self, _metrics: Vec<(String, f64)>) -> Result<(), MinifiError> {

@@ -31,13 +31,15 @@ impl LogAttributeRs {
         log_msg.push_str("\nFlowFile Attributes Map Content");
         session.on_attributes(flow_file, |key, value| {
             if let Some(attributes_to_ignore) = &self.attributes_to_ignore
-                && attributes_to_ignore.iter().any(|ign| ign == key) {
-                    return;
-                }
+                && attributes_to_ignore.iter().any(|ign| ign == key)
+            {
+                return;
+            }
             if let Some(attributes_to_log) = &self.attributes_to_log
-                && !attributes_to_log.iter().any(|ign| ign == key) {
-                    return;
-                }
+                && !attributes_to_log.iter().any(|ign| ign == key)
+            {
+                return;
+            }
             log_msg.push_str(format!("\nkey:{} value:{}", &key, &value).as_str());
         });
         if self.log_payload {
@@ -118,8 +120,11 @@ impl Schedule for LogAttributeRs {
             context: &P,
             property: &Property,
         ) -> Result<Option<Vec<String>>, MinifiError> {
-            Ok(context
-                .get_property(property)?.map(|s| s.split(",").map(|s| s.to_string()).collect::<Vec<String>>()))
+            Ok(context.get_property(property)?.map(|s| {
+                s.split(',')
+                    .map(|s| s.trim().to_string())
+                    .collect::<Vec<String>>()
+            }))
         }
 
         let attributes_to_log = get_csv_property(context, &properties::ATTRIBUTES_TO_LOG)?;

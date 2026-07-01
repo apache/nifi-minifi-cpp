@@ -121,7 +121,10 @@ where
         let name = unsafe {
             let slice =
                 std::slice::from_raw_parts(interface_name.data as *const u8, interface_name.length);
-            std::str::from_utf8_unchecked(slice)
+            match std::str::from_utf8(slice) {
+                Ok(s) => s,
+                Err(_) => return std::ptr::null_mut(),
+            }
         };
 
         let wrapper = unsafe { &*(self_ptr as *const ControllerService<C, CffiLogger>) };

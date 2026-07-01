@@ -33,7 +33,7 @@ unsafe extern "C" fn get_property_callback(
     unsafe {
         let result_target = &mut *(output_option as *mut Option<String>);
 
-        if property_c_value.data.is_null() || property_c_value.length == 0 {
+        if property_c_value.data.is_null() {
             *result_target = None;
             return;
         }

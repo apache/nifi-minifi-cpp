@@ -34,18 +34,23 @@ impl CffiLogger {
 
 impl Logger for CffiLogger {
     fn log(&self, level: LogLevel, args: fmt::Arguments) {
+        // A logged message that contains an interior NUL byte would make
+        // `CString::new` fail
+        let mut message = fmt::format(args);
+        if message.as_bytes().contains(&0) {
+            message = message.replace('\0', "\\0");
+        }
+        // SAFETY: NULs have been stripped, so CString::new cannot fail.
+        let c_message = CString::new(message).expect("NUL bytes were replaced above");
         unsafe {
-            let message = fmt::format(args);
-            if let Ok(c_message) = CString::new(message) {
-                minifi_logger_log_string(
-                    self.ptr,
-                    level.into(),
-                    minifi_string_view {
-                        data: c_message.as_ptr(),
-                        length: c_message.as_bytes().len(),
-                    },
-                );
-            }
+            minifi_logger_log_string(
+                self.ptr,
+                level.into(),
+                minifi_string_view {
+                    data: c_message.as_ptr(),
+                    length: c_message.as_bytes().len(),
+                },
+            );
         }
     }
 

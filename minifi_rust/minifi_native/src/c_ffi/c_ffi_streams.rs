@@ -13,8 +13,6 @@ pub struct CffiInputStream<'a> {
     _marker: std::marker::PhantomData<&'a ()>,
 }
 
-unsafe impl<'a> Send for CffiInputStream<'a> {}
-
 impl<'a> CffiInputStream<'a> {
     pub fn new(ptr: *mut minifi_input_stream) -> Self {
         Self {
@@ -92,8 +90,6 @@ impl<'a> CffiOutputStream<'a> {
         self.written_bytes
     }
 }
-
-unsafe impl<'a> Send for CffiOutputStream<'a> {}
 
 impl<'a> std::io::Write for CffiOutputStream<'a> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
