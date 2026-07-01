@@ -115,9 +115,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description                            |
-|---------|----------------------------------------|
-| success | success operational on the flow record |
+| Name    | Description |
+|---------|-------------|
+| success | success     |
 
 
 ## GetFileRs
