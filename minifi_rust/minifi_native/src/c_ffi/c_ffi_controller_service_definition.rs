@@ -120,7 +120,7 @@ where
     ) -> *mut std::ffi::c_void {
         let name = unsafe {
             let slice =
-                std::slice::from_raw_parts(interface_name.data as *const u8, interface_name.length);
+                std::slice::from_raw_parts(interface_name.data.cast::<u8>(), interface_name.length);
             match std::str::from_utf8(slice) {
                 Ok(s) => s,
                 Err(_) => return std::ptr::null_mut(),

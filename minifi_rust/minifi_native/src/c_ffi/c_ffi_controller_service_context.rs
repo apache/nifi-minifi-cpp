@@ -36,7 +36,7 @@ unsafe extern "C" fn property_callback(
         }
 
         let value_slice =
-            std::slice::from_raw_parts(property_c_value.data as *const u8, property_c_value.length);
+            std::slice::from_raw_parts(property_c_value.data.cast::<u8>(), property_c_value.length);
         if let Ok(string_value) = String::from_utf8(value_slice.to_vec()) {
             *result_target = Some(string_value);
         }
