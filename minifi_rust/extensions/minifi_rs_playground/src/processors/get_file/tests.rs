@@ -120,7 +120,7 @@ fn test_complex_dir_with_filter(
                 .flow_file
                 .attributes
                 .get("filename")
-                .and_then(|filename| Some(filename.contains(expected_filename_part)))
+                .map(|filename| filename.contains(expected_filename_part))
                 .unwrap_or(false)
     }));
     let sum_file_len = transferred_flow_files

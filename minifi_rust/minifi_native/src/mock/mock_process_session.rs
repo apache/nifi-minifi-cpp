@@ -156,11 +156,13 @@ mod tests {
     #[test]
     fn test_read_in_batches() {
         let session = MockProcessSession::new();
-        let mut flow_file = MockFlowFile::new();
-        flow_file.content = RefCell::from("Hello, World!".to_string().as_bytes().to_vec());
+        let flow_file = MockFlowFile::new();
+        flow_file
+            .content
+            .replace("Hello, World!".as_bytes().to_vec());
         let mut vec: Vec<u8> = Vec::new();
 
-        let res = session.read_in_batches(&mut flow_file, 1, |batch| {
+        let res = session.read_in_batches(&flow_file, 1, |batch| {
             assert_eq!(batch.len(), 1);
             vec.push(batch[0]);
             Ok(())
