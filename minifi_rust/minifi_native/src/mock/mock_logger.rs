@@ -66,22 +66,14 @@ mod tests {
 
         let mut call_count = 0;
 
-        trace!(
-            mock_logger,
-            "This is a trace message {}",
-            || -> u32 {
-                call_count += 1;
-                call_count
-            }()
-        );
-        error!(
-            mock_logger,
-            "This is an error message {}",
-            || -> u32 {
-                call_count += 1;
-                call_count
-            }()
-        );
+        trace!(mock_logger, "This is a trace message {}", {
+            call_count += 1;
+            call_count
+        });
+        error!(mock_logger, "This is an error message {}", {
+            call_count += 1;
+            call_count
+        });
 
         assert_eq!(mock_logger.logs.lock().unwrap().len(), 1);
         assert_eq!(call_count, 1);

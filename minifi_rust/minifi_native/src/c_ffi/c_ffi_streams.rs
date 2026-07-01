@@ -13,6 +13,13 @@ pub struct CffiInputStream<'a> {
     _marker: std::marker::PhantomData<&'a ()>,
 }
 
+// SAFETY: The wrapped `minifi_input_stream*` points at a
+// `minifi::io::InputStream` on the C++ side. That interface has no
+// thread-affine state (no `thread_local`, no owning-thread assertions in the
+// concrete implementations — see
+// `minifi-api/common/include/minifi-cpp/io/InputStream.h` and the impls under
+// `libminifi/src/core/`). The stream also cannot escape the FFI callback it
+// was constructed in: the `'a` lifetime is bound to that call frame.
 unsafe impl<'a> Send for CffiInputStream<'a> {}
 
 impl<'a> CffiInputStream<'a> {
@@ -93,6 +100,9 @@ impl<'a> CffiOutputStream<'a> {
     }
 }
 
+// SAFETY: Same reasoning as `CffiInputStream` above — the underlying
+// `minifi::io::OutputStream` has no thread affinity, and the `'a` lifetime keeps
+// the stream inside its FFI callback frame.
 unsafe impl<'a> Send for CffiOutputStream<'a> {}
 
 impl<'a> std::io::Write for CffiOutputStream<'a> {
