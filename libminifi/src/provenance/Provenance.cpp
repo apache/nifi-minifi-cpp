@@ -40,12 +40,12 @@ std::shared_ptr<core::logging::Logger> ProvenanceEventRecordImpl::logger_ = core
 const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD",  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     "DROP", "EXPIRE", "FORK", "JOIN", "CLONE", "CONTENT_MODIFIED", "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
 
-ProvenanceEventRecordImpl::ProvenanceEventRecordImpl(ProvenanceEventRecord::ProvenanceEventType event, std::string componentId, std::string componentType)
+ProvenanceEventRecordImpl::ProvenanceEventRecordImpl(ProvenanceEventRecord::ProvenanceEventType event, utils::Identifier component_id, std::string component_type)
     : core::SerializableComponentImpl(core::className<ProvenanceEventRecord>()),
-      _eventType(event),
-      _eventTime(std::chrono::system_clock::now()),
-      _componentId(std::move(componentId)),
-      _componentType(std::move(componentType)) {
+      event_type_(event),
+      event_time_(std::chrono::system_clock::now()),
+      component_id_(std::move(component_id.to_string())),
+      component_type_(std::move(component_type)) {
 }
 
 bool ProvenanceEventRecordImpl::loadFromRepository(const std::shared_ptr<core::Repository> &repo) {
@@ -70,9 +70,9 @@ bool ProvenanceEventRecordImpl::loadFromRepository(const std::shared_ptr<core::R
   ret = deserialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} success", getUUIDStr(), stream.size(), magic_enum::enum_name(_eventType));
+    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} success", getUUIDStr(), stream.size(), magic_enum::enum_name(event_type_));
   } else {
-    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} fail", getUUIDStr(), stream.size(), magic_enum::enum_name(_eventType));
+    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} fail", getUUIDStr(), stream.size(), magic_enum::enum_name(event_type_));
   }
 
   return ret;
@@ -80,79 +80,79 @@ bool ProvenanceEventRecordImpl::loadFromRepository(const std::shared_ptr<core::R
 
 bool ProvenanceEventRecordImpl::serialize(io::OutputStream& output_stream) {
   {
-    const auto ret = output_stream.write(this->uuid_);
+    const auto ret = output_stream.write(uuid_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
   {
-    uint32_t eventType = this->_eventType;
+    uint32_t eventType = event_type_;
     const auto ret = output_stream.write(eventType);
     if (ret != 4) {
       return false;
     }
   }
   {
-    uint64_t event_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(_eventTime.time_since_epoch()).count();
+    uint64_t event_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(event_time_.time_since_epoch()).count();
     const auto ret = output_stream.write(event_time_ms);
     if (ret != 8) {
       return false;
     }
   }
   {
-    uint64_t entry_date_ms = std::chrono::duration_cast<std::chrono::milliseconds>(_entryDate.time_since_epoch()).count();
+    uint64_t entry_date_ms = std::chrono::duration_cast<std::chrono::milliseconds>(entry_date_.time_since_epoch()).count();
     const auto ret = output_stream.write(entry_date_ms);
     if (ret != 8) {
       return false;
     }
   }
   {
-    uint64_t event_duration_ms = this->_eventDuration.count();
+    uint64_t event_duration_ms = event_duration_.count();
     const auto ret = output_stream.write(event_duration_ms);
     if (ret != 8) {
       return false;
     }
   }
   {
-    uint64_t lineage_start_date_ms = std::chrono::duration_cast<std::chrono::milliseconds>(_lineageStartDate.time_since_epoch()).count();
+    uint64_t lineage_start_date_ms = std::chrono::duration_cast<std::chrono::milliseconds>(lineage_start_date_.time_since_epoch()).count();
     const auto ret = output_stream.write(lineage_start_date_ms);
     if (ret != 8) {
       return false;
     }
   }
   {
-    const auto ret = output_stream.write(this->_componentId);
+    const auto ret = output_stream.write(component_id_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
   {
-    const auto ret = output_stream.write(this->_componentType);
+    const auto ret = output_stream.write(component_type_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
   {
-    const auto ret = output_stream.write(this->flow_uuid_);
+    const auto ret = output_stream.write(flow_uuid_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
   {
-    const auto ret = output_stream.write(this->_details);
+    const auto ret = output_stream.write(details_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
   // write flow attributes
   {
-    const auto numAttributes = gsl::narrow<uint32_t>(this->_attributes.size());
+    const auto numAttributes = gsl::narrow<uint32_t>(attributes_.size());
     const auto ret = output_stream.write(numAttributes);
     if (ret != 4) {
       return false;
     }
   }
-  for (const auto& itAttribute : _attributes) {
+  for (const auto& itAttribute : attributes_) {
     {
       const auto ret = output_stream.write(itAttribute.first);
       if (ret == 0 || io::isError(ret)) {
@@ -167,71 +167,71 @@ bool ProvenanceEventRecordImpl::serialize(io::OutputStream& output_stream) {
     }
   }
   {
-    const auto ret = output_stream.write(this->_contentFullPath);
+    const auto ret = output_stream.write(content_full_path);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
   {
-    const auto ret = output_stream.write(this->_size);
+    const auto ret = output_stream.write(size_);
     if (ret != 8) {
       return false;
     }
   }
   {
-    const auto ret = output_stream.write(this->_offset);
+    const auto ret = output_stream.write(offset_);
     if (ret != 8) {
       return false;
     }
   }
   {
-    const auto ret = output_stream.write(this->_sourceQueueIdentifier);
+    const auto ret = output_stream.write(source_queue_identifier_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
-  if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
+  if (event_type_ == ProvenanceEventRecord::FORK || event_type_ == ProvenanceEventRecord::CLONE || event_type_ == ProvenanceEventRecord::JOIN) {
     // write UUIDs
     {
-      const auto parent_uuids_count = gsl::narrow<uint32_t>(this->_parentUuids.size());
+      const auto parent_uuids_count = gsl::narrow<uint32_t>(parent_uuids_.size());
       const auto ret = output_stream.write(parent_uuids_count);
       if (ret != 4) {
         return false;
       }
     }
-    for (const auto& parentUUID : _parentUuids) {
+    for (const auto& parentUUID : parent_uuids_) {
       const auto ret = output_stream.write(parentUUID);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
     {
-      const auto children_uuids_count = gsl::narrow<uint32_t>(this->_childrenUuids.size());
+      const auto children_uuids_count = gsl::narrow<uint32_t>(children_uuids_.size());
       const auto ret = output_stream.write(children_uuids_count);
       if (ret != 4) {
         return false;
       }
     }
-    for (const auto& childUUID : _childrenUuids) {
+    for (const auto& childUUID : children_uuids_) {
       const auto ret = output_stream.write(childUUID);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
-  } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
-    const auto ret = output_stream.write(this->_transitUri);
+  } else if (event_type_ == ProvenanceEventRecord::SEND || event_type_ == ProvenanceEventRecord::FETCH) {
+    const auto ret = output_stream.write(transit_uri_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
-  } else if (this->_eventType == ProvenanceEventRecord::RECEIVE) {
+  } else if (event_type_ == ProvenanceEventRecord::RECEIVE) {
     {
-      const auto ret = output_stream.write(this->_transitUri);
+      const auto ret = output_stream.write(transit_uri_);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
     {
-      const auto ret = output_stream.write(this->_sourceSystemFlowFileIdentifier);
+      const auto ret = output_stream.write(source_system_flow_file_identifier_);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
@@ -258,7 +258,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   }
 
   if (auto event_type_opt = magic_enum::enum_cast<ProvenanceEventRecord::ProvenanceEventType>(eventType)) {
-    _eventType = *event_type_opt;
+    event_type_ = *event_type_opt;
   } else {
     return false;
   }
@@ -269,7 +269,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
     if (ret != 8) {
       return false;
     }
-    _eventTime = std::chrono::system_clock::time_point() + std::chrono::milliseconds(event_time_in_ms);
+    event_time_ = std::chrono::system_clock::time_point() + std::chrono::milliseconds(event_time_in_ms);
   }
 
   {
@@ -278,7 +278,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
     if (ret != 8) {
       return false;
     }
-    _entryDate = std::chrono::system_clock::time_point() + std::chrono::milliseconds(entry_date_in_ms);
+    entry_date_ = std::chrono::system_clock::time_point() + std::chrono::milliseconds(entry_date_in_ms);
   }
 
   {
@@ -287,7 +287,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
     if (ret != 8) {
       return false;
     }
-    _eventDuration = std::chrono::milliseconds(event_duration_ms);
+    event_duration_ = std::chrono::milliseconds(event_duration_ms);
   }
 
   {
@@ -296,32 +296,32 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
     if (ret != 8) {
       return false;
     }
-    _lineageStartDate = std::chrono::system_clock::time_point() + std::chrono::milliseconds(lineage_start_date_in_ms);
+    lineage_start_date_ = std::chrono::system_clock::time_point() + std::chrono::milliseconds(lineage_start_date_in_ms);
   }
 
   {
-    const auto ret = input_stream.read(this->_componentId);
+    const auto ret = input_stream.read(component_id_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
 
   {
-    const auto ret = input_stream.read(this->_componentType);
+    const auto ret = input_stream.read(component_type_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
 
   {
-    const auto ret = input_stream.read(this->flow_uuid_);
+    const auto ret = input_stream.read(flow_uuid_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
 
   {
-    const auto ret = input_stream.read(this->_details);
+    const auto ret = input_stream.read(details_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
@@ -351,38 +351,38 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
         return false;
       }
     }
-    this->_attributes[key] = value;
+    attributes_[key] = value;
   }
 
   {
-    const auto ret = input_stream.read(this->_contentFullPath);
+    const auto ret = input_stream.read(content_full_path);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
 
   {
-    const auto ret = input_stream.read(this->_size);
+    const auto ret = input_stream.read(size_);
     if (ret != 8) {
       return false;
     }
   }
 
   {
-    const auto ret = input_stream.read(this->_offset);
+    const auto ret = input_stream.read(offset_);
     if (ret != 8) {
       return false;
     }
   }
 
   {
-    const auto ret = input_stream.read(this->_sourceQueueIdentifier);
+    const auto ret = input_stream.read(source_queue_identifier_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
 
-  if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
+  if (event_type_ == ProvenanceEventRecord::FORK || event_type_ == ProvenanceEventRecord::CLONE || event_type_ == ProvenanceEventRecord::JOIN) {
     // read UUIDs
     uint32_t number = 0;
     {
@@ -400,7 +400,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
           return false;
         }
       }
-      this->addParentUuid(parentUUID);
+      addParentUuid(parentUUID);
     }
     number = 0;
     {
@@ -417,24 +417,24 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
           return false;
         }
       }
-      this->addChildUuid(childUUID);
+      addChildUuid(childUUID);
     }
-  } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
+  } else if (event_type_ == ProvenanceEventRecord::SEND || event_type_ == ProvenanceEventRecord::FETCH) {
     {
-      const auto ret = input_stream.read(this->_transitUri);
+      const auto ret = input_stream.read(transit_uri_);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
-  } else if (this->_eventType == ProvenanceEventRecord::RECEIVE) {
+  } else if (event_type_ == ProvenanceEventRecord::RECEIVE) {
     {
-      const auto ret = input_stream.read(this->_transitUri);
+      const auto ret = input_stream.read(transit_uri_);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
     {
-      const auto ret = input_stream.read(this->_sourceSystemFlowFileIdentifier);
+      const auto ret = input_stream.read(source_system_flow_file_identifier_);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
@@ -456,7 +456,7 @@ void ProvenanceReporterImpl::commit() {
 
   std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
 
-  for (auto& event : _events) {
+  for (auto& event : events_) {
     auto stramptr = std::make_unique<io::BufferStream>();
     event->serialize(*stramptr);
 
@@ -509,7 +509,6 @@ void ProvenanceReporterImpl::clone(const core::FlowFile& parent, const core::Flo
 
   if (event) {
     event->addChildFlowFile(child);
-    event->addParentFlowFile(parent);
     add(event);
   }
 }
@@ -577,7 +576,7 @@ void ProvenanceReporterImpl::fetch(const core::FlowFile& flow_file, const std::s
 }
 
 std::shared_ptr<ProvenanceEventRecord> ProvenanceEventRecord::create() {
-  return std::make_shared<ProvenanceEventRecordImpl>();
+  return std::make_shared<ProvenanceEventRecordImpl>(ProvenanceEventType::CLONE, utils::Identifier{}, "");
 }
 
 }  // namespace org::apache::nifi::minifi::provenance

@@ -116,7 +116,7 @@ std::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std::v
 
   for (const auto& flow_file : batched_flow_files) {
     logproto::EntryAdapter *entry = stream->add_entries();
-    auto timestamp_str = std::to_string(flow_file->getlineageStartDate().time_since_epoch() / std::chrono::nanoseconds(1));
+    auto timestamp_str = std::to_string(flow_file->getLineageStartDate().time_since_epoch() / std::chrono::nanoseconds(1));
     auto timestamp_nanos = std::stoll(timestamp_str);
     *entry->mutable_timestamp() = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(timestamp_nanos);
 

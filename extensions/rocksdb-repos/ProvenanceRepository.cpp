@@ -73,28 +73,30 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
   return true;
 }
 
-bool ProvenanceRepository::getElements(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size) {
+std::vector<std::shared_ptr<core::SerializableComponent>> ProvenanceRepository::getElements(size_t max_size) {
+  if (max_size == 0) {
+    return {};
+  }
   auto opendb = db_->open();
   if (!opendb) {
-    return false;
+    return {};
   }
+  std::vector<std::shared_ptr<core::SerializableComponent>> records;
   rocksdb::ReadOptions options;
   options.verify_checksums = verify_checksums_in_rocksdb_reads_;
   std::unique_ptr<rocksdb::Iterator> it(opendb->NewIterator(options));
-  size_t requested_batch = max_size;
-  max_size = 0;
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    if (max_size >= requested_batch)
-      break;
     auto eventRead = ProvenanceEventRecord::create();
     const auto slice = it->value();
     io::BufferStream stream(std::as_bytes(std::span(slice.data(), slice.size())));
     if (eventRead->deserialize(stream)) {
-      max_size++;
       records.push_back(eventRead);
+      if (--max_size == 0) {
+        break;
+      }
     }
   }
-  return max_size > 0;
+  return records;
 }
 
 void ProvenanceRepository::destroy() {

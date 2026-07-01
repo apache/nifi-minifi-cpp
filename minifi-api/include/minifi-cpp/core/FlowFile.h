@@ -54,7 +54,7 @@ class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer
   virtual void setDeleted(bool deleted) = 0;
   [[nodiscard]] virtual std::chrono::system_clock::time_point getEntryDate() const = 0;
   [[nodiscard]] virtual std::chrono::system_clock::time_point getEventTime() const = 0;
-  [[nodiscard]] virtual std::chrono::system_clock::time_point getlineageStartDate() const = 0;
+  [[nodiscard]] virtual std::chrono::system_clock::time_point getLineageStartDate() const = 0;
   virtual void setLineageStartDate(std::chrono::system_clock::time_point date) = 0;
   virtual void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) = 0;
   virtual void setAttribute(std::string_view name, std::string value) = 0;

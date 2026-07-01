@@ -45,9 +45,8 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessGroupPort 
   static constexpr char const* ReportTaskName = "SiteToSiteProvenanceReportingTask";
   static const char *ProvenanceAppStr;
 
-  static void getJsonReport(core::ProcessContext& context, core::ProcessSession& session, std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report); // NOLINT
+  static std::string getJsonReport(core::ProcessContext& context, core::ProcessSession& session, const std::vector<std::shared_ptr<core::SerializableComponent>> &records); // NOLINT
 
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
