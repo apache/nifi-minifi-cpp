@@ -17,10 +17,11 @@
  */
 #include "AWSSdkLogger.h"
 
-#include <cstdio>
 #include <cstdarg>
+#include <cstdio>
 
 #include "aws/core/utils/logging/LogLevel.h"
+#include "minifi-cpp/core/logging/AdvancedLogger.h"
 #include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::aws::utils {

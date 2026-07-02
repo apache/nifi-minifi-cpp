@@ -16,7 +16,9 @@
  */
 
 #include "c2/HeartbeatLogger.h"
+
 #include "core/Resource.h"
+#include "minifi-cpp/core/logging/AdvancedLogger.h"
 
 namespace org::apache::nifi::minifi::c2 {
 

@@ -17,26 +17,18 @@
  */
 #pragma once
 
-#include <string>
-#include <mutex>
 #include <memory>
+#include <mutex>
 #include <optional>
-#include <sstream>
-#include <utility>
-#include <iostream>
-#include <vector>
-#include <algorithm>
+#include <string>
 
+#include "fmt/std.h"
+#include "minifi-cpp/core/logging/AdvancedLogger.h"
+#include "minifi-cpp/core/logging/Logger.h"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
-#include "minifi-cpp/utils/gsl.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/Enum.h"
-#include "utils/GeneralUtils.h"
-#include "fmt/chrono.h"
-#include "fmt/std.h"
-#include "fmt/ostream.h"
-#include "minifi-cpp/core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::core::logging {
 
