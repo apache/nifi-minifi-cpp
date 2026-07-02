@@ -28,6 +28,7 @@
 #include "minifi-cpp/core/ProcessorApi.h"
 #include "minifi-cpp/core/ProcessorDescriptor.h"
 #include "minifi-cpp/core/ProcessorMetadata.h"
+#include "utils/minifi-api-utils.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -67,9 +68,9 @@ class CProcessor : public minifi::core::ProcessorApi {
         metrics_extension_(std::make_shared<CProcessorMetricsWrapper>(*this)) {
     minifi_processor_metadata c_metadata;
     const auto uuid_str = metadata.uuid.to_string();
-    c_metadata.uuid = minifi_string_view{.data = uuid_str.data(), .length = uuid_str.length()};
-    c_metadata.name = minifi_string_view{.data = metadata_.name.data(), .length = metadata_.name.length()};
-    c_metadata.logger = reinterpret_cast<minifi_logger*>(&metadata_.logger);
+    c_metadata.uuid = minifiStringView(uuid_str.view());
+    c_metadata.name = minifiStringView(metadata_.name);
+    c_metadata.logger = toC(&metadata_.logger);
     impl_ = class_description_.callbacks.create(c_metadata);
   }
   CProcessor(CProcessorClassDescription class_description, minifi::core::ProcessorMetadata metadata, gsl::owner<void*> impl)
@@ -116,7 +117,7 @@ class CProcessor : public minifi::core::ProcessorApi {
 
   void onTrigger(minifi::core::ProcessContext& process_context, minifi::core::ProcessSession& process_session) override {
     std::optional<std::string> error;
-    auto status = class_description_.callbacks.trigger(impl_, reinterpret_cast<minifi_process_context*>(&process_context), reinterpret_cast<minifi_process_session*>(&process_session));
+    auto status = class_description_.callbacks.trigger(impl_, toC(&process_context), toC(&process_session));
     if (status == MINIFI_STATUS_PROCESSOR_YIELD) {
       process_context.yield();
       return;
@@ -128,7 +129,7 @@ class CProcessor : public minifi::core::ProcessorApi {
 
   void onSchedule(minifi::core::ProcessContext& process_context, minifi::core::ProcessSessionFactory& /*process_session_factory*/) override {
     std::optional<std::string> error;
-    auto status = class_description_.callbacks.schedule(impl_, reinterpret_cast<minifi_process_context*>(&process_context));
+    auto status = class_description_.callbacks.schedule(impl_, toC(&process_context));
     if (status != MINIFI_STATUS_SUCCESS) {
       throw minifi::Exception(minifi::ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Error while scheduling processor");
     }

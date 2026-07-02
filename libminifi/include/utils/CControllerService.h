@@ -25,6 +25,7 @@
 #include "minifi-cpp/core/ControllerServiceMetadata.h"
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/controller/ControllerServiceApi.h"
+#include "utils/minifi-api-utils.h"
 
 namespace org::apache::nifi::minifi {
 struct ClassDescription;
@@ -47,9 +48,9 @@ class CControllerService final : public core::controller::ControllerServiceApi, 
       metadata_(std::move(metadata)) {
     minifi_controller_service_metadata c_metadata;
     auto uuid_str = metadata_.uuid.to_string();
-    c_metadata.uuid = minifi_string_view{.data = uuid_str.data(), .length = uuid_str.length()};
-    c_metadata.name = minifi_string_view{.data = metadata_.name.data(), .length = metadata_.name.length()};
-    c_metadata.logger = reinterpret_cast<minifi_logger*>(&metadata_.logger);
+    c_metadata.uuid = minifiStringView(uuid_str.view());
+    c_metadata.name = minifiStringView(metadata_.name);
+    c_metadata.logger = toC(&metadata_.logger);
     impl_ = class_description_.callbacks.create(c_metadata);
   }
   CControllerService(CControllerServiceClassDescription class_description, core::ControllerServiceMetadata metadata, gsl::owner<void*> impl)
@@ -75,7 +76,7 @@ class CControllerService final : public core::controller::ControllerServiceApi, 
   void onEnable(core::controller::ControllerServiceContext& controller_service_context,
       const std::shared_ptr<Configure>&,
       const std::vector<std::shared_ptr<core::controller::ControllerServiceHandle>>&) override {
-    const auto enable_status = class_description_.callbacks.enable(impl_, reinterpret_cast<minifi_controller_service_context*>(&controller_service_context));
+    const auto enable_status = class_description_.callbacks.enable(impl_, toC(&controller_service_context));
     if (enable_status != MINIFI_STATUS_SUCCESS) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not enable controller service");
     }
