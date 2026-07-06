@@ -122,7 +122,7 @@ TEST_CASE("C2PauseResumeTest", "[c2test]") {
   VerifyC2PauseResume harness{test_file_path, flow_resumed_successfully};
   PauseResumeHandler responder{flow_resumed_successfully, harness.getConfiguration()};
 
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
+  auto test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_path.string());

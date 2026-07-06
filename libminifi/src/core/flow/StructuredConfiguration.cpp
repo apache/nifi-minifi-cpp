@@ -586,6 +586,10 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
 
   auto report_task = createProvenanceReportTask();
 
+  utils::Identifier task_uuid;
+  task_uuid = getOrGenerateId(node);
+  report_task->setUUID(task_uuid);
+
   checkRequiredField(node, schema_.scheduling_strategy);
   auto schedulingStrategyStr = node[schema_.scheduling_strategy].getString().value();
   checkRequiredField(node, schema_.scheduling_period);
