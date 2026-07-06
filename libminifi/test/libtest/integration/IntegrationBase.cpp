@@ -59,7 +59,7 @@ void IntegrationBase::run() {
   using namespace std::literals::chrono_literals;
   testSetup();
 
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
+  auto test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
   if (flow_config_path_.config_path) {

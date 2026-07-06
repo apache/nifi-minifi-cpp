@@ -30,7 +30,7 @@
 namespace org::apache::nifi::minifi {
 class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
  public:
-  TimerDrivenSchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<core::Repository> repo,
+  TimerDrivenSchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<provenance::ProvenanceRepository> repo,
                              std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configure,
                              utils::ThreadPool &thread_pool)
       : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configure, thread_pool) {

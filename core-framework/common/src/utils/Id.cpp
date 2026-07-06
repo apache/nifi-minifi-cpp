@@ -43,6 +43,18 @@ bool Identifier::isNil() const {
   return *this == Identifier{};
 }
 
+Identifier& Identifier::operator++() {
+  for (int byte_idx = 15; byte_idx >= 0 && ++data_[byte_idx] == 0; --byte_idx) {}
+  return *this;
+}
+
+Identifier Identifier::operator++(int) {
+  auto result = *this;
+  ++*this;
+  return result;
+}
+
+
 bool Identifier::operator!=(const Identifier& other) const {
   return !(*this == other);
 }
