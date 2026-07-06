@@ -156,12 +156,6 @@ void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext& context
 }
 
 void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  auto* state_manager = context.getStateManager();
-  if (!state_manager) {
-    logger_->log_error("Failed to get StateManager");
-    context.yield();
-    return;
-  }
   std::shared_ptr<core::Repository> repo = context.getProvenanceRepository();
   if (!repo) {
     throw minifi::Exception(ExceptionType::REPOSITORY_EXCEPTION, "Failed to retrieve provenance repository");

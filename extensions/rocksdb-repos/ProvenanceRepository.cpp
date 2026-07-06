@@ -20,6 +20,7 @@
 #include <string>
 
 #include "core/Resource.h"
+#include "minifi-cpp/Exception.h"
 
 namespace org::apache::nifi::minifi::provenance {
 
@@ -79,7 +80,7 @@ std::vector<std::shared_ptr<core::SerializableComponent>> ProvenanceRepository::
   }
   auto opendb = db_->open();
   if (!opendb) {
-    return {};
+    throw minifi::Exception(ExceptionType::REPOSITORY_EXCEPTION, "Failed to open provenance repository");
   }
   std::vector<std::shared_ptr<core::SerializableComponent>> records;
   rocksdb::ReadOptions options;
