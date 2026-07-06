@@ -194,7 +194,7 @@ minifi_proxy_type minifiProxyType(const minifi::controllers::ProxyType& proxy_ty
 
 namespace org::apache::nifi::minifi::utils {
 
-void useCProcessorClassDescription(const minifi_processor_class_definition& class_description, const std::function<void(minifi::ClassDescription, minifi::utils::CProcessorClassDescription)>& fn) {
+void useCProcessorClassDescription(const minifi_processor_definition& class_description, const std::function<void(minifi::ClassDescription, minifi::utils::CProcessorClassDescription)>& fn) {
   std::vector<minifi::core::Property> properties;
   properties.reserve(class_description.properties_count);
   for (size_t i = 0; i < class_description.properties_count; ++i) {
@@ -265,7 +265,7 @@ void useCProcessorClassDescription(const minifi_processor_class_definition& clas
   fn(description, c_class_description);
 }
 
-void useCControllerServiceClassDescription(const std::string_view bundle_name, const minifi_controller_service_class_definition& class_description,
+void useCControllerServiceClassDescription(const std::string_view bundle_name, const minifi_controller_service_definition& class_description,
     const std::function<void(const ClassDescription&, CControllerServiceClassDescription)>& fn) {
   std::vector<minifi::core::Property> properties;
   properties.reserve(class_description.properties_count);
@@ -321,7 +321,7 @@ minifi_extension* minifi_register_extension(minifi_extension_context* extension_
   return nullptr;
 }
 
-minifi_status minifi_register_processor(minifi_extension* extension, const minifi_processor_class_definition* processor) {
+minifi_status minifi_register_processor(minifi_extension* extension, const minifi_processor_definition* processor) {
   gsl_Assert(extension);
   gsl_Assert(processor);
   auto* extension_ = reinterpret_cast<minifi::core::extension::Extension*>(extension);
@@ -344,7 +344,7 @@ minifi_status minifi_register_processor(minifi_extension* extension, const minif
   return MINIFI_STATUS_SUCCESS;
 }
 
-minifi_status minifi_register_controller_service(minifi_extension* extension, const minifi_controller_service_class_definition* controller_service) {
+minifi_status minifi_register_controller_service(minifi_extension* extension, const minifi_controller_service_definition* controller_service) {
   gsl_Assert(extension);
   gsl_Assert(controller_service);
   auto extension_info = reinterpret_cast<minifi::core::extension::Extension*>(extension)->getInfo();

@@ -53,7 +53,7 @@ class GCSProcessor : public api::core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto ProxyConfigurationService = core::PropertyDefinitionBuilder<>::createProperty("Proxy Configuration Service")
       .withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests.")
-      .withAllowedType<MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE>()
+      .withAllowedType<MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE>()
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       GCPCredentials,

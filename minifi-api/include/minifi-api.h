@@ -42,12 +42,12 @@ extern "C" {
 #endif
 
 /// To declare a processor property that expects an SSLContextService,
-/// use MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::allowed_type)
-#define MINIFI_SSL_CONTEXT_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
+/// use MINIFI_SSL_CONTEXT_SERVICE_INTERFACE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::allowed_type)
+#define MINIFI_SSL_CONTEXT_SERVICE_INTERFACE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
 
 /// To declare a processor property that expects an ProxyConfigurationService,
-/// use MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::allowed_type)
-#define MINIFI_PROXY_CONFIGURATION_SERVICE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
+/// use MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::allowed_type)
+#define MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
 
 enum : uint32_t {
   MINIFI_API_VERSION = 1
@@ -182,7 +182,7 @@ struct minifi_controller_service_callbacks {
   void* (*get_interface)(void* ctx, struct minifi_string_view interface_type);
 };
 
-struct minifi_processor_class_definition {
+struct minifi_processor_definition {
   struct minifi_string_view full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::GenerateFlowFile'
   struct minifi_string_view description;
   size_t properties_count;
@@ -201,7 +201,7 @@ struct minifi_processor_class_definition {
   struct minifi_processor_callbacks callbacks;
 };
 
-struct minifi_controller_service_class_definition {
+struct minifi_controller_service_definition {
   struct minifi_string_view full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService
   struct minifi_string_view description;
   size_t properties_count;
@@ -225,9 +225,9 @@ struct minifi_extension_definition {
 struct minifi_extension* MINIFI_REGISTER_EXTENSION_FN(struct minifi_extension_context* extension_context,
     const struct minifi_extension_definition* extension_definition);
 
-enum minifi_status minifi_register_processor(struct minifi_extension* extension, const struct minifi_processor_class_definition* processor);
+enum minifi_status minifi_register_processor(struct minifi_extension* extension, const struct minifi_processor_definition* processor);
 enum minifi_status minifi_register_controller_service(struct minifi_extension* extension,
-    const struct minifi_controller_service_class_definition* controller_service);
+    const struct minifi_controller_service_definition* controller_service);
 
 enum minifi_status minifi_process_context_set_trigger_when_empty(struct minifi_process_context*, bool trigger_when_empty);
 enum minifi_status minifi_process_context_report_metrics(struct minifi_process_context*, size_t count, const struct minifi_string_view* metric_names,

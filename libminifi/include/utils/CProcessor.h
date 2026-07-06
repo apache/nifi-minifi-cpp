@@ -177,6 +177,6 @@ class CProcessor : public minifi::core::ProcessorApi {
   std::vector<minifi::state::PublishedMetric> reported_metrics_;
 };
 
-void useCProcessorClassDescription(const minifi_processor_class_definition& class_description, const std::function<void(ClassDescription, CProcessorClassDescription)>& fn);
+void useCProcessorClassDescription(const minifi_processor_definition& class_description, const std::function<void(ClassDescription, CProcessorClassDescription)>& fn);
 
 }  // namespace org::apache::nifi::minifi::utils

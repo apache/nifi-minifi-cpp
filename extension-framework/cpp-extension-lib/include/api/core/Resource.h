@@ -78,7 +78,7 @@ void useProcessorClassDefinition(Fn&& fn) {
     attribute_relationships_cache.push_back(std::move(rel_cache));
   }
 
-  minifi_processor_class_definition definition{
+  minifi_processor_definition definition{
     .full_name = utils::minifiStringView(full_name),
     .description = utils::minifiStringView(Class::Description),
     .properties_count = gsl::narrow<uint32_t>(class_properties.size()),
@@ -149,7 +149,7 @@ void useControllerServiceClassDefinition(Fn&& fn) {
     }
   }
 
-  minifi_controller_service_class_definition definition{.full_name = utils::minifiStringView(full_name),
+  minifi_controller_service_definition definition{.full_name = utils::minifiStringView(full_name),
       .description = utils::minifiStringView(Class::Description),
       .properties_count = gsl::narrow<uint32_t>(class_properties.size()),
       .properties_ptr = class_properties.data(),
@@ -198,14 +198,14 @@ void useControllerServiceClassDefinition(Fn&& fn) {
 
 template <typename... Processors>
 void registerProcessors(minifi_extension* extension) {
-  (core::useProcessorClassDefinition<Processors>([&](const minifi_processor_class_definition& definition) {
+  (core::useProcessorClassDefinition<Processors>([&](const minifi_processor_definition& definition) {
       minifi_register_processor(extension, &definition);
   }), ...);
 }
 
 template <typename... ControllerServices>
 void registerControllerServices(minifi_extension* extension) {
-  (core::useControllerServiceClassDefinition<ControllerServices>([&](const minifi_controller_service_class_definition& definition) {
+  (core::useControllerServiceClassDefinition<ControllerServices>([&](const minifi_controller_service_definition& definition) {
       minifi_register_controller_service(extension, &definition);
   }), ...);
 }

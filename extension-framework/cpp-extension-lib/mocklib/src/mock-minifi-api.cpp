@@ -24,11 +24,11 @@ minifi_extension* MINIFI_REGISTER_EXTENSION_FN(minifi_extension_context*, const 
   throw std::runtime_error("Not implemented");
 }
 
-minifi_status minifi_register_processor(minifi_extension*, const minifi_processor_class_definition*) {
+minifi_status minifi_register_processor(minifi_extension*, const minifi_processor_definition*) {
   throw std::runtime_error("Not implemented");
 }
 
-minifi_status minifi_register_controller_service(minifi_extension*, const minifi_controller_service_class_definition*) {
+minifi_status minifi_register_controller_service(minifi_extension*, const minifi_controller_service_definition*) {
   throw std::runtime_error("Not implemented");
 }
 
