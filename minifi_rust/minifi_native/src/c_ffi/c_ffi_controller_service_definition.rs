@@ -7,7 +7,7 @@ use crate::{
     LogLevel, Property, ProvidedInterface,
 };
 use minifi_native_sys::{
-    minifi_controller_service_callbacks, minifi_controller_service_class_definition,
+    minifi_controller_service_callbacks, minifi_controller_service_definition,
     minifi_controller_service_context, minifi_controller_service_metadata, minifi_status,
     minifi_string_view,
 };
@@ -15,19 +15,19 @@ use std::ffi::c_void;
 
 #[derive(Debug)]
 pub struct ControllerServiceClassDefinition<'a> {
-    inner: minifi_controller_service_class_definition,
+    inner: minifi_controller_service_definition,
     _lifetime: std::marker::PhantomData<&'a ()>,
 }
 
 impl<'a> ControllerServiceClassDefinition<'a> {
-    pub(crate) fn new(inner: minifi_controller_service_class_definition) -> Self {
+    pub(crate) fn new(inner: minifi_controller_service_definition) -> Self {
         Self {
             inner,
             _lifetime: std::marker::PhantomData,
         }
     }
 
-    pub unsafe fn as_raw(&self) -> minifi_controller_service_class_definition {
+    pub unsafe fn as_raw(&self) -> minifi_controller_service_definition {
         self.inner
     }
 }
@@ -152,7 +152,7 @@ where
 {
     fn class_description(&'_ self) -> ControllerServiceClassDefinition<'_> {
         unsafe {
-            ControllerServiceClassDefinition::new(minifi_controller_service_class_definition {
+            ControllerServiceClassDefinition::new(minifi_controller_service_definition {
                 full_name: self.name.as_minifi_c_type(),
                 description: self.description_text.as_minifi_c_type(),
                 properties_count: self.c_properties.len(),

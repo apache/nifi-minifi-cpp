@@ -1,10 +1,10 @@
 use crate::c_ffi::RawRegisterableProcessor;
 use crate::c_ffi::c_ffi_processor_definition::DynRawProcessorDefinition;
-use minifi_native_sys::minifi_processor_class_definition;
+use minifi_native_sys::minifi_processor_definition;
 
 pub struct CffiProcessorList {
     processor_definitions: Vec<Box<dyn DynRawProcessorDefinition>>,
-    minifi_processor_class_description_list: Vec<minifi_processor_class_definition>,
+    minifi_processor_class_description_list: Vec<minifi_processor_definition>,
 }
 
 impl Default for CffiProcessorList {
@@ -51,9 +51,9 @@ impl CffiProcessorList {
 
     /// # Safety
     ///
-    /// The returned *minifi_processor_class_definition only valid until self lives
+    /// The returned *minifi_processor_definition only valid until self lives
     /// TODO(mzink) maybe some lifetimes?
-    pub unsafe fn get_processor_ptr(&self) -> *const minifi_processor_class_definition {
+    pub unsafe fn get_processor_ptr(&self) -> *const minifi_processor_definition {
         self.minifi_processor_class_description_list.as_ptr()
     }
 }

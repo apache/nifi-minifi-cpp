@@ -184,19 +184,19 @@ where
 
 #[derive(Debug)]
 pub struct ProcessorClassDefinition<'a> {
-    inner: minifi_processor_class_definition,
+    inner: minifi_processor_definition,
     _marker: std::marker::PhantomData<&'a ()>,
 }
 
 impl<'a> ProcessorClassDefinition<'a> {
-    pub(crate) fn new(inner: minifi_processor_class_definition) -> Self {
+    pub(crate) fn new(inner: minifi_processor_definition) -> Self {
         Self {
             inner,
             _marker: std::marker::PhantomData,
         }
     }
 
-    pub unsafe fn as_raw(&self) -> minifi_processor_class_definition {
+    pub unsafe fn as_raw(&self) -> minifi_processor_definition {
         self.inner
     }
 }
@@ -211,7 +211,7 @@ where
 {
     fn class_description(&'_ self) -> ProcessorClassDefinition<'_> {
         unsafe {
-            ProcessorClassDefinition::new(minifi_processor_class_definition {
+            ProcessorClassDefinition::new(minifi_processor_definition {
                 full_name: self.name.as_minifi_c_type(),
                 description: self.description_text.as_minifi_c_type(),
                 properties_count: self.c_properties.len(),
