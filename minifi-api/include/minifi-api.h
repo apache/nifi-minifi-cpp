@@ -229,7 +229,7 @@ enum minifi_status minifi_register_processor(struct minifi_extension* extension,
 enum minifi_status minifi_register_controller_service(struct minifi_extension* extension,
     const struct minifi_controller_service_class_definition* controller_service);
 
-enum minifi_status minifi_process_context_set_trigger_when_empty(struct minifi_process_context*, bool);
+enum minifi_status minifi_process_context_set_trigger_when_empty(struct minifi_process_context*, bool trigger_when_empty);
 enum minifi_status minifi_process_context_report_metrics(struct minifi_process_context*, size_t count, const struct minifi_string_view* metric_names,
     const double* metric_values);
 
@@ -242,7 +242,7 @@ enum minifi_status minifi_process_context_get_controller_service_from_property(s
 void minifi_process_context_get_dynamic_properties(struct minifi_process_context* context, MINIFI_NULLABLE struct minifi_flow_file* minifi_flow_file,
     void (*cb)(void* user_ctx, struct minifi_string_view dynamic_property_name, struct minifi_string_view dynamic_property_value), void* user_ctx);
 
-void minifi_logger_log_string(struct minifi_logger*, enum minifi_log_level, struct minifi_string_view);
+void minifi_logger_log_string(struct minifi_logger*, enum minifi_log_level, struct minifi_string_view message);
 bool minifi_logger_should_log(struct minifi_logger*, enum minifi_log_level);
 
 MINIFI_OWNED struct minifi_flow_file* minifi_process_session_get(struct minifi_process_session*);
@@ -264,8 +264,8 @@ void minifi_config_get(struct minifi_extension_context* extension_context, struc
 
 size_t minifi_input_stream_size(struct minifi_input_stream*);
 
-int64_t minifi_input_stream_read(struct minifi_input_stream* stream, char* buffer, size_t size);
-int64_t minifi_output_stream_write(struct minifi_output_stream* stream, const char* data, size_t size);
+int64_t minifi_input_stream_read(struct minifi_input_stream* stream, char* buffer, size_t buffer_size);
+int64_t minifi_output_stream_write(struct minifi_output_stream* stream, const char* data, size_t data_size);
 
 enum minifi_status minifi_process_session_set_flow_file_attribute(struct minifi_process_session* session, struct minifi_flow_file* flowfile,
     struct minifi_string_view attribute_name, const struct minifi_string_view* attribute_value);
