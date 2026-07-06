@@ -88,7 +88,7 @@ void appendJsonStr(const utils::SmallString<N>& value, rapidjson::Value& parent,
   parent.PushBack(valueVal, alloc);
 }
 
-std::string SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, core::ProcessSession&, const std::vector<std::shared_ptr<core::SerializableComponent>> &records) {
+std::string SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, core::ProcessSession&, const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records) {
   rapidjson::Document array(rapidjson::kArrayType);
   rapidjson::Document::AllocatorType &alloc = array.GetAllocator();
 
@@ -110,6 +110,10 @@ std::string SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContex
     recordJson.AddMember("entityOffset", record->getFileOffset(), alloc);
 
     recordJson.AddMember("entityType", "org.apache.nifi.flowfile.FlowFile", alloc);
+
+    if (auto event_ordinal = record->getEventOrdinal()) {
+      recordJson.AddMember("eventOrdinal", event_ordinal.value(), alloc);
+    }
 
     recordJson.AddMember("eventId", getStringValue(record->getEventId().to_string(), alloc), alloc);
     recordJson.AddMember("eventType", getStringValue(provenance::ProvenanceEventRecord::ProvenanceEventTypeStr[record->getEventType()], alloc), alloc);
@@ -156,11 +160,36 @@ void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext& context
 }
 
 void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  std::shared_ptr<core::Repository> repo = context.getProvenanceRepository();
+  std::shared_ptr<provenance::ProvenanceRepository> repo = context.getProvenanceRepository();
   if (!repo) {
     throw minifi::Exception(ExceptionType::REPOSITORY_EXCEPTION, "Failed to retrieve provenance repository");
   }
-  auto records = repo->getElements(batch_size_);
+  auto* state_manager = context.getStateManager();
+  if (!state_manager) {
+    logger_->log_error("Failed to get StateManager");
+    context.yield();
+    return;
+  }
+  std::optional<std::string> cursor_str;
+  {
+    std::unordered_map<std::string, std::string> state_map;
+    if (state_manager->get(state_map)) {
+      if (auto it = state_map.find("cursor"); it != state_map.end()) {
+        cursor_str = it->second;
+      }
+    }
+  }
+  std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> records;
+  auto cursor = repo->cursorFromString(cursor_str);
+  if (cursor_str && !cursor) {
+    logger_->log_error("Failed to parse cursor, falling back to enumerating from the beginning");
+    cursor = repo->cursorFromString(std::nullopt);
+  }
+  if (auto result = repo->getEvents(batch_size_, cursor.get())) {
+    records = std::move(result.value());
+  } else {
+    throw minifi::Exception(GENERAL_EXCEPTION, "Failed to retrieve records: " + result.error());
+  }
   if (records.empty()) {
     logger_->log_debug("No new provenance records");
     return;
@@ -188,8 +217,22 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
     return;
   }
 
-  // we transfer the record, purge the record from DB
-  repo->Delete(records);
+  if (cursor) {
+    // no need to delete just update the state
+    std::unordered_map<std::string, std::string> state_map;
+    state_map["cursor"] = cursor->toString();
+    if (!state_manager->set(state_map)) {
+      logger_->log_error("Failed to update cursor state");
+    }
+  } else {
+    // we transfer the record, purge the record from DB
+    std::vector<std::shared_ptr<core::SerializableComponent>> entries;
+    entries.reserve(records.size());
+    for (const auto& record : records) {
+      entries.push_back(record);
+    }
+    repo->Delete(entries);
+  }
   returnProtocol(context, std::move(protocol_));
 }
 

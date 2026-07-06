@@ -343,7 +343,7 @@ int main(int argc, char **argv) {
 
     configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
     // Create repos for flow record and provenance
-    std::shared_ptr prov_repo = core::createRepository(prov_repo_class, "provenance");
+    std::shared_ptr prov_repo = utils::dynamic_unique_cast<minifi::provenance::ProvenanceRepository>(core::createRepository(prov_repo_class, "provenance"));
 
     if (!prov_repo || !prov_repo->initialize(configure)) {
       logger->log_error("Provenance repository failed to initialize, exiting..");

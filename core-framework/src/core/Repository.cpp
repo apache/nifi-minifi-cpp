@@ -27,20 +27,4 @@ bool RepositoryImpl::Delete(std::vector<std::shared_ptr<core::SerializableCompon
   return found;
 }
 
-bool RepositoryImpl::storeElement(const std::shared_ptr<core::SerializableComponent>& element) {
-  if (!element) {
-    return false;
-  }
-
-  org::apache::nifi::minifi::io::BufferStream stream;
-
-  element->serialize(stream);
-
-  if (!Put(element->getUUIDStr(), reinterpret_cast<const uint8_t*>(stream.getBuffer().data()), stream.size())) {
-    logger_->log_error("NiFi Provenance Store event {} size {} fail", element->getUUIDStr(), stream.size());
-    return false;
-  }
-  return true;
-}
-
 }  // namespace org::apache::nifi::minifi::core

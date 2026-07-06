@@ -38,6 +38,7 @@
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 #include "minifi-cpp/provenance/Provenance.h"
+#include "minifi-cpp/provenance/ProvenanceRepository.h"
 
 namespace org::apache::nifi::minifi::provenance {
 
@@ -53,6 +54,14 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
   ProvenanceEventRecordImpl& operator=(ProvenanceEventRecordImpl&&) = delete;
 
   ~ProvenanceEventRecordImpl() override = default;
+
+  std::optional<uint64_t> getEventOrdinal() const override {
+    return event_ordinal_;
+  }
+
+  void setEventOrdinal(uint64_t event_ordinal) override {
+    event_ordinal_ = event_ordinal;
+  }
 
   utils::Identifier getEventId() const override {
     return getUUID();
@@ -218,6 +227,8 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
 
  protected:
   ProvenanceEventType event_type_;
+  // the index of the event
+  std::optional<uint64_t> event_ordinal_;
   // Date at which the event was created
   std::chrono::system_clock::time_point event_time_{};
   // Date at which the flow file entered the flow
@@ -251,7 +262,7 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
 
 class ProvenanceReporterImpl : public virtual ProvenanceReporter {
  public:
-  ProvenanceReporterImpl(std::shared_ptr<core::Repository> repo, utils::Identifier component_id, std::string component_type)
+  ProvenanceReporterImpl(std::shared_ptr<provenance::ProvenanceRepository> repo, utils::Identifier component_id, std::string component_type)
       : component_id_(component_id),
         component_type_(std::move(component_type)),
         logger_(core::logging::LoggerFactory<ProvenanceReporter>::getLogger()),
@@ -266,16 +277,12 @@ class ProvenanceReporterImpl : public virtual ProvenanceReporter {
     clear();
   }
 
-  std::set<std::shared_ptr<ProvenanceEventRecord>> getEvents() const override {
+  std::vector<std::shared_ptr<ProvenanceEventRecord>> getEvents() const override {
     return events_;
   }
 
   void add(const std::shared_ptr<ProvenanceEventRecord> &event) override {
-    events_.insert(event);
-  }
-
-  void remove(const std::shared_ptr<ProvenanceEventRecord> &event) override {
-    events_.erase(event);
+    events_.push_back(event);
   }
 
   void clear() final {
@@ -313,8 +320,8 @@ class ProvenanceReporterImpl : public virtual ProvenanceReporter {
 
  private:
   std::shared_ptr<core::logging::Logger> logger_;
-  std::set<std::shared_ptr<ProvenanceEventRecord>> events_;
-  std::shared_ptr<core::Repository> repo_;
+  std::vector<std::shared_ptr<ProvenanceEventRecord>> events_;
+  std::shared_ptr<provenance::ProvenanceRepository> repo_;
 };
 
 }  // namespace org::apache::nifi::minifi::provenance

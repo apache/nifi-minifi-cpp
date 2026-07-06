@@ -243,7 +243,7 @@ class TypedProcessorWrapper {
 
 class TestPlan {
  public:
-  explicit TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo, std::shared_ptr<minifi::core::Repository> prov_repo,
+  explicit TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo, std::shared_ptr<minifi::provenance::ProvenanceRepository> prov_repo,
                     std::shared_ptr<minifi::state::response::FlowVersion> flow_version, std::shared_ptr<minifi::Configure> configuration, const char* state_dir);
 
   virtual ~TestPlan();
@@ -305,7 +305,7 @@ class TestPlan {
   bool runCurrentProcessor();
   bool runCurrentProcessorUntilFlowfileIsProduced(std::chrono::milliseconds wait_duration);
 
-  std::set<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> getProvenanceRecords();
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> getProvenanceRecords();
 
   std::shared_ptr<minifi::core::FlowFile> getCurrentFlowFile();
   std::vector<minifi::Connection*> getProcessorOutboundConnections(minifi::core::Processor* processor);
@@ -357,7 +357,7 @@ class TestPlan {
   std::shared_ptr<minifi::core::ContentRepository> content_repo_;
 
   std::shared_ptr<minifi::core::Repository> flow_repo_;
-  std::shared_ptr<minifi::core::Repository> prov_repo_;
+  std::shared_ptr<minifi::provenance::ProvenanceRepository> prov_repo_;
 
   std::shared_ptr<minifi::core::controller::ControllerServiceProvider> controller_services_provider_;
 

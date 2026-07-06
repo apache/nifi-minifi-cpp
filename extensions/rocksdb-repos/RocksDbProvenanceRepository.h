@@ -29,6 +29,7 @@
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/provenance/Provenance.h"
+#include "minifi-cpp/provenance/ProvenanceRepository.h"
 #include "minifi-cpp/utils/Literals.h"
 #include "RocksDbRepository.h"
 
@@ -39,22 +40,22 @@ constexpr auto MAX_PROVENANCE_STORAGE_SIZE = 10_MiB;
 constexpr auto MAX_PROVENANCE_ENTRY_LIFE_TIME = std::chrono::minutes(1);
 constexpr auto PROVENANCE_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
-class ProvenanceRepository : public core::repository::RocksDbRepository {
+class RocksDbProvenanceRepository : public core::repository::RocksDbRepository, public ProvenanceRepository {
  public:
-  ProvenanceRepository(std::string_view name, const utils::Identifier& /*uuid*/)
-    : ProvenanceRepository(name) {
+  RocksDbProvenanceRepository(std::string_view name, const utils::Identifier& /*uuid*/)
+    : RocksDbProvenanceRepository(name) {
   }
 
-  explicit ProvenanceRepository(std::string_view repo_name = "",
+  explicit RocksDbProvenanceRepository(std::string_view repo_name = "",
                                 std::string directory = PROVENANCE_DIRECTORY,
                                 std::chrono::milliseconds maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
                                 int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE,
                                 std::chrono::milliseconds purgePeriod = PROVENANCE_PURGE_PERIOD)
-    : RocksDbRepository(repo_name.length() > 0 ? repo_name : core::className<ProvenanceRepository>(),
-        directory, maxPartitionMillis, maxPartitionBytes, purgePeriod, core::logging::LoggerFactory<ProvenanceRepository>::getLogger()) {
+    : RocksDbRepository(repo_name.length() > 0 ? repo_name : core::className<RocksDbProvenanceRepository>(),
+        directory, maxPartitionMillis, maxPartitionBytes, purgePeriod, core::logging::LoggerFactory<RocksDbProvenanceRepository>::getLogger()) {
   }
 
-  ~ProvenanceRepository() override {
+  ~RocksDbProvenanceRepository() override {
     stop();
   }
 
@@ -72,17 +73,26 @@ class ProvenanceRepository : public core::repository::RocksDbRepository {
     // The repo is cleaned up by itself, there is no need to delete items.
     return true;
   }
-  std::vector<std::shared_ptr<core::SerializableComponent>> getElements(size_t max_size) override;
 
   void destroy();
 
-  ProvenanceRepository(const ProvenanceRepository &parent) = delete;
+  RocksDbProvenanceRepository(const RocksDbProvenanceRepository &parent) = delete;
 
-  ProvenanceRepository &operator=(const ProvenanceRepository &parent) = delete;
+  RocksDbProvenanceRepository &operator=(const RocksDbProvenanceRepository &parent) = delete;
+
+  std::unique_ptr<Cursor> cursorFromString(std::optional<std::string> cursor_str) override;
+
+  std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, std::string> getEvents(size_t max_size, Cursor* cursor) override;
+
+  std::expected<void, std::string> appendEvents(const std::vector<std::shared_ptr<ProvenanceEventRecord>>& events) override;
 
  private:
   // Run function for the thread
   void run() override {};
+
+  std::unique_ptr<minifi::internal::RocksDatabase> internal_state_db_;
+  std::mutex next_event_id_mtx_;
+  utils::Identifier next_event_id_;
 };
 
 }  // namespace org::apache::nifi::minifi::provenance

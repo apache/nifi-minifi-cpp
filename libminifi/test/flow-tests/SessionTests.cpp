@@ -62,7 +62,7 @@ TEST_CASE("Import null data") {
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
-  std::shared_ptr<core::Repository> prov_repo = core::createRepository("nooprepository");
+  std::shared_ptr prov_repo = utils::dynamic_unique_cast<minifi::provenance::ProvenanceRepository>(core::createRepository("nooprepository"));
   std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
   std::shared_ptr<core::ContentRepository> content_repo;
   SECTION("VolatileContentRepository") {

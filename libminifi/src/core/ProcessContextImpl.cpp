@@ -41,7 +41,7 @@ class StandardProcessorInfo : public ProcessorInfo {
 }  // namespace
 
 ProcessContextImpl::ProcessContextImpl(
-    Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::StateStorage>& state_storage, const std::shared_ptr<core::Repository>& repo,
+    Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::StateStorage>& state_storage, const std::shared_ptr<provenance::ProvenanceRepository>& repo,
     const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<core::ContentRepository>& content_repo)
     : VariableRegistryImpl(static_cast<std::shared_ptr<Configure>>(minifi::Configure::create())),
       logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
@@ -55,7 +55,7 @@ ProcessContextImpl::ProcessContextImpl(
       info_(std::make_unique<StandardProcessorInfo>(processor)) {}
 
 ProcessContextImpl::ProcessContextImpl(
-    Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::StateStorage>& state_storage, const std::shared_ptr<core::Repository>& repo,
+    Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::StateStorage>& state_storage, const std::shared_ptr<provenance::ProvenanceRepository>& repo,
     const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<minifi::Configure>& configuration,
     const std::shared_ptr<core::ContentRepository>& content_repo)
     : VariableRegistryImpl(configuration),
