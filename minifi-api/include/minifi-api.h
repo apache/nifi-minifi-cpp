@@ -24,15 +24,7 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdint.h>
-#if __STDC_VERSION__ < 202311l
-#include <stdbool.h>
-#endif  // < C23
-
-#define MINIFI_PRIVATE_STRINGIFY_HELPER(X) #X
-#define MINIFI_PRIVATE_STRINGIFY(X) MINIFI_PRIVATE_STRINGIFY_HELPER(X)
-
-#define MINIFI_PRIVATE_JOIN_HELPER(X, Y) X##_##Y
-#define MINIFI_PRIVATE_JOIN(X, Y) MINIFI_PRIVATE_JOIN_HELPER(X, Y)
+// This API targets C23. This header will fail to build with older language versions.
 
 #define MINIFI_OWNED
 #define MINIFI_NULLABLE
@@ -46,7 +38,8 @@ extern "C" {
 #define MINIFI_SSL_CONTEXT_SERVICE_INTERFACE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.SSLContextServiceInterface"
 
 /// To declare a processor property that expects an ProxyConfigurationService,
-/// use MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE in the type field of the property definition (minifi_property_definition::allowed_type)
+/// use MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE in the type field of the property definition
+/// (minifi_property_definition::allowed_type)
 #define MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
 
 enum : uint32_t {
@@ -202,7 +195,7 @@ struct minifi_processor_definition {
 };
 
 struct minifi_controller_service_definition {
-  struct minifi_string_view full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService
+  struct minifi_string_view full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::processors::GetFile
   struct minifi_string_view description;
   size_t properties_count;
   const struct minifi_property_definition* properties_ptr;
