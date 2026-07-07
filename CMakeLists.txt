@@ -742,15 +742,16 @@ endif()
 
 cpack_add_component_group(extensions DISPLAY_NAME "Extensions" EXPANDED)
 set(EXTENSIONS_ENABLED_BY_DEFAULT (
+    minifi-archive-extensions
     minifi-aws
     minifi-azure
     minifi-civet-extensions
     minifi-elasticsearch
     minifi-gcp
     minifi-grafana-loki
-    minifi-archive-extensions
-    minifi-mqtt-extensions
     minifi-kafka
+    minifi-lmdb
+    minifi-mqtt-extensions
     minifi-pdh
     minifi-prometheus
     minifi-rocksdb-repos
