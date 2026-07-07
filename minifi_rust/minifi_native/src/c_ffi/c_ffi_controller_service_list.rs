@@ -4,8 +4,7 @@ use minifi_native_sys::minifi_controller_service_definition;
 
 pub struct CffiControllerServiceList {
     controller_service_definitions: Vec<Box<dyn DynRawControllerServiceDefinition>>,
-    minifi_controller_service_class_description_list:
-        Vec<minifi_controller_service_definition>,
+    minifi_controller_service_class_description_list: Vec<minifi_controller_service_definition>,
 }
 
 impl Default for CffiControllerServiceList {
@@ -55,9 +54,7 @@ impl CffiControllerServiceList {
     ///
     /// The returned *minifi_controller_service_definition only valid until self lives
     /// TODO(mzink) maybe some lifetimes?
-    pub unsafe fn get_controller_service_ptr(
-        &self,
-    ) -> *const minifi_controller_service_definition {
+    pub unsafe fn get_controller_service_ptr(&self) -> *const minifi_controller_service_definition {
         self.minifi_controller_service_class_description_list
             .as_ptr()
     }

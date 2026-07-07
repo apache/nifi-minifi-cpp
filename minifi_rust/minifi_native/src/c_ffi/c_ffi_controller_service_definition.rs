@@ -7,8 +7,8 @@ use crate::{
     LogLevel, Property, ProvidedInterface,
 };
 use minifi_native_sys::{
-    minifi_controller_service_callbacks, minifi_controller_service_definition,
-    minifi_controller_service_context, minifi_controller_service_metadata, minifi_status,
+    minifi_controller_service_callbacks, minifi_controller_service_context,
+    minifi_controller_service_definition, minifi_controller_service_metadata, minifi_status,
     minifi_string_view,
 };
 use std::ffi::c_void;
