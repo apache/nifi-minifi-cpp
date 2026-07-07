@@ -576,7 +576,7 @@ jobs:
           path: build
       - name: Load Docker image
         run: |
-          docker load --input ./build/minifi_docker.tar && docker tag apacheminificpp:1.0.0 apacheminificpp:behave
+          docker load --input ./build/minifi_docker.tar | awk '{print $NF}' | xargs -I {} docker tag {} apacheminificpp:behave
       - id: install_deps
         name: Install dependencies for Docker Verify
         run: |
