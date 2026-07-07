@@ -603,7 +603,7 @@ jobs:
           name: minifi_rs_behave
           path: minifi_rust/minifi_rs_behave/output
   linters:
-    name: "C++ lint + Shellcheck + Flake8 + Cargo check"
+    name: "C++ lint + Shellcheck + Flake8 + Cargo fmt check + Clippy check"
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 15
     steps:
@@ -628,8 +628,8 @@ jobs:
         continue-on-error: true
         run: ./run_flake8.sh .
 
-      - id: cargo_check
-        name: Cargo check
+      - id: cargo_fmt_check
+        name: Cargo fmt check
         continue-on-error: true
         run: cargo fmt --all --check
         working-directory: minifi_rust
@@ -641,7 +641,7 @@ jobs:
         working-directory: minifi_rust
 
       - name: Check Linter Statuses
-        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.flake8_check.outcome == 'failure' || steps.cargo_check.outcome == 'failure' || steps.clippy_check.outcome == 'failure'
+        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.flake8_check.outcome == 'failure' || steps.cargo_fmt_check.outcome == 'failure' || steps.clippy_check.outcome == 'failure'
         run: |
           echo "One or more linters failed. Failing the workflow."
           exit 1
