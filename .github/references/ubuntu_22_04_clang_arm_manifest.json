@@ -11929,6 +11929,23 @@
             },
             {
                 "propertyDescriptors": {
+                    "Length": {
+                        "name": "Length",
+                        "description": "How many words to generate",
+                        "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "25"
+                    }
+                },
+                "typeDescription": "Simple Rusty Controller Service to test API",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.controller_services.lorem_ipsum_controller_service.LoremIpsumControllerService"
+            },
+            {
+                "propertyDescriptors": {
                     "Default Prioritizer": {
                         "name": "Default Prioritizer",
                         "description": "DEPRECATED, does not do anything",
