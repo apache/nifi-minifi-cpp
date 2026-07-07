@@ -211,7 +211,7 @@ fn main() {
 
     let bindings = bindgen::Builder::default()
         .header(sdk.header_path.to_str().unwrap())
-        .clang_arg("-std=c23")
+        .clang_arg("-std=c2x")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate bindings");
