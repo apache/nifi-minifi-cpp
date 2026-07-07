@@ -18,6 +18,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <string_view>
 
 #include "core/extension/Extension.h"
 #include "minifi-api.h"
