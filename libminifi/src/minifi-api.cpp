@@ -418,9 +418,9 @@ void minifi_config_get(minifi_extension_context* extension_context, minifi_strin
   }
 }
 
-void minifi_logger_log_string(minifi_logger* logger, minifi_log_level level, minifi_string_view msg) {
+void minifi_logger_log_string(minifi_logger* logger, minifi_log_level level, minifi_string_view message) {
   gsl_Assert(logger);
-  (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->log_string(toLogLevel(level), toString(msg));
+  (*reinterpret_cast<std::shared_ptr<minifi::core::logging::Logger>*>(logger))->log_string(toLogLevel(level), toString(message));
 }
 
 bool minifi_logger_should_log(minifi_logger* logger, minifi_log_level level) {
