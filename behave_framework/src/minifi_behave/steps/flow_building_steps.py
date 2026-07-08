@@ -41,6 +41,8 @@ def transient_flow_with_logondestructionprocessor(context: MinifiTestContext):
 
 
 @given(
+    'an {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"')
+@given(
     'a {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"')
 def processor_with_name_and_property(context: MinifiTestContext, processor_type: str, processor_name: str, property_name: str,
                                      property_value: str):
@@ -49,12 +51,14 @@ def processor_with_name_and_property(context: MinifiTestContext, processor_type:
     context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
+@step('an {processor_type} processor with the "{property_name}" property set to "{property_value}"')
 @step('a {processor_type} processor with the "{property_name}" property set to "{property_value}"')
 def processor_with_property(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str):
     context.execute_steps(
         f'Given a {processor_type} processor with the name "{processor_type}" and the "{property_name}" property set to "{property_value}"')
 
 
+@step('an {processor_type} processor with the "{property_name}" property set to "{property_value}" in the "{minifi_container_name}" flow')
 @step('a {processor_type} processor with the "{property_name}" property set to "{property_value}" in the "{minifi_container_name}" flow')
 def processor_with_property_in_minifi_flow(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str, minifi_container_name: str):
     processor = Processor(processor_type, processor_type)
@@ -62,6 +66,7 @@ def processor_with_property_in_minifi_flow(context: MinifiTestContext, processor
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
 
+@step('an {processor_type} processor with the "{property_name}" property set to "{property_value}" in the NiFi flow')
 @step('a {processor_type} processor with the "{property_name}" property set to "{property_value}" in the NiFi flow')
 def processor_with_property_in_nifi_flow(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str):
     processor = Processor(processor_type, processor_type)
@@ -69,30 +74,35 @@ def processor_with_property_in_nifi_flow(context: MinifiTestContext, processor_t
     context.containers["nifi"].flow_definition.add_processor(processor)
 
 
+@given('an {processor_type} processor with the name "{processor_name}" in the "{minifi_container_name}" flow')
 @given('a {processor_type} processor with the name "{processor_name}" in the "{minifi_container_name}" flow')
 def processor_with_name_in_minifi_flow(context: MinifiTestContext, processor_type: str, processor_name: str, minifi_container_name: str):
     processor = Processor(processor_type, processor_name)
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
 
+@given('an {processor_type} processor with the name "{processor_name}"')
 @given('a {processor_type} processor with the name "{processor_name}"')
 def processor_with_name(context: MinifiTestContext, processor_type: str, processor_name: str):
     context.execute_steps(
         f'given a {processor_type} processor with the name "{processor_name}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 
+@given("an {processor_type} processor in the \"{minifi_container_name}\" flow")
 @given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
 def processor_in_minifi_flow(context: MinifiTestContext, processor_type: str, minifi_container_name: str):
     processor = Processor(processor_type, processor_type)
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
 
+@given("an {processor_type} processor in the NiFi flow")
 @given("a {processor_type} processor in the NiFi flow")
 def processor_in_nifi_flow(context: MinifiTestContext, processor_type: str):
     processor = Processor(processor_type, processor_type)
     context.containers["nifi"].flow_definition.add_processor(processor)
 
 
+@given("an {processor_type} processor")
 @given("a {processor_type} processor")
 def processor_setup(context: MinifiTestContext, processor_type: str):
     context.execute_steps(f'given a {processor_type} processor in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
