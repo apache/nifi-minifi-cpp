@@ -1,4 +1,4 @@
-FROM rust:slim-bullseye AS chef
+FROM rust:slim-bookworm AS chef
 RUN apt-get update && apt-get install -y clang lld pkg-config curl tar && cargo install cargo-chef
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY target/.docker_sdk.zi[p] /app/target/
 
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
-RUN cargo build --release
+RUN cargo build --release --all-features
 
 # Export Stage
 FROM scratch AS bin-export
