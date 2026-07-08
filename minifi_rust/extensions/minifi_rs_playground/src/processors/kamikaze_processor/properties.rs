@@ -16,8 +16,7 @@
 // under the License.
 
 use crate::processors::kamikaze_processor::KamikazeBehaviour;
-use minifi_native::{Property, StandardPropertyValidator};
-use strum::VariantNames;
+use minifi_native::{Property, property_constraint};
 
 pub(crate) const SCHEDULE_BEHAVIOUR: Property = Property {
     name: "Schedule Behaviour",
@@ -26,9 +25,7 @@ pub(crate) const SCHEDULE_BEHAVIOUR: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: Some(KamikazeBehaviour::ReturnOk.into_str()),
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: KamikazeBehaviour::VARIANTS,
-    allowed_type: None,
+    constraints: property_constraint::<KamikazeBehaviour>(),
 };
 
 pub(crate) const TRIGGER_BEHAVIOUR: Property = Property {
@@ -38,9 +35,7 @@ pub(crate) const TRIGGER_BEHAVIOUR: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: Some(KamikazeBehaviour::ReturnOk.into_str()),
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: KamikazeBehaviour::VARIANTS,
-    allowed_type: None,
+    constraints: property_constraint::<KamikazeBehaviour>(),
 };
 
 pub(crate) const NOT_REGISTERED_PROPERTY: Property = Property {
@@ -50,7 +45,5 @@ pub(crate) const NOT_REGISTERED_PROPERTY: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: None,
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &[],
-    allowed_type: None,
+    constraints: None,
 };

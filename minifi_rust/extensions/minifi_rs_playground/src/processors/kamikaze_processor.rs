@@ -21,15 +21,19 @@ mod properties;
 mod relationships;
 
 use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;
-use crate::processors::kamikaze_processor::properties::NOT_REGISTERED_PROPERTY;
-use minifi_native::macros::ComponentIdentifier;
+use crate::processors::kamikaze_processor::properties::{
+    NOT_REGISTERED_PROPERTY, SCHEDULE_BEHAVIOUR, TRIGGER_BEHAVIOUR,
+};
+use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
     Trigger,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
-#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr, PropertyType,
+)]
 #[strum(serialize_all = "PascalCase", const_into_str)]
 enum KamikazeBehaviour {
     ReturnErr,
@@ -49,15 +53,11 @@ impl Schedule for KamikazeProcessorRs {
     where
         Self: Sized,
     {
-        let trigger_behaviour = context
-            .get_property(&properties::TRIGGER_BEHAVIOUR)?
-            .expect("required property")
-            .parse::<KamikazeBehaviour>()?;
+        let trigger_behaviour =
+            context.get_req_property::<KamikazeBehaviour>(&TRIGGER_BEHAVIOUR)?;
 
-        let schedule_behaviour = context
-            .get_property(&properties::SCHEDULE_BEHAVIOUR)?
-            .expect("required property")
-            .parse::<KamikazeBehaviour>()?;
+        let schedule_behaviour =
+            context.get_req_property::<KamikazeBehaviour>(&SCHEDULE_BEHAVIOUR)?;
 
         match schedule_behaviour {
             KamikazeBehaviour::ReturnErr => Err(MinifiError::schedule_err(
@@ -65,7 +65,7 @@ impl Schedule for KamikazeProcessorRs {
             )),
             KamikazeBehaviour::ReturnOk => Ok(KamikazeProcessorRs { trigger_behaviour }),
             KamikazeBehaviour::GetNotRegisteredProperty => {
-                let _ = context.get_property(&NOT_REGISTERED_PROPERTY)?;
+                let _ = context.get_property::<String>(&NOT_REGISTERED_PROPERTY)?;
                 Ok(KamikazeProcessorRs { trigger_behaviour })
             }
             KamikazeBehaviour::Panic => {

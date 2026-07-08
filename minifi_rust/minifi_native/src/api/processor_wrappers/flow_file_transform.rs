@@ -67,6 +67,19 @@ impl<'a> TransformedFlowFile<'a> {
     pub fn attributes_to_add(&self) -> &HashMap<String, String> {
         &self.attributes_to_add
     }
+
+    #[cfg(any(test, feature = "test-utils"))]
+    pub fn into_bytes(self) -> std::io::Result<Option<Vec<u8>>> {
+        match self.new_content {
+            Some(Content::Buffer(vec)) => Ok(Some(vec)),
+            Some(Content::Stream(mut stream)) => {
+                let mut buffer = Vec::new();
+                stream.read_to_end(&mut buffer)?;
+                Ok(Some(buffer))
+            }
+            None => Ok(None),
+        }
+    }
 }
 
 pub trait FlowFileTransform {
@@ -199,4 +212,43 @@ where
             ))
         }
     }
+}
+
+#[macro_export]
+macro_rules! unwrap_or_route {
+    ($result:expr, $route:expr) => {
+        match $result {
+            Ok(v) => v,
+            Err(_e) => {
+                return Ok(TransformedFlowFile::route_without_changes($route));
+            }
+        }
+    };
+
+    ($result:expr, $route:expr, $custom_logger:expr) => {
+        match $result {
+            Ok(v) => v,
+            Err(e) => {
+                minifi_native::error!(
+                    $custom_logger,
+                    "Failed to unwrap due to {}. Routing flow file.",
+                    e
+                );
+                return Ok(TransformedFlowFile::route_without_changes($route));
+            }
+        }
+    };
+
+    ($result:expr, $route:expr, $custom_logger:expr, $context:expr) => {
+        match $result {
+            Ok(v) => v,
+            Err(e) => {
+                error!(
+                    $custom_logger,
+                    "Failed to {} due to {}. Routing flow file.", $context, e
+                );
+                return Ok(TransformedFlowFile::route_without_changes($route));
+            }
+        }
+    };
 }

@@ -61,7 +61,7 @@ unsafe extern "C" fn property_callback(
 }
 
 impl<'a> GetProperty for CffiControllerServiceContext<'a> {
-    fn get_property(&self, property: &Property) -> Result<Option<String>, MinifiError> {
+    fn get_raw_property(&self, property: &Property) -> Result<Option<String>, MinifiError> {
         let mut result: Option<String> = None;
         let property_name: StringView = StringView::new(property.name);
 

@@ -25,4 +25,8 @@ pub struct OutputAttribute {
 
 pub trait GetAttribute {
     fn get_attribute(&self, name: &str) -> Result<Option<String>, MinifiError>;
+    fn get_required_attribute(&self, name: &str) -> Result<String, MinifiError> {
+        self.get_attribute(name)?
+            .ok_or(MinifiError::missing_required_attribute(name.to_owned()))
+    }
 }

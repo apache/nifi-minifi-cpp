@@ -21,7 +21,7 @@ mod properties;
 use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;
 use crate::processors::lorem_ipsum_cs_user::properties::CONTROLLER_SERVICE;
 use crate::processors::lorem_ipsum_cs_user::relationships::SUCCESS;
-use minifi_native::macros::ComponentIdentifier;
+use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     Content, FlowFileSource, GeneratedFlowFile, GetControllerService, GetProperty, Logger,
     MinifiError, Schedule, trace,
@@ -29,7 +29,9 @@ use minifi_native::{
 use std::collections::HashMap;
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
-#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr, PropertyType,
+)]
 #[strum(serialize_all = "PascalCase", const_into_str)]
 enum WriteMethod {
     Buffer,
@@ -46,10 +48,7 @@ impl Schedule for LoremIpsumCSUser {
     where
         Self: Sized,
     {
-        let write_method = context
-            .get_property(&properties::WRITE_METHOD)?
-            .expect("required property")
-            .parse::<WriteMethod>()?;
+        let write_method = context.get_req_property::<WriteMethod>(&properties::WRITE_METHOD)?;
         Ok(Self { write_method })
     }
 }

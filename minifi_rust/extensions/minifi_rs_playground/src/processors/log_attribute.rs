@@ -121,25 +121,15 @@ impl Trigger for LogAttributeRs {
 
 impl Schedule for LogAttributeRs {
     fn schedule<P: GetProperty, L>(context: &P, _logger: &L) -> Result<Self, MinifiError> {
-        let log_level = context
-            .get_property(&LOG_LEVEL)?
-            .expect("required property")
-            .parse::<LogLevel>()?;
-
-        let log_payload = context
-            .get_bool_property(&LOG_PAYLOAD)?
-            .expect("required property");
-
-        let flow_files_to_log = context
-            .get_property(&FLOW_FILES_TO_LOG)?
-            .expect("required property")
-            .parse::<usize>()?;
+        let log_level = context.get_req_property::<LogLevel>(&LOG_LEVEL)?;
+        let log_payload = context.get_req_property::<bool>(&LOG_PAYLOAD)?;
+        let flow_files_to_log = context.get_req_property::<usize>(&FLOW_FILES_TO_LOG)?;
 
         fn get_csv_property<P: GetProperty>(
             context: &P,
             property: &Property,
         ) -> Result<Option<Vec<String>>, MinifiError> {
-            Ok(context.get_property(property)?.map(|s| {
+            Ok(context.get_property::<String>(property)?.map(|s| {
                 s.split(',')
                     .map(|s| s.trim().to_string())
                     .collect::<Vec<String>>()
@@ -152,13 +142,12 @@ impl Schedule for LogAttributeRs {
         let dash_line = format!(
             "{:-^50}",
             context
-                .get_property(&properties::LOG_PREFIX)?
-                .unwrap_or(String::new())
+                .get_property::<String>(&properties::LOG_PREFIX)?
+                .unwrap_or_default()
         );
 
-        let hex_encode_payload = context
-            .get_bool_property(&properties::HEX_ENCODE_PAYLOAD)?
-            .expect("required property");
+        let hex_encode_payload =
+            context.get_req_property::<bool>(&properties::HEX_ENCODE_PAYLOAD)?;
 
         Ok(LogAttributeRs {
             log_level,
