@@ -83,10 +83,10 @@ macro_rules! declare_minifi_extension {
     (
         // Group name
         group_name: $group:expr,
-        // Match a tuple of three types for each processor
-        processors: [ $( ($kind:ty, $thread:ty, $impl:ty) ),* $(,)? ],
-        // Match a single type for each controller service
-        controllers: [ $( $ctrl:ty ),* $(,)? ]
+        // Match a tuple of three types for each processor, WITH optional attributes
+        processors: [ $( $(#[$proc_meta:meta])* ($kind:ty, $thread:ty, $impl:ty) ),* $(,)? ],
+        // Match a single type for each controller service, WITH optional attributes
+        controllers: [ $( $(#[$ctrl_meta:meta])* $ctrl:ty ),* $(,)? ]
     ) => {
 
         #[unsafe(no_mangle)]
@@ -108,8 +108,9 @@ macro_rules! declare_minifi_extension {
 
                 let extension = minifi_native::sys::minifi_register_extension(extension_context, &extension_definition);
 
-
                 $(
+                    // Re-apply the captured attributes (e.g., #[cfg(...)]) to this block
+                    $(#[$proc_meta])*
                     {
                         let processor_def = minifi_native::Processor::<
                                 $impl,
@@ -125,6 +126,8 @@ macro_rules! declare_minifi_extension {
                 )*
 
                 $(
+                    // Re-apply the captured attributes to this block
+                    $(#[$ctrl_meta])*
                     {
                         let controller_def =
                             minifi_native::ControllerService::<
