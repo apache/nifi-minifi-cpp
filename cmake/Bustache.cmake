@@ -21,9 +21,9 @@ include(GetFmt)
 
 set(BUSTACHE_USE_FMT ON CACHE STRING "" FORCE)
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/add-append.patch")
-set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/fix-deprecated-literal-operator.patch")
-set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/remove_installs.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/all/patches/add-append.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/all/patches/fix-deprecated-literal-operator.patch")
+set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/bustache/all/patches/remove_installs.patch")
 
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
             (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\

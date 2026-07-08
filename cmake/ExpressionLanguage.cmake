@@ -16,45 +16,7 @@
 # under the License.
 
 if(WIN32)
-    include(FetchContent)
-
-    set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-
-    set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/winflexbison/minimum_cmake_version.patch")
-
-    set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-            (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
-
-    FetchContent_Declare(
-        winflexbison
-        URL "https://github.com/lexxmark/winflexbison/archive/refs/tags/v2.5.25.tar.gz"
-        URL_HASH "SHA256=8e1b71e037b524ba3f576babb0cf59182061df1f19cd86112f085a882560f60b"
-        PATCH_COMMAND "${PC}"
-        SYSTEM
-    )
-    FetchContent_GetProperties("winflexbison")
-
-    if(NOT winflexbison_POPULATED)
-        FetchContent_Populate("winflexbison")
-        execute_process(
-            COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release .
-            WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
-            COMMAND_ERROR_IS_FATAL ANY
-        )
-
-        execute_process(
-            COMMAND ${CMAKE_COMMAND} --build . --config Release
-            WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
-            COMMAND_ERROR_IS_FATAL ANY
-        )
-    endif()
-
-    set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/bin/Release/win_bison.exe" CACHE PATH "bison executable")
-    set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/bin/Release/win_flex.exe" CACHE PATH "flex executable")
-
-    include_directories(${winflexbison_SOURCE_DIR}/flex/src/)
-
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/winflexbison")
+    include(GetWinFlexBison)
 endif()
 
 # On macOS brew installed bison and flex are preferred

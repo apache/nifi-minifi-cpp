@@ -28,8 +28,8 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
 
 FetchContent_Declare(
         absl
-        URL      https://github.com/abseil/abseil-cpp/archive/refs/tags/20260107.1.tar.gz
-        URL_HASH SHA256=4314e2a7cbac89cac25a2f2322870f343d81579756ceff7f431803c2c9090195
+        URL      https://github.com/abseil/abseil-cpp/archive/refs/tags/20260526.0.tar.gz
+        URL_HASH SHA256=6e1aee535473414164bf83e4ebc40240dec71a4701f8a642d906e95bea1aea0c
         PATCH_COMMAND "${PC}"
         OVERRIDE_FIND_PACKAGE
         SYSTEM

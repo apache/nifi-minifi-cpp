@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
 file(GLOB GCS_TESTS  "*.cpp")
 FOREACH(testfile ${GCS_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
@@ -30,13 +31,17 @@ FOREACH(testfile ${GCS_TESTS})
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/gcp")
 
-    target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_INCLUDE_DIRS})
-    target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_SOURCE_DIR}/googletest/include)
-    target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_SOURCE_DIR}/googlemock/include)
+    if(MINIFI_GCP_SOURCE STREQUAL "BUILD")
+        target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_INCLUDE_DIRS})
+        target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_SOURCE_DIR}/googletest/include)
+        target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE ${googletest_SOURCE_DIR}/googlemock/include)
+    endif()
+
+    target_link_libraries(${testfilename} ${MINIFI_GCP_TEST_GTEST_LIBRARIES})
+
     createTests("${testfilename}")
 
     target_link_libraries(${testfilename} minifi-gcp)
-    target_link_libraries(${testfilename} gtest_main gmock)
     target_link_libraries(${testfilename} libminifi-c-unittest)
 
     gtest_add_tests(TARGET "${testfilename}")

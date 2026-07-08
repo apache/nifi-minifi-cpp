@@ -46,20 +46,18 @@ set(BUILD_TESTING OFF CACHE INTERNAL "")
 set(BUILD_SAMPLES OFF CACHE INTERNAL "")
 set(DISABLE_AMQP ON CACHE INTERNAL "")
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/azure-sdk-cpp/wil.patch")
-set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/azure-sdk-cpp/fix-openssl-helper.patch")
-set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/azure-sdk-cpp/fix-managed-identity.patch")
-set(PATCH_FILE_4 "${CMAKE_SOURCE_DIR}/thirdparty/azure-sdk-cpp/include-cinttypes-for-uint8_t-gcc15-fix.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/azure-sdk-cpp/all/patches/wil.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/azure-sdk-cpp/all/patches/fix-openssl-helper.patch")
+set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/azure-sdk-cpp/all/patches/include-cinttypes-for-uint8_t-gcc15-fix.patch")
 
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\") &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_3}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_3}\\\") &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_4}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_4}\\\")")
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_3}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_3}\\\")")
 
 FetchContent_Declare(asdkext
-    URL https://github.com/Azure/azure-sdk-for-cpp/archive/refs/tags/azure-storage-queues_12.7.0.tar.gz
-    URL_HASH "SHA256=a2d52cf30a36c1000cd6ee87fa60d5e3aa8d5b01a1716e5bc684dd5a507d76d5"
+    URL https://github.com/Azure/azure-sdk-for-cpp/archive/refs/tags/azure-storage-blobs_12.18.0.tar.gz
+    URL_HASH "SHA256=0f266f91cf00b79bb6c7c6f99e44942b43a7141db565556a4298f6ebe3a86fcc"
     PATCH_COMMAND "${PC}"
     SYSTEM
 )

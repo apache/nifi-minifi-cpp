@@ -21,7 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_AZURE))
     return()
 endif()
 
-include(AzureSdkCpp)
+include(GetAzureSdkCpp)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 

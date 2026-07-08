@@ -20,8 +20,8 @@ set(protobuf_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     protobuf
-    URL      https://github.com/protocolbuffers/protobuf/archive/refs/tags/v34.1.tar.gz
-    URL_HASH SHA256=a83103b7ed3afaeedee9a212c8f65825444f58144f5e075b73c83f2b4ff27b62
+    URL      https://github.com/protocolbuffers/protobuf/archive/refs/tags/v35.0.tar.gz
+    URL_HASH SHA256=e127ea69dd7be4e88abdd95845fb6c30d25d96971d95827e92b70e2e910d46a1
 )
 FetchContent_MakeAvailable(protobuf)
 
