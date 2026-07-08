@@ -31,7 +31,8 @@ pub trait ProcessorDefinition {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute];
     const RELATIONSHIPS: &'static [Relationship];
-    const PROPERTIES: &'static [PropertyDefinition];
+    /// fn to allow concatenation for complex processors
+    fn properties() -> &'static [PropertyDefinition];
 }
 
 pub trait ControllerServiceDefinition: Sized + 'static {

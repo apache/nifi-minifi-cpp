@@ -28,8 +28,9 @@ impl ProcessorDefinition for KamikazeProcessorRs {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[relationships::SUCCESS];
-    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
-        properties::SCHEDULE_BEHAVIOUR,
-        properties::TRIGGER_BEHAVIOUR
-    ];
+    fn properties() -> &'static [PropertyDefinition] {
+        const PROPERTIES: &[PropertyDefinition] =
+            property_definitions![SCHEDULE_BEHAVIOUR, TRIGGER_BEHAVIOUR];
+        PROPERTIES
+    }
 }
