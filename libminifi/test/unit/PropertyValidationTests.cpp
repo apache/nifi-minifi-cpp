@@ -224,4 +224,16 @@ TEST_CASE("TimePeriodValue Property") {
   CHECK(component.setProperty(property.getName(), "20").error() == core::PropertyErrorCode::ValidationFailed);
 }
 
+TEST_CASE("Number validator") {
+  static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop").withValidator(core::StandardPropertyValidators::NUMBER_VALIDATOR).build();
+  const Property property{property_definition};
+  TestConfigurableComponent component;
+  component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
+  CHECK(component.setProperty(property.getName(), "20"));
+  CHECK(component.setProperty(property.getName(), "3.14"));
+  CHECK(component.setProperty(property.getName(), "0.0000000001"));
+  CHECK_FALSE(component.setProperty(property.getName(), "10 000"));
+  CHECK_FALSE(component.setProperty(property.getName(), "20 apples"));
+}
+
 }  // namespace org::apache::nifi::minifi::core

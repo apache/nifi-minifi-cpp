@@ -134,7 +134,7 @@ inline std::optional<float> parseOptionalFloatProperty(const core::ProcessContex
     if (property_str->empty()) {
       return std::nullopt;
     }
-    return parsing::parseFloat(*property_str)
+    return parsing::parseFloatingPoint<float>(*property_str)
         | minifi::utils::orThrow(fmt::format("Expected parsable float from \"{}\"", property.name));
   }
   return std::nullopt;

@@ -88,6 +88,7 @@ gsl::not_null<const minifi::core::PropertyValidator*> toPropertyValidator(minifi
     case MINIFI_VALIDATOR_UNSIGNED_INTEGER: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR);
     case MINIFI_VALIDATOR_DATA_SIZE: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::DATA_SIZE_VALIDATOR);
     case MINIFI_VALIDATOR_PORT: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::PORT_VALIDATOR);
+    case MINIFI_VALIDATOR_NUMBER: return gsl::make_not_null(&minifi::core::StandardPropertyValidators::NUMBER_VALIDATOR);
   }
   gsl_FailFast();
 }

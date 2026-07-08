@@ -55,6 +55,18 @@ inline int64_t parseI64Property(const core::ProcessContext& ctx, const core::Pro
       | orThrow(fmt::format("Expected parsable int64_t from \"{}\"", property.name));
 }
 
+inline double parsef64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file)
+  | andThen(parsing::parseFloatingPoint<double>)
+  | orThrow(fmt::format("Expected parsable double from \"{}\"", property.name));
+}
+
+inline double parsef32Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+  return ctx.getProperty(property.name, flow_file)
+  | andThen(parsing::parseFloatingPoint<float>)
+  | orThrow(fmt::format("Expected parsable float from \"{}\"", property.name));
+}
+
 inline std::chrono::milliseconds parseDurationProperty(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
       | andThen(parsing::parseDuration<std::chrono::milliseconds>)
@@ -133,7 +145,7 @@ inline std::optional<float> parseOptionalFloatProperty(const core::ProcessContex
     if (property_str->empty()) {
       return std::nullopt;
     }
-    return parsing::parseFloat(*property_str)
+    return parsing::parseFloatingPoint<float>(*property_str)
         | utils::orThrow(fmt::format("Expected parsable float from \"{}\"", property.name));
   }
   return std::nullopt;

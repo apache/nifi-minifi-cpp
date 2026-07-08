@@ -119,6 +119,7 @@ enum minifi_validator : uint32_t {
   MINIFI_VALIDATOR_UNSIGNED_INTEGER = 5,
   MINIFI_VALIDATOR_DATA_SIZE = 6,
   MINIFI_VALIDATOR_PORT = 7,
+  MINIFI_VALIDATOR_NUMBER = 8,
 };
 
 struct minifi_property_definition {
