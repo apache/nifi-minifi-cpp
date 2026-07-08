@@ -26,8 +26,8 @@ use crate::processors::get_file::properties::{
 };
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
-    Schedule, Trigger, debug, info, trace, warn,
+    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessError,
+    ProcessSession, Schedule, Trigger, debug, info, trace, warn,
 };
 use std::collections::VecDeque;
 use std::error;
@@ -225,7 +225,7 @@ impl Schedule for GetFileRs {
     {
         let input_directory = context.get_property(&DIRECTORY)?;
         if !input_directory.is_dir() {
-            return Err(MinifiError::schedule_err(format!(
+            return Err(MinifiError::custom(format!(
                 "{:?} is not a valid directory",
                 input_directory
             )));
@@ -269,7 +269,7 @@ impl Trigger for GetFileRs {
         context: &mut PC,
         session: &mut PS,
         logger: &L,
-    ) -> Result<OnTriggerResult, MinifiError>
+    ) -> Result<OnTriggerResult, ProcessError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,

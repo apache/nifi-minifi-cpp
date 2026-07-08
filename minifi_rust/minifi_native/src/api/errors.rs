@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use minifi_native::{LogLevel, Relationship};
 use minifi_native_sys::minifi_status;
 use std::borrow::Cow;
 use std::error::Error;
@@ -36,18 +37,142 @@ pub enum ParseError {
 }
 
 #[derive(Debug)]
+pub struct RouteError {
+    pub relationship: Cow<'static, str>,
+    pub source: Box<dyn Error + Send + Sync + 'static>,
+    pub log_level: LogLevel,
+}
+
+impl RouteError {
+    pub(crate) fn log<L: crate::Logger>(&self, logger: &L) {
+        logger.log(
+            self.log_level,
+            format_args!(
+                "Routing flow file to '{}': {}",
+                self.relationship, self.source
+            ),
+        );
+    }
+}
+
+impl fmt::Display for RouteError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "route to '{}' due to: {}",
+            self.relationship, self.source
+        )
+    }
+}
+
+impl Error for RouteError {}
+
+#[derive(Debug)]
+pub enum ProcessError {
+    Route(RouteError),
+    Fatal(MinifiError),
+}
+
+impl From<RouteError> for ProcessError {
+    fn from(err: RouteError) -> Self {
+        ProcessError::Route(err)
+    }
+}
+
+impl From<MinifiError> for ProcessError {
+    fn from(err: MinifiError) -> Self {
+        ProcessError::Fatal(err)
+    }
+}
+
+macro_rules! process_error_from_fatal {
+    ($($t:ty),* $(,)?) => {
+        $(
+            impl From<$t> for ProcessError {
+                fn from(err: $t) -> Self {
+                    ProcessError::Fatal(MinifiError::from(err))
+                }
+            }
+        )*
+    };
+}
+
+process_error_from_fatal!(
+    std::io::Error,
+    strum::ParseError,
+    ParseBoolError,
+    ParseIntError,
+    humantime::DurationError,
+    byte_unit::ParseError,
+    NulError,
+    ParseFloatError,
+    std::convert::Infallible,
+);
+
+impl fmt::Display for ProcessError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ProcessError::Route(err) => write!(f, "{}", err),
+            ProcessError::Fatal(err) => write!(f, "{}", err),
+        }
+    }
+}
+
+impl Error for ProcessError {}
+
+pub trait RouteErrorExt<T> {
+    fn route_err(self, rel: &Relationship, level: LogLevel) -> Result<T, ProcessError>;
+
+    fn route_to<S: Into<Cow<'static, str>>>(
+        self,
+        relationship: S,
+        level: LogLevel,
+    ) -> Result<T, ProcessError>;
+
+    fn route_err_to_failure(self) -> Result<T, ProcessError>;
+}
+
+impl<T, E> RouteErrorExt<T> for Result<T, E>
+where
+    E: Into<Box<dyn Error + Send + Sync + 'static>>,
+{
+    fn route_err(self, rel: &Relationship, level: LogLevel) -> Result<T, ProcessError> {
+        self.route_to(rel.name, level)
+    }
+
+    fn route_to<S: Into<Cow<'static, str>>>(
+        self,
+        relationship: S,
+        level: LogLevel,
+    ) -> Result<T, ProcessError> {
+        self.map_err(|e| {
+            ProcessError::Route(RouteError {
+                relationship: relationship.into(),
+                source: e.into(),
+                log_level: level,
+            })
+        })
+    }
+
+    fn route_err_to_failure(self) -> Result<T, ProcessError> {
+        self.route_to("failure", LogLevel::Warn)
+    }
+}
+
+#[derive(Debug)]
 pub enum MinifiError {
     UnknownError,
     StatusError((Cow<'static, str>, NonZeroU32)),
     MissingRequiredAttribute(Cow<'static, str>),
     MissingRequiredProperty(Cow<'static, str>),
-    ControllerServiceError(Cow<'static, str>),
+    UnscheduledProcessor,
     ValidationError(Cow<'static, str>),
-    ScheduleError(Cow<'static, str>),
-    TriggerError(Cow<'static, str>),
+    CustomError(Cow<'static, str>),
     Parse(ParseError),
     MissingFlowFileError,
     IoError(std::io::Error),
+
+    Other(Box<dyn Error + Send + Sync + 'static>),
 }
 
 impl From<std::io::Error> for MinifiError {
@@ -124,32 +249,23 @@ impl MinifiError {
         }
     }
 
-    pub fn validation_err<S: Into<Cow<'static, str>>>(msg: S) -> Self {
+    pub fn validation<S: Into<Cow<'static, str>>>(msg: S) -> Self {
         MinifiError::ValidationError(msg.into())
     }
 
-    pub fn schedule_err<S: Into<Cow<'static, str>>>(msg: S) -> Self {
-        MinifiError::ScheduleError(msg.into())
-    }
-
-    pub fn trigger_err<S: Into<Cow<'static, str>>>(msg: S) -> Self {
-        MinifiError::TriggerError(msg.into())
-    }
-
-    pub fn missing_required_property<S: Into<Cow<'static, str>>>(msg: S) -> Self {
-        MinifiError::MissingRequiredProperty(msg.into())
-    }
-
-    pub fn missing_required_attribute<S: Into<Cow<'static, str>>>(msg: S) -> Self {
-        MinifiError::MissingRequiredAttribute(msg.into())
-    }
-
-    pub fn controller_service_err<S: Into<Cow<'static, str>>>(msg: S) -> Self {
-        MinifiError::ControllerServiceError(msg.into())
+    pub fn custom<S: Into<Cow<'static, str>>>(msg: S) -> Self {
+        MinifiError::CustomError(msg.into())
     }
 
     pub fn parse_err() -> Self {
         MinifiError::Parse(ParseError::Other)
+    }
+
+    pub fn other<E>(err: E) -> Self
+    where
+        E: Into<Box<dyn Error + Send + Sync + 'static>>,
+    {
+        MinifiError::Other(err.into())
     }
 }
 
@@ -177,9 +293,75 @@ impl fmt::Display for MinifiError {
                 }
                 _ => write!(f, "{} (Unknown Status Code: {})", context, code),
             },
+            MinifiError::Other(err) => write!(f, "Custom error: {}", err),
             _ => write!(f, "{:?}", self),
         }
     }
 }
 
 impl Error for MinifiError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn io_err() -> std::io::Error {
+        std::io::Error::other("boom")
+    }
+
+    #[test]
+    fn route_err_to_failure_uses_warn() {
+        let res: Result<(), std::io::Error> = Err(io_err());
+        match res.route_err_to_failure() {
+            Err(ProcessError::Route(route)) => {
+                assert_eq!(route.relationship.as_ref(), "failure");
+                assert_eq!(route.log_level, LogLevel::Warn);
+                assert_eq!(route.source.to_string(), "boom");
+            }
+            other => panic!("expected a route error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn route_err_uses_the_relationships_name() {
+        const REJECT: Relationship = Relationship {
+            name: "reject",
+            description: "",
+        };
+        let res: Result<(), std::io::Error> = Err(io_err());
+        match res.route_err(&REJECT, LogLevel::Info) {
+            Err(ProcessError::Route(route)) => {
+                assert_eq!(route.relationship.as_ref(), "reject");
+                assert_eq!(route.log_level, LogLevel::Info);
+            }
+            other => panic!("expected a route error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn ok_values_pass_through_unchanged() {
+        let res: Result<u8, std::io::Error> = Ok(5);
+        assert_eq!(res.route_err_to_failure().unwrap(), 5);
+    }
+
+    #[test]
+    fn minifi_error_converts_to_fatal_via_from() {
+        let pe: ProcessError = MinifiError::custom("nope").into();
+        assert!(matches!(
+            pe,
+            ProcessError::Fatal(MinifiError::CustomError(_))
+        ));
+    }
+
+    #[test]
+    fn raw_error_question_mark_becomes_fatal() {
+        fn inner() -> Result<(), ProcessError> {
+            Err(io_err())?;
+            Ok(())
+        }
+        assert!(matches!(
+            inner(),
+            Err(ProcessError::Fatal(MinifiError::IoError(_)))
+        ));
+    }
+}

@@ -25,8 +25,8 @@ use crate::processors::kamikaze_processor::properties::{
 };
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
-    Trigger,
+    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessError,
+    ProcessSession, Schedule, Trigger,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
@@ -57,7 +57,7 @@ impl Schedule for KamikazeProcessorRs {
         let schedule_behaviour = context.get_property(&SCHEDULE_BEHAVIOUR)?;
 
         match schedule_behaviour {
-            KamikazeBehaviour::ReturnErr => Err(MinifiError::schedule_err(
+            KamikazeBehaviour::ReturnErr => Err(MinifiError::custom(
                 "it was designed to fail during schedule",
             )),
             KamikazeBehaviour::ReturnOk => Ok(KamikazeProcessorRs { trigger_behaviour }),
@@ -81,16 +81,16 @@ impl Trigger for KamikazeProcessorRs {
         context: &mut PC,
         _session: &mut PS,
         _logger: &L,
-    ) -> Result<OnTriggerResult, MinifiError>
+    ) -> Result<OnTriggerResult, ProcessError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
         L: Logger,
     {
         match self.trigger_behaviour {
-            KamikazeBehaviour::ReturnErr => Err(MinifiError::trigger_err(
-                "it was designed to fail in trigger",
-            )),
+            KamikazeBehaviour::ReturnErr => {
+                Err(MinifiError::custom("it was designed to fail in trigger").into())
+            }
             KamikazeBehaviour::ReturnOk => Ok(OnTriggerResult::Ok),
             KamikazeBehaviour::Panic => {
                 panic!("KamikazeProcessor::trigger panic")

@@ -29,5 +29,7 @@ impl ProcessorDefinition for AsciifyGerman {
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] =
         &[super::relationships::SUCCESS, super::relationships::FAILURE];
-    const PROPERTIES: &'static [PropertyDefinition] = &[];
+    fn properties() -> &'static [PropertyDefinition] {
+        &[]
+    }
 }

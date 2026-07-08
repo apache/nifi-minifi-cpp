@@ -30,13 +30,16 @@ impl ProcessorDefinition for LogAttributeRs {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[relationships::SUCCESS];
-    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
-        LOG_LEVEL,
-        ATTRIBUTES_TO_LOG,
-        ATTRIBUTES_TO_IGNORE,
-        LOG_PAYLOAD,
-        LOG_PREFIX,
-        FLOW_FILES_TO_LOG,
-        HEX_ENCODE_PAYLOAD,
-    ];
+    fn properties() -> &'static [PropertyDefinition] {
+        const PROPERTIES: &[PropertyDefinition] = property_definitions![
+            LOG_LEVEL,
+            ATTRIBUTES_TO_LOG,
+            ATTRIBUTES_TO_IGNORE,
+            LOG_PAYLOAD,
+            LOG_PREFIX,
+            FLOW_FILES_TO_LOG,
+            HEX_ENCODE_PAYLOAD,
+        ];
+        PROPERTIES
+    }
 }

@@ -31,6 +31,9 @@ impl ProcessorDefinition for LoremIpsumCSUser {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS];
-    const PROPERTIES: &'static [PropertyDefinition] =
-        property_definitions![CONTROLLER_SERVICE, DUMMY_CONTROLLER_SERVICE, WRITE_METHOD];
+    fn properties() -> &'static [PropertyDefinition] {
+        const PROPERTIES: &[PropertyDefinition] =
+            property_definitions![CONTROLLER_SERVICE, DUMMY_CONTROLLER_SERVICE, WRITE_METHOD];
+        PROPERTIES
+    }
 }

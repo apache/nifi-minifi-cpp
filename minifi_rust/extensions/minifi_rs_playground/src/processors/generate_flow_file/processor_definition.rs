@@ -29,11 +29,14 @@ impl ProcessorDefinition for GenerateFlowFileRs {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[relationships::SUCCESS];
-    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
-        FILE_SIZE,
-        BATCH_SIZE,
-        DATA_FORMAT,
-        UNIQUE_FLOW_FILES,
-        CUSTOM_TEXT
-    ];
+    fn properties() -> &'static [PropertyDefinition] {
+        const PROPERTIES: &[PropertyDefinition] = property_definitions![
+            FILE_SIZE,
+            BATCH_SIZE,
+            DATA_FORMAT,
+            UNIQUE_FLOW_FILES,
+            CUSTOM_TEXT
+        ];
+        PROPERTIES
+    }
 }

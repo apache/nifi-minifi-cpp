@@ -33,16 +33,19 @@ impl ProcessorDefinition for GetFileRs {
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] =
         &[ABSOLUTE_PATH_OUTPUT_ATTRIBUTE, FILENAME_OUTPUT_ATTRIBUTE];
     const RELATIONSHIPS: &'static [Relationship] = &[relationships::SUCCESS];
-    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
-        DIRECTORY,
-        POLLING_INTERVAL,
-        RECURSE,
-        KEEP_SOURCE_FILE,
-        MIN_AGE,
-        MAX_AGE,
-        MIN_SIZE,
-        MAX_SIZE,
-        IGNORE_HIDDEN_FILES,
-        BATCH_SIZE,
-    ];
+    fn properties() -> &'static [PropertyDefinition] {
+        const PROPERTIES: &[PropertyDefinition] = property_definitions![
+            DIRECTORY,
+            POLLING_INTERVAL,
+            RECURSE,
+            KEEP_SOURCE_FILE,
+            MIN_AGE,
+            MAX_AGE,
+            MIN_SIZE,
+            MAX_SIZE,
+            IGNORE_HIDDEN_FILES,
+            BATCH_SIZE,
+        ];
+        PROPERTIES
+    }
 }

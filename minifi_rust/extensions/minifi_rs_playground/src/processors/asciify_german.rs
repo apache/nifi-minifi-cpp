@@ -20,10 +20,9 @@
 use crate::processors::asciify_german::relationships::FAILURE;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    FlowFileStreamTransform, GetProperty, InputStream, Logger, MinifiError, OutputStream, Schedule,
-    TransformStreamResult,
+    FlowFileStreamTransform, GetProperty, InputStream, Logger, MinifiError, OutputStream,
+    ProcessError, RouteErrorExt, Schedule, TransformStreamResult,
 };
-use std::collections::HashMap;
 
 mod relationships;
 
@@ -46,7 +45,7 @@ impl FlowFileStreamTransform for AsciifyGerman {
         input_stream: &mut dyn InputStream,
         output_stream: &mut dyn OutputStream,
         _logger: &LoggerImpl,
-    ) -> Result<TransformStreamResult, MinifiError> {
+    ) -> Result<TransformStreamResult, ProcessError> {
         let mut byte = [0u8; 1];
 
         while input_stream.read(&mut byte)? > 0 {
@@ -57,8 +56,8 @@ impl FlowFileStreamTransform for AsciifyGerman {
                 0xC3 => {
                     let mut next = [0u8; 1];
                     if input_stream.read(&mut next)? == 0 {
-                        // Truncated multi-byte sequence at EOF — treat as malformed input.
-                        return Ok(TransformStreamResult::route_without_changes(&FAILURE));
+                        Err(MinifiError::custom("Truncated multi-byte sequence at EOF"))
+                            .route_err_to_failure()?
                     }
                     match next[0] {
                         0xA4 => output_stream.write_all(b"ae")?, // ä
@@ -76,10 +75,7 @@ impl FlowFileStreamTransform for AsciifyGerman {
         }
 
         output_stream.flush()?;
-        Ok(TransformStreamResult::new(
-            &relationships::SUCCESS,
-            HashMap::new(),
-        ))
+        Ok(TransformStreamResult::new(&relationships::SUCCESS))
     }
 }
 

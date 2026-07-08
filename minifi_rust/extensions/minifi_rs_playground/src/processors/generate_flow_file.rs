@@ -19,8 +19,8 @@
 
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
-    Trigger,
+    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessError,
+    ProcessSession, Schedule, Trigger,
 };
 use rand::RngExt;
 use rand::distr::Alphanumeric;
@@ -147,7 +147,7 @@ impl Trigger for GenerateFlowFileRs {
         context: &mut PC,
         session: &mut PS,
         _logger: &L,
-    ) -> Result<OnTriggerResult, MinifiError>
+    ) -> Result<OnTriggerResult, ProcessError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -163,7 +163,7 @@ impl Trigger for GenerateFlowFileRs {
                 context
                     .get_raw_property(&properties::CUSTOM_TEXT, None)?
                     .ok_or_else(|| {
-                        MinifiError::trigger_err(
+                        MinifiError::custom(
                             "GenerateFlowFile is in CustomText mode but the \"Custom Text\" \
                              property is not set at trigger time",
                         )
