@@ -517,11 +517,14 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                     let mut reader = CffiInputStream::new(stream_ptr);
 
                     if let Some(cb) = ctx.callback.take() {
-                        match cb(&mut reader) {
-                            Ok(cb_ok) => ctx.result = Some(Ok(cb_ok)),
-                            Err(_) => {
-                                return minifi_io_status_MINIFI_IO_ERROR;
-                            }
+                        let is_err = {
+                            let outcome = cb(&mut reader);
+                            let is_err = outcome.is_err();
+                            ctx.result = Some(outcome);
+                            is_err
+                        };
+                        if is_err {
+                            return minifi_io_status_MINIFI_IO_ERROR;
                         }
                     } else {
                         return minifi_io_status_MINIFI_IO_ERROR;
@@ -538,6 +541,10 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 &mut ctx as *mut _ as *mut c_void,
             );
 
+            if let Some(result) = ctx.result.take() {
+                return result;
+            }
+
             if status != minifi_status_MINIFI_STATUS_SUCCESS {
                 return Err(MinifiError::StatusError((
                     "minifi_process_session_read".into(),
@@ -545,11 +552,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 )));
             }
 
-            if let Some(result) = ctx.result.take() {
-                result
-            } else {
-                Err(MinifiError::UnknownError)
-            }
+            Err(MinifiError::UnknownError)
         }
     }
 

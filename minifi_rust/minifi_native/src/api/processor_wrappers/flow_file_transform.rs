@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::api::InputStream;
 use crate::api::flow_file::GetId;
 use crate::api::processor::Processor;
 use crate::api::processor_wrappers::utils::context_session_flowfile_bundle::ContextSessionFlowFileBundle;
@@ -24,48 +23,66 @@ use crate::api::property::{GetControllerService, GetProperty};
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
     GetAttribute, LogLevel, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
-    ProcessSession, Relationship, Schedule, SingleThreaded, info,
+    ProcessError, ProcessSession, Relationship, Schedule, SingleThreaded, impl_with_attributes,
+    info,
 };
-use std::collections::HashMap;
+
+use minifi_native::InputStream;
+use std::borrow::Cow;
+
+pub type FlowFileAttribute = (Cow<'static, str>, Cow<'static, str>);
 
 #[derive(Debug)]
 pub struct TransformedFlowFile<'a> {
-    target_relationship_name: &'static str,
+    target_relationship_name: Cow<'static, str>,
     new_content: Option<Content<'a>>, // If None, the content doesn't change
-    attributes_to_add: HashMap<String, String>,
+    attributes_to_add: Vec<FlowFileAttribute>,
 }
 
 impl<'a> TransformedFlowFile<'a> {
     pub fn route_without_changes(target_relationship: &Relationship) -> Self {
+        Self::route_without_changes_by_name(Cow::Borrowed(target_relationship.name))
+    }
+
+    pub fn route_without_changes_by_name(relationship: Cow<'static, str>) -> Self {
         Self {
-            target_relationship_name: target_relationship.name,
+            target_relationship_name: relationship,
             new_content: None,
-            attributes_to_add: HashMap::new(),
+            attributes_to_add: Vec::new(),
         }
     }
 
-    pub fn new(
-        target_relationship: &Relationship,
-        new_content: Option<Vec<u8>>,
-        attributes_to_add: HashMap<String, String>,
-    ) -> Self {
+    pub fn new(target_relationship: &Relationship, new_content: Option<Vec<u8>>) -> Self {
         Self {
-            target_relationship_name: target_relationship.name,
+            target_relationship_name: Cow::Borrowed(target_relationship.name),
             new_content: new_content.map(Content::Buffer),
-            attributes_to_add,
+            attributes_to_add: Vec::new(),
         }
+    }
+
+    #[must_use]
+    pub fn with_content(mut self, content: Vec<u8>) -> Self {
+        self.new_content = Some(Content::Buffer(content));
+        self
     }
 
     pub fn new_content(&'_ self) -> Option<&'_ Content<'_>> {
         self.new_content.as_ref()
     }
 
-    pub fn target_relationship(&self) -> &'static str {
-        self.target_relationship_name
+    pub fn target_relationship(&self) -> &str {
+        &self.target_relationship_name
     }
 
-    pub fn attributes_to_add(&self) -> &HashMap<String, String> {
+    pub fn attributes_to_add(&self) -> &[FlowFileAttribute] {
         &self.attributes_to_add
+    }
+
+    pub fn attribute(&self, name: &str) -> Option<&str> {
+        self.attributes_to_add
+            .iter()
+            .find(|(k, _)| k == name)
+            .map(|(_, v)| v.as_ref())
     }
 
     #[cfg(any(test, feature = "test-utils"))]
@@ -82,6 +99,8 @@ impl<'a> TransformedFlowFile<'a> {
     }
 }
 
+impl_with_attributes!(TransformedFlowFile<'a>);
+
 pub trait FlowFileTransform {
     fn transform<
         'a,
@@ -92,7 +111,7 @@ pub trait FlowFileTransform {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, MinifiError>;
+    ) -> Result<TransformedFlowFile<'a>, ProcessError>;
 }
 
 pub trait MutFlowFileTransform {
@@ -105,7 +124,7 @@ pub trait MutFlowFileTransform {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, MinifiError>;
+    ) -> Result<TransformedFlowFile<'a>, ProcessError>;
 }
 
 pub struct FlowFileTransformProcessorType {}
@@ -115,7 +134,7 @@ fn handle_transform<PC, PS, L, F>(
     session: &mut PS,
     logger: &L,
     mut transform_fn: F,
-) -> Result<OnTriggerResult, MinifiError>
+) -> Result<OnTriggerResult, ProcessError>
 where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -123,13 +142,22 @@ where
     F: for<'stream> FnMut(
         &ContextSessionFlowFileBundle<'_, PC, PS>,
         &'stream mut dyn InputStream,
-    ) -> Result<TransformedFlowFile<'stream>, MinifiError>,
+    ) -> Result<TransformedFlowFile<'stream>, ProcessError>,
 {
     if let Some(mut flow_file) = session.get() {
         let simple_context = ContextSessionFlowFileBundle::new(context, session, Some(&flow_file));
 
         let (attrs_to_add, relationship) = session.read_stream(&flow_file, |input_stream| {
-            let transformed = transform_fn(&simple_context, input_stream)?;
+            let transformed = match transform_fn(&simple_context, input_stream) {
+                Ok(transform_success) => transform_success,
+                Err(ProcessError::Route(route)) => {
+                    route.log(logger);
+                    TransformedFlowFile::route_without_changes_by_name(route.relationship)
+                }
+                Err(ProcessError::Fatal(e)) => {
+                    return Err(e);
+                }
+            };
 
             info!(logger, "{:?}", transformed);
             match transformed.new_content {
@@ -152,7 +180,7 @@ where
             session.set_attribute(&mut flow_file, &k, &v)?;
         }
 
-        session.transfer(flow_file, relationship)?;
+        session.transfer(flow_file, relationship.as_ref())?;
         Ok(OnTriggerResult::Ok)
     } else {
         logger.log(LogLevel::Trace, format_args!("No flowfile to transform"));
@@ -170,7 +198,7 @@ where
         &self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
+    ) -> Result<OnTriggerResult, ProcessError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -180,9 +208,7 @@ where
                 scheduled_impl.transform(ctx, input, &self.logger)
             })
         } else {
-            Err(MinifiError::trigger_err(
-                "The processor hasn't been scheduled yet",
-            ))
+            Err(MinifiError::UnscheduledProcessor.into())
         }
     }
 }
@@ -197,7 +223,7 @@ where
         &mut self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
+    ) -> Result<OnTriggerResult, ProcessError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -207,50 +233,118 @@ where
                 scheduled_impl.transform(ctx, input, &self.logger)
             })
         } else {
-            Err(MinifiError::trigger_err(
-                "The processor hasn't been scheduled yet",
-            ))
+            Err(MinifiError::UnscheduledProcessor.into())
         }
     }
 }
 
-#[macro_export]
-macro_rules! unwrap_or_route {
-    ($result:expr, $route:expr) => {
-        match $result {
-            Ok(v) => v,
-            Err(_e) => {
-                return Ok($crate::TransformedFlowFile::route_without_changes($route));
-            }
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api::RawProcessor;
+    use crate::api::raw_processor::MultiThreadedTrigger;
+    use crate::{
+        GetControllerService, GetId, MockFlowFile, MockLogger, MockProcessContext,
+        MockProcessSession, ProcessError, RouteErrorExt,
     };
 
-    ($result:expr, $route:expr, $custom_logger:expr) => {
-        match $result {
-            Ok(v) => v,
-            Err(e) => {
-                $crate::error!(
-                    $custom_logger,
-                    "Failed to unwrap due to {}. Routing flow file.",
-                    e
-                );
-                return Ok($crate::TransformedFlowFile::route_without_changes($route));
-            }
+    struct RouteToFailure;
+    impl Schedule for RouteToFailure {
+        fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
+            Ok(RouteToFailure)
         }
-    };
+    }
+    impl FlowFileTransform for RouteToFailure {
+        fn transform<
+            'a,
+            Context: GetProperty + GetControllerService + GetAttribute + GetId,
+            LoggerImpl: Logger,
+        >(
+            &self,
+            _context: &Context,
+            _input_stream: &'a mut dyn InputStream,
+            _logger: &LoggerImpl,
+        ) -> Result<TransformedFlowFile<'a>, ProcessError> {
+            let bad: Result<TransformedFlowFile<'a>, std::io::Error> = Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "bad data",
+            ));
+            bad.route_err_to_failure()
+        }
+    }
 
-    ($result:expr, $route:expr, $custom_logger:expr, $context:expr) => {
-        match $result {
-            Ok(v) => v,
-            Err(e) => {
-                $crate::error!(
-                    $custom_logger,
-                    "Failed to {} due to {}. Routing flow file.",
-                    $context,
-                    e
-                );
-                return Ok($crate::TransformedFlowFile::route_without_changes($route));
-            }
+    struct FatalTransform;
+    impl Schedule for FatalTransform {
+        fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
+            Ok(FatalTransform)
         }
-    };
+    }
+    impl FlowFileTransform for FatalTransform {
+        fn transform<
+            'a,
+            Context: GetProperty + GetControllerService + GetAttribute + GetId,
+            LoggerImpl: Logger,
+        >(
+            &self,
+            _context: &Context,
+            _input_stream: &'a mut dyn InputStream,
+            _logger: &LoggerImpl,
+        ) -> Result<TransformedFlowFile<'a>, ProcessError> {
+            Err(ProcessError::Fatal(MinifiError::custom("real error")))
+        }
+    }
+
+    fn seeded_session() -> MockProcessSession {
+        let mut session = MockProcessSession::new();
+        session
+            .input_flow_files
+            .push(MockFlowFile::with_content(b"data"));
+        session
+    }
+
+    #[test]
+    fn route_error_transfers_to_failure_and_commits() {
+        let mut processor: Processor<
+            RouteToFailure,
+            FlowFileTransformProcessorType,
+            MultiThreaded,
+            MockLogger,
+        > = Processor::new(MockLogger::new());
+        processor.scheduled_impl = Some(RouteToFailure);
+
+        let mut context = MockProcessContext::new();
+        let mut session = seeded_session();
+
+        let result = MultiThreadedTrigger::trigger(&processor, &mut context, &mut session);
+
+        assert_eq!(
+            result.expect("should commit, not roll back"),
+            OnTriggerResult::Ok
+        );
+        let transferred = session.transferred_flow_files.borrow();
+        assert_eq!(transferred.len(), 1);
+        assert_eq!(transferred[0].relationship, "failure");
+    }
+
+    #[test]
+    fn fatal_error_propagates_and_transfers_nothing() {
+        let mut processor: Processor<
+            FatalTransform,
+            FlowFileTransformProcessorType,
+            MultiThreaded,
+            MockLogger,
+        > = Processor::new(MockLogger::new());
+        processor.scheduled_impl = Some(FatalTransform);
+
+        let mut context = MockProcessContext::new();
+        let mut session = seeded_session();
+
+        let result = MultiThreadedTrigger::trigger(&processor, &mut context, &mut session);
+
+        assert!(matches!(
+            result,
+            Err(ProcessError::Fatal(MinifiError::CustomError(_)))
+        ));
+        assert_eq!(session.num_of_transferred_flow_files(), 0);
+    }
 }
