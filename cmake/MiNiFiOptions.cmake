@@ -175,6 +175,18 @@ add_minifi_multi_option(MINIFI_ASIO_SOURCE "Retrieves Asio from provided source"
 add_minifi_multi_option(MINIFI_KAFKA_SOURCE "Retrieves librdkafka from provided source" "BUILD;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_MAGIC_ENUM_SOURCE "Retrieves magic_enum from provided source" "BUILD;CONAN" "BUILD")
 add_minifi_multi_option(MINIFI_OPC_SOURCE "Retrieves open62541 from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_OSSP_UUID_SOURCE "Retrieves ossp-uuid from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_JOLT_TESTS_SOURCE "Retrieves jolt test resources from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_RPMALLOC_SOURCE "Retrieves rpmalloc from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_BUSTACHE_SOURCE "Retrieves Bustache from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_GCP_SOURCE "Retrieves Google Cloud Platform SDK from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_GRPC_SOURCE "Retrieves gRPC from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_KUBERNETES_CLIENT_C_SOURCE "Retrieves Kubernetes Client C SDK from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_AZURE_SDK_CPP_SOURCE "Retrieves Azure SDK for C++ from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_LLAMACPP_SOURCE "Retrieves llama.cpp from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_DATE_SOURCE "Retrieves date from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_WINFLEXBISON_SOURCE "Retrieves winflexbison from provided source" "BUILD;CONAN" "BUILD")
+add_minifi_multi_option(MINIFI_AWS_SDK_CPP_SOURCE "Retrieves AWS SDK for C++ from provided source" "BUILD;CONAN" "BUILD")
 
 # Docker options
 

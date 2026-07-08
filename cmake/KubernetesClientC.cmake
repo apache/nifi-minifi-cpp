@@ -51,7 +51,7 @@ FetchContent_Declare(websockets
 FetchContent_MakeAvailable(yaml websockets)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(K8S_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/kubernetes-client-c/remove-findpackage.patch")
+set(K8S_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/kubernetes-client-c/all/patches/remove-findpackage.patch")
 set(K8S_PC ${Bash_EXECUTABLE} -c "set -x &&\
         (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${K8S_PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${K8S_PATCH_FILE})")
 FetchContent_Declare(kubernetes

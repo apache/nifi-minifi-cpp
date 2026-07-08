@@ -20,9 +20,9 @@ include(FetchContent)
 include(Abseil)
 include(Crc32c)
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/remove-find_package.patch")
-set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/nlohmann_lib_as_interface.patch")
-set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/c++23_fixes.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/all/patches/remove-find_package.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/all/patches/nlohmann_lib_as_interface.patch")
+set(PATCH_FILE_3 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/all/patches/c++23_fixes.patch")
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\") &&\
@@ -57,3 +57,5 @@ if (WIN32)
     add_compile_definitions(_SILENCE_CXX20_REL_OPS_DEPRECATION_WARNING _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING CURL_STATICLIB)
 endif()
 FetchContent_MakeAvailable(google-cloud-cpp)
+
+set(MINIFI_GCP_TEST_GTEST_LIBRARIES gtest_main gmock CACHE INTERNAL "")

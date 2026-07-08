@@ -1,0 +1,24 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+  "1.82.0":
+    url: "https://github.com/grpc/grpc/archive/refs/tags/v1.82.0.tar.gz"
+    sha256: "d6851f59b9c4edb3218d2659a3abf1138e5bb4d2871c9e89c9330ed71756ed0b"
+patches:
+  "1.82.0":
+    - patch_file: "patches/fix-msvc-auto-return-type-template-arg.patch"
+      patch_description: "Temporary patch for issue https://github.com/grpc/grpc/issues/41436"
+      patch_type: "fix"

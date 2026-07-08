@@ -1,7 +1,9 @@
 Temporary patch for issue https://github.com/grpc/grpc/issues/41436
+diff --git a/src/core/call/call_filters.h b/src/core/call/call_filters.h
+index 4ec8ac8473..95be3e008c 100644
 --- a/src/core/call/call_filters.h
 +++ b/src/core/call/call_filters.h
-@@ -1627,17 +1627,26 @@
+@@ -1627,17 +1627,26 @@ constexpr bool MethodHasChannelAccess<R (T::*)(A, C)> = true;
  template <typename... Ts>
  constexpr bool AnyMethodHasChannelAccess = (MethodHasChannelAccess<Ts> || ...);
  
@@ -35,9 +37,11 @@ Temporary patch for issue https://github.com/grpc/grpc/issues/41436
  }
  }  // namespace filters_detail
  
+diff --git a/src/core/lib/channel/promise_based_filter.h b/src/core/lib/channel/promise_based_filter.h
+index 15fa55a4e7..178c12af8e 100644
 --- a/src/core/lib/channel/promise_based_filter.h
 +++ b/src/core/lib/channel/promise_based_filter.h
-@@ -1120,6 +1120,37 @@
+@@ -1122,6 +1122,37 @@ MakeFilterCall(Derived* derived) {
    return GetContext<Arena>()->ManagedNew<FilterCallData<Derived>>(derived);
  }
  
@@ -75,7 +79,7 @@ Temporary patch for issue https://github.com/grpc/grpc/issues/41436
  }  // namespace promise_filter_detail
  
  // Base class for promise-based channel filters.
-@@ -1190,22 +1221,16 @@
+@@ -1192,22 +1223,16 @@ class ImplementChannelFilter : public ChannelFilter,
        CallArgs call_args, NextPromiseFactory next_promise_factory) final {
      auto* call = promise_filter_detail::MakeFilterCall<Derived>(
          static_cast<Derived*>(this));

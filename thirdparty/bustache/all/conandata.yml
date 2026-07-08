@@ -1,0 +1,31 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+  # Pinned to the same commit (af10816) used by the bundled Bustache.cmake build.
+  "0.1.0":
+    url: "https://github.com/jamboree/bustache/archive/af10816ce3d2ff8577fd27caa2c1005c01d8069b.tar.gz"
+    sha256: "b5f8216609f139169d9770e82e709d719d186ecaec5a2f90b4961d8e7ee4b72f"
+patches:
+  "0.1.0":
+    - patch_file: "patches/add-append.patch"
+      patch_description: "Add append(begin, end) helper used by MiNiFi"
+      patch_type: "portability"
+    - patch_file: "patches/fix-deprecated-literal-operator.patch"
+      patch_description: "Fix deprecated literal operator spacing for newer compilers"
+      patch_type: "portability"
+    - patch_file: "patches/remove_installs.patch"
+      patch_description: "Remove upstream install rules; the recipe packages the artifacts explicitly"
+      patch_type: "conan"

@@ -23,20 +23,12 @@ endif()
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 if (ENABLE_GRPC_FOR_LOKI)
-    include(Grpc)
-
-    set(LOKI_PROTOBUF_GENERATED_DIR ${CMAKE_BINARY_DIR}/grafana-loki-protobuf-generated)
-    file(MAKE_DIRECTORY ${LOKI_PROTOBUF_GENERATED_DIR})
-
-    add_custom_command(
-        OUTPUT  ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.h ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.h ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc
-        COMMAND ${PROTOBUF_COMPILER} --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} --proto_path=. --proto_path=${protobuf_SOURCE_DIR}/src --grpc_out=${LOKI_PROTOBUF_GENERATED_DIR} --cpp_out=${LOKI_PROTOBUF_GENERATED_DIR} grafana-loki-push.proto
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/protos
-        DEPENDS protobuf::protoc grpc_cpp_plugin)
+    include(GetGrpc)
+    include(GenerateGrafanaLokiProto)
 
     add_library(grafana-loki-protos ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc)
-    target_include_directories(grafana-loki-protos SYSTEM PRIVATE BEFORE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
-    target_link_libraries(grafana-loki-protos grpc++ protobuf::libprotobuf)
+    target_include_directories(grafana-loki-protos SYSTEM BEFORE PRIVATE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
+    target_link_libraries(grafana-loki-protos gRPC::grpc++ protobuf::libprotobuf)
 
     file(GLOB SOURCES "*.cpp")
 
@@ -55,7 +47,7 @@ add_minifi_library(minifi-grafana-loki SHARED ${SOURCES})
 target_link_libraries(minifi-grafana-loki ${LIBMINIFI})
 
 if (ENABLE_GRPC_FOR_LOKI)
-    target_include_directories(minifi-grafana-loki SYSTEM PRIVATE BEFORE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
+    target_include_directories(minifi-grafana-loki SYSTEM BEFORE PRIVATE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
     target_link_libraries(minifi-grafana-loki grafana-loki-protos)
     add_dependencies(minifi-grafana-loki grafana-loki-protos)
     if (MSVC)

@@ -1,4 +1,4 @@
-    diff --git a/config.guess b/config.guess
+diff --git a/config.guess b/config.guess
 index ca2a03c..69188da 100755
 --- a/config.guess
 +++ b/config.guess

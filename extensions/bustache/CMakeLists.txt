@@ -21,7 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_BUSTACHE))
     return()
 endif()
 
-include(Bustache)
+include(GetBustache)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 

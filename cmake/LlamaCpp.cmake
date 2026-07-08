@@ -31,7 +31,7 @@ else()
     set(GGML_NATIVE "ON" CACHE STRING "" FORCE)
 endif()
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/llamacpp/mtmd-fix.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/llamacpp/all/patches/mtmd-fix.patch")
 
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
             (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\")")
@@ -49,6 +49,10 @@ FetchContent_MakeAvailable(llamacpp)
 if(MSVC AND TARGET llama)
     target_compile_options(llama PRIVATE /Zc:__cplusplus)
 endif()
+
+add_library(llama-cpp::llama ALIAS llama)
+add_library(llama-cpp::common ALIAS llama-common)
+add_library(llama-cpp::mtmd ALIAS mtmd)
 
 set(LLAMACPP_INCLUDE_DIRS
     "${llamacpp_SOURCE_DIR}/include"

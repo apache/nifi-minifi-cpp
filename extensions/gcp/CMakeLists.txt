@@ -21,7 +21,7 @@ if (NOT (ENABLE_ALL OR ENABLE_GCP))
     return()
 endif()
 
-include(GoogleCloudCpp)
+include(GetGoogleCloudCpp)
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 file(GLOB SOURCES "*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
 

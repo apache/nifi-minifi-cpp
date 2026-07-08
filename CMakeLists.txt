@@ -233,7 +233,7 @@ if(CUSTOM_MALLOC)
         include(GetMiMalloc)
         set(CUSTOM_MALLOC_LIB mimalloc-static)
     elseif (CUSTOM_MALLOC STREQUAL rpmalloc)
-        include(RpMalloc)
+        include(GetRpMalloc)
         set(CUSTOM_MALLOC_LIB rpmalloc)
     else()
         message(FATAL_ERROR "Invalid CUSTOM_MALLOC")
@@ -258,8 +258,7 @@ endif()
 
 # ossp-uuid
 if(NOT WIN32)
-    include(BundledOSSPUUID)
-    use_bundled_osspuuid(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+    include(GetOSSPUUID)
 endif()
 
 # libsodium
@@ -321,7 +320,7 @@ if (NOT _gsl_lite_real_target)
 endif()
 target_compile_definitions(${_gsl_lite_real_target} INTERFACE ${GslDefinitions})
 
-include(Date)
+include(GetDate)
 include(GetMagicEnum)
 include(GetRangeV3)
 include(GetAsio)

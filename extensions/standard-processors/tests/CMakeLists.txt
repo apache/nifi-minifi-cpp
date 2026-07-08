@@ -17,7 +17,7 @@
 # under the License.
 #
 
-include(JoltTests)
+include(GetJoltTests)
 
 file(GLOB PROCESSOR_UNIT_TESTS  "unit/*.cpp" "unit/modbus/*.cpp")
 file(GLOB PROCESSOR_INTEGRATION_TESTS "integration/*.cpp")
