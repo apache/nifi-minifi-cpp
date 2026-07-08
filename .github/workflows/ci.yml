@@ -642,6 +642,10 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-virtualenv
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Expose GitHub Actions cache to buildx
+        uses: crazy-max/ghaction-github-runtime@v3
       - id: test
         name: Docker Verify
         working-directory: ./minifi_rust

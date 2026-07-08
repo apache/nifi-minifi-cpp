@@ -1,0 +1,25 @@
+[package]
+name = "minifi_tensor"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+low-level-processors = []
+all = ["low-level-processors"]
+
+[dependencies]
+minifi_native = { path = "../../minifi_native" }
+strum = "0.28.0"
+strum_macros = "0.28.0"
+image = "0.25.10"
+imageproc = "0.27.0"
+tract = "0.23.4"
+ndarray = "0.17.2"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+
+[dev-dependencies]
+minifi_native = { path = "../../minifi_native", features = ["test-utils"] }
