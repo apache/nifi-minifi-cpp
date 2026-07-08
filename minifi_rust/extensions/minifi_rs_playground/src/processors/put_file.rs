@@ -18,10 +18,10 @@
 // This is the (not production ready) reimplementation of the already existing standard PutFile processor
 
 use crate::processors::put_file::relationships::{FAILURE, SUCCESS};
-use minifi_native::macros::ComponentIdentifier;
+use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, Schedule, TransformedFlowFile, trace, warn,
+    MinifiError, Schedule, TransformedFlowFile, trace, unwrap_or_route, warn,
 };
 use std::path::{Path, PathBuf};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
@@ -32,7 +32,9 @@ mod relationships;
 #[cfg(unix)]
 mod unix_only_properties;
 
-#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr, PropertyType,
+)]
 #[strum(serialize_all = "camelCase", const_into_str)]
 enum ConflictResolutionStrategy {
     Fail,
@@ -109,14 +111,12 @@ impl PutFileRs {
     where
         Ctx: GetProperty + GetAttribute + GetId,
     {
-        let directory = context
-            .get_property(&properties::DIRECTORY)?
-            .expect("required property");
+        let directory = context.get_req_property::<PathBuf>(&properties::DIRECTORY)?;
 
         let file_name = context
             .get_attribute("filename")?
             .unwrap_or(context.get_id()?);
-        Ok(PathBuf::from(directory).join(file_name))
+        Ok(directory.join(file_name))
     }
 
     fn prepare_destination(&self, destination: &Path) -> std::io::Result<()> {
@@ -163,7 +163,7 @@ impl PutFileRs {
         let parse_permission =
             |property: &minifi_native::Property| -> Result<Option<std::fs::Permissions>, MinifiError> {
                 Ok(context
-                    .get_property(property)?
+                    .get_property::<String>(property)?
                     .map(|perm_str| u32::from_str_radix(&perm_str, 8))
                     .transpose()?
                     .map(std::fs::Permissions::from_mode))
@@ -188,15 +188,11 @@ impl PutFileRs {
 impl Schedule for PutFileRs {
     fn schedule<P: GetProperty, L: Logger>(context: &P, _logger: &L) -> Result<Self, MinifiError> {
         let conflict_resolution_strategy = context
-            .get_property(&properties::CONFLICT_RESOLUTION)?
-            .expect("required property")
-            .parse::<ConflictResolutionStrategy>()?;
+            .get_req_property::<ConflictResolutionStrategy>(&properties::CONFLICT_RESOLUTION)?;
 
-        let try_make_dirs = context
-            .get_bool_property(&properties::CREATE_DIRS)?
-            .expect("required property");
+        let try_make_dirs = context.get_req_property::<bool>(&properties::CREATE_DIRS)?;
 
-        let maximum_file_count = context.get_u64_property(&properties::MAX_FILE_COUNT)?;
+        let maximum_file_count = context.get_property::<u64>(&properties::MAX_FILE_COUNT)?;
 
         let unix_permissions = Self::parse_unix_permissions(context)?;
 
@@ -222,10 +218,8 @@ impl FlowFileTransform for PutFileRs {
     ) -> Result<TransformedFlowFile<'a>, MinifiError> {
         trace!(logger, "on_trigger: {:?}", self);
 
-        let Ok(destination_path) = Self::get_destination_path(context) else {
-            warn!(logger, "Invalid destination path");
-            return Ok(TransformedFlowFile::route_without_changes(&FAILURE));
-        };
+        let destination_path =
+            unwrap_or_route!(Self::get_destination_path(context), &FAILURE, logger);
 
         if self.directory_is_full(&destination_path) {
             warn!(logger, "Directory is full");

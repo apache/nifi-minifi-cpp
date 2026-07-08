@@ -15,7 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use minifi_native::{Property, StandardPropertyValidator};
+use minifi_native::PropertyConstraints::AllowedValues;
+use minifi_native::{DataSize, Property, property_constraint};
 
 pub(crate) const FILE_SIZE: Property = Property {
     name: "File Size",
@@ -24,9 +25,7 @@ pub(crate) const FILE_SIZE: Property = Property {
     is_sensitive: false,
     supports_expr_lang: true,
     default_value: Some("1 kB"),
-    validator: StandardPropertyValidator::DataSizeValidator,
-    allowed_values: &[],
-    allowed_type: None,
+    constraints: property_constraint::<DataSize>(),
 };
 
 pub(crate) const BATCH_SIZE: Property = Property {
@@ -36,9 +35,7 @@ pub(crate) const BATCH_SIZE: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: Some("1"),
-    validator: StandardPropertyValidator::U64Validator,
-    allowed_values: &[],
-    allowed_type: None,
+    constraints: property_constraint::<u64>(),
 };
 
 pub(crate) const DATA_FORMAT: Property = Property {
@@ -48,9 +45,7 @@ pub(crate) const DATA_FORMAT: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: Some("Binary"),
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &["Text", "Binary"],
-    allowed_type: None,
+    constraints: Some(AllowedValues(&["Text", "Binary"])),
 };
 
 pub(crate) const UNIQUE_FLOW_FILES: Property = Property {
@@ -60,9 +55,7 @@ pub(crate) const UNIQUE_FLOW_FILES: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: Some("true"),
-    validator: StandardPropertyValidator::BoolValidator,
-    allowed_values: &[],
-    allowed_type: None,
+    constraints: property_constraint::<bool>(),
 };
 
 pub(crate) const CUSTOM_TEXT: Property = Property {
@@ -72,7 +65,5 @@ pub(crate) const CUSTOM_TEXT: Property = Property {
     is_sensitive: false,
     supports_expr_lang: true,
     default_value: None,
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &[],
-    allowed_type: None,
+    constraints: None,
 };
