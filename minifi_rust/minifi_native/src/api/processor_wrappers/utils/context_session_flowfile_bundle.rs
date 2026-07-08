@@ -55,7 +55,7 @@ where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
 {
-    fn get_property(&self, property: &Property) -> Result<Option<String>, MinifiError> {
+    fn get_raw_property(&self, property: &Property) -> Result<Option<String>, MinifiError> {
         self.context.get_property(property, self.flow_file)
     }
 }

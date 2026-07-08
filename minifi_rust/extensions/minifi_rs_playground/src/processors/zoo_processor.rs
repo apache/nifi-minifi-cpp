@@ -18,12 +18,12 @@
 use crate::controller_services::animal_controller_apis::{
     CanFlyControllerApi, NumberOfLegsControllerApi,
 };
-use minifi_native::ControllerServiceApi;
 use minifi_native::macros::ComponentIdentifier;
+use minifi_native::property_constraint;
 use minifi_native::{
     GetProperty, Logger, MinifiError, OnTriggerResult, OutputAttribute, ProcessContext,
     ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
-    Schedule, StandardPropertyValidator, Trigger, critical, info,
+    Schedule, Trigger, critical, info,
 };
 
 pub(crate) const CAN_FLY_SERVICE: Property = Property {
@@ -33,9 +33,7 @@ pub(crate) const CAN_FLY_SERVICE: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: None,
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &[],
-    allowed_type: Some(<dyn CanFlyControllerApi>::INTERFACE_NAME),
+    constraints: property_constraint::<dyn CanFlyControllerApi>(),
 };
 
 pub(crate) const NUMBER_OF_LEGS: Property = Property {
@@ -45,9 +43,7 @@ pub(crate) const NUMBER_OF_LEGS: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: None,
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &[],
-    allowed_type: Some(<dyn NumberOfLegsControllerApi>::INTERFACE_NAME),
+    constraints: property_constraint::<dyn NumberOfLegsControllerApi>(),
 };
 
 #[derive(Debug, ComponentIdentifier)]

@@ -14,6 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+extern crate self as minifi_native;
 
 mod api;
 pub mod c_ffi;
@@ -54,8 +55,9 @@ pub use api::process_session::IoState;
 pub use api::attribute::{GetAttribute, OutputAttribute};
 
 pub use api::{
-    FlowFile, GetId, InputStream, OnTriggerResult, OutputStream, ProcessContext, ProcessSession,
-    ProcessorInputRequirement, Relationship, StandardPropertyValidator,
+    DataSize, FlowFile, GetId, InputStream, OnTriggerResult, OutputStream, ProcessContext,
+    ProcessSession, ProcessorInputRequirement, PropertyConstraints, PropertyType,
+    ProvidesPropertyConstraint, Relationship, StandardPropertyValidator, property_constraint,
 };
 
 pub use minifi_native_macros as macros;

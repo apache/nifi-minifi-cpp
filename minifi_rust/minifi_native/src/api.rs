@@ -38,6 +38,9 @@ pub use process_session::{InputStream, OutputStream, ProcessSession};
 pub use raw_controller_service::RawControllerService;
 pub use raw_processor::{OnTriggerResult, ProcessorInputRequirement, RawProcessor, ThreadingModel};
 
-pub use property::StandardPropertyValidator;
+pub use property::{
+    DataSize, PropertyConstraints, PropertyType, ProvidesPropertyConstraint,
+    StandardPropertyValidator, property_constraint,
+};
 
 pub use relationship::Relationship;

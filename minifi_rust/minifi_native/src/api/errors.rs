@@ -17,9 +17,10 @@
 
 use minifi_native_sys::minifi_status;
 use std::borrow::Cow;
+use std::error::Error;
 use std::ffi::NulError;
 use std::fmt;
-use std::num::{NonZeroU32, ParseIntError};
+use std::num::{NonZeroU32, ParseFloatError, ParseIntError};
 use std::str::ParseBoolError;
 
 #[derive(Debug, Clone)]
@@ -30,6 +31,7 @@ pub enum ParseError {
     Duration(humantime::DurationError),
     Size(byte_unit::ParseError),
     Nul(NulError),
+    Float(ParseFloatError),
     Other,
 }
 
@@ -37,6 +39,7 @@ pub enum ParseError {
 pub enum MinifiError {
     UnknownError,
     StatusError((Cow<'static, str>, NonZeroU32)),
+    MissingRequiredAttribute(Cow<'static, str>),
     MissingRequiredProperty(Cow<'static, str>),
     ControllerServiceError(Cow<'static, str>),
     ValidationError(Cow<'static, str>),
@@ -89,6 +92,18 @@ impl From<NulError> for MinifiError {
     }
 }
 
+impl From<ParseFloatError> for MinifiError {
+    fn from(err: ParseFloatError) -> Self {
+        MinifiError::Parse(ParseError::Float(err))
+    }
+}
+
+impl From<std::convert::Infallible> for MinifiError {
+    fn from(_: std::convert::Infallible) -> Self {
+        unreachable!("Infallible errors can never happen")
+    }
+}
+
 impl MinifiError {
     pub(crate) fn to_status(&self) -> minifi_status {
         match self {
@@ -125,8 +140,16 @@ impl MinifiError {
         MinifiError::MissingRequiredProperty(msg.into())
     }
 
+    pub fn missing_required_attribute<S: Into<Cow<'static, str>>>(msg: S) -> Self {
+        MinifiError::MissingRequiredAttribute(msg.into())
+    }
+
     pub fn controller_service_err<S: Into<Cow<'static, str>>>(msg: S) -> Self {
         MinifiError::ControllerServiceError(msg.into())
+    }
+
+    pub fn parse_err() -> Self {
+        MinifiError::Parse(ParseError::Other)
     }
 }
 
@@ -158,3 +181,5 @@ impl fmt::Display for MinifiError {
         }
     }
 }
+
+impl Error for MinifiError {}

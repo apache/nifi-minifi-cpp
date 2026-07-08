@@ -18,11 +18,11 @@
 use crate::controller_services::animal_controller_apis::{
     CanFlyControllerApi, NumberOfLegsControllerApi,
 };
-use minifi_native::ControllerServiceApi;
 use minifi_native::macros::ComponentIdentifier;
+use minifi_native::{ControllerServiceApi, property_constraint};
 use minifi_native::{
     ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
-    Property, ProvidedInterface, StandardPropertyValidator, create_provided_interface,
+    Property, ProvidedInterface, create_provided_interface,
 };
 
 pub(crate) const HAS_JETPACK: Property = Property {
@@ -32,9 +32,7 @@ pub(crate) const HAS_JETPACK: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: Some("false"),
-    validator: StandardPropertyValidator::BoolValidator,
-    allowed_values: &[],
-    allowed_type: None,
+    constraints: property_constraint::<bool>(),
 };
 
 pub(crate) const EXTRA_INFO: Property = Property {
@@ -44,9 +42,7 @@ pub(crate) const EXTRA_INFO: Property = Property {
     is_sensitive: false,
     supports_expr_lang: false,
     default_value: None,
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &[],
-    allowed_type: None,
+    constraints: None,
 };
 
 #[allow(dead_code)] // extra_info is only used by {:?}
@@ -73,11 +69,10 @@ impl EnableControllerService for DogControllerRs {
     where
         Self: Sized,
     {
-        let has_jetpack = context.get_bool_property(&HAS_JETPACK)?.ok_or(
-            MinifiError::missing_required_property("Has jetpack is required"),
-        )?;
-
-        let extra_info = context.get_property(&EXTRA_INFO)?.unwrap_or("".into());
+        let has_jetpack = context.get_req_property::<bool>(&HAS_JETPACK)?;
+        let extra_info = context
+            .get_property::<String>(&EXTRA_INFO)?
+            .unwrap_or("".into());
 
         Ok(Self {
             has_jetpack,
