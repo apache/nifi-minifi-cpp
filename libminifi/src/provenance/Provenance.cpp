@@ -44,7 +44,7 @@ ProvenanceEventRecordImpl::ProvenanceEventRecordImpl(ProvenanceEventRecord::Prov
     : core::SerializableComponentImpl(core::className<ProvenanceEventRecord>()),
       event_type_(event),
       event_time_(std::chrono::system_clock::now()),
-      component_id_(std::move(component_id.to_string())),
+      component_id_(component_id.to_string()),
       component_type_(std::move(component_type)) {
 }
 
