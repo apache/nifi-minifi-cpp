@@ -53,6 +53,9 @@ class ValidatorGenerator:
     def createLongValidator(self, *args) -> int:
         return StandardValidators.LONG_VALIDATOR
 
+    def createNumberValidator(self, *args) -> int:
+        return StandardValidators.NUMBER_VALIDATOR
+
 
 class StandardValidators:
     _standard_validators = ValidatorGenerator()
@@ -87,6 +90,7 @@ class MinifiPropertyTypes:
     TIME_PERIOD_TYPE = 4
     NON_BLANK_TYPE = 5
     PORT_TYPE = 6
+    NUMBER_TYPE = 7
 
 
 def translateStandardValidatorToMiNiFiPropertype(validators: List[int]) -> int:
@@ -108,6 +112,8 @@ def translateStandardValidatorToMiNiFiPropertype(validators: List[int]) -> int:
         return MinifiPropertyTypes.NON_BLANK_TYPE
     if validator == StandardValidators.PORT_VALIDATOR:
         return MinifiPropertyTypes.PORT_TYPE
+    if validator == StandardValidators.NUMBER_VALIDATOR:
+        return MinifiPropertyTypes.NUMBER_TYPE
     return None
 
 
