@@ -71,6 +71,7 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto Temperature = core::PropertyDefinitionBuilder<>::createProperty("Temperature")
       .withDescription("The temperature to use for sampling.")
+      .withValidator(core::StandardPropertyValidators::NUMBER_VALIDATOR)
       .withDefaultValue("0.8")
       .build();
   EXTENSIONAPI static constexpr auto TopK = core::PropertyDefinitionBuilder<>::createProperty("Top K")
@@ -79,10 +80,12 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto TopP = core::PropertyDefinitionBuilder<>::createProperty("Top P")
       .withDescription("Limit the next token selection to a subset of tokens with a cumulative probability above a threshold P. 1.0 = disabled.")
+      .withValidator(core::StandardPropertyValidators::NUMBER_VALIDATOR)
       .withDefaultValue("0.9")
       .build();
   EXTENSIONAPI static constexpr auto MinP = core::PropertyDefinitionBuilder<>::createProperty("Min P")
       .withDescription("Sets a minimum base probability threshold for token selection. 0.0 = disabled.")
+      .withValidator(core::StandardPropertyValidators::NUMBER_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto MinKeep = core::PropertyDefinitionBuilder<>::createProperty("Min Keep")
       .withDescription("If greater than 0, force samplers to return N possible tokens at minimum.")
