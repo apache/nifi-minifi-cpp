@@ -127,8 +127,8 @@ class NumberValidator final : public core::PropertyValidator {
     return "NUMBER_VALIDATOR";
   }
   [[nodiscard]] bool validate(const std::string_view input) const override {
-    const auto parsed_integer = parsing::parseFloatingPoint<double>(input);
-    return parsed_integer.has_value();
+    const auto parsed_number = parsing::parseFloatingPoint<double>(input);
+    return parsed_number.has_value();
   }
 };
 

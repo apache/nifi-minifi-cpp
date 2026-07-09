@@ -55,13 +55,13 @@ inline int64_t parseI64Property(const core::ProcessContext& ctx, const core::Pro
       | orThrow(fmt::format("Expected parsable int64_t from \"{}\"", property.name));
 }
 
-inline double parsef64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+inline double parseF64Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
   | andThen(parsing::parseFloatingPoint<double>)
   | orThrow(fmt::format("Expected parsable double from \"{}\"", property.name));
 }
 
-inline double parsef32Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
+inline float parseF32Property(const core::ProcessContext& ctx, const core::PropertyReference& property, const core::FlowFile* flow_file = nullptr) {
   return ctx.getProperty(property.name, flow_file)
   | andThen(parsing::parseFloatingPoint<float>)
   | orThrow(fmt::format("Expected parsable float from \"{}\"", property.name));
