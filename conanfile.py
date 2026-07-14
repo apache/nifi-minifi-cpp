@@ -68,16 +68,16 @@ class MiNiFiCppMain(ConanFile):
             self.requires("xz_utils/5.8.3")
         if self.options.enable_all or self.options.enable_mqtt:
             self.requires("paho-mqtt-c/1.3.16")
-        if self.options.enable_all or self.options.get_safe("enable_couchbase"):
+        if self.options.enable_all or self.options.enable_couchbase:
             self.requires("couchbase_cxx_client/1.3.1@minifi/develop")
             self.requires("ms-gsl/4.0.0")
             self.requires("snappy/1.2.1")
             self.requires("hdrhistogram-c/0.11.8")
             self.requires("taocpp-json/1.0.0-beta.14")
             self.requires("llhttp/9.3.0")
-        if self.options.enable_all or self.options.get_safe("enable_kafka"):
+        if self.options.enable_all or self.options.enable_kafka:
             self.requires("librdkafka/2.14.2")
-        if self.options.enable_all or self.options.get_safe("enable_opc"):
+        if self.options.enable_all or self.options.enable_opc:
             self.requires("open62541/1.5.4@minifi/develop")
 
         if self.options.custom_malloc == "jemalloc":
