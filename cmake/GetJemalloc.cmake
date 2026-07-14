@@ -15,13 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_jemalloc SOURCE_DIR BINARY_DIR)
-    if(MINIFI_JEMALLOC_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install jemalloc")
-        find_package(jemalloc REQUIRED)
-    elseif(MINIFI_JEMALLOC_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build jemalloc from source")
-        include(BundledJemalloc)
-        use_bundled_jemalloc(${SOURCE_DIR} ${BINARY_DIR})
-    endif()
-endfunction(get_jemalloc)
+if(MINIFI_JEMALLOC_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install jemalloc")
+    find_package(jemalloc REQUIRED)
+elseif(MINIFI_JEMALLOC_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build jemalloc from source")
+    include(BundledJemalloc)
+    use_bundled_jemalloc(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+endif()

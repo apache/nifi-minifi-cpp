@@ -18,7 +18,6 @@
 #
 include(FetchContent)
 include(GetFmt)
-get_fmt()
 
 set(BUSTACHE_USE_FMT ON CACHE STRING "" FORCE)
 

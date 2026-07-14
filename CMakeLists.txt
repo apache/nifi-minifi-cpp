@@ -248,7 +248,6 @@ include(GetOpenSSL)
 # BZip2
 if (ENABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     include(GetBZip2)
-    get_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
 endif()
 
@@ -265,7 +264,6 @@ endif()
 
 # libsodium
 include(GetLibSodium)
-get_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
 
 list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS SODIUM_STATIC=1)
 list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS "RPM_CONFIG_DIR=\"/${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}\"")
@@ -275,17 +273,14 @@ list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS "RPM_LIB_DIR=\"/usr/${CMAKE_INSTALL_L
 
 # zlib
 include(GetZLIB)
-get_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
 
 # cURL
 include(GetLibCURL)
-get_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
 
 # spdlog
 include(GetSpdlog)
-get_spdlog()
 
 # yaml-cpp
 include(GetYamlCpp)
@@ -373,7 +368,6 @@ add_subdirectory(libminifi)
 
 if (ENABLE_ALL OR ENABLE_PROMETHEUS OR ENABLE_GRAFANA_LOKI OR ENABLE_CIVET)
     include(GetCivetWeb)
-    get_civetweb()
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
 endif()
 

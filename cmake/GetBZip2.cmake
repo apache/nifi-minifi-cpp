@@ -15,13 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_bzip2 SOURCE_DIR BINARY_DIR)
-    if(MINIFI_BZIP2_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install bzip2")
-        find_package(BZip2 REQUIRED)
-    elseif(MINIFI_BZIP2_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build bzip2 from source")
-        include(BundledBZip2)
-        use_bundled_bzip2(${SOURCE_DIR} ${BINARY_DIR})
-    endif()
-endfunction(get_bzip2)
+if(MINIFI_BZIP2_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install bzip2")
+    find_package(BZip2 REQUIRED)
+elseif(MINIFI_BZIP2_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build bzip2 from source")
+    include(BundledBZip2)
+    use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+endif()

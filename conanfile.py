@@ -23,7 +23,7 @@ import shutil
 required_conan_version = ">=2.0"
 
 shared_requires = ("openssl/3.6.2", "libcurl/8.20.0", "civetweb/1.16", "libxml2/2.15.3", "fmt/12.1.0", "spdlog/1.17.0", "catch2/3.15.0", "zlib/1.3.2", "zstd/1.5.7",
-                   "libarchive/3.8.7", "sol2/3.5.0", "argparse/3.2", "libsodium/1.0.22", "gsl-lite/1.1.0", "jsoncons/1.7.0",
+                   "sol2/3.5.0", "argparse/3.2", "libsodium/1.0.22", "gsl-lite/1.1.0", "jsoncons/1.7.0",
                    "json-schema-validator/2.4.0", "pugixml/1.16", "yaml-cpp/0.9.0", "range-v3/0.12.0", "magic_enum/0.9.8@minifi/develop")
 
 shared_sources = ("CMakeLists.txt", "libminifi/*", "extensions/*", "minifi_main/*", "behave_framework/*", "bin/*", "bootstrap/*", "cmake/*", "conf/*", "controller/*", "core-framework/*",
@@ -40,11 +40,11 @@ class MiNiFiCppMain(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"
     options = {"shared": [True, False], "fPIC": [True, False], "custom_malloc": [False, "jemalloc", "mimalloc", "rpmalloc"], "enable_all": [True, False], "enable_rocksdb": [True, False],
-               "enable_sftp": [True, False], "enable_prometheus": [True, False], "enable_bzip2": [True, False], "enable_lzma": [True, False], "enable_mqtt": [True, False],
-               "enable_couchbase": [True, False], "enable_kafka": [True, False], "enable_opc": [True, False], "skip_tests": [True, False]}
+               "enable_libarchive": [True, False], "enable_sftp": [True, False], "enable_prometheus": [True, False], "enable_bzip2": [True, False], "enable_lzma": [True, False],
+               "enable_mqtt": [True, False], "enable_couchbase": [True, False], "enable_kafka": [True, False], "enable_opc": [True, False], "skip_tests": [True, False]}
 
-    default_options = {"shared": False, "fPIC": True, "custom_malloc": False, "enable_all": False, "enable_rocksdb": False, "enable_sftp": False, "enable_prometheus": False, "enable_bzip2": False,
-                       "enable_lzma": False, "enable_mqtt": False, "enable_couchbase": False, "enable_kafka": False, "enable_opc": False, "skip_tests": False}
+    default_options = {"shared": False, "fPIC": True, "custom_malloc": False, "enable_all": False, "enable_rocksdb": False, "enable_libarchive": False, "enable_sftp": False, "enable_prometheus": False,
+                       "enable_bzip2": False, "enable_lzma": False, "enable_mqtt": False, "enable_couchbase": False, "enable_kafka": False, "enable_opc": False, "skip_tests": False}
 
     exports_sources = shared_sources
 
@@ -54,15 +54,17 @@ class MiNiFiCppMain(ConanFile):
         self.requires("lua/5.4.8", force=True)
         self.requires("asio/1.38.0", force=True)
         self.requires("lz4/1.10.0", force=True)
-        if self.options.enable_all or self.options.enable_rocksdb:
+        if self.options.enable_libarchive:
+            self.requires("libarchive/3.8.7")
+        if self.options.enable_rocksdb:
             self.requires("rocksdb/11.1.1@minifi/develop")
         if self.options.enable_all or self.options.enable_sftp:
             self.requires("libssh2/1.11.1")
         if self.options.enable_all or self.options.enable_prometheus:
             self.requires("prometheus-cpp/1.3.0")
-        if self.options.enable_all or self.options.enable_bzip2:
+        if self.options.enable_bzip2:
             self.requires("bzip2/1.0.8")
-        if self.options.enable_all or self.options.enable_lzma:
+        if self.options.enable_lzma:
             self.requires("xz_utils/5.8.3")
         if self.options.enable_all or self.options.enable_mqtt:
             self.requires("paho-mqtt-c/1.3.16")

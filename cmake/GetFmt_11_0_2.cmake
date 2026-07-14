@@ -15,12 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_fmt_11_0_2)
-    if(MINIFI_FMT_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install Fmt")
-        find_package(fmt REQUIRED)
-    elseif(MINIFI_FMT_SOURCE STREQUAL "BUILD")
-	message("Using CMake to build Fmt from source (version 11.0.2)")
-        include(fmt_11_0_2)
-    endif()
-endfunction(get_fmt_11_0_2)
+if(MINIFI_FMT_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install Fmt")
+    find_package(fmt REQUIRED)
+elseif(MINIFI_FMT_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build Fmt from source (version 11.0.2)")
+    include(fmt_11_0_2)
+endif()

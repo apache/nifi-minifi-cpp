@@ -16,7 +16,6 @@
 # under the License.
 
 include(GetCatch2)
-get_catch2()
 
 ### test functions
 MACRO(GETSOURCEFILES result curdir)

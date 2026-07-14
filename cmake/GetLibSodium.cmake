@@ -15,13 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-function(get_libsodium SOURCE_DIR BINARY_DIR)
-    if(MINIFI_LIBSODIUM_SOURCE STREQUAL "CONAN")
-        message("Using Conan to install libsodium")
-        find_package(LibSodium REQUIRED)
-    elseif(MINIFI_LIBSODIUM_SOURCE STREQUAL "BUILD")
-        message("Using CMake to build libsodium from source")
-        include(BundledLibSodium)
-        use_bundled_libsodium(${SOURCE_DIR} ${BINARY_DIR})
-    endif()
-endfunction(get_libsodium)
+if(MINIFI_LIBSODIUM_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install libsodium")
+    find_package(LibSodium REQUIRED)
+elseif(MINIFI_LIBSODIUM_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build libsodium from source")
+    include(BundledLibSodium)
+    use_bundled_libsodium(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+endif()
