@@ -40,7 +40,8 @@ std::expected<uint64_t, std::error_code> parseDataSize(std::string_view input);
 
 std::expected<uint32_t, std::error_code> parseUnixOctalPermissions(std::string_view input);
 
-std::expected<float, std::error_code> parseFloat(std::string_view input);
+template<std::floating_point T>
+std::expected<T, std::error_code> parseFloatingPoint(std::string_view input);
 
 template<std::integral T>
 std::expected<T, std::error_code> parseIntegralMinMax(const std::string_view input, const T minimum, const T maximum) {
@@ -88,6 +89,24 @@ std::expected<T, std::error_code> parseEnum(const std::string_view input) {
     return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
   }
   return *result;
+}
+
+template<std::floating_point T>
+std::expected<T, std::error_code> parseFloatingPoint(const std::string_view input) {
+  const auto trimmed_input = utils::string::trim(input);
+  T value{};
+
+  const auto [ptr, ec] = std::from_chars(trimmed_input.data(), trimmed_input.data() + trimmed_input.size(), value);
+
+  if (ec != std::errc()) {
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
+  }
+
+  if (ptr != trimmed_input.data() + trimmed_input.size()) {
+    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
+  }
+
+  return value;
 }
 
 }  // namespace org::apache::nifi::minifi::parsing

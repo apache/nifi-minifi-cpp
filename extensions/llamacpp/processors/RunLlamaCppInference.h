@@ -83,6 +83,7 @@ class RunLlamaCppInference : public api::core::ProcessorImpl {
       .build();
   EXTENSIONAPI static constexpr auto MinP = core::PropertyDefinitionBuilder<>::createProperty("Min P")
       .withDescription("Sets a minimum base probability threshold for token selection. 0.0 = disabled.")
+      .withValidator(core::StandardPropertyValidators::NUMBER_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto MinKeep = core::PropertyDefinitionBuilder<>::createProperty("Min Keep")
       .withDescription("If greater than 0, force samplers to return N possible tokens at minimum.")

@@ -55,6 +55,9 @@ minifi_validator toStandardPropertyValidator(const minifi::core::PropertyValidat
   if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::PORT_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
     return MINIFI_VALIDATOR_PORT;
   }
+  if (validator->getEquivalentNifiStandardValidatorName() == minifi::core::StandardPropertyValidators::NUMBER_VALIDATOR.getEquivalentNifiStandardValidatorName()) {
+    return MINIFI_VALIDATOR_NUMBER;
+  }
   gsl_FailFast();
 }
 

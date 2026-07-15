@@ -233,10 +233,6 @@ TEST_CASE("Invalid values for optional double type properties throw exception") 
     REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::TopP.name, "invalid_value"));
     property_name = processors::RunLlamaCppInference::TopP.name;
   }
-  SECTION("Invalid value for Min P property") {
-    REQUIRE(controller.getProcessor()->setProperty(processors::RunLlamaCppInference::MinP.name, "invalid_value"));
-    property_name = processors::RunLlamaCppInference::MinP.name;
-  }
 
   REQUIRE_THROWS(controller.trigger(minifi::test::InputFlowFileData{.content = "42", .attributes = {}}));
   CHECK(minifi::test::utils::verifyLogLinePresenceInPollTime(1s,
