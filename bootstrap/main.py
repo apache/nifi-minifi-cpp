@@ -17,7 +17,7 @@ import tempfile
 import argparse
 import pathlib
 
-from cli import main_menu, do_one_click_build, do_one_click_configuration
+from cli import main_menu, do_one_click_build, do_one_click_configuration, do_one_click_conan_install
 from minifi_option import parse_minifi_options
 from package_manager import get_package_manager
 
@@ -35,6 +35,8 @@ if __name__ == '__main__':
                             help="Initiates the one click build")
         parser.add_argument('--run-configuration', action="store_true", default=False,
                             help="Runs configuration")
+        parser.add_argument('--run-conan-install', action="store_true", default=False,
+                            help="Runs conan install")
         args = parser.parse_args()
         no_confirm = args.noconfirm or args.noninteractive
 
@@ -62,5 +64,8 @@ if __name__ == '__main__':
             do_one_click_build(minifi_options, package_manager)
         elif args.run_configuration:
             do_one_click_configuration(minifi_options, package_manager)
+        elif args.run_conan_install:
+            minifi_options.build_options["USE_CONAN"].value = "ON"
+            do_one_click_conan_install(minifi_options, package_manager)
         else:
             main_menu(minifi_options, package_manager)

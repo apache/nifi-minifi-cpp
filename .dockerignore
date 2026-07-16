@@ -39,6 +39,7 @@ logs
 **/cmake-build-*
 docker/*
 !docker/conf
+!docker/settings_user.yml
 target
 *.pyc
 *.swp
