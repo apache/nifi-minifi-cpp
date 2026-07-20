@@ -2,11 +2,20 @@
 
 > ⚠️ **Tech Preview**
 >
-> The Rust bindings are a technology preview. The API surface (both the
-> `minifi-native` safe API and the `minifi-native-sys` FFI layer) is still
-> evolving, and we are **not yet committed to backward compatibility** for
-> the Rust bindings. Expect breaking changes between MiNiFi C++ releases
-> until the bindings are declared stable.
+> Only the **Rust bindings** are a technology preview. The Rust source API
+> (both the `minifi-native` safe API and the `minifi-native-sys` FFI layer)
+> is still evolving, and we are **not yet committed to source-level backward
+> compatibility** for the Rust bindings — expect breaking changes in the
+> Rust API between MiNiFi C++ releases until the bindings are declared
+> stable.
+>
+> Under the hood, the bindings target the **stable MiNiFi C API**, which
+> *does* provide backward compatibility. This means the compiled artifact
+> is unaffected by Rust-side churn: an extension built against an older
+> version of these bindings will keep loading into newer MiNiFi C++
+> releases. You only need to rebuild against the new bindings if you want
+> to pick up new Rust API features — upgrading the agent alone does not
+> force a rebuild.
 
 This repository provides a safe, idiomatic, and high-performance Rust framework for building native extensions (processors) for [Apache NiFi MiNiFi C++](https://github.com/apache/nifi-minifi-cpp).
 
@@ -32,9 +41,15 @@ Provides the public, safe, and idiomatic Rust API. This is the crate that develo
 #### API Traits
 Pure Rust traits (Processor, ProcessSession, Logger, etc.) that define the abstract behavior of the MiNiFi environment.
 #### Higher level API
-Pure rust traits that simplify the requirements for a working processor
-  - FlowFileTransform
-  - FlowFileSource
+Pure rust traits that simplify the requirements for a working processor. Pick the one that matches your processor's shape — the wrapper takes care of getting/creating the flowfile, wiring up streams, applying attributes, and transferring to the right relationship, so your code only needs to describe the transformation itself.
+  - [FlowFileTransform](minifi_native/src/api/processor_wrappers/flow_file_transform.rs)
+    - Consumes a single incoming flowfile, optionally rewrites its content (returned as an in-memory buffer) and/or adds attributes, then routes it to a relationship. Best for buffered, one-in / one-out transforms.
+  - [FlowFileStreamingTransform](minifi_native/src/api/processor_wrappers/flow_file_stream_transform.rs)
+    - Same one-in / one-out shape as `FlowFileTransform`, but you get both an `InputStream` and an `OutputStream` and write content incrementally. Use this when the payload is too large to hold in memory or when you want to stream data through as you process it.
+  - [FlowFileSource](minifi_native/src/api/processor_wrappers/flow_file_source.rs)
+    - Produces zero or more new flowfiles per trigger without consuming an input. Use this for processors that generate data (timers, pollers, external fetchers) — return an empty vec to yield when there is nothing to emit.
+  - [ComplexProcessor](minifi_native/src/api/processor_wrappers/complex_processor.rs)
+    - Escape hatch that hands you the raw `ProcessContext`, `ProcessSession`, and `Logger` — the same shape as MiNiFi C++'s `onTrigger` or NiFi Java's `Processor#onTrigger`. Use this when your processor doesn't fit the one-in / one-out / source molds: batching multiple flowfiles per trigger, custom routing logic, penalizing/rolling back, or anything that requires manual `session.get()` / `session.transfer()` bookkeeping.
 #### FFI Wrappers
 Concrete structs (CffiSession, CffiLogger, etc.) that implement the API traits by calling the unsafe functions from minifi-native-sys.
 #### Thread safety
