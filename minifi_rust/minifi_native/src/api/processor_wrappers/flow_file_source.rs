@@ -1,8 +1,8 @@
 use crate::api::processor_wrappers::utils::flow_file_content::Content;
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
-    Concurrent, Exclusive, GetControllerService, GetProperty, Logger, MinifiError, OnTriggerResult,
-    ProcessContext, ProcessSession, Processor, Relationship, Schedule,
+    GetControllerService, GetProperty, Logger, MinifiError, MultiThreaded, OnTriggerResult,
+    ProcessContext, ProcessSession, Processor, Relationship, Schedule, SingleThreaded,
 };
 use std::collections::HashMap;
 
@@ -76,7 +76,7 @@ where
 pub struct FlowFileSourceProcessorType {}
 
 impl<Implementation, L> MultiThreadedTrigger
-    for Processor<Implementation, FlowFileSourceProcessorType, Concurrent, L>
+    for Processor<Implementation, FlowFileSourceProcessorType, MultiThreaded, L>
 where
     Implementation: Schedule + FlowFileSource,
     L: Logger,
@@ -102,7 +102,7 @@ where
 }
 
 impl<Implementation, L> SingleThreadedTrigger
-    for Processor<Implementation, FlowFileSourceProcessorType, Exclusive, L>
+    for Processor<Implementation, FlowFileSourceProcessorType, SingleThreaded, L>
 where
     Implementation: Schedule + MutFlowFileSource,
     L: Logger,

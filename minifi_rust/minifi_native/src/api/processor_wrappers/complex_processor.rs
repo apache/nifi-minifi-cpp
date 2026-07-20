@@ -1,7 +1,7 @@
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
-    ComponentIdentifier, Concurrent, Exclusive, Logger, MinifiError, OnTriggerResult,
-    ProcessContext, ProcessSession, Processor, ProcessorDefinition, Schedule,
+    ComponentIdentifier, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
+    ProcessSession, Processor, ProcessorDefinition, Schedule, SingleThreaded,
 };
 
 pub trait MutTrigger {
@@ -33,7 +33,7 @@ pub trait Trigger {
 pub struct ComplexProcessorType {}
 
 impl<Implementation, L> SingleThreadedTrigger
-    for Processor<Implementation, ComplexProcessorType, Exclusive, L>
+    for Processor<Implementation, ComplexProcessorType, SingleThreaded, L>
 where
     Implementation: Schedule + MutTrigger + ComponentIdentifier + ProcessorDefinition,
     L: Logger,
@@ -58,7 +58,7 @@ where
 }
 
 impl<Implementation, L> MultiThreadedTrigger
-    for Processor<Implementation, ComplexProcessorType, Concurrent, L>
+    for Processor<Implementation, ComplexProcessorType, MultiThreaded, L>
 where
     Implementation: Schedule + Trigger + ComponentIdentifier + ProcessorDefinition,
     L: Logger,

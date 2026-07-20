@@ -24,7 +24,7 @@ pub use api::processor_wrappers::utils::flow_file_content::Content;
 
 pub use api::processor::{Processor, Schedule};
 
-pub use api::raw_processor::{Concurrent, Exclusive};
+pub use api::raw_processor::{MultiThreaded, SingleThreaded};
 
 pub use api::logger::{LogLevel, Logger};
 

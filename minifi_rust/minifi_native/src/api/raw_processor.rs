@@ -30,24 +30,24 @@ pub trait ThreadingModel: sealed::Sealed {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Concurrent;
-impl ThreadingModel for Concurrent {
+pub struct MultiThreaded;
+impl ThreadingModel for MultiThreaded {
     const IS_EXCLUSIVE: bool = false;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Exclusive;
-impl ThreadingModel for Exclusive {
+pub struct SingleThreaded;
+impl ThreadingModel for SingleThreaded {
     const IS_EXCLUSIVE: bool = true;
 }
 
 mod sealed {
     pub trait Sealed {}
-    impl Sealed for super::Concurrent {}
-    impl Sealed for super::Exclusive {}
+    impl Sealed for super::MultiThreaded {}
+    impl Sealed for super::SingleThreaded {}
 }
 
-pub trait SingleThreadedTrigger: RawProcessor<Threading = Exclusive> {
+pub trait SingleThreadedTrigger: RawProcessor<Threading = SingleThreaded> {
     fn trigger<PC, PS>(
         &mut self,
         context: &mut PC,
@@ -58,7 +58,7 @@ pub trait SingleThreadedTrigger: RawProcessor<Threading = Exclusive> {
         PS: ProcessSession<FlowFile = PC::FlowFile>;
 }
 
-pub trait MultiThreadedTrigger: RawProcessor<Threading = Concurrent> {
+pub trait MultiThreadedTrigger: RawProcessor<Threading = MultiThreaded> {
     fn trigger<PC, PS>(
         &self,
         context: &mut PC,

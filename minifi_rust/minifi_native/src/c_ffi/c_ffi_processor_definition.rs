@@ -10,8 +10,8 @@ use crate::c_ffi::CffiLogger;
 use crate::c_ffi::c_ffi_output_attribute::COutputAttributes;
 use crate::c_ffi::c_ffi_property::CProperties;
 use crate::{
-    ComponentIdentifier, Concurrent, Exclusive, LogLevel, OutputAttribute, Processor,
-    ProcessorDefinition, Property, Schedule,
+    ComponentIdentifier, LogLevel, MultiThreaded, OutputAttribute, Processor, ProcessorDefinition,
+    Property, Schedule, SingleThreaded,
 };
 use crate::{OnTriggerResult, Relationship};
 use minifi_native_sys::*;
@@ -27,7 +27,7 @@ pub trait DispatchOnTrigger<M: ThreadingModel> {
     ) -> minifi_status;
 }
 
-impl<T> DispatchOnTrigger<Concurrent> for T
+impl<T> DispatchOnTrigger<MultiThreaded> for T
 where
     T: MultiThreadedTrigger,
 {
@@ -55,7 +55,7 @@ where
     }
 }
 
-impl<T> DispatchOnTrigger<Exclusive> for T
+impl<T> DispatchOnTrigger<SingleThreaded> for T
 where
     T: SingleThreadedTrigger,
 {

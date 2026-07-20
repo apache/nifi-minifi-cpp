@@ -2,9 +2,9 @@ use crate::api::process_session::IoState;
 use crate::api::processor_wrappers::utils::context_session_flowfile_bundle::ContextSessionFlowFileBundle;
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
-    Concurrent, Exclusive, GetAttribute, GetControllerService, GetProperty, InputStream, LogLevel,
-    Logger, MinifiError, OnTriggerResult, OutputStream, ProcessContext, ProcessSession, Processor,
-    Relationship, Schedule,
+    GetAttribute, GetControllerService, GetProperty, InputStream, LogLevel, Logger, MinifiError,
+    MultiThreaded, OnTriggerResult, OutputStream, ProcessContext, ProcessSession, Processor,
+    Relationship, Schedule, SingleThreaded,
 };
 use std::collections::HashMap;
 
@@ -115,9 +115,8 @@ where
     }
 }
 
-// Concurrent Implementation (Multi-Threaded)
 impl<Implementation, L> MultiThreadedTrigger
-    for Processor<Implementation, FlowFileStreamTransformProcessorType, Concurrent, L>
+    for Processor<Implementation, FlowFileStreamTransformProcessorType, MultiThreaded, L>
 where
     Implementation: Schedule + FlowFileStreamTransform,
     L: Logger,
@@ -143,9 +142,8 @@ where
     }
 }
 
-// Exclusive Implementation (Single-Threaded)
 impl<Implementation, L> SingleThreadedTrigger
-    for Processor<Implementation, FlowFileStreamTransformProcessorType, Exclusive, L>
+    for Processor<Implementation, FlowFileStreamTransformProcessorType, SingleThreaded, L>
 where
     Implementation: Schedule + MutFlowFileStreamTransform,
     L: Logger,

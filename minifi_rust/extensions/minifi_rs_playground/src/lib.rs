@@ -17,22 +17,22 @@ use crate::processors::put_file::PutFileRs;
 use crate::processors::zoo_processor::ZooProcessorRs;
 
 use minifi_native::{
-    ComplexProcessorType, Concurrent, Exclusive, FlowFileSourceProcessorType,
-    FlowFileStreamTransformProcessorType, FlowFileTransformProcessorType,
+    ComplexProcessorType, FlowFileSourceProcessorType, FlowFileStreamTransformProcessorType,
+    FlowFileTransformProcessorType, MultiThreaded, SingleThreaded,
 };
 
 minifi_native::declare_minifi_extension!(
 processors: [
-    (ComplexProcessorType, Concurrent, GenerateFlowFileRs),
-    (ComplexProcessorType, Concurrent, LogAttributeRs),
-    (ComplexProcessorType, Concurrent, GetFileRs),
-    (ComplexProcessorType, Concurrent, KamikazeProcessorRs),
-    (ComplexProcessorType, Exclusive, CountActualLogging),
-    (FlowFileSourceProcessorType, Concurrent, LoremIpsumCSUser),
-    (FlowFileTransformProcessorType, Concurrent, PutFileRs),
-    (FlowFileStreamTransformProcessorType, Concurrent, AsciifyGerman),
-    (FlowFileStreamTransformProcessorType, Exclusive, DuplicateStreamText),
-    (ComplexProcessorType, Concurrent, ZooProcessorRs),
+    (ComplexProcessorType, MultiThreaded, GenerateFlowFileRs),
+    (ComplexProcessorType, MultiThreaded, LogAttributeRs),
+    (ComplexProcessorType, MultiThreaded, GetFileRs),
+    (ComplexProcessorType, MultiThreaded, KamikazeProcessorRs),
+    (ComplexProcessorType, SingleThreaded, CountActualLogging),
+    (FlowFileSourceProcessorType, MultiThreaded, LoremIpsumCSUser),
+    (FlowFileTransformProcessorType, MultiThreaded, PutFileRs),
+    (FlowFileStreamTransformProcessorType, MultiThreaded, AsciifyGerman),
+    (FlowFileStreamTransformProcessorType, SingleThreaded, DuplicateStreamText),
+    (ComplexProcessorType, MultiThreaded, ZooProcessorRs),
 ],
 controllers: [
     LoremIpsumControllerService,
