@@ -236,7 +236,7 @@ def _get_activate_venv_path():
 def _minifi_setup_env_str(vs_where_location: VsWhereLocation) -> str:
     return f"""
 call refreshenv
-call {_get_activate_venv_path()}
+call "{_get_activate_venv_path()}"
 call {_get_vs_dev_cmd(vs_where_location)}
 setlocal EnableDelayedExpansion
   set PATH=!PATH:C:\\Strawberry\\c\\bin;=!;C:\\Program Files\\NASM;
@@ -302,7 +302,7 @@ class ChocolateyPackageManager(PackageManager):
 
     def run_cmd(self, cmd: str) -> bool:
         env_bat_path = pathlib.Path(__file__).parent.resolve() / "build_environment.bat"
-        res = subprocess.run(f"{env_bat_path} & {cmd}", check=True, text=True)
+        res = subprocess.run(f'"{env_bat_path}" & {cmd}', check=True, text=True)
 
         return res.returncode == 0
 
