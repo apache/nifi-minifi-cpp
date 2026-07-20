@@ -57,7 +57,7 @@ impl LogAttributeRs {
             {
                 return;
             }
-            log_msg.push_str(format!("\nkey:{} value:{}", &key, &value).as_str());
+            log_msg.push_str(format!("\nkey:{} value:{}", key, value).as_str());
         });
         if self.log_payload {
             log_msg.push_str("\nPayload:\n");
