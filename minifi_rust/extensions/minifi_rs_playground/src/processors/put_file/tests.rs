@@ -155,6 +155,8 @@ fn put_file_test_permissions() {
     assert_eq!(std::fs::read_to_string(&expected_path).unwrap(), "test");
     let parent_permissions = std::fs::metadata(put_file_dir).unwrap().permissions();
     let permissions = expected_path.metadata().unwrap().permissions();
+    // 0o100777: Regular File (10) + No special bits (0) + Full permissions (777)
     assert_eq!(permissions.mode(), 0o100777);
-    assert_eq!(parent_permissions.mode(), 0o40777);
+    // 0o040777: Directory (04) + No special bits (0) + Full permissions (777)
+    assert_eq!(parent_permissions.mode(), 0o040777);
 }

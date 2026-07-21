@@ -15,14 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod properties;
-
-use crate::controller_services::lorem_ipsum_controller_service::properties::LENGTH;
 use lipsum::lipsum;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
-    Property, ProvidedInterface,
+    Property, ProvidedInterface, StandardPropertyValidator,
+};
+
+const LENGTH: Property = Property {
+    name: "Length",
+    description: "How many words to generate",
+    is_required: true,
+    is_sensitive: false,
+    supports_expr_lang: false,
+    default_value: Some("25"),
+    validator: StandardPropertyValidator::U64Validator,
+    allowed_values: &[],
+    allowed_type: None,
 };
 
 #[derive(Debug, ComponentIdentifier)]

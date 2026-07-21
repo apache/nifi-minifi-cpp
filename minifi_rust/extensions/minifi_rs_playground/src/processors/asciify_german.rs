@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// This processor is used to test streaming flow file transforms, with changing FlowFile sizes
+
 use crate::processors::asciify_german::relationships::FAILURE;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{

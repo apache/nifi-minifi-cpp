@@ -91,8 +91,18 @@ impl From<NulError> for MinifiError {
 
 impl MinifiError {
     pub(crate) fn to_status(&self) -> minifi_status {
-        // TODO expand this
-        minifi_native_sys::minifi_status_MINIFI_STATUS_UNKNOWN_ERROR
+        match self {
+            MinifiError::UnknownError => {
+                minifi_native_sys::minifi_status_MINIFI_STATUS_UNKNOWN_ERROR
+            }
+            MinifiError::ValidationError(_) => {
+                minifi_native_sys::minifi_status_MINIFI_STATUS_VALIDATION_FAILED
+            }
+            MinifiError::Parse(_) => {
+                minifi_native_sys::minifi_status_MINIFI_STATUS_VALIDATION_FAILED
+            }
+            _ => minifi_native_sys::minifi_status_MINIFI_STATUS_UNKNOWN_ERROR,
+        }
     }
 
     pub fn validation_err<S: Into<Cow<'static, str>>>(msg: S) -> Self {
