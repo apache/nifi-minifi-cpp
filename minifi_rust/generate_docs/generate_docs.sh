@@ -6,7 +6,7 @@ cd "$PROJECT_ROOT"
 
 echo "$PROJECT_ROOT"
 
-DOCKERFILE="generate_docs/generate_docs.dockerfile"
+DOCKERFILE="generate_docs/Dockerfile.generate_docs"
 TARGET_DIR="target/docs"
 
 mkdir -p "$TARGET_DIR"

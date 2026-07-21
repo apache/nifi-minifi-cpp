@@ -75,7 +75,7 @@ fi
 
 # --- Set specific build configurations based on flavor ---
 echo "Building for $FLAVOR"
-DOCKERFILE="minifi_rs_behave/$FLAVOR.dockerfile"
+DOCKERFILE="minifi_rs_behave/Dockerfile.$FLAVOR"
 TARGET_DIR="target/release"
 
 mkdir -p "$TARGET_DIR"

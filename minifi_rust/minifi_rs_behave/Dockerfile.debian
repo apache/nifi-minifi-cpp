@@ -1,7 +1,5 @@
-FROM rust:alpine3.22 AS chef
-# Install build dependencies required for compiling C code & extensions on Alpine
-RUN apk add --no-cache musl-dev gcc g++ clang-dev lld pkgconfig curl tar
-RUN cargo install cargo-chef
+FROM rust:slim-bullseye AS chef
+RUN apt-get update && apt-get install -y clang lld pkg-config curl tar && cargo install cargo-chef
 WORKDIR /app
 
 FROM chef AS planner

@@ -1,6 +1,5 @@
-FROM rust:slim-bullseye AS chef
-RUN apt-get update && apt-get install -y clang lld pkg-config curl tar
-RUN cargo install cargo-chef
+FROM rust:alpine3.22 AS chef
+RUN apk add --no-cache musl-dev gcc g++ clang-dev lld pkgconfig curl tar && cargo install cargo-chef
 WORKDIR /app
 
 FROM chef AS planner

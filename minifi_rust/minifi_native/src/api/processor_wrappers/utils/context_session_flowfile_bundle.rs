@@ -79,7 +79,7 @@ where
     PS: ProcessSession<FlowFile = PC::FlowFile>,
 {
     fn get_attribute(&self, name: &str) -> Result<Option<String>, MinifiError> {
-        if let Some(ff) = &self.flow_file {
+        if let Some(ff) = self.flow_file {
             Ok(self.session.get_attribute(ff, name))
         } else {
             Ok(None)
