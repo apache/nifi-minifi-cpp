@@ -94,6 +94,11 @@ class MiNiFiCppMain(ConanFile):
             self.options["libarchive"].with_bzip2 = True
         if self.options.enable_all or self.options.enable_lzma:
             self.options["libarchive"].with_lzma = True
+        if self.options.enable_all or self.options.enable_kafka:
+            self.options["librdkafka"].ssl = True
+            self.options["librdkafka"].sasl = False
+            self.options["librdkafka"].zstd = True
+            self.options["librdkafka"].zlib = True
 
     def generate(self):
         tc = CMakeToolchain(self)
