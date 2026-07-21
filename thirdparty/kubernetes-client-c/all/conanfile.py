@@ -34,7 +34,7 @@ class kubernetesRecipe(ConanFile):
 
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": True, "fPIC": True}
+    default_options = {"shared": False, "fPIC": True}
 
     implements = ["auto_shared_fpic", "auto_language"]
     languages = "C"
@@ -58,7 +58,10 @@ class kubernetesRecipe(ConanFile):
     def generate(self):
         deps = CMakeDeps(self)
         deps.generate()
+
         tc = CMakeToolchain(self)
+        tc.cache_variables["BUILD_STATIC_LIBS"] = not self.options.shared
+        tc.cache_variables["BUILD_SHARED_LIBS"] = self.options.shared
         tc.generate()
 
     def build(self):
@@ -80,7 +83,4 @@ class kubernetesRecipe(ConanFile):
         rmdir(self, join(self.package_folder, "lib", "cmake"))
 
     def package_info(self):
-        self.cpp_info.set_property("cmake_file_name", "KubernetesClientC")
-        self.cpp_info.set_property("cmake_target_name", "kubernetes")
         self.cpp_info.libs = ["kubernetes"]
-        self.cpp_info.includedirs = ["include", "include/kubernetes"]

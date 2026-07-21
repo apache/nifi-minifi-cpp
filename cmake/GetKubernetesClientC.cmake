@@ -17,7 +17,7 @@
 
 if(MINIFI_KUBERNETES_CLIENT_C_SOURCE STREQUAL "CONAN")
     message("Using Conan to install Kubernetes Client C")
-    find_package(KubernetesClientC REQUIRED)
+    find_package(kubernetes REQUIRED)
 elseif(MINIFI_KUBERNETES_CLIENT_C_SOURCE STREQUAL "BUILD")
     message("Using CMake to build Kubernetes Client C from source")
     include(KubernetesClientC)

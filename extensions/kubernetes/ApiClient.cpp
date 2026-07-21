@@ -17,9 +17,9 @@
 #include "ApiClient.h"
 
 extern "C" {
-#include "config/incluster_config.h"
-#include "config/kube_config.h"
-#include "include/apiClient.h"
+#include "kubernetes/config/incluster_config.h"
+#include "kubernetes/config/kube_config.h"
+#include "kubernetes/include/apiClient.h"
 }
 
 #include "utils/StringUtils.h"

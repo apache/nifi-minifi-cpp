@@ -19,7 +19,7 @@
 #include <memory>
 
 extern "C" {
-#include "include/generic.h"
+#include "kubernetes/include/generic.h"
 }
 
 #include "ApiClient.h"

@@ -20,7 +20,7 @@
 #include <vector>
 
 extern "C" {
-#include "api/CoreV1API.h"
+#include "kubernetes/api/CoreV1API.h"
 }
 
 #include "core/Resource.h"

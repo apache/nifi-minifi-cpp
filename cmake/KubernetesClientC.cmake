@@ -64,4 +64,10 @@ FetchContent_Declare(kubernetes
 
 FetchContent_MakeAvailable(kubernetes)
 
+target_include_directories(kubernetes INTERFACE $<BUILD_INTERFACE:${kubernetes_SOURCE_DIR}>)
+
 target_link_libraries(websockets CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
+
+if (NOT TARGET kubernetes::kubernetes)
+    add_library(kubernetes::kubernetes ALIAS kubernetes)
+endif()
