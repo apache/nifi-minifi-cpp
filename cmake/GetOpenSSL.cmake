@@ -20,6 +20,11 @@ if(MINIFI_OPENSSL_SOURCE STREQUAL "CONAN")
     find_package(OpenSSL REQUIRED)
     set(FIND_OPENSSL_PATH "${CMAKE_BINARY_DIR}/FindOpenSSL.cmake" CACHE INTERNAL "Location of the FindOpenSSL file, for other dependencies")
     set(FIND_CRYPTO_PATH "${CMAKE_BINARY_DIR}/FindOpenSSL.cmake" CACHE INTERNAL "Conan's FindOpenSSL finds the Crypto library, too")
+
+    set(OPENSSL_BIN_DIR "${openssl_PACKAGE_FOLDER_RELEASE}" CACHE STRING "" FORCE)
+
+    include(BundledOpenSSLFips)
+
 elseif(MINIFI_OPENSSL_SOURCE STREQUAL "BUILD")
     message("Using CMake to build OpenSSL from source")
     include(BundledOpenSSL)
