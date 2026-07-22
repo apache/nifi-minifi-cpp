@@ -1,0 +1,31 @@
+According to the issue comment https://github.com/SOCI/soci/issues/1306#issuecomment-3351612844 SQLWCHAR being char32_t with libiodbc is unexpected and is not supported by the SOCI library
+This patch disables SQLWCHAR using wstrings and instead uses string type as in previous versions of SOCI.
+
+diff --git a/src/backends/odbc/statement.cpp b/src/backends/odbc/statement.cpp
+index fcd13593..40d1adba 100644
+--- a/src/backends/odbc/statement.cpp
++++ b/src/backends/odbc/statement.cpp
+@@ -423,11 +423,6 @@ void odbc_statement_backend::describe_column(int colNum,
+     case SQL_BIGINT:
+         dbtype = is_unsigned == SQL_TRUE ? db_uint64 : db_int64;
+         break;
+-    case SQL_WCHAR:
+-    case SQL_WVARCHAR:
+-    case SQL_WLONGVARCHAR:
+-        dbtype = db_wstring;
+-        break;
+     case SQL_CHAR:
+     case SQL_VARCHAR:
+     case SQL_LONGVARCHAR:
+diff --git a/src/backends/odbc/vector-use-type.cpp b/src/backends/odbc/vector-use-type.cpp
+index ab7246d9..0d441092 100644
+--- a/src/backends/odbc/vector-use-type.cpp
++++ b/src/backends/odbc/vector-use-type.cpp
+@@ -243,7 +243,6 @@ void* odbc_vector_use_type_backend::prepare_for_bind(SQLUINTEGER &size,
+             buf_ = new char[maxSize * vecSize * sizeof(SQLWCHAR)];
+             memset(buf_, 0, maxSize * vecSize * sizeof(SQLWCHAR));
+
+-            static_assert(sizeof(SQLWCHAR) == sizeof(char16_t), "unexpected SQLWCHAR size");
+             char16_t* pos = reinterpret_cast<char16_t*>(buf_);
+
+             for (std::size_t i = 0; i != vecSize; ++i)

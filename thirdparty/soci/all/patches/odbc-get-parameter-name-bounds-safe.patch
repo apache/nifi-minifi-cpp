@@ -1,0 +1,17 @@
+diff --git a/src/backends/odbc/statement.cpp b/src/backends/odbc/statement.cpp
+--- a/src/backends/odbc/statement.cpp
++++ b/src/backends/odbc/statement.cpp
+@@ -344,7 +344,12 @@
+ 
+ std::string odbc_statement_backend::get_parameter_name(int index) const
+ {
+-    return names_.at(index);
++    // Positional use elements have no entry in names_ (which only holds the
++    // ":name" parameters parsed from the query). Return an empty name for them
++    // instead of throwing, matching the sqlite3/empty backends' behaviour.
++    if (index < 0 || static_cast<std::size_t>(index) >= names_.size())
++        return std::string();
++    return names_[index];
+ }
+ 
+ std::string odbc_statement_backend::rewrite_for_procedure_call(

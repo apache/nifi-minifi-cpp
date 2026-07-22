@@ -63,7 +63,7 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
         return True
     conan_options = add_conan_options_from_cmake_options(["ENABLE_ALL", "ENABLE_LIBARCHIVE", "ENABLE_ROCKSDB", "ENABLE_SFTP", "ENABLE_PROMETHEUS", "ENABLE_BZIP2", "ENABLE_LZMA", "ENABLE_MQTT",
                                                           "ENABLE_COUCHBASE", "ENABLE_KAFKA", "ENABLE_OPC", "ENABLE_GCP", "ENABLE_GRPC_FOR_LOKI", "ENABLE_BUSTACHE", "ENABLE_KUBERNETES",
-                                                          "ENABLE_AZURE", "ENABLE_LLAMACPP", "ENABLE_AWS", "PORTABLE", "SKIP_TESTS"],
+                                                          "ENABLE_AZURE", "ENABLE_LLAMACPP", "ENABLE_AWS", "ENABLE_SQL", "PORTABLE", "SKIP_TESTS"],
                                                          minifi_options)
     if minifi_options.custom_malloc is not None and minifi_options.custom_malloc.value not in (None, "OFF"):
         conan_options += f' -o "&:custom_malloc={minifi_options.custom_malloc.value}"'
