@@ -44,7 +44,13 @@ bool Identifier::isNil() const {
 }
 
 Identifier& Identifier::operator++() {
-  for (int byte_idx = 15; byte_idx >= 0 && ++data_[byte_idx] == 0; --byte_idx) {}
+  // increment with carry
+  for (int byte_idx = 15; byte_idx >= 0; --byte_idx) {
+     ++data_[byte_idx];
+     if (data_[byte_idx] != 0) {
+       break;
+     }
+  }
   return *this;
 }
 
