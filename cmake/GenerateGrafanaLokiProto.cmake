@@ -43,7 +43,7 @@ if(MINIFI_GRPC_SOURCE STREQUAL "CONAN")
             grafana-loki-push.proto
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/protos
         DEPENDS
-            ${LOKI_PROTOC_EXECUTABLE}
+            protobuf::protoc
             gRPC::grpc_cpp_plugin
             ${CMAKE_CURRENT_SOURCE_DIR}/protos/grafana-loki-push.proto
     )

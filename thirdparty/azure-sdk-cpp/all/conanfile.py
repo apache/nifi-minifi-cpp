@@ -43,8 +43,6 @@ class AzureSDKForCppConan(ConanFile):
         "transport_curl": [True, False]
     }
 
-    default_options = {"shared": False, "fPIC": True}
-
     default_options = {
         "shared": False,
         "fPIC": True,
@@ -94,7 +92,7 @@ class AzureSDKForCppConan(ConanFile):
             if not self.options.transport_curl and not self.options.get_safe("transport_winhttp"):
                 raise ConanInvalidConfiguration("On Windows, HTTP Transport options: transport_winhttp or transport_curl must be enabled.")
         elif not self.options.transport_curl:
-                raise ConanInvalidConfiguration("The HTTP Transport option transport_curl must be enabled.")
+            raise ConanInvalidConfiguration("The HTTP Transport option transport_curl must be enabled.")
 
         if self.settings.compiler == 'gcc' and Version(self.settings.compiler.version) < "6":
             raise ConanInvalidConfiguration("Building requires GCC >= 6")

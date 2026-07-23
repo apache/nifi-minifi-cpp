@@ -31,7 +31,7 @@ if (WIN32)
 
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tzdata)
 
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
+    file(COPY ${CMAKE_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
         DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
 
     file(COPY ${tzdata_SOURCE_DIR}/
@@ -41,7 +41,7 @@ if (WIN32)
         DESTINATION tzdata
         COMPONENT bin)
 
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
+    install(FILES ${CMAKE_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
         DESTINATION tzdata
         COMPONENT bin)
 endif()
