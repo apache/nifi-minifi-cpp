@@ -41,13 +41,15 @@
 #include "minifi-cpp/provenance/Provenance.h"
 #include "FlowController.h"
 #include "minifi-cpp/utils/gsl.h"
+#include "core/Resource.h"
+#include "minifi-cpp/core/reporting/ReportingTaskContext.h"
 
 namespace org::apache::nifi::minifi::core::reporting {
 
 const char *SiteToSiteProvenanceReportingTask::ProvenanceAppStr = "MiNiFi Flow";
 
 void SiteToSiteProvenanceReportingTask::initialize() {
-  RemoteProcessGroupPort::initialize();
+  setSupportedProperties(RemoteProcessGroupPort::Properties);
 }
 
 void setJsonStr(const std::string& key, const std::string& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) { // NOLINT
@@ -88,7 +90,7 @@ void appendJsonStr(const utils::SmallString<N>& value, rapidjson::Value& parent,
   parent.PushBack(valueVal, alloc);
 }
 
-std::string SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, core::ProcessSession&, const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records) {
+void SiteToSiteProvenanceReportingTask::getJsonReport(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, std::string &report) {
   rapidjson::Document array(rapidjson::kArrayType);
   rapidjson::Document::AllocatorType &alloc = array.GetAllocator();
 
@@ -154,12 +156,12 @@ std::string SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContex
   return buffer.GetString();
 }
 
-void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+void SiteToSiteProvenanceReportingTask::onSchedule(ReportingTaskContext& context) {
   RemoteProcessGroupPort::onSchedule(context, session_factory);
   context.setTriggerWhenEmpty(true);
 }
 
-void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+void SiteToSiteProvenanceReportingTask::onTrigger(ReportingTaskContext& context) {
   std::shared_ptr<provenance::ProvenanceRepository> repo = context.getProvenanceRepository();
   if (!repo) {
     throw minifi::Exception(ExceptionType::REPOSITORY_EXCEPTION, "Failed to retrieve provenance repository");
@@ -200,7 +202,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
     return;
   }
 
-  auto protocol_ = getNextProtocol();
+  auto protocol_ = remote_port_.getImpl<RemoteProcessGroupPort>().getNextProtocol();
 
   if (!protocol_) {
     context.yield();
@@ -235,5 +237,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
   }
   returnProtocol(context, std::move(protocol_));
 }
+
+REGISTER_RESOURCE(SiteToSiteProvenanceReportingTask, ReportingTask);
 
 }  // namespace org::apache::nifi::minifi::core::reporting

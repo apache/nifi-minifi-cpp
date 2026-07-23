@@ -95,6 +95,7 @@ struct minifi_process_context;
 struct minifi_process_session;
 struct minifi_controller_service;
 struct minifi_controller_service_context;
+struct minifi_reporting_task_context;
 struct minifi_input_stream;
 struct minifi_output_stream;
 struct minifi_extension;
@@ -159,6 +160,12 @@ struct minifi_controller_service_metadata {
   struct minifi_logger* logger;  // borrowed non-null reference, live until the controller service is live
 };
 
+struct minifi_reporting_task_metadata {
+  struct minifi_string_view uuid;
+  struct minifi_string_view name;
+  struct minifi_logger* logger;  // borrowed non-null reference, live until the controller service is live
+};
+
 struct minifi_processor_callbacks {
   MINIFI_OWNED void* (*create)(struct minifi_processor_metadata);
   void (*destroy)(MINIFI_OWNED void*);
@@ -173,6 +180,14 @@ struct minifi_controller_service_callbacks {
   enum minifi_status (*enable)(void*, struct minifi_controller_service_context*);
   void (*disable)(void*);
   void* (*get_interface)(void* ctx, struct minifi_string_view interface_type);
+};
+
+struct minifi_reporting_task_callbacks {
+  MINIFI_OWNED void* (*create)(struct minifi_reporting_task_metadata);
+  void (*destroy)(MINIFI_OWNED void*);
+  enum minifi_status (*enable)(void*, struct minifi_reporting_task_context*);
+  enum minifi_status (*trigger)(void*, struct minifi_reporting_task_context*);
+  void (*disable)(void*);
 };
 
 struct minifi_processor_definition {
@@ -203,6 +218,15 @@ struct minifi_controller_service_definition {
   const struct minifi_string_view* provided_interfaces_ptr;
 
   struct minifi_controller_service_callbacks callbacks;
+};
+
+struct minifi_reporting_task_definition {
+  struct minifi_string_view full_name;  // '::'-delimited fully qualified name e.g. 'org::apache::nifi::minifi::processors::GetFile
+  struct minifi_string_view description;
+  size_t properties_count;
+  const struct minifi_property_definition* properties_ptr;
+
+  struct minifi_reporting_task_callbacks callbacks;
 };
 
 struct minifi_extension_definition {
@@ -272,6 +296,9 @@ enum minifi_status minifi_process_session_get_flow_file_id(struct minifi_process
 
 enum minifi_status minifi_controller_service_context_get_property(struct minifi_controller_service_context* context,
     struct minifi_string_view property_name, void (*cb)(void* user_ctx, struct minifi_string_view property_value), void* user_ctx);
+
+enum minifi_status minifi_reporting_task_context_get_property(struct minifi_reporting_task_context* context,
+  struct minifi_string_view property_name, void (*cb)(void* user_ctx, struct minifi_string_view property_value), void* user_ctx);
 
 struct minifi_ssl_data {
   struct minifi_string_view ca_certificate_file;
