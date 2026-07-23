@@ -66,21 +66,10 @@ impl StaticStrAsMinifiCStr for &'static str {
 }
 
 pub trait ConvertMinifiStringView {
-    unsafe fn as_string(&self) -> Result<String, FfiConversionError>;
     unsafe fn as_str(&self) -> Result<&str, FfiConversionError>;
 }
 
 impl ConvertMinifiStringView for minifi_string_view {
-    unsafe fn as_string(&self) -> Result<String, FfiConversionError> {
-        if self.data.is_null() {
-            return Err(FfiConversionError::NullPointer);
-        }
-        unsafe {
-            let slice = std::slice::from_raw_parts(self.data.cast::<u8>(), self.length);
-            String::from_utf8(slice.to_vec()).map_err(|_| FfiConversionError::InvalidUtf8)
-        }
-    }
-
     unsafe fn as_str(&self) -> Result<&str, FfiConversionError> {
         if self.data.is_null() {
             return Err(FfiConversionError::NullPointer);

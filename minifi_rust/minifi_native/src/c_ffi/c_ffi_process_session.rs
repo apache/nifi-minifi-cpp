@@ -233,7 +233,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             ) {
                 unsafe {
                     let result_target = &mut *(rs_attr_value as *mut Option<String>);
-                    *result_target = minifi_attr_value.as_string().ok()
+                    *result_target = minifi_attr_value.as_str().map(|s| s.to_owned()).ok()
                 }
             }
 
@@ -594,7 +594,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             ) {
                 unsafe {
                     let result_target = &mut *(rs_flow_file_id as *mut Option<String>);
-                    *result_target = minifi_flow_file_id.as_string().ok()
+                    *result_target = minifi_flow_file_id.as_str().map(|s| s.to_owned()).ok()
                 }
             }
 

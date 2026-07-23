@@ -10,14 +10,14 @@
 > stable.
 >
 > Under the hood, the bindings target the **stable MiNiFi C API**, which
-> *does* provide backward compatibility. This means the compiled artifact
+> **does** provide ABI backward compatibility. This means the compiled artifact
 > is unaffected by Rust-side churn: an extension built against an older
 > version of these bindings will keep loading into newer MiNiFi C++
 > releases. You only need to rebuild against the new bindings if you want
 > to pick up new Rust API features — upgrading the agent alone does not
 > force a rebuild.
 
-This repository provides a safe, idiomatic, and high-performance Rust framework for building native extensions (processors) for [Apache NiFi MiNiFi C++](https://github.com/apache/nifi-minifi-cpp).
+This project provides a safe, idiomatic, and high-performance Rust framework for building native extensions (processors) for [Apache NiFi MiNiFi C++](https://github.com/apache/nifi-minifi-cpp).
 
 It is designed to offer a robust developer experience, allowing you to write powerful and reliable data processing components in safe Rust.
 
@@ -34,12 +34,16 @@ The framework completely encapsulates the unsafe C FFI (Foreign Function Interfa
    - Windows (x86_64)
 
 The project is structured as a Cargo workspace with a clear, layered architecture:
+
 ### [minifi-native-sys](minifi_native_sys)
 Contains the raw, unsafe FFI bindings to the minifi-api.h C API.
+
 ### [minifi-native](minifi_native)
 Provides the public, safe, and idiomatic Rust API. This is the crate that developers will use to build their processors.
+
 #### API Traits
 Pure Rust traits (Processor, ProcessSession, Logger, etc.) that define the abstract behavior of the MiNiFi environment.
+
 #### Higher level API
 Pure rust traits that simplify the requirements for a working processor. Pick the one that matches your processor's shape — the wrapper takes care of getting/creating the flowfile, wiring up streams, applying attributes, and transferring to the right relationship, so your code only needs to describe the transformation itself.
   - [FlowFileTransform](minifi_native/src/api/processor_wrappers/flow_file_transform.rs)
@@ -50,14 +54,19 @@ Pure rust traits that simplify the requirements for a working processor. Pick th
     - Produces zero or more new flowfiles per trigger without consuming an input. Use this for processors that generate data (timers, pollers, external fetchers) — return an empty vec to yield when there is nothing to emit.
   - [ComplexProcessor](minifi_native/src/api/processor_wrappers/complex_processor.rs)
     - Escape hatch that hands you the raw `ProcessContext`, `ProcessSession`, and `Logger` — the same shape as MiNiFi C++'s `onTrigger` or NiFi Java's `Processor#onTrigger`. Use this when your processor doesn't fit the one-in / one-out / source molds: batching multiple flowfiles per trigger, custom routing logic, penalizing/rolling back, or anything that requires manual `session.get()` / `session.transfer()` bookkeeping.
+
 #### FFI Wrappers
 Concrete structs (CffiSession, CffiLogger, etc.) that implement the API traits by calling the unsafe functions from minifi-native-sys.
+
 #### Thread safety
 The trait system differentiates between thread-safe (&self) and single-threaded (&mut self) processors at compile time.
+
 #### Comprehensive Mocking
 A full suite of mock objects allows for fast and reliable unit testing of all processor logic.
+
 ### [minifi_native_macros](minifi_native_macros)
 Helper crate that includes the procedural macros.
+
 ### [minifi_rs_behave](minifi_rs_behave)
 Run the behave integration tests using MiNiFi's Docker framework. This will test the release artifacts against the latest released [MiNiFi native docker container](https://hub.docker.com/r/apache/nifi-minifi-cpp).
 There is a handy alias to initiate all behave tests.
@@ -89,6 +98,7 @@ Copy the library file into the MiNiFi C++ application's `extensions/` directory.
 Restart the MiNiFi C++ agent to automatically discover and load the new processors.
 
 ## Included Extensions
+
 ### [minifi_rs_playground](extensions/minifi_rs_playground)
 A concrete example and testing ground for extensions built using the minifi-native crate.
 - Demonstrates how to implement the Processor traits, define processor properties, and route to relationships.

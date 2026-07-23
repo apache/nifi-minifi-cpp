@@ -31,7 +31,7 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub struct TransformedFlowFile<'a> {
     target_relationship_name: &'static str,
-    new_content: Option<Content<'a>>, // If None the content doesn't change
+    new_content: Option<Content<'a>>, // If None, the content doesn't change
     attributes_to_add: HashMap<String, String>,
 }
 
