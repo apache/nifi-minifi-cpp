@@ -92,6 +92,9 @@ impl From<NulError> for MinifiError {
 impl MinifiError {
     pub(crate) fn to_status(&self) -> minifi_status {
         match self {
+            MinifiError::MissingRequiredProperty(_) => {
+                minifi_native_sys::minifi_status_MINIFI_STATUS_PROPERTY_NOT_SET
+            }
             MinifiError::UnknownError => {
                 minifi_native_sys::minifi_status_MINIFI_STATUS_UNKNOWN_ERROR
             }
@@ -101,6 +104,7 @@ impl MinifiError {
             MinifiError::Parse(_) => {
                 minifi_native_sys::minifi_status_MINIFI_STATUS_VALIDATION_FAILED
             }
+            MinifiError::StatusError((_, ecode)) => u32::from(*ecode),
             _ => minifi_native_sys::minifi_status_MINIFI_STATUS_UNKNOWN_ERROR,
         }
     }
