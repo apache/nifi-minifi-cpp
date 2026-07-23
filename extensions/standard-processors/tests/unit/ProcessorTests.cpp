@@ -474,7 +474,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
       [&](const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
         auto json_str = taskReport->getJsonReport(*context, *session, recordsReport.value());
         REQUIRE(recordsReport->size() == 1);
-        REQUIRE(taskReport->getName() == std::string(minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
+        REQUIRE(taskReport->getName() == "reporter");
         REQUIRE(json_str.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
       };
 
