@@ -61,9 +61,6 @@ struct FlowSchema {
   Keys controller_services;
   Keys controller_service_properties;
   Keys remote_process_group;
-  Keys provenance_reporting;
-  Keys provenance_reporting_port_uuid;
-  Keys provenance_reporting_batch_size;
   Keys funnels;
   Keys input_ports;
   Keys output_ports;
@@ -97,6 +94,9 @@ struct FlowSchema {
   Keys parameter_providers;
   Keys parameter_provider_properties;
   Keys parameter_provider;
+
+  Keys reporting_tasks;
+  Keys reporting_task_properties;
 
   static FlowSchema getDefault();
   static FlowSchema getNiFiFlowJson();

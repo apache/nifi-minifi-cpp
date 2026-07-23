@@ -28,32 +28,30 @@
 #include "core/ProcessSession.h"
 #include "RemoteProcessGroupPort.h"
 #include "core/logging/LoggerFactory.h"
+#include "core/reporting/ReportingTaskBase.h"
 
 namespace org::apache::nifi::minifi::core::reporting {
 
-class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessGroupPort {
+class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
  public:
-  explicit SiteToSiteProvenanceReportingTask(std::shared_ptr<Configure> configure)
-      : minifi::RemoteProcessGroupPort(ReportTaskName, "", std::move(configure),
-        utils::IdGenerator::getIdGenerator()->generate(), sitetosite::TransferDirection::SEND, logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
+  explicit SiteToSiteProvenanceReportingTask(ReportingTaskMetadata metadata)
+      : ReportingTaskBase{metadata},
+        remote_port_{metadata.name, metadata.uuid, std::make_unique<RemoteProcessGroupPort>(metadata.name, "", Configure::create(),
+        metadata.uuid, sitetosite::TransferDirection::SEND, metadata.logger)}
+  {
     batch_size_ = 100;
   }
 
   ~SiteToSiteProvenanceReportingTask() override = default;
 
-  static constexpr char const* ReportTaskName = "SiteToSiteProvenanceReportingTask";
   static const char *ProvenanceAppStr;
 
-  static std::string getJsonReport(core::ProcessContext& context, core::ProcessSession& session, const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records);
+  static std::string getJsonReport(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records);
 
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
-  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
+  void onSchedule(ReportingTaskContext& context) override;
+  void onTrigger(ReportingTaskContext& context) override;
 
   void initialize() override;
-
-  void setPortUUID(utils::Identifier &port_uuid) {
-    protocol_uuid_ = port_uuid;
-  }
 
   void setBatchSize(int size) {
     batch_size_ = size;
@@ -63,11 +61,8 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessGroupPort 
     return (batch_size_);
   }
 
-  void getPortUUID(utils::Identifier & port_uuid) {
-    port_uuid = protocol_uuid_;
-  }
-
  private:
+  Processor remote_port_;
   int batch_size_;
 };
 
