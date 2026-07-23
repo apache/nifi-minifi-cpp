@@ -98,7 +98,7 @@ impl Trigger for ZooProcessorRs {
 }
 
 impl ProcessorDefinition for ZooProcessorRs {
-    const DESCRIPTION: &'static str = "Test ZooProcessorRs";
+    const DESCRIPTION: &'static str = "RUST TEST PROCESSOR: ZooProcessorRs";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Forbidden;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

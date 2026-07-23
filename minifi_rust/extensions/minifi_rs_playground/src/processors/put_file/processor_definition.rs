@@ -43,7 +43,8 @@ const fn get_properties() -> &'static [Property] {
 }
 
 impl ProcessorDefinition for PutFileRs {
-    const DESCRIPTION: &'static str = "Writes the contents of a FlowFile to the local file system.";
+    const DESCRIPTION: &'static str =
+        "RUST TEST PROCESSOR: Writes the contents of a FlowFile to the local file system.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

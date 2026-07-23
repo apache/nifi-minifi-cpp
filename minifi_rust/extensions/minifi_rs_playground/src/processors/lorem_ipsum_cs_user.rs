@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// Simple test processor that uses a controller service
 mod properties;
 
 use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;

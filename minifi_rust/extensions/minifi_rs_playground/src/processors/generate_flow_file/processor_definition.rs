@@ -22,7 +22,7 @@ use minifi_native::{
 };
 
 impl ProcessorDefinition for GenerateFlowFileRs {
-    const DESCRIPTION: &'static str = "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.";
+    const DESCRIPTION: &'static str = "RUST TEST PROCESSOR: This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Forbidden;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

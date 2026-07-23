@@ -54,7 +54,7 @@ impl EnableControllerService for LoremIpsumControllerService {
 }
 
 impl ControllerServiceDefinition for LoremIpsumControllerService {
-    const DESCRIPTION: &'static str = "Simple Rusty Controller Service to test API";
+    const DESCRIPTION: &'static str = "RUST TEST CONTROLLER SERVICE: Holds generated lorem ipsum";
     const PROPERTIES: &'static [Property] = &[LENGTH];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
 }

@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// This is the (not production ready) reimplementation of the already existing standard PutFile processor
+
 use crate::processors::put_file::relationships::{FAILURE, SUCCESS};
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{

@@ -2,6 +2,7 @@
 name = "minifi_rs_playground"
 version = "0.1.0"
 edition = "2024"
+description = "This extension contains reimplentations of already existing processors and test only processors. These are not intended for production usage."
 
 [lib]
 crate-type = ["cdylib"]

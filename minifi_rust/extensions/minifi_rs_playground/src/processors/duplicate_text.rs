@@ -61,7 +61,7 @@ impl MutFlowFileStreamTransform for DuplicateStreamText {
 }
 
 impl ProcessorDefinition for DuplicateStreamText {
-    const DESCRIPTION: &'static str = "Duplicate text";
+    const DESCRIPTION: &'static str = "RUST TEST PROCESSOR: Duplicate text";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

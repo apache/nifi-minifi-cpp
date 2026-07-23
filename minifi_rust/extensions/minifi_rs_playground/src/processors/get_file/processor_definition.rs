@@ -25,7 +25,7 @@ use minifi_native::{
 };
 
 impl ProcessorDefinition for GetFileRs {
-    const DESCRIPTION: &'static str = "Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.";
+    const DESCRIPTION: &'static str = "RUST TEST PROCESSOR: Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Forbidden;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

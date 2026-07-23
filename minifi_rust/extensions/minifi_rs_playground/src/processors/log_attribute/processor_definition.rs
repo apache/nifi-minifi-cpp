@@ -23,7 +23,7 @@ use minifi_native::{
 
 impl ProcessorDefinition for LogAttributeRs {
     const DESCRIPTION: &'static str =
-        "Logs attributes of flow files in the MiNiFi application log.";
+        "RUST TEST PROCESSOR: Logs attributes of flow files in the MiNiFi application log.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

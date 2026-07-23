@@ -23,7 +23,8 @@ use minifi_native::{
 };
 
 impl ProcessorDefinition for LoremIpsumCSUser {
-    const DESCRIPTION: &'static str = "Processor to test Controller Service API";
+    const DESCRIPTION: &'static str =
+        "RUST TEST PROCESSOR: Processor to test Controller Service API";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Forbidden;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

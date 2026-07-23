@@ -21,7 +21,7 @@ use minifi_native::{
 };
 
 impl ProcessorDefinition for AsciifyGerman {
-    const DESCRIPTION: &'static str = "This processor switches German characters with their ascii counterparts. (to test stream API)";
+    const DESCRIPTION: &'static str = "RUST TEST PROCESSOR: This processor switches German characters with their ascii counterparts. (to test stream API)";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

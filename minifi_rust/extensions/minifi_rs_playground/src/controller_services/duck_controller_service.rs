@@ -50,7 +50,7 @@ impl EnableControllerService for DuckControllerRs {
 }
 
 impl ControllerServiceDefinition for DuckControllerRs {
-    const DESCRIPTION: &'static str = "Test DuckControllerRs";
+    const DESCRIPTION: &'static str = "RUST TEST CONTROLLER SERVICE: DuckControllerRs";
     const PROPERTIES: &'static [Property] = &[];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[
         create_provided_interface!(dyn CanFlyControllerApi),

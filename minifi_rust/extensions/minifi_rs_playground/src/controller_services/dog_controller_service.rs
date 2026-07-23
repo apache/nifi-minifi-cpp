@@ -87,7 +87,7 @@ impl EnableControllerService for DogControllerRs {
 }
 
 impl ControllerServiceDefinition for DogControllerRs {
-    const DESCRIPTION: &'static str = "Test DogControllerRs";
+    const DESCRIPTION: &'static str = "RUST TEST CONTROLLER SERVICE: DogControllerRs";
     const PROPERTIES: &'static [Property] = &[HAS_JETPACK, EXTRA_INFO];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[
         create_provided_interface!(dyn CanFlyControllerApi),

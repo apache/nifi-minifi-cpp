@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// This processor is used to test Errors and panic during schedule/trigger
+
 mod properties;
 mod relationships;
 

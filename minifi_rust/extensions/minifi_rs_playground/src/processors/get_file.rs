@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// This is the (not production ready) reimplementation of the already existing standard GetFile processor
+
 use crate::processors::get_file::output_attributes::{
     ABSOLUTE_PATH_OUTPUT_ATTRIBUTE, FILENAME_OUTPUT_ATTRIBUTE,
 };

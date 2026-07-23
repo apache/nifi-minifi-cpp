@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// Test processor to test lazy logging
+
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetProperty, Logger, MinifiError, MutTrigger, OnTriggerResult, OutputAttribute, ProcessContext,

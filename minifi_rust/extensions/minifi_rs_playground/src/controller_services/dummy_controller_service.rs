@@ -34,7 +34,7 @@ impl EnableControllerService for DummyControllerService {
 }
 
 impl ControllerServiceDefinition for DummyControllerService {
-    const DESCRIPTION: &'static str = "Dummy Controller Service";
+    const DESCRIPTION: &'static str = "RUST TEST CONTROLLER SERVICE: Dummy Controller Service";
     const PROPERTIES: &'static [Property] = &[];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
 }

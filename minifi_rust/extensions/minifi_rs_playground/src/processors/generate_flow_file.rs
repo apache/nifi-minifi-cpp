@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+// This is the (not production ready) reimplementation of the already existing standard GenerateFlowFile processor
+
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
