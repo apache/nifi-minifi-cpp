@@ -25,7 +25,8 @@ enum class ResourceType {
   ControllerService,
   InternalResource,
   DescriptionOnly,
-  ParameterProvider
+  ParameterProvider,
+  ReportingTask
 };
 
 struct ClassDescription {
