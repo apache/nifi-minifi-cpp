@@ -23,17 +23,18 @@
 #include <vector>
 
 #include "Funnel.h"
+#include "c2/FlowStatusRequest.h"
 #include "core/ParameterContext.h"
-#include "core/Processor.h"
 #include "core/ParameterTokenParser.h"
+#include "core/Processor.h"
 #include "core/ReferenceParser.h"
 #include "core/flow/CheckRequiredField.h"
 #include "core/flow/StructuredConnectionParser.h"
 #include "core/state/Value.h"
+#include "utils/PropertyErrors.h"
 #include "utils/RegexUtils.h"
 #include "utils/TimeUtil.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
-#include "utils/PropertyErrors.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -129,11 +130,12 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
     Node parameterContextsNode = root_node[schema_.parameter_contexts];
     Node parameterProvidersNode = root_node[schema_.parameter_providers];
     Node provenanceReportNode = root_node[schema_.provenance_reporting];
+    Node reportingTasksNode = root_node[schema_.reporting_tasks];
 
     parseParameterContexts(parameterContextsNode, parameterProvidersNode);
     // Create the root process group
     std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
-    parseProvenanceReporting(provenanceReportNode, root.get());
+    parseLegacyProvenanceReporting(provenanceReportNode, root.get());
 
     root->verify();
 
@@ -569,78 +571,6 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     }
     parentGroup->addProcessGroup(std::move(group));
   }
-}
-
-void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::ProcessGroup* parent_group) {
-  utils::Identifier port_uuid;
-
-  if (!parent_group) {
-    logger_->log_error("parseProvenanceReporting: no parent group exists");
-    return;
-  }
-
-  if (!node || node.isNull()) {
-    logger_->log_debug("no provenance reporting task specified");
-    return;
-  }
-
-  auto report_task = createProvenanceReportTask();
-
-  utils::Identifier task_uuid;
-  task_uuid = getOrGenerateId(node);
-  report_task->setUUID(task_uuid);
-
-  checkRequiredField(node, schema_.scheduling_strategy);
-  auto schedulingStrategyStr = node[schema_.scheduling_strategy].getString().value();
-  checkRequiredField(node, schema_.scheduling_period);
-  auto schedulingPeriodStr = node[schema_.scheduling_period].getString().value();
-
-  if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(schedulingPeriodStr)) {
-    logger_->log_debug("ProvenanceReportingTask schedulingPeriod {}", scheduling_period);
-    report_task->setSchedulingPeriod(*scheduling_period);
-  }
-
-  if (schedulingStrategyStr == "TIMER_DRIVEN") {
-    report_task->setSchedulingStrategy(core::TIMER_DRIVEN);
-    logger_->log_debug("ProvenanceReportingTask scheduling strategy {}", schedulingStrategyStr);
-  } else {
-    throw std::invalid_argument("Invalid scheduling strategy " + schedulingStrategyStr);
-  }
-
-  if (node["host"] && node["port"]) {
-    auto hostStr = node["host"].getString().value();
-
-    std::string portStr = node["port"].getIntegerAsString().value();
-    if (auto port = parsing::parseIntegral<int64_t>(portStr); port && !hostStr.empty()) {
-      logger_->log_debug("ProvenanceReportingTask port {}", *port);
-      std::string url = hostStr + ":" + portStr;
-      report_task->getImpl<core::reporting::SiteToSiteProvenanceReportingTask>().setURL(url);
-    }
-  }
-
-  if (node["url"]) {
-    auto urlStr = node["url"].getString().value();
-    if (!urlStr.empty()) {
-      report_task->getImpl<core::reporting::SiteToSiteProvenanceReportingTask>().setURL(urlStr);
-      logger_->log_debug("ProvenanceReportingTask URL {}", urlStr);
-    }
-  }
-  checkRequiredField(node, schema_.provenance_reporting_port_uuid);
-  auto portUUIDStr = node[schema_.provenance_reporting_port_uuid].getString().value();
-  checkRequiredField(node, schema_.provenance_reporting_batch_size);
-  auto batchSizeStr = node[schema_.provenance_reporting_batch_size].getString().value();
-
-  logger_->log_debug("ProvenanceReportingTask port uuid {}", portUUIDStr);
-  port_uuid = portUUIDStr;
-  report_task->getImpl<core::reporting::SiteToSiteProvenanceReportingTask>().setPortUUID(port_uuid);
-
-  if (auto batch_size = parsing::parseIntegral<int>(batchSizeStr)) {
-    report_task->getImpl<core::reporting::SiteToSiteProvenanceReportingTask>().setBatchSize(*batch_size);
-  }
-
-  // add processor to parent
-  report_task->setScheduledState(core::RUNNING);
-  parent_group->addProcessor(std::move(report_task));
 }
 
 void StructuredConfiguration::parseControllerServices(const Node& controller_services_node, core::ProcessGroup* parent_group) {
@@ -1132,6 +1062,85 @@ void StructuredConfiguration::addNewId(const std::string& uuid) {
 std::string StructuredConfiguration::serialize(const core::ProcessGroup& process_group) {
   gsl_Expects(flow_serializer_);
   return flow_serializer_->serialize(process_group, schema_, sensitive_values_encryptor_, {}, parameter_contexts_);
+}
+
+void StructuredConfiguration::parseReportingTasks(const Node& reporting_tasks_node, core::ProcessGroup* parent_group) {
+  if (!reporting_tasks_node || !reporting_tasks_node.isSequence()) {
+    return;
+  }
+  for (const auto& reporting_task_node : reporting_tasks_node) {
+    checkRequiredField(reporting_task_node, schema_.name);
+    auto name = reporting_task_node[schema_.name].getString().value();
+    utils::Identifier id;
+    id = getOrGenerateId(reporting_task_node);
+
+    checkRequiredField(reporting_task_node, schema_.type);
+    auto type = reporting_task_node[schema_.type].getString().value();
+
+    auto reporting_task = createProcessor(utils::string::partAfterLastOccurrenceOf(type, '.'), type, name, id);
+    if (!reporting_task) {
+      logger_->log_error("Could not create a processor {} with id {}", name, id);
+      throw std::invalid_argument("Could not create processor " + name);
+    }
+
+    reporting_task->setFlowIdentifier(flow_version_->getFlowIdentifier());
+
+    auto scheduling_strategy = getOptionalField(reporting_task_node, schema_.scheduling_strategy, DEFAULT_SCHEDULING_STRATEGY);
+    if (scheduling_strategy == "TIMER_DRIVEN") {
+      reporting_task->setSchedulingStrategy(core::TIMER_DRIVEN);
+    } else {
+      reporting_task->setSchedulingStrategy(core::CRON_DRIVEN);
+    }
+    auto scheduling_period_str = getOptionalField(reporting_task_node, schema_.scheduling_period, DEFAULT_SCHEDULING_PERIOD_STR);
+    if (scheduling_strategy == "TIMER_DRIVEN") {
+      if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(scheduling_period_str)) {
+        reporting_task->setSchedulingPeriod(*scheduling_period);
+      }
+    } else {
+      reporting_task->setCronPeriod(scheduling_period_str);
+    }
+
+    if (auto penalization_node = reporting_task_node[schema_.penalization_period]) {
+      if (auto penalization_period = utils::timeutils::StringToDuration<std::chrono::milliseconds>(penalization_node.getString().value())) {
+        reporting_task->setPenalizationPeriod(penalization_period.value());
+      }
+    }
+
+    if (auto yield_node = reporting_task_node[schema_.proc_yield_period]) {
+      if (auto yield_period = utils::timeutils::StringToDuration<std::chrono::milliseconds>(yield_node.getString().value())) {
+        reporting_task->setYieldPeriodMsec(yield_period.value());
+      }
+    }
+
+    if (auto bulletin_level_node = reporting_task_node[schema_.bulletin_level]) {
+      if (auto bulletin_level = bulletin_level_node.getString().value(); !bulletin_level.empty()) {
+        reporting_task->setLogBulletinLevel(core::logging::mapStringToLogLevel(bulletin_level));
+      }
+    }
+
+    if (auto run_node = reporting_task_node[schema_.runduration_nanos]) {
+      if (auto run_duration_nanos = parsing::parseIntegral<uint64_t>(run_node.getIntegerAsString().value())) {
+        reporting_task->setRunDurationNano(std::chrono::nanoseconds(*run_duration_nanos));
+      }
+    }
+
+    if (Node properties_node = reporting_task_node[schema_.processor_properties]) {
+      parsePropertiesNode(properties_node, *reporting_task, name, nullptr);
+    }
+
+    reporting_task->setLoggerCallback([this, processor = reporting_task.get()](core::logging::LOG_LEVEL level, const std::string& message) {
+      if (level < processor->getLogBulletinLevel()) {
+        return;
+      }
+      if (bulletin_store_) {
+        bulletin_store_->addProcessorBulletin(*processor, level, message);
+      }
+    });
+
+    reporting_task->setScheduledState(core::RUNNING);
+
+    parent_group->addProcessor(std::move(reporting_task));
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow
