@@ -39,22 +39,22 @@ use minifi_native::{
 };
 
 minifi_native::declare_minifi_extension!(
-processors: [
-    (ComplexProcessorType, MultiThreaded, GenerateFlowFileRs),
-    (ComplexProcessorType, MultiThreaded, LogAttributeRs),
-    (ComplexProcessorType, MultiThreaded, GetFileRs),
-    (ComplexProcessorType, MultiThreaded, KamikazeProcessorRs),
-    (ComplexProcessorType, SingleThreaded, CountActualLogging),
-    (FlowFileSourceProcessorType, MultiThreaded, LoremIpsumCSUser),
-    (FlowFileTransformProcessorType, MultiThreaded, PutFileRs),
-    (FlowFileStreamTransformProcessorType, MultiThreaded, AsciifyGerman),
-    (FlowFileStreamTransformProcessorType, SingleThreaded, DuplicateStreamText),
-    (ComplexProcessorType, MultiThreaded, ZooProcessorRs),
-],
-controllers: [
-    LoremIpsumControllerService,
-    DummyControllerService,
-    DogControllerRs,
-    DuckControllerRs
-]
+    processors: [
+        (ComplexProcessorType, MultiThreaded, GenerateFlowFileRs),
+        (ComplexProcessorType, MultiThreaded, LogAttributeRs),
+        (ComplexProcessorType, MultiThreaded, GetFileRs),
+        (ComplexProcessorType, MultiThreaded, KamikazeProcessorRs),
+        (ComplexProcessorType, SingleThreaded, CountActualLogging),
+        (FlowFileSourceProcessorType, MultiThreaded, LoremIpsumCSUser),
+        (FlowFileTransformProcessorType, MultiThreaded, PutFileRs),
+        (FlowFileStreamTransformProcessorType, MultiThreaded, AsciifyGerman),
+        (FlowFileStreamTransformProcessorType, SingleThreaded, DuplicateStreamText),
+        (ComplexProcessorType, MultiThreaded, ZooProcessorRs),
+    ],
+    controllers: [
+        LoremIpsumControllerService,
+        DummyControllerService,
+        DogControllerRs,
+        DuckControllerRs
+    ]
 );
