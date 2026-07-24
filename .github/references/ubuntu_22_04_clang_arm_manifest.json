@@ -99,7 +99,7 @@
                         "description": "All asciified flowfiles are routed here"
                     }
                 ],
-                "typeDescription": "This processor switches German characters with their ascii counterparts. (to test stream API)",
+                "typeDescription": "RUST TEST PROCESSOR: This processor switches German characters with their ascii counterparts. (to test stream API)",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.asciify_german.AsciifyGerman"
@@ -1154,7 +1154,7 @@
                 "inputRequirement": "INPUT_FORBIDDEN",
                 "isSingleThreaded": "true",
                 "supportedRelationships": [],
-                "typeDescription": "For testing lazy logging",
+                "typeDescription": "RUST TEST PROCESSOR: For testing lazy logging",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.count_actual_logging.CountActualLogging"
@@ -1906,7 +1906,7 @@
                         "description": {}
                     }
                 ],
-                "typeDescription": "Duplicate text",
+                "typeDescription": "RUST TEST PROCESSOR: Duplicate text",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.duplicate_text.DuplicateStreamText"
@@ -3813,7 +3813,7 @@
                         "description": "success"
                     }
                 ],
-                "typeDescription": "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.",
+                "typeDescription": "RUST TEST PROCESSOR: This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.generate_flow_file.GenerateFlowFileRs"
@@ -4132,7 +4132,7 @@
                         "description": "FlowFiles are transferred here after logging"
                     }
                 ],
-                "typeDescription": "Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.",
+                "typeDescription": "RUST TEST PROCESSOR: Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.get_file.GetFileRs"
@@ -4710,7 +4710,7 @@
                         "description": "success relationship"
                     }
                 ],
-                "typeDescription": "This processor can fail or panic in on_trigger and on_schedule calls based on configuration. Only for testing purposes.",
+                "typeDescription": "RUST TEST PROCESSOR: This processor can fail or panic in on_trigger and on_schedule calls based on configuration. Only for testing purposes.",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.kamikaze_processor.KamikazeProcessorRs"
@@ -6425,7 +6425,7 @@
                         "description": "FlowFiles are transferred here after logging"
                     }
                 ],
-                "typeDescription": "Logs attributes of flow files in the MiNiFi application log.",
+                "typeDescription": "RUST TEST PROCESSOR: Logs attributes of flow files in the MiNiFi application log.",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.log_attribute.LogAttributeRs"
@@ -6482,7 +6482,7 @@
                         "description": "All flowfile are routed here"
                     }
                 ],
-                "typeDescription": "Processor to test Controller Service API",
+                "typeDescription": "RUST TEST PROCESSOR: Processor to test Controller Service API",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.lorem_ipsum_cs_user.LoremIpsumCSUser"
@@ -8354,7 +8354,7 @@
                         "description": "Flowfiles that are successfully written to a file are routed to this relationship"
                     }
                 ],
-                "typeDescription": "Writes the contents of a FlowFile to the local file system.",
+                "typeDescription": "RUST TEST PROCESSOR: Writes the contents of a FlowFile to the local file system.",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.put_file.PutFileRs"
@@ -11473,7 +11473,7 @@
                 "inputRequirement": "INPUT_FORBIDDEN",
                 "isSingleThreaded": "false",
                 "supportedRelationships": [],
-                "typeDescription": "Test ZooProcessorRs",
+                "typeDescription": "RUST TEST PROCESSOR: ZooProcessorRs",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.processors.zoo_processor.ZooProcessorRs"
@@ -11685,7 +11685,7 @@
                         "defaultValue": "false"
                     }
                 },
-                "typeDescription": "Test DogControllerRs",
+                "typeDescription": "RUST TEST CONTROLLER SERVICE: DogControllerRs",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.controller_services.dog_controller_service.DogControllerRs",
@@ -11721,7 +11721,7 @@
                 ]
             },
             {
-                "typeDescription": "Test DuckControllerRs",
+                "typeDescription": "RUST TEST CONTROLLER SERVICE: DuckControllerRs",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.controller_services.duck_controller_service.DuckControllerRs",
@@ -11739,7 +11739,7 @@
                 ]
             },
             {
-                "typeDescription": "Dummy Controller Service",
+                "typeDescription": "RUST TEST CONTROLLER SERVICE: Dummy Controller Service",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.controller_services.dummy_controller_service.DummyControllerService"
@@ -11939,7 +11939,7 @@
                         "defaultValue": "25"
                     }
                 },
-                "typeDescription": "Simple Rusty Controller Service to test API",
+                "typeDescription": "RUST TEST CONTROLLER SERVICE: Holds generated lorem ipsum",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "minifi_rs_playground.controller_services.lorem_ipsum_controller_service.LoremIpsumControllerService"

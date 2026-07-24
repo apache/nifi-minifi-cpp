@@ -66,7 +66,7 @@ impl MutTrigger for CountActualLogging {
 }
 
 impl ProcessorDefinition for CountActualLogging {
-    const DESCRIPTION: &'static str = "For testing lazy logging";
+    const DESCRIPTION: &'static str = "RUST TEST PROCESSOR: For testing lazy logging";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Forbidden;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

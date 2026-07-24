@@ -39,7 +39,7 @@ limitations under the License.
 
 ### Description
 
-This processor switches German characters with their ascii counterparts. (to test stream API)
+RUST TEST PROCESSOR: This processor switches German characters with their ascii counterparts. (to test stream API)
 
 ### Properties
 
@@ -60,7 +60,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-For testing lazy logging
+RUST TEST PROCESSOR: For testing lazy logging
 
 ### Properties
 
@@ -79,7 +79,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Duplicate text
+RUST TEST PROCESSOR: Duplicate text
 
 ### Properties
 
@@ -99,7 +99,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.
+RUST TEST PROCESSOR: This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.
 
 ### Properties
 
@@ -124,7 +124,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.
+RUST TEST PROCESSOR: Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.
 
 ### Properties
 
@@ -161,7 +161,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-This processor can fail or panic in on_trigger and on_schedule calls based on configuration. Only for testing purposes.
+RUST TEST PROCESSOR: This processor can fail or panic in on_trigger and on_schedule calls based on configuration. Only for testing purposes.
 
 ### Properties
 
@@ -183,7 +183,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Logs attributes of flow files in the MiNiFi application log.
+RUST TEST PROCESSOR: Logs attributes of flow files in the MiNiFi application log.
 
 ### Properties
 
@@ -210,7 +210,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Processor to test Controller Service API
+RUST TEST PROCESSOR: Processor to test Controller Service API
 
 ### Properties
 
@@ -232,7 +232,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Writes the contents of a FlowFile to the local file system.
+RUST TEST PROCESSOR: Writes the contents of a FlowFile to the local file system.
 
 ### Properties
 
@@ -259,7 +259,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Test ZooProcessorRs
+RUST TEST PROCESSOR: ZooProcessorRs
 
 ### Properties
 
@@ -280,7 +280,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Test DogControllerRs
+RUST TEST CONTROLLER SERVICE: DogControllerRs
 
 ### Properties
 
@@ -296,7 +296,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Test DuckControllerRs
+RUST TEST CONTROLLER SERVICE: DuckControllerRs
 
 ### Properties
 
@@ -310,7 +310,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Dummy Controller Service
+RUST TEST CONTROLLER SERVICE: Dummy Controller Service
 
 ### Properties
 
@@ -324,7 +324,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Simple Rusty Controller Service to test API
+RUST TEST CONTROLLER SERVICE: Holds generated lorem ipsum
 
 ### Properties
 
