@@ -25,19 +25,22 @@
 #include "utils/CControllerService.h"
 #include "utils/CProcessor.h"
 #include "minifi-cpp/agent/agent_docs.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::test::utils {
 
 template<typename T, typename... Args>
 std::unique_ptr<minifi::core::Processor> make_custom_c_processor(minifi::core::ProcessorMetadata metadata,
     Args&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
+  std::string type;
   std::unique_ptr<minifi::core::ProcessorApi> processor_impl;
   minifi::api::core::useProcessorClassDefinition<T>([&](const minifi_processor_definition& definition) {
-    minifi::utils::useCProcessorClassDescription(definition, [&](const auto&, auto c_description) {
+    minifi::utils::useCProcessorClassDescription(definition, [&](const auto& description, auto c_description) {
+      type = description.short_name_;
       processor_impl = std::make_unique<minifi::utils::CProcessor>(std::move(c_description), metadata, new T(metadata, std::forward<Args>(args)...));
     });
   });
-  return std::make_unique<minifi::core::Processor>(metadata.name, metadata.uuid, std::move(processor_impl));
+  return std::make_unique<minifi::core::Processor>(std::move(type), metadata.name, metadata.uuid, std::move(processor_impl));
 }
 
 template<typename T, typename... Args>

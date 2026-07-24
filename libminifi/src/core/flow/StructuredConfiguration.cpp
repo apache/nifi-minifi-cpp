@@ -741,7 +741,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   auto port_impl = std::make_unique<minifi::RemoteProcessGroupPort>(
           nameStr, parent->getURL(), this->configuration_, uuid, direction);
   auto* port = port_impl.get();
-  auto port_wrapper = std::make_unique<core::Processor>(nameStr, uuid, std::move(port_impl));
+  auto port_wrapper = std::make_unique<core::Processor>("RemoteProcessGroupPort", nameStr, uuid, std::move(port_impl));
   port->setTimeout(std::chrono::milliseconds(parent->getTimeout()));
   port->setTransmitting(true);
   port_wrapper->setYieldPeriodMsec(parent->getYieldPeriodMsec());
@@ -986,7 +986,7 @@ void StructuredConfiguration::parseFunnels(const Node& node, core::ProcessGroup*
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect funnel UUID format.");
     });
 
-    auto funnel = std::make_unique<core::Processor>(name, uuid.value(), std::make_unique<minifi::Funnel>(name, uuid.value()));
+    auto funnel = std::make_unique<core::Processor>("Funnel", name, uuid.value(), std::make_unique<minifi::Funnel>(name, uuid.value()));
     logger_->log_debug("Created funnel with UUID {} and name {}", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);

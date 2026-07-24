@@ -111,10 +111,6 @@ class CProcessor : public minifi::core::ProcessorApi {
     return class_description_.is_single_threaded;
   }
 
-  std::string getProcessorType() const override {
-    return class_description_.name;
-  }
-
   void onTrigger(minifi::core::ProcessContext& process_context, minifi::core::ProcessSession& process_session) override {
     std::optional<std::string> error;
     auto status = class_description_.callbacks.trigger(impl_, toC(&process_context), toC(&process_session));

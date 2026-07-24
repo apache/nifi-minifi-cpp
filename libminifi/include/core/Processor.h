@@ -57,8 +57,7 @@ class ProcessSessionFactory;
 
 class Processor : public ConnectableImpl, public ConfigurableComponentImpl, public state::response::ResponseNodeSource {
  public:
-  Processor(std::string_view name, const utils::Identifier& uuid, std::unique_ptr<ProcessorApi> impl);
-  explicit Processor(std::string_view name, std::unique_ptr<ProcessorApi> impl);
+  Processor(std::string type, std::string_view name, const utils::Identifier& uuid, std::unique_ptr<ProcessorApi> impl);
 
   Processor(const Processor& parent) = delete;
   Processor& operator=(const Processor& parent) = delete;
@@ -141,6 +140,7 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   }
 
  protected:
+  std::string type_;
   std::atomic<ScheduledState> state_;
 
   std::atomic<std::chrono::steady_clock::duration> scheduling_period_;

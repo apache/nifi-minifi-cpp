@@ -42,19 +42,11 @@
 #include "minifi-cpp/core/ProcessorMetadata.h"
 #include "minifi-cpp/Exception.h"
 
-#define ADD_GET_PROCESSOR_NAME \
-  std::string getProcessorType() const override { \
-    auto class_name = org::apache::nifi::minifi::core::className<decltype(*this)>(); \
-    auto splitted = org::apache::nifi::minifi::utils::string::split(class_name, "::"); \
-    return splitted[splitted.size() - 1]; \
-  }
-
 #define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS \
   bool supportsDynamicProperties() const override { return SupportsDynamicProperties; } \
   bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; } \
   minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; } \
-  bool isSingleThreaded() const override { return IsSingleThreaded; } \
-  ADD_GET_PROCESSOR_NAME
+  bool isSingleThreaded() const override { return IsSingleThreaded; }
 
 namespace org::apache::nifi::minifi {
 
@@ -84,8 +76,6 @@ class ProcessorImpl : public virtual ProcessorApi {
   [[nodiscard]] bool supportsDynamicProperties() const override = 0;
 
   [[nodiscard]] bool supportsDynamicRelationships() const override = 0;
-
-  std::string getProcessorType() const override = 0;
 
   void initialize(ProcessorDescriptor& self) final;
 

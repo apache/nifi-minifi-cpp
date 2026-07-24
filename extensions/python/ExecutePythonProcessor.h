@@ -66,7 +66,6 @@ class ExecutePythonProcessor : public core::ProcessorImpl {
   bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; }
   minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; }
   bool isSingleThreaded() const override { return python_single_threaded_; }
-  ADD_GET_PROCESSOR_NAME
 
   void initialize() override;
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override;

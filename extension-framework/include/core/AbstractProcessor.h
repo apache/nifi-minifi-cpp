@@ -48,8 +48,5 @@ class AbstractProcessor : public ProcessorImpl {
   bool supportsDynamicRelationships() const noexcept final { return ProcessorT::SupportsDynamicRelationships; }
   minifi::core::annotation::Input getInputRequirement() const noexcept final { return ProcessorT::InputRequirement; }
   bool isSingleThreaded() const noexcept final { return ProcessorT::IsSingleThreaded; }
-  std::string getProcessorType() const final {
-    return utils::string::partAfterLastOccurrenceOf(className<ProcessorT>(), ':');
-  }
 };
 }  // namespace org::apache::nifi::minifi::core

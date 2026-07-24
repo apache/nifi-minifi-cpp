@@ -50,9 +50,9 @@ class PortImpl final : public ForwardingNode {
   PortType port_type_;
 };
 
-class Port : public core::Processor {
+class Port final : public core::Processor {
  public:
-  Port(std::string_view name, const utils::Identifier& uuid, std::unique_ptr<PortImpl> impl): Processor(name, uuid, std::move(impl)) {}
+  Port(std::string_view name, const utils::Identifier& uuid, std::unique_ptr<PortImpl> impl): Processor("Port", name, uuid, std::move(impl)) {}
 
   PortType getPortType() const {
     auto* port_impl = dynamic_cast<const PortImpl*>(impl_.get());

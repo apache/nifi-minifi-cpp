@@ -64,7 +64,8 @@ class AzureBlobStorageTestsFixture {
     auto uuid = utils::IdGenerator::getIdGenerator()->generate();
     auto impl = std::unique_ptr<ProcessorType>(
       new ProcessorType({.uuid = uuid, .name = "AzureBlobStorageProcessor", .logger = logging::LoggerFactory<ProcessorType>::getLogger(uuid)}, std::move(mock_blob_storage)));
-    auto azure_blob_storage_processor_unique_ptr = std::make_unique<core::Processor>(impl->getName(), impl->getUUID(), std::move(impl));
+    auto azure_blob_storage_processor_unique_ptr = std::make_unique<core::Processor>(
+        utils::string::partAfterLastOccurrenceOf(core::className<ProcessorType>(), ':'), impl->getName(), impl->getUUID(), std::move(impl));
     azure_blob_storage_processor_ = azure_blob_storage_processor_unique_ptr.get();
     auto input_dir = test_controller_.createTempDirectory();
     std::ofstream input_file_stream(input_dir / GET_FILE_NAME);

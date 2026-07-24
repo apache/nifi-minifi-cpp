@@ -100,7 +100,10 @@ std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::s
 }
 
 std::unique_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask() {
-  auto processor = std::make_unique<core::Processor>("", std::make_unique<core::reporting::SiteToSiteProvenanceReportingTask>(this->configuration_));
+  auto impl = std::make_unique<core::reporting::SiteToSiteProvenanceReportingTask>(this->configuration_);
+  auto uuid = impl->getUUID();
+  auto name = impl->getName();
+  auto processor = std::make_unique<core::Processor>("SiteToSiteProvenanceReportingTask", name, uuid, std::move(impl));
   processor->initialize();
   return processor;
 }
