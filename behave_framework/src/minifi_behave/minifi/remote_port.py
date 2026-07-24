@@ -28,6 +28,11 @@ class RemotePort:
         self.properties[property_name] = property_value
 
     def to_yaml_dict(self):
-        data = {'id': self.id, 'name': self.name, 'use compression': self.use_compression, 'max concurrent tasks': 1,
-                'Properties': self.properties}
+        data = {
+            "id": self.id,
+            "name": self.name,
+            "use compression": self.use_compression,
+            "max concurrent tasks": 1,
+            "Properties": self.properties,
+        }
         return data

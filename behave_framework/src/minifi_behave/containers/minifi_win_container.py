@@ -24,7 +24,11 @@ import logging
 
 class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
     def __init__(self, container_name: str, test_context: MinifiTestContext):
-        super().__init__(test_context.minifi_container_image, f"{container_name}-{test_context.scenario_id}", test_context.network)
+        super().__init__(
+            test_context.minifi_container_image,
+            f"{container_name}-{test_context.scenario_id}",
+            test_context.network,
+        )
         self.flow_config_str: str = ""
         self.flow_definition = MinifiFlowDefinition()
         self.properties: dict[str, str] = {}
@@ -38,7 +42,9 @@ class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
         conf_dir = Directory("\\Program Files\\ApacheNiFiMiNiFi\\nifi-minifi-cpp\\conf")
         conf_dir.add_file("config.yml", self.flow_definition.to_yaml())
         conf_dir.add_file("minifi.properties", self._get_properties_file_content())
-        conf_dir.add_file("minifi-log.properties", self._get_log_properties_file_content())
+        conf_dir.add_file(
+            "minifi-log.properties", self._get_log_properties_file_content()
+        )
 
         self.dirs.append(conf_dir)
         return super().deploy(context)

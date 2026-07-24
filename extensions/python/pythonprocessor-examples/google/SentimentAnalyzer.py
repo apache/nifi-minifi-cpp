@@ -14,14 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-  Install the following with pip ( or pip3 )
+Install the following with pip ( or pip3 )
 
-  pip install google-cloud-language
+pip install google-cloud-language
 
-  -- the following were needed during development as we saw SSL timeout errors
-  pip install requests[security]
-  pip install -U httplib2
+-- the following were needed during development as we saw SSL timeout errors
+pip install requests[security]
+pip install -U httplib2
 """
+
 import codecs
 from google.cloud import language
 from google.cloud.language import enums
@@ -29,12 +30,20 @@ from google.cloud.language import types
 
 
 def describe(processor):
-    processor.setDescription("Performs a sentiment Analysis of incoming flowfile content using Google Cloud.")
+    processor.setDescription(
+        "Performs a sentiment Analysis of incoming flowfile content using Google Cloud."
+    )
 
 
 def onInitialize(processor):
     # is required,
-    processor.addProperty("Credentials Path", "Path to your Google Credentials JSON File. Must exist on agent hosts.", "", True, False)
+    processor.addProperty(
+        "Credentials Path",
+        "Path to your Google Credentials JSON File. Must exist on agent hosts.",
+        "",
+        True,
+        False,
+    )
 
 
 class ContentExtract(object):
@@ -42,7 +51,7 @@ class ContentExtract(object):
         self.content = None
 
     def process(self, input_stream):
-        self.content = codecs.getreader('utf-8')(input_stream).read()
+        self.content = codecs.getreader("utf-8")(input_stream).read()
         return len(self.content)
 
 
@@ -52,10 +61,16 @@ def onTrigger(context, session):
         credentials_filename = context.getProperty("Credentials Path")
         sentiment = ContentExtract()
         session.read(flow_file, sentiment)
-        client = language.LanguageServiceClient.from_service_account_json(credentials_filename)
-        document = types.Document(content=sentiment.content, type=enums.Document.Type.PLAIN_TEXT)
+        client = language.LanguageServiceClient.from_service_account_json(
+            credentials_filename
+        )
+        document = types.Document(
+            content=sentiment.content, type=enums.Document.Type.PLAIN_TEXT
+        )
 
-        annotations = client.analyze_sentiment(document=document, retry=None, timeout=1.0)
+        annotations = client.analyze_sentiment(
+            document=document, retry=None, timeout=1.0
+        )
         score = annotations.document_sentiment.score
         magnitude = annotations.document_sentiment.magnitude
 

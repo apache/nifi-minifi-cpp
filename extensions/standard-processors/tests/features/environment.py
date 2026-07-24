@@ -31,12 +31,12 @@ def before_feature(context, feature):
 
 
 def is_minifi_image_alpine_based(context):
-    if os.name == 'nt':
+    if os.name == "nt":
         return False
     client: docker.DockerClient = docker.from_env()
     container = client.containers.create(
         image=context.minifi_container_image,
-        command=['cat', '/etc/os-release'],
+        command=["cat", "/etc/os-release"],
     )
     try:
         container.start()
@@ -46,14 +46,16 @@ def is_minifi_image_alpine_based(context):
         container.remove(force=True)
         return False
 
-    return "alpine" in result.decode('utf-8').lower()
+    return "alpine" in result.decode("utf-8").lower()
 
 
 def before_scenario(context, scenario):
     common_before_scenario(context, scenario)
     if "ALPINE_ONLY" in scenario.tags:
         if not is_minifi_image_alpine_based(context):
-            scenario.skip("This scenario is only compatible with Alpine-based Minifi images")
+            scenario.skip(
+                "This scenario is only compatible with Alpine-based Minifi images"
+            )
 
 
 def after_scenario(context, scenario):

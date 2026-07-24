@@ -20,7 +20,9 @@ import bar
 
 
 def describe(processor):
-    processor.setDescription("Processor used for testing in ExecutePythonProcessorTests.cpp")
+    processor.setDescription(
+        "Processor used for testing in ExecutePythonProcessorTests.cpp"
+    )
 
 
 def onTrigger(context, session):

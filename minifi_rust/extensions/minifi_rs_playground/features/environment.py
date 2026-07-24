@@ -78,8 +78,12 @@ RUN chmod 755 {container_extension_dir}{lib_filename}
 def before_all(context):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     build_path = os.path.normpath(os.path.join(dir_path, "../../../target/release/"))
-    deps_build_path = os.path.normpath(os.path.join(dir_path, "../../../target/release/deps/"))
-    add_extension_to_minifi_container("minifi_rs_playground", [build_path, deps_build_path], context)
+    deps_build_path = os.path.normpath(
+        os.path.join(dir_path, "../../../target/release/deps/")
+    )
+    add_extension_to_minifi_container(
+        "minifi_rs_playground", [build_path, deps_build_path], context
+    )
 
 
 def before_scenario(context, scenario):

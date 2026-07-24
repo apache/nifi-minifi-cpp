@@ -60,7 +60,9 @@ class StateManager:
         except Exception as exception:
             raise StateException("Get state failed") from exception
 
-    def replace(self, old_state: StateMap, new_values: Dict[str, str], scope: Scope) -> bool:
+    def replace(
+        self, old_state: StateMap, new_values: Dict[str, str], scope: Scope
+    ) -> bool:
         try:
             return self.cpp_state_manager.replace(old_state.toMap(), new_values)
         except Exception as exception:

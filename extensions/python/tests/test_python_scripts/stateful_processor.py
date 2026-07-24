@@ -15,7 +15,9 @@
 
 
 def describe(processor):
-    processor.setDescription("Processor used for testing in ExecutePythonProcessorTests.cpp")
+    processor.setDescription(
+        "Processor used for testing in ExecutePythonProcessorTests.cpp"
+    )
 
 
 state = 0
@@ -24,7 +26,7 @@ state = 0
 class WriteCallback(object):
     def process(self, output_stream):
         global state
-        new_content = str(state).encode('utf-8')
+        new_content = str(state).encode("utf-8")
         output_stream.write(new_content)
         state = state + 1
         return len(new_content)
@@ -32,11 +34,11 @@ class WriteCallback(object):
 
 def onTrigger(context, session):
     global state
-    log.info('Vrrm, vrrrm, processor is running, vrrrm!!')
+    log.info("Vrrm, vrrrm, processor is running, vrrrm!!")
     # flow_file = session.get()
     flow_file = session.create()
     flow_file.setAttribute("filename", str(state))
-    log.info('created flow file: %s' % flow_file.getAttribute('filename'))
+    log.info("created flow file: %s" % flow_file.getAttribute("filename"))
 
     if flow_file is not None:
         session.write(flow_file, WriteCallback())

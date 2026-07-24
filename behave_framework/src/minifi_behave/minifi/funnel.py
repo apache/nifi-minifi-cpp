@@ -28,4 +28,7 @@ class Funnel:
 
     def to_yaml_dict(self) -> dict:
         # Funnels have a simpler representation in the MiNiFi YAML
-        return {'id': self.id, 'name': self.name, }
+        return {
+            "id": self.id,
+            "name": self.name,
+        }

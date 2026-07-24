@@ -30,11 +30,17 @@ from minifi_behave.core.hooks import get_minifi_container_image
 
 
 def before_all(context):
-    minifi_tag_prefix = os.environ['MINIFI_TAG_PREFIX'] if 'MINIFI_TAG_PREFIX' in os.environ else ''
+    minifi_tag_prefix = (
+        os.environ["MINIFI_TAG_PREFIX"] if "MINIFI_TAG_PREFIX" in os.environ else ""
+    )
     if "rocky" in minifi_tag_prefix:
         install_sql_cmd = "dnf -y install postgresql-odbc"
         so_location = "psqlodbca.so"
-    elif "bullseye" in minifi_tag_prefix or "bookworm" in minifi_tag_prefix or "trixie" in minifi_tag_prefix:
+    elif (
+        "bullseye" in minifi_tag_prefix
+        or "bookworm" in minifi_tag_prefix
+        or "trixie" in minifi_tag_prefix
+    ):
         install_sql_cmd = "apt -y install odbc-postgresql"
         so_location = "/usr/lib/$(gcc -dumpmachine)/odbc/psqlodbca.so"
     elif "jammy" in minifi_tag_prefix or "noble" in minifi_tag_prefix:
@@ -43,7 +49,8 @@ def before_all(context):
     else:
         install_sql_cmd = "apk --update --no-cache add psqlodbc"
         so_location = "psqlodbca.so"
-    dockerfile = dedent("""\
+    dockerfile = dedent(
+        """\
             FROM {base_image}
             USER root
             RUN {install_sql_cmd}
@@ -73,11 +80,14 @@ def before_all(context):
                 echo "Password = password" >> /etc/odbc.ini && \
                 echo "Database = postgres" >> /etc/odbc.ini
             USER minificpp
-            """.format(base_image=get_minifi_container_image(),
-                       install_sql_cmd=install_sql_cmd, so_location=so_location))
+            """.format(
+            base_image=get_minifi_container_image(),
+            install_sql_cmd=install_sql_cmd,
+            so_location=so_location,
+        )
+    )
     builder = DockerImageBuilder(
-        image_tag="apacheminificpp-sql:behave",
-        dockerfile_content=dockerfile
+        image_tag="apacheminificpp-sql:behave", dockerfile_content=dockerfile
     )
     builder.build()
     docker.from_env().images.pull(PostgresContainer.IMAGE)

@@ -21,12 +21,14 @@ class WriteCallback:
         self.content = content
 
     def process(self, output_stream):
-        output_stream.write(self.content.encode('utf-8'))
+        output_stream.write(self.content.encode("utf-8"))
         return len(self.content)
 
 
 def describe(processor):
-    processor.setDescription("Draw random samples from a normal (Gaussian) distribution.")
+    processor.setDescription(
+        "Draw random samples from a normal (Gaussian) distribution."
+    )
 
 
 def onInitialize(processor):

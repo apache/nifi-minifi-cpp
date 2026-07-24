@@ -38,7 +38,14 @@ class RemoteProcessGroup:
         return next((port for port in self.input_ports if port.name == port_name), None)
 
     def to_yaml_dict(self):
-        data = {'id': self.id, 'name': self.name, 'timeout': '30 sec', 'transport protocol': self.protocol,
-                'url': self.address, 'yield period': '3 sec', 'Input Ports': [port.to_yaml_dict() for port in self.input_ports],
-                'Output Ports': [port.to_yaml_dict() for port in self.output_ports]}
+        data = {
+            "id": self.id,
+            "name": self.name,
+            "timeout": "30 sec",
+            "transport protocol": self.protocol,
+            "url": self.address,
+            "yield period": "3 sec",
+            "Input Ports": [port.to_yaml_dict() for port in self.input_ports],
+            "Output Ports": [port.to_yaml_dict() for port in self.output_ports],
+        }
         return data

@@ -24,9 +24,15 @@ class FakeGcsServerContainer(LinuxContainer):
     IMAGE = "fsouza/fake-gcs-server:1.45.1"
 
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__(FakeGcsServerContainer.IMAGE, f"fake-gcs-server-{test_context.scenario_id}", test_context.network,
-                         command=f'-scheme http -host fake-gcs-server-{test_context.scenario_id}')
-        self.dirs.append(Directory(path="/data/test-bucket", files={"test-file": "preloaded data\n"}))
+        super().__init__(
+            FakeGcsServerContainer.IMAGE,
+            f"fake-gcs-server-{test_context.scenario_id}",
+            test_context.network,
+            command=f"-scheme http -host fake-gcs-server-{test_context.scenario_id}",
+        )
+        self.dirs.append(
+            Directory(path="/data/test-bucket", files={"test-file": "preloaded data\n"})
+        )
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)
@@ -35,7 +41,8 @@ class FakeGcsServerContainer(LinuxContainer):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=30,
             bail_condition=lambda: self.exited,
-            context=context)
+            context=context,
+        )
 
     @retry_check()
     def check_google_cloud_storage(self, content):

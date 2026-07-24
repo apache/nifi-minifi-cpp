@@ -46,39 +46,59 @@ class FlowDefinition(ABC):
         rpg = RemoteProcessGroup(name, address, protocol)
         self.remote_process_groups.append(rpg)
 
-    def add_input_port_to_rpg(self, rpg_name: str, port_name: str, use_compression: bool = False):
-        rpg = next((rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None)
+    def add_input_port_to_rpg(
+        self, rpg_name: str, port_name: str, use_compression: bool = False
+    ):
+        rpg = next(
+            (rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None
+        )
         if rpg:
             rpg.add_input_port(port_name, use_compression)
         else:
             raise ValueError(f"RemoteProcessGroup with name '{rpg_name}' not found.")
 
-    def add_output_port_to_rpg(self, rpg_name: str, port_name: str, use_compression: bool = False):
-        rpg = next((rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None)
+    def add_output_port_to_rpg(
+        self, rpg_name: str, port_name: str, use_compression: bool = False
+    ):
+        rpg = next(
+            (rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None
+        )
         if rpg:
             rpg.add_output_port(port_name, use_compression)
         else:
             raise ValueError(f"RemoteProcessGroup with name '{rpg_name}' not found.")
 
     def get_input_port_id_of_rpg(self, rpg_name: str, rpg_port_name: str) -> str:
-        rpg = next((rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None)
+        rpg = next(
+            (rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None
+        )
         if rpg:
-            port = next((port for port in rpg.input_ports if port.name == rpg_port_name), None)
+            port = next(
+                (port for port in rpg.input_ports if port.name == rpg_port_name), None
+            )
             if port:
                 return port.id
             else:
-                raise ValueError(f"InputPort with name '{rpg_port_name}' not found in RPG '{rpg_name}'.")
+                raise ValueError(
+                    f"InputPort with name '{rpg_port_name}' not found in RPG '{rpg_name}'."
+                )
         else:
             raise ValueError(f"RemoteProcessGroup with name '{rpg_name}' not found.")
 
     def get_output_port_id_of_rpg(self, rpg_name: str, rpg_port_name: str) -> str:
-        rpg = next((rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None)
+        rpg = next(
+            (rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None
+        )
         if rpg:
-            port = next((port for port in rpg.output_ports if port.name == rpg_port_name), None)
+            port = next(
+                (port for port in rpg.output_ports if port.name == rpg_port_name), None
+            )
             if port:
                 return port.id
             else:
-                raise ValueError(f"OutputPort with name '{rpg_port_name}' not found in RPG '{rpg_name}'.")
+                raise ValueError(
+                    f"OutputPort with name '{rpg_port_name}' not found in RPG '{rpg_name}'."
+                )
         else:
             raise ValueError(f"RemoteProcessGroup with name '{rpg_name}' not found.")
 
@@ -89,17 +109,38 @@ class FlowDefinition(ABC):
         self.output_ports.append(OutputPort(output_port_name, output_port_id))
 
     def get_processor(self, processor_name: str) -> Processor | None:
-        return next((proc for proc in self.processors if proc.name == processor_name), None)
+        return next(
+            (proc for proc in self.processors if proc.name == processor_name), None
+        )
 
-    def get_controller_service(self, controller_service_name: str) -> ControllerService | None:
-        return next((controller for controller in self.controller_services if controller.name == controller_service_name), None)
+    def get_controller_service(
+        self, controller_service_name: str
+    ) -> ControllerService | None:
+        return next(
+            (
+                controller
+                for controller in self.controller_services
+                if controller.name == controller_service_name
+            ),
+            None,
+        )
 
-    def get_parameter_context(self, parameter_context_name: str) -> ParameterContext | None:
-        return next((parameter_context for parameter_context in self.parameter_contexts if
-                     parameter_context.name == parameter_context_name), None)
+    def get_parameter_context(
+        self, parameter_context_name: str
+    ) -> ParameterContext | None:
+        return next(
+            (
+                parameter_context
+                for parameter_context in self.parameter_contexts
+                if parameter_context.name == parameter_context_name
+            ),
+            None,
+        )
 
     def get_remote_process_group(self, rpg_name: str) -> RemoteProcessGroup | None:
-        return next((rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None)
+        return next(
+            (rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None
+        )
 
     def add_funnel(self, funnel: Funnel):
         self.funnels.append(funnel)
