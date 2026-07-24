@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// minifi-sys/src/lib.rs
-
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
