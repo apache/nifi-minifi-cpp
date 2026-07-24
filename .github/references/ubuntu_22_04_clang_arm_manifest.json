@@ -4129,7 +4129,7 @@
                 "supportedRelationships": [
                     {
                         "name": "success",
-                        "description": "FlowFiles are transferred here after logging"
+                        "description": "The created FlowFiles are transferred here"
                     }
                 ],
                 "typeDescription": "RUST TEST PROCESSOR: Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.",
