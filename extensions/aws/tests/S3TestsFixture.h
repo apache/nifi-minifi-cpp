@@ -168,7 +168,7 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
           this->mock_s3_request_sender->setUseVirtualAddressing(use_virtual_addressing);
           return std::make_unique<minifi::aws::s3::S3Wrapper>(std::move(this->mock_s3_request_sender));
         }));
-    auto s3_processor_unique_ptr = std::make_unique<core::Processor>("S3Processor", uuid, std::move(impl));
+    auto s3_processor_unique_ptr = std::make_unique<core::Processor>(utils::string::partAfterLastOccurrenceOf(core::className<T>(), ':'), "S3Processor", uuid, std::move(impl));
     this->s3_processor = s3_processor_unique_ptr.get();
 
     auto input_dir = this->test_controller.createTempDirectory();
@@ -226,7 +226,7 @@ class FlowProducerS3TestsFixture : public S3TestsFixture<T> {
           this->mock_s3_request_sender->setUseVirtualAddressing(use_virtual_addressing);
           return std::make_unique<minifi::aws::s3::S3Wrapper>(std::move(this->mock_s3_request_sender));
         }));
-    auto s3_processor_unique_ptr = std::make_unique<core::Processor>("S3Processor", uuid, std::move(impl));
+    auto s3_processor_unique_ptr = std::make_unique<core::Processor>(utils::string::partAfterLastOccurrenceOf(core::className<T>(), ':'), "S3Processor", uuid, std::move(impl));
     this->s3_processor = s3_processor_unique_ptr.get();
 
     this->plan->addProcessor(

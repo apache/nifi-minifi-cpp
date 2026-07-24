@@ -152,7 +152,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
       .logger = logging::LoggerFactory<minifi::extensions::python::processors::ExecutePythonProcessor>::getLogger(uuid)
     });
     execute_python_processor->setScriptFilePath(getScriptFullPath(used_as_script_file).string());
-    auto execute_python_processor_unique_ptr = std::make_unique<core::Processor>(execute_python_processor->getName(), execute_python_processor->getUUID(), std::move(execute_python_processor));
+    auto execute_python_processor_unique_ptr = std::make_unique<core::Processor>("ExecutePythonProcessor", execute_python_processor->getName(), execute_python_processor->getUUID(), std::move(execute_python_processor));
     auto processor = plan_->addProcessor(std::move(execute_python_processor_unique_ptr), "executePythonProcessor", core::Relationship("success", "description"), link_to_previous);
     return processor;
   }

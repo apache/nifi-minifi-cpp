@@ -52,28 +52,9 @@ static std::mutex& getGraphMutex() {
   return mutex;
 }
 
-Processor::Processor(std::string_view name, std::unique_ptr<ProcessorApi> impl)
-    : ConnectableImpl(name),
-      state_(DISABLED),
-      scheduling_period_(MINIMUM_SCHEDULING_PERIOD),
-      run_duration_(DEFAULT_RUN_DURATION),
-      yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
-      active_tasks_(0),
-      trigger_when_empty_(false),
-      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
-      metrics_(gsl::make_not_null(std::make_shared<ProcessorMetrics>(*this))),
-      impl_(std::move(impl)) {
-  has_work_.store(false);
-  // Setup the default values
-  strategy_ = TIMER_DRIVEN;
-  penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
-  max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
-  incoming_connections_Iter = this->incoming_connections_.begin();
-  logger_->log_debug("Processor {} created UUID {}", name_, getUUIDStr());
-}
-
-Processor::Processor(std::string_view name, const utils::Identifier& uuid, std::unique_ptr<ProcessorApi> impl)
+Processor::Processor(std::string type, std::string_view name, const utils::Identifier& uuid, std::unique_ptr<ProcessorApi> impl)
     : ConnectableImpl(name, uuid),
+      type_(std::move(type)),
       state_(DISABLED),
       scheduling_period_(MINIMUM_SCHEDULING_PERIOD),
       run_duration_(DEFAULT_RUN_DURATION),
@@ -447,7 +428,7 @@ bool Processor::isSingleThreaded() const {
 }
 
 std::string Processor::getProcessorType() const {
-  return impl_->getProcessorType();
+  return type_;
 }
 
 void Processor::setTriggerWhenEmpty(bool trigger_when_empty) {
