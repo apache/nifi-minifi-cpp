@@ -156,7 +156,7 @@ impl<'a> CffiProcessSession<'a> {
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 error_code => Err(MinifiError::StatusError((
                     "minifi_process_session_write".into(),
-                    NonZeroU32::new_unchecked(error_code),
+                    NonZeroU32::new_unchecked(error_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
                 ))),
             }
         }
@@ -199,7 +199,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 err_code => Err(MinifiError::StatusError((
                     "minifi_process_session_transfer".into(),
-                    NonZeroU32::new_unchecked(err_code),
+                    NonZeroU32::new_unchecked(err_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
                 ))),
             }
         }
@@ -212,7 +212,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 err_code => Err(MinifiError::StatusError((
                     "minifi_process_session_remove".into(),
-                    NonZeroU32::new_unchecked(err_code),
+                    NonZeroU32::new_unchecked(err_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
                 ))),
             }
         }
@@ -241,7 +241,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                         attr_key, attr_value
                     )
                     .into(),
-                    NonZeroU32::new_unchecked(err_code),
+                    NonZeroU32::new_unchecked(err_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
                 ))),
             }
         }
@@ -342,7 +342,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 err_code => Err(MinifiError::StatusError((
                     "minifi_process_session_write".into(),
-                    NonZeroU32::new_unchecked(err_code),
+                    NonZeroU32::new_unchecked(err_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
                 ))),
             }
         }
@@ -426,7 +426,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
         if session_status != minifi_status_MINIFI_STATUS_SUCCESS {
             return Err(MinifiError::StatusError((
                 "minifi_process_session_write".into(),
-                unsafe { NonZeroU32::new_unchecked(session_status) },
+                unsafe { NonZeroU32::new_unchecked(session_status) }, // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
             )));
         }
 
@@ -520,8 +520,10 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
 
                     if let Some(cb) = ctx.callback.take() {
                         match cb(&mut reader) {
-                            Ok(cb_ok) => {ctx.result = Some(Ok(cb_ok))}
-                            Err(_) => { return minifi_io_status_MINIFI_IO_ERROR; }
+                            Ok(cb_ok) => ctx.result = Some(Ok(cb_ok)),
+                            Err(_) => {
+                                return minifi_io_status_MINIFI_IO_ERROR;
+                            }
                         }
                     } else {
                         return minifi_io_status_MINIFI_IO_ERROR;
@@ -541,7 +543,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             if status != minifi_status_MINIFI_STATUS_SUCCESS {
                 return Err(MinifiError::StatusError((
                     "minifi_process_session_read".into(),
-                    NonZeroU32::new_unchecked(status),
+                    NonZeroU32::new_unchecked(status), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
                 )));
             }
 
