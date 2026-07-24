@@ -15,6 +15,7 @@
 #  limitations under the License.
 #
 
+
 class Directory:
     def __init__(self, path, files: dict[str, str | bytes] | None = None, mode="rw"):
         self.path = path

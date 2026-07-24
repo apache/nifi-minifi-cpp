@@ -21,12 +21,12 @@ from nifiapi.decorators import trigger_serially
 @trigger_serially
 class SingleThreadedSleepForever(FlowFileSource):
     class Java:
-        implements = ['org.apache.nifi.python.processor.FlowFileSource']
+        implements = ["org.apache.nifi.python.processor.FlowFileSource"]
 
     class ProcessorDetails:
-        version = '2.0.0-snapshot'
-        description = '''NiFi-style sleep forever python processor (single-threaded).'''
-        tags = ['test', 'python', 'sleep']
+        version = "2.0.0-snapshot"
+        description = """NiFi-style sleep forever python processor (single-threaded)."""
+        tags = ["test", "python", "sleep"]
 
     def __init__(self, **kwargs):
         pass

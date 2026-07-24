@@ -17,26 +17,58 @@ import tempfile
 import argparse
 import pathlib
 
-from cli import main_menu, do_one_click_build, do_one_click_configuration, do_one_click_conan_install
+from cli import (
+    main_menu,
+    do_one_click_build,
+    do_one_click_configuration,
+    do_one_click_conan_install,
+)
 from minifi_option import parse_minifi_options
 from package_manager import get_package_manager
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as cmake_cache_dir:
         parser = argparse.ArgumentParser()
-        parser.add_argument('--noconfirm', action="store_true", default=False,
-                            help="Bypass any and all “Are you sure?” messages.")
-        parser.add_argument('--minifi-options', default="", help="Overrides the default minifi options during the "
-                                                                 "initial parsing")
-        parser.add_argument('--cmake-options', default="", help="Appends this to the final cmake command")
-        parser.add_argument('--skip-compiler-install', action="store_true", default=False,
-                            help="Skips the installation of the default compiler")
-        parser.add_argument('--noninteractive', action="store_true", default=False,
-                            help="Initiates the one click build")
-        parser.add_argument('--run-configuration', action="store_true", default=False,
-                            help="Runs configuration")
-        parser.add_argument('--run-conan-install', action="store_true", default=False,
-                            help="Runs conan install")
+        parser.add_argument(
+            "--noconfirm",
+            action="store_true",
+            default=False,
+            help="Bypass any and all “Are you sure?” messages.",
+        )
+        parser.add_argument(
+            "--minifi-options",
+            default="",
+            help="Overrides the default minifi options during the initial parsing",
+        )
+        parser.add_argument(
+            "--cmake-options",
+            default="",
+            help="Appends this to the final cmake command",
+        )
+        parser.add_argument(
+            "--skip-compiler-install",
+            action="store_true",
+            default=False,
+            help="Skips the installation of the default compiler",
+        )
+        parser.add_argument(
+            "--noninteractive",
+            action="store_true",
+            default=False,
+            help="Initiates the one click build",
+        )
+        parser.add_argument(
+            "--run-configuration",
+            action="store_true",
+            default=False,
+            help="Runs configuration",
+        )
+        parser.add_argument(
+            "--run-conan-install",
+            action="store_true",
+            default=False,
+            help="Runs conan install",
+        )
         args = parser.parse_args()
         no_confirm = args.noconfirm or args.noninteractive
 
@@ -47,15 +79,26 @@ if __name__ == '__main__':
             compiler_override = ""
         package_manager.ensure_environment()
 
-        cmake_options_for_parsing = " ".join(filter(None, [args.minifi_options, compiler_override]))
-        cmake_options_for_cmake = " ".join(filter(None, [args.cmake_options, compiler_override]))
+        cmake_options_for_parsing = " ".join(
+            filter(None, [args.minifi_options, compiler_override])
+        )
+        cmake_options_for_cmake = " ".join(
+            filter(None, [args.cmake_options, compiler_override])
+        )
 
-        path = pathlib.Path(__file__).parent.resolve() / '..' / "cmake" / "MiNiFiOptions.cmake"
+        path = (
+            pathlib.Path(__file__).parent.resolve()
+            / ".."
+            / "cmake"
+            / "MiNiFiOptions.cmake"
+        )
 
-        minifi_options = parse_minifi_options(str(path.as_posix()),
-                                              cmake_options_for_parsing,
-                                              package_manager,
-                                              cmake_cache_dir)
+        minifi_options = parse_minifi_options(
+            str(path.as_posix()),
+            cmake_options_for_parsing,
+            package_manager,
+            cmake_cache_dir,
+        )
         minifi_options.load_option_state()
         minifi_options.no_confirm = no_confirm
         minifi_options.set_cmake_override(cmake_options_for_cmake)

@@ -33,12 +33,15 @@ ENV PROTOCOL=tcp
 """)
 
         builder = DockerImageBuilder(
-            image_tag="minifi-diag-slave-tcp:latest",
-            dockerfile_content=dockerfile
+            image_tag="minifi-diag-slave-tcp:latest", dockerfile_content=dockerfile
         )
         builder.build()
 
-        super().__init__("minifi-diag-slave-tcp:latest", f"diag-slave-tcp-{test_context.scenario_id}", test_context.network)
+        super().__init__(
+            "minifi-diag-slave-tcp:latest",
+            f"diag-slave-tcp-{test_context.scenario_id}",
+            test_context.network,
+        )
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)
@@ -47,7 +50,7 @@ ENV PROTOCOL=tcp
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=30,
             bail_condition=lambda: self.exited,
-            context=context
+            context=context,
         )
 
     def set_value_on_plc_with_modbus(self, modbus_cmd):

@@ -22,14 +22,73 @@ import shutil
 
 required_conan_version = ">=2.0"
 
-shared_requires = ("civetweb/1.16", "libxml2/2.15.3", "fmt/12.1.0", "spdlog/1.17.0", "catch2/3.15.0", "zstd/1.5.7", "sol2/3.5.0", "argparse/3.2", "libsodium/1.0.22", "gsl-lite/1.1.0",
-                   "jsoncons/1.7.0", "json-schema-validator/2.4.0", "pugixml/1.16", "yaml-cpp/0.9.0", "range-v3/0.12.0", "magic_enum/0.9.8@minifi/develop", "date/3.0.4")
+shared_requires = (
+    "civetweb/1.16",
+    "libxml2/2.15.3",
+    "fmt/12.1.0",
+    "spdlog/1.17.0",
+    "catch2/3.15.0",
+    "zstd/1.5.7",
+    "sol2/3.5.0",
+    "argparse/3.2",
+    "libsodium/1.0.22",
+    "gsl-lite/1.1.0",
+    "jsoncons/1.7.0",
+    "json-schema-validator/2.4.0",
+    "pugixml/1.16",
+    "yaml-cpp/0.9.0",
+    "range-v3/0.12.0",
+    "magic_enum/0.9.8@minifi/develop",
+    "date/3.0.4",
+)
 
-shared_sources = ("CMakeLists.txt", "libminifi/*", "extensions/*", "minifi_main/*", "behave_framework/*", "bin/*", "bootstrap/*", "cmake/*", "conf/*", "controller/*", "core-framework/*",
-                  "docs/*", "encrypt-config/*", "etc/*", "examples/*", "extension-framework/*", "fips/*", "minifi-api/*", "packaging/*", "thirdparty/*", "docker/*", "LICENSE", "NOTICE",
-                  "README.md", "C2.md", "CONAN.md", "CONFIGURE.md", "CONTRIBUTING.md", "CONTROLLERS.md", "EXPRESSIONS.md", "Extensions.md", "METRICS.md", "OPS.md", "PARAMETER_PROVIDERS.md",
-                  "PROCESSORS.md", "SITE_TO_SITE.md", "ThirdParties.md", "Windows.md", "CPPLINT.cfg", "generateVersion.bat", "generateVersion.sh", "run_clang_tidy.sh", "run_flake8.sh",
-                  "run_shellcheck.sh", "versioninfo.rc.in")
+shared_sources = (
+    "CMakeLists.txt",
+    "libminifi/*",
+    "extensions/*",
+    "minifi_main/*",
+    "behave_framework/*",
+    "bin/*",
+    "bootstrap/*",
+    "cmake/*",
+    "conf/*",
+    "controller/*",
+    "core-framework/*",
+    "docs/*",
+    "encrypt-config/*",
+    "etc/*",
+    "examples/*",
+    "extension-framework/*",
+    "fips/*",
+    "minifi-api/*",
+    "packaging/*",
+    "thirdparty/*",
+    "docker/*",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "C2.md",
+    "CONAN.md",
+    "CONFIGURE.md",
+    "CONTRIBUTING.md",
+    "CONTROLLERS.md",
+    "EXPRESSIONS.md",
+    "Extensions.md",
+    "METRICS.md",
+    "OPS.md",
+    "PARAMETER_PROVIDERS.md",
+    "PROCESSORS.md",
+    "SITE_TO_SITE.md",
+    "ThirdParties.md",
+    "Windows.md",
+    "CPPLINT.cfg",
+    "generateVersion.bat",
+    "generateVersion.sh",
+    "run_clang_tidy.sh",
+    "run_flake8.sh",
+    "run_shellcheck.sh",
+    "versioninfo.rc.in",
+)
 
 
 class MiNiFiCppMain(ConanFile):
@@ -38,16 +97,59 @@ class MiNiFiCppMain(ConanFile):
     license = "Apache-2.0"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"
-    options = {"shared": [True, False], "fPIC": [True, False], "custom_malloc": [False, "jemalloc", "mimalloc", "rpmalloc"], "enable_all": [True, False], "enable_libarchive": [True, False],
-               "enable_rocksdb": [True, False], "enable_sftp": [True, False], "enable_prometheus": [True, False], "enable_bzip2": [True, False], "enable_lzma": [True, False],
-               "enable_mqtt": [True, False], "enable_couchbase": [True, False], "enable_kafka": [True, False], "enable_opc": [True, False], "enable_gcp": [True, False],
-               "enable_grpc_for_loki": [True, False], "enable_bustache": [True, False], "enable_kubernetes": [True, False], "enable_azure": [True, False], "enable_llamacpp": [True, False],
-               "enable_aws": [True, False], "enable_sql": [True, False], "skip_tests": [True, False], "portable": [True, False]}
+    options = {
+        "shared": [True, False],
+        "fPIC": [True, False],
+        "custom_malloc": [False, "jemalloc", "mimalloc", "rpmalloc"],
+        "enable_all": [True, False],
+        "enable_libarchive": [True, False],
+        "enable_rocksdb": [True, False],
+        "enable_sftp": [True, False],
+        "enable_prometheus": [True, False],
+        "enable_bzip2": [True, False],
+        "enable_lzma": [True, False],
+        "enable_mqtt": [True, False],
+        "enable_couchbase": [True, False],
+        "enable_kafka": [True, False],
+        "enable_opc": [True, False],
+        "enable_gcp": [True, False],
+        "enable_grpc_for_loki": [True, False],
+        "enable_bustache": [True, False],
+        "enable_kubernetes": [True, False],
+        "enable_azure": [True, False],
+        "enable_llamacpp": [True, False],
+        "enable_aws": [True, False],
+        "enable_sql": [True, False],
+        "skip_tests": [True, False],
+        "portable": [True, False],
+    }
 
-    default_options = {"shared": False, "fPIC": True, "custom_malloc": False, "enable_all": False, "enable_libarchive": False, "enable_rocksdb": False, "enable_sftp": False,
-                       "enable_prometheus": False, "enable_bzip2": False, "enable_lzma": False, "enable_mqtt": False, "enable_couchbase": False, "enable_kafka": False, "enable_opc": False,
-                       "enable_gcp": False, "enable_grpc_for_loki": False, "enable_bustache": False, "enable_kubernetes": False, "enable_azure": False, "enable_llamacpp": False, "enable_aws": False,
-                       "enable_sql": False, "skip_tests": False, "portable": True}
+    default_options = {
+        "shared": False,
+        "fPIC": True,
+        "custom_malloc": False,
+        "enable_all": False,
+        "enable_libarchive": False,
+        "enable_rocksdb": False,
+        "enable_sftp": False,
+        "enable_prometheus": False,
+        "enable_bzip2": False,
+        "enable_lzma": False,
+        "enable_mqtt": False,
+        "enable_couchbase": False,
+        "enable_kafka": False,
+        "enable_opc": False,
+        "enable_gcp": False,
+        "enable_grpc_for_loki": False,
+        "enable_bustache": False,
+        "enable_kubernetes": False,
+        "enable_azure": False,
+        "enable_llamacpp": False,
+        "enable_aws": False,
+        "enable_sql": False,
+        "skip_tests": False,
+        "portable": True,
+    }
 
     exports_sources = shared_sources
 
@@ -96,7 +198,9 @@ class MiNiFiCppMain(ConanFile):
             self.requires("google-cloud-cpp/2.47.1@minifi/develop")
             if not self.options.skip_tests:
                 self.requires("gtest/1.17.0")
-        if (self.options.enable_all or self.options.enable_kubernetes) and self.settings.os != "Windows":
+        if (
+            self.options.enable_all or self.options.enable_kubernetes
+        ) and self.settings.os != "Windows":
             self.requires("kubernetes/0.14.0@minifi/develop")
         if self.options.enable_all or self.options.enable_azure:
             self.requires("azure-sdk-for-cpp/12.18.0@minifi/develop")
@@ -124,7 +228,9 @@ class MiNiFiCppMain(ConanFile):
 
     def configure(self):
         self.options["libarchive"].with_openssl = True
-        self.options["date"].tz_db = "manual" if self.settings.os == "Windows" else "system"
+        self.options["date"].tz_db = (
+            "manual" if self.settings.os == "Windows" else "system"
+        )
         if self.options.enable_all or self.options.enable_bzip2:
             self.options["libarchive"].with_bzip2 = True
         if self.options.enable_all or self.options.enable_lzma:
@@ -134,7 +240,9 @@ class MiNiFiCppMain(ConanFile):
             self.options["librdkafka"].sasl = False
             self.options["librdkafka"].zstd = True
             self.options["librdkafka"].zlib = True
-        if (self.options.enable_all or self.options.enable_gcp) and not self.options.skip_tests:
+        if (
+            self.options.enable_all or self.options.enable_gcp
+        ) and not self.options.skip_tests:
             self.options["google-cloud-cpp"].with_mocks = True
         if self.options.enable_all or self.options.enable_aws:
             self.options["aws-sdk-cpp"].s3 = True
@@ -180,17 +288,47 @@ class MiNiFiCppMain(ConanFile):
         cmake.install()
         include_dir = os.path.join(self.source_folder)
         built_dir = os.path.join(self.source_folder, self.folders.build)
-        copy(self, pattern="*.h*", dst=os.path.join(self.package_folder, "include"), src=include_dir, keep_path=True)
-        copy(self, pattern="*.i*", dst=os.path.join(self.package_folder, "include"), src=include_dir, keep_path=True)
-        copy(self, pattern="*.a", dst=os.path.join(self.package_folder, "lib"), src=built_dir, keep_path=False)
-        copy(self, pattern="*.so*", dst=os.path.join(self.package_folder, "lib"), src=built_dir, keep_path=False)
+        copy(
+            self,
+            pattern="*.h*",
+            dst=os.path.join(self.package_folder, "include"),
+            src=include_dir,
+            keep_path=True,
+        )
+        copy(
+            self,
+            pattern="*.i*",
+            dst=os.path.join(self.package_folder, "include"),
+            src=include_dir,
+            keep_path=True,
+        )
+        copy(
+            self,
+            pattern="*.a",
+            dst=os.path.join(self.package_folder, "lib"),
+            src=built_dir,
+            keep_path=False,
+        )
+        copy(
+            self,
+            pattern="*.so*",
+            dst=os.path.join(self.package_folder, "lib"),
+            src=built_dir,
+            keep_path=False,
+        )
 
-        minifi_py_ext_oldfile = os.path.join(self.package_folder, "lib", "libminifi-python-script-extension.so")
-        minifi_py_ext_copynewfile = os.path.join(self.package_folder, "lib", "libminifi_native.so")
+        minifi_py_ext_oldfile = os.path.join(
+            self.package_folder, "lib", "libminifi-python-script-extension.so"
+        )
+        minifi_py_ext_copynewfile = os.path.join(
+            self.package_folder, "lib", "libminifi_native.so"
+        )
         self.overwrite_libfile(minifi_py_ext_oldfile, minifi_py_ext_copynewfile)
 
     def package_info(self):
-        self.cpp_info.libs = collect_libs(self, folder=os.path.join(self.package_folder, "lib"))
+        self.cpp_info.libs = collect_libs(
+            self, folder=os.path.join(self.package_folder, "lib")
+        )
         self.cpp_info.set_property("cmake_file_name", "minifi-cpp")
         self.cpp_info.set_property("cmake_target_name", "minifi-cpp::minifi-cpp")
         self.cpp_info.set_property("pkg_config_name", "minifi-cpp")

@@ -53,14 +53,20 @@ class FlowFileTransform(ProcessorBase):
         try:
             result = self.transform(context_proxy, flow_file_proxy)
         except Exception:
-            self.logger.error("Failed to transform flow file due to error:\n{}".format(traceback.format_exc()))
+            self.logger.error(
+                "Failed to transform flow file due to error:\n{}".format(
+                    traceback.format_exc()
+                )
+            )
             session.remove(flow_file)
             session.transfer(original_flow_file, self.REL_FAILURE)
             return
 
         if result.getRelationship() == "original":
             session.remove(flow_file)
-            self.logger.error("Result relationship cannot be 'original', it is reserved for the original flow file, and transferred automatically in non-failure cases.")
+            self.logger.error(
+                "Result relationship cannot be 'original', it is reserved for the original flow file, and transferred automatically in non-failure cases."
+            )
             session.transfer(original_flow_file, self.REL_FAILURE)
             return
 
@@ -71,7 +77,9 @@ class FlowFileTransform(ProcessorBase):
                 for name, value in result_attributes.items():
                     original_flow_file.setAttribute(name, value)
             if result.getContents() is not None:
-                self.logger.error("'failure' relationship should not have content, the original flow file will be transferred automatically in this case.")
+                self.logger.error(
+                    "'failure' relationship should not have content, the original flow file will be transferred automatically in this case."
+                )
             session.transfer(original_flow_file, self.REL_FAILURE)
             return
 
@@ -90,5 +98,7 @@ class FlowFileTransform(ProcessorBase):
         session.transfer(original_flow_file, self.REL_ORIGINAL)
 
     @abstractmethod
-    def transform(self, context: ProcessContextProxy, flowFile: FlowFileProxy) -> FlowFileTransformResult:
+    def transform(
+        self, context: ProcessContextProxy, flowFile: FlowFileProxy
+    ) -> FlowFileTransformResult:
         pass

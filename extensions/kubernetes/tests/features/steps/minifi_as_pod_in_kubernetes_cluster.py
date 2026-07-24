@@ -25,10 +25,16 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
         self.container = test_context.kubernetes_proxy
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
-        logging.debug('Setting up the kind Kubernetes cluster')
-        self.container.write_minifi_conf_file("minifi.properties", self._get_properties_file_content())
-        self.container.write_minifi_conf_file("minifi-log.properties", self._get_log_properties_file_content())
-        self.container.write_minifi_conf_file("config.yml", self.flow_definition.to_yaml())
+        logging.debug("Setting up the kind Kubernetes cluster")
+        self.container.write_minifi_conf_file(
+            "minifi.properties", self._get_properties_file_content()
+        )
+        self.container.write_minifi_conf_file(
+            "minifi-log.properties", self._get_log_properties_file_content()
+        )
+        self.container.write_minifi_conf_file(
+            "config.yml", self.flow_definition.to_yaml()
+        )
         self.container.create_helper_objects()
         self.container.load_docker_image("apacheminificpp:docker_test")
         self.container.create_minifi_pod()

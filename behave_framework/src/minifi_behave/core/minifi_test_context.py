@@ -47,15 +47,32 @@ class MinifiTestContext(Context):
 
     def get_or_create_minifi_container(self, container_name: str) -> MinifiContainer:
         if container_name not in self.containers:
-            if os.name == 'nt':
-                from minifi_behave.containers.minifi_win_container import MinifiWindowsContainer
+            if os.name == "nt":
+                from minifi_behave.containers.minifi_win_container import (
+                    MinifiWindowsContainer,
+                )
+
                 minifi_container = MinifiWindowsContainer(container_name, self)
-            elif 'MINIFI_INSTALLATION_TYPE=FHS' in str(docker.from_env().images.get(self.minifi_container_image).history()):
-                from minifi_behave.containers.minifi_linux_container import MinifiLinuxContainer, FHSDeployment
-                minifi_container = MinifiLinuxContainer(container_name, self, FHSDeployment())
+            elif "MINIFI_INSTALLATION_TYPE=FHS" in str(
+                docker.from_env().images.get(self.minifi_container_image).history()
+            ):
+                from minifi_behave.containers.minifi_linux_container import (
+                    MinifiLinuxContainer,
+                    FHSDeployment,
+                )
+
+                minifi_container = MinifiLinuxContainer(
+                    container_name, self, FHSDeployment()
+                )
             else:
-                from minifi_behave.containers.minifi_linux_container import MinifiLinuxContainer, NormalDeployment
-                minifi_container = MinifiLinuxContainer(container_name, self, NormalDeployment())
+                from minifi_behave.containers.minifi_linux_container import (
+                    MinifiLinuxContainer,
+                    NormalDeployment,
+                )
+
+                minifi_container = MinifiLinuxContainer(
+                    container_name, self, NormalDeployment()
+                )
             self.containers[container_name] = minifi_container
         return self.containers[container_name]
 

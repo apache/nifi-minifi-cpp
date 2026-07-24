@@ -21,23 +21,33 @@ from minifi_behave.core.hooks import common_after_scenario
 
 
 def get_minifi_container_image():
-    if 'MINIFI_TAG_PREFIX' in os.environ and 'MINIFI_VERSION' in os.environ:
-        minifi_tag_prefix = os.environ['MINIFI_TAG_PREFIX']
-        minifi_version = os.environ['MINIFI_VERSION']
-        return 'apacheminificpp:' + minifi_tag_prefix + minifi_version
+    if "MINIFI_TAG_PREFIX" in os.environ and "MINIFI_VERSION" in os.environ:
+        minifi_tag_prefix = os.environ["MINIFI_TAG_PREFIX"]
+        minifi_version = os.environ["MINIFI_VERSION"]
+        return "apacheminificpp:" + minifi_tag_prefix + minifi_version
     return "apacheminificpp:behave"
 
 
 def before_all(context):
     context.minifi_container_image = get_minifi_container_image()
     client: docker.DockerClient = docker.from_env()
-    is_fhs = 'MINIFI_INSTALLATION_TYPE=FHS' in str(client.images.get(context.minifi_container_image).history())
+    is_fhs = "MINIFI_INSTALLATION_TYPE=FHS" in str(
+        client.images.get(context.minifi_container_image).history()
+    )
     pip3_install_command = ""
-    minifi_tag_prefix = os.environ['MINIFI_TAG_PREFIX'] if 'MINIFI_TAG_PREFIX' in os.environ else ""
+    minifi_tag_prefix = (
+        os.environ["MINIFI_TAG_PREFIX"] if "MINIFI_TAG_PREFIX" in os.environ else ""
+    )
     if not minifi_tag_prefix:
         pip3_install_command = "RUN apk --update --no-cache add py3-pip"
-    minifi_python_dir_path = '/var/lib/nifi-minifi-cpp/minifi-python' if is_fhs else '/opt/minifi/minifi-current/minifi-python'
-    minifi_python_venv_parent = '/var/lib/nifi-minifi-cpp' if is_fhs else '/opt/minifi/minifi-current'
+    minifi_python_dir_path = (
+        "/var/lib/nifi-minifi-cpp/minifi-python"
+        if is_fhs
+        else "/opt/minifi/minifi-current/minifi-python"
+    )
+    minifi_python_venv_parent = (
+        "/var/lib/nifi-minifi-cpp" if is_fhs else "/opt/minifi/minifi-current"
+    )
     dockerfile = """
 FROM {base_image}
 USER root
@@ -65,10 +75,12 @@ COPY SingleThreadedSleepForever.py {minifi_python_dir}/nifi_python_processors/Si
 COPY MinifiSleepForever.py {minifi_python_dir}/MinifiSleepForever.py
 COPY SingleThreadedMinifiSleepForever.py {minifi_python_dir}/SingleThreadedMinifiSleepForever.py
 RUN python3 -m venv {minifi_python_venv_parent}/venv
-    """.format(base_image=context.minifi_container_image,
-               pip3_install_command=pip3_install_command,
-               minifi_python_dir=minifi_python_dir_path,
-               minifi_python_venv_parent=minifi_python_venv_parent)
+    """.format(
+        base_image=context.minifi_container_image,
+        pip3_install_command=pip3_install_command,
+        minifi_python_dir=minifi_python_dir_path,
+        minifi_python_venv_parent=minifi_python_venv_parent,
+    )
 
     build_context_path = str(Path(__file__).resolve().parent / "resources")
     files_on_context = {}
@@ -80,7 +92,7 @@ RUN python3 -m venv {minifi_python_venv_parent}/venv
     builder = DockerImageBuilder(
         image_tag="apacheminificpp-python:latest",
         dockerfile_content=dockerfile,
-        files_on_context=files_on_context
+        files_on_context=files_on_context,
     )
     builder.build()
 
@@ -89,7 +101,7 @@ def is_conda_available_in_minifi_image(context):
     client: docker.DockerClient = docker.from_env()
     container = client.containers.create(
         image=context.minifi_container_image,
-        command=['conda', '--version'],
+        command=["conda", "--version"],
     )
     try:
         container.start()
@@ -99,25 +111,29 @@ def is_conda_available_in_minifi_image(context):
         container.remove(force=True)
         return False
 
-    return result.decode('utf-8').startswith('conda ')
+    return result.decode("utf-8").startswith("conda ")
 
 
 def get_minifi_image_python_version(context):
     client: docker.DockerClient = docker.from_env()
     result = client.containers.run(
         image=context.minifi_container_image,
-        command=['python3', '-c', 'import platform; print(platform.python_version())'],
-        remove=True
+        command=["python3", "-c", "import platform; print(platform.python_version())"],
+        remove=True,
     )
 
-    python_ver_str = result.decode('utf-8')
-    return tuple(map(int, python_ver_str.split('.')))
+    python_ver_str = result.decode("utf-8")
+    return tuple(map(int, python_ver_str.split(".")))
 
 
 def before_scenario(context, scenario):
     if "USE_NIFI_PYTHON_PROCESSORS_WITH_LANGCHAIN" in scenario.effective_tags:
-        if not is_conda_available_in_minifi_image(context) and get_minifi_image_python_version(context) < (3, 8, 1):
-            scenario.skip("NiFi Python processor tests use langchain library which requires Python 3.8.1 or later.")
+        if not is_conda_available_in_minifi_image(
+            context
+        ) and get_minifi_image_python_version(context) < (3, 8, 1):
+            scenario.skip(
+                "NiFi Python processor tests use langchain library which requires Python 3.8.1 or later."
+            )
             return
 
     common_before_scenario(context, scenario)

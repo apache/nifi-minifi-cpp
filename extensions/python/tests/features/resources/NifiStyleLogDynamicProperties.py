@@ -14,16 +14,19 @@
 #  limitations under the License.
 
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
-from nifiapi.properties import ExpressionLanguageScope, PropertyDescriptor, StandardValidators
+from nifiapi.properties import (
+    ExpressionLanguageScope,
+    PropertyDescriptor,
+    StandardValidators,
+)
 
 
 class NifiStyleLogDynamicProperties(FlowFileTransform):
-
     class Java:
-        implements = ['org.apache.nifi.python.processor.FlowFileTransform']
+        implements = ["org.apache.nifi.python.processor.FlowFileTransform"]
 
     class ProcessorDetails:
-        version = '1.2.3'
+        version = "1.2.3"
         description = "Test processor"
         dependencies = []
 
@@ -32,7 +35,7 @@ class NifiStyleLogDynamicProperties(FlowFileTransform):
         description="A dummy static property",
         required=True,
         validators=[StandardValidators.NON_EMPTY_VALIDATOR],
-        expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES
+        expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES,
     )
 
     def __init__(self, **kwargs):
@@ -42,14 +45,16 @@ class NifiStyleLogDynamicProperties(FlowFileTransform):
         return [self.STATIC_PROPERTY]
 
     def getDynamicPropertyDescriptor(self, propertyname):
-        return PropertyDescriptor(name=propertyname,
-                                  description="A user-defined property",
-                                  dynamic=True)
+        return PropertyDescriptor(
+            name=propertyname, description="A user-defined property", dynamic=True
+        )
 
     def transform(self, context, flow_file):
         property_value = context.getProperty("Static Property")
         self.logger.info("Static Property value: {}".format(property_value.getValue()))
         dyn_property_value = context.getProperty("Dynamic Property")
-        self.logger.info("Dynamic Property value: {}".format(dyn_property_value.getValue()))
+        self.logger.info(
+            "Dynamic Property value: {}".format(dyn_property_value.getValue())
+        )
 
-        return FlowFileTransformResult('success', contents="content")
+        return FlowFileTransformResult("success", contents="content")

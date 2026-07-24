@@ -13,5 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 def minus_ten(number):
     return number - 10

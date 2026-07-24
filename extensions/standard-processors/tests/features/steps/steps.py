@@ -18,10 +18,10 @@
 import humanfriendly
 from behave import step, then, given
 
-from minifi_behave.steps import checking_steps        # noqa: F401
-from minifi_behave.steps import configuration_steps   # noqa: F401
-from minifi_behave.steps import core_steps            # noqa: F401
-from minifi_behave.steps import flow_building_steps   # noqa: F401
+from minifi_behave.steps import checking_steps  # noqa: F401
+from minifi_behave.steps import configuration_steps  # noqa: F401
+from minifi_behave.steps import core_steps  # noqa: F401
+from minifi_behave.steps import flow_building_steps  # noqa: F401
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.helpers import wait_for_condition
 from containers.syslog_container import SyslogContainer
@@ -42,44 +42,87 @@ def setup_syslog_udp_client(context: MinifiTestContext):
     context.containers["syslog-udp"] = SyslogContainer("udp", context)
 
 
-@step('there is an accessible PLC with modbus enabled')
+@step("there is an accessible PLC with modbus enabled")
 def setup_plc_with_modbus(context: MinifiTestContext):
     modbus_container = context.containers["diag-slave-tcp"] = DiagSlave(context)
     assert modbus_container.deploy(context)
 
 
-@step('PLC register has been set with {modbus_cmd} command')
+@step("PLC register has been set with {modbus_cmd} command")
 def set_plc_register_with_command(context: MinifiTestContext, modbus_cmd: str):
-    assert context.containers["diag-slave-tcp"].set_value_on_plc_with_modbus(modbus_cmd) or context.containers["diag-slave-tcp"].log_app_output()
+    assert (
+        context.containers["diag-slave-tcp"].set_value_on_plc_with_modbus(modbus_cmd)
+        or context.containers["diag-slave-tcp"].log_app_output()
+    )
 
 
-@step('a TCP client is set up to send a test TCP message to minifi')
+@step("a TCP client is set up to send a test TCP message to minifi")
 def setup_tcp_client(context: MinifiTestContext):
     context.containers["tcp-client"] = TcpClientContainer(context)
 
 
 @given("C2 is enabled in MiNiFi")
 def enable_c2_in_minifi(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.enable", "true")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.rest.url", f"http://minifi-c2-server-{context.scenario_id}:10090/c2/config/heartbeat")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.rest.url.ack", f"http://minifi-c2-server-{context.scenario_id}:10090/c2/config/acknowledge")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.flow.base.url", f"http://minifi-c2-server-{context.scenario_id}:10090/c2/config/")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.full.heartbeat", "false")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.class", "minifi-test-class")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.identifier", "minifi-test-id")
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.enable", "true"
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.rest.url",
+        f"http://minifi-c2-server-{context.scenario_id}:10090/c2/config/heartbeat",
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.rest.url.ack",
+        f"http://minifi-c2-server-{context.scenario_id}:10090/c2/config/acknowledge",
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.flow.base.url",
+        f"http://minifi-c2-server-{context.scenario_id}:10090/c2/config/",
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.root.classes",
+        "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation",
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.full.heartbeat", "false"
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.agent.class", "minifi-test-class"
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.agent.identifier", "minifi-test-id"
+    )
 
 
 @given("ssl properties are set up for MiNiFi C2 server")
 def setup_ssl_properties_for_c2(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.enable", "true")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.rest.url", f"https://minifi-c2-server-{context.scenario_id}:10090/c2/config/heartbeat")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.rest.url.ack", f"https://minifi-c2-server-{context.scenario_id}:10090/c2/config/acknowledge")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.flow.base.url", f"https://minifi-c2-server-{context.scenario_id}:10090/c2/config/")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.full.heartbeat", "false")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.class", "minifi-test-class")
-    context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.identifier", "minifi-test-id")
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.enable", "true"
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.rest.url",
+        f"https://minifi-c2-server-{context.scenario_id}:10090/c2/config/heartbeat",
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.rest.url.ack",
+        f"https://minifi-c2-server-{context.scenario_id}:10090/c2/config/acknowledge",
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.flow.base.url",
+        f"https://minifi-c2-server-{context.scenario_id}:10090/c2/config/",
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.root.classes",
+        "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation",
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.full.heartbeat", "false"
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.agent.class", "minifi-test-class"
+    )
+    context.get_or_create_default_minifi_container().set_property(
+        "nifi.c2.agent.identifier", "minifi-test-id"
+    )
     set_up_ssl_properties(context.get_or_create_default_minifi_container())
 
 
@@ -99,9 +142,18 @@ def start_minifi_c2_server(context: MinifiTestContext):
     assert context.containers["minifi-c2-server"].deploy(context)
 
 
-@then("the MiNiFi C2 server logs contain the following message: \"{log_message}\" in less than {duration}")
-def verify_c2_server_logs_contain_message(context: MinifiTestContext, log_message: str, duration: str):
+@then(
+    'the MiNiFi C2 server logs contain the following message: "{log_message}" in less than {duration}'
+)
+def verify_c2_server_logs_contain_message(
+    context: MinifiTestContext, log_message: str, duration: str
+):
     duration_seconds = humanfriendly.parse_timespan(duration)
-    assert wait_for_condition(condition=lambda: log_message in context.containers["minifi-c2-server"].get_logs(),
-                              timeout_seconds=duration_seconds, bail_condition=lambda: context.containers["minifi-c2-server"].exited,
-                              context=context)
+    assert wait_for_condition(
+        condition=lambda: (
+            log_message in context.containers["minifi-c2-server"].get_logs()
+        ),
+        timeout_seconds=duration_seconds,
+        bail_condition=lambda: context.containers["minifi-c2-server"].exited,
+        context=context,
+    )
