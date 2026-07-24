@@ -519,7 +519,12 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                     let mut reader = CffiInputStream::new(stream_ptr);
 
                     if let Some(cb) = ctx.callback.take() {
-                        ctx.result = Some(cb(&mut reader));
+                        match cb(&mut reader) {
+                            Ok(cb_ok) => {ctx.result = Some(Ok(cb_ok))}
+                            Err(_) => { return minifi_io_status_MINIFI_IO_ERROR; }
+                        }
+                    } else {
+                        return minifi_io_status_MINIFI_IO_ERROR;
                     }
 
                     reader.total_bytes_read() as i64
