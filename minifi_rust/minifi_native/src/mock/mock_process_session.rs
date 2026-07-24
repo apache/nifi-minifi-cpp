@@ -126,21 +126,6 @@ impl ProcessSession for MockProcessSession {
         callback(&mut cursor)
     }
 
-    fn read_in_batches<F>(
-        &self,
-        flow_file: &Self::FlowFile,
-        batch_size: usize,
-        mut process_batch: F,
-    ) -> Result<(), MinifiError>
-    where
-        F: FnMut(&[u8]) -> Result<(), MinifiError>,
-    {
-        for chunk in flow_file.content.borrow().chunks(batch_size) {
-            process_batch(chunk)?;
-        }
-        Ok(())
-    }
-
     fn get_flow_file_id(&self, flow_file: &Self::FlowFile) -> Result<String, MinifiError> {
         Ok(flow_file.id.clone())
     }
@@ -169,27 +154,6 @@ impl MockProcessSession {
 mod tests {
     use super::*;
     use crate::api::process_session::IoState;
-
-    #[test]
-    fn test_read_in_batches() {
-        let session = MockProcessSession::new();
-        let flow_file = MockFlowFile::new();
-        flow_file
-            .content
-            .replace("Hello, World!".as_bytes().to_vec());
-        let mut vec: Vec<u8> = Vec::new();
-
-        let res = session.read_in_batches(&flow_file, 1, |batch| {
-            assert_eq!(batch.len(), 1);
-            vec.push(batch[0]);
-            Ok(())
-        });
-
-        assert!(res.is_ok());
-
-        assert_eq!(vec.len(), 13);
-        assert_eq!(vec, b"Hello, World!");
-    }
 
     #[test]
     fn test_write_from_stream_replaces_content() {

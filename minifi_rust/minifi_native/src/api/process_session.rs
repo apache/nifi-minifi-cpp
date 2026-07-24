@@ -64,14 +64,6 @@ pub trait ProcessSession {
     fn read_stream<F, R>(&self, flow_file: &Self::FlowFile, callback: F) -> Result<R, MinifiError>
     where
         F: FnOnce(&mut dyn InputStream) -> Result<R, MinifiError>;
-    fn read_in_batches<F>(
-        &self,
-        flow_file: &Self::FlowFile,
-        batch_size: usize,
-        process_batch: F,
-    ) -> Result<(), MinifiError>
-    where
-        F: FnMut(&[u8]) -> Result<(), MinifiError>;
 
     fn get_flow_file_id(&self, flow_file: &Self::FlowFile) -> Result<String, MinifiError>;
 }

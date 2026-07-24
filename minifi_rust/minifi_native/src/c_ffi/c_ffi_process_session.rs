@@ -33,7 +33,7 @@ use minifi_native_sys::{
 };
 use std::ffi::{CString, c_void};
 use std::io::Read;
-use std::num::NonZeroU32;
+use std::num::{NonZeroU32};
 use std::os::raw::c_char;
 
 const _: () = {
@@ -41,6 +41,35 @@ const _: () = {
         panic!("minifi_status_MINIFI_STATUS_SUCCESS expected to be 0");
     }
 };
+
+unsafe fn write_all_to_output_stream(
+    output_stream: *mut minifi_output_stream,
+    data: &[u8],
+) -> Result<i64, i64> {
+    let mut offset = 0;
+    while offset < data.len() {
+        let remaining = data.len() - offset;
+        let written = unsafe {
+            minifi_output_stream_write(
+                output_stream,
+                data.as_ptr().add(offset) as *const c_char,
+                remaining,
+            )
+        };
+        if written < 0 {
+            return Err(written);
+        }
+        if written == 0 {
+            return Err(minifi_io_status_MINIFI_IO_ERROR); // To avoid spinning, but not sure about it
+        }
+        let written_usize = written as usize;
+        if written_usize > remaining {
+            return Err(minifi_io_status_MINIFI_IO_ERROR);
+        }
+        offset += written_usize;
+    }
+    Ok(data.len() as i64)
+}
 
 pub struct CffiProcessSession<'a> {
     ptr: *mut minifi_process_session,
@@ -102,16 +131,10 @@ impl<'a> CffiProcessSession<'a> {
                             }
                         };
 
-                        let written = minifi_output_stream_write(
-                            output_stream,
-                            state.buffer.as_ptr() as *const c_char,
-                            n,
-                        );
-
-                        if written < 0 {
-                            return minifi_io_status_MINIFI_IO_ERROR;
+                        match write_all_to_output_stream(output_stream, &state.buffer[..n]) {
+                            Ok(written) => overall_writes += written,
+                            Err(err) => return err,
                         }
-                        overall_writes += written;
                     }
                     overall_writes
                 }
@@ -301,15 +324,11 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             ) -> i64 {
                 unsafe {
                     let result_target = &mut *(user_ctx as *mut Option<&[u8]>);
-                    if result_target.is_none() {
+                    let Some(data) = *result_target else {
                         return minifi_io_status_MINIFI_IO_ERROR;
-                    }
+                    };
 
-                    minifi_output_stream_write(
-                        output_stream,
-                        result_target.unwrap().as_ptr() as *const c_char,
-                        result_target.unwrap().len(),
-                    )
+                    write_all_to_output_stream(output_stream, data).unwrap_or_else(|err| err)
                 }
             }
 
@@ -503,85 +522,6 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
 
             ctx.result
                 .expect("Agent returned with success, so ctx.result should be set")
-        }
-    }
-
-    fn read_in_batches<F>(
-        &self,
-        flow_file: &Self::FlowFile,
-        batch_size: usize,
-        process_batch: F,
-    ) -> Result<(), MinifiError>
-    where
-        F: FnMut(&[u8]) -> Result<(), MinifiError>,
-    {
-        struct BatchReadHelper<F>
-        where
-            F: FnMut(&[u8]) -> Result<(), MinifiError>,
-        {
-            batch_size: usize,
-            process_batch: F,
-        }
-
-        let mut batch_helper = BatchReadHelper {
-            batch_size,
-            process_batch,
-        };
-        unsafe {
-            unsafe extern "C" fn cb<F>(
-                output_option: *mut c_void,
-                input_stream: *mut minifi_input_stream,
-            ) -> i64
-            where
-                F: FnMut(&[u8]) -> Result<(), MinifiError>,
-            {
-                unsafe {
-                    let batch_helper = &mut *(output_option as *mut BatchReadHelper<F>);
-
-                    let mut remaining_size = minifi_input_stream_size(input_stream);
-                    let mut overall_read = 0;
-                    while remaining_size > 0 {
-                        let read_size = remaining_size.min(batch_helper.batch_size);
-                        let mut buffer: Vec<u8> = Vec::with_capacity(read_size);
-
-                        let bytes_read = minifi_input_stream_read(
-                            input_stream,
-                            buffer.as_mut_ptr() as *mut c_char,
-                            read_size,
-                        );
-                        if bytes_read < 0 || bytes_read > read_size as i64 {
-                            return minifi_io_status_MINIFI_IO_ERROR;
-                        }
-
-                        buffer.set_len(bytes_read as usize);
-
-                        match (batch_helper.process_batch)(&buffer) {
-                            Ok(_) => {}
-                            Err(err) => {
-                                eprintln!("Error during read_in_batch {:?}", err);
-                                return minifi_io_status_MINIFI_IO_ERROR;
-                            }
-                        }
-                        remaining_size -= bytes_read as usize;
-                        overall_read += bytes_read;
-                    }
-                    overall_read
-                }
-            }
-
-            match minifi_process_session_read(
-                self.ptr,
-                flow_file.get_ptr(),
-                Some(cb::<F>),
-                &mut batch_helper as *mut _ as *mut c_void,
-            ) {
-                #[allow(non_upper_case_globals)]
-                minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
-                status_code => Err(MinifiError::StatusError((
-                    "minifi_process_session_read".into(),
-                    NonZeroU32::new_unchecked(status_code),
-                ))),
-            }
         }
     }
 
