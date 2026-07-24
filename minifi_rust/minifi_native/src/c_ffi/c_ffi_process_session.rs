@@ -33,7 +33,7 @@ use minifi_native_sys::{
 };
 use std::ffi::{CString, c_void};
 use std::io::Read;
-use std::num::{NonZeroU32};
+use std::num::NonZeroU32;
 use std::os::raw::c_char;
 
 const _: () = {
@@ -272,7 +272,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
         attr_value
     }
 
-    fn on_attributes<F: FnMut(&str, &str)>(
+    fn for_each_attribute<F: FnMut(&str, &str)>(
         &self,
         flow_file: &Self::FlowFile,
         process_attr: F,
@@ -451,30 +451,43 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                     }
                     let mut buffer: Vec<u8> = Vec::with_capacity(stream_size);
 
-                    let bytes_read = minifi_input_stream_read(
-                        input_stream,
-                        buffer.as_mut_ptr() as *mut c_char,
-                        stream_size,
-                    );
+                    let mut total_read: usize = 0;
+                    while total_read < stream_size {
+                        let spare = stream_size - total_read;
+                        let bytes_read = minifi_input_stream_read(
+                            input_stream,
+                            buffer.as_mut_ptr().add(total_read) as *mut c_char,
+                            spare,
+                        );
 
-                    if bytes_read < 0 {
-                        *result_target = None;
-                        return bytes_read;
+                        if bytes_read < 0 {
+                            *result_target = None;
+                            return bytes_read;
+                        }
+                        if bytes_read == 0 {
+                            // EOF
+                            break;
+                        }
+                        total_read += bytes_read as usize;
                     }
 
-                    buffer.set_len(bytes_read as usize);
+                    buffer.set_len(total_read);
 
                     *result_target = Some(buffer);
-                    bytes_read
+                    total_read as i64
                 }
             }
 
-            minifi_process_session_read(
+            let status = minifi_process_session_read(
                 self.ptr,
                 flow_file.get_ptr(),
                 Some(cb),
                 &mut output as *mut _ as *mut c_void,
             );
+
+            if status != minifi_status_MINIFI_STATUS_SUCCESS {
+                output = None;
+            }
         }
         output
     }
@@ -513,15 +526,25 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 }
             }
 
-            minifi_process_session_read(
+            let status = minifi_process_session_read(
                 self.ptr,
                 flow_file.get_ptr(),
                 Some(read_cb::<F, R>),
                 &mut ctx as *mut _ as *mut c_void,
             );
 
-            ctx.result
-                .expect("Agent returned with success, so ctx.result should be set")
+            if status != minifi_status_MINIFI_STATUS_SUCCESS {
+                return Err(MinifiError::StatusError((
+                    "minifi_process_session_read".into(),
+                    NonZeroU32::new_unchecked(status),
+                )));
+            }
+
+            if let Some(result) = ctx.result.take() {
+                result
+            } else {
+                Err(MinifiError::UnknownError)
+            }
         }
     }
 

@@ -70,7 +70,7 @@ impl ProcessSession for MockProcessSession {
         flow_file.attributes.get(attr_key).cloned()
     }
 
-    fn on_attributes<F: FnMut(&str, &str)>(
+    fn for_each_attribute<F: FnMut(&str, &str)>(
         &self,
         flow_file: &Self::FlowFile,
         mut process_attr: F,

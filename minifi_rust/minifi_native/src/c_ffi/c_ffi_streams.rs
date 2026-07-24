@@ -25,7 +25,7 @@ pub struct CffiInputStream<'a> {
     ptr: *mut minifi_input_stream,
     buffer: [u8; 8192],
     pos: usize,
-    cap: usize,
+    filled: usize,
     total_read: usize,
     _marker: std::marker::PhantomData<&'a ()>,
 }
@@ -45,7 +45,7 @@ impl<'a> CffiInputStream<'a> {
             ptr,
             buffer: [0u8; 8192],
             pos: 0,
-            cap: 0,
+            filled: 0,
             total_read: 0,
             _marker: std::marker::PhantomData,
         }
@@ -70,7 +70,7 @@ impl<'a> Read for CffiInputStream<'a> {
 
 impl<'a> BufRead for CffiInputStream<'a> {
     fn fill_buf(&mut self) -> std::io::Result<&[u8]> {
-        if self.pos >= self.cap {
+        if self.pos >= self.filled {
             unsafe {
                 let ret = minifi_input_stream_read(
                     self.ptr,
@@ -80,15 +80,15 @@ impl<'a> BufRead for CffiInputStream<'a> {
                 if ret < 0 {
                     return Err(Error::other("Minifi Read Error"));
                 }
-                self.cap = ret as usize;
+                self.filled = ret as usize;
                 self.pos = 0;
             }
         }
-        Ok(&self.buffer[self.pos..self.cap])
+        Ok(&self.buffer[self.pos..self.filled])
     }
 
     fn consume(&mut self, amount: usize) {
-        let actual_consumed = std::cmp::min(amount, self.cap - self.pos);
+        let actual_consumed = std::cmp::min(amount, self.filled - self.pos);
         self.pos += actual_consumed;
         self.total_read += actual_consumed;
     }

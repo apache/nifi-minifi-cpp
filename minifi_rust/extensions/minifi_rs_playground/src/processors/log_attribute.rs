@@ -48,7 +48,7 @@ impl LogAttributeRs {
         log_msg.push_str(self.dash_line.as_str());
 
         log_msg.push_str("\nFlowFile Attributes Map Content");
-        session.on_attributes(flow_file, |key, value| {
+        session.for_each_attribute(flow_file, |key, value| {
             if let Some(attributes_to_ignore) = &self.attributes_to_ignore
                 && attributes_to_ignore.iter().any(|ign| ign == key)
             {

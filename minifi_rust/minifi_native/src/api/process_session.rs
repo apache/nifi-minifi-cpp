@@ -43,7 +43,7 @@ pub trait ProcessSession {
         attr_value: &str,
     ) -> Result<(), MinifiError>;
     fn get_attribute(&self, flow_file: &Self::FlowFile, attr_key: &str) -> Option<String>;
-    fn on_attributes<F: FnMut(&str, &str)>(
+    fn for_each_attribute<F: FnMut(&str, &str)>(
         &self,
         flow_file: &Self::FlowFile,
         process_attr: F,
