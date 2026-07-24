@@ -88,7 +88,13 @@ where
             match processor.trigger(&mut context, &mut session) {
                 Ok(OnTriggerResult::Ok) => minifi_status_MINIFI_STATUS_SUCCESS,
                 Ok(OnTriggerResult::Yield) => minifi_status_MINIFI_STATUS_PROCESSOR_YIELD,
-                Err(error_code) => error_code.to_status(),
+                Err(minifi_error) => {
+                    processor.log(
+                        LogLevel::Error,
+                        format_args!("Error during trigger {}", minifi_error),
+                    );
+                    minifi_error.to_status()
+                }
             }
         }
     }
