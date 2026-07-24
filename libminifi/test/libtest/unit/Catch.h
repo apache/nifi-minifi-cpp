@@ -17,9 +17,11 @@
 
 #pragma once
 
+#include <chrono>
+#include <expected>
 #include <optional>
 #include <string>
-#include <chrono>
+
 #include "fmt/format.h"
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/catch_tostring.hpp"
@@ -54,6 +56,19 @@ template <>
 struct StringMaker<std::chrono::file_clock::duration> {
   static std::string convert(const std::chrono::file_clock::duration& duration) {
     return fmt::format("{} {} s", duration.count(), Catch::ratio_string<std::chrono::file_clock::duration::period>::symbol());
+  }
+};
+
+template <typename T, typename E>
+struct StringMaker<std::expected<T, E>> {
+  static std::string convert(const std::expected<T, E>& expected) {
+    if (!expected) {
+      return "error: " + Catch::Detail::stringify(expected.error());
+    }
+    if constexpr (!std::is_void_v<T>) {
+      return Catch::Detail::stringify(*expected);
+    }
+    return "OK";
   }
 };
 }  // namespace Catch

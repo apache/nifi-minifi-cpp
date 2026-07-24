@@ -19,7 +19,6 @@
 
 #include "unit/Catch.h"
 #include "unit/ConfigurationTestController.h"
-#include "unit/TestUtils.h"
 #include "catch2/generators/catch_generators.hpp"
 #include "core/flow/FlowSchema.h"
 #include "core/yaml/YamlFlowSerializer.h"

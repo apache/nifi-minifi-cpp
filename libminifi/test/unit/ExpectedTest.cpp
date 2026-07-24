@@ -578,3 +578,12 @@ TEST_CASE("This fails to compile with std::expected on GCC 15.1 due to https://g
 
   CHECK(a == b);
 }
+
+TEST_CASE("Test Catch2 stringification of expected") {
+  CHECK(Catch::Detail::stringify(std::expected<int, std::string>{123}) == "123");
+  CHECK(Catch::Detail::stringify(std::expected<std::string, std::string>{"hello"}) == R"("hello")");
+  CHECK(Catch::Detail::stringify(std::expected<std::string, std::error_code>{"hello"}) == R"("hello")");
+  CHECK(Catch::Detail::stringify(std::expected<std::string, std::unique_ptr<int>>{"hello"}) == R"("hello")");
+  CHECK(Catch::Detail::stringify(std::expected<void, std::string>{}) == "OK");
+  CHECK(Catch::Detail::stringify(std::expected<std::string, std::string>{std::unexpect, "doesn't compute"}) == R"(error: "doesn't compute")");
+}

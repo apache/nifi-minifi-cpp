@@ -266,15 +266,4 @@ struct StringMaker<std::unordered_map<std::string_view, std::string_view>> {
     }) + "}";
   }
 };
-
-template <typename T, typename E>
-struct StringMaker<std::expected<T, E>> {
-  static std::string convert(const std::expected<T, E>& expected) {
-    if (expected.has_value()) {
-      return fmt::format(R"("{}")", expected.value());
-    } else {
-      return fmt::format(R"(error: "{}")", expected.error());
-    }
-  }
-};
 }  // namespace Catch
