@@ -22,13 +22,20 @@ import sys
 import math
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--includePaths', nargs="+", help='Run linter check in these directories')
-parser.add_argument('-q', '--quiet', action='store_true', help='Don\'t print anything if no errors are found.')
+parser.add_argument(
+    "-i", "--includePaths", nargs="+", help="Run linter check in these directories"
+)
+parser.add_argument(
+    "-q",
+    "--quiet",
+    action="store_true",
+    help="Don't print anything if no errors are found.",
+)
 args = parser.parse_args()
 
 list_of_files = list()
 for include_path in args.includePaths:
-    for (dir_path, dir_names, file_names) in os.walk(include_path):
+    for dir_path, dir_names, file_names in os.walk(include_path):
         for file_name in file_names:
             if (".h" in file_name) or (".cpp" in file_name):
                 list_of_files += [os.path.join(dir_path, file_name)]
@@ -67,7 +74,7 @@ def create_chunks(chunk_size, items):
     return chunk_list
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     chunk_num = multiprocessing.cpu_count()
     chunk_max_size = math.ceil(len(list_of_files) / chunk_num)
     chunks = create_chunks(chunk_max_size, list_of_files)

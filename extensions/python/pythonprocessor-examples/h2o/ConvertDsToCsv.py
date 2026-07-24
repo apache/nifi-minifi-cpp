@@ -14,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-    Install the following with pip
+Install the following with pip
 
-    pip install datatable
-    pip install pandas
+pip install datatable
+pip install pandas
 """
+
 import codecs
 import pandas as pd  # noqa F401
 import datatable as dt
@@ -26,49 +27,47 @@ from io import StringIO
 
 
 def describe(processor):
-    """ describe what this processor does
-    """
-    processor.setDescription("Converts the data source content of incoming flow file to csv. It \
+    """describe what this processor does"""
+    processor.setDescription(
+        "Converts the data source content of incoming flow file to csv. It \
                               supports a variety of data sources: pandas DataFrames, csv, numpy \
-                              arrays, dictionary, list, raw Python objects, etc")
+                              arrays, dictionary, list, raw Python objects, etc"
+    )
 
 
 def onInitialize(processor):
-    """ onInitialize is where you can set properties
-    """
+    """onInitialize is where you can set properties"""
     processor.setSupportsDynamicProperties()
 
 
 class ContentExtract(object):
-    """ ContentExtract callback class is defined for reading streams of data through the session
-        and has a process function that accepts the input stream
+    """ContentExtract callback class is defined for reading streams of data through the session
+    and has a process function that accepts the input stream
     """
+
     def __init__(self):
         self.content = None
 
     def process(self, input_stream):
-        """ Use codecs getReader to read that data
-        """
-        self.content = codecs.getreader('utf-8')(input_stream).read()
+        """Use codecs getReader to read that data"""
+        self.content = codecs.getreader("utf-8")(input_stream).read()
         return len(self.content)
 
 
 class ContentWrite(object):
-    """ ContentWrite callback class is defined for writing streams of data through the session
-    """
+    """ContentWrite callback class is defined for writing streams of data through the session"""
+
     def __init__(self, data):
         self.content = data
 
     def process(self, output_stream):
-        """ Use codecs getWriter to write data encoded to the stream
-        """
-        codecs.getwriter('utf-8')(output_stream).write(self.content)
+        """Use codecs getWriter to write data encoded to the stream"""
+        codecs.getwriter("utf-8")(output_stream).write(self.content)
         return len(self.content)
 
 
 def onTrigger(context, session):
-    """ onTrigger is executed and passed processor context and session
-    """
+    """onTrigger is executed and passed processor context and session"""
     flow_file = session.get()
     if flow_file is not None:
         read_cb = ContentExtract()

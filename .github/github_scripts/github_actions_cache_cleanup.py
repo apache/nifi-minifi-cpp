@@ -13,9 +13,9 @@ logging.basicConfig(level=logging.INFO)
 class GithubRequestSender:
     def __init__(self, token: str, repository: str):
         self.headers = {
-            'Accept': 'application/vnd.github+json',
-            'Authorization': 'Bearer ' + token,
-            'X-GitHub-Api-Version': '2022-11-28'
+            "Accept": "application/vnd.github+json",
+            "Authorization": "Bearer " + token,
+            "X-GitHub-Api-Version": "2022-11-28",
         }
         self.repository = repository
 
@@ -61,7 +61,7 @@ class GithubActionsCacheCleaner:
     def _list_open_pr_ids(self) -> List[str]:
         open_tickets = []
         for request in self.github_request_sender.list_open_pull_requests():
-            open_tickets.append(request['number'])
+            open_tickets.append(request["number"])
         return open_tickets
 
     def _get_cache_entries(self) -> List[CacheEntry]:
@@ -72,10 +72,15 @@ class GithubActionsCacheCleaner:
         return entries
 
     def _is_pr_already_closed(self, entry, open_tickets):
-        match = re.search(r'refs/pull/([\d]+)/merge', entry.key)
+        match = re.search(r"refs/pull/([\d]+)/merge", entry.key)
         return match and int(match[1]) not in open_tickets
 
-    def _remove_non_latest_branch_caches(self, entry: CacheEntry, latest_branch_cache_map: Dict[str, CacheEntry], removable_entries: List[str]):
+    def _remove_non_latest_branch_caches(
+        self,
+        entry: CacheEntry,
+        latest_branch_cache_map: Dict[str, CacheEntry],
+        removable_entries: List[str],
+    ):
         cache_mapping_key = "-".join(entry.key.split("-")[0:-1])
         if cache_mapping_key not in latest_branch_cache_map:
             latest_branch_cache_map[cache_mapping_key] = entry
@@ -95,13 +100,15 @@ class GithubActionsCacheCleaner:
                 removable_entries.append(entry.key)
                 continue
 
-            self._remove_non_latest_branch_caches(entry, latest_branch_cache_map, removable_entries)
+            self._remove_non_latest_branch_caches(
+                entry, latest_branch_cache_map, removable_entries
+            )
 
         return removable_entries
 
     def _remove_cache_entries(self, entries_to_remove: List[str]):
         for key in entries_to_remove:
-            logging.info('Removing cache entry: %s', key)
+            logging.info("Removing cache entry: %s", key)
             self.github_request_sender.delete_cache(key)
 
     def remove_obsolete_cache_entries(self):
@@ -109,9 +116,19 @@ class GithubActionsCacheCleaner:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog='Github Actions Cache Cleaner', description='Cleans up obsolete cache entries of github actions')
-    parser.add_argument('-r', '--repository', help='The name of the repository in <owner>/<repository> format', required=True)
-    parser.add_argument('-t', '--token', help='Github token for API access', required=True)
+    parser = argparse.ArgumentParser(
+        prog="Github Actions Cache Cleaner",
+        description="Cleans up obsolete cache entries of github actions",
+    )
+    parser.add_argument(
+        "-r",
+        "--repository",
+        help="The name of the repository in <owner>/<repository> format",
+        required=True,
+    )
+    parser.add_argument(
+        "-t", "--token", help="Github token for API access", required=True
+    )
     args = parser.parse_args()
     cache_cleaner = GithubActionsCacheCleaner(args.token, args.repository)
     cache_cleaner.remove_obsolete_cache_entries()

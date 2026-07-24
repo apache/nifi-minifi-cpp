@@ -20,7 +20,11 @@ from minifi_behave.core.helpers import wait_for_condition
 
 class ReverseProxyContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__("minifi-reverse-proxy:latest", f"reverse-proxy-{test_context.scenario_id}", test_context.network)
+        super().__init__(
+            "minifi-reverse-proxy:latest",
+            f"reverse-proxy-{test_context.scenario_id}",
+            test_context.network,
+        )
         self.environment = [
             "BASIC_USERNAME=admin",
             "BASIC_PASSWORD=password",
@@ -35,4 +39,5 @@ class ReverseProxyContainer(LinuxContainer):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
-            context=context)
+            context=context,
+        )

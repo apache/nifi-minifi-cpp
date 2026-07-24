@@ -19,7 +19,12 @@ import os
 
 from elastic_base_container import ElasticBaseContainer
 from pathlib import Path
-from minifi_behave.core.ssl_utils import make_server_cert, make_cert_without_extended_usage, dump_cert, dump_key
+from minifi_behave.core.ssl_utils import (
+    make_server_cert,
+    make_cert_without_extended_usage,
+    dump_cert,
+    dump_key,
+)
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.minifi_test_context import MinifiTestContext
@@ -29,28 +34,71 @@ class ElasticsearchContainer(ElasticBaseContainer):
     IMAGE = "elasticsearch:9.1.5"
 
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__(test_context, ElasticsearchContainer.IMAGE, f"elasticsearch-{test_context.scenario_id}")
+        super().__init__(
+            test_context,
+            ElasticsearchContainer.IMAGE,
+            f"elasticsearch-{test_context.scenario_id}",
+        )
 
-        http_cert, http_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
-        transport_cert, transport_key = make_cert_without_extended_usage(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
+        http_cert, http_key = make_server_cert(
+            self.container_name, test_context.root_ca_cert, test_context.root_ca_key
+        )
+        transport_cert, transport_key = make_cert_without_extended_usage(
+            self.container_name, test_context.root_ca_cert, test_context.root_ca_key
+        )
 
         root_ca_content = dump_cert(test_context.root_ca_cert)
-        self.files.append(File("/usr/share/elasticsearch/config/certs/root_ca.crt", root_ca_content, permissions=0o644))
+        self.files.append(
+            File(
+                "/usr/share/elasticsearch/config/certs/root_ca.crt",
+                root_ca_content,
+                permissions=0o644,
+            )
+        )
 
         http_cert_content = dump_cert(http_cert)
-        self.files.append(File("/usr/share/elasticsearch/config/certs/elastic_http.crt", http_cert_content, permissions=0o644))
+        self.files.append(
+            File(
+                "/usr/share/elasticsearch/config/certs/elastic_http.crt",
+                http_cert_content,
+                permissions=0o644,
+            )
+        )
 
         http_key_content = dump_key(http_key)
-        self.files.append(File("/usr/share/elasticsearch/config/certs/elastic_http.key", http_key_content, permissions=0o644))
+        self.files.append(
+            File(
+                "/usr/share/elasticsearch/config/certs/elastic_http.key",
+                http_key_content,
+                permissions=0o644,
+            )
+        )
 
         transport_cert_content = dump_cert(transport_cert)
-        self.files.append(File("/usr/share/elasticsearch/config/certs/elastic_transport.crt", transport_cert_content, permissions=0o644))
+        self.files.append(
+            File(
+                "/usr/share/elasticsearch/config/certs/elastic_transport.crt",
+                transport_cert_content,
+                permissions=0o644,
+            )
+        )
 
         transport_key_content = dump_key(transport_key)
-        self.files.append(File("/usr/share/elasticsearch/config/certs/elastic_transport.key", transport_key_content, permissions=0o644))
+        self.files.append(
+            File(
+                "/usr/share/elasticsearch/config/certs/elastic_transport.key",
+                transport_key_content,
+                permissions=0o644,
+            )
+        )
 
         features_dir = Path(__file__).resolve().parent.parent
-        self.host_files.append(HostFile('/usr/share/elasticsearch/config/elasticsearch.yml', os.path.join(features_dir, "resources", "elasticsearch.yml")))
+        self.host_files.append(
+            HostFile(
+                "/usr/share/elasticsearch/config/elasticsearch.yml",
+                os.path.join(features_dir, "resources", "elasticsearch.yml"),
+            )
+        )
 
         self.environment.append("ELASTIC_PASSWORD=password")
 
@@ -62,32 +110,30 @@ class ElasticsearchContainer(ElasticBaseContainer):
         api_user = "elastic:password"
         api_headers = "Content-Type:application/json"
         api_data = (
-            '{'
+            "{"
             '    "name": "my-api-key",'
             '    "expiration": "1d",'
             '    "role_descriptors": {'
             '        "role-a": {'
             '            "cluster": ['
             '                "all"'
-            '            ],'
+            "            ],"
             '            "index": ['
-            '                {'
+            "                {"
             '                    "names": ['
             '                        "my_index"'
-            '                    ],'
+            "                    ],"
             '                    "privileges": ['
             '                        "all"'
-            '                    ]'
-            '                }'
-            '            ]'
-            '        }'
-            '    }'
-            '}'
+            "                    ]"
+            "                }"
+            "            ]"
+            "        }"
+            "    }"
+            "}"
         )
         curl_cmd = (
-            f"curl -s -u {api_user} -k -XPOST {api_url} "
-            f"-H {api_headers} "
-            f"-d'{api_data}'"
+            f"curl -s -u {api_user} -k -XPOST {api_url} -H {api_headers} -d'{api_data}'"
         )
         (code, output) = self.exec_run(["/bin/bash", "-c", curl_cmd])
         if code != 0:

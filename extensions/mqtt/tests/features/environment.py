@@ -22,7 +22,9 @@ from minifi_behave.core.hooks import common_after_scenario
 
 
 def before_all(context):
-    check_log_lines_path = Path(__file__).resolve().parent / "resources" / "publish_mqtt_message.py"
+    check_log_lines_path = (
+        Path(__file__).resolve().parent / "resources" / "publish_mqtt_message.py"
+    )
     check_log_lines_content = None
     with open(check_log_lines_path, "rb") as f:
         check_log_lines_content = f.read()
@@ -33,7 +35,7 @@ COPY publish_mqtt_message.py /scripts/publish_mqtt_message.py"""
     mqtt_helper_builder = DockerImageBuilder(
         image_tag="minifi-mqtt-helper:latest",
         dockerfile_content=dockerfile,
-        files_on_context={"publish_mqtt_message.py": check_log_lines_content}
+        files_on_context={"publish_mqtt_message.py": check_log_lines_content},
     )
     mqtt_helper_builder.build()
     docker.from_env().images.pull(MqttBrokerContainer.IMAGE)

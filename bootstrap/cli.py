@@ -22,9 +22,15 @@ from package_manager import PackageManager
 from system_dependency import install_required
 
 
-def install_dependencies(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
+def install_dependencies(
+    minifi_options: MinifiOptions, package_manager: PackageManager
+) -> bool:
     res = install_required(minifi_options, package_manager)
-    print("Installation went smoothly" if res else "There were some error during installation")
+    print(
+        "Installation went smoothly"
+        if res
+        else "There were some error during installation"
+    )
     return res
 
 
@@ -33,7 +39,9 @@ def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
         os.mkdir(minifi_options.build_dir)
     cmake_cmd = f"cmake {minifi_options.create_cmake_generator_str()} {minifi_options.create_cmake_options_str()} {minifi_options.source_dir} -B {minifi_options.build_dir}"
     res = package_manager.run_cmd(cmake_cmd)
-    print("CMake command run successfully" if res else "CMake command run unsuccessfully")
+    print(
+        "CMake command run successfully" if res else "CMake command run unsuccessfully"
+    )
     return res
 
 
@@ -54,7 +62,9 @@ def do_docker_build(minifi_options: MinifiOptions, package_manager: PackageManag
     return package_manager.run_cmd(build_cmd)
 
 
-def do_one_click_build(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
+def do_one_click_build(
+    minifi_options: MinifiOptions, package_manager: PackageManager
+) -> bool:
     assert install_dependencies(minifi_options, package_manager)
     assert run_cmake(minifi_options, package_manager)
     assert do_build(minifi_options, package_manager)
@@ -62,7 +72,9 @@ def do_one_click_build(minifi_options: MinifiOptions, package_manager: PackageMa
     return True
 
 
-def do_one_click_configuration(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
+def do_one_click_configuration(
+    minifi_options: MinifiOptions, package_manager: PackageManager
+) -> bool:
     assert install_dependencies(minifi_options, package_manager)
     assert run_cmake(minifi_options, package_manager)
     return True
@@ -93,10 +105,14 @@ def main_menu(minifi_options: MinifiOptions, package_manager: PackageManager):
         main_menu_prompt = inquirer.prompt(questions)
         if main_menu_prompt is None:
             break
-        done = main_menu_options[main_menu_prompt["sub_menu"]](minifi_options, package_manager)
+        done = main_menu_options[main_menu_prompt["sub_menu"]](
+            minifi_options, package_manager
+        )
 
 
-def build_type_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
+def build_type_menu(
+    minifi_options: MinifiOptions, _package_manager: PackageManager
+) -> bool:
     questions = [
         inquirer.List(
             "build_type",
@@ -113,12 +129,13 @@ def build_type_menu(minifi_options: MinifiOptions, _package_manager: PackageMana
     return False
 
 
-def build_dir_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
+def build_dir_menu(
+    minifi_options: MinifiOptions, _package_manager: PackageManager
+) -> bool:
     questions = [
-        inquirer.Path('build_dir',
-                      message="Build directory",
-                      default=minifi_options.build_dir
-                      ),
+        inquirer.Path(
+            "build_dir", message="Build directory", default=minifi_options.build_dir
+        ),
     ]
     answers = inquirer.prompt(questions)
     if answers is None:
@@ -128,15 +145,21 @@ def build_dir_menu(minifi_options: MinifiOptions, _package_manager: PackageManag
     return False
 
 
-def extension_options_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
+def extension_options_menu(
+    minifi_options: MinifiOptions, _package_manager: PackageManager
+) -> bool:
     possible_values = [option_name for option_name in minifi_options.extension_options]
-    selected_values = [option.name for option in minifi_options.extension_options.values() if option.value == "ON"]
+    selected_values = [
+        option.name
+        for option in minifi_options.extension_options.values()
+        if option.value == "ON"
+    ]
     questions = [
         inquirer.Checkbox(
             "options",
             message="MiNiFi C++ Extension Options (space to select, enter to confirm)",
             choices=possible_values,
-            default=selected_values
+            default=selected_values,
         ),
     ]
 
@@ -153,15 +176,21 @@ def extension_options_menu(minifi_options: MinifiOptions, _package_manager: Pack
     return False
 
 
-def build_options_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
+def build_options_menu(
+    minifi_options: MinifiOptions, _package_manager: PackageManager
+) -> bool:
     possible_values = [option_name for option_name in minifi_options.build_options]
-    selected_values = [option.name for option in minifi_options.build_options.values() if option.value == "ON"]
+    selected_values = [
+        option.name
+        for option in minifi_options.build_options.values()
+        if option.value == "ON"
+    ]
     questions = [
         inquirer.Checkbox(
             "options",
             message="MiNiFi C++ Build Options (space to select, enter to confirm)",
             choices=possible_values,
-            default=selected_values
+            default=selected_values,
         ),
     ]
 
@@ -178,7 +207,9 @@ def build_options_menu(minifi_options: MinifiOptions, _package_manager: PackageM
     return False
 
 
-def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
+def step_by_step_menu(
+    minifi_options: MinifiOptions, package_manager: PackageManager
+) -> bool:
     done = False
     while not done:
         step_by_step_options = {
@@ -195,13 +226,18 @@ def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageMan
             inquirer.List(
                 "selection",
                 message="Step by step menu",
-                choices=[step_by_step_menu_option_name for step_by_step_menu_option_name in step_by_step_options],
+                choices=[
+                    step_by_step_menu_option_name
+                    for step_by_step_menu_option_name in step_by_step_options
+                ],
             ),
         ]
 
         step_by_step_prompt = inquirer.prompt(questions)
         if step_by_step_prompt is None:
             return True
-        step_by_step_options[step_by_step_prompt["selection"]](minifi_options, package_manager)
-        done = step_by_step_prompt['selection'] == 'Back'
+        step_by_step_options[step_by_step_prompt["selection"]](
+            minifi_options, package_manager
+        )
+        done = step_by_step_prompt["selection"] == "Back"
     return False

@@ -19,8 +19,14 @@ import uuid
 
 
 class Processor:
-    def __init__(self, class_name: str, proc_name: str, scheduling_strategy: str = "TIMER_DRIVEN",
-                 scheduling_period: str = "1 sec", penalization_period: str = "1 sec"):
+    def __init__(
+        self,
+        class_name: str,
+        proc_name: str,
+        scheduling_strategy: str = "TIMER_DRIVEN",
+        scheduling_period: str = "1 sec",
+        penalization_period: str = "1 sec",
+    ):
         self.class_name = class_name
         self.id: str = str(uuid.uuid4())
         self.name = proc_name
@@ -46,18 +52,20 @@ class Processor:
 
     def to_yaml_dict(self) -> dict:
         data = {
-            'name': self.name,
-            'id': self.id,
-            'class': self.class_name,
-            'scheduling strategy': self.scheduling_strategy,
-            'scheduling period': self.scheduling_period,
-            'penalization period': self.penalization_period,
+            "name": self.name,
+            "id": self.id,
+            "class": self.class_name,
+            "scheduling strategy": self.scheduling_strategy,
+            "scheduling period": self.scheduling_period,
+            "penalization period": self.penalization_period,
         }
         if self.auto_terminated_relationships:
-            data['auto-terminated relationships list'] = self.auto_terminated_relationships
+            data["auto-terminated relationships list"] = (
+                self.auto_terminated_relationships
+            )
         if self.max_concurrent_tasks is not None:
-            data['max concurrent tasks'] = self.max_concurrent_tasks
+            data["max concurrent tasks"] = self.max_concurrent_tasks
 
         # The YAML format capitalizes 'Properties'
-        data['Properties'] = self.properties
+        data["Properties"] = self.properties
         return data

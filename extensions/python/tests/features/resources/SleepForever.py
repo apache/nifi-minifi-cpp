@@ -19,12 +19,12 @@ from nifiapi.flowfilesource import FlowFileSource
 
 class SleepForever(FlowFileSource):
     class Java:
-        implements = ['org.apache.nifi.python.processor.FlowFileSource']
+        implements = ["org.apache.nifi.python.processor.FlowFileSource"]
 
     class ProcessorDetails:
-        version = '2.0.0-snapshot'
-        description = '''NiFi-style sleep forever python processor.'''
-        tags = ['test', 'python', 'sleep']
+        version = "2.0.0-snapshot"
+        description = """NiFi-style sleep forever python processor."""
+        tags = ["test", "python", "sleep"]
 
     def __init__(self, **kwargs):
         pass

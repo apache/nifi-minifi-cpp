@@ -18,13 +18,15 @@
 
 
 def describe(processor):
-    processor.setDescription("Processor used for testing in ExecutePythonProcessorTests.cpp")
+    processor.setDescription(
+        "Processor used for testing in ExecutePythonProcessorTests.cpp"
+    )
 
 
 def onTrigger(context, session):
     flow_file = session.get()
-    log.info('Vrrm, vrrrm, processor is running, vrrrm!!')
+    log.info("Vrrm, vrrrm, processor is running, vrrrm!!")
 
     if flow_file is not None:
-        log.info('created flow file: %s' % flow_file.getAttribute('filename'))
+        log.info("created flow file: %s" % flow_file.getAttribute("filename"))
         session.transfer(flow_file, REL_SUCCESS)

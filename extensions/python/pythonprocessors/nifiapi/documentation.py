@@ -16,7 +16,9 @@
 
 class ProcessorConfiguration:
     class Java:
-        implements = ['org.apache.nifi.python.processor.documentation.ProcessorConfigurationDetails']
+        implements = [
+            "org.apache.nifi.python.processor.documentation.ProcessorConfigurationDetails"
+        ]
 
     def __init__(self, processor_type: str, configuration: str):
         self.processor_type = processor_type
@@ -29,25 +31,41 @@ class ProcessorConfiguration:
         return self.configuration
 
 
-def use_case(description: str, configuration: str = None, notes: str = None, keywords: list[str] = None):
+def use_case(
+    description: str,
+    configuration: str = None,
+    notes: str = None,
+    keywords: list[str] = None,
+):
     """Decorator to explain how to perform a specific use case with a given processor"""
+
     def decorator(func):
         return func
+
     return decorator
 
 
-def multi_processor_use_case(description: str, configurations: list[ProcessorConfiguration], notes: str = None, keywords: list[str] = None):
+def multi_processor_use_case(
+    description: str,
+    configurations: list[ProcessorConfiguration],
+    notes: str = None,
+    keywords: list[str] = None,
+):
     """Decorator to explain how to perform a specific use case that involves the decorated Processor, in addition to additional Processors"""
+
     def decorator(func):
         return func
+
     return decorator
 
 
 class UseCaseDetails:
     class Java:
-        implements = ['org.apache.nifi.python.processor.documentation.UseCaseDetails']
+        implements = ["org.apache.nifi.python.processor.documentation.UseCaseDetails"]
 
-    def __init__(self, description: str, notes: str, keywords: list[str], configuration: str):
+    def __init__(
+        self, description: str, notes: str, keywords: list[str], configuration: str
+    ):
         self.description = description
         self.notes = notes
         self.keywords = keywords
@@ -71,9 +89,17 @@ class UseCaseDetails:
 
 class MultiProcessorUseCaseDetails:
     class Java:
-        implements = ['org.apache.nifi.python.processor.documentation.MultiProcessorUseCaseDetails']
+        implements = [
+            "org.apache.nifi.python.processor.documentation.MultiProcessorUseCaseDetails"
+        ]
 
-    def __init__(self, description: str, notes: str, keywords: list[str], configurations: list[ProcessorConfiguration]):
+    def __init__(
+        self,
+        description: str,
+        notes: str,
+        keywords: list[str],
+        configurations: list[ProcessorConfiguration],
+    ):
         self.description = description
         self.notes = notes
         self.keywords = keywords
@@ -97,17 +123,21 @@ class MultiProcessorUseCaseDetails:
 
 class PropertyDescription:
     class Java:
-        implements = ['org.apache.nifi.python.processor.documentation.PropertyDescription']
+        implements = [
+            "org.apache.nifi.python.processor.documentation.PropertyDescription"
+        ]
 
-    def __init__(self,
-                 name: str,
-                 description: str,
-                 display_name: str = None,
-                 required: bool = False,
-                 sensitive: bool = True,
-                 default_value: str = None,
-                 expression_language_scope: str = None,
-                 controller_service_definition: str = None):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        display_name: str = None,
+        required: bool = False,
+        sensitive: bool = True,
+        default_value: str = None,
+        expression_language_scope: str = None,
+        controller_service_definition: str = None,
+    ):
         self.name = name
         self.description = description
         self.display_name = display_name

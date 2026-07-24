@@ -25,8 +25,7 @@ def before_all(context):
     FROM python:3.13-slim-bookworm
     RUN pip install confluent-kafka"""
     builder = DockerImageBuilder(
-        image_tag="minifi-kafka-helper:latest",
-        dockerfile_content=dockerfile
+        image_tag="minifi-kafka-helper:latest", dockerfile_content=dockerfile
     )
     builder.build()
     docker.from_env().images.pull(KafkaServer.IMAGE)

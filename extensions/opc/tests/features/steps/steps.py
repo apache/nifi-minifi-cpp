@@ -22,10 +22,10 @@ import tarfile
 import humanfriendly
 
 from behave import given, step, then
-from minifi_behave.steps import checking_steps        # noqa: F401
-from minifi_behave.steps import configuration_steps   # noqa: F401
-from minifi_behave.steps import core_steps            # noqa: F401
-from minifi_behave.steps import flow_building_steps   # noqa: F401
+from minifi_behave.steps import checking_steps  # noqa: F401
+from minifi_behave.steps import configuration_steps  # noqa: F401
+from minifi_behave.steps import core_steps  # noqa: F401
+from minifi_behave.steps import flow_building_steps  # noqa: F401
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.helpers import wait_for_condition
 from containers.opc_ua_server_container import OPCUAServerContainer
@@ -38,10 +38,14 @@ def setup_opcua_server(context: MinifiTestContext):
 
 @step("an OPC UA server is set up with access control")
 def setup_opcua_server_with_access_control(context: MinifiTestContext):
-    context.containers["opcua-server-access"] = OPCUAServerContainer(context, command=["/opt/open62541/examples/access_control_server"])
+    context.containers["opcua-server-access"] = OPCUAServerContainer(
+        context, command=["/opt/open62541/examples/access_control_server"]
+    )
 
 
-@then("the OPC UA server logs contain the following message: \"{log_message}\" in less than {duration}")
+@then(
+    'the OPC UA server logs contain the following message: "{log_message}" in less than {duration}'
+)
 def verify_opcua_server_logs_contain_message(context, log_message, duration):
     timeout_seconds = humanfriendly.parse_timespan(duration)
     opcua_container = context.containers["opcua-server"]
@@ -50,7 +54,8 @@ def verify_opcua_server_logs_contain_message(context, log_message, duration):
         condition=lambda: log_message in opcua_container.get_logs(),
         timeout_seconds=timeout_seconds,
         bail_condition=lambda: opcua_container.exited,
-        context=context)
+        context=context,
+    )
 
 
 def _copy_file_from_docker_image(image_name: str, file_path: str, output_path: str):
@@ -69,18 +74,38 @@ def _copy_file_from_docker_image(image_name: str, file_path: str, output_path: s
 
         return True
     except Exception as e:
-        logging.error(f"Error copying file {file_path} from Docker image {image_name}: {e}")
+        logging.error(
+            f"Error copying file {file_path} from Docker image {image_name}: {e}"
+        )
         return False
     finally:
         container.remove(force=True)
 
 
-@given('the OPC UA server certificate files are placed in the "{directory}" directory in the MiNiFi container "{container_name}"')
-def place_opcua_certificate_files_in_minifi_container(context: MinifiTestContext, directory: str, container_name: str):
+@given(
+    'the OPC UA server certificate files are placed in the "{directory}" directory in the MiNiFi container "{container_name}"'
+)
+def place_opcua_certificate_files_in_minifi_container(
+    context: MinifiTestContext, directory: str, container_name: str
+):
     if not hasattr(context, "opcua_cert_temp_dir"):
         context.opcua_cert_temp_dir = tempfile.TemporaryDirectory()
-        _copy_file_from_docker_image(OPCUAServerContainer.IMAGE, "/opt/open62541/pki/created/server_cert.der", os.path.join(context.opcua_cert_temp_dir.name, "server_cert.der"))
-        _copy_file_from_docker_image(OPCUAServerContainer.IMAGE, "/opt/open62541/pki/created/server_key.der", os.path.join(context.opcua_cert_temp_dir.name, "server_key.der"))
+        _copy_file_from_docker_image(
+            OPCUAServerContainer.IMAGE,
+            "/opt/open62541/pki/created/server_cert.der",
+            os.path.join(context.opcua_cert_temp_dir.name, "server_cert.der"),
+        )
+        _copy_file_from_docker_image(
+            OPCUAServerContainer.IMAGE,
+            "/opt/open62541/pki/created/server_key.der",
+            os.path.join(context.opcua_cert_temp_dir.name, "server_key.der"),
+        )
 
-    context.get_or_create_minifi_container(container_name).add_host_file(os.path.join(context.opcua_cert_temp_dir.name, "server_cert.der"), os.path.join(directory, "opcua_client_cert.der"))
-    context.get_or_create_minifi_container(container_name).add_host_file(os.path.join(context.opcua_cert_temp_dir.name, "server_key.der"), os.path.join(directory, "opcua_client_key.der"))
+    context.get_or_create_minifi_container(container_name).add_host_file(
+        os.path.join(context.opcua_cert_temp_dir.name, "server_cert.der"),
+        os.path.join(directory, "opcua_client_cert.der"),
+    )
+    context.get_or_create_minifi_container(container_name).add_host_file(
+        os.path.join(context.opcua_cert_temp_dir.name, "server_key.der"),
+        os.path.join(directory, "opcua_client_key.der"),
+    )

@@ -28,7 +28,7 @@ class ParameterContext:
 
     def to_yaml_dict(self) -> dict:
         return {
-            'id': self.id,
-            'name': self.name,
-            'Parameters': [p.to_yaml_dict() for p in self.parameters],
+            "id": self.id,
+            "name": self.name,
+            "Parameters": [p.to_yaml_dict() for p in self.parameters],
         }

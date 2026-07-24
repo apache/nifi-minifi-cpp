@@ -22,7 +22,7 @@ class WriteCallback:
         self.content = content
 
     def process(self, output_stream):
-        output_stream.write(self.content.encode('utf-8'))
+        output_stream.write(self.content.encode("utf-8"))
         return len(self.content)
 
 

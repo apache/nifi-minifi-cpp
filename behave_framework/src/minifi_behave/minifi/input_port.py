@@ -15,6 +15,7 @@
 #  limitations under the License.
 #
 
+
 class InputPort:
     def __init__(self, name: str, id: str):
         self.id: str = id
@@ -26,16 +27,13 @@ class InputPort:
             "instanceIdentifier": self.id,
             "name": self.name,
             "comments": "",
-            "position": {
-                "x": 0,
-                "y": 0
-            },
+            "position": {"x": 0, "y": 0},
             "type": "INPUT_PORT",
             "concurrentlySchedulableTaskCount": 1,
             "scheduledState": "RUNNING",
             "allowRemoteAccess": True,
             "portFunction": "STANDARD",
             "componentType": "INPUT_PORT",
-            "groupIdentifier": "9802c873-3322-3b60-a71d-732d02bd60f8"
+            "groupIdentifier": "9802c873-3322-3b60-a71d-732d02bd60f8",
         }
         return data

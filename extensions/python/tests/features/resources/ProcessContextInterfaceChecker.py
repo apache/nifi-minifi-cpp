@@ -22,34 +22,31 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
     """
     Checks ProcessContext interface
     """
+
     SECRET_PASSWORD = PropertyDescriptor(
         name="Secret Password",
         description="Password to access",
         validators=[StandardValidators.NON_EMPTY_VALIDATOR],
         default_value="mysecret",
         required=True,
-        sensitive=True
+        sensitive=True,
     )
     REQUEST_TIMEOUT = PropertyDescriptor(
         name="Request Timeout",
         description="Timeout for the request",
         validators=[StandardValidators.TIME_PERIOD_VALIDATOR],
         default_value="60 sec",
-        required=True
+        required=True,
     )
     WISH_COUNT = PropertyDescriptor(
         name="Wish Count",
         description="Number of wishes",
         default_value="3",
         validators=[StandardValidators.POSITIVE_INTEGER_VALIDATOR],
-        required=True
+        required=True,
     )
 
-    property_descriptors = [
-        SECRET_PASSWORD,
-        REQUEST_TIMEOUT,
-        WISH_COUNT
-    ]
+    property_descriptors = [SECRET_PASSWORD, REQUEST_TIMEOUT, WISH_COUNT]
 
     def __init__(self, **kwargs):
         pass
@@ -66,13 +63,22 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
             return FlowFileTransformResult("failure")
 
         property_names = [property.name for property in properties]
-        if "Secret Password" not in property_names or "Request Timeout" not in property_names or "Wish Count" not in property_names:
+        if (
+            "Secret Password" not in property_names
+            or "Request Timeout" not in property_names
+            or "Wish Count" not in property_names
+        ):
             return FlowFileTransformResult("failure")
 
         for property in properties:
-            if property.name == "Secret Password" and properties[property] != "mysecret":
+            if (
+                property.name == "Secret Password"
+                and properties[property] != "mysecret"
+            ):
                 return FlowFileTransformResult("failure")
-            elif property.name == "Request Timeout" and properties[property] != "60 sec":
+            elif (
+                property.name == "Request Timeout" and properties[property] != "60 sec"
+            ):
                 return FlowFileTransformResult("failure")
             elif property.name == "Wish Count" and properties[property] != "3":
                 return FlowFileTransformResult("failure")

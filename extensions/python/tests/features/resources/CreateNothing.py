@@ -17,13 +17,13 @@ from nifiapi.flowfilesource import FlowFileSource
 
 class CreateNothing(FlowFileSource):
     class Java:
-        implements = ['org.apache.nifi.python.processor.FlowFileSource']
+        implements = ["org.apache.nifi.python.processor.FlowFileSource"]
 
     class ProcessorDetails:
-        version = '0.0.1-SNAPSHOT'
-        description = '''A Python processor for testing a use-case where the Source processor
-                         does not create any output.'''
-        tags = ['test', 'python', 'source']
+        version = "0.0.1-SNAPSHOT"
+        description = """A Python processor for testing a use-case where the Source processor
+                         does not create any output."""
+        tags = ["test", "python", "source"]
 
     def __init__(self, **kwargs):
         pass

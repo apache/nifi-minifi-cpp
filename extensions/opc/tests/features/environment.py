@@ -26,7 +26,7 @@ def before_all(context):
 
 def before_scenario(context, scenario):
     common_before_scenario(context, scenario)
-    context.resource_dir = os.path.join(os.path.dirname(__file__), 'resources')
+    context.resource_dir = os.path.join(os.path.dirname(__file__), "resources")
 
 
 def after_scenario(context, scenario):

@@ -20,23 +20,25 @@ from nifiapi.relationship import Relationship
 
 class CreateFlowFile(FlowFileSource):
     class Java:
-        implements = ['org.apache.nifi.python.processor.FlowFileSource']
+        implements = ["org.apache.nifi.python.processor.FlowFileSource"]
 
     class ProcessorDetails:
-        version = '2.0.0-snapshot'
-        description = '''Test Python source processor.'''
-        tags = ['text', 'test', 'python', 'source']
+        version = "2.0.0-snapshot"
+        description = """Test Python source processor."""
+        tags = ["text", "test", "python", "source"]
 
     FF_CONTENTS = PropertyDescriptor(
-        name='FlowFile Contents',
-        description='''The contents of the FlowFile.''',
+        name="FlowFile Contents",
+        description="""The contents of the FlowFile.""",
         required=True,
-        default_value='Hello World!'
+        default_value="Hello World!",
     )
 
     property_descriptors = [FF_CONTENTS]
 
-    REL_MULTILINE = Relationship(name='space', description='FlowFiles that contain space characters.')
+    REL_MULTILINE = Relationship(
+        name="space", description="FlowFiles that contain space characters."
+    )
 
     def __init__(self, **kwargs):
         pass
@@ -52,7 +54,13 @@ class CreateFlowFile(FlowFileSource):
 
         if contents is not None and isinstance(contents, str):
             contents_str = str.encode(contents)
-            if b' ' in contents_str:
-                return FlowFileSourceResult(relationship='space', attributes={"type": "space"}, contents=contents_str)
+            if b" " in contents_str:
+                return FlowFileSourceResult(
+                    relationship="space",
+                    attributes={"type": "space"},
+                    contents=contents_str,
+                )
 
-        return FlowFileSourceResult(relationship='success', attributes={"type": "non-space"}, contents=contents)
+        return FlowFileSourceResult(
+            relationship="success", attributes={"type": "non-space"}, contents=contents
+        )
