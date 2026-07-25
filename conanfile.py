@@ -85,7 +85,7 @@ shared_sources = (
     "generateVersion.bat",
     "generateVersion.sh",
     "run_clang_tidy.sh",
-    "run_flake8.sh",
+    "ruff.toml",
     "run_shellcheck.sh",
     "versioninfo.rc.in",
 )
