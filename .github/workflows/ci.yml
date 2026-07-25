@@ -660,19 +660,19 @@ jobs:
           name: minifi_rs_behave
           path: minifi_rust/minifi_rs_behave/output
   linters:
-    name: "C++ lint + Shellcheck + Flake8 + Cargo fmt check + Clippy check"
+    name: "C++ lint + Shellcheck + Ruff + Cargo fmt check + Clippy check"
     if: >-
       github.event_name != 'push' || 
       github.repository != 'apache/nifi-minifi-cpp' || 
       github.ref == 'refs/heads/main'
-    runs-on: ubuntu-22.04-arm
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     steps:
       - id: checkout
         uses: actions/checkout@v6
 
       - id: install_deps
-        run: sudo apt update && sudo apt install -y flake8
+        run: pipx install ruff
 
       - id: cpp_lint
         name: C++ linter
@@ -684,10 +684,10 @@ jobs:
         continue-on-error: true
         run: ./run_shellcheck.sh .
 
-      - id: flake8_check
-        name: Flake8 check
+      - id: python_check
+        name: Python check
         continue-on-error: true
-        run: ./run_flake8.sh .
+        run: ruff check && ruff format --check
 
       - id: cargo_fmt_check
         name: Cargo fmt check
@@ -702,7 +702,7 @@ jobs:
         working-directory: minifi_rust
 
       - name: Check Linter Statuses
-        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.flake8_check.outcome == 'failure' || steps.cargo_fmt_check.outcome == 'failure' || steps.clippy_check.outcome == 'failure'
+        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.python_check.outcome == 'failure' || steps.cargo_fmt_check.outcome == 'failure' || steps.clippy_check.outcome == 'failure'
         run: |
           echo "One or more linters failed. Failing the workflow."
           exit 1

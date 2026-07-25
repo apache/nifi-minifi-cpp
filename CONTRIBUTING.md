@@ -55,14 +55,28 @@ it doesn't contradict any of the Google Style Guide or the above exceptions.
 C++ is a powerful language and "with great power comes great responsibility". Please aim for simple, readable and
 maintainable solutions and avoid footguns. Be open for respectful debate in pull request reviews.
 
+### Shell scripts
+
 Shell script files shall follow the guidelines and best practices defined by the [shellcheck](https://github.com/koalaman/shellcheck) analysis tool.
 New contributions are expected to pass the shellcheck analysis as part of the verification process.
 If a shellcheck requested change is unfeasible it shall be disabled on per-line basis and will be subjected to review.
 For more information on an issue please check the [shellcheck wiki page](https://github.com/koalaman/shellcheck/wiki).
-You can run shellcheck by invoking the shellcheck cmake target, e.g. `make shellcheck`.
+You can run shellcheck by invoking the shellcheck cmake target.
+```bash
+make shellcheck
+```
 
-Python script files shall follow the PEP8 guidelines and best practices. The project includes [flake8](https://flake8.pycqa.org/en/latest/) checks
+### Python
+Python script files shall follow the PEP8 guidelines and best practices. The project includes [ruff](https://docs.astral.sh/ruff/) checks
 as part of the verification process, that is applied to all new contributions.
+You can run the linter on Python code via:
+```bash
+ruff check
+```
+You can also auto-format the code via 
+```bash
+ruff format
+```
 
 ## Issues and Pull Requests
 
@@ -127,4 +141,3 @@ register_extension(minifi-kubernetes-extensions "KUBERNETES EXTENSIONS" KUBERNET
 # the next three arguments are used for documentation purposes
 # the fifth optional argument designates the directory of the extension's tests
 ```
-
