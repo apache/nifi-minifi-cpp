@@ -829,9 +829,6 @@ set_target_properties(linter PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
 if(NOT WIN32)
 add_custom_target(shellcheck
     COMMAND ${CMAKE_SOURCE_DIR}/run_shellcheck.sh ${CMAKE_SOURCE_DIR})
-
-add_custom_target(flake8
-    COMMAND ${CMAKE_SOURCE_DIR}/run_flake8.sh ${CMAKE_SOURCE_DIR})
 endif(NOT WIN32)
 
 feature_summary(WHAT ALL FILENAME ${CMAKE_BINARY_DIR}/all.log)
