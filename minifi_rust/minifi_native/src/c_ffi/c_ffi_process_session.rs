@@ -60,12 +60,10 @@ unsafe fn write_all_to_output_stream(
             return Err(written);
         }
         if written == 0 {
-            return Err(minifi_io_status_MINIFI_IO_ERROR); // To avoid spinning, but not sure about it
+            return Err(minifi_io_status_MINIFI_IO_ERROR); // To avoid spinning
         }
         let written_usize = written as usize;
-        if written_usize > remaining {
-            return Err(minifi_io_status_MINIFI_IO_ERROR);
-        }
+        assert!(written_usize <= remaining);
         offset += written_usize;
     }
     Ok(data.len() as i64)
