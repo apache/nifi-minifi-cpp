@@ -16,16 +16,18 @@
 # under the License.
 
 import os
-from typing import List
 
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from minifi_behave.core.hooks import common_after_scenario
-from minifi_behave.core.hooks import common_before_scenario, get_minifi_container_image
+from minifi_behave.core.hooks import (
+    common_after_scenario,
+    common_before_scenario,
+    get_minifi_container_image,
+)
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 def add_extension_to_minifi_container(
-    extension_name: str, possible_paths: List[str], context: MinifiTestContext
+    extension_name: str, possible_paths: list[str], context: MinifiTestContext
 ):
     new_container_name = f"apacheminificpp:{extension_name}"
     is_windows = os.name == "nt"
@@ -78,8 +80,12 @@ RUN chmod 755 {container_extension_dir}{lib_filename}
 def before_all(context):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     build_path = os.path.normpath(os.path.join(dir_path, "../../../target/release/"))
-    deps_build_path = os.path.normpath(os.path.join(dir_path, "../../../target/release/deps/"))
-    add_extension_to_minifi_container("minifi_rs_playground", [build_path, deps_build_path], context)
+    deps_build_path = os.path.normpath(
+        os.path.join(dir_path, "../../../target/release/deps/")
+    )
+    add_extension_to_minifi_container(
+        "minifi_rs_playground", [build_path, deps_build_path], context
+    )
 
 
 def before_scenario(context, scenario):
