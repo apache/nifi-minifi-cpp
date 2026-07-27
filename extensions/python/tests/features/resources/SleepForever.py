@@ -14,18 +14,19 @@
 # limitations under the License.
 
 import time
+from typing import ClassVar
 
 from nifiapi.flowfilesource import FlowFileSource
 
 
 class SleepForever(FlowFileSource):
     class Java:
-        implements = ["org.apache.nifi.python.processor.FlowFileSource"]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.FlowFileSource"]
 
     class ProcessorDetails:
         version = "2.0.0-snapshot"
         description = """NiFi-style sleep forever python processor."""
-        tags = ["test", "python", "sleep"]
+        tags: ClassVar[list] = ["test", "python", "sleep"]
 
     def __init__(self, **kwargs):
         pass

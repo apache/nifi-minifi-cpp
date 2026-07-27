@@ -13,6 +13,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from typing import ClassVar
+
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import (
     ExpressionLanguageScope,
@@ -23,12 +25,14 @@ from nifiapi.properties import (
 
 class NifiStyleLogDynamicProperties(FlowFileTransform):
     class Java:
-        implements = ["org.apache.nifi.python.processor.FlowFileTransform"]
+        implements: ClassVar[list] = [
+            "org.apache.nifi.python.processor.FlowFileTransform"
+        ]
 
     class ProcessorDetails:
         version = "1.2.3"
         description = "Test processor"
-        dependencies = []
+        dependencies: ClassVar[list] = []
 
     STATIC_PROPERTY = PropertyDescriptor(
         name="Static Property",
@@ -53,8 +57,6 @@ class NifiStyleLogDynamicProperties(FlowFileTransform):
         property_value = context.getProperty("Static Property")
         self.logger.info(f"Static Property value: {property_value.getValue()}")
         dyn_property_value = context.getProperty("Dynamic Property")
-        self.logger.info(
-            f"Dynamic Property value: {dyn_property_value.getValue()}"
-        )
+        self.logger.info(f"Dynamic Property value: {dyn_property_value.getValue()}")
 
         return FlowFileTransformResult("success", contents="content")

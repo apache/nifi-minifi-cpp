@@ -116,7 +116,7 @@ class MinifiOptions:
         self.cmake_override = cmake_override
 
     def save_option_state(self):
-        options_dict = dict()
+        options_dict = {}
         for option_name in self.bool_options:
             options_dict[option_name] = self.bool_options[option_name].value
         options_dict[self.use_ninja.name] = self.use_ninja.value

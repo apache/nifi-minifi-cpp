@@ -36,9 +36,7 @@ def before_all(context):
         client.images.get(context.minifi_container_image).history()
     )
     pip3_install_command = ""
-    minifi_tag_prefix = (
-        os.environ["MINIFI_TAG_PREFIX"] if "MINIFI_TAG_PREFIX" in os.environ else ""
-    )
+    minifi_tag_prefix = os.environ.get("MINIFI_TAG_PREFIX", "")
     if not minifi_tag_prefix:
         pip3_install_command = "RUN apk --update --no-cache add py3-pip"
     minifi_python_dir_path = (
@@ -123,14 +121,15 @@ def get_minifi_image_python_version(context):
 
 
 def before_scenario(context, scenario):
-    if "USE_NIFI_PYTHON_PROCESSORS_WITH_LANGCHAIN" in scenario.effective_tags:
-        if not is_conda_available_in_minifi_image(
-            context
-        ) and get_minifi_image_python_version(context) < (3, 8, 1):
-            scenario.skip(
-                "NiFi Python processor tests use langchain library which requires Python 3.8.1 or later."
-            )
-            return
+    if (
+        "USE_NIFI_PYTHON_PROCESSORS_WITH_LANGCHAIN" in scenario.effective_tags
+        and not is_conda_available_in_minifi_image(context)
+        and get_minifi_image_python_version(context) < (3, 8, 1)
+    ):
+        scenario.skip(
+            "NiFi Python processor tests use langchain library which requires Python 3.8.1 or later."
+        )
+        return
 
     common_before_scenario(context, scenario)
     context.minifi_container_image = "apacheminificpp-python:latest"

@@ -20,6 +20,8 @@ from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class S3ServerContainer(LinuxContainer):
     IMAGE = "adobe/s3mock:3.12.0"
@@ -88,8 +90,10 @@ class S3ServerContainer(LinuxContainer):
         return file_hash == expected_file_hash
 
     def check_s3_server_object_metadata(
-        self, content_type="application/octet-stream", metadata=dict()
+        self, content_type="application/octet-stream", metadata=None
     ):
+        if metadata is None:
+            metadata = {}
         (code, output) = self.exec_run(
             [
                 "find",
@@ -126,5 +130,5 @@ class S3ServerContainer(LinuxContainer):
                 "d",
             ]
         )
-        logging.info(f"is_s3_bucket_empty: {output}")
+        logger.info(f"is_s3_bucket_empty: {output}")
         return code == 0 and not output.strip()

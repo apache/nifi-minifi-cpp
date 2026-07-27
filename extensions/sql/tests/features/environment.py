@@ -33,17 +33,19 @@ import docker
 
 
 def before_all(context):
-    minifi_tag_prefix = (
-        os.environ["MINIFI_TAG_PREFIX"] if "MINIFI_TAG_PREFIX" in os.environ else ""
-    )
+    minifi_tag_prefix = os.environ.get("MINIFI_TAG_PREFIX", "")
     if "rocky" in minifi_tag_prefix:
         install_sql_cmd = "dnf -y install postgresql-odbc"
         so_location = "psqlodbca.so"
     elif (
-        "bullseye" in minifi_tag_prefix
-        or "bookworm" in minifi_tag_prefix
-        or "trixie" in minifi_tag_prefix
-    ) or "jammy" in minifi_tag_prefix or "noble" in minifi_tag_prefix:
+        (
+            "bullseye" in minifi_tag_prefix
+            or "bookworm" in minifi_tag_prefix
+            or "trixie" in minifi_tag_prefix
+        )
+        or "jammy" in minifi_tag_prefix
+        or "noble" in minifi_tag_prefix
+    ):
         install_sql_cmd = "apt -y install odbc-postgresql"
         so_location = "/usr/lib/$(gcc -dumpmachine)/odbc/psqlodbca.so"
     else:

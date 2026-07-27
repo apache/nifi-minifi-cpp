@@ -18,6 +18,8 @@ import logging
 from minifi_behave.containers.minifi_container import MinifiContainer
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class MinifiAsPodInKubernetesCluster(MinifiContainer):
     def __init__(self, container_name: str, test_context: MinifiTestContext):
@@ -25,7 +27,7 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
         self.container = test_context.kubernetes_proxy
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
-        logging.debug("Setting up the kind Kubernetes cluster")
+        logger.debug("Setting up the kind Kubernetes cluster")
         self.container.write_minifi_conf_file(
             "minifi.properties", self._get_properties_file_content()
         )

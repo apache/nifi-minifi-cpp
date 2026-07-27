@@ -33,6 +33,8 @@ from minifi_behave.steps import (
 
 import docker
 
+logger = logging.getLogger(__name__)
+
 
 @step("an OPC UA server is set up")
 def setup_opcua_server(context: MinifiTestContext):
@@ -77,7 +79,7 @@ def _copy_file_from_docker_image(image_name: str, file_path: str, output_path: s
 
         return True
     except Exception as e:
-        logging.error(
+        logger.error(
             f"Error copying file {file_path} from Docker image {image_name}: {e}"
         )
         return False

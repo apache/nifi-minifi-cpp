@@ -1,5 +1,6 @@
 import os
 import shutil
+from typing import ClassVar
 
 from conan import ConanFile
 from conan.errors import ConanException
@@ -82,9 +83,9 @@ class MiNiFiCppMain(ConanFile):
     requires = shared_requires
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"
-    options = {"shared": [True, False], "fPIC": [True, False]}
+    options: ClassVar[dict] = {"shared": [True, False], "fPIC": [True, False]}
 
-    default_options = {"shared": False, "fPIC": True}
+    default_options: ClassVar[dict] = {"shared": False, "fPIC": True}
 
     exports_sources = shared_sources
 

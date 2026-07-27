@@ -21,6 +21,8 @@ from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.helpers import retry_check, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class KinesisServerContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
@@ -55,5 +57,5 @@ class KinesisServerContainer(LinuxContainer):
         (code, output) = self.exec_run(
             ["node", "/app/consumer/consumer.js", record_data]
         )
-        logging.info(f"Kinesis server returned output: '{output}' with code '{code}'")
+        logger.info(f"Kinesis server returned output: '{output}' with code '{code}'")
         return code == 0

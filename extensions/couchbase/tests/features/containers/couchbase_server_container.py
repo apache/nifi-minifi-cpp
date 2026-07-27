@@ -22,6 +22,8 @@ from minifi_behave.core.helpers import retry_check, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
+logger = logging.getLogger(__name__)
+
 
 class CouchbaseServerContainer(LinuxContainer):
     IMAGE = "couchbase:enterprise-7.2.5"
@@ -149,16 +151,13 @@ class CouchbaseServerContainer(LinuxContainer):
         if not self._run_couchbase_cli_commands(commands):
             return False
 
-        if not self._load_couchbase_certs():
-            return False
-
-        return True
+        return self._load_couchbase_certs()
 
     @retry_check(max_tries=12, retry_interval_seconds=5)
     def _run_couchbase_cli_command(self, command):
         (code, output) = self.exec_run(command)
         if code != 0:
-            logging.error(
+            logger.error(
                 f"Failed to run command '{command}', returned error code: {code}, output: '{output}'"
             )
             return False
@@ -189,12 +188,12 @@ class CouchbaseServerContainer(LinuxContainer):
                 if hasattr(e, "stderr") and e.stderr
                 else ""
             )
-            logging.error(
+            logger.error(
                 f"Python command '{command}' failed in couchbase helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'"
             )
             return False
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Unexpected error while running python command '{command}' in couchbase helper docker: '{e}'"
             )
             return False

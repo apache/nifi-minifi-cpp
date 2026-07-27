@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import ClassVar
+
 from nifiapi.properties import (
     ExpressionLanguageScope,
     PropertyDescriptor,
@@ -23,7 +25,9 @@ from nifiapi.recordtransform import RecordTransform, RecordTransformResult
 
 class SetRecordField(RecordTransform):
     class Java:
-        implements = ["org.apache.nifi.python.processor.RecordTransform"]
+        implements: ClassVar[list] = [
+            "org.apache.nifi.python.processor.RecordTransform"
+        ]
 
     class ProcessorDetails:
         version = "0.0.1-SNAPSHOT"
@@ -33,7 +37,7 @@ class SetRecordField(RecordTransform):
 
     def transform(self, context, record, schema, attributemap):
         # Update dictionary based on the dynamic properties provided by user
-        for key in context.getProperties().keys():
+        for key in context.getProperties():
             if not key.dynamic:
                 continue
 

@@ -61,11 +61,12 @@ class KubernetesProxy:
         if not os.path.exists(self.kind_binary_path):
             if (
                 subprocess.run(
-                    ["curl", "-Lo", self.kind_binary_path, download_link]
+                    ["curl", "-Lo", self.kind_binary_path, download_link],
+                    check=False,
                 ).returncode
                 != 0
             ):
-                raise Exception("Could not download kind")
+                raise RuntimeError("Could not download kind")
             os.chmod(self.kind_binary_path, stat.S_IXUSR)
 
     def __create_kind_config(self):
@@ -98,28 +99,34 @@ class KubernetesProxy:
                     "create",
                     "cluster",
                     "--config=" + self.kind_config_path,
-                ]
+                ],
+                check=False,
             ).returncode
             != 0
         ):
-            raise Exception("Could not create the kind Kubernetes cluster")
+            raise RuntimeError("Could not create the kind Kubernetes cluster")
         self.status = "running"
 
     def delete_cluster(self):
-        if subprocess.run([self.kind_binary_path, "delete", "cluster"]).returncode != 0:
-            raise Exception("Could not delete the kind Kubernetes cluster")
+        if (
+            subprocess.run(
+                [self.kind_binary_path, "delete", "cluster"], check=False
+            ).returncode
+            != 0
+        ):
+            raise RuntimeError("Could not delete the kind Kubernetes cluster")
         self.status = "exited"
 
     def load_docker_image(self, image_name: str):
         if (
             subprocess.run(
-                [self.kind_binary_path, "load", "docker-image", image_name]
+                [self.kind_binary_path, "load", "docker-image", image_name],
+                check=False,
             ).returncode
             != 0
         ):
-            raise Exception(
-                "Could not load the %s docker image into the kind Kubernetes cluster"
-                % image_name
+            raise RuntimeError(
+                f"Could not load the {image_name} docker image into the kind Kubernetes cluster"
             )
 
     def create_helper_objects(self):
@@ -150,7 +157,7 @@ class KubernetesProxy:
             ).exec_run(["kubectl", "-n", namespace, "get", "pods"])
             if code == 0 and re.search(f"{pod_name}.*Running", output.decode("utf-8")):
                 return
-        raise Exception(
+        raise RuntimeError(
             f"The pod {namespace}:{pod_name} in the Kubernetes cluster failed to start up"
         )
 
@@ -158,13 +165,13 @@ class KubernetesProxy:
         for i in range(120):
             if i > 0:
                 time.sleep(1)
-            (code, output) = self.docker_client.containers.get(
+            (code, _output) = self.docker_client.containers.get(
                 KUBERNETES_CONTAINER_NAME
             ).exec_run(["kubectl", "-n", namespace, "get", "serviceaccount", "default"])
             if code == 0:
                 return
-        raise Exception(
-            "Default service account for namespace '%s' not found" % namespace
+        raise RuntimeError(
+            f"Default service account for namespace '{namespace}' not found"
         )
 
     def __create_objects_of_type(self, type: str) -> list[str]:
@@ -179,9 +186,10 @@ class KubernetesProxy:
                 KUBERNETES_CONTAINER_NAME
             ).exec_run(["kubectl", "apply", "-f", file_name_in_container])
             if code != 0:
-                raise Exception(
-                    "Could not create kubernetes object from file '%s': %s"
-                    % full_file_name,
+                raise RuntimeError(
+                    "Could not create kubernetes object from file '{}': {}".format(
+                        *full_file_name
+                    ),
                     output.decode("utf-8"),
                 )
 
@@ -206,7 +214,7 @@ class KubernetesProxy:
         if code == 0:
             return output
         else:
-            raise Exception(
+            raise RuntimeError(
                 "Could not get logs from the kind Kubernetes cluster, error %d: %s",
                 code,
                 output.decode("utf-8"),

@@ -13,18 +13,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from typing import ClassVar
+
 from nifiapi.componentstate import Scope
 from nifiapi.flowfilesource import FlowFileSource, FlowFileSourceResult
 
 
 class TestStateManager(FlowFileSource):
     class Java:
-        implements = ["org.apache.nifi.python.processor.FlowFileSource"]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.FlowFileSource"]
 
     class ProcessorDetails:
         version = "0.0.1-SNAPSHOT"
         description = """A Python source processor that uses StateManager."""
-        tags = ["text", "test", "python", "source"]
+        tags: ClassVar[list] = ["text", "test", "python", "source"]
 
     def __init__(self, **kwargs):
         pass

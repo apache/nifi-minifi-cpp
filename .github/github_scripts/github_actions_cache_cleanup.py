@@ -6,6 +6,8 @@ import re
 
 import requests
 
+logger = logging.getLogger(__name__)
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -92,7 +94,7 @@ class GithubActionsCacheCleaner:
 
     def _get_removable_cache_entries(self) -> list[str]:
         removable_entries = []
-        latest_branch_cache_map = dict()
+        latest_branch_cache_map = {}
         open_prs = self._list_open_pr_ids()
         for entry in self._get_cache_entries():
             if self._is_pr_already_closed(entry, open_prs):
@@ -107,7 +109,7 @@ class GithubActionsCacheCleaner:
 
     def _remove_cache_entries(self, entries_to_remove: list[str]):
         for key in entries_to_remove:
-            logging.info("Removing cache entry: %s", key)
+            logger.info("Removing cache entry: %s", key)
             self.github_request_sender.delete_cache(key)
 
     def remove_obsolete_cache_entries(self):

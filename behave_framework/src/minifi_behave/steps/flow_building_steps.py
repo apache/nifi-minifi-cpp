@@ -30,6 +30,8 @@ from minifi_behave.minifi.parameter import Parameter
 from minifi_behave.minifi.parameter_context import ParameterContext
 from minifi_behave.minifi.processor import Processor
 
+logger = logging.getLogger(__name__)
+
 
 @given("a MiNiFi CPP server with yaml config")
 def minifi_cpp_server_with_yaml_config(context: MinifiTestContext):
@@ -481,7 +483,9 @@ def step_impl(context: MinifiTestContext, proxy_type: str, container_name: str):
 @given(
     "a ProxyConfigurationService controller service is set up with {proxy_type} proxy configuration"
 )
-def step_impl(context: MinifiTestContext, proxy_type: str):
+def set_up_proxy_configuration_service_in_default_flow(
+    context: MinifiTestContext, proxy_type: str
+):
     context.execute_steps(
         f'given a ProxyConfigurationService controller service is set up with {proxy_type} proxy configuration in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
     )
@@ -585,8 +589,8 @@ def set_processor_property_to_match_attribute(
         processor.add_property(property_name, "true")
         return
     filtering = "${" + attribute_key + ":equals('" + attribute_value + "')}"
-    logging.info('Filter: "%s"', filtering)
-    logging.info('Key: "%s", value: "%s"', attribute_key, attribute_value)
+    logger.info('Filter: "%s"', filtering)
+    logger.info('Key: "%s", value: "%s"', attribute_key, attribute_value)
     processor.add_property(property_name, filtering)
 
 

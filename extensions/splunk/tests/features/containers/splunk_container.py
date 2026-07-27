@@ -133,18 +133,26 @@ splunk:
                 continue
             if "result" not in result_line_json:
                 continue
-            if "host" in attributes:
-                if result_line_json["result"]["host"] != attributes["host"]:
-                    continue
-            if "source" in attributes:
-                if result_line_json["result"]["source"] != attributes["source"]:
-                    continue
-            if "sourcetype" in attributes:
-                if result_line_json["result"]["sourcetype"] != attributes["sourcetype"]:
-                    continue
-            if "index" in attributes:
-                if result_line_json["result"]["index"] != attributes["index"]:
-                    continue
+            if (
+                "host" in attributes
+                and result_line_json["result"]["host"] != attributes["host"]
+            ):
+                continue
+            if (
+                "source" in attributes
+                and result_line_json["result"]["source"] != attributes["source"]
+            ):
+                continue
+            if (
+                "sourcetype" in attributes
+                and result_line_json["result"]["sourcetype"] != attributes["sourcetype"]
+            ):
+                continue
+            if (
+                "index" in attributes
+                and result_line_json["result"]["index"] != attributes["index"]
+            ):
+                continue
             return True
         return False
 

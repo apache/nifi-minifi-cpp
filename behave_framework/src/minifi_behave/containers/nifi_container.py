@@ -27,6 +27,8 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 from minifi_behave.minifi.nifi_flow_definition import NifiFlowDefinition
 
+logger = logging.getLogger(__name__)
+
 
 class NifiContainer(LinuxContainer):
     def __init__(
@@ -112,7 +114,7 @@ class NifiContainer(LinuxContainer):
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_json()
-        logging.info(
+        logger.info(
             f"Deploying NiFi container '{self.container_name}' with flow configuration:\n{flow_config}"
         )
         buffer = io.BytesIO()

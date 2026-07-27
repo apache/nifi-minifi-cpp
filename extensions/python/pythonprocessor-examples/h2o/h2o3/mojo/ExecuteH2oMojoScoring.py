@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -161,7 +160,6 @@ class ContentWrite:
 
 def onTrigger(context, session):
     """onTrigger is executed and passed processor context and session"""
-    global mojo_model
     flow_file = session.get()
     if flow_file is not None:
         # read test data of flow file content into read_cb.content

@@ -17,6 +17,8 @@ import logging
 
 from minifi_behave.core.helpers import retry_check
 
+logger = logging.getLogger(__name__)
+
 
 class MinifiController:
     def __init__(self, minifi_container, config_path, bin_path):
@@ -44,7 +46,7 @@ class MinifiController:
     def updated_config_is_persisted(self) -> bool:
         exit_code, output = self.minifi_container.exec_run(["cat", self.config_path])
         if exit_code != 0:
-            logging.error(
+            logger.error(
                 f"Failed to read MiNiFi config file to check if updated config is persisted: {exit_code} {output}"
             )
             return False
@@ -115,7 +117,7 @@ class MinifiController:
             [f"{self.bin_path}/minifi-controller", "--debug", "/tmp"]
         )
         if code != 0:
-            logging.error("Minifi controller debug command failed with code: %d", code)
+            logger.error("Minifi controller debug command failed with code: %d", code)
             return False
 
         (code, _) = self.minifi_container.exec_run(["test", "-f", "/tmp/debug.tar.gz"])

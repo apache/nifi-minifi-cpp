@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import ClassVar
+
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import DataUnit, PropertyDescriptor, TimeUnit
 
@@ -41,7 +43,7 @@ class SpecialPropertyTypeChecker(FlowFileTransform):
         required=True,
     )
 
-    property_descriptors = [
+    property_descriptors: ClassVar[list] = [
         TIME_PERIOD_PROPERTY,
         DATA_SIZE_PROPERTY,
         SSL_CONTEXT_PROPERTY,

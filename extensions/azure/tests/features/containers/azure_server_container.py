@@ -22,6 +22,8 @@ from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.core.helpers import run_cmd_in_docker_image, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class AzureServerContainer(LinuxContainer):
     IMAGE = "mcr.microsoft.com/azure-storage/azurite:3.35.0"
@@ -86,7 +88,7 @@ class AzureServerContainer(LinuxContainer):
                 "mcr.microsoft.com/azure-cli:2.81.0", cmd_create, self.network.name
             )
         except ContainerError as e:
-            logging.error(e)
+            logger.error(e)
             return False
 
         cmd_upload = [
@@ -108,7 +110,7 @@ class AzureServerContainer(LinuxContainer):
                 "mcr.microsoft.com/azure-cli:2.81.0", cmd_upload, self.network.name
             )
         except ContainerError as e:
-            logging.error(e)
+            logger.error(e)
             return False
 
         if with_snapshot:
@@ -131,7 +133,7 @@ class AzureServerContainer(LinuxContainer):
                     self.network.name,
                 )
             except ContainerError as e:
-                logging.error(e)
+                logger.error(e)
                 return False
 
         return True
@@ -148,13 +150,13 @@ class AzureServerContainer(LinuxContainer):
                 "mcr.microsoft.com/azure-cli:2.81.0", cmd, self.network.name
             )
         except ContainerError as e:
-            logging.error(e)
+            logger.error(e)
             return -1
 
         try:
             return int(output.strip())
         except (ValueError, TypeError):
-            logging.error(f"{output} Not an int")
+            logger.error(f"{output} Not an int")
             return -1
 
     def check_azure_blob_and_snapshot_count(self, blob_and_snapshot_count) -> bool:
