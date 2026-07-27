@@ -51,6 +51,6 @@ class ExpressionLanguagePropertyWithValidator(FlowFileTransform):
 
     def transform(self, context, flow_file):
         integer_value = context.getProperty(self.INTEGER_PROPERTY).asInteger()
-        self.logger.info("Integer Property value: {}".format(integer_value))
+        self.logger.info(f"Integer Property value: {integer_value}")
 
         return FlowFileTransformResult("success", contents="content")

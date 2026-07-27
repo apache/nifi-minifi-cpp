@@ -14,17 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import docker
-import types
 import logging
+import os
+import types
 from pathlib import Path
 
 from behave.model import Scenario
 from behave.runner import Context
-
-from minifi_behave.core.ssl_utils import make_self_signed_cert
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import make_self_signed_cert
+
+import docker
 
 
 def get_minifi_container_image():

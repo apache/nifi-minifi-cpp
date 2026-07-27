@@ -15,11 +15,12 @@
 
 
 import argparse
+import math
 import multiprocessing
 import os
-import cpplint
 import sys
-import math
+
+import cpplint
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--includePaths', nargs="+", help='Run linter check in these directories')
@@ -62,8 +63,7 @@ def create_chunks(chunk_size, items):
         if chunk_begin >= len(list_of_files):
             break
         chunk_end += chunk_size
-        if chunk_end > len(list_of_files):
-            chunk_end = len(list_of_files)
+        chunk_end = min(chunk_end, len(list_of_files))
     return chunk_list
 
 

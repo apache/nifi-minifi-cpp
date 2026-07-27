@@ -14,8 +14,9 @@
 # limitations under the License.
 
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
-from .multiplierutils import double
+
 from ..subtractutils import minus_ten
+from .multiplierutils import double
 
 
 class RelativeImporterProcessor(FlowFileTransform):
@@ -27,5 +28,5 @@ class RelativeImporterProcessor(FlowFileTransform):
         number = double(number)
         number = minus_ten(number)
         return FlowFileTransformResult(
-            "success", contents="The final result is {}".format(number)
+            "success", contents=f"The final result is {number}"
         )

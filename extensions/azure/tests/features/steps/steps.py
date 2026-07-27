@@ -17,15 +17,16 @@
 
 import humanfriendly
 from behave import step, then
+from containers.azure_server_container import AzureServerContainer
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.minifi.processor import Processor
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-
-from containers.azure_server_container import AzureServerContainer
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @step("a {processor_name} processor set up to communicate with an Azure blob storage")

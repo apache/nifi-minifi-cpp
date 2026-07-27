@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import traceback
 import json
+import traceback
 from abc import abstractmethod
-from minifi_native import ProcessContext, ProcessSession, Processor
+
+from minifi_native import ProcessContext, Processor, ProcessSession
+
 from .processorbase import ProcessorBase
 from .properties import FlowFile as FlowFileProxy
 from .properties import ProcessContext as ProcessContextProxy
@@ -80,7 +82,7 @@ class RecordTransform(ProcessorBase):
     )
 
     def onInitialize(self, processor: Processor):
-        super(RecordTransform, self).onInitialize(processor)
+        super().onInitialize(processor)
         processor.addProperty(
             self.RECORD_READER.name,
             self.RECORD_READER.description,
@@ -133,9 +135,7 @@ class RecordTransform(ProcessorBase):
                 return
         except Exception:
             self.logger.error(
-                "Failed to read flow file records due to the following error:\n{}".format(
-                    traceback.format_exc()
-                )
+                f"Failed to read flow file records due to the following error:\n{traceback.format_exc()}"
             )
             session.transfer(flow_file, self.REL_FAILURE)
             return
@@ -155,9 +155,7 @@ class RecordTransform(ProcessorBase):
                 results.append(__RecordTransformResult__(result, resultjson))
             except Exception:
                 self.logger.error(
-                    "Failed to transform record due to the following error:\n{}".format(
-                        traceback.format_exc()
-                    )
+                    f"Failed to transform record due to the following error:\n{traceback.format_exc()}"
                 )
                 session.transfer(flow_file, self.REL_FAILURE)
                 return

@@ -1,7 +1,7 @@
 import ast
-import sys
-import subprocess
 import os
+import subprocess
+import sys
 
 
 # Extract the list of PIP dependency packages from the visited processor class AST node
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         if "requirements.txt" in sys.argv[i]:
             command += ["-r", sys.argv[i]]
             print(
-                "Installing dependencies from requirements file: {}".format(sys.argv[i])
+                f"Installing dependencies from requirements file: {sys.argv[i]}"
             )
             dependencies_found = True
         else:
@@ -82,9 +82,7 @@ if __name__ == "__main__":
             if dependencies:
                 dependencies_found = True
                 print(
-                    "Installing dependencies for processor {}: {}".format(
-                        sys.argv[i], str(dependencies)
-                    )
+                    f"Installing dependencies for processor {sys.argv[i]}: {dependencies!s}"
                 )
                 command += dependencies
 
@@ -93,7 +91,7 @@ if __name__ == "__main__":
             subprocess.check_call(command)
             print("Done installing dependencies for MiNiFi python processors.")
         except subprocess.CalledProcessError as e:
-            print("Error occurred while installing dependencies: {}".format(e))
+            print(f"Error occurred while installing dependencies: {e}")
             sys.exit(1)
     else:
         print(

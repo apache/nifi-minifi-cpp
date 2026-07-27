@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nifiapi.properties import PropertyDescriptor
-from nifiapi.properties import StandardValidators
-from nifiapi.properties import ExpressionLanguageScope
-from nifiapi.recordtransform import RecordTransformResult
-from nifiapi.recordtransform import RecordTransform
+from nifiapi.properties import (
+    ExpressionLanguageScope,
+    PropertyDescriptor,
+    StandardValidators,
+)
+from nifiapi.recordtransform import RecordTransform, RecordTransformResult
 
 
 class SetRecordField(RecordTransform):

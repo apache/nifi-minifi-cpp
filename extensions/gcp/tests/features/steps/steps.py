@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from behave import step, then
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.helpers import log_due_to_failure
 from containers.fake_gcs_server_container import FakeGcsServerContainer
+from minifi_behave.core.helpers import log_due_to_failure
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @step("a Google Cloud storage server is set up")

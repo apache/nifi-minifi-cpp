@@ -23,7 +23,7 @@ def describe(processor):
 state = 0
 
 
-class WriteCallback(object):
+class WriteCallback:
     def process(self, output_stream):
         global state
         new_content = str(state).encode("utf-8")

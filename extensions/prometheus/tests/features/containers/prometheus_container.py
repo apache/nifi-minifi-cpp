@@ -14,12 +14,16 @@
 # limitations under the License.
 
 import logging
+
+from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.containers.file import File
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.ssl_utils import make_cert_without_extended_usage
-from minifi_behave.containers.file import File
-from minifi_behave.core.ssl_utils import dump_cert, dump_key
-from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.core.ssl_utils import (
+    dump_cert,
+    dump_key,
+    make_cert_without_extended_usage,
+)
 
 
 class PrometheusContainer(LinuxContainer):
@@ -70,16 +74,16 @@ class PrometheusContainer(LinuxContainer):
     tls_config:
       ca_file: /etc/prometheus/certs/root-ca.pem
 """
-        prometheus_yml_content = """
+        prometheus_yml_content = f"""
 global:
   scrape_interval: 2s
   evaluation_interval: 15s
 scrape_configs:
   - job_name: "minifi"
     static_configs:
-      - targets: ["minifi-primary-{scenario_id}:9936"]
+      - targets: ["minifi-primary-{test_context.scenario_id}:9936"]
 {extra_ssl_settings}
-""".format(scenario_id=test_context.scenario_id, extra_ssl_settings=extra_ssl_settings)
+"""
 
         self.files.append(
             File(

@@ -74,13 +74,9 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
             if (
                 property.name == "Secret Password"
                 and properties[property] != "mysecret"
-            ):
-                return FlowFileTransformResult("failure")
-            elif (
+            ) or (
                 property.name == "Request Timeout" and properties[property] != "60 sec"
-            ):
-                return FlowFileTransformResult("failure")
-            elif property.name == "Wish Count" and properties[property] != "3":
+            ) or property.name == "Wish Count" and properties[property] != "3":
                 return FlowFileTransformResult("failure")
 
         secret_password = context.getProperty(self.SECRET_PASSWORD).getValue()

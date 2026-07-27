@@ -15,14 +15,13 @@
 
 from __future__ import annotations
 
-from typing import Dict, Set
+import platform
 
 from minifi_option import MinifiOptions
 from package_manager import PackageManager
-import platform
 
 
-def _create_system_dependencies(minifi_options: MinifiOptions) -> Dict[str, Set[str]]:
+def _create_system_dependencies(minifi_options: MinifiOptions) -> dict[str, set[str]]:
     system_dependencies = {
         "patch": {"patch"},
         "make": {"make"},

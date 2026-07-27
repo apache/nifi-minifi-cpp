@@ -15,25 +15,23 @@
 #  limitations under the License.
 #
 
-import jks
 import os
-
-from cryptography.hazmat.primitives import serialization
-from cryptography import x509
 from pathlib import Path
 
+import jks
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import (
+    BestAvailableEncryption,
     load_pem_private_key,
     pkcs12,
-    BestAvailableEncryption,
 )
 from minifi_behave.containers.container_linux import LinuxContainer
-from minifi_behave.core.helpers import wait_for_condition
-from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.ssl_utils import make_server_cert
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
-from minifi_behave.core.ssl_utils import dump_key, dump_cert
+from minifi_behave.core.helpers import wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
 
 class MinifiC2Server(LinuxContainer):
@@ -84,10 +82,10 @@ class MinifiC2Server(LinuxContainer):
                 )
             )
 
-            authorities_file_content = """
-  CN=minifi-primary-{scenario_id}:
+            authorities_file_content = f"""
+  CN=minifi-primary-{test_context.scenario_id}:
   - CLASS_MINIFI_CPP
-  """.format(scenario_id=test_context.scenario_id)
+  """
             self.files.append(
                 File(
                     "/opt/minifi-c2/minifi-c2-current/conf/authorities.yaml",

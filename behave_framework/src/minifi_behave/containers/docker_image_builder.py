@@ -19,8 +19,9 @@ import logging
 import os
 import tempfile
 
-import docker
 from docker.models.images import Image
+
+import docker
 
 
 class DockerImageBuilder:

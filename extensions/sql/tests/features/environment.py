@@ -16,14 +16,17 @@
 #
 
 import os
-import docker
 from textwrap import dedent
 
 from containers.postgress_server_container import PostgresContainer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
-from minifi_behave.core.hooks import get_minifi_container_image
+from minifi_behave.core.hooks import (
+    common_after_scenario,
+    common_before_scenario,
+    get_minifi_container_image,
+)
+
+import docker
 
 # These hooks are executed by behave before and after each scenario
 # The common_before_scenario and common_after_scenario must be called for proper setup and tear down
@@ -40,18 +43,15 @@ def before_all(context):
         "bullseye" in minifi_tag_prefix
         or "bookworm" in minifi_tag_prefix
         or "trixie" in minifi_tag_prefix
-    ):
-        install_sql_cmd = "apt -y install odbc-postgresql"
-        so_location = "/usr/lib/$(gcc -dumpmachine)/odbc/psqlodbca.so"
-    elif "jammy" in minifi_tag_prefix or "noble" in minifi_tag_prefix:
+    ) or "jammy" in minifi_tag_prefix or "noble" in minifi_tag_prefix:
         install_sql_cmd = "apt -y install odbc-postgresql"
         so_location = "/usr/lib/$(gcc -dumpmachine)/odbc/psqlodbca.so"
     else:
         install_sql_cmd = "apk --update --no-cache add psqlodbc"
         so_location = "psqlodbca.so"
     dockerfile = dedent(
-        """\
-            FROM {base_image}
+        f"""\
+            FROM {get_minifi_container_image()}
             USER root
             RUN {install_sql_cmd}
             RUN echo "[PostgreSQL ANSI]" > /odbcinst.ini.template && \
@@ -80,11 +80,7 @@ def before_all(context):
                 echo "Password = password" >> /etc/odbc.ini && \
                 echo "Database = postgres" >> /etc/odbc.ini
             USER minificpp
-            """.format(
-            base_image=get_minifi_container_image(),
-            install_sql_cmd=install_sql_cmd,
-            so_location=so_location,
-        )
+            """
     )
     builder = DockerImageBuilder(
         image_tag="apacheminificpp-sql:behave", dockerfile_content=dockerfile

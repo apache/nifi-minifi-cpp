@@ -14,6 +14,7 @@
 # limitations under the License.
 import argparse
 import sys
+
 import requests
 from prometheus_api_client import PrometheusConnect
 
@@ -55,7 +56,7 @@ class PrometheusChecker:
         # Only flowfile and content repositories are using rocksdb by default, so rocksdb specific metrics are only present there
         return (
             all(
-                (
+                
                     self._verify_metrics_exist(
                         [
                             "minifi_is_running",
@@ -68,18 +69,18 @@ class PrometheusChecker:
                         labels,
                     )
                     for labels in label_list
-                )
+                
             )
             and all(
-                (
+                
                     self._verify_metric_larger_than_zero(
                         "minifi_repository_size_bytes", "RepositoryMetrics", labels
                     )
                     for labels in label_list[1:3]
-                )
+                
             )
             and all(
-                (
+                
                     self._verify_metrics_exist(
                         [
                             "minifi_rocksdb_table_readers_size_bytes",
@@ -89,7 +90,7 @@ class PrometheusChecker:
                         labels,
                     )
                     for labels in label_list[1:3]
-                )
+                
             )
         )
 
@@ -251,10 +252,10 @@ class PrometheusChecker:
         self, metric_names: list, metric_class: str, labels: dict = {}
     ) -> bool:
         return all(
-            (
+            
                 self._verify_metric_exists(metric_name, metric_class, labels)
                 for metric_name in metric_names
-            )
+            
         )
 
     def _verify_metric_larger_than_zero(
@@ -270,10 +271,10 @@ class PrometheusChecker:
         self, metric_names: list, metric_class: str, labels: dict = {}
     ) -> bool:
         return all(
-            (
+            
                 self._verify_metric_larger_than_zero(metric_name, metric_class, labels)
                 for metric_name in metric_names
-            )
+            
         )
 
 

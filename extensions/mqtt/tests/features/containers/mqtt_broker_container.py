@@ -17,11 +17,11 @@ import logging
 import re
 from textwrap import dedent
 
+from docker.errors import ContainerError
 from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from docker.errors import ContainerError
 
 
 class MqttBrokerContainer(LinuxContainer):
@@ -29,11 +29,11 @@ class MqttBrokerContainer(LinuxContainer):
 
     def __init__(self, test_context: MinifiTestContext):
         dockerfile = dedent(
-            """\
-            FROM {base_image}
+            f"""\
+            FROM {MqttBrokerContainer.IMAGE}
             RUN echo 'log_dest stderr' >> /mosquitto-no-auth.conf
             CMD ["/usr/sbin/mosquitto", "--verbose", "--config-file", "/mosquitto-no-auth.conf"]
-            """.format(base_image=MqttBrokerContainer.IMAGE)
+            """
         )
 
         builder = DockerImageBuilder(

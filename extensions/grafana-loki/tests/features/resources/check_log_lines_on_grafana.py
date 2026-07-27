@@ -14,8 +14,9 @@
 # limitations under the License.
 
 import sys
-import requests
 import time
+
+import requests
 
 
 def wait_for(action, timeout_seconds, *args, **kwargs) -> bool:
