@@ -31,11 +31,6 @@ const crypto::Bytes secret_key = crypto::generateKey();
 const crypto::EncryptionProvider property_encryptor{secret_key};
 
 TEST_CASE("A property value can be encrypted") {
-  std::string encrypted_blank = property_encryption::encrypt("", property_encryptor);
-  CHECK(encrypted_blank.starts_with("enc{"));
-  CHECK(encrypted_blank.ends_with("}"));
-  CHECK(encrypted_blank.size() == 63);
-
   std::string encrypted_foo = property_encryption::encrypt("foo", property_encryptor);
   CHECK(encrypted_foo.starts_with("enc{"));
   CHECK(encrypted_foo.ends_with("}"));
@@ -48,6 +43,10 @@ TEST_CASE("A property value can be encrypted") {
   CHECK(encrypted_long_text.size() == 283);
 }
 
+TEST_CASE("An empty property value is not encrypted") {
+  CHECK(property_encryption::encrypt("", property_encryptor).empty());
+}
+
 TEST_CASE("Encrypting the same value a second time doesn't change its value") {
   std::string encrypted_foo = property_encryption::encrypt("foo", property_encryptor);
   std::string re_encrypted_foo = property_encryption::encrypt(encrypted_foo, property_encryptor);
@@ -58,9 +57,6 @@ TEST_CASE("Encrypting the same value a second time doesn't change its value") {
 }
 
 TEST_CASE("We can decrypt an encrypted value") {
-  std::string encrypted_blank = property_encryption::encrypt("", property_encryptor);
-  CHECK(property_encryption::decrypt(encrypted_blank, property_encryptor).empty());
-
   std::string encrypted_foo = property_encryption::encrypt("foo", property_encryptor);
   CHECK(property_encryption::decrypt(encrypted_foo, property_encryptor) == "foo");
 

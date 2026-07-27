@@ -39,7 +39,7 @@ std::string decrypt(std::string_view input, const utils::crypto::EncryptionProvi
 }
 
 std::string encrypt(std::string_view input, const utils::crypto::EncryptionProvider& encryption_provider) {
-  if (isEncrypted(input)) {
+  if (input.empty() || isEncrypted(input)) {
     return std::string{input};
   }
   return utils::string::join_pack("enc{", encryption_provider.encrypt(input), "}");

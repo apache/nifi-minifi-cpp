@@ -65,7 +65,7 @@ void YamlFlowSerializer::addProviderCreatedParameterContexts(YAML::Node flow_def
 
     int64_t index = -1;
     for (int64_t i = 0; i < gsl::narrow<int64_t>(parameter_contexts_node.size()); ++i) {
-      if (parameter_contexts_node[i][schema.name[0]].as<std::string>() == parameter_context->getName()) {
+      if (parameter_contexts_node[i][schema.name[0]].Scalar() == parameter_context->getName()) {
         index = i;
         break;
       }
@@ -85,7 +85,7 @@ void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls,
   std::unordered_set<std::string> processed_property_names;
 
   for (auto kv : property_yamls) {
-    auto name = kv.first.as<std::string>();
+    auto name = kv.first.Scalar();
     if (!properties.contains(name)) {
       logger_->log_warn("Property {} found in flow definition does not exist!", name);
       continue;
@@ -94,12 +94,12 @@ void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls,
       if (kv.second.IsSequence()) {
         for (auto property_item : kv.second) {
           const auto override_value = overrides.get(name);
-          auto value = override_value ? *override_value : property_item["value"].as<std::string>();
+          auto value = override_value ? *override_value : property_item["value"].Scalar();
           property_item["value"] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
         }
       } else {
         const auto override_value = overrides.get(name);
-        auto value = override_value ? *override_value : kv.second.as<std::string>();
+        auto value = override_value ? *override_value : kv.second.Scalar();
         property_yamls[name] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
       }
       processed_property_names.insert(name);

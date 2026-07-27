@@ -26,7 +26,6 @@
 #include "utils/crypto/EncryptionProvider.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "utils/StringUtils.h"
-#include "core/Resource.h"
 #include "utils/Environment.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -338,6 +337,44 @@ TEST_CASE("The encrypted flow configuration can be decrypted with the correct ke
 
   const auto& param_contexts = yaml_configuration_after.getParameterContexts();
   CHECK(param_contexts.at("my-context")->getParameter("secret_parameter")->value == "param_value_1");
+}
+
+TEST_CASE("Empty sensitive properties and parameters are not encrypted and round-trip as empty") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_values_encryptor = encryption_provider;
+
+  std::string config_yaml_with_empty_passphrase_and_parameter{config_yaml};
+  minifi::utils::string::replaceAll(config_yaml_with_empty_passphrase_and_parameter, "very_secure_passphrase", "");
+  minifi::utils::string::replaceAll(config_yaml_with_empty_passphrase_and_parameter, "param_value_1", "");
+
+  core::flow::AdaptiveConfiguration yaml_configuration_before{configuration_context};
+  const auto process_group_before = yaml_configuration_before.getRootFromPayload(config_yaml_with_empty_passphrase_and_parameter);
+  REQUIRE(process_group_before);
+
+  const auto schema = core::flow::FlowSchema::getDefault();
+  YAML::Node root_yaml_node = YAML::Load(config_yaml_with_empty_passphrase_and_parameter);
+  const auto flow_serializer = core::yaml::YamlFlowSerializer{root_yaml_node};
+
+  const auto processor_id = minifi::utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
+  const OverridesMap overrides{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "")}};
+  const std::string serialized = flow_serializer.serialize(*process_group_before, schema, encryption_provider, overrides, {});
+  CHECK_FALSE(serialized.contains("enc{"));
+
+  core::flow::AdaptiveConfiguration yaml_configuration_after{configuration_context};
+  const auto process_group_after = yaml_configuration_after.getRootFromPayload(serialized);
+  REQUIRE(process_group_after);
+
+  const auto* processor_after = process_group_after->findProcessorById(processor_id);
+  REQUIRE(processor_after);
+  CHECK(processor_after->getProperty("invokehttp-proxy-password") == "");
+
+  const auto* const controller_service_node_after = process_group_after->findControllerService("b9801278-7b5d-4314-aed6-713fd4b5f933");
+  REQUIRE(controller_service_node_after);
+  CHECK(controller_service_node_after->getControllerServiceImplementation()->getProperty("Passphrase") == "");
+
+  const auto& param_contexts = yaml_configuration_after.getParameterContexts();
+  CHECK(param_contexts.at("my-context")->getParameter("secret_parameter").value().value.empty());
 }
 
 TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrect key") {

@@ -749,6 +749,46 @@ TEST_CASE("The encrypted flow configuration cannot be decrypted with an incorrec
   REQUIRE_THROWS_AS(json_configuration_after.getRootFromPayload(config_json_encrypted), minifi::utils::crypto::EncryptionError);
 }
 
+TEST_CASE("Empty sensitive properties and parameters are not encrypted and round-trip as empty") {
+  ConfigurationTestController test_controller;
+  auto configuration_context = test_controller.getContext();
+  configuration_context.sensitive_values_encryptor = encryption_provider;
+
+  const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
+  std::string config_json_with_empty_passphrase_and_parameter = minifi::utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
+  minifi::utils::string::replaceAll(config_json_with_empty_passphrase_and_parameter, "very_secure_passphrase", "");
+  minifi::utils::string::replaceAll(config_json_with_empty_passphrase_and_parameter, "param_value_1", "");
+
+  core::flow::AdaptiveConfiguration json_configuration_before{configuration_context};
+  const auto process_group_before = json_configuration_before.getRootFromPayload(config_json_with_empty_passphrase_and_parameter);
+  REQUIRE(process_group_before);
+
+  rapidjson::Document doc;
+  rapidjson::ParseResult res = doc.Parse(config_json_with_empty_passphrase_and_parameter.data(), config_json_with_empty_passphrase_and_parameter.size());
+  REQUIRE(res);
+  const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
+
+  const auto processor_id = minifi::utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
+  const OverridesMap overrides{{processor_id, core::flow::Overrides{}.add("invokehttp-proxy-password", "")}};
+  const std::string serialized = flow_serializer.serialize(*process_group_before, schema, encryption_provider, overrides, {});
+  CHECK_FALSE(serialized.contains("enc{"));
+
+  core::flow::AdaptiveConfiguration json_configuration_after{configuration_context};
+  const auto process_group_after = json_configuration_after.getRootFromPayload(serialized);
+  REQUIRE(process_group_after);
+
+  const auto* processor_after = process_group_after->findProcessorById(processor_id);
+  REQUIRE(processor_after);
+  CHECK(processor_after->getProperty("invokehttp-proxy-password") == "");
+
+  const auto* const controller_service_node_after = process_group_after->findControllerService("b9801278-7b5d-4314-aed6-713fd4b5f933");
+  REQUIRE(controller_service_node_after);
+  CHECK(controller_service_node_after->getControllerServiceImplementation()->getProperty("Passphrase") == "");
+
+  const auto& param_contexts = json_configuration_after.getParameterContexts();
+  CHECK(param_contexts.at("my-context")->getParameter("secret_parameter").value().value.empty());
+}
+
 TEST_CASE("Parameter provider generated parameter context is serialized correctly") {
   ConfigurationTestController test_controller;
   auto configuration_context = test_controller.getContext();
