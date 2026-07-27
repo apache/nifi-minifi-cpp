@@ -301,6 +301,13 @@ def setup_controller_service(context: MinifiTestContext, service_name: str):
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
+@given('a {class_name} controller service named "{service_name}" is set up and the "{property_name}" property set to "{property_value}"')
+def setup_controller_service_with_property(context: MinifiTestContext, class_name: str, service_name: str, property_name: str, property_value: str):
+    controller_service = ControllerService(class_name=class_name, service_name=service_name)
+    controller_service.add_property(property_name, property_value)
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
+
+
 @given('a {service_name} controller service is set up and the "{property_name}" property set to "{property_value}"')
 def setup_controller_service_with_property(context: MinifiTestContext, service_name: str, property_name: str, property_value: str):
     controller_service = ControllerService(class_name=service_name, service_name=service_name)

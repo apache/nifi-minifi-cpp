@@ -1,0 +1,92 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+use crate::ProcessorInputRequirement;
+use minifi_native_sys::{
+    minifi_input_requirement, minifi_input_requirement_MINIFI_INPUT_ALLOWED,
+    minifi_input_requirement_MINIFI_INPUT_FORBIDDEN,
+    minifi_input_requirement_MINIFI_INPUT_REQUIRED, minifi_string_view,
+};
+use std::os::raw::c_char;
+
+#[derive(Debug)]
+pub enum FfiConversionError {
+    NullPointer,
+    InvalidUtf8,
+}
+
+#[repr(transparent)] // This allows us to pass Vec<StringView> as a pointer to minifi_string_view array
+#[derive(Debug)]
+pub(crate) struct StringView<'a> {
+    inner: minifi_string_view,
+    _marker: std::marker::PhantomData<&'a ()>,
+}
+
+impl<'a> StringView<'a> {
+    pub(crate) fn new(str: &'a str) -> Self {
+        Self {
+            inner: minifi_string_view {
+                data: str.as_ptr() as *const c_char,
+                length: str.len(),
+            },
+            _marker: std::marker::PhantomData,
+        }
+    }
+
+    pub unsafe fn as_raw(&self) -> minifi_string_view {
+        self.inner
+    }
+}
+
+pub trait StaticStrAsMinifiCStr {
+    fn as_minifi_c_type(&self) -> minifi_string_view;
+}
+
+impl StaticStrAsMinifiCStr for &'static str {
+    fn as_minifi_c_type(&self) -> minifi_string_view {
+        minifi_string_view {
+            data: self.as_ptr() as *const c_char,
+            length: self.len(),
+        }
+    }
+}
+
+pub trait ConvertMinifiStringView {
+    unsafe fn as_str(&self) -> Result<&str, FfiConversionError>;
+}
+
+impl ConvertMinifiStringView for minifi_string_view {
+    unsafe fn as_str(&self) -> Result<&str, FfiConversionError> {
+        if self.data.is_null() {
+            return Err(FfiConversionError::NullPointer);
+        }
+        unsafe {
+            let slice = std::slice::from_raw_parts(self.data.cast::<u8>(), self.length);
+            str::from_utf8(slice).map_err(|_| FfiConversionError::InvalidUtf8)
+        }
+    }
+}
+
+impl ProcessorInputRequirement {
+    pub fn as_minifi_c_type(&self) -> minifi_input_requirement {
+        match self {
+            ProcessorInputRequirement::Required => minifi_input_requirement_MINIFI_INPUT_REQUIRED,
+            ProcessorInputRequirement::Allowed => minifi_input_requirement_MINIFI_INPUT_ALLOWED,
+            ProcessorInputRequirement::Forbidden => minifi_input_requirement_MINIFI_INPUT_FORBIDDEN,
+        }
+    }
+}

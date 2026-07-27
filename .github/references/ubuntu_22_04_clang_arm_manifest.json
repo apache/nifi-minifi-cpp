@@ -87,6 +87,24 @@
                 "type": "org.apache.nifi.minifi.processors.ApplyTemplate"
             },
             {
+                "inputRequirement": "INPUT_REQUIRED",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [
+                    {
+                        "name": "failure",
+                        "description": "Non-german flowfiles are routed here"
+                    },
+                    {
+                        "name": "success",
+                        "description": "All asciified flowfiles are routed here"
+                    }
+                ],
+                "typeDescription": "RUST TEST PROCESSOR: This processor switches German characters with their ascii counterparts. (to test stream API)",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.asciify_german.AsciifyGerman"
+            },
+            {
                 "propertyDescriptors": {
                     "Attribute name prefix": {
                         "name": "Attribute name prefix",
@@ -1133,6 +1151,15 @@
                 "type": "org.apache.nifi.minifi.processors.ConvertRecord"
             },
             {
+                "inputRequirement": "INPUT_FORBIDDEN",
+                "isSingleThreaded": "true",
+                "supportedRelationships": [],
+                "typeDescription": "RUST TEST PROCESSOR: For testing lazy logging",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.count_actual_logging.CountActualLogging"
+            },
+            {
                 "propertyDescriptors": {
                     "Max Buffer Age": {
                         "name": "Max Buffer Age",
@@ -1869,6 +1896,20 @@
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "true",
                 "type": "org.apache.nifi.minifi.aws.processors.DeleteS3Object"
+            },
+            {
+                "inputRequirement": "INPUT_REQUIRED",
+                "isSingleThreaded": "true",
+                "supportedRelationships": [
+                    {
+                        "name": "success",
+                        "description": {}
+                    }
+                ],
+                "typeDescription": "RUST TEST PROCESSOR: Duplicate text",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.duplicate_text.DuplicateStreamText"
             },
             {
                 "propertyDescriptors": {
@@ -3709,6 +3750,76 @@
             },
             {
                 "propertyDescriptors": {
+                    "Batch Size": {
+                        "name": "Batch Size",
+                        "description": "The number of FlowFiles to be transferred in each invocation",
+                        "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "1"
+                    },
+                    "Custom Text": {
+                        "name": "Custom Text",
+                        "description": "If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles",
+                        "validator": "VALID",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                    },
+                    "Data Format": {
+                        "name": "Data Format",
+                        "description": "Specifies whether the data should be Text or Binary",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "Binary",
+                        "allowableValues": [
+                            {
+                                "value": "Text",
+                                "displayName": "Text"
+                            },
+                            {
+                                "value": "Binary",
+                                "displayName": "Binary"
+                            }
+                        ]
+                    },
+                    "File Size": {
+                        "name": "File Size",
+                        "description": "The size of the file that will be used",
+                        "validator": "DATA_SIZE_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+                        "defaultValue": "1 kB"
+                    },
+                    "Unique FlowFiles": {
+                        "name": "Unique FlowFiles",
+                        "description": "If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles will get the same content but this offers much higher throughput (but see the description of Custom Text for special non-random use cases)",
+                        "validator": "BOOLEAN_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "true"
+                    }
+                },
+                "inputRequirement": "INPUT_FORBIDDEN",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [
+                    {
+                        "name": "success",
+                        "description": "success"
+                    }
+                ],
+                "typeDescription": "RUST TEST PROCESSOR: This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.generate_flow_file.GenerateFlowFileRs"
+            },
+            {
+                "propertyDescriptors": {
                     "Bucket Name": {
                         "name": "Bucket Name",
                         "description": "The name of bucket to access.",
@@ -3925,6 +4036,106 @@
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "org.apache.nifi.minifi.processors.GetFile"
+            },
+            {
+                "propertyDescriptors": {
+                    "Batch Size": {
+                        "name": "Batch Size",
+                        "description": "The maximum number of files to pull in each iteration",
+                        "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "10"
+                    },
+                    "Ignore Hidden Files": {
+                        "name": "Ignore Hidden Files",
+                        "description": "Indicates whether or not hidden files should be ignored",
+                        "validator": "BOOLEAN_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "true"
+                    },
+                    "Input Directory": {
+                        "name": "Input Directory",
+                        "description": "The input directory from which to pull files",
+                        "validator": "NON_BLANK_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                    },
+                    "Keep Source File": {
+                        "name": "Keep Source File",
+                        "description": "If true, the file is not deleted after it has been copied to the Content Repository",
+                        "validator": "BOOLEAN_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "false"
+                    },
+                    "Maximum File Age": {
+                        "name": "Maximum File Age",
+                        "description": "The maximum age that a file must be in order to be pulled;  any file older than this amount of time (according to last modification date) will be ignored",
+                        "validator": "TIME_PERIOD_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Maximum File Size": {
+                        "name": "Maximum File Size",
+                        "description": "The maximum size that a file can be in order to be pulled",
+                        "validator": "DATA_SIZE_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Minimum File Age": {
+                        "name": "Minimum File Age",
+                        "description": "The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored",
+                        "validator": "TIME_PERIOD_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Minimum File Size": {
+                        "name": "Minimum File Size",
+                        "description": "The minimum size that a file can be in order to be pulled",
+                        "validator": "DATA_SIZE_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Polling Interval": {
+                        "name": "Polling Interval",
+                        "description": "Indicates how long to wait before performing a directory listing",
+                        "validator": "TIME_PERIOD_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Recurse Subdirectories": {
+                        "name": "Recurse Subdirectories",
+                        "description": "Indicates whether or not to pull files from subdirectories",
+                        "validator": "BOOLEAN_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "true"
+                    }
+                },
+                "inputRequirement": "INPUT_FORBIDDEN",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [
+                    {
+                        "name": "success",
+                        "description": "The created FlowFiles are transferred here"
+                    }
+                ],
+                "typeDescription": "RUST TEST PROCESSOR: Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.get_file.GetFileRs"
             },
             {
                 "propertyDescriptors": {
@@ -4425,6 +4636,84 @@
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "org.apache.nifi.minifi.processors.KamikazeProcessor"
+            },
+            {
+                "propertyDescriptors": {
+                    "Schedule Behaviour": {
+                        "name": "Schedule Behaviour",
+                        "description": "What to do during the on_schedule method",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "ReturnOk",
+                        "allowableValues": [
+                            {
+                                "value": "ReturnErr",
+                                "displayName": "ReturnErr"
+                            },
+                            {
+                                "value": "ReturnOk",
+                                "displayName": "ReturnOk"
+                            },
+                            {
+                                "value": "GetNotRegisteredProperty",
+                                "displayName": "GetNotRegisteredProperty"
+                            },
+                            {
+                                "value": "GetInvalidControllerService",
+                                "displayName": "GetInvalidControllerService"
+                            },
+                            {
+                                "value": "Panic",
+                                "displayName": "Panic"
+                            }
+                        ]
+                    },
+                    "Trigger Behaviour": {
+                        "name": "Trigger Behaviour",
+                        "description": "What to do during the trigger method",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "ReturnOk",
+                        "allowableValues": [
+                            {
+                                "value": "ReturnErr",
+                                "displayName": "ReturnErr"
+                            },
+                            {
+                                "value": "ReturnOk",
+                                "displayName": "ReturnOk"
+                            },
+                            {
+                                "value": "GetNotRegisteredProperty",
+                                "displayName": "GetNotRegisteredProperty"
+                            },
+                            {
+                                "value": "GetInvalidControllerService",
+                                "displayName": "GetInvalidControllerService"
+                            },
+                            {
+                                "value": "Panic",
+                                "displayName": "Panic"
+                            }
+                        ]
+                    }
+                },
+                "inputRequirement": "INPUT_ALLOWED",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [
+                    {
+                        "name": "success",
+                        "description": "success relationship"
+                    }
+                ],
+                "typeDescription": "RUST TEST PROCESSOR: This processor can fail or panic in on_trigger and on_schedule calls based on configuration. Only for testing purposes.",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.kamikaze_processor.KamikazeProcessorRs"
             },
             {
                 "propertyDescriptors": {
@@ -6036,6 +6325,112 @@
                 "type": "org.apache.nifi.minifi.processors.LogAttribute"
             },
             {
+                "propertyDescriptors": {
+                    "Attributes to Ignore": {
+                        "name": "Attributes to Ignore",
+                        "description": "A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.",
+                        "validator": "VALID",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Attributes to Log": {
+                        "name": "Attributes to Log",
+                        "description": "A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.",
+                        "validator": "VALID",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "FlowFiles To Log": {
+                        "name": "FlowFiles To Log",
+                        "description": "Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "1"
+                    },
+                    "Hexencode Payload": {
+                        "name": "Hexencode Payload",
+                        "description": "If true, the FlowFile's payload will be logged in a hexencoded format",
+                        "validator": "BOOLEAN_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "false"
+                    },
+                    "Log Level": {
+                        "name": "Log Level",
+                        "description": "The Log Level to use when logging the Attributes",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "Info",
+                        "allowableValues": [
+                            {
+                                "value": "Trace",
+                                "displayName": "Trace"
+                            },
+                            {
+                                "value": "Debug",
+                                "displayName": "Debug"
+                            },
+                            {
+                                "value": "Info",
+                                "displayName": "Info"
+                            },
+                            {
+                                "value": "Warn",
+                                "displayName": "Warn"
+                            },
+                            {
+                                "value": "Error",
+                                "displayName": "Error"
+                            },
+                            {
+                                "value": "Critical",
+                                "displayName": "Critical"
+                            },
+                            {
+                                "value": "Off",
+                                "displayName": "Off"
+                            }
+                        ]
+                    },
+                    "Log Payload": {
+                        "name": "Log Payload",
+                        "description": "If true, the FlowFile's payload will be logged, in addition to its attributes. Otherwise, just the Attributes will be logged.",
+                        "validator": "BOOLEAN_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "false"
+                    },
+                    "Log Prefix": {
+                        "name": "Log Prefix",
+                        "description": "Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.",
+                        "validator": "VALID",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    }
+                },
+                "inputRequirement": "INPUT_REQUIRED",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [
+                    {
+                        "name": "success",
+                        "description": "FlowFiles are transferred here after logging"
+                    }
+                ],
+                "typeDescription": "RUST TEST PROCESSOR: Logs attributes of flow files in the MiNiFi application log.",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.log_attribute.LogAttributeRs"
+            },
+            {
                 "inputRequirement": "INPUT_ALLOWED",
                 "isSingleThreaded": "false",
                 "supportedRelationships": [],
@@ -6043,6 +6438,54 @@
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "org.apache.nifi.minifi.processors.LogOnDestructionProcessor"
+            },
+            {
+                "propertyDescriptors": {
+                    "Lorem Ipsum Controller Service": {
+                        "typeProvidedByValue": {
+                            "type": "minifi_rs_playground.controller_services.lorem_ipsum_controller_service.LoremIpsumControllerService",
+                            "group": "minifi_rs_playground.controller_services.lorem_ipsum_controller_service",
+                            "artifact": "minifi_rs_playground"
+                        },
+                        "name": "Lorem Ipsum Controller Service",
+                        "description": "Name of the lorem ipsum controller service",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Write Method": {
+                        "name": "Write Method",
+                        "description": "Which API to test",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "Buffer",
+                        "allowableValues": [
+                            {
+                                "value": "Buffer",
+                                "displayName": "Buffer"
+                            },
+                            {
+                                "value": "Stream",
+                                "displayName": "Stream"
+                            }
+                        ]
+                    }
+                },
+                "inputRequirement": "INPUT_FORBIDDEN",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [
+                    {
+                        "name": "success",
+                        "description": "All flowfile are routed here"
+                    }
+                ],
+                "typeDescription": "RUST TEST PROCESSOR: Processor to test Controller Service API",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.lorem_ipsum_cs_user.LoremIpsumCSUser"
             },
             {
                 "propertyDescriptors": {
@@ -7830,6 +8273,91 @@
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "org.apache.nifi.minifi.processors.PutFile"
+            },
+            {
+                "propertyDescriptors": {
+                    "Conflict Resolution Strategy": {
+                        "name": "Conflict Resolution Strategy",
+                        "description": "Indicates what should happen when a file with the same name already exists in the output directory",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "fail",
+                        "allowableValues": [
+                            {
+                                "value": "fail",
+                                "displayName": "fail"
+                            },
+                            {
+                                "value": "replace",
+                                "displayName": "replace"
+                            },
+                            {
+                                "value": "ignore",
+                                "displayName": "ignore"
+                            }
+                        ]
+                    },
+                    "Create Missing Directories": {
+                        "name": "Create Missing Directories",
+                        "description": "If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.",
+                        "validator": "BOOLEAN_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "true"
+                    },
+                    "Directory": {
+                        "name": "Directory",
+                        "description": "The output directory to which to put files",
+                        "validator": "NON_BLANK_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+                        "defaultValue": "."
+                    },
+                    "Directory Permissions": {
+                        "name": "Directory Permissions",
+                        "description": "Sets the permissions on the directories being created if 'Create Missing Directories' property is set. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.",
+                        "validator": "VALID",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Maximum File Count": {
+                        "name": "Maximum File Count",
+                        "description": "Specifies the maximum number of files that can exist in the output directory",
+                        "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Permissions": {
+                        "name": "Permissions",
+                        "description": "Sets the permissions on the output file to the value of this attribute. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.",
+                        "validator": "VALID",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    }
+                },
+                "inputRequirement": "INPUT_REQUIRED",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [
+                    {
+                        "name": "failure",
+                        "description": "Failed files (conflict, write failure, etc.) are transferred to failure"
+                    },
+                    {
+                        "name": "success",
+                        "description": "Flowfiles that are successfully written to a file are routed to this relationship"
+                    }
+                ],
+                "typeDescription": "RUST TEST PROCESSOR: Writes the contents of a FlowFile to the local file system.",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.put_file.PutFileRs"
             },
             {
                 "propertyDescriptors": {
@@ -10912,6 +11440,43 @@
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "org.apache.nifi.minifi.api_testing.ZooProcessor"
+            },
+            {
+                "propertyDescriptors": {
+                    "Can fly service": {
+                        "typeProvidedByValue": {
+                            "type": "minifi_rs_playground.controller_services.animal_controller_apis.CanFlyControllerApi",
+                            "group": "minifi_rs_playground.controller_services.animal_controller_apis",
+                            "artifact": "minifi_rs_playground"
+                        },
+                        "name": "Can fly service",
+                        "description": "Test CanFlyService",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Number of Legs service": {
+                        "typeProvidedByValue": {
+                            "type": "minifi_rs_playground.controller_services.animal_controller_apis.NumberOfLegsControllerApi",
+                            "group": "minifi_rs_playground.controller_services.animal_controller_apis",
+                            "artifact": "minifi_rs_playground"
+                        },
+                        "name": "Number of Legs service",
+                        "description": "Test NumberOfLegsService",
+                        "validator": "VALID",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    }
+                },
+                "inputRequirement": "INPUT_FORBIDDEN",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [],
+                "typeDescription": "RUST TEST PROCESSOR: ZooProcessorRs",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.processors.zoo_processor.ZooProcessorRs"
             }
         ],
         "controllerServices": [
@@ -11101,6 +11666,43 @@
                 ]
             },
             {
+                "propertyDescriptors": {
+                    "Extra information": {
+                        "name": "Extra information",
+                        "description": "We need this to verify the casting was done correctly",
+                        "validator": "VALID",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Has Jetpack": {
+                        "name": "Has Jetpack",
+                        "description": "Whether or not the dog has a jetpack",
+                        "validator": "BOOLEAN_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "false"
+                    }
+                },
+                "typeDescription": "RUST TEST CONTROLLER SERVICE: DogControllerRs",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.controller_services.dog_controller_service.DogControllerRs",
+                "providedApiImplementations": [
+                    {
+                        "artifact": "minifi_rs_playground",
+                        "group": "minifi_rs_playground.controller_services.animal_controller_apis",
+                        "type": "minifi_rs_playground.controller_services.animal_controller_apis.CanFlyControllerApi"
+                    },
+                    {
+                        "artifact": "minifi_rs_playground",
+                        "group": "minifi_rs_playground.controller_services.animal_controller_apis",
+                        "type": "minifi_rs_playground.controller_services.animal_controller_apis.NumberOfLegsControllerApi"
+                    }
+                ]
+            },
+            {
                 "typeDescription": "Test DuckController",
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
@@ -11117,6 +11719,30 @@
                         "type": "org.apache.nifi.minifi.api_testing.NumberOfLegsControllerApi"
                     }
                 ]
+            },
+            {
+                "typeDescription": "RUST TEST CONTROLLER SERVICE: DuckControllerRs",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.controller_services.duck_controller_service.DuckControllerRs",
+                "providedApiImplementations": [
+                    {
+                        "artifact": "minifi_rs_playground",
+                        "group": "minifi_rs_playground.controller_services.animal_controller_apis",
+                        "type": "minifi_rs_playground.controller_services.animal_controller_apis.CanFlyControllerApi"
+                    },
+                    {
+                        "artifact": "minifi_rs_playground",
+                        "group": "minifi_rs_playground.controller_services.animal_controller_apis",
+                        "type": "minifi_rs_playground.controller_services.animal_controller_apis.NumberOfLegsControllerApi"
+                    }
+                ]
+            },
+            {
+                "typeDescription": "RUST TEST CONTROLLER SERVICE: Dummy Controller Service",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.controller_services.dummy_controller_service.DummyControllerService"
             },
             {
                 "propertyDescriptors": {
@@ -11300,6 +11926,23 @@
                         "type": "org.apache.nifi.minifi.controllers.AttributeProviderService"
                     }
                 ]
+            },
+            {
+                "propertyDescriptors": {
+                    "Length": {
+                        "name": "Length",
+                        "description": "How many words to generate",
+                        "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                        "required": "true",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE",
+                        "defaultValue": "25"
+                    }
+                },
+                "typeDescription": "RUST TEST CONTROLLER SERVICE: Holds generated lorem ipsum",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "minifi_rs_playground.controller_services.lorem_ipsum_controller_service.LoremIpsumControllerService"
             },
             {
                 "propertyDescriptors": {
