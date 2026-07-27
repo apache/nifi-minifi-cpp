@@ -15,15 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from behave import then, when, given
 import humanfriendly
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
+from behave import given, then, when
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @when("the MiNiFi instance is started without assertions")
