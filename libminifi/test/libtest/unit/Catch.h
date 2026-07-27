@@ -63,12 +63,12 @@ template <typename T, typename E>
 struct StringMaker<std::expected<T, E>> {
   static std::string convert(const std::expected<T, E>& expected) {
     if (!expected) {
-      return "error: " + Catch::Detail::stringify(expected.error());
+      return fmt::format("unexpected({})", Catch::Detail::stringify(expected.error()));
     }
     if constexpr (!std::is_void_v<T>) {
-      return Catch::Detail::stringify(*expected);
+      return fmt::format("expected({})", Catch::Detail::stringify(*expected));
     }
-    return "OK";
+    return "expected(void)";
   }
 };
 }  // namespace Catch
