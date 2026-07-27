@@ -22,6 +22,8 @@ from minifi_behave.core.helpers import retry_check, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
+logger = logging.getLogger(__name__)
+
 
 class GrafanaLokiOptions:
     def __init__(self, enable_ssl: bool = False, enable_multi_tenancy: bool = False):
@@ -188,12 +190,12 @@ analytics:
                 if hasattr(e, "stderr") and e.stderr
                 else ""
             )
-            logging.error(
+            logger.error(
                 f"Failed to run python command in grafana loki helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'"
             )
             return False
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Unexpected error while running python command in grafana loki helper docker: '{e}'"
             )
             return False

@@ -378,12 +378,10 @@ def verify_files_with_at_least_contents_in_directory(
     contents_arr = new_contents.split(",")
     assert wait_for_condition(
         condition=lambda: all(
-            [
-                context.containers[
-                    DEFAULT_MINIFI_CONTAINER_NAME
-                ].directory_contains_file_with_content(directory, content)
-                for content in contents_arr
-            ]
+            context.containers[
+                DEFAULT_MINIFI_CONTAINER_NAME
+            ].directory_contains_file_with_content(directory, content)
+            for content in contents_arr
         ),
         timeout_seconds=timeout_seconds,
         bail_condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].exited,
@@ -502,7 +500,7 @@ def verify_exact_files_in_directory(
 @then(
     'exactly these files are in the "{directory}" directory in less than {duration}: ""'
 )
-def verify_no_files_in_directory(context, directory, duration):
+def verify_no_files_in_directory_exact(context, directory, duration):
     context.execute_steps(
         f'then no files are placed in the "{directory}" directory in {duration} of running time'
     )

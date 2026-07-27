@@ -38,9 +38,7 @@ class PythonWithDependenciesOptions:
 def build_minifi_cpp_image_with_nifi_python_processors_using_dependencies(
     context, python_option
 ):
-    minifi_tag_prefix = (
-        os.environ["MINIFI_TAG_PREFIX"] if "MINIFI_TAG_PREFIX" in os.environ else ""
-    )
+    minifi_tag_prefix = os.environ.get("MINIFI_TAG_PREFIX", "")
     client: docker.DockerClient = docker.from_env()
     is_fhs = "MINIFI_INSTALLATION_TYPE=FHS" in str(
         client.images.get(context.minifi_container_image).history()
@@ -167,4 +165,4 @@ def install_python_with_langchain(context, install_mode):
             "nifi.python.install.packages.automatically", "true"
         )
     else:
-        raise Exception("Unknown python install mode.")
+        raise RuntimeError("Unknown python install mode.")

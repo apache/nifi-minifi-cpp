@@ -23,6 +23,8 @@ from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
+logger = logging.getLogger(__name__)
+
 
 class OpensearchContainer(ElasticBaseContainer):
     IMAGE = "opensearchproject/opensearch:2.6.0"
@@ -90,5 +92,5 @@ class OpensearchContainer(ElasticBaseContainer):
         ]
         full_cmd = " ".join(curl_cmd)
         (code, output) = self.exec_run(["/bin/bash", "-c", full_cmd])
-        logging.info(f"Add elastic user to Opensearch output: {output}")
+        logger.info(f"Add elastic user to Opensearch output: {output}")
         return code == 0 and '"status":"CREATED"' in output

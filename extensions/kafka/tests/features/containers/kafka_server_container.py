@@ -24,6 +24,8 @@ from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
+logger = logging.getLogger(__name__)
+
 
 class KafkaServer(LinuxContainer):
     IMAGE = "apache/kafka:4.1.0"
@@ -151,7 +153,7 @@ Client {
                 f"/opt/kafka/bin/kafka-topics.sh --create --topic '{topic_name}' --bootstrap-server '{self.container_name}':9092",
             ]
         )
-        logging.info(f"Create topic output: '{output}' with code {code}")
+        logger.info(f"Create topic output: '{output}' with code {code}")
         return code == 0
 
     def produce_message(self, topic_name: str, message: str):
@@ -162,7 +164,7 @@ Client {
                 f"echo '{message}' | /opt/kafka/bin/kafka-console-producer.sh --topic '{topic_name}' --bootstrap-server '{self.container_name}':9092",
             ]
         )
-        logging.info(f"Produce message output: '{output}' with code {code}")
+        logger.info(f"Produce message output: '{output}' with code {code}")
         return code == 0
 
     def produce_message_with_key(self, topic_name: str, message: str, message_key: str):
@@ -173,7 +175,7 @@ Client {
                 f" echo '{message_key}:{message}' | /opt/kafka/bin/kafka-console-producer.sh --property 'key.separator=:' --property 'parse.key=true' --topic '{topic_name}' --bootstrap-server '{self.container_name}':9092",
             ]
         )
-        logging.info(f"Produce message with key output: '{output}' with code {code}")
+        logger.info(f"Produce message with key output: '{output}' with code {code}")
         return code == 0
 
     def run_python_in_kafka_helper_docker(self, command: str):
@@ -185,7 +187,7 @@ Client {
             stderr=True,
             network=self.network.name,
         )
-        logging.info(
+        logger.info(
             f"Run python in kafka helper docker output: '{output.decode('utf-8')}'"
         )
         return True

@@ -27,7 +27,7 @@ parser.add_argument('-i', '--includePaths', nargs="+", help='Run linter check in
 parser.add_argument('-q', '--quiet', action='store_true', help='Don\'t print anything if no errors are found.')
 args = parser.parse_args()
 
-list_of_files = list()
+list_of_files = []
 for include_path in args.includePaths:
     for (dir_path, dir_names, file_names) in os.walk(include_path):
         for file_name in file_names:
@@ -37,7 +37,7 @@ for include_path in args.includePaths:
 script_dir = os.path.dirname(os.path.realpath(__file__))
 repository_path = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
 
-arg_list = list()
+arg_list = []
 arg_list.append("--linelength=200")
 arg_list.append("--repository=" + repository_path)
 if args.quiet:

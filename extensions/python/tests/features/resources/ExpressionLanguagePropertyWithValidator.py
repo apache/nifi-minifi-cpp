@@ -13,6 +13,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from typing import ClassVar
+
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import (
     ExpressionLanguageScope,
@@ -23,12 +25,14 @@ from nifiapi.properties import (
 
 class ExpressionLanguagePropertyWithValidator(FlowFileTransform):
     class Java:
-        implements = ["org.apache.nifi.python.processor.FlowFileTransform"]
+        implements: ClassVar[list] = [
+            "org.apache.nifi.python.processor.FlowFileTransform"
+        ]
 
     class ProcessorDetails:
         version = "1.2.3"
         description = "Test processor"
-        dependencies = []
+        dependencies: ClassVar[list] = []
 
     INTEGER_PROPERTY = PropertyDescriptor(
         name="Integer Property",

@@ -20,6 +20,8 @@ from minifi_behave.containers.directory import Directory
 from minifi_behave.core.helpers import retry_check, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class FakeGcsServerContainer(LinuxContainer):
     IMAGE = "fsouza/fake-gcs-server:1.45.1"
@@ -48,11 +50,11 @@ class FakeGcsServerContainer(LinuxContainer):
     @retry_check()
     def check_google_cloud_storage(self, content):
         (code, output) = self.exec_run(["grep", "-r", content, "/storage"])
-        logging.info(f"GCS storage contents matching '{content}': {output}")
+        logger.info(f"GCS storage contents matching '{content}': {output}")
         return code == 0
 
     @retry_check()
     def is_gcs_bucket_empty(self):
         (code, output) = self.exec_run(["ls", "/storage/test-bucket"])
-        logging.info(f"GCS bucket contents: {output}")
+        logger.info(f"GCS bucket contents: {output}")
         return code == 0 and output == ""

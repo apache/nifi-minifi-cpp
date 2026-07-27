@@ -29,6 +29,8 @@ from minifi_behave.core.ssl_utils import (
     make_server_cert,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class ElasticsearchContainer(ElasticBaseContainer):
     IMAGE = "elasticsearch:9.1.5"
@@ -138,7 +140,7 @@ class ElasticsearchContainer(ElasticBaseContainer):
         (code, output) = self.exec_run(["/bin/bash", "-c", curl_cmd])
         if code != 0:
             return None
-        logging.info(f"Elasticsearch generate API key output: {output}")
+        logger.info(f"Elasticsearch generate API key output: {output}")
         output_lines = output.splitlines()
         result = json.loads(output_lines[-1])
         return result["encoded"]

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -16,7 +18,7 @@
 
 class ProcessorConfiguration:
     class Java:
-        implements = [
+        implements: ClassVar[list] = [
             "org.apache.nifi.python.processor.documentation.ProcessorConfigurationDetails"
         ]
 
@@ -33,9 +35,9 @@ class ProcessorConfiguration:
 
 def use_case(
     description: str,
-    configuration: str = None,
-    notes: str = None,
-    keywords: list[str] = None,
+    configuration: str | None = None,
+    notes: str | None = None,
+    keywords: list[str] | None = None,
 ):
     """Decorator to explain how to perform a specific use case with a given processor"""
 
@@ -48,8 +50,8 @@ def use_case(
 def multi_processor_use_case(
     description: str,
     configurations: list[ProcessorConfiguration],
-    notes: str = None,
-    keywords: list[str] = None,
+    notes: str | None = None,
+    keywords: list[str] | None = None,
 ):
     """Decorator to explain how to perform a specific use case that involves the decorated Processor, in addition to additional Processors"""
 
@@ -61,7 +63,9 @@ def multi_processor_use_case(
 
 class UseCaseDetails:
     class Java:
-        implements = ["org.apache.nifi.python.processor.documentation.UseCaseDetails"]
+        implements: ClassVar[list] = [
+            "org.apache.nifi.python.processor.documentation.UseCaseDetails"
+        ]
 
     def __init__(
         self, description: str, notes: str, keywords: list[str], configuration: str
@@ -89,7 +93,7 @@ class UseCaseDetails:
 
 class MultiProcessorUseCaseDetails:
     class Java:
-        implements = [
+        implements: ClassVar[list] = [
             "org.apache.nifi.python.processor.documentation.MultiProcessorUseCaseDetails"
         ]
 
@@ -123,7 +127,7 @@ class MultiProcessorUseCaseDetails:
 
 class PropertyDescription:
     class Java:
-        implements = [
+        implements: ClassVar[list] = [
             "org.apache.nifi.python.processor.documentation.PropertyDescription"
         ]
 
@@ -131,12 +135,12 @@ class PropertyDescription:
         self,
         name: str,
         description: str,
-        display_name: str = None,
+        display_name: str | None = None,
         required: bool = False,
         sensitive: bool = True,
-        default_value: str = None,
-        expression_language_scope: str = None,
-        controller_service_definition: str = None,
+        default_value: str | None = None,
+        expression_language_scope: str | None = None,
+        controller_service_definition: str | None = None,
     ):
         self.name = name
         self.description = description

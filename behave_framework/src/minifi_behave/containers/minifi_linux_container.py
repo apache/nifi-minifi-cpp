@@ -36,6 +36,8 @@ from .container_linux import LinuxContainer
 from .minifi_controller import MinifiController
 from .minifi_protocol import MinifiProtocol
 
+logger = logging.getLogger(__name__)
+
 CA_CERT_PATHS = [
     "/usr/local/share/certs/ca-root-nss.crt",
     "/etc/ssl/certs/ca-certificates.crt",
@@ -145,7 +147,7 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_yaml()
-        logging.info(
+        logger.info(
             f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}"
         )
         self.files.append(
