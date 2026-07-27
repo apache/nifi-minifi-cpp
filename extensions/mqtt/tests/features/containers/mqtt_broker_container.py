@@ -23,6 +23,8 @@ from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class MqttBrokerContainer(LinuxContainer):
     IMAGE = "eclipse-mosquitto:2.1.1-alpine"
@@ -85,12 +87,12 @@ class MqttBrokerContainer(LinuxContainer):
                 if hasattr(e, "stderr") and e.stderr
                 else ""
             )
-            logging.error(
+            logger.error(
                 f"Failed to publish mqtt message in mqtt helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'"
             )
             return False
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Unexpected error while publishing mqtt message in mqtt helper docker: '{e}'"
             )
             return False

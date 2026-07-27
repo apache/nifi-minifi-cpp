@@ -45,9 +45,7 @@ def extract_dependencies(file_path):
 
 
 def has_progress_bar() -> bool:
-    return sys.version_info.major > 3 or (
-        sys.version_info.major == 3 and sys.version_info.minor >= 9
-    )
+    return sys.version_info >= (3, 9)
 
 
 if __name__ == "__main__":
@@ -73,9 +71,7 @@ if __name__ == "__main__":
     for i in range(1, len(sys.argv)):
         if "requirements.txt" in sys.argv[i]:
             command += ["-r", sys.argv[i]]
-            print(
-                f"Installing dependencies from requirements file: {sys.argv[i]}"
-            )
+            print(f"Installing dependencies from requirements file: {sys.argv[i]}")
             dependencies_found = True
         else:
             dependencies = extract_dependencies(sys.argv[i])

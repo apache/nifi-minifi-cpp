@@ -23,6 +23,8 @@ from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class DiagSlave(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
@@ -55,5 +57,5 @@ ENV PROTOCOL=tcp
 
     def set_value_on_plc_with_modbus(self, modbus_cmd):
         (code, output) = self.exec_run(["modbus", "localhost", modbus_cmd])
-        logging.info("Modbus command '%s' output: %s", modbus_cmd, output)
+        logger.info("Modbus command '%s' output: %s", modbus_cmd, output)
         return code == 0

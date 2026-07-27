@@ -43,8 +43,8 @@ class PrometheusChecker:
         elif metric_class == "AgentStatus":
             return self._verify_agent_status_metrics()
         else:
-            raise Exception(
-                "Metric class '%s' verification is not implemented" % metric_class
+            raise RuntimeError(
+                f"Metric class '{metric_class}' verification is not implemented"
             )
 
     def _verify_repository_metrics(self) -> bool:
@@ -56,41 +56,35 @@ class PrometheusChecker:
         # Only flowfile and content repositories are using rocksdb by default, so rocksdb specific metrics are only present there
         return (
             all(
-                
-                    self._verify_metrics_exist(
-                        [
-                            "minifi_is_running",
-                            "minifi_is_full",
-                            "minifi_repository_size_bytes",
-                            "minifi_max_repository_size_bytes",
-                            "minifi_repository_entry_count",
-                        ],
-                        "RepositoryMetrics",
-                        labels,
-                    )
-                    for labels in label_list
-                
+                self._verify_metrics_exist(
+                    [
+                        "minifi_is_running",
+                        "minifi_is_full",
+                        "minifi_repository_size_bytes",
+                        "minifi_max_repository_size_bytes",
+                        "minifi_repository_entry_count",
+                    ],
+                    "RepositoryMetrics",
+                    labels,
+                )
+                for labels in label_list
             )
             and all(
-                
-                    self._verify_metric_larger_than_zero(
-                        "minifi_repository_size_bytes", "RepositoryMetrics", labels
-                    )
-                    for labels in label_list[1:3]
-                
+                self._verify_metric_larger_than_zero(
+                    "minifi_repository_size_bytes", "RepositoryMetrics", labels
+                )
+                for labels in label_list[1:3]
             )
             and all(
-                
-                    self._verify_metrics_exist(
-                        [
-                            "minifi_rocksdb_table_readers_size_bytes",
-                            "minifi_rocksdb_all_memory_tables_size_bytes",
-                        ],
-                        "RepositoryMetrics",
-                        labels,
-                    )
-                    for labels in label_list[1:3]
-                
+                self._verify_metrics_exist(
+                    [
+                        "minifi_rocksdb_table_readers_size_bytes",
+                        "minifi_rocksdb_all_memory_tables_size_bytes",
+                    ],
+                    "RepositoryMetrics",
+                    labels,
+                )
+                for labels in label_list[1:3]
             )
         )
 
@@ -235,8 +229,10 @@ class PrometheusChecker:
         )
 
     def _verify_metric_exists(
-        self, metric_name: str, metric_class: str, labels: dict = {}
+        self, metric_name: str, metric_class: str, labels: dict | None = None
     ) -> bool:
+        if labels is None:
+            labels = {}
         labels["metric_class"] = metric_class
         labels["agent_identifier"] = "Agent1"
         return (
@@ -249,18 +245,20 @@ class PrometheusChecker:
         )
 
     def _verify_metrics_exist(
-        self, metric_names: list, metric_class: str, labels: dict = {}
+        self, metric_names: list, metric_class: str, labels: dict | None = None
     ) -> bool:
+        if labels is None:
+            labels = {}
         return all(
-            
-                self._verify_metric_exists(metric_name, metric_class, labels)
-                for metric_name in metric_names
-            
+            self._verify_metric_exists(metric_name, metric_class, labels)
+            for metric_name in metric_names
         )
 
     def _verify_metric_larger_than_zero(
-        self, metric_name: str, metric_class: str, labels: dict = {}
+        self, metric_name: str, metric_class: str, labels: dict | None = None
     ) -> bool:
+        if labels is None:
+            labels = {}
         labels["metric_class"] = metric_class
         result = self.prometheus_client.get_current_metric_value(
             metric_name=metric_name, label_config=labels
@@ -268,13 +266,13 @@ class PrometheusChecker:
         return len(result) > 0 and int(result[0]["value"][1]) > 0
 
     def _verify_metrics_larger_than_zero(
-        self, metric_names: list, metric_class: str, labels: dict = {}
+        self, metric_names: list, metric_class: str, labels: dict | None = None
     ) -> bool:
+        if labels is None:
+            labels = {}
         return all(
-            
-                self._verify_metric_larger_than_zero(metric_name, metric_class, labels)
-                for metric_name in metric_names
-            
+            self._verify_metric_larger_than_zero(metric_name, metric_class, labels)
+            for metric_name in metric_names
         )
 
 

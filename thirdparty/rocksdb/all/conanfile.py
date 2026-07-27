@@ -16,6 +16,7 @@
 import os
 import glob
 import shutil
+from typing import ClassVar
 
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
@@ -45,7 +46,7 @@ class RocksDBConan(ConanFile):
     topics = ("database", "leveldb", "facebook", "key-value")
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
-    options = {
+    options: ClassVar[dict] = {
         "shared": [True, False],
         "fPIC": [True, False],
         "lite": [True, False],
@@ -60,7 +61,7 @@ class RocksDBConan(ConanFile):
         "enable_sse": [False, "sse42", "avx2"],
         "use_rtti": [True, False],
     }
-    default_options = {
+    default_options: ClassVar[dict] = {
         "shared": False,
         "fPIC": True,
         "lite": False,

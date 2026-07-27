@@ -26,6 +26,8 @@ from minifi_behave.core.ssl_utils import make_self_signed_cert
 
 import docker
 
+logger = logging.getLogger(__name__)
+
 
 def get_minifi_container_image():
     if "MINIFI_TAG_PREFIX" in os.environ and "MINIFI_VERSION" in os.environ:
@@ -66,7 +68,7 @@ def common_before_scenario(context: Context, scenario: Scenario):
         if not hasattr(context, attr):
             setattr(context, attr, types.MethodType(method, context))
 
-    logging.info("Running scenario: %s", scenario)
+    logger.info("Running scenario: %s", scenario)
     context.scenario_id = (
         scenario.filename.rsplit("/", 1)[1].split(".")[0]
         + "-"
@@ -77,7 +79,7 @@ def common_before_scenario(context: Context, scenario: Scenario):
 
     try:
         existing_network = docker_client.networks.get(network_name)
-        logging.warning(f"Found existing network '{network_name}'. Removing it first.")
+        logger.warning(f"Found existing network '{network_name}'. Removing it first.")
         existing_network.remove()
     except docker.errors.NotFound:
         pass  # No existing network found, which is good.

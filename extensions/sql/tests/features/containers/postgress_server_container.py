@@ -23,6 +23,8 @@ from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class PostgresContainer(LinuxContainer):
     IMAGE = "postgres:17.4"
@@ -69,7 +71,7 @@ class PostgresContainer(LinuxContainer):
 
     def check_query_results(self, query: str, number_of_rows: int) -> bool:
         (code, output) = self.exec_run(["psql", "-U", "postgres", "-c", query])
-        logging.debug(f"check_query_results: {query} -> {output}")
+        logger.debug(f"check_query_results: {query} -> {output}")
         return (
             code == 0
             and (str(number_of_rows) + (" row" if number_of_rows == 1 else " rows"))

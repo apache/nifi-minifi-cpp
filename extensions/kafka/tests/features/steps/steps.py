@@ -187,7 +187,7 @@ producer.flush(10)
 producer.abort_transaction()
         """
     else:
-        raise Exception("Unknown transaction type.")
+        raise RuntimeError("Unknown transaction type.")
     assert (
         context.containers["kafka-server"].run_python_in_kafka_helper_docker(
             python_code

@@ -72,9 +72,7 @@ class ProcessorBase(ABC):
 
         for property in self.getPropertyDescriptors():
             expression_language_supported = (
-                True
-                if property.expressionLanguageScope != ExpressionLanguageScope.NONE
-                else False
+                property.expressionLanguageScope != ExpressionLanguageScope.NONE
             )
             property_type_code = translateStandardValidatorToMiNiFiPropertype(
                 property.validators
@@ -92,9 +90,7 @@ class ProcessorBase(ABC):
                 property_type_code = None
 
             # MiNiFi C++ does not support dependant properties, so if a property depends on another property, it should not be required
-            is_required = (
-                True if property.required and not property.dependencies else False
-            )
+            is_required = bool(property.required and not property.dependencies)
             processor.addProperty(
                 property.name,
                 property.description,

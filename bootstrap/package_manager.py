@@ -52,10 +52,10 @@ class PackageManager:
         self.no_confirm = no_confirm
 
     def install(self, dependencies: dict[str, set[str]]) -> bool:
-        raise Exception("NotImplementedException")
+        raise RuntimeError("NotImplementedException")
 
     def install_compiler(self) -> str:
-        raise Exception("NotImplementedException")
+        raise RuntimeError("NotImplementedException")
 
     def ensure_environment(self):
         pass
@@ -80,7 +80,7 @@ class PackageManager:
         )
 
     def _get_installed_packages(self) -> set[str]:
-        raise Exception("NotImplementedException")
+        raise RuntimeError("NotImplementedException")
 
     def _filter_out_installed_packages(self, dependencies: dict[str, set[str]]):
         installed_packages = self._get_installed_packages()
@@ -92,7 +92,7 @@ class PackageManager:
         return filtered_packages
 
     def run_cmd(self, cmd: str) -> bool:
-        result = subprocess.run(f"{cmd}", shell=True, text=True)
+        result = subprocess.run(f"{cmd}", shell=True, text=True, check=False)
         return result.returncode == 0
 
 
@@ -121,7 +121,9 @@ class BrewPackageManager(PackageManager):
 
     def run_cmd(self, cmd: str) -> bool:
         add_m4_to_path_cmd = 'export PATH="$(brew --prefix m4)/bin:$PATH"'
-        result = subprocess.run(f"{add_m4_to_path_cmd} && {cmd}", shell=True, text=True)
+        result = subprocess.run(
+            f"{add_m4_to_path_cmd} && {cmd}", shell=True, text=True, check=False
+        )
         return result.returncode == 0
 
 
@@ -224,12 +226,7 @@ class ZypperPackageManager(PackageManager):
         lines = result.stdout.splitlines()
         packages = set()
         for line in lines:
-            if (
-                line.startswith("S |")
-                or line.startswith("--")
-                or line.startswith(" ")
-                or not line
-            ):
+            if line.startswith(("S |", "--", " ")) or not line:
                 continue
 
             parts = line.split("|")
@@ -258,6 +255,7 @@ def _get_vs_dev_cmd_path(vs_where_location: VsWhereLocation):
         f"-requires Microsoft.VisualStudio.Component.VC.ATL "
         f"-version 17",
         capture_output=True,
+        check=False,
     )
 
     for vswhere_result in vswhere_results.stdout.splitlines():
@@ -349,10 +347,12 @@ class ChocolateyPackageManager(PackageManager):
             self.install(
                 {
                     "visualstudio2022buildtools": {
-                        'visualstudio2022buildtools --package-parameters "--wait --quiet '
-                        "--add Microsoft.VisualStudio.Workload.VCTools "
-                        "--add Microsoft.VisualStudio.Component.VC.ATL "
-                        '--includeRecommended"'
+                        (
+                            'visualstudio2022buildtools --package-parameters "--wait --quiet '
+                            "--add Microsoft.VisualStudio.Workload.VCTools "
+                            "--add Microsoft.VisualStudio.Component.VC.ATL "
+                            '--includeRecommended"'
+                        )
                     }
                 }
             )

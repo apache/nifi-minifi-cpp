@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import ClassVar
+
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import PropertyDescriptor, StandardValidators
 from nifiapi.relationship import Relationship
@@ -46,7 +48,11 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
         required=True,
     )
 
-    property_descriptors = [SECRET_PASSWORD, REQUEST_TIMEOUT, WISH_COUNT]
+    property_descriptors: ClassVar[list] = [
+        SECRET_PASSWORD,
+        REQUEST_TIMEOUT,
+        WISH_COUNT,
+    ]
 
     def __init__(self, **kwargs):
         pass
@@ -72,11 +78,17 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
 
         for property in properties:
             if (
-                property.name == "Secret Password"
-                and properties[property] != "mysecret"
-            ) or (
-                property.name == "Request Timeout" and properties[property] != "60 sec"
-            ) or property.name == "Wish Count" and properties[property] != "3":
+                (
+                    property.name == "Secret Password"
+                    and properties[property] != "mysecret"
+                )
+                or (
+                    property.name == "Request Timeout"
+                    and properties[property] != "60 sec"
+                )
+                or property.name == "Wish Count"
+                and properties[property] != "3"
+            ):
                 return FlowFileTransformResult("failure")
 
         secret_password = context.getProperty(self.SECRET_PASSWORD).getValue()

@@ -26,6 +26,8 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 import docker
 
+logger = logging.getLogger(__name__)
+
 
 def log_due_to_failure(context: MinifiTestContext | None):
     if context is not None:
@@ -38,7 +40,7 @@ def check_condition_after_wait(
 ) -> bool:
     time.sleep(wait_time)
     if not condition():
-        logging.warning("Condition not met after wait")
+        logger.warning("Condition not met after wait")
         log_due_to_failure(context)
         return False
     return True
@@ -51,7 +53,7 @@ def wait_for_condition(
     context: MinifiTestContext | None,
 ) -> bool:
     if bail_condition():
-        logging.warning("Bail condition evaluated to 'True', aborting wait.")
+        logger.warning("Bail condition evaluated to 'True', aborting wait.")
         log_due_to_failure(context)
         return False
     start_time = time.monotonic()
@@ -60,7 +62,7 @@ def wait_for_condition(
             if condition():
                 return True
             if bail_condition():
-                logging.warning("Bail condition evaluated to 'True', aborting wait.")
+                logger.warning("Bail condition evaluated to 'True', aborting wait.")
                 log_due_to_failure(context)
                 return False
             remaining_time = timeout_seconds - (time.monotonic() - start_time)
@@ -68,10 +70,10 @@ def wait_for_condition(
             if sleep_time > 0:
                 time.sleep(sleep_time)
     except Exception as ex:
-        logging.warning("Exception while waiting for condition: %s", ex)
+        logger.warning("Exception while waiting for condition: %s", ex)
         log_due_to_failure(context)
         return False
-    logging.warning(
+    logger.warning(
         "Timed out after %d seconds while waiting for condition", timeout_seconds
     )
     log_due_to_failure(context)

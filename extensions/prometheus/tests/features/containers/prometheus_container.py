@@ -25,6 +25,8 @@ from minifi_behave.core.ssl_utils import (
     make_cert_without_extended_usage,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class PrometheusContainer(LinuxContainer):
     IMAGE = "prom/prometheus:v3.9.1"
@@ -120,7 +122,7 @@ scrape_configs:
             )
             return True
         except Exception:
-            logging.error(f"Failed to check metric class {metric_class} on Prometheus")
+            logger.error(f"Failed to check metric class {metric_class} on Prometheus")
             return False
 
     def check_processor_metric_on_prometheus(
@@ -144,7 +146,7 @@ scrape_configs:
             )
             return True
         except Exception:
-            logging.error(
+            logger.error(
                 f"Failed to check processor metric class {metric_class} for processor {processor_name} on Prometheus"
             )
             return False
@@ -164,7 +166,7 @@ scrape_configs:
             )
             return True
         except Exception:
-            logging.error(
+            logger.error(
                 "Failed check that all metric types are defined once on Prometheus"
             )
             return False

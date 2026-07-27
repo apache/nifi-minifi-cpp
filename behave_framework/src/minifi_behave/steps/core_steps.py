@@ -33,19 +33,21 @@ from minifi_behave.core.minifi_test_context import (
     MinifiTestContext,
 )
 
+logger = logging.getLogger(__name__)
+
 
 @when("both instances start up")
 @when("all instances start up")
 def start_all_instances(context: MinifiTestContext):
     for container in context.containers.values():
         assert container.deploy(context)
-    logging.debug("All instances started up")
+    logger.debug("All instances started up")
 
 
 @when("the MiNiFi instance starts up")
 def start_minifi_instance(context: MinifiTestContext):
     assert context.get_or_create_default_minifi_container().deploy(context)
-    logging.debug("MiNiFi instance started up")
+    logger.debug("MiNiFi instance started up")
 
 
 @step('a directory at "{directory}" has a file with the size "{size}"')

@@ -160,15 +160,15 @@ class PropertyDescriptor:
         description: str,
         required: bool = False,
         sensitive: bool = False,
-        display_name: str = None,
-        default_value: str = None,
-        allowable_values: list[str] = None,
-        dependencies: list[PropertyDependency] = None,
+        display_name: str | None = None,
+        default_value: str | None = None,
+        allowable_values: list[str] | None = None,
+        dependencies: list[PropertyDependency] | None = None,
         expression_language_scope: ExpressionLanguageScope = ExpressionLanguageScope.NONE,
         dynamic: bool = False,
-        validators: list[int] = None,
+        validators: list[int] | None = None,
         resource_definition: ResourceDefinition = None,
-        controller_service_definition: str = None,
+        controller_service_definition: str | None = None,
     ):
         if validators is None:
             validators = [StandardValidators.ALWAYS_VALID]
@@ -273,13 +273,13 @@ class PythonPropertyValue:
         if time_unit == TimeUnit.MILLISECONDS:
             return milliseconds
         if time_unit == TimeUnit.SECONDS:
-            return int(round(milliseconds / 1000))
+            return round(milliseconds / 1000)
         if time_unit == TimeUnit.MINUTES:
-            return int(round(milliseconds / 1000 / 60))
+            return round(milliseconds / 1000 / 60)
         if time_unit == TimeUnit.HOURS:
-            return int(round(milliseconds / 1000 / 60 / 60))
+            return round(milliseconds / 1000 / 60 / 60)
         if time_unit == TimeUnit.DAYS:
-            return int(round(milliseconds / 1000 / 60 / 60 / 24))
+            return round(milliseconds / 1000 / 60 / 60 / 24)
         return 0
 
     def asDataSize(self, data_unit: DataUnit) -> float:
@@ -322,7 +322,7 @@ class PythonPropertyValue:
 
     def asControllerService(self):
         if not self.controller_service_definition:
-            raise Exception(
+            raise RuntimeError(
                 "Controller Service definition is not set, getProperty must be called with a property descriptor instead of string value"
             )
         return self.cpp_context.getControllerService(
@@ -370,7 +370,7 @@ class ProcessContext:
         return self.cpp_context.getName()
 
     def getProperties(self) -> dict[PropertyDescriptor, str]:
-        properties = dict()
+        properties = {}
         cpp_properties = self.cpp_context.getProperties()
 
         for property_descriptor in self.processor.getPropertyDescriptors():
