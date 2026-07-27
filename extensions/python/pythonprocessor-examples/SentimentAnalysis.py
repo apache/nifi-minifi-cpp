@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import codecs
+
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
@@ -27,7 +28,7 @@ def onInitialize(processor):
     processor.setSupportsDynamicProperties()
 
 
-class VaderSentiment(object):
+class VaderSentiment:
     def __init__(self):
         self.content = None
 

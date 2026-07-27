@@ -14,12 +14,12 @@
 # limitations under the License.
 
 import logging
-
 from pathlib import Path
+
 from minifi_behave.containers.container_linux import LinuxContainer
-from minifi_behave.core.helpers import wait_for_condition, retry_check
-from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
+from minifi_behave.core.helpers import retry_check, wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class KinesisServerContainer(LinuxContainer):

@@ -13,22 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import logging
 import os
-import tempfile
-import docker
-import io
 import tarfile
-import humanfriendly
+import tempfile
 
+import humanfriendly
 from behave import given, step, then
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.helpers import wait_for_condition
 from containers.opc_ua_server_container import OPCUAServerContainer
+from minifi_behave.core.helpers import wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
+
+import docker
 
 
 @step("an OPC UA server is set up")

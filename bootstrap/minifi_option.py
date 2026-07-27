@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict
-
-import pathlib
 import json
-import platform
 import os
+import pathlib
+import platform
 
 import cmake_parser
 from cmake_parser import CMakeCacheValue
@@ -26,7 +24,7 @@ from package_manager import PackageManager
 
 
 class MinifiOptions:
-    def __init__(self, cache_values: Dict[str, CMakeCacheValue]):
+    def __init__(self, cache_values: dict[str, CMakeCacheValue]):
         self.cmake_override = ""
         self.build_type = CMakeCacheValue(
             "Specifies the build type on single-configuration generators",

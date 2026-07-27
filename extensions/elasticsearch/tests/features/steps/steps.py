@@ -12,17 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from behave import step, given, then
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.minifi.controller_service import ControllerService
-from minifi_behave.core.helpers import log_due_to_failure
+from behave import given, step, then
 from containers.elasticsearch_container import ElasticsearchContainer
 from containers.opensearch_container import OpensearchContainer
+from minifi_behave.core.helpers import log_due_to_failure
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.minifi.controller_service import ControllerService
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @step("an Elasticsearch server is set up and running")

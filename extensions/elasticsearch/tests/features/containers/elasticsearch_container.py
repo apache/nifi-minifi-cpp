@@ -16,18 +16,18 @@
 import json
 import logging
 import os
+from pathlib import Path
 
 from elastic_base_container import ElasticBaseContainer
-from pathlib import Path
-from minifi_behave.core.ssl_utils import (
-    make_server_cert,
-    make_cert_without_extended_usage,
-    dump_cert,
-    dump_key,
-)
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import (
+    dump_cert,
+    dump_key,
+    make_cert_without_extended_usage,
+    make_server_cert,
+)
 
 
 class ElasticsearchContainer(ElasticBaseContainer):

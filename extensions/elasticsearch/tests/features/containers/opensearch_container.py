@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
+import os
+from pathlib import Path
 
 from elastic_base_container import ElasticBaseContainer
-from pathlib import Path
-from minifi_behave.core.ssl_utils import make_server_cert, dump_cert, dump_key
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
 
 class OpensearchContainer(ElasticBaseContainer):

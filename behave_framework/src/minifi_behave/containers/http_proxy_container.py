@@ -19,10 +19,10 @@ from textwrap import dedent
 
 from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from minifi_behave.core.helpers import wait_for_condition, retry_check
-from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.ssl_utils import make_server_cert, dump_cert, dump_key
 from minifi_behave.containers.file import File
+from minifi_behave.core.helpers import retry_check, wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
 
 class HttpProxy(LinuxContainer):

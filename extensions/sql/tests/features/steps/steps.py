@@ -16,16 +16,17 @@
 #
 
 import humanfriendly
-from behave import step, given, then
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-from minifi_behave.core.helpers import wait_for_condition
-from minifi_behave.minifi.controller_service import ControllerService
-from minifi_behave.core.minifi_test_context import MinifiTestContext
+from behave import given, step, then
 from containers.postgress_server_container import PostgresContainer
+from minifi_behave.core.helpers import wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.minifi.controller_service import ControllerService
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @given('an ODBCService is setup up for {processor_name} with the name "{service_name}"')

@@ -18,7 +18,6 @@ import platform
 import subprocess
 import sys
 from enum import Enum
-from typing import Dict, Set
 
 from distro import distro
 
@@ -32,10 +31,10 @@ def _query_yes_no(question: str, no_confirm: bool) -> bool:
     valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
 
     if no_confirm:
-        print("Running {} with noconfirm".format(question))
+        print(f"Running {question} with noconfirm")
         return True
     while True:
-        print("{} [y/n]".format(question), end=" ", flush=True)
+        print(f"{question} [y/n]", end=" ", flush=True)
         choice = input().lower()
         if choice in valid:
             return valid[choice]
@@ -44,16 +43,15 @@ def _query_yes_no(question: str, no_confirm: bool) -> bool:
 
 
 def _run_command_with_confirm(command: str, no_confirm: bool) -> bool:
-    if _query_yes_no("Running {}".format(command), no_confirm):
+    if _query_yes_no(f"Running {command}", no_confirm):
         return os.system(command) == 0
 
 
-class PackageManager(object):
+class PackageManager:
     def __init__(self, no_confirm):
         self.no_confirm = no_confirm
-        pass
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         raise Exception("NotImplementedException")
 
     def install_compiler(self) -> str:
@@ -64,8 +62,8 @@ class PackageManager(object):
 
     def _install(
         self,
-        dependencies: Dict[str, Set[str]],
-        replace_dict: Dict[str, Set[str]],
+        dependencies: dict[str, set[str]],
+        replace_dict: dict[str, set[str]],
         install_cmd: str,
     ) -> bool:
         dependencies.update(
@@ -81,10 +79,10 @@ class PackageManager(object):
             f"{install_cmd} {dependencies_str}", self.no_confirm
         )
 
-    def _get_installed_packages(self) -> Set[str]:
+    def _get_installed_packages(self) -> set[str]:
         raise Exception("NotImplementedException")
 
-    def _filter_out_installed_packages(self, dependencies: Dict[str, Set[str]]):
+    def _filter_out_installed_packages(self, dependencies: dict[str, set[str]]):
         installed_packages = self._get_installed_packages()
         filtered_packages = {
             k: (v - installed_packages) for k, v in dependencies.items()
@@ -102,7 +100,7 @@ class BrewPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         return self._install(
             dependencies=dependencies,
             install_cmd="brew install",
@@ -113,7 +111,7 @@ class BrewPackageManager(PackageManager):
         self.install({"compiler": set()})
         return ""
 
-    def _get_installed_packages(self) -> Set[str]:
+    def _get_installed_packages(self) -> set[str]:
         result = subprocess.run(
             ["brew", "list"], text=True, capture_output=True, check=True
         )
@@ -131,14 +129,14 @@ class AptPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         return self._install(
             dependencies=dependencies,
             install_cmd="sudo apt install -y",
             replace_dict={"libarchive": {"liblzma-dev"}, "python": {"libpython3-dev"}},
         )
 
-    def _get_installed_packages(self) -> Set[str]:
+    def _get_installed_packages(self) -> set[str]:
         result = subprocess.run(
             ["dpkg", "--get-selections"], text=True, capture_output=True, check=True
         )
@@ -156,7 +154,7 @@ class DnfPackageManager(PackageManager):
         PackageManager.__init__(self, no_confirm)
         self.needs_epel = needs_epel
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         if self.needs_epel:
             install_cmd = "sudo dnf --enablerepo=crb install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
         else:
@@ -167,7 +165,7 @@ class DnfPackageManager(PackageManager):
             replace_dict={"python": {"python3-devel"}},
         )
 
-    def _get_installed_packages(self) -> Set[str]:
+    def _get_installed_packages(self) -> set[str]:
         result = subprocess.run(
             ["dnf", "list", "installed"], text=True, capture_output=True, check=True
         )
@@ -184,14 +182,14 @@ class PacmanPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         return self._install(
             dependencies=dependencies,
             install_cmd="sudo pacman --noconfirm -S",
             replace_dict={},
         )
 
-    def _get_installed_packages(self) -> Set[str]:
+    def _get_installed_packages(self) -> set[str]:
         result = subprocess.run(
             ["pacman", "-Qq"], text=True, capture_output=True, check=True
         )
@@ -206,7 +204,7 @@ class ZypperPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         return self._install(
             dependencies=dependencies,
             install_cmd="sudo zypper install -y",
@@ -216,7 +214,7 @@ class ZypperPackageManager(PackageManager):
             },
         )
 
-    def _get_installed_packages(self) -> Set[str]:
+    def _get_installed_packages(self) -> set[str]:
         result = subprocess.run(
             ["zypper", "se", "--installed-only"],
             text=True,
@@ -302,7 +300,7 @@ class ChocolateyPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         self._install(
             dependencies=dependencies,
             install_cmd="choco install -y",
@@ -322,7 +320,7 @@ class ChocolateyPackageManager(PackageManager):
         )
         return True
 
-    def _get_installed_packages(self) -> Set[str]:
+    def _get_installed_packages(self) -> set[str]:
         result = subprocess.run(
             ["choco", "list"], text=True, capture_output=True, check=True
         )

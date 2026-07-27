@@ -2,6 +2,7 @@
 
 import unittest
 from unittest.mock import MagicMock
+
 from github_actions_cache_cleanup import GithubActionsCacheCleaner
 
 

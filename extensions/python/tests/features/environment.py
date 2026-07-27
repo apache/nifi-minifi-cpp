@@ -12,12 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import docker
 import os
 from pathlib import Path
+
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
+
+import docker
 
 
 def get_minifi_container_image():
@@ -48,39 +49,34 @@ def before_all(context):
     minifi_python_venv_parent = (
         "/var/lib/nifi-minifi-cpp" if is_fhs else "/opt/minifi/minifi-current"
     )
-    dockerfile = """
-FROM {base_image}
+    dockerfile = f"""
+FROM {context.minifi_container_image}
 USER root
 {pip3_install_command}
 USER minificpp
-COPY RotatingForwarder.py {minifi_python_dir}/nifi_python_processors/RotatingForwarder.py
-COPY SpecialPropertyTypeChecker.py {minifi_python_dir}/nifi_python_processors/SpecialPropertyTypeChecker.py
-COPY ProcessContextInterfaceChecker.py {minifi_python_dir}/nifi_python_processors/ProcessContextInterfaceChecker.py
-COPY CreateFlowFile.py {minifi_python_dir}/nifi_python_processors/CreateFlowFile.py
-COPY FailureWithAttributes.py {minifi_python_dir}/nifi_python_processors/FailureWithAttributes.py
-COPY subtractutils.py {minifi_python_dir}/nifi_python_processors/compute/subtractutils.py
-COPY RelativeImporterProcessor.py {minifi_python_dir}/nifi_python_processors/compute/processors/RelativeImporterProcessor.py
-COPY multiplierutils.py {minifi_python_dir}/nifi_python_processors/compute/processors/multiplierutils.py
-COPY CreateNothing.py {minifi_python_dir}/nifi_python_processors/CreateNothing.py
-COPY FailureWithContent.py {minifi_python_dir}/nifi_python_processors/FailureWithContent.py
-COPY TransferToOriginal.py {minifi_python_dir}/nifi_python_processors/TransferToOriginal.py
-COPY SetRecordField.py {minifi_python_dir}/nifi_python_processors/SetRecordField.py
-COPY TestStateManager.py {minifi_python_dir}/nifi_python_processors/TestStateManager.py
-COPY NifiStyleLogDynamicProperties.py {minifi_python_dir}/nifi_python_processors/NifiStyleLogDynamicProperties.py
-COPY LogDynamicProperties.py {minifi_python_dir}/LogDynamicProperties.py
-COPY ExpressionLanguagePropertyWithValidator.py {minifi_python_dir}/nifi_python_processors/ExpressionLanguagePropertyWithValidator.py
-COPY EvaluateExpressionLanguageChecker.py {minifi_python_dir}/nifi_python_processors/EvaluateExpressionLanguageChecker.py
-COPY SleepForever.py {minifi_python_dir}/nifi_python_processors/SleepForever.py
-COPY SingleThreadedSleepForever.py {minifi_python_dir}/nifi_python_processors/SingleThreadedSleepForever.py
-COPY MinifiSleepForever.py {minifi_python_dir}/MinifiSleepForever.py
-COPY SingleThreadedMinifiSleepForever.py {minifi_python_dir}/SingleThreadedMinifiSleepForever.py
+COPY RotatingForwarder.py {minifi_python_dir_path}/nifi_python_processors/RotatingForwarder.py
+COPY SpecialPropertyTypeChecker.py {minifi_python_dir_path}/nifi_python_processors/SpecialPropertyTypeChecker.py
+COPY ProcessContextInterfaceChecker.py {minifi_python_dir_path}/nifi_python_processors/ProcessContextInterfaceChecker.py
+COPY CreateFlowFile.py {minifi_python_dir_path}/nifi_python_processors/CreateFlowFile.py
+COPY FailureWithAttributes.py {minifi_python_dir_path}/nifi_python_processors/FailureWithAttributes.py
+COPY subtractutils.py {minifi_python_dir_path}/nifi_python_processors/compute/subtractutils.py
+COPY RelativeImporterProcessor.py {minifi_python_dir_path}/nifi_python_processors/compute/processors/RelativeImporterProcessor.py
+COPY multiplierutils.py {minifi_python_dir_path}/nifi_python_processors/compute/processors/multiplierutils.py
+COPY CreateNothing.py {minifi_python_dir_path}/nifi_python_processors/CreateNothing.py
+COPY FailureWithContent.py {minifi_python_dir_path}/nifi_python_processors/FailureWithContent.py
+COPY TransferToOriginal.py {minifi_python_dir_path}/nifi_python_processors/TransferToOriginal.py
+COPY SetRecordField.py {minifi_python_dir_path}/nifi_python_processors/SetRecordField.py
+COPY TestStateManager.py {minifi_python_dir_path}/nifi_python_processors/TestStateManager.py
+COPY NifiStyleLogDynamicProperties.py {minifi_python_dir_path}/nifi_python_processors/NifiStyleLogDynamicProperties.py
+COPY LogDynamicProperties.py {minifi_python_dir_path}/LogDynamicProperties.py
+COPY ExpressionLanguagePropertyWithValidator.py {minifi_python_dir_path}/nifi_python_processors/ExpressionLanguagePropertyWithValidator.py
+COPY EvaluateExpressionLanguageChecker.py {minifi_python_dir_path}/nifi_python_processors/EvaluateExpressionLanguageChecker.py
+COPY SleepForever.py {minifi_python_dir_path}/nifi_python_processors/SleepForever.py
+COPY SingleThreadedSleepForever.py {minifi_python_dir_path}/nifi_python_processors/SingleThreadedSleepForever.py
+COPY MinifiSleepForever.py {minifi_python_dir_path}/MinifiSleepForever.py
+COPY SingleThreadedMinifiSleepForever.py {minifi_python_dir_path}/SingleThreadedMinifiSleepForever.py
 RUN python3 -m venv {minifi_python_venv_parent}/venv
-    """.format(
-        base_image=context.minifi_container_image,
-        pip3_install_command=pip3_install_command,
-        minifi_python_dir=minifi_python_dir_path,
-        minifi_python_venv_parent=minifi_python_venv_parent,
-    )
+    """
 
     build_context_path = str(Path(__file__).resolve().parent / "resources")
     files_on_context = {}

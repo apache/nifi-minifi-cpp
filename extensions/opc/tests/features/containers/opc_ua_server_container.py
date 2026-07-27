@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
+
 from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
@@ -23,7 +23,7 @@ class OPCUAServerContainer(LinuxContainer):
     IMAGE = "lordgamez/open62541:1.5.2"
 
     def __init__(
-        self, test_context: MinifiTestContext, command: Optional[List[str]] = None
+        self, test_context: MinifiTestContext, command: list[str] | None = None
     ):
         super().__init__(
             OPCUAServerContainer.IMAGE,

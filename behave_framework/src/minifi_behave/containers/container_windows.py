@@ -15,22 +15,23 @@
 #  limitations under the License.
 #
 from __future__ import annotations
+
+import base64
+import io
 import logging
 import os
-import tempfile
-import base64
 import tarfile
-import io
+import tempfile
 from typing import TYPE_CHECKING
 
-import docker
-from docker.models.networks import Network
 from docker.models.containers import Container
-
+from docker.models.networks import Network
 from minifi_behave.containers.container_protocol import ContainerProtocol
 from minifi_behave.containers.directory import Directory
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
+
+import docker
 
 if TYPE_CHECKING:
     from minifi_behave.core.minifi_test_context import MinifiTestContext
@@ -64,8 +65,7 @@ class WindowsContainer(ContainerProtocol):
 
     def _normalize_path(self, path: str) -> str:
         clean_path = path.strip().replace("/", "\\")
-        if clean_path.startswith("\\"):
-            clean_path = clean_path[1:]
+        clean_path = clean_path.removeprefix("\\")
 
         # If it doesn't already have a drive letter, assume C:
         if ":" not in clean_path:

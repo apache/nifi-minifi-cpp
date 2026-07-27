@@ -24,9 +24,9 @@ pip install -U httplib2
 """
 
 import codecs
+
 from google.cloud import language
-from google.cloud.language import enums
-from google.cloud.language import types
+from google.cloud.language import enums, types
 
 
 def describe(processor):
@@ -46,7 +46,7 @@ def onInitialize(processor):
     )
 
 
-class ContentExtract(object):
+class ContentExtract:
     def __init__(self):
         self.content = None
 

@@ -17,13 +17,14 @@
 
 from __future__ import annotations
 
+import functools
 import logging
 import time
-import functools
 from collections.abc import Callable
 
-import docker
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+
+import docker
 
 
 def log_due_to_failure(context: MinifiTestContext | None):

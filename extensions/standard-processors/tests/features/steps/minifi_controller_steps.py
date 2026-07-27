@@ -15,7 +15,7 @@
 #  limitations under the License.
 #
 
-from behave import given, when, then
+from behave import given, then, when
 from minifi_behave.core.helpers import retry_check
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 

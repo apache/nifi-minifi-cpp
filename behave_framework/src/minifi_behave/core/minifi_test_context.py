@@ -18,15 +18,15 @@
 from __future__ import annotations
 
 import os
-import docker
+
 from behave.runner import Context
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from cryptography.x509 import Certificate
 from docker.models.networks import Network
-
 from minifi_behave.containers.container_protocol import ContainerProtocol
 from minifi_behave.containers.minifi_protocol import MinifiProtocol
 
+import docker
 
 DEFAULT_MINIFI_CONTAINER_NAME = "minifi-primary"
 
@@ -57,8 +57,8 @@ class MinifiTestContext(Context):
                 docker.from_env().images.get(self.minifi_container_image).history()
             ):
                 from minifi_behave.containers.minifi_linux_container import (
-                    MinifiLinuxContainer,
                     FHSDeployment,
+                    MinifiLinuxContainer,
                 )
 
                 minifi_container = MinifiLinuxContainer(

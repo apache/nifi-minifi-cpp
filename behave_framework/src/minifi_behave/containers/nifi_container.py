@@ -13,21 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
 import gzip
+import io
 import logging
 import os
 from pathlib import Path
 
-from minifi_behave.containers.file import File
 from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.containers.file import File
+from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 from minifi_behave.minifi.nifi_flow_definition import NifiFlowDefinition
-from minifi_behave.containers.host_file import HostFile
-from minifi_behave.core.ssl_utils import make_server_cert
-
-from minifi_behave.core.ssl_utils import dump_cert, dump_key
 
 
 class NifiContainer(LinuxContainer):
@@ -42,11 +40,11 @@ class NifiContainer(LinuxContainer):
         if use_ssl:
             entry_command = (
                 r"/scripts/convert_cert_to_jks.sh /tmp/resources /tmp/resources/nifi_client.key /tmp/resources/nifi_client.crt /tmp/resources/root_ca.crt &&"
-                r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' "
+                rf"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' "
                 r"-e 's/^\(nifi.remote.input.secure\)=.*/\1=true/' "
                 r"-e 's/^\(nifi.sensitive.props.key\)=.*/\1=secret_key_12345/' "
                 r"-e 's/^\(nifi.web.https.port\)=.*/\1=8443/' "
-                r"-e 's/^\(nifi.web.https.host\)=.*/\1={name}/' "
+                rf"-e 's/^\(nifi.web.https.host\)=.*/\1={name}/' "
                 r"-e 's/^\(nifi.security.keystore\)=.*/\1=\/tmp\/resources\/keystore.jks/' "
                 r"-e 's/^\(nifi.security.keystoreType\)=.*/\1=jks/' "
                 r"-e 's/^\(nifi.security.keystorePasswd\)=.*/\1=passw0rd1!/' "
@@ -57,17 +55,17 @@ class NifiContainer(LinuxContainer):
                 r"-e 's/^\(nifi.remote.input.socket.port\)=.*/\1=10443/' /opt/nifi/nifi-current/conf/nifi.properties && "
                 r"cp /tmp/nifi_config/flow.json.gz /opt/nifi/nifi-current/conf && /opt/nifi/nifi-current/bin/nifi.sh run & "
                 r"nifi_pid=$! &&"
-                r"tail -F --pid=${{nifi_pid}} /opt/nifi/nifi-current/logs/nifi-app.log"
-            ).format(name=name)
+                r"tail -F --pid=${nifi_pid} /opt/nifi/nifi-current/logs/nifi-app.log"
+            )
         else:
             entry_command = (
-                r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' "
+                rf"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' "
                 r"-e 's/^\(nifi.sensitive.props.key\)=.*/\1=secret_key_12345/' "
                 r"-e 's/^\(nifi.remote.input.secure\)=.*/\1=false/' "
                 r"-e 's/^\(nifi.web.http.port\)=.*/\1=8080/' "
                 r"-e 's/^\(nifi.web.https.port\)=.*/\1=/' "
                 r"-e 's/^\(nifi.web.https.host\)=.*/\1=/' "
-                r"-e 's/^\(nifi.web.http.host\)=.*/\1={name}/' "
+                rf"-e 's/^\(nifi.web.http.host\)=.*/\1={name}/' "
                 r"-e 's/^\(nifi.security.keystore\)=.*/\1=/' "
                 r"-e 's/^\(nifi.security.keystoreType\)=.*/\1=/' "
                 r"-e 's/^\(nifi.security.keystorePasswd\)=.*/\1=/' "
@@ -78,8 +76,8 @@ class NifiContainer(LinuxContainer):
                 r"-e 's/^\(nifi.remote.input.socket.port\)=.*/\1=10000/' /opt/nifi/nifi-current/conf/nifi.properties && "
                 r"cp /tmp/nifi_config/flow.json.gz /opt/nifi/nifi-current/conf && /opt/nifi/nifi-current/bin/nifi.sh run & "
                 r"nifi_pid=$! &&"
-                r"tail -F --pid=${{nifi_pid}} /opt/nifi/nifi-current/logs/nifi-app.log"
-            ).format(name=name)
+                r"tail -F --pid=${nifi_pid} /opt/nifi/nifi-current/logs/nifi-app.log"
+            )
         if not command:
             command = ["/bin/sh", "-c", entry_command]
 

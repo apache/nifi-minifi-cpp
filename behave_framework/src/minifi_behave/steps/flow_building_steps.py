@@ -17,8 +17,8 @@
 
 import logging
 import uuid
-from behave import given, step
 
+from behave import given, step
 from minifi_behave.core.minifi_test_context import (
     DEFAULT_MINIFI_CONTAINER_NAME,
     MinifiTestContext,

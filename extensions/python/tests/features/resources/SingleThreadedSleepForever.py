@@ -14,8 +14,9 @@
 # limitations under the License.
 
 import time
-from nifiapi.flowfilesource import FlowFileSource
+
 from nifiapi.decorators import trigger_serially
+from nifiapi.flowfilesource import FlowFileSource
 
 
 @trigger_serially

@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import logging
+
 from minifi_behave.core.helpers import retry_check
 
 

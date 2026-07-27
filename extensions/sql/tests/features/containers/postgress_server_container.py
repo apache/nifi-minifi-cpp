@@ -17,6 +17,7 @@
 
 import logging
 from textwrap import dedent
+
 from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.helpers import wait_for_condition
@@ -28,8 +29,8 @@ class PostgresContainer(LinuxContainer):
 
     def __init__(self, context):
         dockerfile = dedent(
-            """\
-                FROM {base_image}
+            f"""\
+                FROM {PostgresContainer.IMAGE}
                 RUN mkdir -p /docker-entrypoint-initdb.d
                 RUN echo "#!/bin/bash" > /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "set -e" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
@@ -42,14 +43,14 @@ class PostgresContainer(LinuxContainer):
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (5, 'ApPlE');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (6, 'BaNaNa');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
-                """.format(base_image=PostgresContainer.IMAGE)
+                """
         )
         builder = DockerImageBuilder(
             image_tag="minifi-postgres-server:latest", dockerfile_content=dockerfile
         )
         builder.build()
 
-        super(PostgresContainer, self).__init__(
+        super().__init__(
             "minifi-postgres-server:latest",
             f"postgres-server-{context.scenario_id}",
             context.network,
@@ -57,7 +58,7 @@ class PostgresContainer(LinuxContainer):
         self.environment = ["POSTGRES_PASSWORD=password"]
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
-        super(PostgresContainer, self).deploy(context)
+        super().deploy(context)
         finished_str = "database system is ready to accept connections"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
