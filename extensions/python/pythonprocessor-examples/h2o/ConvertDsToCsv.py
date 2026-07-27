@@ -21,9 +21,10 @@ pip install pandas
 """
 
 import codecs
-import pandas as pd  # noqa F401
-import datatable as dt
 from io import StringIO
+
+import datatable as dt
+import pandas as pd  # noqa F401
 
 
 def describe(processor):
@@ -40,7 +41,7 @@ def onInitialize(processor):
     processor.setSupportsDynamicProperties()
 
 
-class ContentExtract(object):
+class ContentExtract:
     """ContentExtract callback class is defined for reading streams of data through the session
     and has a process function that accepts the input stream
     """
@@ -54,7 +55,7 @@ class ContentExtract(object):
         return len(self.content)
 
 
-class ContentWrite(object):
+class ContentWrite:
     """ContentWrite callback class is defined for writing streams of data through the session"""
 
     def __init__(self, data):

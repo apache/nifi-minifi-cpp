@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import docker
 import glob
 import os
 import platform
@@ -25,6 +24,7 @@ import time
 from pathlib import Path
 from textwrap import dedent
 
+import docker
 
 KUBERNETES_CONTAINER_NAME = "kind-control-plane"
 

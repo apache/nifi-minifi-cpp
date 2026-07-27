@@ -16,19 +16,18 @@
 #
 
 import logging
+import os
 import random
 import string
-import os
 import time
 import uuid
 
 import humanfriendly
-from behave import when, step, given
-
-from minifi_behave.containers.http_proxy_container import HttpProxy
-from minifi_behave.containers.nifi_container import NifiContainer
+from behave import given, step, when
 from minifi_behave.containers.directory import Directory
 from minifi_behave.containers.file import File
+from minifi_behave.containers.http_proxy_container import HttpProxy
+from minifi_behave.containers.nifi_container import NifiContainer
 from minifi_behave.core.minifi_test_context import (
     DEFAULT_MINIFI_CONTAINER_NAME,
     MinifiTestContext,

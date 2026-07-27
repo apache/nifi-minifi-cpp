@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from behave import step, then
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
+from containers.splunk_container import SplunkContainer
 from minifi_behave.core.helpers import log_due_to_failure
 from minifi_behave.core.minifi_test_context import MinifiTestContext
-from containers.splunk_container import SplunkContainer
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @step("a Splunk HEC is set up and running")

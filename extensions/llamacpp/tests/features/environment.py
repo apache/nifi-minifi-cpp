@@ -12,13 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from pathlib import Path
 from textwrap import dedent
 
-from pathlib import Path
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
-from minifi_behave.core.hooks import get_minifi_container_image
+from minifi_behave.core.hooks import (
+    common_after_scenario,
+    common_before_scenario,
+    get_minifi_container_image,
+)
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 # These hooks are executed by behave before and after each scenario

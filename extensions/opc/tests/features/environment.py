@@ -14,10 +14,11 @@
 # limitations under the License.
 
 import os
-import docker
+
 from containers.opc_ua_server_container import OPCUAServerContainer
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
+
+import docker
 
 
 def before_all(context):

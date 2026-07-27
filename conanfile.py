@@ -1,9 +1,10 @@
-from conan import ConanFile
-from conan.tools.cmake import CMake, CMakeToolchain
-from conan.tools.files import collect_libs, copy
-from conan.errors import ConanException
 import os
 import shutil
+
+from conan import ConanFile
+from conan.errors import ConanException
+from conan.tools.cmake import CMake, CMakeToolchain
+from conan.tools.files import collect_libs, copy
 
 required_conan_version = ">=2.0"
 
@@ -114,7 +115,7 @@ class MiNiFiCppMain(ConanFile):
         cmake.build()
 
     def overwrite_libfile(self, oldfile, newfile):
-        print("Copying {} to {}".format(oldfile, newfile))
+        print(f"Copying {oldfile} to {newfile}")
         if os.path.exists(oldfile):
             try:
                 if os.path.exists(newfile):

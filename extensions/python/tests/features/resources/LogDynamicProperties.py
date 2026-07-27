@@ -26,11 +26,11 @@ def onInitialize(processor):
 def onTrigger(context, session):
     flow_file = session.get()
     property_value = context.getProperty("Static Property")
-    log.info("Static Property value: {}".format(property_value))
+    log.info(f"Static Property value: {property_value}")
     dyn_property_value = context.getDynamicProperty("Dynamic Property")
-    log.info("Dynamic Property value: {}".format(dyn_property_value))
+    log.info(f"Dynamic Property value: {dyn_property_value}")
     keys = context.getDynamicPropertyKeys()
-    log.info("dynamic property key count: {}".format(len(keys)))
+    log.info(f"dynamic property key count: {len(keys)}")
     for dynamic_property_key in keys:
-        log.info("dynamic property key: {}".format(dynamic_property_key))
+        log.info(f"dynamic property key: {dynamic_property_key}")
     session.transfer(flow_file, REL_SUCCESS)

@@ -14,17 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import time
 import re
+import time
 
 import humanfriendly
-from behave import then, step
-
+from behave import step, then
 from minifi_behave.containers.http_proxy_container import HttpProxy
 from minifi_behave.core.helpers import (
-    wait_for_condition,
     check_condition_after_wait,
     log_due_to_failure,
+    wait_for_condition,
 )
 from minifi_behave.core.minifi_test_context import (
     DEFAULT_MINIFI_CONTAINER_NAME,

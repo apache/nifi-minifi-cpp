@@ -51,10 +51,10 @@ class NifiStyleLogDynamicProperties(FlowFileTransform):
 
     def transform(self, context, flow_file):
         property_value = context.getProperty("Static Property")
-        self.logger.info("Static Property value: {}".format(property_value.getValue()))
+        self.logger.info(f"Static Property value: {property_value.getValue()}")
         dyn_property_value = context.getProperty("Dynamic Property")
         self.logger.info(
-            "Dynamic Property value: {}".format(dyn_property_value.getValue())
+            f"Dynamic Property value: {dyn_property_value.getValue()}"
         )
 
         return FlowFileTransformResult("success", contents="content")

@@ -15,8 +15,8 @@
 
 
 import os
-import inquirer
 
+import inquirer
 from minifi_option import MinifiOptions
 from package_manager import PackageManager
 from system_dependency import install_required
@@ -46,19 +46,19 @@ def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
 
 
 def do_build(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"cmake --build {str(minifi_options.build_dir)} {minifi_options.create_cmake_build_flags_str()}"
+    build_cmd = f"cmake --build {minifi_options.build_dir!s} {minifi_options.create_cmake_build_flags_str()}"
     res = package_manager.run_cmd(build_cmd)
     print("Build was successful" if res else "Build was unsuccessful")
     return res
 
 
 def do_package(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"cmake --build {str(minifi_options.build_dir)} --target package {minifi_options.create_cmake_build_flags_str()}"
+    build_cmd = f"cmake --build {minifi_options.build_dir!s} --target package {minifi_options.create_cmake_build_flags_str()}"
     return package_manager.run_cmd(build_cmd)
 
 
 def do_docker_build(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"cmake --build {str(minifi_options.build_dir)} --target docker"
+    build_cmd = f"cmake --build {minifi_options.build_dir!s} --target docker"
     return package_manager.run_cmd(build_cmd)
 
 

@@ -17,24 +17,24 @@
 
 import logging
 import os
+from pathlib import Path
+
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.ssl_utils import (
+    dump_cert,
+    dump_key,
     make_cert_without_extended_usage,
     make_client_cert,
     make_server_cert,
-    dump_cert,
-    dump_key,
 )
 from minifi_behave.minifi.minifi_flow_definition import MinifiFlowDefinition
-from pathlib import Path
 
 from .container_linux import LinuxContainer
 from .minifi_controller import MinifiController
 from .minifi_protocol import MinifiProtocol
-
 
 CA_CERT_PATHS = [
     "/usr/local/share/certs/ca-root-nss.crt",

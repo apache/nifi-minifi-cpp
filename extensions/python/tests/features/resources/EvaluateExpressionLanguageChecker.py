@@ -14,7 +14,7 @@
 # limitations under the License.
 
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
-from nifiapi.properties import PropertyDescriptor, ExpressionLanguageScope
+from nifiapi.properties import ExpressionLanguageScope, PropertyDescriptor
 
 
 class EvaluateExpressionLanguageChecker(FlowFileTransform):

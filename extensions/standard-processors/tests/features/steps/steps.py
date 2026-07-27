@@ -16,19 +16,19 @@
 #
 
 import humanfriendly
-from behave import step, then, given
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.helpers import wait_for_condition
-from containers.syslog_container import SyslogContainer
+from behave import given, step, then
 from containers.diag_slave_container import DiagSlave
+from containers.syslog_container import SyslogContainer
 from containers.tcp_client_container import TcpClientContainer
-
 from minifi_behave.containers.minifi_protocol import set_up_ssl_properties
+from minifi_behave.core.helpers import wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 from minifi_c2_server_container import MinifiC2Server
 
 

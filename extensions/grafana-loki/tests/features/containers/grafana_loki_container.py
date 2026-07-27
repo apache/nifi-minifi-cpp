@@ -15,12 +15,12 @@
 
 import logging
 
-from minifi_behave.core.helpers import wait_for_condition, retry_check
+from docker.errors import ContainerError
 from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.containers.file import File
+from minifi_behave.core.helpers import retry_check, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.ssl_utils import make_server_cert, dump_cert, dump_key
-from docker.errors import ContainerError
+from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
 
 class GrafanaLokiOptions:
@@ -101,8 +101,8 @@ frontend_worker:
     tls_insecure_skip_verify: true
 """
 
-        grafana_loki_yml_content = """
-auth_enabled: {enable_multi_tenancy}
+        grafana_loki_yml_content = f"""
+auth_enabled: {options.enable_multi_tenancy}
 
 server:
   http_listen_port: 3100
@@ -135,10 +135,7 @@ ruler:
 
 analytics:
   reporting_enabled: false
-""".format(
-            extra_ssl_settings=extra_ssl_settings,
-            enable_multi_tenancy=options.enable_multi_tenancy,
-        )
+"""
 
         self.files.append(
             File(

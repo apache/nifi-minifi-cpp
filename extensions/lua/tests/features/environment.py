@@ -15,8 +15,7 @@
 
 import os
 
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
 
 
 def before_scenario(context, scenario):

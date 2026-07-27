@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import docker
 import os
 
 from minifi_behave.core.hooks import (
@@ -22,6 +21,8 @@ from minifi_behave.core.hooks import (
     get_minifi_container_image,
 )
 from steps.kubernetes_proxy import KubernetesProxy
+
+import docker
 
 
 def before_feature(context, feature):

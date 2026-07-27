@@ -23,12 +23,13 @@ import shlex
 import tarfile
 import tempfile
 import uuid
+from typing import TYPE_CHECKING
+
 from docker.models.networks import Network
 from minifi_behave.containers.container_protocol import ContainerProtocol
 from minifi_behave.containers.directory import Directory
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
-from typing import TYPE_CHECKING
 
 import docker
 
@@ -252,7 +253,7 @@ class LinuxContainer(ContainerProtocol):
             f"xargs -0 -r grep -l -E -- {safe_regex_str}"
         )
 
-        exit_code, output = self.exec_run("sh -c {}".format(shlex.quote(command)))
+        exit_code, output = self.exec_run(f"sh -c {shlex.quote(command)}")
 
         if exit_code != 0:
             logging.debug(
@@ -445,8 +446,7 @@ class LinuxContainer(ContainerProtocol):
             temp_tar_path = os.path.join(temp_dir, "archive.tar")
 
             with open(temp_tar_path, "wb") as f:
-                for chunk in bits:
-                    f.write(chunk)
+                f.writelines(bits)
 
             with tarfile.open(temp_tar_path) as tar:
                 tar.extractall(path=temp_dir)

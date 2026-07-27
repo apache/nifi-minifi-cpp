@@ -19,8 +19,7 @@ import logging
 
 from docker.errors import ContainerError
 from minifi_behave.containers.container_linux import LinuxContainer
-from minifi_behave.core.helpers import run_cmd_in_docker_image
-from minifi_behave.core.helpers import wait_for_condition
+from minifi_behave.core.helpers import run_cmd_in_docker_image, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 

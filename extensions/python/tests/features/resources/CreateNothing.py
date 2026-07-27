@@ -30,4 +30,3 @@ class CreateNothing(FlowFileSource):
 
     def create(self, context):
         context.yield_resources()
-        return None

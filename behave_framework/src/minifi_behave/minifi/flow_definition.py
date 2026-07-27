@@ -20,11 +20,11 @@ from abc import ABC
 from .connection import Connection
 from .controller_service import ControllerService
 from .funnel import Funnel
+from .input_port import InputPort
+from .output_port import OutputPort
 from .parameter_context import ParameterContext
 from .processor import Processor
 from .remote_process_group import RemoteProcessGroup
-from .input_port import InputPort
-from .output_port import OutputPort
 
 
 class FlowDefinition(ABC):

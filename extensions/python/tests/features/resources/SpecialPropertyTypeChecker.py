@@ -14,7 +14,7 @@
 # limitations under the License.
 
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
-from nifiapi.properties import PropertyDescriptor, TimeUnit, DataUnit
+from nifiapi.properties import DataUnit, PropertyDescriptor, TimeUnit
 
 
 class SpecialPropertyTypeChecker(FlowFileTransform):

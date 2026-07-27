@@ -14,14 +14,15 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import List, Dict
-from minifi_native import (
-    ProcessSession,
-    timePeriodStringToMilliseconds,
-    dataSizeStringToBytes,
-)
+
 from minifi_native import FlowFile as CppFlowFile
 from minifi_native import ProcessContext as CppProcessContext
+from minifi_native import (
+    ProcessSession,
+    dataSizeStringToBytes,
+    timePeriodStringToMilliseconds,
+)
+
 from .componentstate import StateManager
 
 
@@ -93,7 +94,7 @@ class MinifiPropertyTypes:
     PORT_TYPE = 6
 
 
-def translateStandardValidatorToMiNiFiPropertype(validators: List[int]) -> int:
+def translateStandardValidatorToMiNiFiPropertype(validators: list[int]) -> int:
     if validators is None or len(validators) == 0 or len(validators) > 1:
         return None
 
@@ -155,11 +156,11 @@ class PropertyDescriptor:
         sensitive: bool = False,
         display_name: str = None,
         default_value: str = None,
-        allowable_values: List[str] = None,
-        dependencies: List[PropertyDependency] = None,
+        allowable_values: list[str] = None,
+        dependencies: list[PropertyDependency] = None,
         expression_language_scope: ExpressionLanguageScope = ExpressionLanguageScope.NONE,
         dynamic: bool = False,
-        validators: List[int] = None,
+        validators: list[int] = None,
         resource_definition: ResourceDefinition = None,
         controller_service_definition: str = None,
     ):
@@ -362,7 +363,7 @@ class ProcessContext:
     def getName(self) -> str:
         return self.cpp_context.getName()
 
-    def getProperties(self) -> Dict[PropertyDescriptor, str]:
+    def getProperties(self) -> dict[PropertyDescriptor, str]:
         properties = dict()
         cpp_properties = self.cpp_context.getProperties()
 

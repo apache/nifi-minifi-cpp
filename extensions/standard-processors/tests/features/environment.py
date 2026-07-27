@@ -15,9 +15,9 @@
 import os
 import platform
 
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
+
 import docker
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
 
 # These hooks are executed by behave before and after each scenario
 # The common_before_scenario and common_after_scenario must be called for proper setup and tear down

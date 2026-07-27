@@ -19,18 +19,18 @@ import string
 
 import humanfriendly
 from behave import step, then
-
+from containers.kinesis_server_container import KinesisServerContainer
+from containers.s3_server_container import S3ServerContainer
 from minifi_behave.containers.directory import Directory
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
+from minifi_behave.core.helpers import log_due_to_failure, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.minifi.processor import Processor
-from minifi_behave.core.helpers import wait_for_condition, log_due_to_failure
-
-from containers.s3_server_container import S3ServerContainer
-from containers.kinesis_server_container import KinesisServerContainer
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @step("a {processor_name} processor set up to communicate with an s3 server")

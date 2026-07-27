@@ -14,15 +14,16 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import List
+
+from minifi_native import OutputStream, ProcessContext, Processor, ProcessSession
+
 from .properties import (
     ExpressionLanguageScope,
+    MinifiPropertyTypes,
     PropertyDescriptor,
     translateStandardValidatorToMiNiFiPropertype,
-    MinifiPropertyTypes,
 )
 from .properties import ProcessContext as ProcessContextProxy
-from minifi_native import OutputStream, Processor, ProcessContext, ProcessSession
 
 
 class WriteCallback:
@@ -86,9 +87,7 @@ class ProcessorBase(ABC):
                 and property_type_code != MinifiPropertyTypes.NON_BLANK_TYPE
             ):
                 self.logger.warn(
-                    "Property '{}' has validators defined, but since it also supports Expression Language, the validators will be ignored.".format(
-                        property.name
-                    )
+                    f"Property '{property.name}' has validators defined, but since it also supports Expression Language, the validators will be ignored."
                 )
                 property_type_code = None
 
@@ -119,5 +118,5 @@ class ProcessorBase(ABC):
     def onTrigger(self, context: ProcessContext, session: ProcessSession):
         pass
 
-    def getPropertyDescriptors(self) -> List[PropertyDescriptor]:
+    def getPropertyDescriptors(self) -> list[PropertyDescriptor]:
         return []

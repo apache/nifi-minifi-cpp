@@ -14,19 +14,19 @@
 # limitations under the License.
 
 from behave import given
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-
+from minifi_as_pod_in_kubernetes_cluster import MinifiAsPodInKubernetesCluster
 from minifi_behave.core.minifi_test_context import (
     DEFAULT_MINIFI_CONTAINER_NAME,
     MinifiTestContext,
 )
-from minifi_behave.minifi.processor import Processor
 from minifi_behave.minifi.controller_service import ControllerService
-from minifi_as_pod_in_kubernetes_cluster import MinifiAsPodInKubernetesCluster
+from minifi_behave.minifi.processor import Processor
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 def __ensure_kubernetes_cluster(context: MinifiTestContext):

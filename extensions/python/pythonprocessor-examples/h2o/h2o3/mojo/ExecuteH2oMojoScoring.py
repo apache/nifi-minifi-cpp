@@ -51,10 +51,11 @@ else:
 
 """
 
-import h2o
 import codecs
-import pandas as pd  # noqa: F401
+
 import datatable as dt
+import h2o
+import pandas as pd  # noqa: F401
 
 mojo_model = None
 
@@ -132,7 +133,7 @@ def onSchedule(context):
     mojo_model = h2o.import_mojo(mojo_model_filepath)
 
 
-class ContentExtract(object):
+class ContentExtract:
     """ContentExtract callback class is defined for reading streams of data through the session
     and has a process function that accepts the input stream
     """
@@ -146,7 +147,7 @@ class ContentExtract(object):
         return len(self.content)
 
 
-class ContentWrite(object):
+class ContentWrite:
     """ContentWrite callback class is defined for writing streams of data through the session"""
 
     def __init__(self, data):
@@ -199,8 +200,6 @@ def onTrigger(context, session):
             ff_attr_name = pred_header[i] + "_pred_0"
             flow_file.addAttribute(ff_attr_name, str(preds_pd_df.at[0, pred_header[i]]))
             log.info(
-                "getAttribute({}): {}".format(
-                    ff_attr_name, flow_file.getAttribute(ff_attr_name)
-                )
+                f"getAttribute({ff_attr_name}): {flow_file.getAttribute(ff_attr_name)}"
             )
         session.transfer(flow_file, REL_SUCCESS)

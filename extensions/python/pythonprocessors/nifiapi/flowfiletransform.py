@@ -15,7 +15,9 @@
 
 import traceback
 from abc import abstractmethod
+
 from minifi_native import ProcessContext, ProcessSession
+
 from .processorbase import ProcessorBase, WriteCallback
 from .properties import FlowFile as FlowFileProxy
 from .properties import ProcessContext as ProcessContextProxy
@@ -54,9 +56,7 @@ class FlowFileTransform(ProcessorBase):
             result = self.transform(context_proxy, flow_file_proxy)
         except Exception:
             self.logger.error(
-                "Failed to transform flow file due to error:\n{}".format(
-                    traceback.format_exc()
-                )
+                f"Failed to transform flow file due to error:\n{traceback.format_exc()}"
             )
             session.remove(flow_file)
             session.transfer(original_flow_file, self.REL_FAILURE)
