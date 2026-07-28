@@ -236,12 +236,12 @@ def _get_activate_venv_path():
 def _minifi_setup_env_str(vs_where_location: VsWhereLocation) -> str:
     return f"""
 call refreshenv
+call {_get_activate_venv_path()}
 call {_get_vs_dev_cmd(vs_where_location)}
 setlocal EnableDelayedExpansion
   set PATH=!PATH:C:\\Strawberry\\c\\bin;=!;C:\\Program Files\\NASM;
 endlocal & set PATH=%PATH%
 set build_platform=x64
-call {_get_activate_venv_path()}
 
 """
 
