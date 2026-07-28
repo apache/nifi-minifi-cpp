@@ -3680,6 +3680,34 @@
             },
             {
                 "propertyDescriptors": {
+                    "Max Batch Size": {
+                        "name": "Max Batch Size",
+                        "description": "The maximum number of flow files to process at a time. If unset, all FlowFiles will be processed at once.",
+                        "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    }
+                },
+                "inputRequirement": "INPUT_REQUIRED",
+                "isSingleThreaded": "false",
+                "supportedRelationships": [
+                    {
+                        "name": "enrichment",
+                        "description": "A clone of the incoming FlowFile will be routed to this relationship, after adding appropriate attributes."
+                    },
+                    {
+                        "name": "original",
+                        "description": "The incoming FlowFile will be routed to this relationship, after adding appropriate attributes."
+                    }
+                ],
+                "typeDescription": "Used in conjunction with the JoinEnrichmentAttributes processor, this processor is responsible for adding the attributes that are necessary for the JoinEnrichmentAttributes processor to perform its function. Each incoming FlowFile will be cloned. The original FlowFile will have appropriate attributes added and then be transferred to the 'original' relationship. The clone will have appropriate attributes added and then be routed to the 'enrichment' relationship.",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "org.apache.nifi.minifi.standard.ForkEnrichment"
+            },
+            {
+                "propertyDescriptors": {
                     "Batch Size": {
                         "name": "Batch Size",
                         "description": "The number of FlowFiles to be transferred in each invocation",
@@ -4564,6 +4592,50 @@
                 "supportsDynamicRelationships": "false",
                 "supportsDynamicProperties": "false",
                 "type": "org.apache.nifi.minifi.processors.InvokeHTTP"
+            },
+            {
+                "propertyDescriptors": {
+                    "Max Batch Size": {
+                        "name": "Max Batch Size",
+                        "description": "The maximum number of flow files to process at a time. If unset, all FlowFiles will be processed at once.",
+                        "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    },
+                    "Timeout": {
+                        "name": "Timeout",
+                        "description": "Specifies the maximum amount of time to wait for the second FlowFile once the first arrives at the processor, after which point the first FlowFile will be routed to the 'timeout' relationship.",
+                        "validator": "TIME_PERIOD_VALIDATOR",
+                        "required": "false",
+                        "sensitive": "false",
+                        "expressionLanguageScope": "NONE"
+                    }
+                },
+                "inputRequirement": "INPUT_REQUIRED",
+                "isSingleThreaded": "true",
+                "supportedRelationships": [
+                    {
+                        "name": "invalid",
+                        "description": "Any FlowFiles without the requisite attributes will be routed here"
+                    },
+                    {
+                        "name": "joined",
+                        "description": "The resultant FlowFile with Records joined together from both the original and enrichment FlowFiles will be routed to this relationship"
+                    },
+                    {
+                        "name": "original",
+                        "description": "Both of the incoming FlowFiles ('original' and 'enrichment') will be routed to this Relationship. I.e., this is the 'original' version of both of these FlowFiles."
+                    },
+                    {
+                        "name": "timeout",
+                        "description": "If one of the incoming FlowFiles (i.e., the 'original' FlowFile or the 'enrichment' FlowFile) arrives to this Processor but the other does not arrive within the configured Timeout period, the FlowFile that did arrive is routed to this relationship."
+                    }
+                ],
+                "typeDescription": "Rejoins the forked FlowFiles coming from ForkEnrichment processor, the resulting FlowFile will have the Original's content and all attributes from both of them (prioritizing Enrichment's).",
+                "supportsDynamicRelationships": "false",
+                "supportsDynamicProperties": "false",
+                "type": "org.apache.nifi.minifi.standard.JoinEnrichmentAttributes"
             },
             {
                 "propertyDescriptors": {
