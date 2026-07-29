@@ -1,21 +1,12 @@
-import glob
 import os
+import glob
 import shutil
-from typing import ClassVar
 
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
-from conan.tools.files import (
-    collect_libs,
-    copy,
-    export_conandata_patches,
-    get,
-    patch,
-    rm,
-    rmdir,
-)
+from conan.tools.files import patch, collect_libs, copy, export_conandata_patches, get, rm, rmdir
 from conan.tools.microsoft import check_min_vs, is_msvc, is_msvc_static_runtime
 from conan.tools.scm import Version
 
@@ -31,7 +22,7 @@ class RocksDBConan(ConanFile):
     topics = ("database", "leveldb", "facebook", "key-value")
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
-    options: ClassVar[dict] = {
+    options = {
         "shared": [True, False],
         "fPIC": [True, False],
         "lite": [True, False],
@@ -46,7 +37,7 @@ class RocksDBConan(ConanFile):
         "enable_sse": [False, "sse42", "avx2"],
         "use_rtti": [True, False],
     }
-    default_options: ClassVar[dict] = {
+    default_options = {
         "shared": False,
         "fPIC": True,
         "lite": False,
@@ -68,17 +59,13 @@ class RocksDBConan(ConanFile):
 
     @property
     def _compilers_minimum_version(self):
-        return (
-            {}
-            if self._min_cppstd == "11"
-            else {
+        return {} if self._min_cppstd == "11" else {
                 "apple-clang": "10",
                 "clang": "7",
                 "gcc": "7",
                 "msvc": "191",
                 "Visual Studio": "15",
             }
-        )
 
     def export_sources(self):
         export_conandata_patches(self)
@@ -120,13 +107,8 @@ class RocksDBConan(ConanFile):
         if self.settings.compiler.get_safe("cppstd"):
             check_min_cppstd(self, self._min_cppstd)
 
-        minimum_version = self._compilers_minimum_version.get(
-            str(self.settings.compiler), False
-        )
-        if (
-            minimum_version
-            and Version(self.settings.compiler.version) < minimum_version
-        ):
+        minimum_version = self._compilers_minimum_version.get(str(self.settings.compiler), False)
+        if minimum_version and Version(self.settings.compiler.version) < minimum_version:
             raise ConanInvalidConfiguration(
                 f"{self.ref} requires C++{self._min_cppstd}, which your compiler does not support."
             )
@@ -136,15 +118,11 @@ class RocksDBConan(ConanFile):
 
         check_min_vs(self, "191")
 
-        if (
-            self.version == "6.20.3"
-            and self.settings.os == "Linux"
-            and self.settings.compiler == "gcc"
-            and Version(self.settings.compiler.version) < "5"
-        ):
-            raise ConanInvalidConfiguration(
-                "Rocksdb 6.20.3 is not compilable with gcc <5."
-            )  # See https://github.com/facebook/rocksdb/issues/3522
+        if self.version == "6.20.3" and \
+           self.settings.os == "Linux" and \
+           self.settings.compiler == "gcc" and \
+           Version(self.settings.compiler.version) < "5":
+            raise ConanInvalidConfiguration("Rocksdb 6.20.3 is not compilable with gcc <5.") # See https://github.com/facebook/rocksdb/issues/3522
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
@@ -170,12 +148,8 @@ class RocksDBConan(ConanFile):
         tc.variables["WITH_TBB"] = self.options.get_safe("with_tbb", False)
         tc.variables["WITH_JEMALLOC"] = self.options.with_jemalloc
         tc.variables["ROCKSDB_BUILD_SHARED"] = self.options.shared
-        tc.variables["ROCKSDB_LIBRARY_EXPORTS"] = (
-            self.settings.os == "Windows" and self.options.shared
-        )
-        tc.variables["ROCKSDB_DLL"] = (
-            self.settings.os == "Windows" and self.options.shared
-        )
+        tc.variables["ROCKSDB_LIBRARY_EXPORTS"] = self.settings.os == "Windows" and self.options.shared
+        tc.variables["ROCKSDB_DLL" ] = self.settings.os == "Windows" and self.options.shared
         tc.variables["USE_RTTI"] = self.options.use_rtti
         if not bool(self.options.enable_sse):
             tc.variables["PORTABLE"] = True
@@ -200,13 +174,7 @@ class RocksDBConan(ConanFile):
 
     def build(self):
         for patch_data in self.conan_data.get("patches", {}).get(self.version, []):
-            patch(
-                self,
-                patch_file=patch_data["patch_file"],
-                base_path=self.source_folder,
-                strip=0,
-                fuzz=True,
-            )
+            patch(self, patch_file=patch_data["patch_file"], base_path=self.source_folder, strip=0, fuzz=True)
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
@@ -218,9 +186,7 @@ class RocksDBConan(ConanFile):
                 os.remove(lib)
 
     def _remove_cpp_headers(self):
-        for path in glob.glob(
-            os.path.join(self.package_folder, "include", "rocksdb", "*")
-        ):
+        for path in glob.glob(os.path.join(self.package_folder, "include", "rocksdb", "*")):
             if path != os.path.join(self.package_folder, "include", "rocksdb", "c.h"):
                 if os.path.isfile(path):
                     os.remove(path)
@@ -228,23 +194,13 @@ class RocksDBConan(ConanFile):
                     shutil.rmtree(path)
 
     def package(self):
-        copy(
-            self,
-            "COPYING",
-            src=self.source_folder,
-            dst=os.path.join(self.package_folder, "licenses"),
-        )
-        copy(
-            self,
-            "LICENSE*",
-            src=self.source_folder,
-            dst=os.path.join(self.package_folder, "licenses"),
-        )
+        copy(self, "COPYING", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
+        copy(self, "LICENSE*", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
         cmake = CMake(self)
         cmake.install()
         if self.options.shared:
             self._remove_static_libraries()
-            self._remove_cpp_headers()  # Force stable ABI for shared libraries
+            self._remove_cpp_headers() # Force stable ABI for shared libraries
         rmdir(self, os.path.join(self.package_folder, "lib", "cmake"))
         rmdir(self, os.path.join(self.package_folder, "lib", "pkgconfig"))
 
@@ -266,15 +222,9 @@ class RocksDBConan(ConanFile):
         # TODO: to remove in conan v2 once cmake_find_package* generators removed
         self.cpp_info.names["cmake_find_package"] = "RocksDB"
         self.cpp_info.names["cmake_find_package_multi"] = "RocksDB"
-        self.cpp_info.components["librocksdb"].names["cmake_find_package"] = (
-            cmake_target
-        )
-        self.cpp_info.components["librocksdb"].names["cmake_find_package_multi"] = (
-            cmake_target
-        )
-        self.cpp_info.components["librocksdb"].set_property(
-            "cmake_target_name", f"RocksDB::{cmake_target}"
-        )
+        self.cpp_info.components["librocksdb"].names["cmake_find_package"] = cmake_target
+        self.cpp_info.components["librocksdb"].names["cmake_find_package_multi"] = cmake_target
+        self.cpp_info.components["librocksdb"].set_property("cmake_target_name", f"RocksDB::{cmake_target}")
         if self.options.with_gflags:
             self.cpp_info.components["librocksdb"].requires.append("gflags::gflags")
         if self.options.with_snappy:
