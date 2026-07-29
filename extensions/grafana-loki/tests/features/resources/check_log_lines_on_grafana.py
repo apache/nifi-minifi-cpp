@@ -14,8 +14,9 @@
 # limitations under the License.
 
 import sys
-import requests
 import time
+
+import requests
 
 
 def wait_for(action, timeout_seconds, *args, **kwargs) -> bool:
@@ -30,7 +31,9 @@ def wait_for(action, timeout_seconds, *args, **kwargs) -> bool:
     return False
 
 
-def verify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, tenant_id: str) -> bool:
+def verify_log_lines_on_grafana_loki(
+    host: str, lines: list[str], ssl: bool, tenant_id: str
+) -> bool:
     labels = '{job="minifi"}'
     prefix = "http://"
     if ssl:
@@ -40,14 +43,18 @@ def verify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, ten
 
     headers = None
     if tenant_id:
-        headers = {'X-Scope-OrgID': tenant_id}
+        headers = {"X-Scope-OrgID": tenant_id}
 
     response = requests.get(query_url, verify=False, timeout=30, headers=headers)
     if response.status_code < 200 or response.status_code >= 300:
         return False
 
     json_response = response.json()
-    if "data" not in json_response or "result" not in json_response["data"] or len(json_response["data"]["result"]) < 1:
+    if (
+        "data" not in json_response
+        or "result" not in json_response["data"]
+        or len(json_response["data"]["result"]) < 1
+    ):
         return False
 
     result = json_response["data"]["result"][0]
@@ -60,8 +67,13 @@ def verify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, ten
     return True
 
 
-def wait_for_lines_on_grafana_loki(host: str, lines: list[str], timeout_seconds: int, ssl: bool, tenant_id: str) -> bool:
-    return wait_for(lambda: verify_log_lines_on_grafana_loki(host, lines, ssl, tenant_id), timeout_seconds)
+def wait_for_lines_on_grafana_loki(
+    host: str, lines: list[str], timeout_seconds: int, ssl: bool, tenant_id: str
+) -> bool:
+    return wait_for(
+        lambda: verify_log_lines_on_grafana_loki(host, lines, ssl, tenant_id),
+        timeout_seconds,
+    )
 
 
 if __name__ == "__main__":
@@ -75,5 +87,7 @@ if __name__ == "__main__":
     tenant_id = ""
     if len(sys.argv) >= 6:
         tenant_id = sys.argv[5]
-    if not wait_for_lines_on_grafana_loki(host, lines.split(";"), timeout_seconds, ssl, tenant_id):
+    if not wait_for_lines_on_grafana_loki(
+        host, lines.split(";"), timeout_seconds, ssl, tenant_id
+    ):
         sys.exit(1)

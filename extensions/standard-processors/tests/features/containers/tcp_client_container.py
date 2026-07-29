@@ -27,7 +27,12 @@ class TcpClientContainer(LinuxContainer):
             f"nc minifi-primary-{test_context.scenario_id} 10254; "
             "sleep 1; done'"
         )
-        super().__init__("alpine:3.17.3", f"tcp-client-{test_context.scenario_id}", test_context.network, cmd)
+        super().__init__(
+            "alpine:3.17.3",
+            f"tcp-client-{test_context.scenario_id}",
+            test_context.network,
+            cmd,
+        )
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)
@@ -36,5 +41,5 @@ class TcpClientContainer(LinuxContainer):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=30,
             bail_condition=lambda: self.exited,
-            context=context
+            context=context,
         )

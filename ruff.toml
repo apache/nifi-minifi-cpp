@@ -1,0 +1,15 @@
+builtins = ["log", "REL_SUCCESS", "REL_FAILURE", "REL_ORIGINAL", "raw_input"]
+
+extend-exclude = [
+    "thirdparty",
+    "cmake-build-*",
+]
+
+[lint]
+# BLE001 (blind-except) is intentional at framework boundaries
+ignore = ["BLE001"]
+
+[lint.per-file-ignores]
+# G010 (logging-warn) is intentional in our Python code, because NiFi logging syntax differs
+"extensions/python/*" = ["G010"]
+"examples/scripts/python/*" = ["G010"]

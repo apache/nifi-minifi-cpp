@@ -14,7 +14,7 @@
 #  limitations under the License.
 
 from enum import Enum
-from typing import Dict
+
 from minifi_native import StateManager as CppFlowFile
 
 
@@ -24,7 +24,7 @@ class Scope(Enum):
 
 
 class StateMap:
-    def __init__(self, state_map: Dict[str, str]):
+    def __init__(self, state_map: dict[str, str]):
         self.state_map = state_map if state_map is not None else {}
 
     def getStateVersion(self) -> int:
@@ -36,7 +36,7 @@ class StateMap:
 
         return self.state_map[key]
 
-    def toMap(self) -> Dict[str, str]:
+    def toMap(self) -> dict[str, str]:
         return self.state_map
 
 
@@ -48,7 +48,7 @@ class StateManager:
     def __init__(self, cpp_state_manager: CppFlowFile):
         self.cpp_state_manager = cpp_state_manager
 
-    def setState(self, state: Dict[str, str], scope: Scope) -> bool:
+    def setState(self, state: dict[str, str], scope: Scope) -> bool:
         try:
             return self.cpp_state_manager.set(state)
         except Exception as exception:
@@ -60,7 +60,9 @@ class StateManager:
         except Exception as exception:
             raise StateException("Get state failed") from exception
 
-    def replace(self, old_state: StateMap, new_values: Dict[str, str], scope: Scope) -> bool:
+    def replace(
+        self, old_state: StateMap, new_values: dict[str, str], scope: Scope
+    ) -> bool:
         try:
             return self.cpp_state_manager.replace(old_state.toMap(), new_values)
         except Exception as exception:

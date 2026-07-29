@@ -13,16 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import docker
-from containers.grafana_loki_container import GrafanaLokiContainer
 from pathlib import Path
+
+from containers.grafana_loki_container import GrafanaLokiContainer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
+
+import docker
 
 
 def before_all(context):
-    check_log_lines_path = Path(__file__).resolve().parent / "resources" / "check_log_lines_on_grafana.py"
+    check_log_lines_path = (
+        Path(__file__).resolve().parent / "resources" / "check_log_lines_on_grafana.py"
+    )
     check_log_lines_content = None
     with open(check_log_lines_path, "rb") as f:
         check_log_lines_content = f.read()
@@ -33,13 +36,15 @@ COPY check_log_lines_on_grafana.py /scripts/check_log_lines_on_grafana.py"""
     grafana_helper_builder = DockerImageBuilder(
         image_tag="minifi-grafana-loki-helper:latest",
         dockerfile_content=dockerfile,
-        files_on_context={"check_log_lines_on_grafana.py": check_log_lines_content}
+        files_on_context={"check_log_lines_on_grafana.py": check_log_lines_content},
     )
     grafana_helper_builder.build()
 
     reverse_proxy_builder = DockerImageBuilder(
         image_tag="minifi-reverse-proxy:latest",
-        build_context_path=str(Path(__file__).resolve().parent / "resources" / "reverse-proxy")
+        build_context_path=str(
+            Path(__file__).resolve().parent / "resources" / "reverse-proxy"
+        ),
     )
     reverse_proxy_builder.build()
     docker.from_env().images.pull(GrafanaLokiContainer.IMAGE)

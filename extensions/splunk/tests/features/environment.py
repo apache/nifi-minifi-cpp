@@ -14,11 +14,11 @@
 # limitations under the License.
 
 import platform
-import docker
 
 from containers.splunk_container import SplunkContainer
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
+
+import docker
 
 
 def before_feature(context, feature):

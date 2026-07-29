@@ -13,45 +13,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nifiapi.properties import PropertyDescriptor
-from nifiapi.properties import StandardValidators
-from nifiapi.properties import ExpressionLanguageScope
-from nifiapi.recordtransform import RecordTransformResult
-from nifiapi.recordtransform import RecordTransform
+from typing import ClassVar
+
+from nifiapi.properties import (
+    ExpressionLanguageScope,
+    PropertyDescriptor,
+    StandardValidators,
+)
+from nifiapi.recordtransform import RecordTransform, RecordTransformResult
 
 
 class SetRecordField(RecordTransform):
     class Java:
-        implements = ['org.apache.nifi.python.processor.RecordTransform']
+        implements: ClassVar[list] = [
+            "org.apache.nifi.python.processor.RecordTransform"
+        ]
 
     class ProcessorDetails:
-        version = '0.0.1-SNAPSHOT'
+        version = "0.0.1-SNAPSHOT"
 
     def __init__(self, **kwargs):
         super().__init__()
 
     def transform(self, context, record, schema, attributemap):
         # Update dictionary based on the dynamic properties provided by user
-        for key in context.getProperties().keys():
+        for key in context.getProperties():
             if not key.dynamic:
                 continue
 
             propname = key.name
-            record[propname] = context.getProperty(propname).evaluateAttributeExpressions(attributemap).getValue()
+            record[propname] = (
+                context.getProperty(propname)
+                .evaluateAttributeExpressions(attributemap)
+                .getValue()
+            )
 
         # Determine the partition
-        if 'group' in record:
-            partition = {'group': record['group']}
+        if "group" in record:
+            partition = {"group": record["group"]}
         else:
             partition = None
 
         # Return the result
-        return RecordTransformResult(record=record, relationship='success', partition=partition)
+        return RecordTransformResult(
+            record=record, relationship="success", partition=partition
+        )
 
     def getDynamicPropertyDescriptor(self, name):
         return PropertyDescriptor(
             name=name,
             description="Specifies the value to set for the '" + name + "' field",
             expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES,
-            validators=[StandardValidators.ALWAYS_VALID]
+            validators=[StandardValidators.ALWAYS_VALID],
         )

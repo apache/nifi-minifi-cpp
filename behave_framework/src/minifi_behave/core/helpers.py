@@ -17,13 +17,16 @@
 
 from __future__ import annotations
 
+import functools
 import logging
 import time
-import functools
 from collections.abc import Callable
 
-import docker
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+
+import docker
+
+logger = logging.getLogger(__name__)
 
 
 def log_due_to_failure(context: MinifiTestContext | None):
@@ -32,19 +35,25 @@ def log_due_to_failure(context: MinifiTestContext | None):
             container.log_app_output()
 
 
-def check_condition_after_wait(condition: Callable[[], bool], context: MinifiTestContext | None, wait_time: int) -> bool:
+def check_condition_after_wait(
+    condition: Callable[[], bool], context: MinifiTestContext | None, wait_time: int
+) -> bool:
     time.sleep(wait_time)
     if not condition():
-        logging.warning("Condition not met after wait")
+        logger.warning("Condition not met after wait")
         log_due_to_failure(context)
         return False
     return True
 
 
-def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, bail_condition: Callable[[], bool],
-                       context: MinifiTestContext | None) -> bool:
+def wait_for_condition(
+    condition: Callable[[], bool],
+    timeout_seconds: float,
+    bail_condition: Callable[[], bool],
+    context: MinifiTestContext | None,
+) -> bool:
     if bail_condition():
-        logging.warning("Bail condition evaluated to 'True', aborting wait.")
+        logger.warning("Bail condition evaluated to 'True', aborting wait.")
         log_due_to_failure(context)
         return False
     start_time = time.monotonic()
@@ -53,7 +62,7 @@ def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, ba
             if condition():
                 return True
             if bail_condition():
-                logging.warning("Bail condition evaluated to 'True', aborting wait.")
+                logger.warning("Bail condition evaluated to 'True', aborting wait.")
                 log_due_to_failure(context)
                 return False
             remaining_time = timeout_seconds - (time.monotonic() - start_time)
@@ -61,23 +70,27 @@ def wait_for_condition(condition: Callable[[], bool], timeout_seconds: float, ba
             if sleep_time > 0:
                 time.sleep(sleep_time)
     except Exception as ex:
-        logging.warning("Exception while waiting for condition: %s", ex)
+        logger.warning("Exception while waiting for condition: %s", ex)
         log_due_to_failure(context)
         return False
-    logging.warning("Timed out after %d seconds while waiting for condition", timeout_seconds)
+    logger.warning(
+        f"Timed out after {timeout_seconds} seconds while waiting for condition"
+    )
     log_due_to_failure(context)
     return False
 
 
 def run_cmd_in_docker_image(image_name: str, cmd: str | list, network: str) -> str:
     client = docker.from_env()
-    output = client.containers.run(image=image_name,
-                                   command=cmd,
-                                   remove=True,
-                                   stdout=True,
-                                   stderr=True,
-                                   network=network,
-                                   detach=False)
+    output = client.containers.run(
+        image=image_name,
+        command=cmd,
+        remove=True,
+        stdout=True,
+        stderr=True,
+        network=network,
+        detach=False,
+    )
     return output.decode("utf-8")
 
 
@@ -90,6 +103,7 @@ def retry_check(max_tries: int = 5, retry_interval_seconds: int = 1):
     Decorator for retrying a checker function that returns a boolean. The decorated function is called repeatedly until it returns True
     or the maximum number of attempts is reached. The maximum number of attempts and the interval between attempts in seconds can be configured.
     """
+
     def retry_check_func(func):
         @functools.wraps(func)
         def retry_wrapper(*args, **kwargs):
@@ -99,5 +113,7 @@ def retry_check(max_tries: int = 5, retry_interval_seconds: int = 1):
                 if i < max_tries - 1:
                     time.sleep(retry_interval_seconds)
             return False
+
         return retry_wrapper
+
     return retry_check_func

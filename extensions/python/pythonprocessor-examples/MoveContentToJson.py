@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -19,7 +18,7 @@ import json
 
 class ReadCallback:
     def process(self, input_stream):
-        self.content = codecs.getreader('utf-8')(input_stream).read()
+        self.content = codecs.getreader("utf-8")(input_stream).read()
         return len(self.content)
 
 
@@ -29,12 +28,14 @@ class WriteToJsonCallback:
 
     def process(self, output_stream):
         json_content = json.dumps({"content": self.content})
-        output_stream.write(json_content.encode('utf-8'))
+        output_stream.write(json_content.encode("utf-8"))
         return len(json_content)
 
 
 def describe(processor):
-    processor.setDescription("Moves content of flow file to JSON file under 'content' key")
+    processor.setDescription(
+        "Moves content of flow file to JSON file under 'content' key"
+    )
 
 
 def onInitialize(processor):

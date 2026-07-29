@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -14,23 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import codecs
+
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
 def describe(processor):
-    processor.setDescription("Provides a sentiment analysis of the content within the flow file")
+    processor.setDescription(
+        "Provides a sentiment analysis of the content within the flow file"
+    )
 
 
 def onInitialize(processor):
     processor.setSupportsDynamicProperties()
 
 
-class VaderSentiment(object):
+class VaderSentiment:
     def __init__(self):
         self.content = None
 
     def process(self, input_stream):
-        self.content = codecs.getreader('utf-8')(input_stream).read()
+        self.content = codecs.getreader("utf-8")(input_stream).read()
         return len(self.content)
 
 
@@ -41,7 +43,7 @@ def onTrigger(context, session):
         session.read(flow_file, sentiment)
         analyzer = SentimentIntensityAnalyzer()
         vs = analyzer.polarity_scores(sentiment.content)
-        flow_file.addAttribute("positive", str(vs['pos']))
-        flow_file.addAttribute("negative", str(vs['neg']))
-        flow_file.addAttribute("neutral", str(vs['neu']))
+        flow_file.addAttribute("positive", str(vs["pos"]))
+        flow_file.addAttribute("negative", str(vs["neg"]))
+        flow_file.addAttribute("neutral", str(vs["neu"]))
         session.transfer(flow_file, REL_SUCCESS)

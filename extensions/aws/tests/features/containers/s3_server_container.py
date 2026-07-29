@@ -20,12 +20,18 @@ from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
+logger = logging.getLogger(__name__)
+
 
 class S3ServerContainer(LinuxContainer):
     IMAGE = "adobe/s3mock:3.12.0"
 
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__(S3ServerContainer.IMAGE, f"s3-server-{test_context.scenario_id}", test_context.network)
+        super().__init__(
+            S3ServerContainer.IMAGE,
+            f"s3-server-{test_context.scenario_id}",
+            test_context.network,
+        )
         self.environment.append("initialBuckets=test_bucket")
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
@@ -35,10 +41,22 @@ class S3ServerContainer(LinuxContainer):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
-            context=context)
+            context=context,
+        )
 
     def check_s3_server_object_data(self, test_data):
-        (code, output) = self.exec_run(["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
+        (code, output) = self.exec_run(
+            [
+                "find",
+                "/s3mockroot/test_bucket",
+                "-mindepth",
+                "1",
+                "-maxdepth",
+                "1",
+                "-type",
+                "d",
+            ]
+        )
         if code != 0:
             return False
         s3_mock_dir = output.strip()
@@ -46,7 +64,18 @@ class S3ServerContainer(LinuxContainer):
         return code == 0 and file_data == test_data
 
     def check_s3_server_object_hash(self, expected_file_hash: str):
-        (code, output) = self.exec_run(["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
+        (code, output) = self.exec_run(
+            [
+                "find",
+                "/s3mockroot/test_bucket",
+                "-mindepth",
+                "1",
+                "-maxdepth",
+                "1",
+                "-type",
+                "d",
+            ]
+        )
         if code != 0:
             return False
         dir_candidates = output.split("\n")
@@ -57,19 +86,49 @@ class S3ServerContainer(LinuxContainer):
         (code, md5_output) = self.exec_run(["md5sum", s3_mock_dir + "/binaryData"])
         if code != 0:
             return False
-        file_hash = md5_output.split(' ')[0].strip()
+        file_hash = md5_output.split(" ")[0].strip()
         return file_hash == expected_file_hash
 
-    def check_s3_server_object_metadata(self, content_type="application/octet-stream", metadata=dict()):
-        (code, output) = self.exec_run(["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
+    def check_s3_server_object_metadata(
+        self, content_type="application/octet-stream", metadata=None
+    ):
+        if metadata is None:
+            metadata = {}
+        (code, output) = self.exec_run(
+            [
+                "find",
+                "/s3mockroot/test_bucket",
+                "-mindepth",
+                "1",
+                "-maxdepth",
+                "1",
+                "-type",
+                "d",
+            ]
+        )
         if code != 0:
             return False
         s3_mock_dir = output.strip()
         (code, output) = self.exec_run(["cat", s3_mock_dir + "/objectMetadata.json"])
         server_metadata = json.loads(output)
-        return code == 0 and server_metadata["contentType"] == content_type and metadata == server_metadata["userMetadata"]
+        return (
+            code == 0
+            and server_metadata["contentType"] == content_type
+            and metadata == server_metadata["userMetadata"]
+        )
 
     def is_s3_bucket_empty(self):
-        (code, output) = self.exec_run(["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
-        logging.info(f"is_s3_bucket_empty: {output}")
+        (code, output) = self.exec_run(
+            [
+                "find",
+                "/s3mockroot/test_bucket",
+                "-mindepth",
+                "1",
+                "-maxdepth",
+                "1",
+                "-type",
+                "d",
+            ]
+        )
+        logger.info(f"is_s3_bucket_empty: {output}")
         return code == 0 and not output.strip()

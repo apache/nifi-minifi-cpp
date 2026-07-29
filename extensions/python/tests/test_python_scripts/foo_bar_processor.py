@@ -15,12 +15,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import foo
 import bar
+import foo
 
 
 def describe(processor):
-    processor.setDescription("Processor used for testing in ExecutePythonProcessorTests.cpp")
+    processor.setDescription(
+        "Processor used for testing in ExecutePythonProcessorTests.cpp"
+    )
 
 
 def onTrigger(context, session):

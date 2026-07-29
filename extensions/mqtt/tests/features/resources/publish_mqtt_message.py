@@ -12,8 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import paho.mqtt.client as mqtt
 import sys
+
+import paho.mqtt.client as mqtt
 
 
 def publish_test_mqtt_message(host: str, topic: str, message: str):

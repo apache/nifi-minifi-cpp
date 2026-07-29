@@ -16,12 +16,11 @@
 import datetime
 
 from cryptography import x509
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from cryptography.x509 import Certificate, ExtendedKeyUsage
-from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
+from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 
 def gen_cert() -> tuple[Certificate, RSAPrivateKey]:
@@ -41,7 +40,9 @@ def gen_cert() -> tuple[Certificate, RSAPrivateKey]:
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
-        .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365))
+        .not_valid_after(
+            datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365)
+        )
         .sign(key, hashes.SHA256())
     )
 
@@ -64,8 +65,12 @@ def make_self_signed_cert(common_name: str) -> tuple[Certificate, RSAPrivateKey]
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
-        .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3650))
-        .add_extension(x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False)
+        .not_valid_after(
+            datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3650)
+        )
+        .add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False
+        )
         .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
         .sign(key, hashes.SHA256())
     )
@@ -94,7 +99,9 @@ def _make_cert(
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
-        .not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3650))
+        .not_valid_after(
+            datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3650)
+        )
         .add_extension(
             x509.BasicConstraints(ca=False, path_length=None),
             critical=True,
@@ -110,13 +117,17 @@ def _make_cert(
     )
 
     if extended_key_usage:
-        builder = builder.add_extension(x509.ExtendedKeyUsage(extended_key_usage), critical=False)
+        builder = builder.add_extension(
+            x509.ExtendedKeyUsage(extended_key_usage), critical=False
+        )
 
     cert = builder.sign(ca_key, hashes.SHA256())
     return cert, key
 
 
-def make_client_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
+def make_client_cert(
+    common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey
+) -> tuple[Certificate, RSAPrivateKey]:
     return _make_cert(
         common_name,
         ca_cert,
@@ -125,7 +136,9 @@ def make_client_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateK
     )
 
 
-def make_server_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
+def make_server_cert(
+    common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey
+) -> tuple[Certificate, RSAPrivateKey]:
     return _make_cert(
         common_name,
         ca_cert,
@@ -134,7 +147,9 @@ def make_server_cert(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateK
     )
 
 
-def make_cert_without_extended_usage(common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey) -> tuple[Certificate, RSAPrivateKey]:
+def make_cert_without_extended_usage(
+    common_name: str, ca_cert: Certificate, ca_key: RSAPrivateKey
+) -> tuple[Certificate, RSAPrivateKey]:
     return _make_cert(common_name, ca_cert, ca_key, None)
 
 

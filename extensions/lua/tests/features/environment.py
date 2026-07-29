@@ -15,13 +15,12 @@
 
 import os
 
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
 
 
 def before_scenario(context, scenario):
     common_before_scenario(context, scenario)
-    context.resource_dir = os.path.join(os.path.dirname(__file__), 'resources')
+    context.resource_dir = os.path.join(os.path.dirname(__file__), "resources")
 
 
 def after_scenario(context, scenario):

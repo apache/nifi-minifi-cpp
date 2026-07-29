@@ -15,29 +15,39 @@
 #  limitations under the License.
 #
 from __future__ import annotations
+
+import base64
+import io
 import logging
 import os
-import tempfile
-import base64
 import tarfile
-import io
+import tempfile
 from typing import TYPE_CHECKING
 
-import docker
-from docker.models.networks import Network
 from docker.models.containers import Container
-
+from docker.models.networks import Network
 from minifi_behave.containers.container_protocol import ContainerProtocol
 from minifi_behave.containers.directory import Directory
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
+
+import docker
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class WindowsContainer(ContainerProtocol):
-    def __init__(self, image_name: str, container_name: str, network: Network, command: str | None = None, entrypoint: str | None = None):
+    def __init__(
+        self,
+        image_name: str,
+        container_name: str,
+        network: Network,
+        command: str | None = None,
+        entrypoint: str | None = None,
+    ):
         super().__init__()
         self.image_name: str = image_name
         self.container_name: str = container_name
@@ -57,8 +67,7 @@ class WindowsContainer(ContainerProtocol):
 
     def _normalize_path(self, path: str) -> str:
         clean_path = path.strip().replace("/", "\\")
-        if clean_path.startswith("\\"):
-            clean_path = clean_path[1:]
+        clean_path = clean_path.removeprefix("\\")
 
         # If it doesn't already have a drive letter, assume C:
         if ":" not in clean_path:
@@ -78,28 +87,33 @@ class WindowsContainer(ContainerProtocol):
             for file_name, content in directory.files.items():
                 file_path = os.path.join(temp_subdir, file_name)
                 with open(file_path, "w", encoding="utf-8") as temp_file:
-                    logging.info(f"writing content into {temp_file.name}")
+                    logger.info(f"writing content into {temp_file.name}")
                     temp_file.write(content)
 
             container_bind_path = self._normalize_path(directory.path)
             self.volumes[temp_subdir] = {
                 "bind": container_bind_path,
-                "mode": directory.mode
+                "mode": directory.mode,
             }
 
         for host_file in self.host_files:
             container_bind_path = self._normalize_path(host_file.container_path)
-            self.volumes[host_file.host_path] = {"bind": container_bind_path, "mode": host_file.mode}
+            self.volumes[host_file.host_path] = {
+                "bind": container_bind_path,
+                "mode": host_file.mode,
+            }
 
         try:
             existing_container = self.client.containers.get(self.container_name)
-            logging.warning(f"Found existing container '{self.container_name}'. Removing it first.")
+            logger.warning(
+                f"Found existing container '{self.container_name}'. Removing it first."
+            )
             existing_container.remove(force=True)
         except docker.errors.NotFound:
             pass
 
         try:
-            logging.info(f"Creating and starting container '{self.container_name}'...")
+            logger.info(f"Creating and starting container '{self.container_name}'...")
             self.container = self.client.containers.run(
                 image=self.image_name,
                 name=self.container_name,
@@ -110,14 +124,14 @@ class WindowsContainer(ContainerProtocol):
                 command=self.command,
                 entrypoint=self.entrypoint,
                 detach=True,
-                tty=False
+                tty=False,
             )
 
             for file in self.files:
                 self._copy_content_to_container(file.content, file.path)
 
         except Exception as e:
-            logging.error(f"Error starting container: {e}")
+            logger.error(f"Error starting container: {e}")
             self.clean_up()
             raise
         return True
@@ -133,9 +147,9 @@ class WindowsContainer(ContainerProtocol):
         self._run_powershell(f"New-Item -ItemType Directory -Force -Path '{dir_name}'")
 
         tar_stream = io.BytesIO()
-        with tarfile.open(fileobj=tar_stream, mode='w') as tar:
+        with tarfile.open(fileobj=tar_stream, mode="w") as tar:
             if isinstance(content, str):
-                encoded_data = content.encode('utf-8')
+                encoded_data = content.encode("utf-8")
             else:
                 encoded_data = content
             tarinfo = tarfile.TarInfo(name=file_name)
@@ -151,7 +165,7 @@ class WindowsContainer(ContainerProtocol):
             try:
                 self._temp_dir.cleanup()
             except Exception as e:
-                logging.warning(f"Failed to cleanup temp dir: {e}")
+                logger.warning(f"Failed to cleanup temp dir: {e}")
             finally:
                 self._temp_dir = None
 
@@ -161,16 +175,16 @@ class WindowsContainer(ContainerProtocol):
             except docker.errors.NotFound:
                 pass
             except Exception as e:
-                logging.warning(f"Failed to remove container: {e}")
+                logger.warning(f"Failed to remove container: {e}")
             finally:
                 self.container = None
 
     def exec_run(self, command: str | list) -> tuple[int | None, str]:
-        logging.debug(f"Running command: {command}")
+        logger.debug(f"Running command: {command}")
         if self.container:
             (code, output) = self.container.exec_run(command, detach=False)
-            decoded_output = output.decode("utf-8", errors='replace')
-            logging.debug(f"Result {code}, output: {decoded_output}")
+            decoded_output = output.decode("utf-8", errors="replace")
+            logger.debug(f"Result {code}, output: {decoded_output}")
             return code, decoded_output
         return None, "Container not running."
 
@@ -178,9 +192,17 @@ class WindowsContainer(ContainerProtocol):
         if not self.container:
             return None, "Container not running"
 
-        encoded_command = base64.b64encode(ps_script.encode('utf_16_le')).decode('utf-8')
+        encoded_command = base64.b64encode(ps_script.encode("utf_16_le")).decode(
+            "utf-8"
+        )
 
-        cmd_parts = ["powershell", "-NonInteractive", "-NoProfile", "-EncodedCommand", encoded_command]
+        cmd_parts = [
+            "powershell",
+            "-NonInteractive",
+            "-NoProfile",
+            "-EncodedCommand",
+            encoded_command,
+        ]
 
         return self.exec_run(cmd_parts)
 
@@ -198,7 +220,9 @@ class WindowsContainer(ContainerProtocol):
         exit_code, _ = self._run_powershell(ps_script)
         return exit_code == 0
 
-    def directory_contains_file_with_content(self, directory_path: str, expected_content: str) -> bool:
+    def directory_contains_file_with_content(
+        self, directory_path: str, expected_content: str
+    ) -> bool:
         if not self.container:
             return False
 
@@ -215,7 +239,9 @@ class WindowsContainer(ContainerProtocol):
         exit_code, _ = self._run_powershell(ps_script)
         return exit_code == 0
 
-    def directory_contains_file_with_regex(self, directory_path: str, regex_str: str) -> bool:
+    def directory_contains_file_with_regex(
+        self, directory_path: str, regex_str: str
+    ) -> bool:
         if not self.container:
             return False
 
@@ -249,16 +275,22 @@ class WindowsContainer(ContainerProtocol):
 
         exit_code, output = self._run_powershell(ps_script)
         if exit_code != 0:
-            logging.debug(f"path_with_content_exists failed for {win_path}. Output: {output}")
+            logger.debug(
+                f"path_with_content_exists failed for {win_path}. Output: {output}"
+            )
 
         return exit_code == 0
 
-    def directory_has_single_file_with_content(self, directory_path: str, expected_content: str) -> bool:
+    def directory_has_single_file_with_content(
+        self, directory_path: str, expected_content: str
+    ) -> bool:
         if not self.container:
             return False
 
         win_path = self._normalize_path(directory_path)
-        escaped_content = expected_content.strip().replace("'", "''").replace("\n", "\r\n")
+        escaped_content = (
+            expected_content.strip().replace("'", "''").replace("\n", "\r\n")
+        )
 
         ps_script = (
             f"$files = Get-ChildItem -Path '{win_path}' -File -Depth 0; "
@@ -269,22 +301,24 @@ class WindowsContainer(ContainerProtocol):
 
         exit_code, output = self._run_powershell(ps_script)
         if exit_code != 0:
-            logging.debug(f"Check for single file failed in {win_path}. Output: {output}")
+            logger.debug(
+                f"Check for single file failed in {win_path}. Output: {output}"
+            )
 
         return exit_code == 0
 
     def get_logs(self) -> str:
-        logging.debug("Getting logs from container '%s'", self.container_name)
+        logger.debug("Getting logs from container '%s'", self.container_name)
         if not self.container:
             return ""
         logs_as_bytes = self.container.logs()
-        return logs_as_bytes.decode('utf-8', errors='replace')
+        return logs_as_bytes.decode("utf-8", errors="replace")
 
     def log_app_output(self) -> bool:
         logs = self.get_logs()
-        logging.info("Logs of container '%s':", self.container_name)
+        logger.info("Logs of container '%s':", self.container_name)
         for line in logs.splitlines():
-            logging.info(line)
+            logger.info(line)
         return False
 
     @property
@@ -293,7 +327,7 @@ class WindowsContainer(ContainerProtocol):
             return False
         try:
             self.container.reload()
-            return self.container.status == 'exited'
+            return self.container.status == "exited"
         except docker.errors.NotFound:
             self.container = None
             return False
@@ -310,7 +344,7 @@ class WindowsContainer(ContainerProtocol):
         exit_code, output = self._run_powershell(ps_script)
 
         if exit_code != 0:
-            logging.error(f"Error counting files in '{win_path}': {output}")
+            logger.error(f"Error counting files in '{win_path}': {output}")
             return -1
 
         try:
@@ -318,7 +352,9 @@ class WindowsContainer(ContainerProtocol):
         except (ValueError, IndexError):
             return -1
 
-    def verify_file_contents(self, directory_path: str, expected_contents: list[str]) -> bool:
+    def verify_file_contents(
+        self, directory_path: str, expected_contents: list[str]
+    ) -> bool:
         if not self.container:
             return False
 
@@ -328,10 +364,12 @@ class WindowsContainer(ContainerProtocol):
         exit_code, output = self._run_powershell(ps_list)
 
         if exit_code != 0:
-            logging.error(f"Error listing files in '{win_path}': {output}")
+            logger.error(f"Error listing files in '{win_path}': {output}")
             return False
 
-        actual_filepaths = [path.strip() for path in output.splitlines() if path.strip()]
+        actual_filepaths = [
+            path.strip() for path in output.splitlines() if path.strip()
+        ]
 
         if len(actual_filepaths) != len(expected_contents):
             return False
@@ -349,7 +387,8 @@ class WindowsContainer(ContainerProtocol):
             actual_file_contents.append(content)
 
         normalized_expected = [
-            s.strip().replace("\r\n", "\n").replace("\r", "\n") for s in expected_contents
+            s.strip().replace("\r\n", "\n").replace("\r", "\n")
+            for s in expected_contents
         ]
 
         return sorted(actual_file_contents) == sorted(normalized_expected)
@@ -369,12 +408,14 @@ class WindowsContainer(ContainerProtocol):
         exit_code, output = self._run_powershell(ps_script)
 
         if exit_code != 0:
-            logging.error(f"Error running command for nonempty_dir_exists: {output}")
+            logger.error(f"Error running command for nonempty_dir_exists: {output}")
             return False
 
         return True
 
-    def directory_contains_file_with_minimum_size(self, directory_path: str, expected_size: int) -> bool:
+    def directory_contains_file_with_minimum_size(
+        self, directory_path: str, expected_size: int
+    ) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
@@ -387,10 +428,7 @@ class WindowsContainer(ContainerProtocol):
         exit_code, output = self._run_powershell(ps_script)
 
         if exit_code != 0:
-            logging.error(f"Error running command to get file sizes: {output}")
+            logger.error(f"Error running command to get file sizes: {output}")
             return False
 
-        if output and len(output.strip()) > 0:
-            return True
-
-        return False
+        return bool(output and len(output.strip()) > 0)
