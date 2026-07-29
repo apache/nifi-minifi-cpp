@@ -1696,6 +1696,8 @@ class _FunctionState:
 class _IncludeError(Exception):
     """Indicates a problem with the include order in a file."""
 
+    pass
+
 
 
 class FileInfo:
@@ -2981,6 +2983,7 @@ class _BlockInfo:
           linenum: The number of the line to check.
           error: The function to call with any errors found.
         """
+        pass
 
     def CheckEnd(self, filename, clean_lines, linenum, error):
         """Run checks that applies to text after the closing brace.
@@ -2993,6 +2996,7 @@ class _BlockInfo:
           linenum: The number of the line to check.
           error: The function to call with any errors found.
         """
+        pass
 
     def IsBlockInfo(self):
         """Returns true if this block is a _BlockInfo.
@@ -3186,10 +3190,14 @@ class _WrappedInfo(_BlockInfo):
     though parentheses tracking would slow us down a lot
     and is effectively already done by open_parentheses."""
 
+    pass
+
 
 
 class _MemInitListInfo(_WrappedInfo):
     """Stores information about member initializer lists."""
+
+    pass
 
 
 
@@ -7166,7 +7174,7 @@ def CheckRedundantOverrideOrFinal(filename, clean_lines, linenum, error):
 
 # Returns true if we are at a new block, and it is directly
 # inside of a namespace.
-def IsBlockInNameSpace(nesting_state: NestingState, is_forward_declaration: bool):
+def IsBlockInNameSpace(nesting_state: NestingState, is_forward_declaration: bool):  # noqa: FBT001
     """Checks that the new block is directly in a namespace.
 
     Args:
