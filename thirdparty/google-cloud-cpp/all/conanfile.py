@@ -102,7 +102,13 @@ class GoogleCloudCppConan(ConanFile):
             self.requires("gtest/1.17.0", transitive_headers=True)
 
     def generate(self):
+        # google-cloud-cpp's storage-only build path never calls find_package(Threads), but google_cloud_cpp_common/storage still link against Threads::Threads.
+        threads_include = os.path.join(self.generators_folder, "conan_threads.cmake")
+        with open(threads_include, "w") as f:
+            f.write("find_package(Threads REQUIRED)\n")
+
         tc = CMakeToolchain(self)
+        tc.variables["CMAKE_PROJECT_INCLUDE"] = threads_include.replace("\\", "/")
         tc.variables["BUILD_TESTING"] = False
         tc.variables["GOOGLE_CLOUD_CPP_WITH_MOCKS"] = self.options.with_mocks
         tc.variables["GOOGLE_CLOUD_CPP_ENABLE_MACOS_OPENSSL_CHECK"] = False
