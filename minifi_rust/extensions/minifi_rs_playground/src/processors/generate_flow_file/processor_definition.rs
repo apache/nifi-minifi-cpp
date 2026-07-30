@@ -18,7 +18,8 @@
 use super::properties::*;
 use super::{GenerateFlowFileRs, relationships};
 use minifi_native::{
-    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
+    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
+    Relationship, property_definitions,
 };
 
 impl ProcessorDefinition for GenerateFlowFileRs {
@@ -28,11 +29,11 @@ impl ProcessorDefinition for GenerateFlowFileRs {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[relationships::SUCCESS];
-    const PROPERTIES: &'static [Property] = &[
+    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
         FILE_SIZE,
         BATCH_SIZE,
         DATA_FORMAT,
         UNIQUE_FLOW_FILES,
-        CUSTOM_TEXT,
+        CUSTOM_TEXT
     ];
 }

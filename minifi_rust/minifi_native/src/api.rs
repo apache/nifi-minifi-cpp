@@ -39,8 +39,7 @@ pub use raw_controller_service::RawControllerService;
 pub use raw_processor::{OnTriggerResult, ProcessorInputRequirement, RawProcessor, ThreadingModel};
 
 pub use property::{
-    DataSize, PropertyConstraints, PropertyType, ProvidesPropertyConstraint,
-    StandardPropertyValidator, property_constraint,
+    DataSize, NonBlankPath, PropertyConstraints, PropertyType, StandardPropertyValidator,
 };
 
 pub use relationship::Relationship;

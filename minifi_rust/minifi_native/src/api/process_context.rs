@@ -18,35 +18,36 @@
 use crate::api::RawControllerService;
 use crate::api::component_definition_traits::ComponentIdentifier;
 use crate::api::flow_file::FlowFile;
-use crate::api::property::GetControllerService;
-use crate::{
-    ControllerServiceApi, ControllerServiceDefinition, EnableControllerService, GetProperty,
-    MinifiError, Property,
-};
+use crate::api::property::{ControllerServiceValue, GetControllerService, PropertySchema};
+use crate::{ControllerServiceApi, EnableControllerService, GetProperty, MinifiError, Property};
 
 pub trait ProcessContext {
     type FlowFile: FlowFile;
 
-    fn get_property(
+    fn get_raw_property<K: PropertySchema + ?Sized>(
         &self,
-        property: &Property,
+        property: &Property<K>,
         flow_file: Option<&Self::FlowFile>,
     ) -> Result<Option<String>, MinifiError>;
 
-    fn get_raw_controller_service<Cs>(
+    fn get_raw_controller_service<Cs, K>(
         &self,
-        property: &Property,
+        property: &Property<K>,
     ) -> Result<Option<&Cs>, MinifiError>
     where
-        Cs: RawControllerService + ComponentIdentifier + 'static;
+        Cs: RawControllerService + ComponentIdentifier + 'static,
+        K: PropertySchema + ?Sized;
 
-    fn get_controller_service<Cs>(&self, property: &Property) -> Result<Option<&Cs>, MinifiError>
-    where
-        Cs: EnableControllerService + ComponentIdentifier + 'static;
-
-    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi>(
+    fn get_controller_service<Cs>(
         &self,
-        property: &Property,
+        property: &Property<Cs>,
+    ) -> Result<Option<&Cs>, MinifiError>
+    where
+        Cs: EnableControllerService + ComponentIdentifier + PropertySchema + 'static;
+
+    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi + PropertySchema>(
+        &self,
+        property: &Property<Trait>,
     ) -> Result<Option<Box<&Trait>>, MinifiError>;
 
     fn report_metrics(&self, metrics: Vec<(String, f64)>) -> Result<(), MinifiError>;
@@ -56,8 +57,11 @@ impl<S> GetProperty for S
 where
     S: ProcessContext,
 {
-    fn get_raw_property(&self, property: &Property) -> Result<Option<String>, MinifiError> {
-        self.get_property(property, None)
+    fn get_raw_property<K: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<K>,
+    ) -> Result<Option<String>, MinifiError> {
+        self.get_raw_property(property, None)
     }
 }
 
@@ -65,10 +69,15 @@ impl<S> GetControllerService for S
 where
     S: ProcessContext,
 {
-    fn get_controller_service<Cs>(&self, property: &Property) -> Result<Option<&Cs>, MinifiError>
+    fn get_controller_service<K>(
+        &self,
+        property: &Property<K>,
+    ) -> Result<K::Output<'_>, MinifiError>
     where
-        Cs: EnableControllerService + ComponentIdentifier + ControllerServiceDefinition + 'static,
+        K: ControllerServiceValue + ?Sized,
     {
-        ProcessContext::get_controller_service::<Cs>(self, property)
+        let cs_property = property.with_marker::<K::Cs>();
+        let service = ProcessContext::get_controller_service::<K::Cs>(self, &cs_property)?;
+        K::from_service(service, property.name)
     }
 }

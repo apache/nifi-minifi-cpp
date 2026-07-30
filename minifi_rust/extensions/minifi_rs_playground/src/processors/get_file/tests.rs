@@ -113,12 +113,12 @@ fn test_complex_dir_with_filter(
 
     let mut context = MockProcessContext::new();
     context.properties.insert(
-        DIRECTORY.name.to_string(),
+        DIRECTORY.name().to_string(),
         test_directory.path().to_str().unwrap().to_string(),
     );
     context
         .properties
-        .insert(BATCH_SIZE.name.to_string(), "10".to_string());
+        .insert(BATCH_SIZE.name().to_string(), "10".to_string());
 
     context
         .properties
@@ -154,10 +154,10 @@ fn test_complex_dir_with_filter(
 
 #[test]
 fn complex_dir_with_filters() {
-    test_complex_dir_with_filter(MIN_AGE.name, "5 min", "old");
-    test_complex_dir_with_filter(MAX_AGE.name, "5 min", "new");
-    test_complex_dir_with_filter(MIN_SIZE.name, "50 B", "large");
-    test_complex_dir_with_filter(MAX_SIZE.name, "50 B", "small");
+    test_complex_dir_with_filter(MIN_AGE.name(), "5 min", "old");
+    test_complex_dir_with_filter(MAX_AGE.name(), "5 min", "new");
+    test_complex_dir_with_filter(MIN_SIZE.name(), "50 B", "large");
+    test_complex_dir_with_filter(MAX_SIZE.name(), "50 B", "small");
 }
 
 #[test]
@@ -169,16 +169,16 @@ fn test_hidden_files_and_batch_size() {
 
     let mut context = MockProcessContext::new();
     context.properties.insert(
-        DIRECTORY.name.to_string(),
+        DIRECTORY.name().to_string(),
         temp_dir.path().to_str().unwrap().to_string(),
     );
     context
         .properties
-        .insert(BATCH_SIZE.name.to_string(), "2".to_string());
+        .insert(BATCH_SIZE.name().to_string(), "2".to_string());
 
     context
         .properties
-        .insert(IGNORE_HIDDEN_FILES.name.to_string(), "false".to_string());
+        .insert(IGNORE_HIDDEN_FILES.name().to_string(), "false".to_string());
 
     let mut session = MockProcessSession::new();
     let get_file = GetFileRs::schedule(&context, &MockLogger::new()).unwrap();

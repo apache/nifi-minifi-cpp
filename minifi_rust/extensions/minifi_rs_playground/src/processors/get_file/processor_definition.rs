@@ -21,7 +21,8 @@ use crate::processors::get_file::output_attributes::{
 use crate::processors::get_file::properties::*;
 use crate::processors::get_file::{GetFileRs, relationships};
 use minifi_native::{
-    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
+    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
+    Relationship, property_definitions,
 };
 
 impl ProcessorDefinition for GetFileRs {
@@ -32,7 +33,7 @@ impl ProcessorDefinition for GetFileRs {
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] =
         &[ABSOLUTE_PATH_OUTPUT_ATTRIBUTE, FILENAME_OUTPUT_ATTRIBUTE];
     const RELATIONSHIPS: &'static [Relationship] = &[relationships::SUCCESS];
-    const PROPERTIES: &'static [Property] = &[
+    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
         DIRECTORY,
         POLLING_INTERVAL,
         RECURSE,
