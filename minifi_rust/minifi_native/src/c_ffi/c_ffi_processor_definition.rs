@@ -28,7 +28,7 @@ use crate::c_ffi::c_ffi_output_attribute::COutputAttributes;
 use crate::c_ffi::c_ffi_property::CProperties;
 use crate::{
     ComponentIdentifier, LogLevel, MultiThreaded, OutputAttribute, Processor, ProcessorDefinition,
-    Property, Schedule, SingleThreaded,
+    PropertyDefinition, Schedule, SingleThreaded,
 };
 use crate::{OnTriggerResult, Relationship};
 use minifi_native_sys::*;
@@ -130,10 +130,10 @@ where
         supports_dynamic_relationships: bool,
         output_attributes: &'static [OutputAttribute],
         relationships: &'static [Relationship],
-        properties: &'static [Property],
+        properties: &'static [PropertyDefinition],
     ) -> Self {
         let c_relationships = Relationship::create_c_vec(relationships);
-        let c_properties = Property::create_c_properties(properties);
+        let c_properties = PropertyDefinition::create_c_properties(properties);
         let c_output_attributes = COutputAttributes::new(output_attributes);
 
         Self {

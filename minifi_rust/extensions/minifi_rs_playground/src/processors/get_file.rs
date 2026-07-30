@@ -26,8 +26,8 @@ use crate::processors::get_file::properties::{
 };
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    DataSize, GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext,
-    ProcessSession, Schedule, Trigger, debug, info, trace, warn,
+    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
+    Schedule, Trigger, debug, info, trace, warn,
 };
 use std::collections::VecDeque;
 use std::error;
@@ -223,7 +223,7 @@ impl Schedule for GetFileRs {
     where
         Self: Sized,
     {
-        let input_directory = context.get_req_property::<PathBuf>(&DIRECTORY)?;
+        let input_directory = context.get_property(&DIRECTORY)?;
         if !input_directory.is_dir() {
             return Err(MinifiError::schedule_err(format!(
                 "{:?} is not a valid directory",
@@ -231,17 +231,17 @@ impl Schedule for GetFileRs {
             )));
         }
 
-        let recursive = context.get_req_property::<bool>(&RECURSE)?;
+        let recursive = context.get_property(&RECURSE)?;
 
-        let keep_source_file = context.get_req_property::<bool>(&KEEP_SOURCE_FILE)?;
+        let keep_source_file = context.get_property(&KEEP_SOURCE_FILE)?;
 
-        let poll_interval = context.get_property::<Duration>(&properties::POLLING_INTERVAL)?;
-        let min_size = context.get_property::<DataSize>(&MIN_SIZE)?;
-        let max_size = context.get_property::<DataSize>(&MAX_SIZE)?;
-        let min_age = context.get_property::<Duration>(&MIN_AGE)?;
-        let max_age = context.get_property::<Duration>(&MAX_AGE)?;
-        let batch_size = context.get_req_property::<u64>(&BATCH_SIZE)?;
-        let ignore_hidden_files = context.get_req_property::<bool>(&IGNORE_HIDDEN_FILES)?;
+        let poll_interval = context.get_property(&properties::POLLING_INTERVAL)?;
+        let min_size = context.get_property(&MIN_SIZE)?;
+        let max_size = context.get_property(&MAX_SIZE)?;
+        let min_age = context.get_property(&MIN_AGE)?;
+        let max_age = context.get_property(&MAX_AGE)?;
+        let batch_size = context.get_property(&BATCH_SIZE)?;
+        let ignore_hidden_files = context.get_property(&IGNORE_HIDDEN_FILES)?;
 
         Ok(GetFileRs {
             recursive,

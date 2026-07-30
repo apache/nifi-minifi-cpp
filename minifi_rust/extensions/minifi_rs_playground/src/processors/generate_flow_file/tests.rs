@@ -32,13 +32,13 @@ fn generate_flow_file_empty_test() {
     let mut context = MockProcessContext::new();
     context
         .properties
-        .insert(properties::FILE_SIZE.name.to_string(), "0".to_string());
+        .insert(properties::FILE_SIZE.name().to_string(), "0".to_string());
     context
         .properties
-        .insert(UNIQUE_FLOW_FILES.name.to_string(), "false".to_string());
+        .insert(UNIQUE_FLOW_FILES.name().to_string(), "false".to_string());
     context
         .properties
-        .insert(DATA_FORMAT.name.to_string(), "Text".to_string());
+        .insert(DATA_FORMAT.name().to_string(), "Text".to_string());
 
     let processor = GenerateFlowFileRs::schedule(&context, &logger).unwrap();
     let mut session = MockProcessSession::new();
@@ -58,16 +58,16 @@ fn generate_custom_text() {
     let mut context = MockProcessContext::new();
     context
         .properties
-        .insert(properties::FILE_SIZE.name.to_string(), "0".to_string());
+        .insert(properties::FILE_SIZE.name().to_string(), "0".to_string());
     context
         .properties
-        .insert(UNIQUE_FLOW_FILES.name.to_string(), "false".to_string());
+        .insert(UNIQUE_FLOW_FILES.name().to_string(), "false".to_string());
     context
         .properties
-        .insert(DATA_FORMAT.name.to_string(), "Text".to_string());
+        .insert(DATA_FORMAT.name().to_string(), "Text".to_string());
     context
         .properties
-        .insert(CUSTOM_TEXT.name.to_string(), "foo bar baz".to_string());
+        .insert(CUSTOM_TEXT.name().to_string(), "foo bar baz".to_string());
 
     let logger = MockLogger::new();
     let processor = GenerateFlowFileRs::schedule(&context, &logger).unwrap();
@@ -89,16 +89,16 @@ fn random_bytes_unique() {
     let mut context = MockProcessContext::new();
     context
         .properties
-        .insert(properties::FILE_SIZE.name.to_string(), "40 B".to_string());
+        .insert(properties::FILE_SIZE.name().to_string(), "40 B".to_string());
     context
         .properties
-        .insert(UNIQUE_FLOW_FILES.name.to_string(), "true".to_string());
+        .insert(UNIQUE_FLOW_FILES.name().to_string(), "true".to_string());
     context
         .properties
-        .insert(DATA_FORMAT.name.to_string(), "Bytes".to_string());
+        .insert(DATA_FORMAT.name().to_string(), "Binary".to_string());
     context
         .properties
-        .insert(BATCH_SIZE.name.to_string(), "2".to_string());
+        .insert(BATCH_SIZE.name().to_string(), "2".to_string());
 
     let logger = MockLogger::new();
     let processor = GenerateFlowFileRs::schedule(&context, &logger).unwrap();
@@ -124,16 +124,16 @@ fn random_bytes_non_unique() {
     let mut context = MockProcessContext::new();
     context
         .properties
-        .insert(properties::FILE_SIZE.name.to_string(), "40 B".to_string());
+        .insert(properties::FILE_SIZE.name().to_string(), "40 B".to_string());
     context
         .properties
-        .insert(UNIQUE_FLOW_FILES.name.to_string(), "false".to_string());
+        .insert(UNIQUE_FLOW_FILES.name().to_string(), "false".to_string());
     context
         .properties
-        .insert(DATA_FORMAT.name.to_string(), "Bytes".to_string());
+        .insert(DATA_FORMAT.name().to_string(), "Binary".to_string());
     context
         .properties
-        .insert(BATCH_SIZE.name.to_string(), "2".to_string());
+        .insert(BATCH_SIZE.name().to_string(), "2".to_string());
 
     let logger = MockLogger::new();
     let processor = GenerateFlowFileRs::schedule(&context, &logger).unwrap();

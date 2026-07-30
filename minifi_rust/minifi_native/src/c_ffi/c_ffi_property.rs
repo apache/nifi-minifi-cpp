@@ -17,7 +17,7 @@
 
 use super::c_ffi_primitives::StaticStrAsMinifiCStr;
 use crate::api::property::PropertyConstraints;
-use crate::{Property, StandardPropertyValidator};
+use crate::{PropertyDefinition, StandardPropertyValidator};
 use minifi_native_sys::{
     minifi_property_definition, minifi_string_view, minifi_validator,
     minifi_validator_MINIFI_VALIDATOR_ALWAYS_VALID, minifi_validator_MINIFI_VALIDATOR_BOOLEAN,
@@ -60,7 +60,7 @@ impl CProperties {
     }
 }
 
-impl Property {
+impl PropertyDefinition {
     fn create_c_default_value_holder(properties: &[Self]) -> Vec<minifi_string_view> {
         properties
             .iter()
@@ -105,9 +105,9 @@ impl Property {
     }
 
     pub(crate) fn create_c_properties(properties: &[Self]) -> CProperties {
-        let c_default_values = Property::create_c_default_value_holder(properties);
-        let c_allowed_values = Property::create_c_allowed_values_vec_vec(properties);
-        let c_allowed_types = Property::create_c_allowed_types_vec(properties);
+        let c_default_values = PropertyDefinition::create_c_default_value_holder(properties);
+        let c_allowed_values = PropertyDefinition::create_c_allowed_values_vec_vec(properties);
+        let c_allowed_types = PropertyDefinition::create_c_allowed_types_vec(properties);
         assert_eq!(c_default_values.len(), properties.len());
         assert_eq!(c_allowed_values.len(), properties.len());
         assert_eq!(c_allowed_types.len(), properties.len());

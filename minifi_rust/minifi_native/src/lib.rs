@@ -46,7 +46,10 @@ pub use api::raw_processor::{MultiThreaded, SingleThreaded};
 
 pub use api::logger::{LogLevel, Logger};
 
-pub use api::property::{GetControllerService, GetProperty, Property};
+pub use api::property::{
+    ControllerServiceValue, GetControllerService, GetProperty, Property, PropertyDefinition,
+    PropertySchema, PropertyValue,
+};
 
 pub use api::provided_interface::{ControllerServiceApi, ProvidedInterface};
 
@@ -55,9 +58,9 @@ pub use api::process_session::IoState;
 pub use api::attribute::{GetAttribute, OutputAttribute};
 
 pub use api::{
-    DataSize, FlowFile, GetId, InputStream, OnTriggerResult, OutputStream, ProcessContext,
-    ProcessSession, ProcessorInputRequirement, PropertyConstraints, PropertyType,
-    ProvidesPropertyConstraint, Relationship, StandardPropertyValidator, property_constraint,
+    DataSize, FlowFile, GetId, InputStream, NonBlankPath, OnTriggerResult, OutputStream,
+    ProcessContext, ProcessSession, ProcessorInputRequirement, PropertyConstraints, PropertyType,
+    Relationship, StandardPropertyValidator,
 };
 
 pub use minifi_native_macros as macros;

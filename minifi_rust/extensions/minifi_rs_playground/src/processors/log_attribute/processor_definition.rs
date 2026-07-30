@@ -18,7 +18,8 @@
 use crate::processors::log_attribute::properties::*;
 use crate::processors::log_attribute::{LogAttributeRs, relationships};
 use minifi_native::{
-    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
+    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
+    Relationship, property_definitions,
 };
 
 impl ProcessorDefinition for LogAttributeRs {
@@ -29,7 +30,7 @@ impl ProcessorDefinition for LogAttributeRs {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[relationships::SUCCESS];
-    const PROPERTIES: &'static [Property] = &[
+    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
         LOG_LEVEL,
         ATTRIBUTES_TO_LOG,
         ATTRIBUTES_TO_IGNORE,

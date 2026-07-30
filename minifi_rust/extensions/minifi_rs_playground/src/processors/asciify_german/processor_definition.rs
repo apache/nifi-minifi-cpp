@@ -17,7 +17,8 @@
 
 use crate::processors::asciify_german::AsciifyGerman;
 use minifi_native::{
-    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
+    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
+    Relationship,
 };
 
 impl ProcessorDefinition for AsciifyGerman {
@@ -28,5 +29,5 @@ impl ProcessorDefinition for AsciifyGerman {
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] =
         &[super::relationships::SUCCESS, super::relationships::FAILURE];
-    const PROPERTIES: &'static [Property] = &[];
+    const PROPERTIES: &'static [PropertyDefinition] = &[];
 }
