@@ -130,24 +130,24 @@ RUST TEST PROCESSOR: Creates FlowFiles from files in a directory. MiNiFi will ig
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                    | Default Value | Allowable Values | Description                                                                                                                                                |
-|-------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Batch Size**          | 10            |                  | The maximum number of files to pull in each iteration                                                                                                      |
-| **Ignore Hidden Files** | true          | true<br/>false   | Indicates whether or not hidden files should be ignored                                                                                                    |
-| **Input Directory**     |               |                  | The input directory from which to pull files<br/>**Supports Expression Language: true**                                                                    |
-| Keep Source File        | false         | true<br/>false   | If true, the file is not deleted after it has been copied to the Content Repository                                                                        |
-| Maximum File Age        |               |                  | The maximum age that a file must be in order to be pulled;  any file older than this amount of time (according to last modification date) will be ignored  |
-| Maximum File Size       |               |                  | The maximum size that a file can be in order to be pulled                                                                                                  |
-| Minimum File Age        |               |                  | The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored |
-| Minimum File Size       |               |                  | The minimum size that a file can be in order to be pulled                                                                                                  |
-| Polling Interval        |               |                  | Indicates how long to wait before performing a directory listing                                                                                           |
-| Recurse Subdirectories  | true          | true<br/>false   | Indicates whether or not to pull files from subdirectories                                                                                                 |
+| Name                       | Default Value | Allowable Values | Description                                                                                                                                                |
+|----------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Batch Size**             | 10            |                  | The maximum number of files to pull in each iteration                                                                                                      |
+| **Ignore Hidden Files**    | true          | true<br/>false   | Indicates whether or not hidden files should be ignored                                                                                                    |
+| **Input Directory**        |               |                  | The input directory from which to pull files<br/>**Supports Expression Language: true**                                                                    |
+| **Keep Source File**       | false         | true<br/>false   | If true, the file is not deleted after it has been copied to the Content Repository                                                                        |
+| Maximum File Age           |               |                  | The maximum age that a file must be in order to be pulled;  any file older than this amount of time (according to last modification date) will be ignored  |
+| Maximum File Size          |               |                  | The maximum size that a file can be in order to be pulled                                                                                                  |
+| Minimum File Age           |               |                  | The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored |
+| Minimum File Size          |               |                  | The minimum size that a file can be in order to be pulled                                                                                                  |
+| Polling Interval           |               |                  | Indicates how long to wait before performing a directory listing                                                                                           |
+| **Recurse Subdirectories** | true          | true<br/>false   | Indicates whether or not to pull files from subdirectories                                                                                                 |
 
 ### Relationships
 
-| Name    | Description                                  |
-|---------|----------------------------------------------|
-| success | FlowFiles are transferred here after logging |
+| Name    | Description                                |
+|---------|--------------------------------------------|
+| success | The created FlowFiles are transferred here |
 
 ### Output Attributes
 

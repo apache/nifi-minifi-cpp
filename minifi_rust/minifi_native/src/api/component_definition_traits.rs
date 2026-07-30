@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::api::provided_interface::ProvidedInterface;
-use crate::{OutputAttribute, ProcessorInputRequirement, Property, Relationship};
+use crate::{OutputAttribute, ProcessorInputRequirement, PropertyDefinition, Relationship};
 
 pub trait ComponentIdentifier {
     const CLASS_NAME: &'static str;
@@ -31,11 +31,11 @@ pub trait ProcessorDefinition {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute];
     const RELATIONSHIPS: &'static [Relationship];
-    const PROPERTIES: &'static [Property];
+    const PROPERTIES: &'static [PropertyDefinition];
 }
 
 pub trait ControllerServiceDefinition: Sized + 'static {
     const DESCRIPTION: &'static str;
-    const PROPERTIES: &'static [Property];
+    const PROPERTIES: &'static [PropertyDefinition];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>];
 }

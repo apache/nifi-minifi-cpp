@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::api::property::PropertySchema;
 use crate::mock::mock_process_context::MockPropertyMap;
 use crate::{GetProperty, MinifiError, Property};
 
@@ -23,7 +24,10 @@ pub struct MockControllerServiceContext {
 }
 
 impl GetProperty for MockControllerServiceContext {
-    fn get_raw_property(&self, property: &Property) -> Result<Option<String>, MinifiError> {
+    fn get_raw_property<K: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<K>,
+    ) -> Result<Option<String>, MinifiError> {
         self.properties.get_property(property, None)
     }
 }

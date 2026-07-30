@@ -19,7 +19,7 @@ use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetAttribute, GetControllerService, GetProperty, InputStream, Logger, MinifiError,
     MutFlowFileStreamTransform, OutputAttribute, OutputStream, ProcessorDefinition,
-    ProcessorInputRequirement, Property, Relationship, Schedule, TransformStreamResult,
+    ProcessorInputRequirement, PropertyDefinition, Relationship, Schedule, TransformStreamResult,
 };
 use std::collections::HashMap;
 
@@ -67,5 +67,5 @@ impl ProcessorDefinition for DuplicateStreamText {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS];
-    const PROPERTIES: &'static [Property] = &[];
+    const PROPERTIES: &'static [PropertyDefinition] = &[];
 }
