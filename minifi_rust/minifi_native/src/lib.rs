@@ -94,6 +94,7 @@ macro_rules! declare_minifi_extension {
                 let extension_definition = minifi_native::sys::minifi_extension_definition {
                     name: env!("CARGO_PKG_NAME").as_minifi_c_type(),
                     version: env!("CARGO_PKG_VERSION").as_minifi_c_type(),
+                    group_name: env!("CARGO_PKG_NAME").as_minifi_c_type(),
                     deinit: None,
                     user_data: std::ptr::null_mut(),
                 };

@@ -38,6 +38,7 @@ class Extension {
   struct Info {
     std::string name;
     std::string version;
+    std::string group_name;
     void(*deinit)(void* user_data);
     void* user_data;
   };

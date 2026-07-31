@@ -36,6 +36,7 @@ extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_co
   minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
+    .group_name = minifi::utils::toStringView("org.apache.nifi.minifi"),
     .deinit = [] (void* /*user_data*/) {
       curl_global_cleanup();
       libssh2_exit();

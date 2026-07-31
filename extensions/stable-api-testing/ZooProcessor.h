@@ -43,9 +43,16 @@ class ZooProcessor : public api::core::ProcessorImpl {
           .withAllowedTypes<NumberOfLegsControllerApi>()
           .build();
 
+  EXTENSIONAPI static constexpr auto SSLContextService =
+      core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
+          .withDescription("SSL Context Service Name")
+          .withAllowedType<MINIFI_SSL_CONTEXT_SERVICE_INTERFACE_PROPERTY_TYPE>()
+          .build();
+
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       CanFlyService,
       NumberOfLegsService,
+      SSLContextService,
   });
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "failure"};

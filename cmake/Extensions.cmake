@@ -32,6 +32,8 @@ macro(register_extension extension-name extension-display-name extension-guard d
     endif()
     target_compile_definitions(${extension-name}
         PRIVATE "MODULE_NAME=${extension-name}")
+    target_compile_definitions(${extension-name}
+        PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi")
     set_target_properties(${extension-name} PROPERTIES
         ENABLE_EXPORTS True
         POSITION_INDEPENDENT_CODE ON)
@@ -89,7 +91,7 @@ macro(register_c_api_extension extension-name extension-display-name extension-g
     get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
     set_property(GLOBAL APPEND PROPERTY EXTENSION-OPTIONS ${extension-name})
     target_compile_definitions(${extension-name}
-            PRIVATE "EXTENSION_NAME=${extension-name}" "EXTENSION_VERSION=${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+            PRIVATE "EXTENSION_NAME=${extension-name}" "EXTENSION_VERSION=${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}" "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi")
     set_target_properties(${extension-name} PROPERTIES
             ENABLE_EXPORTS True
             POSITION_INDEPENDENT_CODE ON)

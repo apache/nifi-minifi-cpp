@@ -44,6 +44,7 @@ extern "C" void minifi_init_extension(minifi_extension_context* extension_contex
   minifi_extension_definition extension_definition{
     .name = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_NAME)),
     .version = minifi::api::utils::toStringView(MAKESTRING(EXTENSION_VERSION)),
+    .group_name = minifi::api::utils::minifiStringView(MAKESTRING(MINIFI_EXTENSION_GROUP_NAME)),
     .deinit = nullptr,
     .user_data = nullptr
   };
@@ -87,6 +88,7 @@ extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_co
   minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView(minifi::AgentBuild::VERSION),
+    .group_name = minifi::api::utils::minifiStringView(MAKESTRING(MINIFI_EXTENSION_GROUP_NAME)),
     .deinit = nullptr,
     .user_data = nullptr
   };

@@ -174,7 +174,8 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
       .inputRequirement_ = toString(processor->getInputRequirement()),
       .isSingleThreaded_ = processor->isSingleThreaded()};
 
-    minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[details].processors.push_back(description);
+    auto [it, _success] = ClassDescriptionRegistry::getMutableClassDescriptions().try_emplace(details, details);
+    it->second.addClassDescription(description, ResourceType::Processor);
   }
 
   void configure(const std::vector<std::string> &pythonFiles) {

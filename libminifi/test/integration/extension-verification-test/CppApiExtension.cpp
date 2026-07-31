@@ -28,6 +28,7 @@ extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_co
   minifi_extension_definition extension_definition{
     .name = minifi::utils::toStringView(MAKESTRING(MODULE_NAME)),
     .version = minifi::utils::toStringView("1.0.0"),
+    .group_name = minifi::utils::toStringView("org.apache.nifi.minifi"),
     .deinit = nullptr,
     .user_data = nullptr
   };

@@ -36,14 +36,8 @@ utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
 std::mutex AgentStatus::cpu_load_tracker_mutex_;
 
 namespace {
-
-std::string allowedTypeGroupName(const std::string_view allowed_type) {
-  constexpr std::string_view APACHE_GROUP_STR = "org.apache.nifi.minifi";
-  if (allowed_type.starts_with(APACHE_GROUP_STR)) {
-    return std::string{APACHE_GROUP_STR};
-  }
-  return std::string{allowed_type.substr(0, allowed_type.find_last_of('.'))};
-}
+constexpr std::string_view MINIFI_SYSTEM_ARTIFACT_NAME = "minifi-system";
+constexpr std::string_view MINIFI_SYSTEM_GROUP_NAME = "org.apache.nifi.minifi";
 
 constexpr std::string_view shortNameFromFullName(std::string_view sv) {
   auto pos = sv.rfind('.');
@@ -60,7 +54,7 @@ bool minifiSystemAllowedType(const std::string_view allowed_type) {
 
 std::string allowedTypeArtifactName(const std::string_view allowed_type, const std::string_view prop_owner_type) {
   if (minifiSystemAllowedType(allowed_type)) {
-    return "minifi-system";
+    return std::string{MINIFI_SYSTEM_ARTIFACT_NAME};
   }
 
   auto& class_loader = core::ClassLoader::getDefaultClassLoader();
@@ -72,12 +66,20 @@ std::string allowedTypeArtifactName(const std::string_view allowed_type, const s
     return *prop_owner_artifact;
   }
 
-  return "minifi-system";
+    return std::string{MINIFI_SYSTEM_ARTIFACT_NAME};
+}
+
+std::string allowedTypeGroupName(const std::string_view allowed_type, const std::string_view bundle_group_name) {
+  if (minifiSystemAllowedType(allowed_type)) {
+    return std::string{MINIFI_SYSTEM_GROUP_NAME};
+  }
+  return std::string{bundle_group_name};
 }
 
 void serializeClassDescription(const std::vector<ClassDescription>& descriptions,
     const std::string& name,
-    SerializedResponseNode& response) {
+    SerializedResponseNode& response,
+    const BundleIdentifier& bundle_identifier) {
   if (descriptions.empty()) {
     return;
   }
@@ -99,7 +101,7 @@ void serializeClassDescription(const std::vector<ClassDescription>& descriptions
             std::string typeClazz = allowed_type;
             utils::string::replaceAll(typeClazz, "::", ".");
             allowed_type_node.children.push_back({.name = "type", .value = typeClazz});
-            allowed_type_node.children.push_back({.name = "group", .value = allowedTypeGroupName(typeClazz)});
+            allowed_type_node.children.push_back({.name = "group", .value = allowedTypeGroupName(typeClazz, bundle_identifier.group_name)});
             allowed_type_node.children.push_back({.name = "artifact", .value = allowedTypeArtifactName(typeClazz, class_description.full_name_)});
           }
           child.children.push_back(allowed_type_node);
@@ -185,8 +187,8 @@ std::vector<SerializedResponseNode> serializeComponentManifest(const Components&
   std::vector<SerializedResponseNode> serialized;
   SerializedResponseNode resp;
   resp.name = "componentManifest";
-  serializeClassDescription(components.processors, "processors", resp);
-  serializeClassDescription(components.controller_services, "controllerServices", resp);
+  serializeClassDescription(components.getProcessors(), "processors", resp, components.getBundleIdentifier());
+  serializeClassDescription(components.getControllerServices(), "controllerServices", resp, components.getBundleIdentifier());
   serialized.push_back(resp);
   return serialized;
 }
@@ -199,12 +201,11 @@ std::vector<SerializedResponseNode> Bundles::serialize() {
     if (serialized_components[0].children.empty()) {
       continue;
     }
-    std::string serialized_comp_name = serialized_components[0].name;
     SerializedResponseNode serialized_bundle {
       .name = "bundles",
       .children = {
         serialized_components[0],
-        {.name = "group", .value = allowedTypeGroupName(serialized_comp_name)},
+        {.name = "group", .value = bundle.group_name},
         {.name = "artifact", .value = bundle.name},
         {.name = "version", .value = bundle.version},
       }

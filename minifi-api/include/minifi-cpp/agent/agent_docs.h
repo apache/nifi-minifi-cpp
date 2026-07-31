@@ -32,7 +32,11 @@
 namespace org::apache::nifi::minifi {
 
 enum class ResourceType {
-  Processor, ControllerService, InternalResource, DescriptionOnly, ParameterProvider
+  Processor,
+  ControllerService,
+  InternalResource,
+  DescriptionOnly,
+  ParameterProvider
 };
 
 struct ClassDescription {
@@ -51,22 +55,109 @@ struct ClassDescription {
   bool isSingleThreaded_ = false;
 };
 
-struct Components {
-  std::vector<ClassDescription> processors;
-  std::vector<ClassDescription> controller_services;
-  std::vector<ClassDescription> parameter_providers;
-  std::vector<ClassDescription> other_components;
-
-  [[nodiscard]] bool empty() const noexcept {
-    return processors.empty() && controller_services.empty() && parameter_providers.empty() && other_components.empty();
-  }
-};
-
 struct BundleIdentifier {
   std::string name;
+  std::string group_name;
   std::string version;
 
   auto operator<=>(const BundleIdentifier& rhs) const = default;
+};
+
+class Components {
+ public:
+  explicit Components(BundleIdentifier bundle_identifier) : bundle_identifier_(std::move(bundle_identifier)) {
+  }
+  Components(const Components& rhs) = default;
+  Components(Components&& rhs) = default;
+  Components& operator=(const Components& rhs) = default;
+  Components& operator=(Components&& rhs) = default;
+  virtual ~Components() = default;
+
+  void addClassDescription(ClassDescription component, ResourceType resource_type) {
+    switch (resource_type) {
+      case ResourceType::Processor: {
+        processors_.emplace_back(std::move(component));
+        break;
+      }
+      case ResourceType::ControllerService: {
+        controller_services_.emplace_back(std::move(component));
+        break;
+      }
+      case ResourceType::ParameterProvider: {
+        parameter_providers_.emplace_back(std::move(component));
+        break;
+      }
+      default: {
+        other_components_.emplace_back(std::move(component));
+        break;
+      }
+    }
+  };
+
+  const std::vector<ClassDescription>& getProcessors() const {
+    return processors_;
+  }
+  const std::vector<ClassDescription>& getControllerServices() const {
+    return controller_services_;
+  }
+  const std::vector<ClassDescription>& getParameterProviders() const {
+    return parameter_providers_;
+  }
+  const std::vector<ClassDescription>& getOtherComponents() const {
+    return other_components_;
+  }
+
+  const BundleIdentifier& getBundleIdentifier() const {
+    return bundle_identifier_;
+  }
+
+  [[nodiscard]] bool empty() const noexcept {
+    return processors_.empty() && controller_services_.empty() && parameter_providers_.empty() && other_components_.empty();
+  }
+
+  static void sortClassDescription(minifi::ClassDescription& class_description) {
+    std::ranges::sort(class_description.class_properties_, {}, &minifi::core::Property::getName);
+    std::ranges::sort(class_description.dynamic_properties_, {}, &minifi::core::DynamicProperty::name);
+    std::ranges::sort(class_description.class_relationships_, {}, &minifi::core::Relationship::getName);
+    std::ranges::sort(class_description.output_attributes_, {}, &minifi::core::OutputAttribute::name);
+    std::ranges::sort(class_description.api_implementations, {}, &minifi::core::ControllerServiceType::type);
+  }
+
+  void sort() {
+    auto lower_case_short_name = [](const auto& b) { return minifi::utils::string::toLower(b.short_name_); };
+    std::ranges::sort(processors_, {}, lower_case_short_name);
+    std::ranges::sort(controller_services_, {}, lower_case_short_name);
+    std::ranges::sort(parameter_providers_, {}, lower_case_short_name);
+    std::ranges::sort(other_components_, {}, lower_case_short_name);
+
+    for (auto& processors : processors_) {
+      sortClassDescription(processors);
+    }
+    for (auto& cs : controller_services_) {
+      sortClassDescription(cs);
+    }
+    for (auto& pp : parameter_providers_) {
+      sortClassDescription(pp);
+    }
+    for (auto& oc : other_components_) {
+      sortClassDescription(oc);
+    }
+  }
+
+  void extend(const Components& components) {
+    std::ranges::copy(components.getProcessors(), std::back_inserter(processors_));
+    std::ranges::copy(components.getControllerServices(), std::back_inserter(controller_services_));
+    std::ranges::copy(components.getParameterProviders(), std::back_inserter(parameter_providers_));
+    std::ranges::copy(components.getOtherComponents(), std::back_inserter(other_components_));
+  }
+
+ private:
+  BundleIdentifier bundle_identifier_;
+
+  std::vector<ClassDescription> processors_;
+  std::vector<ClassDescription> controller_services_;
+  std::vector<ClassDescription> parameter_providers_;
+  std::vector<ClassDescription> other_components_;
 };
 
 class ClassDescriptionRegistry {
@@ -76,7 +167,7 @@ class ClassDescriptionRegistry {
   static void clearClassDescriptionsForBundle(const std::string& bundle_name);
 
   template<typename Class, ResourceType Type>
-  static void createClassDescription(std::string bundle_name, std::string class_name, std::string version);
+  static void createClassDescription(const BundleIdentifier& bundle_identifier, std::string class_name);
 };
 
 }  // namespace org::apache::nifi::minifi

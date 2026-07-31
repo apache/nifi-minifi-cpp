@@ -110,7 +110,7 @@ REGISTER_RESOURCE(ExampleProcessor, Processor);
 }  // namespace test::apple
 
 TEST_CASE("Manifest indicates property type requirement") {
-  const auto system_bundle_id = minifi::BundleIdentifier{.name = "minifi-system", .version = minifi::AgentBuild::VERSION};
+  const auto system_bundle_id = minifi::BundleIdentifier{.name = "minifi-system", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
   const auto system_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(system_bundle_id);
   auto nodes = minifi::state::response::serializeComponentManifest(system_components);
   REQUIRE(nodes.size() == 1);
@@ -136,7 +136,7 @@ TEST_CASE("Manifest indicates property type requirement") {
     auto& type = get(*prop_it, "typeProvidedByValue");
 
     CHECK(get(type, "type").value == "test.apple.ExampleService");
-    CHECK(get(type, "group").value == "test.apple");
+    CHECK(get(type, "group").value == "org.apache.nifi.minifi");
     CHECK(get(type, "artifact").value == "minifi-system");
   }
   {
@@ -155,7 +155,7 @@ TEST_CASE("Manifest indicates property type requirement") {
 TEST_CASE("Processors do not get instantiated during manifest creation") {
   LogTestController::getInstance().setDebug<core::Processor>();
 
-  const auto system_bundle_id = minifi::BundleIdentifier{.name = "minifi-system", .version = minifi::AgentBuild::VERSION};
+  const auto system_bundle_id = minifi::BundleIdentifier{.name = "minifi-system", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
   const auto system_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(system_bundle_id);
   minifi::state::response::serializeComponentManifest(system_components);
 

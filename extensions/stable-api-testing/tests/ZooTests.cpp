@@ -16,11 +16,13 @@
  * limitations under the License.
  */
 
+#include "../../standard-processors/tests/unit/ManifestTestHelper.h"
 #include "../AnimalControllerServices.h"
 #include "CProcessorTestUtils.h"
 #include "ZooProcessor.h"
 #include "api/core/Resource.h"
 #include "minifi-cpp/core/FlowFile.h"
+#include "state/nodes/AgentInformation.h"
 #include "unit/Catch.h"
 #include "unit/SingleProcessorTestController.h"
 #include "unit/TestBase.h"
@@ -63,6 +65,34 @@ TEST_CASE("ZooTest") {
     CHECK(controller.getProcessor()->setProperty(ZooProcessor::NumberOfLegsService.name, "invalid"));
     controller.trigger();
     CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::api_testing::ZooProcessor] [critical] Can duck fly? true"));
+  }
+}
+
+TEST_CASE("Test providedApiImplementations") {
+  minifi::state::response::AgentManifest manifest("minifi-stable-api-testing");
+  const auto manifest_serialized = manifest.serialize();
+
+  const auto minifi_stable_api_testing_bundle = getBundle(manifest_serialized, "minifi-stable-api-testing");
+
+  REQUIRE(minifi_stable_api_testing_bundle);
+
+  {
+    const auto duck_controller_service = getComponentFromBundle(*minifi_stable_api_testing_bundle,
+        "org.apache.nifi.minifi.api_testing.DuckController",
+        kControllerService);
+    const auto zoo_processor = getComponentFromBundle(*minifi_stable_api_testing_bundle,
+        "org.apache.nifi.minifi.api_testing.ZooProcessor",
+        kProcessor);
+
+    REQUIRE(duck_controller_service);
+    REQUIRE(zoo_processor);
+
+    const auto can_fly_service_allowed_type = getProcessorPropertyAllowedType(*zoo_processor, "Can fly service");
+    const auto duck_cs_provides_api = getControllerServiceProvidedApiImplementations(*duck_controller_service);
+
+    REQUIRE(can_fly_service_allowed_type);
+    REQUIRE(duck_cs_provides_api.size() == 2);
+    CHECK(duck_cs_provides_api[0] == can_fly_service_allowed_type);
   }
 }
 
