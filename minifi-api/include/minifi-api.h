@@ -208,6 +208,7 @@ struct minifi_controller_service_definition {
 struct minifi_extension_definition {
   struct minifi_string_view name;
   struct minifi_string_view version;
+  struct minifi_string_view group_name;
   void (*deinit)(void* user_data);
   void* user_data;
 };

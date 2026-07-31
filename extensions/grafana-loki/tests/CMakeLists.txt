@@ -35,6 +35,7 @@ FOREACH(testfile ${GRAFANA_LOKI_TESTS})
         target_include_directories(${testfilename} SYSTEM PRIVATE BEFORE "${CMAKE_BINARY_DIR}/grafana-loki-protobuf-generated")
     endif()
     target_include_directories(${testfilename} BEFORE PRIVATE "${CIVETWEB_INCLUDE_DIRS}")
+    target_compile_definitions(${testfilename} PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
 
     createTests("${testfilename}")
     target_link_libraries(${testfilename} Catch2WithMain civetweb::civetweb-cpp minifi-grafana-loki minifi-standard-processors)

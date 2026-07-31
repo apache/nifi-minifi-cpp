@@ -18,6 +18,7 @@
 #pragma once
 
 #include <cinttypes>
+#include <string_view>
 
 namespace org::apache::nifi::minifi::api_testing {
 class NumberOfLegsControllerApi {

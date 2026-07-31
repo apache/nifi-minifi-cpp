@@ -42,36 +42,6 @@ namespace {
 
 namespace minifi = org::apache::nifi::minifi;
 
-
-void sortClassDescription(minifi::ClassDescription& class_description) {
-  std::ranges::sort(class_description.class_properties_, {}, &minifi::core::Property::getName);
-  std::ranges::sort(class_description.dynamic_properties_, {}, &minifi::core::DynamicProperty::name);
-  std::ranges::sort(class_description.class_relationships_, {}, &minifi::core::Relationship::getName);
-  std::ranges::sort(class_description.output_attributes_, {}, &minifi::core::OutputAttribute::name);
-  std::ranges::sort(class_description.api_implementations, {}, &minifi::core::ControllerServiceType::type);
-}
-
-void sortComponents(minifi::Components& components) {
-  auto lower_case_short_name = [](const auto& b) { return minifi::utils::string::toLower(b.short_name_); };
-  std::ranges::sort(components.processors, {}, lower_case_short_name);
-  std::ranges::sort(components.controller_services, {}, lower_case_short_name);
-  std::ranges::sort(components.parameter_providers, {}, lower_case_short_name);
-  std::ranges::sort(components.other_components, {}, lower_case_short_name);
-
-  for (auto& processors : components.processors) {
-    sortClassDescription(processors);
-  }
-  for (auto& cs : components.controller_services) {
-    sortClassDescription(cs);
-  }
-  for (auto& pp : components.parameter_providers) {
-    sortClassDescription(pp);
-  }
-  for (auto& oc : components.other_components) {
-    sortClassDescription(oc);
-  }
-}
-
 std::string formatName(std::string_view name_view, bool is_required) {
   std::string name{name_view};
   if (is_required) { return "**" + name + "**"; }
@@ -234,13 +204,13 @@ class MonolithDocumentation {
 
  private:
   void addComponents(const minifi::Components& components) {
-    for (const auto& controller_service_description : components.controller_services) {
+    for (const auto& controller_service_description : components.getControllerServices()) {
       controller_services.emplace_back(extractClassName(controller_service_description.full_name_), controller_service_description);
     }
-    for (const auto& processor_description : components.processors) {
+    for (const auto& processor_description : components.getProcessors()) {
       processors.emplace_back(extractClassName(processor_description.full_name_), processor_description);
     }
-    for (const auto& parameter_provider_description : components.parameter_providers) {
+    for (const auto& parameter_provider_description : components.getParameterProviders()) {
       parameter_providers.emplace_back(extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
     }
   }
@@ -283,7 +253,7 @@ class ModularDocumentation {
   static void write(const std::filesystem::path& docs_dir) {
     for (auto [bundle_id, components] : minifi::ClassDescriptionRegistry::getClassDescriptions()) {
       if (components.empty()) { continue; }
-      sortComponents(components);
+      components.sort();
       writeModule(docs_dir, bundle_id.name, components);
     }
   }
@@ -301,9 +271,9 @@ class ModularDocumentation {
 
   static void writeToC(std::ostream& os, const minifi::Components& components) {
     os << "\n\n## Table of Contents\n\n";
-    writeComponentParts(os, components.processors, "Processors");
-    writeComponentParts(os, components.controller_services, "Controller Services");
-    writeComponentParts(os, components.parameter_providers, "Parameter Providers");
+    writeComponentParts(os, components.getProcessors(), "Processors");
+    writeComponentParts(os, components.getControllerServices(), "Controller Services");
+    writeComponentParts(os, components.getParameterProviders(), "Parameter Providers");
   }
 
   static void writeModule(const std::filesystem::path& docs_dir, const std::string_view module_name, const minifi::Components& components) {
@@ -315,15 +285,15 @@ class ModularDocumentation {
 
     writeToC(os, components);
 
-    for (const auto& processor : components.processors) {
+    for (const auto& processor : components.getProcessors()) {
       writeProcessor(os, extractClassName(processor.full_name_), processor);
     }
 
-    for (const auto& controller_service : components.controller_services) {
+    for (const auto& controller_service : components.getControllerServices()) {
       writeControllerService(os, extractClassName(controller_service.full_name_), controller_service);
     }
 
-    for (const auto& parameter_provider_description : components.parameter_providers) {
+    for (const auto& parameter_provider_description : components.getParameterProviders()) {
       writeParameterProvider(os, extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
     }
   }
@@ -340,19 +310,20 @@ void AgentDocs::generate(const std::filesystem::path& docs_dir) {
 }
 
 void AgentDocs::generateManifest() {
-  auto all_components = Components{};
-  for (const auto& components : minifi::ClassDescriptionRegistry::getClassDescriptions() | std::views::values) {
-    std::ranges::copy(components.processors, std::back_inserter(all_components.processors));
-    std::ranges::copy(components.controller_services, std::back_inserter(all_components.controller_services));
-    std::ranges::copy(components.parameter_providers, std::back_inserter(all_components.parameter_providers));
-    std::ranges::copy(components.other_components, std::back_inserter(all_components.other_components));
+  for (auto& components : ClassDescriptionRegistry::getMutableClassDescriptions() | std::views::values) {
+    components.sort();
   }
-
-  sortComponents(all_components);
-  auto serialized = minifi::state::response::serializeComponentManifest(all_components);
-  for (const auto& ser : serialized) {
-    std::cout << ser.to_pretty_string() << std::endl;
+  const auto bundles = state::response::Bundles{"bundles"}.serialize();
+  std::cout << "[\n";
+  bool first = true;
+  for (const auto& bundle : bundles) {
+    if (!first) {
+      std::cout << ",\n";
+    }
+    std::cout << bundle.to_pretty_string();
+    first = false;
   }
+  std::cout << "\n]\n";
 }
 
 }  // namespace org::apache::nifi::minifi::docs

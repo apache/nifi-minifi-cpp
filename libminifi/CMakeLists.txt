@@ -69,6 +69,7 @@ if (BREW_FLEX_INCLUDE)
 endif()
 
 target_compile_definitions(core-minifi PRIVATE "LIBMINIFI=1")
+target_compile_definitions(core-minifi PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi")
 if(WIN32)
     set_target_properties(core-minifi PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     add_dependencies(core-minifi message-strings)

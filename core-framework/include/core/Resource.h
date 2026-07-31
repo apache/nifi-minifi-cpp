@@ -57,6 +57,11 @@ class StaticClassType {
 #else
       auto module_name = "minifi-system";
 #endif
+#ifdef MINIFI_EXTENSION_GROUP_NAME
+    auto group_name = MAKESTRING(MINIFI_EXTENSION_GROUP_NAME);
+#else
+    static_assert(false, "MINIFI_EXTENSION_GROUP_NAME has to be defined");
+#endif
 
     if constexpr (Type == ResourceType::Processor) {
       for (const auto& construction_name : construction_names_) {
@@ -75,7 +80,8 @@ class StaticClassType {
       }
     }
 
-    minifi::ClassDescriptionRegistry::createClassDescription<Class, Type>(module_name, class_name, minifi::AgentBuild::VERSION);
+    minifi::BundleCoordinate bundle_coord{.name = module_name, .group_name = group_name, .version = minifi::AgentBuild::VERSION};
+    minifi::ClassDescriptionRegistry::createClassDescription<Class, Type>(bundle_coord, class_name);
   }
 
   ~StaticClassType() {

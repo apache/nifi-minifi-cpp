@@ -37,6 +37,10 @@ minifi_status ZooProcessor::onTriggerImpl(api::core::ProcessContext& process_con
       logger_->log_critical("{} has {} legs", num_of_legs_name, num_legs->numberOfLegs());
     }
   }
+  if (auto ssl_data = process_context.getSslData(SSLContextService)) {
+    logger_->log_critical("Has ssl_data? {}", ssl_data->has_value());
+  }
+
   return ProcessorImpl::onTriggerImpl(process_context, process_session);
 }
 

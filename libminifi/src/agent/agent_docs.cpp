@@ -20,17 +20,17 @@
 namespace org::apache::nifi::minifi {
 
 namespace {
-std::map<BundleIdentifier, Components>& getAgentDocsClassMappings() {
-  static std::map<BundleIdentifier, Components> mappings;
+std::map<BundleCoordinate, Components>& getAgentDocsClassMappings() {
+  static std::map<BundleCoordinate, Components> mappings;
   return mappings;
 }
 }  // namespace
 
-const std::map<BundleIdentifier, Components>& ClassDescriptionRegistry::getClassDescriptions() {
+const std::map<BundleCoordinate, Components>& ClassDescriptionRegistry::getClassDescriptions() {
   return getAgentDocsClassMappings();
 }
 
-std::map<BundleIdentifier, Components>& ClassDescriptionRegistry::getMutableClassDescriptions() {
+std::map<BundleCoordinate, Components>& ClassDescriptionRegistry::getMutableClassDescriptions() {
   return getAgentDocsClassMappings();
 }
 
@@ -39,5 +39,12 @@ void ClassDescriptionRegistry::clearClassDescriptionsForBundle(const std::string
     return entry.first.name == bundle_name;
   });
 }
+
+Components& ClassDescriptionRegistry::getMutableComponents(const BundleCoordinate& bundle_coordinate) {
+  const auto [it, success] = getMutableClassDescriptions().try_emplace(bundle_coordinate, bundle_coordinate);
+  (void)success;
+  return it->second;
+}
+
 
 }  // namespace org::apache::nifi::minifi

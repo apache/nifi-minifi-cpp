@@ -59,6 +59,7 @@ extern "C" void minifi_init_cpp_extension(minifi_extension_context* extension_co
 
   minifi_extension_definition ext_definition{.name = toStringView(MAKESTRING(MODULE_NAME)),
       .version = toStringView(minifi::AgentBuild::VERSION),
+      .group_name = toStringView("org.apache.nifi.minifi"),
       .deinit = &minifi::aws::init::deinit,
       .user_data = sdk_options.get()};
 

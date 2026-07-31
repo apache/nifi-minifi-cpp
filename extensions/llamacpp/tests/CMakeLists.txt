@@ -31,6 +31,7 @@ FOREACH(testfile ${LLAMACPP_TESTS})
     target_link_libraries(${testfilename} minifi-standard-processors)
     target_link_libraries(${testfilename} libminifi-c-unittest)
     target_compile_definitions("${testfilename}" PRIVATE TZ_DATA_DIR="${CMAKE_BINARY_DIR}/tzdata")
+    target_compile_definitions(${testfilename} PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
 
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME ${testfilename} COMMAND ${testfilename} WORKING_DIRECTORY ${TEST_DIR})

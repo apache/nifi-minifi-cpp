@@ -36,6 +36,8 @@ struct ControllerServiceType {
       : artifact(std::move(artifact)),
         group(std::move(group)),
         type(std::move(type)) {}
+
+  auto operator<=>(const ControllerServiceType&) const = default;
 };
 
 }  // namespace org::apache::nifi::minifi::core

@@ -442,10 +442,10 @@ std::string generateJsonSchema() {
   };
 
   for (const auto& [bundle_id, components]: ClassDescriptionRegistry::getClassDescriptions()) {
-    for (const auto& proc : components.processors) {
+    for (const auto& proc : components.getProcessors()) {
       putProcSchema(proc);
     }
-    for (const auto& service : components.controller_services) {
+    for (const auto& service : components.getControllerServices()) {
       putControllerService(service);
     }
   }

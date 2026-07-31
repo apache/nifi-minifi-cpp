@@ -48,7 +48,7 @@ std::shared_ptr<minifi::core::controller::ControllerService> make_custom_c_contr
     Args&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
   std::unique_ptr<minifi::core::controller::ControllerServiceApi> controller_service_impl;
   minifi::api::core::useControllerServiceClassDefinition<T>([&](const minifi_controller_service_definition& definition) {
-    minifi::utils::useCControllerServiceClassDescription("test_bundle", definition, [&](const auto&, auto c_description) {
+    minifi::utils::useCControllerServiceClassDescription("test_bundle", "test_group", definition, [&](const auto&, auto c_description) {
       controller_service_impl = std::make_unique<minifi::utils::CControllerService>(std::move(c_description),
           metadata,
           new T(metadata, std::forward<Args>(args)...));

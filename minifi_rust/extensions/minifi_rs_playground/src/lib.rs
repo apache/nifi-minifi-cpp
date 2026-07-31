@@ -39,6 +39,7 @@ use minifi_native::{
 };
 
 minifi_native::declare_minifi_extension!(
+    group_name: "org.apache.nifi.minifi.rust.test",
     processors: [
         (ComplexProcessorType, MultiThreaded, GenerateFlowFileRs),
         (ComplexProcessorType, MultiThreaded, LogAttributeRs),

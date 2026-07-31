@@ -30,6 +30,7 @@ CEXTENSIONAPI const uint32_t minifi_api_version = MINIFI_API_VERSION;
 CEXTENSIONAPI void minifi_init_extension(minifi_extension_context* extension_context) {
   const minifi_extension_definition extension_definition{.name = minifi::api::utils::minifiStringView(MAKESTRING(EXTENSION_NAME)),
       .version = minifi::api::utils::minifiStringView(MAKESTRING(EXTENSION_VERSION)),
+      .group_name = minifi::api::utils::minifiStringView(MAKESTRING(MINIFI_EXTENSION_GROUP_NAME)),
       .deinit = nullptr,
       .user_data = nullptr};
   auto* extension = minifi_register_extension(extension_context, &extension_definition);

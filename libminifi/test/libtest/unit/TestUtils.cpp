@@ -299,4 +299,102 @@ std::vector<LogMessageView> extractLogMessageViews(const std::string& log_str) {
   return messages;
 }
 
+const state::response::SerializedResponseNode* getBundle(const std::vector<state::response::SerializedResponseNode>& manifest,
+    const std::string_view bundle_artifact_name) {
+  const auto bundle_it = ranges::find_if(manifest, [bundle_artifact_name](const auto& node) {
+    return node.name == "bundles" && std::end(node.children) != ranges::find_if(node.children, [bundle_artifact_name](const auto& child) {
+      return child.name == "artifact" && child.value.to_string() == bundle_artifact_name;
+    });
+  });
+  if (bundle_it == std::end(manifest)) {
+    return nullptr;
+  }
+  return &(*bundle_it);
+}
+
+const state::response::SerializedResponseNode* getComponentFromBundle(const state::response::SerializedResponseNode& bundle, std::string_view name,
+    ResourceType type) {
+  const auto component_manifest = ranges::find_if(bundle.children, [](const auto& bundle_child) { return bundle_child.name == "componentManifest"; });
+  if (component_manifest == std::end(bundle.children)) {
+    return nullptr;
+  }
+  if (type == ResourceType::Processor) {
+    const auto processors = ranges::find_if(component_manifest->children, [](const auto& c) { return c.name == "processors"; });
+    if (processors != std::end(component_manifest->children)) {
+      const auto proc_it = ranges::find_if(processors->children, [name](const auto& c) { return c.name == name; });
+      if (proc_it != std::end(processors->children)) {
+        return &(*proc_it);
+      }
+    }
+  } else if (type == ResourceType::ControllerService) {
+    const auto controller_services = ranges::find_if(component_manifest->children, [](const auto& c) { return c.name == "controllerServices"; });
+    if (controller_services != std::end(component_manifest->children)) {
+      const auto controller_service_it = ranges::find_if(controller_services->children, [name](const auto& c) { return c.name == name; });
+      if (controller_service_it != std::end(controller_services->children)) {
+        return &(*controller_service_it);
+      }
+    }
+  }
+  return nullptr;
+}
+
+namespace {
+std::optional<std::string> getChildAsStr(const state::response::SerializedResponseNode& node, const std::string_view node_name) {
+  const auto child_node = ranges::find_if(node.children, [node_name](const auto& c) { return c.name == node_name; });
+  if (child_node == std::end(node.children)) {
+    return std::nullopt;
+  }
+  return child_node->value.to_string();
+}
+}  // namespace
+
+std::optional<core::ControllerServiceType> getProcessorPropertyAllowedType(const state::response::SerializedResponseNode& processor_node,
+    std::string_view property) {
+  const auto property_descriptors = ranges::find_if(processor_node.children, [](const auto& c) { return c.name == "propertyDescriptors"; });
+  if (property_descriptors == std::end(processor_node.children)) {
+    return std::nullopt;
+  }
+  const auto property_descriptor = ranges::find_if(property_descriptors->children, [property](const auto& c) { return c.name == property; });
+  if (property_descriptor == std::end(property_descriptors->children)) {
+    return std::nullopt;
+  }
+  const auto type_provided_by_value = ranges::find_if(property_descriptor->children, [](const auto& c) { return c.name == "typeProvidedByValue"; });
+  if (type_provided_by_value == std::end(property_descriptor->children)) {
+    return std::nullopt;
+  }
+  const auto artifact = getChildAsStr(*type_provided_by_value, "artifact");
+  const auto group = getChildAsStr(*type_provided_by_value, "group");
+  const auto type = getChildAsStr(*type_provided_by_value, "type");
+  [[maybe_unused]] const auto version = getChildAsStr(*type_provided_by_value, "version");  // Currently not used
+
+  if (!artifact || !group || !type) {
+    return std::nullopt;
+  }
+  return core::ControllerServiceType(*artifact, *group, *type);
+}
+
+std::vector<core::ControllerServiceType>
+getControllerServiceProvidedApiImplementations(const state::response::SerializedResponseNode& controller_service_node) {
+  std::vector<core::ControllerServiceType> allowed_types;
+  const auto provided_api_implementations = ranges::find_if(controller_service_node.children, [](const auto& c) {
+    return c.name == "providedApiImplementations";
+  });
+  if (provided_api_implementations == std::end(controller_service_node.children)) {
+    return allowed_types;
+  }
+  for (const auto& provided_api_implementation : provided_api_implementations->children) {
+    const auto artifact = getChildAsStr(provided_api_implementation, "artifact");
+    const auto group = getChildAsStr(provided_api_implementation, "group");
+    const auto type = getChildAsStr(provided_api_implementation, "type");
+    [[maybe_unused]] const auto version = getChildAsStr(provided_api_implementation, "version");  // Currently not used
+
+    if (!artifact || !group || !type) {
+      continue;
+    }
+    allowed_types.push_back(core::ControllerServiceType{
+        *artifact, *group, *type});
+  }
+  return allowed_types;
+}
+
 }  // namespace org::apache::nifi::minifi::test::utils

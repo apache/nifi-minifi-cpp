@@ -259,7 +259,7 @@ void useCProcessorClassDescription(const minifi_processor_definition& class_desc
   fn(description, c_class_description);
 }
 
-void useCControllerServiceClassDescription(const std::string_view bundle_name, const minifi_controller_service_definition& class_description,
+void useCControllerServiceClassDescription(const std::string_view artifact_name, const std::string_view group_name, const minifi_controller_service_definition& class_description,
     const std::function<void(const ClassDescription&, CControllerServiceClassDescription)>& fn) {
   std::vector<minifi::core::Property> properties;
   properties.reserve(class_description.properties_count);
@@ -275,9 +275,7 @@ void useCControllerServiceClassDescription(const std::string_view bundle_name, c
   for (size_t i = 0; i < class_description.provided_interfaces_count; ++i) {
     auto api_segments = string::split(toStringView(class_description.provided_interfaces_ptr[i]), "::");
     std::string type_name = string::join(".", api_segments);
-    api_segments.pop_back();
-    std::string group_name = string::join(".", api_segments);
-    implements_apis.emplace_back(std::string{bundle_name}, std::move(group_name), std::move(type_name));
+    implements_apis.emplace_back(std::string{artifact_name}, std::string{group_name}, std::move(type_name));
   }
 
   ClassDescription description{
@@ -309,6 +307,7 @@ minifi_extension* minifi_register_extension(minifi_extension_context* extension_
   auto* extension = toCpp(extension_context)->create(minifi::core::extension::Extension::Info{
     .name = toString(extension_definition->name),
     .version = toString(extension_definition->version),
+    .group_name = toString(extension_definition->group_name),
     .deinit = extension_definition->deinit,
     .user_data = extension_definition->user_data
   });
@@ -326,16 +325,17 @@ minifi_status minifi_register_processor(minifi_extension* extension, const minif
   if (!extension_info) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
-  const minifi::BundleIdentifier bundle{
+  const minifi::BundleCoordinate bundle{
     .name = extension_info->name,
+    .group_name = extension_info->group_name,
     .version = extension_info->version
   };
-  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[bundle];
+  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableComponents(bundle);
   minifi::utils::useCProcessorClassDescription(*processor, [&] (const auto& description, const auto& c_class_description) {
     minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_info->name).registerClass(
       c_class_description.name,
       std::make_unique<CProcessorFactory>(extension_info->name, toString(processor->full_name), c_class_description));
-    bundle_components.processors.emplace_back(description);
+    bundle_components.addClassDescription(description, minifi::ResourceType::Processor);
     extension_->addClass(c_class_description.name);
   });
   return MINIFI_STATUS_SUCCESS;
@@ -348,16 +348,17 @@ minifi_status minifi_register_controller_service(minifi_extension* extension, co
   if (!extension_info) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
-  const minifi::BundleIdentifier bundle{
+  const minifi::BundleCoordinate bundle{
     .name = extension_info->name,
+    .group_name = extension_info->group_name,
     .version = extension_info->version
   };
-  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions()[bundle];
-  minifi::utils::useCControllerServiceClassDescription(bundle.name, *controller_service, [&] (const auto& description, const auto& c_class_description) {
+  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableComponents(bundle);
+  minifi::utils::useCControllerServiceClassDescription(bundle.name, bundle.group_name, *controller_service, [&] (const auto& description, const auto& c_class_description) {
     minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_info->name).registerClass(
       description.short_name_,
       std::make_unique<CControllerServiceFactory>(extension_info->name, toString(controller_service->full_name), c_class_description));
-    bundle_components.controller_services.emplace_back(description);
+    bundle_components.addClassDescription(description, minifi::ResourceType::ControllerService);
   });
   return MINIFI_STATUS_SUCCESS;
 }

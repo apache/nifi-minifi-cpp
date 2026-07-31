@@ -76,6 +76,8 @@ pub static minifi_api_version: u32 = minifi_native_sys::MINIFI_API_VERSION;
 #[macro_export]
 macro_rules! declare_minifi_extension {
     (
+        // Group name
+        group_name: $group:expr,
         // Match a tuple of three types for each processor
         processors: [ $( ($kind:ty, $thread:ty, $impl:ty) ),* $(,)? ],
         // Match a single type for each controller service
@@ -94,6 +96,7 @@ macro_rules! declare_minifi_extension {
                 let extension_definition = minifi_native::sys::minifi_extension_definition {
                     name: env!("CARGO_PKG_NAME").as_minifi_c_type(),
                     version: env!("CARGO_PKG_VERSION").as_minifi_c_type(),
+                    group_name: $group.as_minifi_c_type(),
                     deinit: None,
                     user_data: std::ptr::null_mut(),
                 };

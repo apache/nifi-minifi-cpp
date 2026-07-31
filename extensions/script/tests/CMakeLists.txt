@@ -24,6 +24,7 @@ FOREACH(testfile ${EXECUTE_SCRIPT_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
     add_minifi_executable("${testfilename}" "${testfile}")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/script")
+    target_compile_definitions(${testfilename} PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
 
     createTests("${testfilename}")
     target_link_libraries(${testfilename} Catch2WithMain)

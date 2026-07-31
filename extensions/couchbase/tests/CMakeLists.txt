@@ -28,6 +28,7 @@ FOREACH(testfile ${COUCHBASE_TESTS})
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/couchbase/processors")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/couchbase/")
     target_include_directories(${testfilename} PRIVATE BEFORE "${COUCHBASE_INCLUDE_DIR}")
+    target_compile_definitions(${testfilename} PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
 
     # Demote preprocessor warnings so <ciso646> doesn't break the build
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
