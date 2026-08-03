@@ -78,6 +78,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
+  void onSchedule(core::reporting::ReportingTaskContext& context);
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
@@ -150,11 +151,13 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     return batch_duration_;
   }
 
+  bool useProtocol(std::function<bool(sitetosite::SiteToSiteClient& client)> callback);
+
  protected:
   std::optional<std::pair<std::string, uint16_t>> refreshRemoteSiteToSiteInfo();
   void refreshPeerList();
   std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol();
-  void returnProtocol(core::ProcessContext& context, std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
+  void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
 
   moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
   std::shared_ptr<Configure> configure_;
@@ -175,6 +178,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
   std::optional<uint64_t> batch_count_;
   std::optional<uint64_t> batch_size_;
   std::optional<std::chrono::milliseconds> batch_duration_;
+  uint64_t max_concurrent_tasks_{1};
 
  private:
   gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const;

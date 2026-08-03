@@ -59,6 +59,18 @@ public:
 
   void forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) override;
 
+  ReportingTaskApi& getImpl() const {
+    gsl_Assert(impl_);
+    return *impl_;
+  }
+
+  template<typename T>
+  T& getImpl() const {
+    auto* res = dynamic_cast<T*>(&getImpl());
+    gsl_Assert(res);
+    return *res;
+  }
+
  private:
   std::unique_ptr<ReportingTaskApi> impl_;
 };
