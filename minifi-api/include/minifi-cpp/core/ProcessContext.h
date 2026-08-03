@@ -30,6 +30,7 @@
 #include "minifi-cpp/core/VariableRegistry.h"
 #include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 #include "minifi-cpp/provenance/ProvenanceRepository.h"
+#include "minifi-cpp/core/reporting/ReportingTaskContext.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -46,14 +47,20 @@ class ProcessorInfo {
 
 class Processor;
 
-class ProcessContext : public virtual core::VariableRegistry, public virtual utils::EnableSharedFromThis {
+class ProcessContext : public reporting::ReportingTaskContext, public virtual core::VariableRegistry, public virtual utils::EnableSharedFromThis {
  public:
   virtual const ProcessorInfo& getProcessorInfo() const = 0;
   virtual Processor& getProcessor() const = 0;
 
-  virtual std::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
-  std::expected<std::string, std::error_code> getProperty(const Property& property, const FlowFile* flow_file = nullptr) const { return getProperty(property.getName(), flow_file); }
-  std::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file = nullptr) const {
+  std::expected<std::string, std::error_code> getProperty(std::string_view name) const final {
+    return getProperty(name, nullptr);
+  }
+
+  using ReportingTaskContext::getProperty;
+
+  virtual std::expected<std::string, std::error_code> getProperty(std::string_view name, const FlowFile* flow_file) const = 0;
+  std::expected<std::string, std::error_code> getProperty(const Property& property, const FlowFile* flow_file) const { return getProperty(property.getName(), flow_file); }
+  std::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference, const FlowFile* flow_file) const {
     return getProperty(property_reference.name, flow_file);
   }
 
@@ -79,25 +86,18 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
 
   virtual bool isRunning() const = 0;
   virtual bool isAutoTerminated(Relationship relationship) const = 0;
-  virtual uint8_t getMaxConcurrentTasks() const = 0;
-  virtual std::shared_ptr<provenance::ProvenanceRepository> getProvenanceRepository() = 0;
   virtual std::shared_ptr<core::ContentRepository> getContentRepository() const = 0;
   virtual std::shared_ptr<core::Repository> getFlowFileRepository() const = 0;
 
   virtual bool hasIncomingConnections() const = 0;
 
   virtual bool hasNonEmptyProperty(std::string_view name) const = 0;
-  virtual void yield() = 0;
 
-  virtual std::shared_ptr<core::controller::ControllerServiceHandle> getControllerService(const std::string &identifier, const utils::Identifier &processor_uuid) const = 0;
   static constexpr char const* DefaultStateStorageName = "defaultstatestorage";
 
   // Locally creates a StateManager instance, committing or rolling back changes to the component state is the responsibility of the caller.
   virtual std::unique_ptr<StateManager> createStateManager() = 0;
 
-  // Returns the StateManager associated with the current ProcessSession, the lifetime of which is scoped to a single execution of a Processor's onTrigger method.
-  // The ProcessSession is responsible for committing or rolling back any changes to the component state at the end of the onTrigger execution.
-  virtual StateManager* getStateManager() = 0;
   virtual void setSessionStateManager(std::unique_ptr<StateManager> state_manager) = 0;
   virtual gsl::not_null<Configure*> getConfiguration() const = 0;
   virtual void setTriggerWhenEmpty(bool trigger_when_empty) = 0;

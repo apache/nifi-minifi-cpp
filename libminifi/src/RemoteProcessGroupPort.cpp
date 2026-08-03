@@ -87,6 +87,15 @@ gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> RemoteProcessGroupP
   return sitetosite::createClient(config);
 }
 
+bool RemoteProcessGroupPort::useProtocol(std::function<bool(sitetosite::SiteToSiteClient& client)> callback) {
+  auto protocol = getNextProtocol();
+  if (!protocol) {
+    return false;
+  }
+  auto protocol_guard = gsl::finally([&] {returnProtocol(std::move(protocol));});
+  return callback(*protocol);
+}
+
 std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::getNextProtocol() {
   std::unique_ptr<sitetosite::SiteToSiteClient> next_protocol = nullptr;
   if (!available_protocols_.try_dequeue(next_protocol)) {
@@ -109,8 +118,8 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::getNextPro
   return next_protocol;
 }
 
-void RemoteProcessGroupPort::returnProtocol(core::ProcessContext& context, std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
-  auto count = std::max<size_t>(context.getProcessor().getMaxConcurrentTasks(), peers_.size());
+void RemoteProcessGroupPort::returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
+  auto count = std::max<size_t>(max_concurrent_tasks_, peers_.size());
   if (available_protocols_.size_approx() >= count) {
     logger_->log_debug("not enqueueing protocol {}", getUUIDStr());
     // let the memory be freed
@@ -133,10 +142,15 @@ void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::Pro
   } else {
     context.setTriggerWhenEmpty(false);
   }
+  onSchedule(context);
+}
 
+void RemoteProcessGroupPort::onSchedule(core::reporting::ReportingTaskContext& context) {
   if (auto protocol_uuid = context.getProperty(portUUID)) {
     protocol_uuid_ = *protocol_uuid;
   }
+
+  max_concurrent_tasks_ = context.getMaxConcurrentTasks();
 
   auto context_name = context.getProperty(SSLContext);
   if (!context_name || IsNullOrEmpty(*context_name)) {
@@ -163,7 +177,7 @@ void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::Pro
   }
   // populate the site2site protocol for load balancing between them
   if (!peers_.empty()) {
-    auto count = std::max<size_t>(context.getProcessor().getMaxConcurrentTasks(), peers_.size());
+    auto count = std::max<size_t>(max_concurrent_tasks_, peers_.size());
     for (uint32_t i = 0; i < count; i++) {
       auto peer_status = peers_[peer_index_];
       sitetosite::SiteToSiteClientConfiguration config(peer_status.getPortId(), peer_status.getHost(), peer_status.getPort(), local_network_interface_, client_type_);
@@ -174,7 +188,7 @@ void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::Pro
       logger_->log_trace("Creating client");
       auto next_protocol = initializeProtocol(config);
       logger_->log_trace("Created client, moving into available protocols");
-      returnProtocol(context, std::move(next_protocol));
+      returnProtocol(std::move(next_protocol));
     }
   } else {
     // we don't have any peers
@@ -211,7 +225,7 @@ void RemoteProcessGroupPort::onTrigger(core::ProcessContext& context, core::Proc
       context.yield();
     }
 
-    returnProtocol(context, std::move(protocol));
+    returnProtocol(std::move(protocol));
   } catch (const std::exception&) {
     context.yield();
     session.rollback();

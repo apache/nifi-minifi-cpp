@@ -90,7 +90,7 @@ void appendJsonStr(const utils::SmallString<N>& value, rapidjson::Value& parent,
   parent.PushBack(valueVal, alloc);
 }
 
-void SiteToSiteProvenanceReportingTask::getJsonReport(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, std::string &report) {
+std::string SiteToSiteProvenanceReportingTask::getJsonReport(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records) {
   rapidjson::Document array(rapidjson::kArrayType);
   rapidjson::Document::AllocatorType &alloc = array.GetAllocator();
 
@@ -157,8 +157,7 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(const std::vector<std::sha
 }
 
 void SiteToSiteProvenanceReportingTask::onSchedule(ReportingTaskContext& context) {
-  RemoteProcessGroupPort::onSchedule(context, session_factory);
-  context.setTriggerWhenEmpty(true);
+  remote_port_.getImpl<RemoteProcessGroupPort>().onSchedule(context);
 }
 
 void SiteToSiteProvenanceReportingTask::onTrigger(ReportingTaskContext& context) {
@@ -197,25 +196,20 @@ void SiteToSiteProvenanceReportingTask::onTrigger(ReportingTaskContext& context)
     return;
   }
   logger_->log_debug("Captured {} records", records.size());
-  std::string jsonStr = getJsonReport(context, session, records);
+  std::string jsonStr = getJsonReport(records);
   if (jsonStr.empty()) {
     return;
   }
 
-  auto protocol_ = remote_port_.getImpl<RemoteProcessGroupPort>().getNextProtocol();
-
-  if (!protocol_) {
-    context.yield();
-    return;
-  }
-
-  try {
-    std::map<std::string, std::string> attributes;
-    if (!protocol_->transmitPayload(context, jsonStr, attributes)) {
-      context.yield();
+  if (!remote_port_.getImpl<RemoteProcessGroupPort>().useProtocol([&] (auto& protocol) {
+    try {
+      std::map<std::string, std::string> attributes;
+      return protocol.transmitPayload(context, jsonStr, attributes);
+    } catch (...) {
+      return false;
     }
-  } catch (...) {
-    // if transfer bytes failed, return instead of purge the provenance records
+  })) {
+    context.yield();
     return;
   }
 
@@ -235,7 +229,6 @@ void SiteToSiteProvenanceReportingTask::onTrigger(ReportingTaskContext& context)
     }
     repo->Delete(entries);
   }
-  returnProtocol(context, std::move(protocol_));
 }
 
 REGISTER_RESOURCE(SiteToSiteProvenanceReportingTask, ReportingTask);

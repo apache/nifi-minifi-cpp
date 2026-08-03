@@ -23,17 +23,6 @@ namespace org::apache::nifi::minifi::core::reporting {
 
 namespace {
 
-class ReportingTaskContextWrapper : public ReportingTaskContext {
- public:
-  explicit ReportingTaskContextWrapper(ProcessContext& context): context_(context) {}
-  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(std::string_view name) const override {
-    return context_.getProperty(name);
-  }
-
- private:
-  ProcessContext& context_;
-};
-
 class ReportingTaskDescriptorWrapper : public ReportingTaskDescriptor {
  public:
   explicit ReportingTaskDescriptorWrapper(ProcessorDescriptor& descriptor): descriptor_(descriptor) {}
@@ -58,7 +47,7 @@ bool ReportingTask::isWorkAvailable() {
   return false;
 }
 
-void ReportingTask::restore(const std::shared_ptr<FlowFile>& file) {
+void ReportingTask::restore(const std::shared_ptr<FlowFile>&) {
   throw std::runtime_error("Not supported");
 }
 
@@ -80,18 +69,16 @@ bool ReportingTask::isSingleThreaded() const {
 }
 
 std::string ReportingTask::getProcessorType() const {
-
+  return "ReportingTask";
 }
 
 void ReportingTask::onTrigger(ProcessContext& context, ProcessSession&) {
-  ReportingTaskContextWrapper reporting_context{context};
-  impl_->onTrigger(reporting_context);
+  impl_->onTrigger(context);
 }
 
 void ReportingTask::onSchedule(ProcessContext& context, ProcessSessionFactory&) {
+  impl_->onSchedule(context);
   context.setTriggerWhenEmpty(true);
-  ReportingTaskContextWrapper reporting_context{context};
-  impl_->onSchedule(reporting_context);
 }
 
 void ReportingTask::onUnSchedule() {
@@ -110,7 +97,7 @@ std::shared_ptr<ProcessorMetricsExtension> ReportingTask::getMetricsExtension() 
   return nullptr;
 }
 
-void ReportingTask::forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) {
+void ReportingTask::forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>&) {
   // pass
 }
 
