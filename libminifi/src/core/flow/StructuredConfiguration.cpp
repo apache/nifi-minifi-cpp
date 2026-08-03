@@ -129,13 +129,11 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
     uuids_.clear();
     Node parameterContextsNode = root_node[schema_.parameter_contexts];
     Node parameterProvidersNode = root_node[schema_.parameter_providers];
-    Node provenanceReportNode = root_node[schema_.provenance_reporting];
     Node reportingTasksNode = root_node[schema_.reporting_tasks];
 
     parseParameterContexts(parameterContextsNode, parameterProvidersNode);
     // Create the root process group
     std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
-    parseLegacyProvenanceReporting(provenanceReportNode, root.get());
 
     root->verify();
 
@@ -1079,7 +1077,7 @@ void StructuredConfiguration::parseReportingTasks(const Node& reporting_tasks_no
 
     auto reporting_task = createProcessor(utils::string::partAfterLastOccurrenceOf(type, '.'), type, name, id);
     if (!reporting_task) {
-      logger_->log_error("Could not create a processor {} with id {}", name, id);
+      logger_->log_error("Could not create a processor {} with id {}", name, id.to_string());
       throw std::invalid_argument("Could not create processor " + name);
     }
 
