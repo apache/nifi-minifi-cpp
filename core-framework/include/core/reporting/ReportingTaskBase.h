@@ -60,6 +60,8 @@ class ReportingTaskBase : public ReportingTaskApi {
 
   ~ReportingTaskBase() noexcept override = default;
 
+  void onUnSchedule() override {}
+
  protected:
   std::string name_;
   utils::Identifier uuid_;

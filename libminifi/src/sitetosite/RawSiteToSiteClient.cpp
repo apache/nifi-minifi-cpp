@@ -379,7 +379,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(TransferDire
   }
 }
 
-bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, const std::string &payload, const std::map<std::string, std::string>& attributes) {
+bool RawSiteToSiteClient::transmitPayload(YieldAction yield, const std::string &payload, const std::map<std::string, std::string>& attributes) {
   if (payload.empty()) {
     return false;
   }
@@ -389,14 +389,14 @@ bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, const s
   }
 
   if (peer_state_ != PeerState::READY) {
-    context.yield();
+    yield.request();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not establish handshake with peer");
   }
 
   auto transaction = createTransaction(TransferDirection::SEND);
   if (transaction == nullptr) {
-    context.yield();
+    yield.request();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
   }
@@ -412,12 +412,12 @@ bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, const s
     if (!confirm(transaction_id)) {
       throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed in transaction " + transaction_id.to_string());
     }
-    if (!complete(context, transaction_id)) {
+    if (!complete(yield, transaction_id)) {
       throw Exception(SITE2SITE_EXCEPTION, "Complete Failed in transaction " + transaction_id.to_string());
     }
     logger_->log_info("Site2Site transaction {} successfully send flow record {} content bytes {}", transaction_id.to_string(), transaction->getCurrentTransfers(), transaction->getBytes());
   } catch (const std::exception &exception) {
-    handleTransactionError(transaction, context, exception);
+    handleTransactionError(transaction, yield, exception);
     throw;
   }
 

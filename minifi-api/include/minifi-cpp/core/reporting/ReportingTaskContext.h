@@ -21,6 +21,7 @@
 #include <system_error>
 #include <string_view>
 #include "utils/expected.h"
+#include "minifi-cpp/provenance/ProvenanceRepository.h"
 
 namespace org::apache::nifi::minifi::core::reporting {
 
@@ -28,7 +29,30 @@ class ReportingTaskContext {
  public:
   virtual ~ReportingTaskContext() = default;
 
-  [[nodiscard]] virtual std::expected<std::string, std::error_code> getProperty(std::string_view name) const = 0;
+  [[nodiscard]]
+  virtual std::expected<std::string, std::error_code> getProperty(std::string_view name) const = 0;
+
+  [[nodiscard]]
+  std::expected<std::string, std::error_code> getProperty(const Property& property) const {
+    return getProperty(property.getName());
+  }
+
+  [[nodiscard]]
+  std::expected<std::string, std::error_code> getProperty(const PropertyReference& property_reference) const {
+    return getProperty(property_reference.name);
+  }
+
+  [[nodiscard]]
+  virtual std::shared_ptr<core::controller::ControllerServiceHandle> getControllerService(const std::string& service_name, const utils::Identifier& reporting_task_uuid) const = 0;
+
+  [[nodiscard]]
+  virtual std::shared_ptr<provenance::ProvenanceRepository> getProvenanceRepository() = 0;
+
+  [[nodiscard]]
+  virtual StateManager* getStateManager() = 0;
+
+  [[nodiscard]]
+  virtual uint8_t getMaxConcurrentTasks() const = 0;
 
   virtual void yield() = 0;
 };
