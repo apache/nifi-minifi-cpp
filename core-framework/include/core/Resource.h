@@ -80,8 +80,8 @@ class StaticClassType {
       }
     }
 
-    minifi::BundleIdentifier bundle_identifier{.name = module_name, .group_name = group_name, .version = minifi::AgentBuild::VERSION};
-    minifi::ClassDescriptionRegistry::createClassDescription<Class, Type>(bundle_identifier, class_name);
+    minifi::BundleCoordinate bundle_coord{.name = module_name, .group_name = group_name, .version = minifi::AgentBuild::VERSION};
+    minifi::ClassDescriptionRegistry::createClassDescription<Class, Type>(bundle_coord, class_name);
   }
 
   ~StaticClassType() {

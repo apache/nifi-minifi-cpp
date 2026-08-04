@@ -315,7 +315,7 @@ void HeartbeatHandler::verifyJsonHasAgentManifest(const rapidjson::Document& roo
         classes.push_back(proc["type"].GetString());
       }
 
-      auto bundle_details = BundleIdentifier{.name = str, .group_name = "org.apache.nifi.minifi", .version = AgentBuild::VERSION};
+      auto bundle_details = BundleCoordinate{.name = str, .group_name = "org.apache.nifi.minifi", .version = AgentBuild::VERSION};
       const Components& group = minifi::ClassDescriptionRegistry::getClassDescriptions().at(bundle_details);
       for (const auto& proc : group.getProcessors()) {
         REQUIRE(std::find(classes.begin(), classes.end(), proc.full_name_) != std::end(classes));

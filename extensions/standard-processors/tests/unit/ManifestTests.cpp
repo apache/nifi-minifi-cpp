@@ -30,8 +30,8 @@
 #include "ManifestTestHelper.h"
 
 TEST_CASE("Test Required", "[required]") {
-  const auto standard_processor_bundle_id = minifi::BundleIdentifier{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
-  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_id);
+  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
@@ -66,8 +66,8 @@ TEST_CASE("Test Required", "[required]") {
 }
 
 TEST_CASE("Test Valid Regex", "[validRegex]") {
-  const auto standard_processor_bundle_id = minifi::BundleIdentifier{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
-  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_id);
+  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
@@ -86,8 +86,8 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
 }
 
 TEST_CASE("Test Relationships", "[rel1]") {
-  const auto standard_processor_bundle_id = minifi::BundleIdentifier{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
-  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_id);
+  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
@@ -126,9 +126,9 @@ TEST_CASE("Test Relationships", "[rel1]") {
 }
 
 TEST_CASE("Test Dependent", "[dependent]") {
-  const auto standard_processor_bundle_id = minifi::BundleIdentifier{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
   const auto class_desc = minifi::ClassDescriptionRegistry::getClassDescriptions();
-  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_id);
+  const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];

@@ -20,17 +20,17 @@
 namespace org::apache::nifi::minifi {
 
 namespace {
-std::map<BundleIdentifier, Components>& getAgentDocsClassMappings() {
-  static std::map<BundleIdentifier, Components> mappings;
+std::map<BundleCoordinate, Components>& getAgentDocsClassMappings() {
+  static std::map<BundleCoordinate, Components> mappings;
   return mappings;
 }
 }  // namespace
 
-const std::map<BundleIdentifier, Components>& ClassDescriptionRegistry::getClassDescriptions() {
+const std::map<BundleCoordinate, Components>& ClassDescriptionRegistry::getClassDescriptions() {
   return getAgentDocsClassMappings();
 }
 
-std::map<BundleIdentifier, Components>& ClassDescriptionRegistry::getMutableClassDescriptions() {
+std::map<BundleCoordinate, Components>& ClassDescriptionRegistry::getMutableClassDescriptions() {
   return getAgentDocsClassMappings();
 }
 

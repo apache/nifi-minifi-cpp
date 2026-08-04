@@ -159,7 +159,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
     }
     DummyProcessorDescriptor descriptor;
     processor->core::ProcessorImpl::initialize(descriptor);
-    minifi::BundleIdentifier details;
+    minifi::BundleCoordinate details;
     details.name = path.filename().string();
     details.version = processor->getVersion() && !processor->getVersion()->empty() ? *processor->getVersion() : minifi::AgentBuild::VERSION;
     details.group_name = "org.apache.nifi.minifi";  // Hard coded for backward compatibility

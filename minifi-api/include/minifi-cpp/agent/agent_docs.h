@@ -57,17 +57,17 @@ struct ClassDescription {
   bool isSingleThreaded_ = false;
 };
 
-struct BundleIdentifier {
+struct BundleCoordinate {
   std::string name;
   std::string group_name;
   std::string version;
 
-  auto operator<=>(const BundleIdentifier& rhs) const = default;
+  auto operator<=>(const BundleCoordinate& rhs) const = default;
 };
 
 class Components {
  public:
-  explicit Components(BundleIdentifier bundle_identifier) : bundle_identifier_(std::move(bundle_identifier)) {
+  explicit Components(BundleCoordinate bundle_identifier) : bundle_coordinate_(std::move(bundle_identifier)) {
   }
   Components(const Components& rhs) = default;
   Components(Components&& rhs) = default;
@@ -109,8 +109,8 @@ class Components {
     return other_components_;
   }
 
-  const BundleIdentifier& getBundleIdentifier() const {
-    return bundle_identifier_;
+  const BundleCoordinate& getBundleCoordinate() const {
+    return bundle_coordinate_;
   }
 
   [[nodiscard]] bool empty() const noexcept {
@@ -154,7 +154,7 @@ class Components {
   }
 
  private:
-  BundleIdentifier bundle_identifier_;
+  BundleCoordinate bundle_coordinate_;
 
   std::vector<ClassDescription> processors_;
   std::vector<ClassDescription> controller_services_;
@@ -164,18 +164,18 @@ class Components {
 
 class ClassDescriptionRegistry {
  public:
-  static const std::map<minifi::BundleIdentifier, Components>& getClassDescriptions();
-  static std::map<minifi::BundleIdentifier, Components>& getMutableClassDescriptions();
+  static const std::map<minifi::BundleCoordinate, Components>& getClassDescriptions();
+  static std::map<minifi::BundleCoordinate, Components>& getMutableClassDescriptions();
   static void clearClassDescriptionsForBundle(const std::string& bundle_name);
 
   template<typename Class, ResourceType Type>
-  static void createClassDescription(const BundleIdentifier& bundle_identifier, std::string class_name);
+  static void createClassDescription(const BundleCoordinate& bundle_identifier, std::string class_name);
 };
 }  // namespace org::apache::nifi::minifi
 
 template<>
-struct std::hash<org::apache::nifi::minifi::BundleIdentifier> {
-  size_t operator()(const org::apache::nifi::minifi::BundleIdentifier& bundle_details) const noexcept {
+struct std::hash<org::apache::nifi::minifi::BundleCoordinate> {
+  size_t operator()(const org::apache::nifi::minifi::BundleCoordinate& bundle_details) const noexcept {
     size_t hash_value{0};
     hash_value = org::apache::nifi::minifi::utils::hash_combine(hash_value, std::hash<std::string>{}(bundle_details.name));
     hash_value = org::apache::nifi::minifi::utils::hash_combine(hash_value, std::hash<std::string>{}(bundle_details.version));

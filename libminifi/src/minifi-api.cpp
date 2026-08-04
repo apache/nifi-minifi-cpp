@@ -325,7 +325,7 @@ minifi_status minifi_register_processor(minifi_extension* extension, const minif
   if (!extension_info) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
-  const minifi::BundleIdentifier bundle{
+  const minifi::BundleCoordinate bundle{
     .name = extension_info->name,
     .group_name = extension_info->group_name,
     .version = extension_info->version
@@ -348,7 +348,7 @@ minifi_status minifi_register_controller_service(minifi_extension* extension, co
   if (!extension_info) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
-  const minifi::BundleIdentifier bundle{
+  const minifi::BundleCoordinate bundle{
     .name = extension_info->name,
     .group_name = extension_info->group_name,
     .version = extension_info->version

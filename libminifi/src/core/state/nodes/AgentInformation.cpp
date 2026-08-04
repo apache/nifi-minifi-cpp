@@ -79,7 +79,7 @@ std::string allowedTypeGroupName(const std::string_view allowed_type, const std:
 void serializeClassDescription(const std::vector<ClassDescription>& descriptions,
     const std::string& name,
     SerializedResponseNode& response,
-    const BundleIdentifier& bundle_identifier) {
+    const BundleCoordinate& bundle_identifier) {
   if (descriptions.empty()) {
     return;
   }
@@ -187,8 +187,8 @@ std::vector<SerializedResponseNode> serializeComponentManifest(const Components&
   std::vector<SerializedResponseNode> serialized;
   SerializedResponseNode resp;
   resp.name = "componentManifest";
-  serializeClassDescription(components.getProcessors(), "processors", resp, components.getBundleIdentifier());
-  serializeClassDescription(components.getControllerServices(), "controllerServices", resp, components.getBundleIdentifier());
+  serializeClassDescription(components.getProcessors(), "processors", resp, components.getBundleCoordinate());
+  serializeClassDescription(components.getControllerServices(), "controllerServices", resp, components.getBundleCoordinate());
   serialized.push_back(resp);
   return serialized;
 }
