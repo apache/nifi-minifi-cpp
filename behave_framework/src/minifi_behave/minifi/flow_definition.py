@@ -23,6 +23,7 @@ from .funnel import Funnel
 from .parameter_context import ParameterContext
 from .processor import Processor
 from .remote_process_group import RemoteProcessGroup
+from .reporting_task import ReportingTask
 from .input_port import InputPort
 from .output_port import OutputPort
 
@@ -38,6 +39,7 @@ class FlowDefinition(ABC):
         self.remote_process_groups: list[RemoteProcessGroup] = []
         self.input_ports: list[InputPort] = []
         self.output_ports: list[OutputPort] = []
+        self.reporting_tasks: list[ReportingTask] = []
 
     def add_processor(self, processor: Processor):
         self.processors.append(processor)
@@ -100,6 +102,12 @@ class FlowDefinition(ABC):
 
     def get_remote_process_group(self, rpg_name: str) -> RemoteProcessGroup | None:
         return next((rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None)
+
+    def add_reporting_task(self, reporting_task: ReportingTask):
+        self.reporting_tasks.append(reporting_task)
+
+    def get_reporting_task(self, name: str) -> ReportingTask | None:
+        return next((rt for rt in self.reporting_tasks if rt.name == name), None)
 
     def add_funnel(self, funnel: Funnel):
         self.funnels.append(funnel)

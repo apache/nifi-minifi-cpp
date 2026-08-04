@@ -135,6 +135,8 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
     // Create the root process group
     std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
 
+    parseReportingTasks(reportingTasksNode, root.get());
+
     root->verify();
 
     return root;
