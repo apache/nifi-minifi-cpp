@@ -12463,7 +12463,7 @@
                         "Lorem Ipsum Controller Service": {
                             "typeProvidedByValue": {
                                 "type": "minifi_rs_playground.controller_services.lorem_ipsum_controller_service.LoremIpsumControllerService",
-                                "group": "minifi_rs_playground",
+                                "group": "org.apache.nifi.minifi.rust.test",
                                 "artifact": "minifi_rs_playground"
                             },
                             "name": "Lorem Ipsum Controller Service",
@@ -12596,7 +12596,7 @@
                         "Can fly service": {
                             "typeProvidedByValue": {
                                 "type": "minifi_rs_playground.controller_services.animal_controller_apis.CanFlyControllerApi",
-                                "group": "minifi_rs_playground",
+                                "group": "org.apache.nifi.minifi.rust.test",
                                 "artifact": "minifi_rs_playground"
                             },
                             "name": "Can fly service",
@@ -12609,7 +12609,7 @@
                         "Number of Legs service": {
                             "typeProvidedByValue": {
                                 "type": "minifi_rs_playground.controller_services.animal_controller_apis.NumberOfLegsControllerApi",
-                                "group": "minifi_rs_playground",
+                                "group": "org.apache.nifi.minifi.rust.test",
                                 "artifact": "minifi_rs_playground"
                             },
                             "name": "Number of Legs service",
@@ -12657,12 +12657,12 @@
                     "providedApiImplementations": [
                         {
                             "artifact": "minifi_rs_playground",
-                            "group": "minifi_rs_playground",
+                            "group": "org.apache.nifi.minifi.rust.test",
                             "type": "minifi_rs_playground.controller_services.animal_controller_apis.CanFlyControllerApi"
                         },
                         {
                             "artifact": "minifi_rs_playground",
-                            "group": "minifi_rs_playground",
+                            "group": "org.apache.nifi.minifi.rust.test",
                             "type": "minifi_rs_playground.controller_services.animal_controller_apis.NumberOfLegsControllerApi"
                         }
                     ]
@@ -12675,12 +12675,12 @@
                     "providedApiImplementations": [
                         {
                             "artifact": "minifi_rs_playground",
-                            "group": "minifi_rs_playground",
+                            "group": "org.apache.nifi.minifi.rust.test",
                             "type": "minifi_rs_playground.controller_services.animal_controller_apis.CanFlyControllerApi"
                         },
                         {
                             "artifact": "minifi_rs_playground",
-                            "group": "minifi_rs_playground",
+                            "group": "org.apache.nifi.minifi.rust.test",
                             "type": "minifi_rs_playground.controller_services.animal_controller_apis.NumberOfLegsControllerApi"
                         }
                     ]
@@ -12710,7 +12710,7 @@
                 }
             ]
         },
-        "group": "minifi_rs_playground",
+        "group": "org.apache.nifi.minifi.rust.test",
         "artifact": "minifi_rs_playground",
         "version": "0.1.0"
     }
