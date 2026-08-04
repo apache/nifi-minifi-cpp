@@ -49,7 +49,7 @@ namespace org::apache::nifi::minifi::core::reporting {
 const char *SiteToSiteProvenanceReportingTask::ProvenanceAppStr = "MiNiFi Flow";
 
 void SiteToSiteProvenanceReportingTask::initialize() {
-  setSupportedProperties(RemoteProcessGroupPort::Properties);
+  setSupportedProperties(Properties);
 }
 
 void setJsonStr(const std::string& key, const std::string& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) { // NOLINT
@@ -157,7 +157,11 @@ std::string SiteToSiteProvenanceReportingTask::getJsonReport(const std::vector<s
 }
 
 void SiteToSiteProvenanceReportingTask::onSchedule(ReportingTaskContext& context) {
-  remote_port_.getImpl<RemoteProcessGroupPort>().onSchedule(context);
+  auto& port = remote_port_.getImpl<RemoteProcessGroupPort>();
+  if (auto url = context.getProperty(DestinationUrl); url && !url->empty()) {
+    port.setURL(*url);
+  }
+  port.onSchedule(context);
 }
 
 void SiteToSiteProvenanceReportingTask::onTrigger(ReportingTaskContext& context) {
