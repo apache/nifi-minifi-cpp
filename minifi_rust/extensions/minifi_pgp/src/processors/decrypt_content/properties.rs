@@ -1,36 +1,21 @@
 use crate::controller_services::private_key_service::PGPPrivateKeyService;
 use crate::processors::decrypt_content::DecryptionStrategy;
-use minifi_native::ComponentIdentifier;
 use minifi_native::Property;
-use minifi_native::PropertyConstraints::{AllowedType, AllowedValues, NoConstraints};
-use strum::VariantNames;
+use crate::utils;
 
-pub(crate) const DECRYPTION_STRATEGY: Property = Property {
-    name: "Decryption Strategy",
-    description: "Strategy for writing files to success after decryption",
-    is_required: true,
-    is_sensitive: false,
-    supports_expr_lang: false,
-    default_value: Some(DecryptionStrategy::Decrypted.into_str()),
-    constraints: AllowedValues(DecryptionStrategy::VARIANTS),
-};
+pub(super) const DECRYPTION_STRATEGY: Property<DecryptionStrategy> = Property::new(
+    "Decryption Strategy",
+    "Strategy for writing files to success after decryption",
+)
+.with_default(DecryptionStrategy::Decrypted.into_str());
 
-pub(crate) const SYMMETRIC_PASSWORD: Property = Property {
-    name: "Symmetric Password",
-    description: "Password used for decrypting data encrypted with Password-Based Encryption",
-    is_required: false,
-    is_sensitive: true,
-    supports_expr_lang: false,
-    default_value: None,
-    constraints: NoConstraints,
-};
+pub(super) const SYMMETRIC_PASSWORD: Property<Option<utils::Password>> = Property::new(
+    "Symmetric Password",
+    "Password used for decrypting data encrypted with Password-Based Encryption",
+)
+.sensitive();
 
-pub(crate) const PRIVATE_KEY_SERVICE: Property = Property {
-    name: "Private Key Service",
-    description: "PGP Private Key Service for decrypting data encrypted with Public Key Encryption",
-    is_required: false,
-    is_sensitive: false,
-    supports_expr_lang: false,
-    default_value: None,
-    constraints: AllowedType(PGPPrivateKeyService::CLASS_NAME),
-};
+pub(super) const PRIVATE_KEY_SERVICE: Property<Option<PGPPrivateKeyService>> = Property::new(
+    "Private Key Service",
+    "PGP Private Key Service for decrypting data encrypted with Public Key Encryption",
+);

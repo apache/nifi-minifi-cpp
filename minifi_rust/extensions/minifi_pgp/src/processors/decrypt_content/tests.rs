@@ -28,7 +28,7 @@ fn fails_to_schedule_by_default() {
 fn schedules_with_password() {
     let mut context = MockProcessContext::new();
     context.properties.insert(
-        super::properties::SYMMETRIC_PASSWORD.name.to_string(),
+        super::properties::SYMMETRIC_PASSWORD.name(),
         "my_secret_password".to_string(),
     );
     let decrypt_content = DecryptContentPGP::schedule(&context, &MockLogger::new());
@@ -39,7 +39,7 @@ fn schedules_with_password() {
 fn schedules_with_controller() {
     let mut context = MockProcessContext::new();
     context.properties.insert(
-        super::properties::PRIVATE_KEY_SERVICE.name.to_string(),
+        super::properties::PRIVATE_KEY_SERVICE.name(),
         "my_private_key_service".to_string(),
     );
     let decrypt_content = DecryptContentPGP::schedule(&context, &MockLogger::new());
@@ -50,11 +50,11 @@ fn schedules_with_controller() {
 fn schedule_rejects_invalid_strategy_without_panicking() {
     let mut context = MockProcessContext::new();
     context.properties.insert(
-        super::properties::DECRYPTION_STRATEGY.name.to_string(),
+        super::properties::DECRYPTION_STRATEGY.name(),
         "NOT_A_STRATEGY".to_string(),
     );
     context.properties.insert(
-        super::properties::SYMMETRIC_PASSWORD.name.to_string(),
+        super::properties::SYMMETRIC_PASSWORD.name(),
         "my_secret_password".to_string(),
     );
     // Must return Err, not panic.
@@ -96,13 +96,13 @@ fn test_decryption(
             Box::new(private_key.into_controller()),
         );
         processor_context.properties.insert(
-            super::properties::PRIVATE_KEY_SERVICE.name.to_string(),
+            super::properties::PRIVATE_KEY_SERVICE.name(),
             "my_private_key_service".to_string(),
         );
     }
     if let Some(symmetric_password) = symmetric_password {
         processor_context.properties.insert(
-            super::properties::SYMMETRIC_PASSWORD.name.to_string(),
+            super::properties::SYMMETRIC_PASSWORD.name(),
             symmetric_password.to_string(),
         );
     }
@@ -226,7 +226,7 @@ fn decryption_of_not_encrypted_data() {
         Box::new(alice_private_key.into_controller()),
     );
     processor_context.properties.insert(
-        super::properties::PRIVATE_KEY_SERVICE.name.to_string(),
+        super::properties::PRIVATE_KEY_SERVICE.name(),
         "my_private_key_service".to_string(),
     );
 

@@ -1,32 +1,18 @@
 use minifi_native::Property;
-use minifi_native::PropertyConstraints::NoConstraints;
+use std::path::PathBuf;
+use crate::utils;
 
-pub(crate) const KEY_FILE: Property = Property {
-    name: "Key File",
-    description: "File path to PGP Secret Key encoded in binary or ASCII Armor",
-    is_required: false,
-    is_sensitive: false,
-    supports_expr_lang: true,
-    default_value: None,
-    constraints: NoConstraints,
-};
+pub(crate) const KEY_FILE: Property<Option<PathBuf>> = Property::new(
+    "Key File",
+    "File path to PGP Secret Key encoded in binary or ASCII Armor",
+)
+.supports_expression_language();
 
-pub(crate) const KEY: Property = Property {
-    name: "Key",
-    description: "Secret Key encoded in ASCII Armor",
-    is_required: false,
-    is_sensitive: true,
-    supports_expr_lang: false,
-    default_value: None,
-    constraints: NoConstraints,
-};
+pub(crate) const KEY: Property<Option<String>> =
+    Property::new("Key", "Secret Key encoded in ASCII Armor").sensitive();
 
-pub(crate) const KEY_PASSPHRASE: Property = Property {
-    name: "Key Passphrase",
-    description: "Passphrase used for decrypting Private Keys",
-    is_required: false,
-    is_sensitive: true,
-    supports_expr_lang: false,
-    default_value: None,
-    constraints: NoConstraints,
-};
+pub(crate) const KEY_PASSPHRASE: Property<Option<utils::Password>> = Property::new(
+    "Key Passphrase",
+    "Passphrase used for decrypting Private Keys",
+)
+.sensitive();
