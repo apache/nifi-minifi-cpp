@@ -297,7 +297,7 @@ class ProvenanceReporterImpl : public virtual ProvenanceReporter {
   void clone(const core::FlowFile& parent, const core::FlowFile& child) override;
   void expire(const core::FlowFile& flow_file, const std::string& detail) override;
   void drop(const core::FlowFile& flow_file, const std::string& reason) override;
-  void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) override;
+  void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) override;
   void fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) override;
   void receive(const core::FlowFile& flow_file, const std::string& transitUri,
     const std::string& sourceSystemFlowFileIdentifier, const std::string& detail, std::chrono::milliseconds processingDuration) override;
