@@ -137,7 +137,6 @@ TEST_CASE("Test Dependent", "[dependent]") {
   const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors",
       .group_name = "org.apache.nifi.minifi",
       .version = minifi::AgentBuild::VERSION};
-  const auto class_desc = minifi::ClassDescriptionRegistry::getClassDescriptions();
   const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
