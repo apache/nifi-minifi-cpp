@@ -1030,4 +1030,49 @@ TEST_CASE("Parameter provider generated parameter context is reserialized if Rel
   }
 }
 
+TEST_CASE("Reporting tasks are correctly parsed from flow json") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
+
+  constexpr std::string_view config_json_with_reporting_task = R"({
+    "reportingTasks": [
+      {
+        "identifier": "00000000-0000-0000-0000-000000000001",
+        "name": "ProvenanceReporter",
+        "type": "SiteToSiteProvenanceReportingTask",
+        "schedulingStrategy": "TIMER_DRIVEN",
+        "schedulingPeriod": "5 sec",
+        "properties": {
+          "Destination URL": "http://localhost:8080/nifi",
+          "Port UUID": "00000000-0000-0000-0000-000000000002"
+        }
+      }
+    ],
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": []
+    }
+  })";
+
+  const auto process_group = json_configuration.getRootFromPayload(std::string{config_json_with_reporting_task});
+  REQUIRE(process_group);
+
+  const auto reporting_task_id = minifi::utils::Identifier::parse("00000000-0000-0000-0000-000000000001").value();
+  auto* reporting_task = process_group->findProcessorById(reporting_task_id);
+  REQUIRE(reporting_task != nullptr);
+
+  CHECK(reporting_task->getName() == "ProvenanceReporter");
+  CHECK(reporting_task->getSchedulingStrategy() == core::TIMER_DRIVEN);
+  CHECK(reporting_task->getSchedulingPeriod() == std::chrono::seconds{5});
+  CHECK(reporting_task->getScheduledState() == core::RUNNING);
+
+  const auto destination_url = reporting_task->getProperty("Destination URL");
+  REQUIRE(destination_url.has_value());
+  CHECK(*destination_url == "http://localhost:8080/nifi");
+
+  const auto port_uuid = reporting_task->getProperty("Port UUID");
+  REQUIRE(port_uuid.has_value());
+  CHECK(*port_uuid == "00000000-0000-0000-0000-000000000002");
+}
+
 }  // namespace org::apache::nifi::minifi::test
