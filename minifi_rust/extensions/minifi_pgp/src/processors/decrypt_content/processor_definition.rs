@@ -1,5 +1,8 @@
 use super::{DecryptContentPGP, output_attributes, properties, relationships};
-use minifi_native::{property_definitions, OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition, Relationship};
+use minifi_native::{
+    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
+    Relationship, property_definitions,
+};
 
 impl ProcessorDefinition for DecryptContentPGP {
     const DESCRIPTION: &'static str = "Decrypt contents of OpenPGP messages. Using the Packaged Decryption Strategy preserves OpenPGP encoding to support subsequent signature verification.";

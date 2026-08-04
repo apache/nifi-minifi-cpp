@@ -36,9 +36,7 @@ impl EnableControllerService for PGPPrivateKeyService {
             collect_keys(keys, &mut private_keys, logger);
         }
 
-        let passphrase = context
-            .get_property(&KEY_PASSPHRASE)?
-            .unwrap_or_default();
+        let passphrase = context.get_property(&KEY_PASSPHRASE)?.unwrap_or_default();
 
         if private_keys.is_empty() {
             return Err(MinifiError::controller_service_err(

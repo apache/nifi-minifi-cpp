@@ -1,10 +1,10 @@
 use super::*;
+use crate::controller_services::public_key_service::PGPPublicKeyService;
 use crate::test_utils;
 use minifi_native::{
     ComponentIdentifier, EnableControllerService, IoState, MockControllerServiceContext,
     MockLogger, MockProcessContext,
 };
-use crate::controller_services::public_key_service::PGPPublicKeyService;
 
 #[test]
 fn test_ids() {

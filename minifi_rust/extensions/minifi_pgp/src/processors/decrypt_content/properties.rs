@@ -1,7 +1,7 @@
 use crate::controller_services::private_key_service::PGPPrivateKeyService;
 use crate::processors::decrypt_content::DecryptionStrategy;
-use minifi_native::Property;
 use crate::utils;
+use minifi_native::Property;
 
 pub(super) const DECRYPTION_STRATEGY: Property<DecryptionStrategy> = Property::new(
     "Decryption Strategy",

@@ -1,6 +1,6 @@
+use crate::utils;
 use minifi_native::Property;
 use std::path::PathBuf;
-use crate::utils;
 
 pub(crate) const KEY_FILE: Property<Option<PathBuf>> = Property::new(
     "Key File",

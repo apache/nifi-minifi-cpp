@@ -38,13 +38,10 @@ impl Schedule for DecryptContentPGP {
         Self: Sized,
         L: Logger,
     {
-        let decryption_strategy =
-            context.get_property(&DECRYPTION_STRATEGY)?;
+        let decryption_strategy = context.get_property(&DECRYPTION_STRATEGY)?;
 
         let symmetric_password = context.get_property(&SYMMETRIC_PASSWORD)?;
-        let has_context_service = context
-            .get_raw_property(&PRIVATE_KEY_SERVICE)?
-            .is_some();
+        let has_context_service = context.get_raw_property(&PRIVATE_KEY_SERVICE)?.is_some();
         if !has_context_service && symmetric_password.is_none() {
             Err(MinifiError::schedule_err(
                 "Either Symmetric Password or Private Key Service must be set",
@@ -112,8 +109,7 @@ impl FlowFileStreamTransform for DecryptContentPGP {
             return Ok(TransformStreamResult::route_without_changes(&FAILURE));
         };
 
-        let private_key_service =
-            context.get_controller_service(&PRIVATE_KEY_SERVICE)?;
+        let private_key_service = context.get_controller_service(&PRIVATE_KEY_SERVICE)?;
 
         let Ok(mut decrypted_msg) = self.decrypt_msg(msg, private_key_service) else {
             warn!(logger, "Failed to decrypt data");

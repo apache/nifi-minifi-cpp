@@ -1,6 +1,8 @@
 use super::PGPPublicKeyService;
 use super::properties::*;
-use minifi_native::{property_definitions, ControllerServiceDefinition, PropertyDefinition, ProvidedInterface};
+use minifi_native::{
+    ControllerServiceDefinition, PropertyDefinition, ProvidedInterface, property_definitions,
+};
 
 impl ControllerServiceDefinition for PGPPublicKeyService {
     const DESCRIPTION: &'static str =
