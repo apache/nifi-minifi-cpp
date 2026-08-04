@@ -8,6 +8,7 @@ use crate::processors::encrypt_content::EncryptContentPGP;
 use minifi_native::{FlowFileStreamTransformProcessorType, MultiThreaded};
 
 minifi_native::declare_minifi_extension!(
+    group_name: "org.apache.nifi.minifi.rust",
     processors: [
         (FlowFileStreamTransformProcessorType, MultiThreaded, EncryptContentPGP),
         (FlowFileStreamTransformProcessorType, MultiThreaded, DecryptContentPGP),

@@ -7,7 +7,6 @@ use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError, warn};
 use pgp::composed::{Deserializable, SignedPublicKey};
 use pgp::types::KeyDetails;
-use std::path::PathBuf;
 
 #[derive(Debug, ComponentIdentifier, PartialEq)]
 pub(crate) struct PGPPublicKeyService {
@@ -20,7 +19,7 @@ impl EnableControllerService for PGPPublicKeyService {
         Self: Sized,
     {
         let mut public_keys = vec![];
-        if let Some(keyring_file_path) = context.get_property::<PathBuf>(&KEYRING_FILE)? {
+        if let Some(keyring_file_path) = context.get_property(&KEYRING_FILE)? {
             if let Ok((keys, _headers)) = SignedPublicKey::from_armor_file_many(&keyring_file_path)
             {
                 collect_keys(keys, &mut public_keys, logger);
@@ -28,7 +27,7 @@ impl EnableControllerService for PGPPublicKeyService {
                 collect_keys(keys, &mut public_keys, logger);
             }
         }
-        if let Some(keyring_ascii) = context.get_property::<String>(&KEYRING)?
+        if let Some(keyring_ascii) = context.get_property(&KEYRING)?
             && let Ok((keys, _headers)) = SignedPublicKey::from_armor_many(keyring_ascii.as_bytes())
         {
             collect_keys(keys, &mut public_keys, logger);

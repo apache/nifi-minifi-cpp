@@ -4,13 +4,11 @@ mod properties;
 #[cfg(test)]
 use crate::controller_services::key_lookup::key_matches;
 use crate::controller_services::private_key_service::properties::KEY_PASSPHRASE;
-use crate::utils;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError, warn};
 use pgp::composed::{Deserializable, SignedSecretKey, TheRing};
 #[cfg(test)]
 use pgp::types::KeyDetails;
-use std::path::PathBuf;
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct PGPPrivateKeyService {
@@ -24,7 +22,7 @@ impl EnableControllerService for PGPPrivateKeyService {
         Self: Sized,
     {
         let mut private_keys = vec![];
-        if let Some(keyring_file_path) = context.get_property::<PathBuf>(&properties::KEY_FILE)? {
+        if let Some(keyring_file_path) = context.get_property(&properties::KEY_FILE)? {
             if let Ok((keys, _headers)) = SignedSecretKey::from_armor_file_many(&keyring_file_path)
             {
                 collect_keys(keys, &mut private_keys, logger);
@@ -32,14 +30,14 @@ impl EnableControllerService for PGPPrivateKeyService {
                 collect_keys(keys, &mut private_keys, logger);
             }
         }
-        if let Some(keyring_ascii) = context.get_property::<String>(&properties::KEY)?
+        if let Some(keyring_ascii) = context.get_property(&properties::KEY)?
             && let Ok((keys, _headers)) = SignedSecretKey::from_armor_many(keyring_ascii.as_bytes())
         {
             collect_keys(keys, &mut private_keys, logger);
         }
 
         let passphrase = context
-            .get_property::<utils::Password>(&KEY_PASSPHRASE)?
+            .get_property(&KEY_PASSPHRASE)?
             .unwrap_or_default();
 
         if private_keys.is_empty() {

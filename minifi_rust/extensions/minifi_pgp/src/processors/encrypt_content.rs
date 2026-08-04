@@ -10,7 +10,6 @@ mod output_attributes;
 mod properties;
 mod relationships;
 
-use crate::controller_services::public_key_service::PGPPublicKeyService;
 use crate::processors::encrypt_content::output_attributes::FILE_ENCODING;
 use crate::processors::encrypt_content::properties::{
     PASSWORD, PUBLIC_KEY_SEARCH, PUBLIC_KEY_SERVICE,
@@ -81,15 +80,11 @@ impl Schedule for EncryptContentPGP {
     where
         Self: Sized,
     {
-        let file_encoding = context.get_req_property::<FileEncoding>(&properties::FILE_ENCODING)?;
+        let file_encoding = context.get_property::<FileEncoding>(&properties::FILE_ENCODING)?;
 
-        let has_password = context.get_property::<String>(&PASSWORD)?.is_some();
-        let has_public_key = context
-            .get_property::<String>(&PUBLIC_KEY_SERVICE)?
-            .is_some()
-            && context
-                .get_property::<String>(&PUBLIC_KEY_SEARCH)?
-                .is_some();
+        let has_password = context.get_property(&PASSWORD)?.is_some();
+        let has_public_key = context.get_raw_property(&PUBLIC_KEY_SERVICE)?.is_some()
+            && context.get_property(&PUBLIC_KEY_SEARCH)?.is_some();
 
         if !has_password && !has_public_key {
             Err(MinifiError::schedule_err(
@@ -111,14 +106,14 @@ impl FlowFileStreamTransform for EncryptContentPGP {
     ) -> Result<TransformStreamResult, MinifiError> {
         let file_name = context.get_attribute("filename")?.unwrap_or_default();
         let public_key = if let (Some(pub_key_search), Some(public_key_service)) = (
-            context.get_property::<String>(&PUBLIC_KEY_SEARCH)?,
-            context.get_controller_service::<PGPPublicKeyService>(&PUBLIC_KEY_SERVICE)?,
+            context.get_property(&PUBLIC_KEY_SEARCH)?,
+            context.get_controller_service(&PUBLIC_KEY_SERVICE)?,
         ) {
             public_key_service.get(&pub_key_search)
         } else {
             None
         };
-        let password = context.get_property::<String>(&PASSWORD)?;
+        let password = context.get_property(&PASSWORD)?;
         if public_key.is_none() && password.is_none() {
             warn!(logger, "No password or public key to encrypt with");
             return Ok(TransformStreamResult::route_without_changes(&FAILURE));

@@ -7,7 +7,6 @@ use crate::processors::decrypt_content::properties::{
     DECRYPTION_STRATEGY, PRIVATE_KEY_SERVICE, SYMMETRIC_PASSWORD,
 };
 use crate::processors::decrypt_content::relationships::{FAILURE, SUCCESS};
-use crate::utils;
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     FlowFileStreamTransform, GetControllerService, GetProperty, InputStream, Logger, MinifiError,
@@ -40,11 +39,11 @@ impl Schedule for DecryptContentPGP {
         L: Logger,
     {
         let decryption_strategy =
-            context.get_req_property::<DecryptionStrategy>(&DECRYPTION_STRATEGY)?;
+            context.get_property(&DECRYPTION_STRATEGY)?;
 
-        let symmetric_password = context.get_property::<utils::Password>(&SYMMETRIC_PASSWORD)?;
+        let symmetric_password = context.get_property(&SYMMETRIC_PASSWORD)?;
         let has_context_service = context
-            .get_property::<String>(&PRIVATE_KEY_SERVICE)?
+            .get_raw_property(&PRIVATE_KEY_SERVICE)?
             .is_some();
         if !has_context_service && symmetric_password.is_none() {
             Err(MinifiError::schedule_err(
@@ -114,7 +113,7 @@ impl FlowFileStreamTransform for DecryptContentPGP {
         };
 
         let private_key_service =
-            context.get_controller_service::<PGPPrivateKeyService>(&PRIVATE_KEY_SERVICE)?;
+            context.get_controller_service(&PRIVATE_KEY_SERVICE)?;
 
         let Ok(mut decrypted_msg) = self.decrypt_msg(msg, private_key_service) else {
             warn!(logger, "Failed to decrypt data");

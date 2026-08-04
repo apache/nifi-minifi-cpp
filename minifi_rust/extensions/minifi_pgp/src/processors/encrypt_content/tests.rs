@@ -4,6 +4,7 @@ use minifi_native::{
     ComponentIdentifier, EnableControllerService, IoState, MockControllerServiceContext,
     MockLogger, MockProcessContext,
 };
+use crate::controller_services::public_key_service::PGPPublicKeyService;
 
 #[test]
 fn test_ids() {
@@ -32,7 +33,7 @@ fn assert_content(transform_result: &TransformStreamResult, is_ascii: bool) {
 #[test]
 fn encrypts_via_passphrase() {
     let mut context = MockProcessContext::new();
-    context.properties.insert(PASSWORD.name, "password");
+    context.properties.insert(PASSWORD.name(), "password");
     context
         .attributes
         .insert("filename".to_owned(), "mammut".to_owned());
