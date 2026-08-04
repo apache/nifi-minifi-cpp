@@ -53,7 +53,7 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
   auto testRepository = std::make_shared<TestRepository>();
   record1->setEventDuration(sample);
 
-  testRepository->appendEvents({record1});
+  REQUIRE(testRepository->appendEvents({record1}));
   auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == true);
@@ -79,7 +79,7 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   auto testRepository = std::make_shared<TestRepository>();
   record1->setEventDuration(sample);
 
-  testRepository->appendEvents({record1});
+  REQUIRE(testRepository->appendEvents({record1}));
   auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == true);
@@ -102,7 +102,7 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
   testRepository->initialize(nullptr);
   record1->setEventDuration(sample);
 
-  testRepository->appendEvents({record1});
+  REQUIRE(testRepository->appendEvents({record1}));
 
   utils::Identifier eventId = record1->getEventId();
 
@@ -131,7 +131,7 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
   testRepository->initialize(nullptr);
   record1->setEventDuration(sample);
 
-  testRepository->appendEvents({record1});
+  REQUIRE(testRepository->appendEvents({record1}));
 
   utils::Identifier eventId = record1->getEventId();
 

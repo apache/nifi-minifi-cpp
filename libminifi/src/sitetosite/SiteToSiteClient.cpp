@@ -152,7 +152,7 @@ bool SiteToSiteClient::transferFlowFiles(core::ProcessContext& context, core::Pr
       auto end_time = std::chrono::steady_clock::now();
       std::string transit_uri = peer_->getURL() + "/" + flow->getUUIDStr();
       std::string details = "urn:nifi:" + flow->getUUIDStr() + "Remote Host=" + peer_->getHostName();
-      session.getProvenanceReporter()->send(*flow, transit_uri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), false);
+      session.getProvenanceReporter()->send(*flow, transit_uri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
       session.remove(flow);
 
       std::chrono::nanoseconds transfer_duration = std::chrono::high_resolution_clock::now() - transaction_started_at;
