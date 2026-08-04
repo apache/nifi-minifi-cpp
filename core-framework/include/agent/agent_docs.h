@@ -60,8 +60,7 @@ std::string classNameWithDots() {
 
 template<typename Class, ResourceType Type>
 void ClassDescriptionRegistry::createClassDescription(const BundleIdentifier& bundle_identifier, std::string class_name) {
-  auto [it, _success] = getMutableClassDescriptions().try_emplace(bundle_identifier, bundle_identifier);
-  auto& [id, components] = *it;
+  auto& [id, components] = *getMutableClassDescriptions().try_emplace(bundle_identifier, bundle_identifier).first;
   if constexpr (Type == ResourceType::Processor) {
     components.addClassDescription(ClassDescription{
         .type_ = Type,

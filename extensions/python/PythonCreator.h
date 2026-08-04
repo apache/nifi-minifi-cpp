@@ -162,6 +162,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
     minifi::BundleIdentifier details;
     details.name = path.filename().string();
     details.version = processor->getVersion() && !processor->getVersion()->empty() ? *processor->getVersion() : minifi::AgentBuild::VERSION;
+    details.group_name = "org.apache.nifi.minifi";  // Hard coded for backward compatibility
 
     minifi::ClassDescription description{
       .type_ = ResourceType::Processor,
@@ -174,8 +175,8 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
       .inputRequirement_ = toString(processor->getInputRequirement()),
       .isSingleThreaded_ = processor->isSingleThreaded()};
 
-    auto [it, _success] = ClassDescriptionRegistry::getMutableClassDescriptions().try_emplace(details, details);
-    it->second.addClassDescription(description, ResourceType::Processor);
+    auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions().try_emplace(details, details).first->second;
+    bundle_components.addClassDescription(description, ResourceType::Processor);
   }
 
   void configure(const std::vector<std::string> &pythonFiles) {

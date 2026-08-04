@@ -16,6 +16,8 @@
  */
 #pragma once
 
+#include <algorithm>
+#include <iterator>
 #include <map>
 #include <string>
 #include <utility>
@@ -28,9 +30,9 @@
 #include "minifi-cpp/core/Property.h"
 #include "minifi-cpp/core/Relationship.h"
 #include "utils/Hash.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi {
-
 enum class ResourceType {
   Processor,
   ControllerService,
@@ -71,7 +73,7 @@ class Components {
   Components(Components&& rhs) = default;
   Components& operator=(const Components& rhs) = default;
   Components& operator=(Components&& rhs) = default;
-  virtual ~Components() = default;
+  ~Components() = default;
 
   void addClassDescription(ClassDescription component, ResourceType resource_type) {
     switch (resource_type) {
@@ -169,7 +171,6 @@ class ClassDescriptionRegistry {
   template<typename Class, ResourceType Type>
   static void createClassDescription(const BundleIdentifier& bundle_identifier, std::string class_name);
 };
-
 }  // namespace org::apache::nifi::minifi
 
 template<>

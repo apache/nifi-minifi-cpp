@@ -330,8 +330,7 @@ minifi_status minifi_register_processor(minifi_extension* extension, const minif
     .group_name = extension_info->group_name,
     .version = extension_info->version
   };
-  auto [it, _success] = minifi::ClassDescriptionRegistry::getMutableClassDescriptions().try_emplace(bundle, bundle);
-  auto& bundle_components = it->second;
+  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions().try_emplace(bundle, bundle).first->second;
   minifi::utils::useCProcessorClassDescription(*processor, [&] (const auto& description, const auto& c_class_description) {
     minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_info->name).registerClass(
       c_class_description.name,
@@ -354,8 +353,7 @@ minifi_status minifi_register_controller_service(minifi_extension* extension, co
     .group_name = extension_info->group_name,
     .version = extension_info->version
   };
-  auto [it, _success] = minifi::ClassDescriptionRegistry::getMutableClassDescriptions().try_emplace(bundle, bundle);
-  auto& bundle_components = it->second;
+  auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions().try_emplace(bundle, bundle).first->second;
   minifi::utils::useCControllerServiceClassDescription(bundle.name, bundle.group_name, *controller_service, [&] (const auto& description, const auto& c_class_description) {
     minifi::core::ClassLoader::getDefaultClassLoader().getClassLoader(extension_info->name).registerClass(
       description.short_name_,

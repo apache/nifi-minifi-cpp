@@ -43,7 +43,7 @@ struct AllowedType {
 
 using org::apache::nifi::minifi::state::response::SerializedResponseNode;
 
-const SerializedResponseNode* getBundle(const std::vector<SerializedResponseNode>& manifest, const std::string_view bundle_artifact_name) {
+inline const SerializedResponseNode* getBundle(const std::vector<SerializedResponseNode>& manifest, const std::string_view bundle_artifact_name) {
   const auto bundle_it = ranges::find_if(manifest, [bundle_artifact_name](const auto& node) {
     return node.name == "bundles" && std::end(node.children) != ranges::find_if(node.children, [bundle_artifact_name](const auto& child) {
       return child.name == "artifact" && child.value.to_string() == bundle_artifact_name;
@@ -55,7 +55,7 @@ const SerializedResponseNode* getBundle(const std::vector<SerializedResponseNode
   return &(*bundle_it);
 }
 
-const SerializedResponseNode* getComponentFromBundle(const auto& bundle, const std::string_view name, const ComponentType type) {
+inline const SerializedResponseNode* getComponentFromBundle(const auto& bundle, const std::string_view name, const ComponentType type) {
   const auto component_manifest = ranges::find_if(bundle.children, [](const auto& bundle_child) { return bundle_child.name == "componentManifest"; });
   if (component_manifest == std::end(bundle.children)) {
     return nullptr;
@@ -80,7 +80,7 @@ const SerializedResponseNode* getComponentFromBundle(const auto& bundle, const s
   return nullptr;
 }
 
-std::optional<AllowedType> getProcessorPropertyAllowedType(const SerializedResponseNode& processor_node, const std::string_view property) {
+inline std::optional<AllowedType> getProcessorPropertyAllowedType(const SerializedResponseNode& processor_node, const std::string_view property) {
   const auto property_descriptors = ranges::find_if(processor_node.children, [](const auto& c) { return c.name == "propertyDescriptors"; });
   if (property_descriptors == std::end(processor_node.children)) {
     return std::nullopt;
@@ -103,7 +103,7 @@ std::optional<AllowedType> getProcessorPropertyAllowedType(const SerializedRespo
   return AllowedType{.type = type_node->value.to_string(), .group = group_node->value.to_string(), .artifact = artifact_node->value.to_string()};
 }
 
-std::vector<AllowedType> getControllerServiceProvidedApiImplementations(const SerializedResponseNode& controller_service_node) {
+inline std::vector<AllowedType> getControllerServiceProvidedApiImplementations(const SerializedResponseNode& controller_service_node) {
   std::vector<AllowedType> allowed_types;
   const auto provided_api_implementations = ranges::find_if(controller_service_node.children, [](const auto& c) {
     return c.name == "providedApiImplementations";
