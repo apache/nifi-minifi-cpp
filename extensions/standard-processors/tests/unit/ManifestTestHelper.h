@@ -28,6 +28,7 @@
 namespace org::apache::nifi::minifi::state::response {
 struct SerializedResponseNode;
 }
+namespace org::apache::nifi::minifi::test {
 enum ComponentType {
   kProcessor,
   kControllerService,
@@ -125,3 +126,4 @@ inline std::vector<AllowedType> getControllerServiceProvidedApiImplementations(c
   }
   return allowed_types;
 }
+}  // namespace org::apache::nifi::minifi::test

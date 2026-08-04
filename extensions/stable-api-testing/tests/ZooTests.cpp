@@ -72,23 +72,23 @@ TEST_CASE("Test providedApiImplementations") {
   minifi::state::response::AgentManifest manifest("minifi-stable-api-testing");
   const auto manifest_serialized = manifest.serialize();
 
-  const auto minifi_stable_api_testing_bundle = getBundle(manifest_serialized, "minifi-stable-api-testing");
+  const auto minifi_stable_api_testing_bundle = minifi::test::getBundle(manifest_serialized, "minifi-stable-api-testing");
 
   REQUIRE(minifi_stable_api_testing_bundle);
 
   {
-    const auto duck_controller_service = getComponentFromBundle(*minifi_stable_api_testing_bundle,
+    const auto duck_controller_service = minifi::test::getComponentFromBundle(*minifi_stable_api_testing_bundle,
         "org.apache.nifi.minifi.api_testing.DuckController",
-        kControllerService);
-    const auto zoo_processor = getComponentFromBundle(*minifi_stable_api_testing_bundle,
+        minifi::test::kControllerService);
+    const auto zoo_processor = minifi::test::getComponentFromBundle(*minifi_stable_api_testing_bundle,
         "org.apache.nifi.minifi.api_testing.ZooProcessor",
-        kProcessor);
+        minifi::test::kProcessor);
 
     REQUIRE(duck_controller_service);
     REQUIRE(zoo_processor);
 
-    const auto can_fly_service_allowed_type = getProcessorPropertyAllowedType(*zoo_processor, "Can fly service");
-    const auto duck_cs_provides_api = getControllerServiceProvidedApiImplementations(*duck_controller_service);
+    const auto can_fly_service_allowed_type = minifi::test::getProcessorPropertyAllowedType(*zoo_processor, "Can fly service");
+    const auto duck_cs_provides_api = minifi::test::getControllerServiceProvidedApiImplementations(*duck_controller_service);
 
     REQUIRE(can_fly_service_allowed_type);
     REQUIRE(duck_cs_provides_api.size() == 2);

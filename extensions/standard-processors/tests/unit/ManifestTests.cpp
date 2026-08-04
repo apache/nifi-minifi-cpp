@@ -20,6 +20,7 @@
 
 #include <memory>
 
+#include "ManifestTestHelper.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/DeviceInformation.h"
 #include "minifi-cpp/agent/agent_version.h"
@@ -27,14 +28,15 @@
 #include "range/v3/algorithm/find_if.hpp"
 #include "unit/Catch.h"
 #include "unit/TestBase.h"
-#include "ManifestTestHelper.h"
 
 TEST_CASE("Test Required", "[required]") {
-  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors",
+      .group_name = "org.apache.nifi.minifi",
+      .version = minifi::AgentBuild::VERSION};
   const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
-  const auto &resp = serialized[0];
+  const auto& resp = serialized[0];
   REQUIRE_FALSE(resp.children.empty());
   size_t processorIndex = resp.children.size();
   for (size_t i = 0; i < resp.children.size(); ++i) {
@@ -60,25 +62,29 @@ TEST_CASE("Test Required", "[required]") {
 
   const auto& batch_size_property = *batch_size_property_it;
   REQUIRE(batch_size_property.children.size() >= 4);
-  const auto &batch_size_property_required = batch_size_property.children[3];
+  const auto& batch_size_property_required = batch_size_property.children[3];
   REQUIRE("required" == batch_size_property_required.name);
   REQUIRE(false == std::dynamic_pointer_cast<minifi::state::response::BoolValue>(batch_size_property_required.value.getValue())->getValue());
 }
 
 TEST_CASE("Test Valid Regex", "[validRegex]") {
-  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors",
+      .group_name = "org.apache.nifi.minifi",
+      .version = minifi::AgentBuild::VERSION};
   const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
-  const auto &resp = serialized[0];
+  const auto& resp = serialized[0];
   REQUIRE_FALSE(resp.children.empty());
-  const auto &processors = resp.children[0];
+  const auto& processors = resp.children[0];
   REQUIRE_FALSE(processors.children.empty());
-  const auto &processor_with_properties = "org.apache.nifi.minifi.processors.UpdateAttribute" != processors.children[0].name ? processors.children[0] : processors.children[1];
+  const auto& processor_with_properties = "org.apache.nifi.minifi.processors.UpdateAttribute" != processors.children[0].name
+      ? processors.children[0]
+      : processors.children[1];
   REQUIRE_FALSE(processor_with_properties.children.empty());
-  const auto &prop_descriptors = processor_with_properties.children[0];
+  const auto& prop_descriptors = processor_with_properties.children[0];
   REQUIRE_FALSE(prop_descriptors.children.empty());
-  const auto &prop_0 = prop_descriptors.children[0];
+  const auto& prop_0 = prop_descriptors.children[0];
   REQUIRE(prop_0.children.size() >= 6);
   CHECK("required" == prop_0.children[3].name);
   CHECK("sensitive" == prop_0.children[4].name);
@@ -86,13 +92,15 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
 }
 
 TEST_CASE("Test Relationships", "[rel1]") {
-  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors",
+      .group_name = "org.apache.nifi.minifi",
+      .version = minifi::AgentBuild::VERSION};
   const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
-  const auto &resp = serialized[0];
+  const auto& resp = serialized[0];
   REQUIRE_FALSE(resp.children.empty());
-  const auto &processors = resp.children[0];
+  const auto& processors = resp.children[0];
   REQUIRE_FALSE(processors.children.empty());
   minifi::state::response::SerializedResponseNode proc_0;
   for (const auto& node : processors.children) {
@@ -126,26 +134,28 @@ TEST_CASE("Test Relationships", "[rel1]") {
 }
 
 TEST_CASE("Test Dependent", "[dependent]") {
-  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors", .group_name = "org.apache.nifi.minifi", .version = minifi::AgentBuild::VERSION};
+  const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors",
+      .group_name = "org.apache.nifi.minifi",
+      .version = minifi::AgentBuild::VERSION};
   const auto class_desc = minifi::ClassDescriptionRegistry::getClassDescriptions();
   const auto standard_processors_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(standard_processor_bundle_coord);
   auto serialized = minifi::state::response::serializeComponentManifest(standard_processors_components);
   REQUIRE_FALSE(serialized.empty());
-  const auto &resp = serialized[0];
+  const auto& resp = serialized[0];
   REQUIRE_FALSE(resp.children.empty());
-  const auto &processors = resp.children[0];
+  const auto& processors = resp.children[0];
   REQUIRE_FALSE(processors.children.empty());
   minifi::state::response::SerializedResponseNode proc_0;
-  for (const auto &node : processors.children) {
+  for (const auto& node : processors.children) {
     if ("org.apache.nifi.minifi.processors.PutFile" == node.name) {
       proc_0 = node;
     }
   }
 #ifndef WIN32
   REQUIRE_FALSE(proc_0.children.empty());
-  const auto &prop_descriptors = proc_0.children[0];
+  const auto& prop_descriptors = proc_0.children[0];
   REQUIRE(prop_descriptors.children.size() >= 3);
-  const auto &prop_0 = prop_descriptors.children[1];
+  const auto& prop_0 = prop_descriptors.children[1];
   REQUIRE(prop_0.children.size() >= 6);
   CHECK("required" == prop_0.children[3].name);
   CHECK("sensitive" == prop_0.children[4].name);
@@ -159,13 +169,13 @@ TEST_CASE("Test Scheduling Defaults", "[schedDef]") {
   auto serialized = manifest.serialize();
   REQUIRE_FALSE(serialized.empty());
   minifi::state::response::SerializedResponseNode proc_0;
-  for (const auto &node : serialized) {
+  for (const auto& node : serialized) {
     if ("schedulingDefaults" == node.name) {
       proc_0 = node;
     }
   }
   REQUIRE(proc_0.children.size() == 6);
-  for (const auto &child : proc_0.children) {
+  for (const auto& child : proc_0.children) {
     if ("defaultMaxConcurrentTasks" == child.name) {
       REQUIRE("1" == child.value.to_string());
     } else if ("defaultRunDurationNanos" == child.name) {
@@ -189,9 +199,9 @@ TEST_CASE("Test operatingSystem Defaults", "[opsys]") {
   auto serialized = manifest.serialize();
   REQUIRE_FALSE(serialized.empty());
   minifi::state::response::SerializedResponseNode proc_0;
-  for (const auto &node : serialized) {
+  for (const auto& node : serialized) {
     if ("systemInfo" == node.name) {
-      for (const auto &sinfo : node.children) {
+      for (const auto& sinfo : node.children) {
         if ("operatingSystem" == sinfo.name) {
           proc_0 = sinfo;
           break;
@@ -209,9 +219,13 @@ std::vector<std::string> listExtensionsInManifest(minifi::state::response::Agent
   std::vector<std::string> extensions;
   const auto serialized = manifest.serialize();
   for (const auto& node : serialized) {
-    if ("bundles" != node.name) { continue; }
+    if ("bundles" != node.name) {
+      continue;
+    }
     for (const auto& subnode : node.children) {
-      if ("artifact" != subnode.name) { continue; }
+      if ("artifact" != subnode.name) {
+        continue;
+      }
       extensions.push_back(subnode.value.to_string());
     }
   }
@@ -230,21 +244,25 @@ TEST_CASE("Test providedApiImplementations") {
   minifi::state::response::AgentManifest manifest("minifi-system");
   const auto manifest_serialized = manifest.serialize();
 
-  const auto minifi_system_bundle = getBundle(manifest_serialized, "minifi-system");
-  const auto minifi_standard_processors_bundle = getBundle(manifest_serialized, "minifi-standard-processors");
+  const auto minifi_system_bundle = minifi::test::getBundle(manifest_serialized, "minifi-system");
+  const auto minifi_standard_processors_bundle = minifi::test::getBundle(manifest_serialized, "minifi-standard-processors");
 
   REQUIRE(minifi_system_bundle);
   REQUIRE(minifi_standard_processors_bundle);
 
   {
-    const auto ssl_context_service = getComponentFromBundle(*minifi_system_bundle, "org.apache.nifi.minifi.controllers.SSLContextService", ComponentType::kControllerService);
-    const auto listen_tcp = getComponentFromBundle(*minifi_standard_processors_bundle, "org.apache.nifi.minifi.processors.ListenTCP", ComponentType::kProcessor);
+    const auto ssl_context_service = minifi::test::getComponentFromBundle(*minifi_system_bundle,
+        "org.apache.nifi.minifi.controllers.SSLContextService",
+        minifi::test::ComponentType::kControllerService);
+    const auto listen_tcp = minifi::test::getComponentFromBundle(*minifi_standard_processors_bundle,
+        "org.apache.nifi.minifi.processors.ListenTCP",
+        minifi::test::ComponentType::kProcessor);
 
     REQUIRE(ssl_context_service);
     REQUIRE(listen_tcp);
 
-    const auto listen_tcp_ssl_context_service_allowed_type = getProcessorPropertyAllowedType(*listen_tcp, "SSL Context Service");
-    const auto ssl_context_service_provided_api_imps = getControllerServiceProvidedApiImplementations(*ssl_context_service);
+    const auto listen_tcp_ssl_context_service_allowed_type = minifi::test::getProcessorPropertyAllowedType(*listen_tcp, "SSL Context Service");
+    const auto ssl_context_service_provided_api_imps = minifi::test::getControllerServiceProvidedApiImplementations(*ssl_context_service);
 
     REQUIRE(listen_tcp_ssl_context_service_allowed_type);
     REQUIRE(ssl_context_service_provided_api_imps.size() == 1);
@@ -252,19 +270,25 @@ TEST_CASE("Test providedApiImplementations") {
   }
 
   {
-    const auto json_tree_reader = getComponentFromBundle(*minifi_standard_processors_bundle, "org.apache.nifi.minifi.standard.JsonTreeReader", ComponentType::kControllerService);
-    const auto json_record_set_writer = getComponentFromBundle(*minifi_standard_processors_bundle, "org.apache.nifi.minifi.standard.JsonRecordSetWriter", ComponentType::kControllerService);
-    const auto split_record = getComponentFromBundle(*minifi_standard_processors_bundle, "org.apache.nifi.minifi.processors.SplitRecord", ComponentType::kProcessor);
+    const auto json_tree_reader = getComponentFromBundle(*minifi_standard_processors_bundle,
+        "org.apache.nifi.minifi.standard.JsonTreeReader",
+        minifi::test::ComponentType::kControllerService);
+    const auto json_record_set_writer = getComponentFromBundle(*minifi_standard_processors_bundle,
+        "org.apache.nifi.minifi.standard.JsonRecordSetWriter",
+        minifi::test::ComponentType::kControllerService);
+    const auto split_record = getComponentFromBundle(*minifi_standard_processors_bundle,
+        "org.apache.nifi.minifi.processors.SplitRecord",
+        minifi::test::ComponentType::kProcessor);
 
     REQUIRE(json_tree_reader);
     REQUIRE(json_record_set_writer);
     REQUIRE(split_record);
 
-    const auto split_record_record_reader_allowed_type = getProcessorPropertyAllowedType(*split_record, "Record Reader");
-    const auto split_record_record_writer_allowed_type = getProcessorPropertyAllowedType(*split_record, "Record Writer");
+    const auto split_record_record_reader_allowed_type = minifi::test::getProcessorPropertyAllowedType(*split_record, "Record Reader");
+    const auto split_record_record_writer_allowed_type = minifi::test::getProcessorPropertyAllowedType(*split_record, "Record Writer");
 
-    const auto json_tree_reader_api_imps = getControllerServiceProvidedApiImplementations(*json_tree_reader);
-    const auto json_record_set_writer_api_imps = getControllerServiceProvidedApiImplementations(*json_record_set_writer);
+    const auto json_tree_reader_api_imps = minifi::test::getControllerServiceProvidedApiImplementations(*json_tree_reader);
+    const auto json_record_set_writer_api_imps = minifi::test::getControllerServiceProvidedApiImplementations(*json_record_set_writer);
 
     REQUIRE(split_record_record_reader_allowed_type);
     REQUIRE(split_record_record_writer_allowed_type);
