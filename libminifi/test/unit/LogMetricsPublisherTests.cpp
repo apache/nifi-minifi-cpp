@@ -33,12 +33,16 @@ namespace org::apache::nifi::minifi::test {
 class LogPublisherTestFixture {
  public:
   LogPublisherTestFixture()
-      : configuration_(std::make_shared<ConfigureImpl>()),
-        provenance_repo_(core::createRepository("provenancerepository", "provenancerepository")),
-        flow_file_repo_(core::createRepository("flowfilerepository", "flowfilerepository")),
-        response_node_loader_(std::make_shared<state::response::ResponseNodeLoaderImpl>(configuration_,
-            std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_}, nullptr)),
-        publisher_(std::make_unique<minifi::state::LogMetricsPublisher>("LogMetricsPublisher")) {
+      : configuration_(std::make_shared<ConfigureImpl>()) {
+    configuration_->set(minifi::Configuration::nifi_provenance_repository_directory_default,
+                        (temp_directory_.getPath() / "provenance_repository").string());
+    configuration_->set(minifi::Configuration::nifi_flowfile_repository_directory_default,
+                        (temp_directory_.getPath() / "flowfile_repository").string());
+    provenance_repo_ = core::createRepository("provenancerepository", "provenancerepository");
+    flow_file_repo_ = core::createRepository("flowfilerepository", "flowfilerepository");
+    response_node_loader_ = std::make_shared<state::response::ResponseNodeLoaderImpl>(configuration_,
+        std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_}, nullptr);
+    publisher_ = std::make_unique<minifi::state::LogMetricsPublisher>("LogMetricsPublisher");
     provenance_repo_->initialize(configuration_);
     flow_file_repo_->initialize(configuration_);
   }
@@ -50,8 +54,9 @@ class LogPublisherTestFixture {
 
   ~LogPublisherTestFixture() {
     publisher_.reset();  // explicit because LogTestController should outlive the thread in publisher_
-    minifi::utils::file::delete_dir(provenance_repo_->getDirectory());
-    minifi::utils::file::delete_dir(flow_file_repo_->getDirectory());
+    response_node_loader_.reset();
+    flow_file_repo_.reset();
+    provenance_repo_.reset();
     LogTestController::getInstance().reset();
   }
 
