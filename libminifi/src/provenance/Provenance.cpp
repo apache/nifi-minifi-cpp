@@ -167,7 +167,7 @@ bool ProvenanceEventRecordImpl::serialize(io::OutputStream& output_stream) {
     }
   }
   {
-    const auto ret = output_stream.write(content_full_path);
+    const auto ret = output_stream.write(content_full_path_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
@@ -355,7 +355,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   }
 
   {
-    const auto ret = input_stream.read(content_full_path);
+    const auto ret = input_stream.read(content_full_path_);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }

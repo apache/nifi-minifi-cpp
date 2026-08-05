@@ -111,11 +111,11 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
   }
 
   std::string getContentFullPath() const override {
-    return content_full_path;
+    return content_full_path_;
   }
 
   std::vector<utils::Identifier> getLineageIdentifiers() const override {
-    return lineage_identifiers;
+    return lineage_identifiers_;
   }
 
   std::string getDetails() const override {
@@ -200,7 +200,7 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
   void fromFlowFile(const core::FlowFile& flow_file) override {
     entry_date_ = flow_file.getEntryDate();
     lineage_start_date_ = flow_file.getLineageStartDate();
-    lineage_identifiers = flow_file.getlineageIdentifiers();
+    lineage_identifiers_ = flow_file.getlineageIdentifiers();
     flow_uuid_ = flow_file.getUUID();
     attributes_ = flow_file.getAttributes();
     size_ = flow_file.getSize();
@@ -208,7 +208,7 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
     if (flow_file.getConnection())
       source_queue_identifier_ = flow_file.getConnection()->getName();
     if (flow_file.getResourceClaim()) {
-      content_full_path = flow_file.getResourceClaim()->getContentFullPath();
+      content_full_path_ = flow_file.getResourceClaim()->getContentFullPath();
     }
   }
 
@@ -231,10 +231,10 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
   uint64_t size_ = 0;
   utils::Identifier flow_uuid_;
   uint64_t offset_ = 0;
-  std::string content_full_path;
+  std::string content_full_path_;
   std::map<std::string, std::string> attributes_;
   // UUID string for all parents
-  std::vector<utils::Identifier> lineage_identifiers;
+  std::vector<utils::Identifier> lineage_identifiers_;
   std::string transit_uri_;
   std::string source_system_flow_file_identifier_;
   std::vector<utils::Identifier> parent_uuids_;
