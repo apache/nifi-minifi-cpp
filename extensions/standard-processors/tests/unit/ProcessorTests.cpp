@@ -53,6 +53,7 @@
 #include "fmt/format.h"
 #include "processors/TailFile.h"
 #include "Connection.h"
+#include "unit/ReportingTaskUtils.h"
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;
@@ -412,8 +413,8 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceReporter>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   auto processor = plan->addProcessor("GetFile", "getfileCreate2");
-  TypedProcessorWrapper<minifi::core::reporting::SiteToSiteProvenanceReportingTask> processorReport = plan->addProcessor(
-      minifi::test::utils::make_custom_processor<minifi::core::reporting::SiteToSiteProvenanceReportingTask>(std::make_shared<minifi::ConfigureImpl>()),
+  TypedProcessorWrapper<minifi::core::reporting::ReportingTask> processorReport = plan->addProcessor(
+      minifi::test::utils::make_reporting_task<minifi::core::reporting::SiteToSiteProvenanceReportingTask>("reporter"),
       "reporter", core::Relationship("success", "description"), false);
 
   auto dir = testController.createTempDirectory();
@@ -464,17 +465,17 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
       throw std::runtime_error("Did not find record");
     }
   }
-  auto taskReport = &processorReport.get();
+  auto taskReport = &processorReport.get().getImpl<minifi::core::reporting::SiteToSiteProvenanceReportingTask>();
   taskReport->setBatchSize(1);
   processorReport->incrementActiveTasks();
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
   auto recordsReport = repo->getEvents(1, nullptr);
   REQUIRE(recordsReport);
   std::function<void(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession>&)> verifyReporter =
-      [&](const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-        auto json_str = taskReport->getJsonReport(*context, *session, recordsReport.value());
+      [&](const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) {
+        auto json_str = taskReport->getJsonReport(recordsReport.value());
         REQUIRE(recordsReport->size() == 1);
-        REQUIRE(taskReport->getName() == std::string(minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
+        REQUIRE(processorReport->getName() == "reporter");
         REQUIRE(json_str.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
       };
 

@@ -28,6 +28,7 @@
 #include "ObjectFactory.h"
 #include "ProcessorFactory.h"
 #include "controller/ControllerServiceFactory.h"
+#include "reporting/ReportingTaskFactory.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -69,6 +70,8 @@ class ClassLoader {
   virtual void registerClass(const std::string &clazz, std::unique_ptr<ProcessorFactory> factory) = 0;
 
   virtual void registerClass(const std::string &clazz, std::unique_ptr<controller::ControllerServiceFactory> factory) = 0;
+
+  virtual void registerClass(const std::string &clazz, std::unique_ptr<reporting::ReportingTaskFactory> factory) = 0;
 
   virtual void unregisterClass(const std::string& clazz) = 0;
 

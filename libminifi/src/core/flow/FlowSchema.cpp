@@ -57,9 +57,6 @@ FlowSchema FlowSchema::getDefault() {
       .controller_services = {"Controller Services"},
       .controller_service_properties = {"Properties"},
       .remote_process_group = {"Remote Processing Groups", "Remote Process Groups"},
-      .provenance_reporting = {"Provenance Reporting"},
-      .provenance_reporting_port_uuid = {"port uuid"},
-      .provenance_reporting_batch_size = {"batch size"},
       .funnels = {"Funnels"},
       .input_ports = {"Input Ports"},
       .output_ports = {"Output Ports"},
@@ -93,7 +90,9 @@ FlowSchema FlowSchema::getDefault() {
       .inherited_parameter_contexts = {"Inherited Parameter Contexts"},
       .parameter_providers = {"Parameter Providers"},
       .parameter_provider_properties = {"Properties"},
-      .parameter_provider{"Parameter Provider"}
+      .parameter_provider{"Parameter Provider"},
+      .reporting_tasks = {"Reporting Tasks"},
+      .reporting_task_properties = {"Properties"}
   };
 }
 
@@ -135,9 +134,6 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .controller_services = {"controllerServices"},
       .controller_service_properties = {"properties"},
       .remote_process_group = {"remoteProcessGroups"},
-      .provenance_reporting = {"provenanceReporting"},
-      .provenance_reporting_port_uuid = {"portUuid"},
-      .provenance_reporting_batch_size = {"batchSize"},
       .funnels = {"funnels"},
       .input_ports = {"inputPorts"},
       .output_ports = {"outputPorts"},
@@ -171,7 +167,10 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .inherited_parameter_contexts = {"inheritedParameterContexts"},
       .parameter_providers = {"parameterProviders"},
       .parameter_provider_properties = {"properties"},
-      .parameter_provider{"parameterProvider"}
+      .parameter_provider{"parameterProvider"},
+
+      .reporting_tasks = {"reportingTasks"},
+      .reporting_task_properties = {"properties"}
   };
 }
 

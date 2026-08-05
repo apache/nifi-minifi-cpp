@@ -134,18 +134,6 @@ class StructuredConfiguration : public FlowConfiguration {
   void parseRemoteProcessGroup(const Node& rpg_node_seq, core::ProcessGroup* parent);
 
   /**
-   * Parses the Provenance Reporting section of a configuration.
-   * The resulting Provenance Reporting processor is added to the
-   * parent ProcessGroup.
-   *
-   * @param report_node  the Node containing the provenance
-   *                      reporting configuration
-   * @param parent_group the root node of flow configuration to which
-   *                      to add the provenance reporting config
-   */
-  void parseProvenanceReporting(const Node& report_node, core::ProcessGroup* parent_group);
-
-  /**
    * A helper function to parse the Properties Node for a processor.
    *
    * @param properties_node the Node containing the properties
@@ -176,6 +164,8 @@ class StructuredConfiguration : public FlowConfiguration {
   void parsePorts(const flow::Node& node, core::ProcessGroup* parent, PortType port_type);
 
   void parseParameterContext(const flow::Node& node, core::ProcessGroup& parent);
+
+  void parseReportingTasks(const Node& reporting_tasks_node, core::ProcessGroup* parent_group);
 
   /**
    * A helper function for parsing or generating optional id fields.

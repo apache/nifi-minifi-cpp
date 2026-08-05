@@ -26,6 +26,7 @@ from minifi_behave.minifi.funnel import Funnel
 from minifi_behave.minifi.parameter import Parameter
 from minifi_behave.minifi.parameter_context import ParameterContext
 from minifi_behave.minifi.processor import Processor
+from minifi_behave.minifi.reporting_task import ReportingTask
 
 
 @given("a MiNiFi CPP server with yaml config")
@@ -421,3 +422,25 @@ def nifi_send_to_rpg_output_port(context: MinifiTestContext, port_name: str, rpg
 @given("the connection going to {destination} has \"drop empty\" set")
 def set_drop_empty_flag_for_connection(context: MinifiTestContext, destination: str):
     context.get_or_create_default_minifi_container().flow_definition.set_drop_empty_for_destination(destination)
+
+
+@given("a SiteToSiteProvenanceReportingTask reporting task with the name \"{name}\"")
+def add_site_to_site_provenance_reporting_task(context: MinifiTestContext, name: str):
+    flow_definition = context.get_or_create_default_minifi_container().flow_definition
+    port_id = str(uuid.uuid4())
+    reporting_task = ReportingTask("SiteToSiteProvenanceReportingTask", name)
+    reporting_task.add_property("Destination URL", f"http://nifi-{context.scenario_id}:8080/nifi")
+    reporting_task.add_property("Port UUID", port_id)
+    flow_definition.add_reporting_task(reporting_task)
+
+
+@given("a NiFi flow is receiving data on an input port named \"{nifi_port_name}\" from the reporting task named \"{reporting_task_name}\"")
+def nifi_receive_from_reporting_task(context: MinifiTestContext, nifi_port_name: str, reporting_task_name: str):
+    flow_definition = context.get_or_create_default_minifi_container().flow_definition
+    reporting_task = flow_definition.get_reporting_task(reporting_task_name)
+    if reporting_task is None:
+        raise ValueError(f"ReportingTask '{reporting_task_name}' not found in the MiNiFi flow.")
+    port_id = reporting_task.properties.get("Port UUID")
+    if not port_id:
+        raise ValueError(f"ReportingTask '{reporting_task_name}' has no Port UUID property set.")
+    context.containers["nifi"].flow_definition.add_input_port(port_id, nifi_port_name)

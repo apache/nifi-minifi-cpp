@@ -53,7 +53,7 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
   auto testRepository = std::make_shared<TestRepository>();
   record1->setEventDuration(sample);
 
-  testRepository->appendEvents({record1});
+  REQUIRE(testRepository->appendEvents({record1}));
   auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == true);
@@ -79,7 +79,7 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   auto testRepository = std::make_shared<TestRepository>();
   record1->setEventDuration(sample);
 
-  testRepository->appendEvents({record1});
+  REQUIRE(testRepository->appendEvents({record1}));
   auto record2 = provenance::ProvenanceEventRecord::create();
   record2->setEventId(eventId);
   REQUIRE(record2->loadFromRepository(testRepository) == true);
@@ -93,8 +93,6 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
   auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
       utils::Identifier::parse("00000000-0000-0000-0000-000000000004").value(), "componenttype");
 
-  utils::Identifier eventId = record1->getEventId();
-
   std::string smileyface = ":)";
   record1->setDetails(smileyface);
 
@@ -104,7 +102,7 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
   testRepository->initialize(nullptr);
   record1->setEventDuration(sample);
 
-  testRepository->appendEvents({record1});
+  REQUIRE(testRepository->appendEvents({record1}));
 
   utils::Identifier eventId = record1->getEventId();
 
@@ -122,7 +120,6 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
 TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[TestFlowAndProv1]") {
   auto record1 = std::make_shared<provenance::ProvenanceEventRecordImpl>(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE,
       utils::Identifier::parse("00000000-0000-0000-0000-000000000005").value(), "componenttype");
-  utils::Identifier eventId = record1->getEventId();
   std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecordImpl>();
   ffr1->setAttribute("potato", "potatoe");
   ffr1->setAttribute("tomato", "tomatoe");
@@ -134,7 +131,7 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
   testRepository->initialize(nullptr);
   record1->setEventDuration(sample);
 
-  testRepository->appendEvents({record1});
+  REQUIRE(testRepository->appendEvents({record1}));
 
   utils::Identifier eventId = record1->getEventId();
 
