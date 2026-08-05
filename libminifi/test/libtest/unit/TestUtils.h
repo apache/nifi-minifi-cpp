@@ -40,6 +40,8 @@
 #include "core/Processor.h"
 #include <range/v3/all.hpp>
 #include "./ProcessorUtils.h"
+#include "minifi-cpp/agent/agent_docs.h"
+
 
 using namespace std::literals::chrono_literals;
 
@@ -247,6 +249,16 @@ struct LogMessageView {
 };
 
 std::vector<LogMessageView> extractLogMessageViews(const std::string& log_str);
+
+const state::response::SerializedResponseNode* getBundle(const std::vector<state::response::SerializedResponseNode>& manifest,
+    std::string_view bundle_artifact_name);
+const state::response::SerializedResponseNode* getComponentFromBundle(const state::response::SerializedResponseNode& bundle, std::string_view name,
+    ResourceType type);
+
+std::optional<core::ControllerServiceType> getProcessorPropertyAllowedType(const state::response::SerializedResponseNode& processor_node,
+    std::string_view property);
+std::vector<core::ControllerServiceType>
+getControllerServiceProvidedApiImplementations(const state::response::SerializedResponseNode& controller_service_node);
 
 }  // namespace org::apache::nifi::minifi::test::utils
 

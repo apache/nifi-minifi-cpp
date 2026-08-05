@@ -20,7 +20,6 @@
 
 #include <memory>
 
-#include "ManifestTestHelper.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/DeviceInformation.h"
 #include "minifi-cpp/agent/agent_version.h"
@@ -28,6 +27,7 @@
 #include "range/v3/algorithm/find_if.hpp"
 #include "unit/Catch.h"
 #include "unit/TestBase.h"
+#include "unit/TestUtils.h"
 
 TEST_CASE("Test Required", "[required]") {
   const auto standard_processor_bundle_coord = minifi::BundleCoordinate{.name = "minifi-standard-processors",
@@ -243,25 +243,25 @@ TEST_CASE("Test providedApiImplementations") {
   minifi::state::response::AgentManifest manifest("minifi-system");
   const auto manifest_serialized = manifest.serialize();
 
-  const auto minifi_system_bundle = minifi::test::getBundle(manifest_serialized, "minifi-system");
-  const auto minifi_standard_processors_bundle = minifi::test::getBundle(manifest_serialized, "minifi-standard-processors");
+  const auto minifi_system_bundle = minifi::test::utils::getBundle(manifest_serialized, "minifi-system");
+  const auto minifi_standard_processors_bundle = minifi::test::utils::getBundle(manifest_serialized, "minifi-standard-processors");
 
   REQUIRE(minifi_system_bundle);
   REQUIRE(minifi_standard_processors_bundle);
 
   {
-    const auto ssl_context_service = minifi::test::getComponentFromBundle(*minifi_system_bundle,
+    const auto ssl_context_service = minifi::test::utils::getComponentFromBundle(*minifi_system_bundle,
         "org.apache.nifi.minifi.controllers.SSLContextService",
-        minifi::test::ComponentType::kControllerService);
-    const auto listen_tcp = minifi::test::getComponentFromBundle(*minifi_standard_processors_bundle,
+        minifi::ResourceType::ControllerService);
+    const auto listen_tcp = minifi::test::utils::getComponentFromBundle(*minifi_standard_processors_bundle,
         "org.apache.nifi.minifi.processors.ListenTCP",
-        minifi::test::ComponentType::kProcessor);
+        minifi::ResourceType::Processor);
 
     REQUIRE(ssl_context_service);
     REQUIRE(listen_tcp);
 
-    const auto listen_tcp_ssl_context_service_allowed_type = minifi::test::getProcessorPropertyAllowedType(*listen_tcp, "SSL Context Service");
-    const auto ssl_context_service_provided_api_imps = minifi::test::getControllerServiceProvidedApiImplementations(*ssl_context_service);
+    const auto listen_tcp_ssl_context_service_allowed_type = minifi::test::utils::getProcessorPropertyAllowedType(*listen_tcp, "SSL Context Service");
+    const auto ssl_context_service_provided_api_imps = minifi::test::utils::getControllerServiceProvidedApiImplementations(*ssl_context_service);
 
     REQUIRE(listen_tcp_ssl_context_service_allowed_type);
     REQUIRE(ssl_context_service_provided_api_imps.size() == 1);
@@ -269,25 +269,25 @@ TEST_CASE("Test providedApiImplementations") {
   }
 
   {
-    const auto json_tree_reader = getComponentFromBundle(*minifi_standard_processors_bundle,
+    const auto json_tree_reader = minifi::test::utils::getComponentFromBundle(*minifi_standard_processors_bundle,
         "org.apache.nifi.minifi.standard.JsonTreeReader",
-        minifi::test::ComponentType::kControllerService);
-    const auto json_record_set_writer = getComponentFromBundle(*minifi_standard_processors_bundle,
+        minifi::ResourceType::ControllerService);
+    const auto json_record_set_writer = minifi::test::utils::getComponentFromBundle(*minifi_standard_processors_bundle,
         "org.apache.nifi.minifi.standard.JsonRecordSetWriter",
-        minifi::test::ComponentType::kControllerService);
-    const auto split_record = getComponentFromBundle(*minifi_standard_processors_bundle,
+        minifi::ResourceType::ControllerService);
+    const auto split_record = minifi::test::utils::getComponentFromBundle(*minifi_standard_processors_bundle,
         "org.apache.nifi.minifi.processors.SplitRecord",
-        minifi::test::ComponentType::kProcessor);
+        minifi::ResourceType::Processor);
 
     REQUIRE(json_tree_reader);
     REQUIRE(json_record_set_writer);
     REQUIRE(split_record);
 
-    const auto split_record_record_reader_allowed_type = minifi::test::getProcessorPropertyAllowedType(*split_record, "Record Reader");
-    const auto split_record_record_writer_allowed_type = minifi::test::getProcessorPropertyAllowedType(*split_record, "Record Writer");
+    const auto split_record_record_reader_allowed_type = minifi::test::utils::getProcessorPropertyAllowedType(*split_record, "Record Reader");
+    const auto split_record_record_writer_allowed_type = minifi::test::utils::getProcessorPropertyAllowedType(*split_record, "Record Writer");
 
-    const auto json_tree_reader_api_imps = minifi::test::getControllerServiceProvidedApiImplementations(*json_tree_reader);
-    const auto json_record_set_writer_api_imps = minifi::test::getControllerServiceProvidedApiImplementations(*json_record_set_writer);
+    const auto json_tree_reader_api_imps = minifi::test::utils::getControllerServiceProvidedApiImplementations(*json_tree_reader);
+    const auto json_record_set_writer_api_imps = minifi::test::utils::getControllerServiceProvidedApiImplementations(*json_record_set_writer);
 
     REQUIRE(split_record_record_reader_allowed_type);
     REQUIRE(split_record_record_writer_allowed_type);

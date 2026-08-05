@@ -25,6 +25,8 @@ struct ControllerServiceTypeDefinition {
   std::string_view group;
   std::string_view type;
   std::string_view version;
+
+  auto operator<=>(const ControllerServiceTypeDefinition&) const = default;
 };
 
 }  // namespace org::apache::nifi::minifi::core
