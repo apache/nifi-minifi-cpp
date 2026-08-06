@@ -223,10 +223,7 @@ impl Schedule for GetFileRs {
     where
         Self: Sized,
     {
-        let input_directory: PathBuf = context
-            .get_property(&DIRECTORY)?
-            .expect("Required property")
-            .into();
+        let input_directory = context.get_property(&DIRECTORY)?;
         if !input_directory.is_dir() {
             return Err(MinifiError::schedule_err(format!(
                 "{:?} is not a valid directory",
@@ -234,25 +231,17 @@ impl Schedule for GetFileRs {
             )));
         }
 
-        let recursive = context
-            .get_bool_property(&RECURSE)?
-            .expect("Required property");
+        let recursive = context.get_property(&RECURSE)?;
 
-        let keep_source_file = context
-            .get_bool_property(&KEEP_SOURCE_FILE)?
-            .expect("Required property");
+        let keep_source_file = context.get_property(&KEEP_SOURCE_FILE)?;
 
-        let poll_interval = context.get_duration_property(&properties::POLLING_INTERVAL)?;
-        let min_size = context.get_size_property(&MIN_SIZE)?;
-        let max_size = context.get_size_property(&MAX_SIZE)?;
-        let min_age = context.get_duration_property(&MIN_AGE)?;
-        let max_age = context.get_duration_property(&MAX_AGE)?;
-        let batch_size = context
-            .get_u64_property(&BATCH_SIZE)?
-            .expect("required property");
-        let ignore_hidden_files = context
-            .get_bool_property(&IGNORE_HIDDEN_FILES)?
-            .expect("required property");
+        let poll_interval = context.get_property(&properties::POLLING_INTERVAL)?;
+        let min_size = context.get_property(&MIN_SIZE)?;
+        let max_size = context.get_property(&MAX_SIZE)?;
+        let min_age = context.get_property(&MIN_AGE)?;
+        let max_age = context.get_property(&MAX_AGE)?;
+        let batch_size = context.get_property(&BATCH_SIZE)?;
+        let ignore_hidden_files = context.get_property(&IGNORE_HIDDEN_FILES)?;
 
         Ok(GetFileRs {
             recursive,

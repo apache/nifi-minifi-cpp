@@ -19,12 +19,12 @@ use super::c_ffi_flow_file::CffiFlowFile;
 use super::c_ffi_primitives::StringView;
 use crate::api::ProcessContext;
 use crate::api::controller_service::ControllerService;
+use crate::api::property::PropertySchema;
 use crate::c_ffi::{CffiLogger, StaticStrAsMinifiCStr};
 use crate::{
     ComponentIdentifier, ControllerServiceApi, EnableControllerService, MinifiError, Property,
 };
 use minifi_native_sys::*;
-use std::borrow::Cow;
 use std::ffi::c_void;
 use std::num::NonZeroU32;
 
@@ -65,9 +65,9 @@ unsafe extern "C" fn get_property_callback(
 
 impl<'a> ProcessContext for CffiProcessContext<'a> {
     type FlowFile = CffiFlowFile<'a>; // FlowFile shouldn't outlive the ProcessContext
-    fn get_property(
+    fn get_raw_property<K: PropertySchema + ?Sized>(
         &self,
-        property: &Property,
+        property: &Property<K>,
         flow_file: Option<&Self::FlowFile>,
     ) -> Result<Option<String>, MinifiError> {
         let ff_ptr = flow_file.map_or(std::ptr::null_mut(), |ff| ff.get_ptr());
@@ -85,12 +85,7 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
                 &mut result as *mut _ as *mut c_void,
             ) {
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(result),
-                minifi_status_MINIFI_STATUS_PROPERTY_NOT_SET => match property.is_required {
-                    true => Err(MinifiError::MissingRequiredProperty(Cow::from(
-                        property.name,
-                    ))),
-                    false => Ok(None),
-                },
+                minifi_status_MINIFI_STATUS_PROPERTY_NOT_SET => Ok(None),
                 err_code => Err(MinifiError::StatusError((
                     format!("minifi_process_context_get_property({:?})", property.name).into(),
                     NonZeroU32::new_unchecked(err_code),
@@ -99,12 +94,13 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
         }
     }
 
-    fn get_raw_controller_service<Cs>(
+    fn get_raw_controller_service<Cs, K>(
         &self,
-        property: &Property,
+        property: &Property<K>,
     ) -> Result<Option<&'a Cs>, MinifiError>
     where
         Cs: ComponentIdentifier + 'static,
+        K: PropertySchema + ?Sized,
     {
         let str_view = StringView::new(property.name);
 
@@ -117,39 +113,43 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
                 Cs::CLASS_NAME.as_minifi_c_type(),
                 &mut controller_service_ptr,
             );
-            if get_cs_status != minifi_status_MINIFI_STATUS_SUCCESS {
-                return Err(MinifiError::StatusError((
+            #[allow(non_upper_case_globals)]
+            match get_cs_status {
+                minifi_status_MINIFI_STATUS_PROPERTY_NOT_SET => Ok(None),
+                minifi_status_MINIFI_STATUS_SUCCESS => Ok(Some(
+                    (controller_service_ptr as *const Cs)
+                        .as_ref()
+                        .expect("C returned a null pointer"),
+                )),
+                err => Err(MinifiError::StatusError((
                     format!(
                         "minifi_process_context_get_controller_service_from_property::<{:?}>({:?})",
                         Cs::CLASS_NAME,
-                        property
+                        property.name
                     )
                     .into(),
-                    NonZeroU32::new_unchecked(get_cs_status),
-                )));
+                    NonZeroU32::new_unchecked(err),
+                ))),
             }
-            let cs_ref: &Cs = {
-                (controller_service_ptr as *const Cs)
-                    .as_ref()
-                    .expect("C returned a null pointer")
-            };
-            Ok(Some(cs_ref))
         }
     }
 
-    fn get_controller_service<Cs>(&self, property: &Property) -> Result<Option<&Cs>, MinifiError>
+    fn get_controller_service<Cs>(
+        &self,
+        property: &Property<Cs>,
+    ) -> Result<Option<&Cs>, MinifiError>
     where
-        Cs: EnableControllerService + ComponentIdentifier + 'static,
+        Cs: EnableControllerService + ComponentIdentifier + PropertySchema + 'static,
     {
-        match self.get_raw_controller_service::<ControllerService<Cs, CffiLogger>>(property)? {
+        match self.get_raw_controller_service::<ControllerService<Cs, CffiLogger>, Cs>(property)? {
             None => Ok(None),
             Some(f) => Ok(f.get_implementation()),
         }
     }
 
-    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi>(
+    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi + PropertySchema>(
         &self,
-        property: &Property,
+        property: &Property<Trait>,
     ) -> Result<Option<Box<&Trait>>, MinifiError> {
         let str_view = StringView::new(property.name);
         let interface_view = StringView::new(Trait::INTERFACE_NAME);

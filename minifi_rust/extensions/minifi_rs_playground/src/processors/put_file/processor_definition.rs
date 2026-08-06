@@ -17,30 +17,9 @@
 
 use super::*;
 use minifi_native::{
-    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
+    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
+    Relationship, property_definitions,
 };
-
-#[cfg(windows)]
-const fn get_properties() -> &'static [Property] {
-    &[
-        properties::DIRECTORY,
-        properties::CONFLICT_RESOLUTION,
-        properties::CREATE_DIRS,
-        properties::MAX_FILE_COUNT,
-    ]
-}
-
-#[cfg(unix)]
-const fn get_properties() -> &'static [Property] {
-    &[
-        properties::DIRECTORY,
-        properties::CONFLICT_RESOLUTION,
-        properties::CREATE_DIRS,
-        properties::MAX_FILE_COUNT,
-        unix_only_properties::PERMISSIONS,
-        unix_only_properties::DIRECTORY_PERMISSIONS,
-    ]
-}
 
 impl ProcessorDefinition for PutFileRs {
     const DESCRIPTION: &'static str =
@@ -50,5 +29,22 @@ impl ProcessorDefinition for PutFileRs {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
-    const PROPERTIES: &'static [Property] = get_properties();
+
+    #[cfg(windows)]
+    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
+        properties::DIRECTORY,
+        properties::CONFLICT_RESOLUTION,
+        properties::CREATE_DIRS,
+        properties::MAX_FILE_COUNT,
+    ];
+
+    #[cfg(unix)]
+    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
+        properties::DIRECTORY,
+        properties::CONFLICT_RESOLUTION,
+        properties::CREATE_DIRS,
+        properties::MAX_FILE_COUNT,
+        unix_only_properties::PERMISSIONS,
+        unix_only_properties::DIRECTORY_PERMISSIONS,
+    ];
 }

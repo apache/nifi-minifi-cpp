@@ -18,10 +18,11 @@
 // This is the (not production ready) reimplementation of the already existing standard PutFile processor
 
 use crate::processors::put_file::relationships::{FAILURE, SUCCESS};
-use minifi_native::macros::ComponentIdentifier;
+use crate::processors::put_file::unix_permissions::PutFileUnixPermissions;
+use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, Schedule, TransformedFlowFile, trace, warn,
+    MinifiError, Schedule, TransformedFlowFile, trace, unwrap_or_route, warn,
 };
 use std::path::{Path, PathBuf};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
@@ -32,51 +33,16 @@ mod relationships;
 #[cfg(unix)]
 mod unix_only_properties;
 
-#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr)]
+mod unix_permissions;
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr, PropertyType,
+)]
 #[strum(serialize_all = "camelCase", const_into_str)]
 enum ConflictResolutionStrategy {
     Fail,
     Replace,
     Ignore,
-}
-
-#[cfg(unix)]
-#[derive(Debug)]
-struct PutFileUnixPermissions {
-    file_permissions: Option<std::fs::Permissions>,
-    directory_permissions: Option<std::fs::Permissions>,
-}
-
-#[cfg(unix)]
-impl PutFileUnixPermissions {
-    fn set_directory_permissions(&self, path: &Path) -> std::io::Result<()> {
-        if let Some(permissions) = self.directory_permissions.clone() {
-            return std::fs::set_permissions(path, permissions);
-        }
-        Ok(())
-    }
-
-    fn set_file_permissions(&self, file: &Path) -> std::io::Result<()> {
-        if let Some(permissions) = self.file_permissions.clone() {
-            return std::fs::set_permissions(file, permissions);
-        }
-        Ok(())
-    }
-}
-
-#[cfg(windows)]
-#[derive(Debug)]
-struct PutFileUnixPermissions {}
-
-#[cfg(windows)]
-impl PutFileUnixPermissions {
-    fn set_directory_permissions(&self, _path: &Path) -> std::io::Result<()> {
-        Ok(())
-    }
-
-    fn set_file_permissions(&self, _file: &Path) -> std::io::Result<()> {
-        Ok(())
-    }
 }
 
 #[derive(Debug, ComponentIdentifier)]
@@ -109,14 +75,12 @@ impl PutFileRs {
     where
         Ctx: GetProperty + GetAttribute + GetId,
     {
-        let directory = context
-            .get_property(&properties::DIRECTORY)?
-            .expect("required property");
+        let directory = context.get_property(&properties::DIRECTORY)?;
 
         let file_name = context
             .get_attribute("filename")?
             .unwrap_or(context.get_id()?);
-        Ok(PathBuf::from(directory).join(file_name))
+        Ok(directory.join(file_name))
     }
 
     fn prepare_destination(&self, destination: &Path) -> std::io::Result<()> {
@@ -159,17 +123,9 @@ impl PutFileRs {
     fn parse_unix_permissions<P: GetProperty>(
         context: &P,
     ) -> Result<PutFileUnixPermissions, MinifiError> {
-        use std::os::unix::fs::PermissionsExt;
-        let parse_permission =
-            |property: &minifi_native::Property| -> Result<Option<std::fs::Permissions>, MinifiError> {
-                Ok(context
-                    .get_property(property)?
-                    .map(|perm_str| u32::from_str_radix(&perm_str, 8))
-                    .transpose()?
-                    .map(std::fs::Permissions::from_mode))
-            };
-        let file_permissions = parse_permission(&unix_only_properties::PERMISSIONS)?;
-        let directory_permissions = parse_permission(&unix_only_properties::DIRECTORY_PERMISSIONS)?;
+        let file_permissions = context.get_property(&unix_only_properties::PERMISSIONS)?;
+        let directory_permissions =
+            context.get_property(&unix_only_properties::DIRECTORY_PERMISSIONS)?;
 
         Ok(PutFileUnixPermissions {
             file_permissions,
@@ -187,16 +143,12 @@ impl PutFileRs {
 
 impl Schedule for PutFileRs {
     fn schedule<P: GetProperty, L: Logger>(context: &P, _logger: &L) -> Result<Self, MinifiError> {
-        let conflict_resolution_strategy = context
-            .get_property(&properties::CONFLICT_RESOLUTION)?
-            .expect("required property")
-            .parse::<ConflictResolutionStrategy>()?;
+        let conflict_resolution_strategy =
+            context.get_property(&properties::CONFLICT_RESOLUTION)?;
 
-        let try_make_dirs = context
-            .get_bool_property(&properties::CREATE_DIRS)?
-            .expect("required property");
+        let try_make_dirs = context.get_property(&properties::CREATE_DIRS)?;
 
-        let maximum_file_count = context.get_u64_property(&properties::MAX_FILE_COUNT)?;
+        let maximum_file_count = context.get_property(&properties::MAX_FILE_COUNT)?;
 
         let unix_permissions = Self::parse_unix_permissions(context)?;
 
@@ -222,10 +174,8 @@ impl FlowFileTransform for PutFileRs {
     ) -> Result<TransformedFlowFile<'a>, MinifiError> {
         trace!(logger, "on_trigger: {:?}", self);
 
-        let Ok(destination_path) = Self::get_destination_path(context) else {
-            warn!(logger, "Invalid destination path");
-            return Ok(TransformedFlowFile::route_without_changes(&FAILURE));
-        };
+        let destination_path =
+            unwrap_or_route!(Self::get_destination_path(context), &FAILURE, logger);
 
         if self.directory_is_full(&destination_path) {
             warn!(logger, "Directory is full");

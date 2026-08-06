@@ -15,8 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use std::fmt::{Display, Formatter};
+
 #[derive(Debug, Eq, PartialEq)]
 pub struct Relationship {
     pub name: &'static str,
     pub description: &'static str,
+}
+
+impl Display for Relationship {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
 }

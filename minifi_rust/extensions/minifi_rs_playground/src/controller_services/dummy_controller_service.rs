@@ -18,7 +18,7 @@
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
-    Property, ProvidedInterface,
+    PropertyDefinition, ProvidedInterface,
 };
 
 #[derive(Debug, ComponentIdentifier)]
@@ -35,6 +35,6 @@ impl EnableControllerService for DummyControllerService {
 
 impl ControllerServiceDefinition for DummyControllerService {
     const DESCRIPTION: &'static str = "RUST TEST CONTROLLER SERVICE: Dummy Controller Service";
-    const PROPERTIES: &'static [Property] = &[];
+    const PROPERTIES: &'static [PropertyDefinition] = &[];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
 }

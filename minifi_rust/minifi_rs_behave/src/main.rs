@@ -95,6 +95,7 @@ impl BehaveRunner {
             .arg("pip")
             .arg("install")
             .arg(self.minifi_behave_path.to_string_lossy().as_ref())
+            .arg("certifi")
             .status()
             .expect("Failed to install dependencies")
     }

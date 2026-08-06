@@ -18,10 +18,11 @@
 // Simple test processor that uses a controller service
 mod properties;
 
-use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;
-use crate::processors::lorem_ipsum_cs_user::properties::CONTROLLER_SERVICE;
+use crate::processors::lorem_ipsum_cs_user::properties::{
+    CONTROLLER_SERVICE, DUMMY_CONTROLLER_SERVICE,
+};
 use crate::processors::lorem_ipsum_cs_user::relationships::SUCCESS;
-use minifi_native::macros::ComponentIdentifier;
+use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     Content, FlowFileSource, GeneratedFlowFile, GetControllerService, GetProperty, Logger,
     MinifiError, Schedule, trace,
@@ -29,7 +30,9 @@ use minifi_native::{
 use std::collections::HashMap;
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
-#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr, PropertyType,
+)]
 #[strum(serialize_all = "PascalCase", const_into_str)]
 enum WriteMethod {
     Buffer,
@@ -46,10 +49,7 @@ impl Schedule for LoremIpsumCSUser {
     where
         Self: Sized,
     {
-        let write_method = context
-            .get_property(&properties::WRITE_METHOD)?
-            .expect("required property")
-            .parse::<WriteMethod>()?;
+        let write_method = context.get_property(&properties::WRITE_METHOD)?;
         Ok(Self { write_method })
     }
 }
@@ -61,11 +61,12 @@ impl FlowFileSource for LoremIpsumCSUser {
         logger: &LoggerImpl,
     ) -> Result<Vec<GeneratedFlowFile<'a>>, MinifiError> {
         trace!(logger, "generate call {:?}", self);
-        let controller_service = context
-            .get_controller_service::<LoremIpsumControllerService>(&CONTROLLER_SERVICE)?
-            .ok_or(MinifiError::missing_required_property(
-                "A valid usable controller service is required",
-            ))?;
+        let dummy_controller_service = context.get_controller_service(&DUMMY_CONTROLLER_SERVICE)?;
+        trace!(
+            logger,
+            "optional dummy controller service: {:?}", dummy_controller_service
+        );
+        let controller_service = context.get_controller_service(&CONTROLLER_SERVICE)?;
         match self.write_method {
             WriteMethod::Buffer => {
                 let generated_flow_file = GeneratedFlowFile::new(

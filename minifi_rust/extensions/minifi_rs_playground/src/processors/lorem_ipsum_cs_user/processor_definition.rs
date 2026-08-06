@@ -19,7 +19,8 @@ use super::LoremIpsumCSUser;
 use super::properties::*;
 use crate::processors::lorem_ipsum_cs_user::relationships::SUCCESS;
 use minifi_native::{
-    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
+    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
+    Relationship, property_definitions,
 };
 
 impl ProcessorDefinition for LoremIpsumCSUser {
@@ -30,5 +31,6 @@ impl ProcessorDefinition for LoremIpsumCSUser {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS];
-    const PROPERTIES: &'static [Property] = &[CONTROLLER_SERVICE, WRITE_METHOD];
+    const PROPERTIES: &'static [PropertyDefinition] =
+        property_definitions![CONTROLLER_SERVICE, DUMMY_CONTROLLER_SERVICE, WRITE_METHOD];
 }

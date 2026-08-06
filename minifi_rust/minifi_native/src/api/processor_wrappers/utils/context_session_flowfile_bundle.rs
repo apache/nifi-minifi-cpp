@@ -17,11 +17,10 @@
 
 use crate::api::attribute::GetAttribute;
 use crate::api::flow_file::GetId;
-use crate::api::property::{GetControllerService, GetProperty};
-use crate::{
-    ComponentIdentifier, EnableControllerService, MinifiError, ProcessContext, ProcessSession,
-    Property,
+use crate::api::property::{
+    ControllerServiceValue, GetControllerService, GetProperty, PropertySchema,
 };
+use crate::{MinifiError, ProcessContext, ProcessSession, Property};
 
 pub struct ContextSessionFlowFileBundle<'a, PC, PS>
 where
@@ -55,8 +54,11 @@ where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
 {
-    fn get_property(&self, property: &Property) -> Result<Option<String>, MinifiError> {
-        self.context.get_property(property, self.flow_file)
+    fn get_raw_property<K: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<K>,
+    ) -> Result<Option<String>, MinifiError> {
+        self.context.get_raw_property(property, self.flow_file)
     }
 }
 
@@ -65,11 +67,14 @@ where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
 {
-    fn get_controller_service<Cs>(&self, property: &Property) -> Result<Option<&Cs>, MinifiError>
+    fn get_controller_service<K>(
+        &self,
+        property: &Property<K>,
+    ) -> Result<K::Output<'_>, MinifiError>
     where
-        Cs: EnableControllerService + ComponentIdentifier + 'static,
+        K: ControllerServiceValue + ?Sized,
     {
-        self.context.get_controller_service(property)
+        GetControllerService::get_controller_service(self.context, property)
     }
 }
 

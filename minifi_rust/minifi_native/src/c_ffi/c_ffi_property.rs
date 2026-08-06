@@ -16,7 +16,8 @@
 // under the License.
 
 use super::c_ffi_primitives::StaticStrAsMinifiCStr;
-use crate::{Property, StandardPropertyValidator};
+use crate::api::property::PropertyConstraints;
+use crate::{PropertyDefinition, StandardPropertyValidator};
 use minifi_native_sys::{
     minifi_property_definition, minifi_string_view, minifi_validator,
     minifi_validator_MINIFI_VALIDATOR_ALWAYS_VALID, minifi_validator_MINIFI_VALIDATOR_BOOLEAN,
@@ -59,7 +60,7 @@ impl CProperties {
     }
 }
 
-impl Property {
+impl PropertyDefinition {
     fn create_c_default_value_holder(properties: &[Self]) -> Vec<minifi_string_view> {
         properties
             .iter()
@@ -76,11 +77,14 @@ impl Property {
     fn create_c_allowed_values_vec_vec(properties: &[Self]) -> Vec<Vec<minifi_string_view>> {
         properties
             .iter()
-            .map(|p| {
-                p.allowed_values
+            .map(|p| match p.constraints {
+                Some(PropertyConstraints::AllowedValues(allowed_values)) => allowed_values
                     .iter()
                     .map(|av| av.as_minifi_c_type())
-                    .collect()
+                    .collect(),
+                _ => {
+                    vec![]
+                }
             })
             .collect()
     }
@@ -88,9 +92,11 @@ impl Property {
     fn create_c_allowed_types_vec(properties: &[Self]) -> Vec<minifi_string_view> {
         properties
             .iter()
-            .map(|p| match p.allowed_type {
-                Some(dv) => dv.as_minifi_c_type(),
-                None => minifi_string_view {
+            .map(|p| match p.constraints {
+                Some(PropertyConstraints::ControllerService(allowed_type)) => {
+                    allowed_type.as_minifi_c_type()
+                }
+                _ => minifi_string_view {
                     data: ptr::null(),
                     length: 0,
                 },
@@ -99,9 +105,9 @@ impl Property {
     }
 
     pub(crate) fn create_c_properties(properties: &[Self]) -> CProperties {
-        let c_default_values = Property::create_c_default_value_holder(properties);
-        let c_allowed_values = Property::create_c_allowed_values_vec_vec(properties);
-        let c_allowed_types = Property::create_c_allowed_types_vec(properties);
+        let c_default_values = PropertyDefinition::create_c_default_value_holder(properties);
+        let c_allowed_values = PropertyDefinition::create_c_allowed_values_vec_vec(properties);
+        let c_allowed_types = PropertyDefinition::create_c_allowed_types_vec(properties);
         assert_eq!(c_default_values.len(), properties.len());
         assert_eq!(c_allowed_values.len(), properties.len());
         assert_eq!(c_allowed_types.len(), properties.len());
@@ -125,7 +131,10 @@ impl Property {
                     },
                     allowed_values_count: allowed_values.len(),
                     allowed_values_ptr: allowed_values.as_ptr(),
-                    validator: property.validator.as_minifi_c_type(),
+                    validator: match &property.constraints {
+                        Some(PropertyConstraints::Validator(s)) => s.as_minifi_c_type(),
+                        _ => minifi_validator_MINIFI_VALIDATOR_ALWAYS_VALID,
+                    },
                     allowed_type: if allowed_type.data.is_null() {
                         std::ptr::null()
                     } else {
@@ -147,9 +156,6 @@ impl Property {
 impl StandardPropertyValidator {
     pub(crate) fn as_minifi_c_type(&self) -> minifi_validator {
         match self {
-            StandardPropertyValidator::AlwaysValidValidator => {
-                minifi_validator_MINIFI_VALIDATOR_ALWAYS_VALID
-            }
             StandardPropertyValidator::NonBlankValidator => {
                 minifi_validator_MINIFI_VALIDATOR_NON_BLANK
             }
