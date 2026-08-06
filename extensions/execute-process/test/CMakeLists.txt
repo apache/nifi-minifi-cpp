@@ -24,6 +24,8 @@ add_minifi_executable(ExecuteProcessTests ExecuteProcessTests.cpp)
 
 target_link_libraries(ExecuteProcessTests minifi-execute-process minifi-standard-processors Catch2WithMain)
 target_include_directories(ExecuteProcessTests PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test")
+target_compile_definitions(ExecuteProcessTests PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
+
 add_test(NAME ExecuteProcessTests COMMAND ExecuteProcessTests WORKING_DIRECTORY ${TEST_DIR})
 set_tests_properties(ExecuteProcessTests PROPERTIES LABELS "execute-process;memchecked")
 

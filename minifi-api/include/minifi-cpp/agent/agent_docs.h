@@ -167,6 +167,7 @@ class ClassDescriptionRegistry {
   static const std::map<minifi::BundleCoordinate, Components>& getClassDescriptions();
   static std::map<minifi::BundleCoordinate, Components>& getMutableClassDescriptions();
   static void clearClassDescriptionsForBundle(const std::string& bundle_name);
+  static Components& getMutableComponents(const BundleCoordinate& bundle_coordinate);
 
   template<typename Class, ResourceType Type>
   static void createClassDescription(const BundleCoordinate& bundle_identifier, std::string class_name);

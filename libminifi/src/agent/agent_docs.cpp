@@ -40,4 +40,11 @@ void ClassDescriptionRegistry::clearClassDescriptionsForBundle(const std::string
   });
 }
 
+Components& ClassDescriptionRegistry::getMutableComponents(const BundleCoordinate& bundle_coordinate) {
+  const auto [it, success] = getMutableClassDescriptions().try_emplace(bundle_coordinate, bundle_coordinate);
+  (void)success;
+  return it->second;
+}
+
+
 }  // namespace org::apache::nifi::minifi

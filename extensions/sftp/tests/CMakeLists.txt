@@ -52,6 +52,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND)
             target_link_libraries(${testfilename} minifi-rocksdb-repos)
         endif()
 
+        target_compile_definitions(${testfilename} PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
         MATH(EXPR SFTP-EXTENSIONS_TEST_COUNT "${SFTP-EXTENSIONS_TEST_COUNT}+1")
         add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
     ENDFOREACH()

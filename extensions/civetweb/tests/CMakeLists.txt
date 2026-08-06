@@ -28,6 +28,7 @@ FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
     target_link_libraries(${testfilename} minifi-civet-extensions)
     target_link_libraries(${testfilename} minifi-standard-processors)
     target_compile_definitions(${testfilename} PRIVATE TEST_RESOURCES="${TEST_RESOURCES}")
+    target_compile_definitions(${testfilename} PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
 
     createIntegrationTests("${testfilename}")
     target_link_libraries(${testfilename} Catch2WithMain)

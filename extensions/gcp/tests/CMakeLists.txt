@@ -39,5 +39,7 @@ FOREACH(testfile ${GCS_TESTS})
     target_link_libraries(${testfilename} gtest_main gmock)
     target_link_libraries(${testfilename} libminifi-c-unittest)
 
+    target_compile_definitions(${testfilename} PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
+
     gtest_add_tests(TARGET "${testfilename}")
 ENDFOREACH()

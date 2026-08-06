@@ -175,7 +175,7 @@ class PythonCreator : public minifi::core::CoreComponentImpl {
       .inputRequirement_ = toString(processor->getInputRequirement()),
       .isSingleThreaded_ = processor->isSingleThreaded()};
 
-    auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableClassDescriptions().try_emplace(details, details).first->second;
+    auto& bundle_components = minifi::ClassDescriptionRegistry::getMutableComponents(details);
     bundle_components.addClassDescription(description, ResourceType::Processor);
   }
 

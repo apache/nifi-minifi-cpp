@@ -60,7 +60,7 @@ class StaticClassType {
 #ifdef MINIFI_EXTENSION_GROUP_NAME
     auto group_name = MAKESTRING(MINIFI_EXTENSION_GROUP_NAME);
 #else
-    auto group_name = "org.apache.nifi.minifi";
+    static_assert(false, "MINIFI_EXTENSION_GROUP_NAME has to be defined");
 #endif
 
     if constexpr (Type == ResourceType::Processor) {
