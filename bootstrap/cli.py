@@ -43,7 +43,7 @@ def export_custom_conan_recipes(minifi_options: MinifiOptions, package_manager: 
                 version = next(iter(data["versions"]))
 
                 print(f"Exporting the custom Conan recipe {root} with version {version}")
-                if not package_manager.run_cmd(f"conan export {root} --version={version} --user=minifi --channel=develop"):
+                if not package_manager.run_cmd(f'conan export "{root}" --version={version} --user=minifi --channel=develop'):
                     print(f"Exporting the custom Conan recipe {root} failed")
                     return False
     return True
@@ -81,8 +81,8 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
     if not package_manager.run_cmd(conan_remote_add_cmd):
         print("Adding the nifi-conan remote failed")
         return False
-    build_cmd = f"conan install {minifi_options.source_dir} --output-folder={minifi_options.build_dir} --build=missing {conan_options} " \
-                f"--settings=build_type={minifi_options.build_type.value}{generator_setting}{compiler_settings}"
+    build_cmd = f'conan install "{minifi_options.source_dir}" --output-folder="{minifi_options.build_dir}" --build=missing {conan_options} ' \
+                f'--settings=build_type={minifi_options.build_type.value}{generator_setting}{compiler_settings}'
     res = package_manager.run_cmd(build_cmd)
     print("Conan install was successful" if res else "Conan install was unsuccessful")
     return res
@@ -98,27 +98,27 @@ def _conan_build_env_prefix(minifi_options: MinifiOptions) -> str:
 def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
     if not os.path.exists(minifi_options.build_dir):
         os.mkdir(minifi_options.build_dir)
-    cmake_cmd = f"{_conan_build_env_prefix(minifi_options)}cmake {minifi_options.create_cmake_generator_str()} {minifi_options.create_cmake_use_conan_str()} " \
-                f"{minifi_options.create_cmake_options_str()} {minifi_options.source_dir} -B {minifi_options.build_dir}"
+    cmake_cmd = f'{_conan_build_env_prefix(minifi_options)}cmake {minifi_options.create_cmake_generator_str()} {minifi_options.create_cmake_use_conan_str()} ' \
+                f'{minifi_options.create_cmake_options_str()} "{minifi_options.source_dir}" -B "{minifi_options.build_dir}"'
     res = package_manager.run_cmd(cmake_cmd)
     print("CMake command run successfully" if res else "CMake command run unsuccessfully")
     return res
 
 
 def do_build(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"{_conan_build_env_prefix(minifi_options)}cmake --build {str(minifi_options.build_dir)} {minifi_options.create_cmake_build_flags_str()}"
+    build_cmd = f'{_conan_build_env_prefix(minifi_options)}cmake --build "{str(minifi_options.build_dir)}" {minifi_options.create_cmake_build_flags_str()}'
     res = package_manager.run_cmd(build_cmd)
     print("Build was successful" if res else "Build was unsuccessful")
     return res
 
 
 def do_package(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"{_conan_build_env_prefix(minifi_options)}cmake --build {str(minifi_options.build_dir)} --target package {minifi_options.create_cmake_build_flags_str()}"
+    build_cmd = f'{_conan_build_env_prefix(minifi_options)}cmake --build "{str(minifi_options.build_dir)}" --target package {minifi_options.create_cmake_build_flags_str()}'
     return package_manager.run_cmd(build_cmd)
 
 
 def do_docker_build(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f"cmake --build {str(minifi_options.build_dir)} --target docker"
+    build_cmd = f'cmake --build "{str(minifi_options.build_dir)}" --target docker'
     return package_manager.run_cmd(build_cmd)
 
 
@@ -213,7 +213,7 @@ def build_dir_menu(minifi_options: MinifiOptions, _package_manager: PackageManag
     answers = inquirer.prompt(questions)
     if answers is None:
         return True
-    minifi_options.build_dir = answers["build_dir"]
+    minifi_options.build_dir = Path(answers["build_dir"]).resolve()
     minifi_options.save_option_state()
     return False
 
