@@ -1,0 +1,15 @@
+[package]
+name = "minifi_pgp"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+minifi_native = { path = "../../minifi_native" }
+strum_macros = "0.28.0"
+strum = "0.28.0"
+pgp = "0.20.0"
+rand = "0.8.6" # pgp 0.20.0 doesnt support >= 0.9 rand yet
+
