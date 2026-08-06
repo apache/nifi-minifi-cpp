@@ -126,12 +126,4 @@ std::expected<uint32_t, std::error_code> parseUnixOctalPermissions(const std::st
   return result;
 }
 
-std::expected<float, std::error_code> parseFloat(std::string_view input) {
-  try {
-    return std::stof(std::string{input});
-  } catch(const std::exception&) {
-    return std::unexpected{core::ParsingErrorCode::GeneralParsingError};
-  }
-}
-
 }  // namespace org::apache::nifi::minifi::parsing

@@ -5765,7 +5765,7 @@
                         "Min P": {
                             "name": "Min P",
                             "description": "Sets a minimum base probability threshold for token selection. 0.0 = disabled.",
-                            "validator": "VALID",
+                            "validator": "NUMBER_VALIDATOR",
                             "required": "false",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
