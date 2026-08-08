@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,31 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-if (NOT (ENABLE_ALL OR ENABLE_SQL))
-    return()
-endif()
-
-if(WIN32)
+if(MINIFI_IODBC_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install iODBC")
     find_package(ODBC REQUIRED)
-else()
-    include(GetIODBC)
+elseif(MINIFI_IODBC_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build iODBC from source")
+    include(BundledIodbc)
 endif()
-
-include(GetSOCI)
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-include_directories(SYSTEM ../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
-include_directories(".")
-
-file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
-
-add_minifi_library(minifi-sql SHARED ${SOURCES})
-
-target_link_libraries(minifi-sql SOCI::SOCI)
-
-target_link_libraries(minifi-sql ${LIBMINIFI} Threads::Threads)
-
-register_extension(minifi-sql "SQL EXTENSIONS" SQL-EXTENSIONS "Enables the SQL Suite of Tools" "extensions/sql/tests")

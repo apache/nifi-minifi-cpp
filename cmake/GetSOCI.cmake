@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,31 +14,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-if (NOT (ENABLE_ALL OR ENABLE_SQL))
-    return()
+if(MINIFI_SOCI_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install SOCI")
+    find_package(SOCI REQUIRED)
+    if(NOT TARGET SOCI::SOCI)
+        add_library(SOCI::SOCI INTERFACE IMPORTED)
+        target_link_libraries(SOCI::SOCI INTERFACE SOCI::soci_core_static SOCI::soci_odbc_static)
+    endif()
+elseif(MINIFI_SOCI_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build SOCI from source")
+    include(Soci)
 endif()
-
-if(WIN32)
-    find_package(ODBC REQUIRED)
-else()
-    include(GetIODBC)
-endif()
-
-include(GetSOCI)
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-include_directories(SYSTEM ../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
-include_directories(".")
-
-file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
-
-add_minifi_library(minifi-sql SHARED ${SOURCES})
-
-target_link_libraries(minifi-sql SOCI::SOCI)
-
-target_link_libraries(minifi-sql ${LIBMINIFI} Threads::Threads)
-
-register_extension(minifi-sql "SQL EXTENSIONS" SQL-EXTENSIONS "Enables the SQL Suite of Tools" "extensions/sql/tests")
