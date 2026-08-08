@@ -76,7 +76,7 @@ class MiNiFiCppMain(ConanFile):
         if self.options.enable_all or self.options.enable_prometheus:
             self.requires("prometheus-cpp/1.3.0")
         if self.options.enable_all or self.options.enable_mqtt:
-            self.requires("paho-mqtt-c/1.3.16")
+            self.requires("paho-mqtt-c/1.3.16@minifi/develop")
         if self.options.enable_all or self.options.enable_couchbase:
             self.requires("couchbase_cxx_client/1.3.1@minifi/develop")
             self.requires("ms-gsl/4.0.0")
@@ -141,10 +141,15 @@ class MiNiFiCppMain(ConanFile):
             setattr(self.options["aws-sdk-cpp"], "text-to-speech", False)
         if self.options.enable_all or self.options.get_safe("enable_llamacpp"):
             self.options["llama-cpp"].portable = self.options.portable
+        if self.options.enable_all or self.options.get_safe("enable_mqtt"):
+            self.options["paho-mqtt-c"].high_performance = True
 
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["MINIFI_DEFAULT_DEPENDENCY_SOURCE"] = "CONAN"
+
+        # Drop hardcoded install dir from Conan's generated toolchain to detect the correct install dir for RPM package installation
+        tc.blocks.remove("output_dirs")
         tc.generate()
 
     def build(self):

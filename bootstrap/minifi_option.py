@@ -31,7 +31,7 @@ class MinifiOptions:
         self.build_type = CMakeCacheValue("Specifies the build type on single-configuration generators",
                                           "CMAKE_BUILD_TYPE", "STRING", "Release")
         self.build_type.possible_values = ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]
-        additional_build_options = ["DOCKER_BUILD_ONLY", "DOCKER_SKIP_TESTS", "DOCKER_CREATE_RPM", "SKIP_TESTS", "PORTABLE"]
+        additional_build_options = ["DOCKER_BUILD_ONLY", "DOCKER_USE_CONAN", "DOCKER_SKIP_TESTS", "DOCKER_CREATE_RPM", "SKIP_TESTS", "PORTABLE"]
         self.use_ninja = CMakeCacheValue("Specifies if CMake should use the Ninja generator or the system default", "USE_NINJA", "BOOL", "ON")
         self.use_conan = CMakeCacheValue("Specifies if CMake should use Conan package manager", "USE_CONAN", "BOOL", "OFF")
         if "USE_NINJA" in cache_values:

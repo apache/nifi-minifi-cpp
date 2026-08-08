@@ -76,6 +76,8 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
         return False
 
     compiler_settings = " -s:a compiler.cppstd=23"
+    if "-stdlib=libc++" in os.environ.get("CXXFLAGS", ""):
+        compiler_settings += " -s:a compiler.libcxx=libc++"
     generator_setting = " -c tools.cmake.cmaketoolchain:generator=Ninja" if minifi_options.use_ninja.value == "ON" else ""
     conan_remote_add_cmd = "conan remote add nifi-conan https://apache.jfrog.io/artifactory/api/conan/nifi-conan --force"
     if not package_manager.run_cmd(conan_remote_add_cmd):
@@ -83,6 +85,9 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
         return False
     build_cmd = f'conan install "{minifi_options.source_dir}" --output-folder="{minifi_options.build_dir}" --build=missing {conan_options} ' \
                 f'--settings=build_type={minifi_options.build_type.value}{generator_setting}{compiler_settings}'
+    if platform.system() == "Linux":
+        # Conan's prebuilt m4 binary fails autom4te's version probe in some Linux build containers (e.g. RockyLinux 8), so always build m4 from source on Linux.
+        build_cmd += " --build=m4/*"
     res = package_manager.run_cmd(build_cmd)
     print("Conan install was successful" if res else "Conan install was unsuccessful")
     return res
@@ -135,6 +140,11 @@ def do_one_click_configuration(minifi_options: MinifiOptions, package_manager: P
     assert install_dependencies(minifi_options, package_manager)
     assert run_conan_install(minifi_options, package_manager)
     assert run_cmake(minifi_options, package_manager)
+    return True
+
+
+def do_one_click_conan_install(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
+    assert run_conan_install(minifi_options, package_manager)
     return True
 
 

@@ -30,6 +30,9 @@ DISTRO_NAME=
 BUILD_NUMBER=
 DOCKER_CCACHE_DUMP_LOCATION=
 DOCKER_SKIP_TESTS=ON
+DOCKER_USE_CONAN=OFF
+DOCKER_NIFI_CONAN_USER=
+DOCKER_NIFI_CONAN_PASSWORD=
 DOCKER_CREATE_RPM=ON
 CMAKE_BUILD_TYPE=Release
 PLATFORMS=
@@ -44,7 +47,7 @@ function usage {
   echo "-p, --prefix          Additional prefix added to the image tag"
   echo "-u, --uid             User id to be used in the Docker image (default: 1000)"
   echo "-g, --gid             Group id to be used in the Docker image (default: 1000)"
-  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (centos|rockylinux)"
+  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (rockylinux)"
   echo "-l  --dump-location   Path where to the output dump to be put"
   echo "-c  --cmake-param     CMake parameter passed in PARAM=value format"
   echo "-o  --options         Minifi options string"
@@ -108,6 +111,12 @@ while [[ $# -gt 0 ]]; do
         DOCKER_SKIP_TESTS="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_CREATE_RPM" ]; then
         DOCKER_CREATE_RPM="${ARR[1]}"
+      elif [ "${ARR[0]}" == "DOCKER_USE_CONAN" ]; then
+        DOCKER_USE_CONAN="${ARR[1]}"
+      elif [ "${ARR[0]}" == "DOCKER_NIFI_CONAN_USER" ]; then
+        DOCKER_NIFI_CONAN_USER="${ARR[1]}"
+      elif [ "${ARR[0]}" == "DOCKER_NIFI_CONAN_PASSWORD" ]; then
+        DOCKER_NIFI_CONAN_PASSWORD="${ARR[1]}"
       elif [ "${ARR[0]}" == "CMAKE_BUILD_TYPE" ]; then
         CMAKE_BUILD_TYPE="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_PLATFORMS" ] && [ -n "${ARR[1]}" ]; then
@@ -202,7 +211,13 @@ BUILD_ARGS+=("--build-arg" "UID=${UID_ARG}"
              "--build-arg" "DISTRO_NAME=${DISTRO_NAME}"
              "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}"
              "--build-arg" "DOCKER_CREATE_RPM=${DOCKER_CREATE_RPM}"
+             "--build-arg" "DOCKER_USE_CONAN=${DOCKER_USE_CONAN}"
+             "--build-arg" "DOCKER_NIFI_CONAN_USER=${DOCKER_NIFI_CONAN_USER}"
              "--build-arg" "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+if [ -n "${DOCKER_NIFI_CONAN_PASSWORD}" ]; then
+  export DOCKER_NIFI_CONAN_PASSWORD
+  BUILD_ARGS+=("--secret" "id=nifi_conan_password,env=DOCKER_NIFI_CONAN_PASSWORD")
+fi
 if [ -n "${DUMP_LOCATION}" ]; then
   BUILD_ARGS+=("--build-arg" "DOCKER_MAKE_TARGET=package")
 fi
@@ -223,6 +238,7 @@ if [ -n "${DISTRO_NAME}" ]; then
   fi
 else
   if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
+    echo docker buildx build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" --target build -t minifi_build ..
     docker buildx build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" --target build -t minifi_build ..
     dump_ccache "minifi_build" "${DOCKER_CCACHE_DUMP_LOCATION}"
   fi

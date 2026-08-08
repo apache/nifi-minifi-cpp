@@ -9,12 +9,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 env:
-  DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
-    -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
-    -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DENABLE_LLAMACPP=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON -DMINIFI_RUST=OFF
   CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
   CONAN_LOGIN_USERNAME_NIFI_CONAN: ${{ secrets.CONAN_USERNAME }}
   CONAN_PASSWORD_NIFI_CONAN: ${{ secrets.CONAN_ACCESS_TOKEN }}
+  DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
+    -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
+    -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DENABLE_LLAMACPP=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON -DMINIFI_RUST=OFF -DDOCKER_USE_CONAN=ON \
+    -DDOCKER_NIFI_CONAN_USER=${{ secrets.CONAN_USERNAME }} -DDOCKER_NIFI_CONAN_PASSWORD=${{ secrets.CONAN_ACCESS_TOKEN }}
 jobs:
   macos_xcode:
     name: "macOS 26 aarch64"
@@ -297,6 +298,7 @@ jobs:
         -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF
         -DUSE_SHARED_LIBS=ON
         -DMINIFI_PERFORMANCE_TESTS=ON
+        -DUSE_CONAN=ON
     steps:
       - id: checkout
         uses: actions/checkout@v6
@@ -336,6 +338,11 @@ jobs:
           python3 -m venv venv && source venv/bin/activate \
             && pip install -r requirements.txt \
             && python main.py --noninteractive --skip-compiler-install --cmake-options="-DSTRICT_GSL_CHECKS=AUDIT -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" --minifi-options="${UBUNTU_CLANG_MINIFI_OPTIONS}"
+        working-directory: bootstrap
+      - name: Upload conan packages
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          source venv/bin/activate && conan remote login nifi-conan && conan upload "*" -r nifi-conan --confirm
         working-directory: bootstrap
       - id: cache_save
         uses: actions/cache/save@v5
@@ -446,7 +453,8 @@ jobs:
           mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DMINIFI_FAIL_ON_WARNINGS=OFF -DENABLE_AWS=ON -DENABLE_AZURE=ON \
               -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_OPC=ON -DENABLE_OPS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
               -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON \
-              -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_LLAMACPP=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make rocky-test
+              -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_LLAMACPP=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} \
+              -DDOCKER_USE_CONAN=ON -DDOCKER_NIFI_CONAN_USER=${{ env.CONAN_LOGIN_USERNAME_NIFI_CONAN }} -DDOCKER_NIFI_CONAN_PASSWORD=${{ env.CONAN_PASSWORD_NIFI_CONAN }} .. && make rocky-test
       - name: cache save
         uses: actions/cache/save@v5
         if: always()

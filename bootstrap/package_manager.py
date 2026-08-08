@@ -204,6 +204,25 @@ class ZypperPackageManager(PackageManager):
         return ""
 
 
+class ApkPackageManager(PackageManager):
+    def __init__(self, no_confirm):
+        PackageManager.__init__(self, no_confirm)
+
+    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+        return self._install(dependencies=dependencies,
+                             install_cmd="sudo apk add --no-cache",
+                             replace_dict={"libarchive": {"libarchive-dev"},
+                                           "python": {"python3-dev"}})
+
+    def _get_installed_packages(self) -> Set[str]:
+        result = subprocess.run(['apk', 'info'], text=True, capture_output=True, check=True)
+        return set(result.stdout.splitlines())
+
+    def install_compiler(self) -> str:
+        self.install({"compiler": {"g++"}})
+        return ""
+
+
 def _get_vs_dev_cmd_path(vs_where_location: VsWhereLocation):
     if vs_where_location == VsWhereLocation.CHOCO:
         vs_where_path = "vswhere"
@@ -326,6 +345,8 @@ def get_package_manager(no_confirm: bool) -> PackageManager:
             return DnfPackageManager(no_confirm, False)
         elif "opensuse" in distro_id:
             return ZypperPackageManager(no_confirm)
+        elif "alpine" in distro_id:
+            return ApkPackageManager(no_confirm)
         else:
             sys.exit(f"Unsupported platform {distro_id} exiting")
     elif platform_system == "Windows":
