@@ -138,7 +138,8 @@ enum class PropertyValidatorCode : int64_t {
   DATA_SIZE = 3,
   TIME_PERIOD = 4,
   NON_BLANK = 5,
-  PORT = 6
+  PORT = 6,
+  NUMBER = 7
 };
 
 const core::PropertyValidator& translateCodeToPropertyValidator(const PropertyValidatorCode& code) {
@@ -156,6 +157,8 @@ const core::PropertyValidator& translateCodeToPropertyValidator(const PropertyVa
       return core::StandardPropertyValidators::NON_BLANK_VALIDATOR;
     case PropertyValidatorCode::PORT:
       return core::StandardPropertyValidators::PORT_VALIDATOR;
+    case PropertyValidatorCode::NUMBER:
+      return core::StandardPropertyValidators::NUMBER_VALIDATOR;
     default:
       throw std::invalid_argument("Unknown PropertyValidatorCode");
   }
