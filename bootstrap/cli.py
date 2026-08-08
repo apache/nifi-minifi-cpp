@@ -72,6 +72,20 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
         print("Conan default profile detection failed")
         return False
 
+    if platform.system() == "Linux":
+        settings_user = minifi_options.source_dir / "docker" / "settings_user.yml"
+        if not package_manager.run_cmd(f'cp "{settings_user}" "$(conan config home)/settings_user.yml"'):
+            return False
+        musl_tag_cmd = (
+            'if ldd --version 2>&1 | grep -qi musl; then '
+            'grep -q "^os.libc=" "$(conan config home)/profiles/default" || '
+            'printf "\\nos.libc=musl\\n" >> "$(conan config home)/profiles/default"; '
+            'fi'
+        )
+        if not package_manager.run_cmd(musl_tag_cmd):
+            print("Setting os.libc for musl failed")
+            return False
+
     if not export_custom_conan_recipes(minifi_options, package_manager):
         return False
 
