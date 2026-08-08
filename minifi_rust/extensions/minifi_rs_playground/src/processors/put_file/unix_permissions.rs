@@ -1,6 +1,8 @@
 use minifi_native::{MinifiError, PropertyConstraints, PropertySchema, PropertyType};
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
+
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 
 #[cfg(unix)]
 pub struct UnixPermission {}
@@ -46,15 +48,15 @@ impl PutFileUnixPermissions {
 
 #[cfg(windows)]
 #[derive(Debug)]
-struct PutFileUnixPermissions {}
+pub(crate) struct PutFileUnixPermissions {}
 
 #[cfg(windows)]
 impl PutFileUnixPermissions {
-    fn set_directory_permissions(&self, _path: &Path) -> std::io::Result<()> {
+    pub(crate) fn set_directory_permissions(&self, _path: &Path) -> std::io::Result<()> {
         Ok(())
     }
 
-    fn set_file_permissions(&self, _file: &Path) -> std::io::Result<()> {
+    pub(crate) fn set_file_permissions(&self, _file: &Path) -> std::io::Result<()> {
         Ok(())
     }
 }
