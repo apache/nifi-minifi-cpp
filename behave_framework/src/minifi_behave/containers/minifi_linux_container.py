@@ -131,7 +131,10 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         self.properties["nifi.extension.path"] = self.deployment_type.extension_pattern
         self.properties["nifi.administrative.yield.duration"] = "1 sec"
         self.properties["nifi.bored.yield.duration"] = "100 millis"
-        self.properties["nifi.openssl.fips.support.enable"] = "false"
+        if 'MINIFI_FIPS' in os.environ and os.environ["MINIFI_FIPS"] == "true":
+            self.properties["nifi.openssl.fips.support.enable"] = "true"
+        else:
+            self.properties["nifi.openssl.fips.support.enable"] = "false"
         self.properties["nifi.provenance.repository.class.name"] = "NoOpRepository"
         self.properties["nifi.python.processor.dir"] = self.deployment_type.minifi_python_path
 

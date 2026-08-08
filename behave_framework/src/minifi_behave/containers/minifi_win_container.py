@@ -20,6 +20,7 @@ from minifi_behave.containers.directory import Directory
 from .container_windows import WindowsContainer
 from .minifi_protocol import MinifiProtocol
 import logging
+import os
 
 
 class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
@@ -54,7 +55,10 @@ class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
         self.properties["nifi.extension.path"] = "../extensions/*"
         self.properties["nifi.administrative.yield.duration"] = "1 sec"
         self.properties["nifi.bored.yield.duration"] = "100 millis"
-        self.properties["nifi.openssl.fips.support.enable"] = "false"
+        if 'MINIFI_FIPS' in os.environ and os.environ["MINIFI_FIPS"] == "true":
+            self.properties["nifi.openssl.fips.support.enable"] = "true"
+        else:
+            self.properties["nifi.openssl.fips.support.enable"] = "false"
         self.properties["nifi.provenance.repository.class.name"] = "NoOpRepository"
 
     def _fill_default_log_properties(self):
