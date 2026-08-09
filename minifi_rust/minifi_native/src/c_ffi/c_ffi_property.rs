@@ -25,6 +25,7 @@ use minifi_native_sys::{
     minifi_validator_MINIFI_VALIDATOR_NON_BLANK, minifi_validator_MINIFI_VALIDATOR_PORT,
     minifi_validator_MINIFI_VALIDATOR_TIME_PERIOD,
     minifi_validator_MINIFI_VALIDATOR_UNSIGNED_INTEGER,
+    minifi_validator_MINIFI_VALIDATOR_NUMBER
 };
 use std::ptr;
 
@@ -171,6 +172,7 @@ impl StandardPropertyValidator {
                 minifi_validator_MINIFI_VALIDATOR_DATA_SIZE
             }
             StandardPropertyValidator::PortValidator => minifi_validator_MINIFI_VALIDATOR_PORT,
+            StandardPropertyValidator::F64Validator => minifi_validator_MINIFI_VALIDATOR_NUMBER,
         }
     }
 }
