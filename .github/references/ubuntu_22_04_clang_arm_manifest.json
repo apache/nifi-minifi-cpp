@@ -12251,7 +12251,7 @@
                             "name": "Keep Source File",
                             "description": "If true, the file is not deleted after it has been copied to the Content Repository",
                             "validator": "BOOLEAN_VALIDATOR",
-                            "required": "false",
+                            "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "defaultValue": "false"
@@ -12300,7 +12300,7 @@
                             "name": "Recurse Subdirectories",
                             "description": "Indicates whether or not to pull files from subdirectories",
                             "validator": "BOOLEAN_VALIDATOR",
-                            "required": "false",
+                            "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "defaultValue": "true"
@@ -12402,7 +12402,7 @@
                         "Attributes to Ignore": {
                             "name": "Attributes to Ignore",
                             "description": "A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.",
-                            "validator": "VALID",
+                            "validator": "NON_BLANK_VALIDATOR",
                             "required": "false",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
@@ -12410,7 +12410,7 @@
                         "Attributes to Log": {
                             "name": "Attributes to Log",
                             "description": "A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.",
-                            "validator": "VALID",
+                            "validator": "NON_BLANK_VALIDATOR",
                             "required": "false",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
@@ -12418,7 +12418,7 @@
                         "FlowFiles To Log": {
                             "name": "FlowFiles To Log",
                             "description": "Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.",
-                            "validator": "VALID",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
                             "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
@@ -12505,6 +12505,19 @@
                 },
                 {
                     "propertyDescriptors": {
+                        "Dummy Controller Service": {
+                            "typeProvidedByValue": {
+                                "type": "minifi_rs_playground.controller_services.dummy_controller_service.DummyControllerService",
+                                "group": "org.apache.nifi.minifi.rust.test",
+                                "artifact": "minifi_rs_playground"
+                            },
+                            "name": "Dummy Controller Service",
+                            "description": "Optional dummy controller service",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
                         "Lorem Ipsum Controller Service": {
                             "typeProvidedByValue": {
                                 "type": "minifi_rs_playground.controller_services.lorem_ipsum_controller_service.LoremIpsumControllerService",
