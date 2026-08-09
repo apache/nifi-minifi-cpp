@@ -24,6 +24,7 @@ use crate::{
 use std::marker::PhantomData;
 use std::str::FromStr;
 use std::time::Duration;
+use minifi_native::StandardPropertyValidator::{F64Validator, I64Validator};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum StandardPropertyValidator {
@@ -34,6 +35,7 @@ pub enum StandardPropertyValidator {
     U64Validator,
     DataSizeValidator,
     PortValidator,
+    F64Validator
 }
 
 #[derive(Debug, PartialEq)]
@@ -185,10 +187,10 @@ macro_rules! impl_from_str_property {
 
 impl_from_str_property!(String);
 impl_from_str_property!(std::path::PathBuf);
-impl_from_str_property!(f64);
-impl_from_str_property!(f32);
-impl_from_str_property!(i64);
-impl_from_str_property!(i32);
+impl_from_str_property!(f64, Some(PropertyConstraints::Validator(F64Validator)));
+impl_from_str_property!(f32, Some(PropertyConstraints::Validator(F64Validator)));
+impl_from_str_property!(i64, Some(PropertyConstraints::Validator(I64Validator)));
+impl_from_str_property!(i32, Some(PropertyConstraints::Validator(I64Validator)));
 impl_from_str_property!(bool, Some(PropertyConstraints::Validator(BoolValidator)));
 impl_from_str_property!(u64, Some(PropertyConstraints::Validator(U64Validator)));
 impl_from_str_property!(u32, Some(PropertyConstraints::Validator(U64Validator)));
