@@ -66,7 +66,7 @@ class SQLTestPlan {
     }
     if (content) {
       auto claim = std::make_shared<minifi::ResourceClaimImpl>(plan_->getContentRepo());
-      auto content_stream = plan_->getContentRepo()->write(*claim);
+      auto content_stream = plan_->getContentRepo()->write(*claim, false);
       const auto ret = content_stream->write(reinterpret_cast<const uint8_t*>(content->c_str()), content->length());
       REQUIRE(ret == content->length());
       flow_file->setOffset(0);

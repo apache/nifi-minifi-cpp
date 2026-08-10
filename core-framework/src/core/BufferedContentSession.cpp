@@ -69,7 +69,7 @@ std::shared_ptr<io::BaseStream> BufferedContentSession::read(const std::shared_p
 
 void BufferedContentSession::commit() {
   for (const auto& resource : managed_resources_) {
-    auto outStream = repository_->write(*resource.first);
+    auto outStream = repository_->write(*resource.first, false);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
     }

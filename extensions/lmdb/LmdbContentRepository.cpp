@@ -30,25 +30,34 @@
 #include "minifi-cpp/Exception.h"
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/Locations.h"
+#include "minifi-cpp/utils/Literals.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
-LmdbContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository) : BufferedContentSession(std::move(repository)) {}
+LmdbContentRepository::Session::Session(std::shared_ptr<LmdbContentRepository> repository) : BufferedContentSession(std::move(repository)) {}
 
 void LmdbContentRepository::Session::commit() {
   auto lmdb_content_repository = std::dynamic_pointer_cast<LmdbContentRepository>(repository_);
-  if (!lmdb_content_repository) { throw Exception(REPOSITORY_EXCEPTION, "Session's repository is not an LmdbContentRepository"); }
+  if (!lmdb_content_repository) {
+    throw Exception(REPOSITORY_EXCEPTION, "Session's repository is not an LmdbContentRepository");
+  }
 
   const auto writeResource = [&lmdb_content_repository](const std::shared_ptr<ResourceClaim>& resource_claim, const std::shared_ptr<io::BaseStream>& stream, bool is_append) {
     auto outStream = lmdb_content_repository->write(*resource_claim, is_append);
-    if (outStream == nullptr) { throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource_claim->getContentFullPath()); }
+    if (outStream == nullptr) {
+      throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource_claim->getContentFullPath());
+    }
     const auto size = stream->size();
+    auto lmdb_out_stream = std::dynamic_pointer_cast<io::LmdbStream>(outStream);
+    if (lmdb_out_stream == nullptr) {
+      throw Exception(REPOSITORY_EXCEPTION, "Couldn't cast output stream to LmdbStream for commit: " + resource_claim->getContentFullPath());
+    }
     if (outStream->write(stream->getBuffer()) != size) {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to write " + std::string(is_append ? "appended" : "new") + " resource: " + resource_claim->getContentFullPath());
     }
-    auto lmdb_out_stream = std::dynamic_pointer_cast<io::LmdbStream>(outStream);
-    if (lmdb_out_stream == nullptr) { throw Exception(REPOSITORY_EXCEPTION, "Couldn't cast output stream to LmdbStream for commit: " + resource_claim->getContentFullPath()); }
-    if (!lmdb_out_stream->commit()) { throw Exception(REPOSITORY_EXCEPTION, "Failed to commit " + std::string(is_append ? "appended" : "new") + " resource: " + resource_claim->getContentFullPath()); }
+    if (!lmdb_out_stream->commit()) {
+      throw Exception(REPOSITORY_EXCEPTION, "Failed to commit " + std::string(is_append ? "appended" : "new") + " resource: " + resource_claim->getContentFullPath());
+    }
   };
 
   for (const auto& resource : managed_resources_) {
@@ -64,22 +73,22 @@ void LmdbContentRepository::Session::commit() {
 }
 
 bool LmdbContentRepository::initialize(const std::shared_ptr<minifi::Configure>& configuration) {
-  if (const int rc = mdb_env_create(&lmdb_env_)) {
+  if (const int rc = mdb_env_create(&lmdb_env_); rc != MDB_SUCCESS) {
     logger_->log_error("Failed to create LMDB environment: {}", mdb_strerror(rc));
     return false;
   }
 
   // Reserve virtual address space for the DB file (max size it can grow to)
-  const auto max_db_size = configuration->get(Configure::nifi_content_repository_lmdb_max_db_size) | utils::andThen([](auto max_db_size_str) -> std::optional<uint64_t> {
-    if (max_db_size_str.empty()) { return std::nullopt; }
-    return parsing::parseDataSize(max_db_size_str) | utils::orThrow(fmt::format("{} was set to invalid value: '{}'", Configure::nifi_content_repository_lmdb_max_db_size, max_db_size_str));
-  }) | utils::orElse([] {
-    // Default to 10 GB if the property is not set
-    return std::make_optional<uint64_t>(10ULL * 1024 * 1024 * 1024);
-  });
+  std::expected<uint64_t, std::error_code> max_db_size;
+  auto max_db_size_str_opt = configuration->get(Configure::nifi_content_repository_lmdb_max_db_size);
+  if (!max_db_size_str_opt || max_db_size_str_opt->empty()) {
+    max_db_size = 10_GiB;
+  } else {
+    max_db_size = parsing::parseDataSize(*max_db_size_str_opt);
+  }
 
   if (!max_db_size) {
-    logger_->log_error("Invalid max DB size configuration for LMDB Content Repository");
+    logger_->log_error("Invalid max DB size configuration for LMDB Content Repository: {}", *max_db_size_str_opt);
     mdb_env_close(lmdb_env_);
     lmdb_env_ = nullptr;
     return false;
@@ -150,7 +159,7 @@ void LmdbContentRepository::start() {}
 void LmdbContentRepository::stop() {}
 
 std::shared_ptr<ContentSession> LmdbContentRepository::createSession() {
-  return std::make_shared<Session>(sharedFromThis<ContentRepository>());
+  return std::make_shared<Session>(sharedFromThis<LmdbContentRepository>());
 }
 
 std::shared_ptr<io::BaseStream> LmdbContentRepository::write(const minifi::ResourceClaim& claim, bool) {
@@ -229,16 +238,18 @@ void LmdbContentRepository::clearOrphans() {
     MDB_val val{};
     int rc = mdb_cursor_get(cursor, &key, &val, MDB_FIRST);
 
-    while (rc == MDB_SUCCESS) {
-      std::string key_string = std::string(static_cast<char*>(key.mv_data), key.mv_size);
-
+    {
       std::lock_guard<std::mutex> lock(count_map_mutex_);
-      auto claim_it = count_map_.find(key_string);
-      if (claim_it == count_map_.end() || claim_it->second == 0) {
-        logger_->log_debug("Deleting orphan resource {}", key_string);
-        keys_to_be_deleted.push_back(key_string);
+      while (rc == MDB_SUCCESS) {
+        std::string key_string = std::string(static_cast<char*>(key.mv_data), key.mv_size);
+
+        auto claim_it = count_map_.find(key_string);
+        if (claim_it == count_map_.end() || claim_it->second == 0) {
+          logger_->log_debug("Deleting orphan resource {}", key_string);
+          keys_to_be_deleted.push_back(key_string);
+        }
+        rc = mdb_cursor_get(cursor, &key, &val, MDB_NEXT);
       }
-      rc = mdb_cursor_get(cursor, &key, &val, MDB_NEXT);
     }
 
     if (rc != MDB_NOTFOUND) {

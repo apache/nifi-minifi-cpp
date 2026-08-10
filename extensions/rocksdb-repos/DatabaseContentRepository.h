@@ -64,7 +64,7 @@ class DatabaseContentRepository : public core::ContentRepositoryImpl {
 
   std::shared_ptr<ContentSession> createSession() override;
   bool initialize(const std::shared_ptr<minifi::Configure> &configuration) override;
-  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false) override;
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append) override;
   std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim) override;
 
   bool close(const minifi::ResourceClaim &claim) override {
