@@ -41,7 +41,7 @@ class LmdbContentRepositoryTests : TestController {
   std::shared_ptr<core::repository::LmdbContentRepository> content_repo_ = std::make_shared<core::repository::LmdbContentRepository>();
 
   void writeContent(const minifi::ResourceClaim& claim) {
-    auto stream = content_repo_->write(claim);
+    auto stream = content_repo_->write(claim, false);
     stream->write(as_bytes(std::span(test_content_)));
     stream->close();
   }
@@ -56,8 +56,8 @@ TEST_CASE("Invalid or empty dbsize configuration value is set", "[lmdb]") {
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, db_path);
   SECTION("Invalid value") {
     configuration->set(minifi::Configure::nifi_content_repository_lmdb_max_db_size, "invalid");
-    REQUIRE_THROWS_WITH(content_repo->initialize(configuration),
-        "nifi.content.repository.lmdb.max.db.size was set to invalid value: 'invalid', but got GeneralParsingError (Parsing Error:0)");
+    REQUIRE_FALSE(content_repo->initialize(configuration));
+    REQUIRE(LogTestController::getInstance().contains("Invalid max DB size configuration for LMDB Content Repository: invalid"));
   }
   SECTION("Empty value") {
     configuration->set(minifi::Configure::nifi_content_repository_lmdb_max_db_size, "");
@@ -124,7 +124,7 @@ TEST_CASE_METHOD(LmdbContentRepositoryTests, "exists returns false for unrelated
 
 TEST_CASE_METHOD(LmdbContentRepositoryTests, "Empty content claim does not exist", "[lmdb]") {
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo_);
-  auto write_stream = content_repo_->write(*claim);
+  auto write_stream = content_repo_->write(*claim, false);
   write_stream->close();
   REQUIRE_FALSE(content_repo_->exists(*claim));
 }
@@ -219,7 +219,7 @@ TEST_CASE("Content persists across LmdbContentRepository re-initialization", "[l
     REQUIRE(content_repo->initialize(configuration));
     auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
     claim_path = claim->getContentFullPath();
-    auto stream = content_repo->write(*claim);
+    auto stream = content_repo->write(*claim, false);
     stream->write(as_bytes(std::span(content)));
     stream->close();
     // ensure the content is not deleted on resource claim destruction

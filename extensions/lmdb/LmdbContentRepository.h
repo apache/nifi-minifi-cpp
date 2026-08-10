@@ -37,8 +37,13 @@ class LmdbContentRepository : public core::ContentRepositoryImpl {
   explicit LmdbContentRepository(std::string_view name = className<LmdbContentRepository>(), const utils::Identifier& uuid = {})
       : core::ContentRepositoryImpl(name, uuid) {}
 
-  ~LmdbContentRepository() override {
-    stop();
+  LmdbContentRepository(const LmdbContentRepository&) = delete;
+  LmdbContentRepository(LmdbContentRepository&&) = delete;
+  LmdbContentRepository& operator=(const LmdbContentRepository&) = delete;
+  LmdbContentRepository& operator=(LmdbContentRepository&&) = delete;
+
+  ~LmdbContentRepository() noexcept override {
+    LmdbContentRepository::stop();
     if (lmdb_env_) {
       mdb_dbi_close(lmdb_env_, lmdb_handle_);
       mdb_env_close(lmdb_env_);
@@ -51,14 +56,14 @@ class LmdbContentRepository : public core::ContentRepositoryImpl {
 
   class Session : public BufferedContentSession {
    public:
-    explicit Session(std::shared_ptr<ContentRepository> repository);
+    explicit Session(std::shared_ptr<LmdbContentRepository> repository);
 
     void commit() override;
   };
 
   std::shared_ptr<ContentSession> createSession() override;
   bool initialize(const std::shared_ptr<minifi::Configure>& configuration) override;
-  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim& claim, bool append = false) override;
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim& claim, bool append) override;
   std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim& claim) override;
 
   bool close(const minifi::ResourceClaim& claim) override { return remove(claim); }

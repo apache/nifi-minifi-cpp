@@ -50,12 +50,12 @@ class LmdbContentSessionController : public TestController {
 
 namespace {
 
-std::shared_ptr<io::OutputStream> operator<<(std::shared_ptr<io::OutputStream> stream, const std::string& str) {
+std::shared_ptr<io::OutputStream> operator<<(const std::shared_ptr<io::OutputStream>& stream, const std::string& str) {
   REQUIRE(stream->write(reinterpret_cast<const uint8_t*>(str.data()), str.length()) == str.length());
   return stream;
 }
 
-std::shared_ptr<io::InputStream> operator>>(std::shared_ptr<io::InputStream> stream, std::string& str) {
+std::shared_ptr<io::InputStream> operator>>(const std::shared_ptr<io::InputStream>& stream, std::string& str) {
   str.clear();
   std::array<std::byte, utils::configuration::DEFAULT_BUFFER_SIZE> buffer{};
   while (true) {
@@ -288,14 +288,6 @@ TEST_CASE("Rollback after a commit on a different session leaves committed conte
   std::string content;
   controller.content_repository_->read(*claim) >> content;
   REQUIRE(content == "committed");
-}
-
-TEST_CASE("LmdbContentRepository::Session commit throws when underlying repository is not LmdbContentRepository", "[lmdb]") {
-  auto unrelated_repository = std::make_shared<core::repository::VolatileContentRepository>();
-  unrelated_repository->initialize(std::make_shared<ConfigureImpl>());
-
-  core::repository::LmdbContentRepository::Session session(unrelated_repository);
-  REQUIRE_THROWS_WITH(session.commit(), Catch::Matchers::ContainsSubstring("Session's repository is not an LmdbContentRepository"));
 }
 
 }  // namespace org::apache::nifi::minifi::test

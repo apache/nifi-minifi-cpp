@@ -66,7 +66,7 @@ bool LmdbStream::commit() {
   MDB_txn* txn = nullptr;
   auto rc = mdb_txn_begin(lmdb_env_, nullptr, 0, &txn);
   if (rc != MDB_SUCCESS) {
-    logger_->log_error("Failed to begin LMDB transaction in close: {}", mdb_strerror(rc));
+    logger_->log_error("Failed to begin LMDB transaction in commit: {}", mdb_strerror(rc));
     return false;
   }
 
@@ -74,14 +74,14 @@ bool LmdbStream::commit() {
   MDB_val val{value_.size(), const_cast<char*>(value_.data())};
   rc = mdb_put(txn, *lmdb_handle_, &key, &val, 0);
   if (rc != MDB_SUCCESS) {
-    logger_->log_error("Failed to put value in LMDB database during close: {}", mdb_strerror(rc));
+    logger_->log_error("Failed to put value in LMDB database during commit: {}", mdb_strerror(rc));
     mdb_txn_abort(txn);
     return false;
   }
 
   rc = mdb_txn_commit(txn);
   if (rc != MDB_SUCCESS) {
-    logger_->log_error("Failed to commit LMDB transaction during close: {}", mdb_strerror(rc));
+    logger_->log_error("Failed to commit LMDB transaction during commit: {}", mdb_strerror(rc));
     return false;
   }
 
@@ -99,7 +99,7 @@ size_t LmdbStream::tell() const {
 
 size_t LmdbStream::write(const uint8_t* value, size_t size) {
   if (!write_enable_) { return STREAM_ERROR; }
-  if (size != 0 && IsNullOrEmpty(value)) { return STREAM_ERROR; }
+  if (size != 0 && value == nullptr) { return STREAM_ERROR; }
   value_.append(reinterpret_cast<const char*>(value), size);
   dirty_ = true;
   return size;

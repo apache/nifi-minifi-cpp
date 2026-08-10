@@ -43,7 +43,7 @@ class FileSystemRepository : public ContentRepositoryImpl {
 
   bool initialize(const std::shared_ptr<Configure>& configuration) override;
   bool exists(const ResourceClaim& streamId) override;
-  std::shared_ptr<io::BaseStream> write(const ResourceClaim& claim, bool append = false) override;
+  std::shared_ptr<io::BaseStream> write(const ResourceClaim& claim, bool append) override;
   std::shared_ptr<io::BaseStream> read(const ResourceClaim& claim) override;
 
   bool close(const ResourceClaim& claim) override {

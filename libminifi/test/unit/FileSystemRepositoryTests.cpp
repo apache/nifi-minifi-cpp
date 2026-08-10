@@ -81,7 +81,7 @@ TEST_CASE("FileSystemRepository can clear orphan entries") {
     REQUIRE(content_repo->initialize(configuration));
 
     minifi::ResourceClaimImpl claim(content_repo);
-    content_repo->write(claim)->write("hi");
+    content_repo->write(claim, false)->write("hi", false);
     // ensure that the content is not deleted during resource claim destruction
     content_repo->incrementStreamCount(claim);
   }
@@ -107,7 +107,7 @@ TEST_CASE("FileSystemRepository can retry removing entry that previously failed 
   REQUIRE(content_repo->initialize(configuration));
   {
     minifi::ResourceClaimImpl claim(content_repo);
-    content_repo->write(claim)->write("hi");
+    content_repo->write(claim, false)->write("hi", false);
     auto files = minifi::utils::file::list_dir_all(dir, testController.getLogger());
     REQUIRE(files.size() == 1);
     // ensure that the content is not deleted during resource claim destruction
@@ -118,7 +118,7 @@ TEST_CASE("FileSystemRepository can retry removing entry that previously failed 
   REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).size() == 1);
   {
     minifi::ResourceClaimImpl claim(content_repo);
-    content_repo->write(claim)->write("hi");
+    content_repo->write(claim, false)->write("hi", false);
     REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).size() == 2);
   }
 
@@ -139,7 +139,7 @@ TEST_CASE("FileSystemRepository removes non-existing resource file from purge li
   std::string filename;
   {
     minifi::ResourceClaimImpl claim(content_repo);
-    content_repo->write(claim)->write("hi");
+    content_repo->write(claim, false)->write("hi", false);
     auto files = minifi::utils::file::list_dir_all(dir, testController.getLogger());
     REQUIRE(files.size() == 1);
     // ensure that the content is not deleted during resource claim destruction
@@ -152,7 +152,7 @@ TEST_CASE("FileSystemRepository removes non-existing resource file from purge li
   REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).empty());
   {
     minifi::ResourceClaimImpl claim(content_repo);
-    content_repo->write(claim)->write("hi");
+    content_repo->write(claim, false)->write("hi", false);
     REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).size() == 1);
   }
 
@@ -173,7 +173,7 @@ TEST_CASE("Append Claim") {
   const std::string content = "well hello there";
 
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
-  content_repo->write(*claim)->write(as_bytes(std::span(content)));
+  content_repo->write(*claim, false)->write(as_bytes(std::span(content)));
 
   // requesting append before content end fails
   CHECK(content_repo->lockAppend(*claim, 0) == nullptr);

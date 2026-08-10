@@ -53,7 +53,7 @@ class StreamManager {
    * @param streamId stream identifier
    * @return stream pointer.
    */
-  virtual std::shared_ptr<io::BaseStream> write(const T &streamId, bool append = false) = 0;
+  virtual std::shared_ptr<io::BaseStream> write(const T &streamId, bool append) = 0;
 
   /**
    * Queries the stream and locks it to be appended to
