@@ -15,10 +15,10 @@
 
 import os
 import platform
-import inquirer
-import yaml
 from pathlib import Path
 
+import inquirer
+import yaml
 from minifi_option import MinifiOptions
 from package_manager import PackageManager
 from system_dependency import install_required
@@ -77,7 +77,7 @@ def add_conan_options_from_cmake_options(
 def run_conan_install(
     minifi_options: MinifiOptions, package_manager: PackageManager
 ) -> bool:
-    if not minifi_options.use_conan.value == "ON":
+    if minifi_options.use_conan.value != "ON":
         print("Conan install skipped because USE_CONAN is OFF")
         return True
     conan_options = add_conan_options_from_cmake_options(
@@ -159,19 +159,19 @@ def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
 
 
 def do_build(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f'{_conan_build_env_prefix(minifi_options)}cmake --build "{str(minifi_options.build_dir)}" {minifi_options.create_cmake_build_flags_str()}'
+    build_cmd = f'{_conan_build_env_prefix(minifi_options)}cmake --build "{minifi_options.build_dir!s}" {minifi_options.create_cmake_build_flags_str()}'
     res = package_manager.run_cmd(build_cmd)
     print("Build was successful" if res else "Build was unsuccessful")
     return res
 
 
 def do_package(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f'{_conan_build_env_prefix(minifi_options)}cmake --build "{str(minifi_options.build_dir)}" --target package {minifi_options.create_cmake_build_flags_str()}'
+    build_cmd = f'{_conan_build_env_prefix(minifi_options)}cmake --build "{minifi_options.build_dir!s}" --target package {minifi_options.create_cmake_build_flags_str()}'
     return package_manager.run_cmd(build_cmd)
 
 
 def do_docker_build(minifi_options: MinifiOptions, package_manager: PackageManager):
-    build_cmd = f'cmake --build "{str(minifi_options.build_dir)}" --target docker'
+    build_cmd = f'cmake --build "{minifi_options.build_dir!s}" --target docker'
     return package_manager.run_cmd(build_cmd)
 
 

@@ -573,24 +573,6 @@ def setup_controller_service_with_property(
 
 
 @given(
-    'a {service_name} controller service is set up and the "{property_name}" property set to "{property_value}"'
-)
-def setup_controller_service_with_property(
-    context: MinifiTestContext,
-    service_name: str,
-    property_name: str,
-    property_value: str,
-):
-    controller_service = ControllerService(
-        class_name=service_name, service_name=service_name
-    )
-    controller_service.add_property(property_name, property_value)
-    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(
-        controller_service
-    )
-
-
-@given(
     'the "{property_name}" property of the {processor_name} processor is set to match the attribute "{attribute_key}" to "{attribute_value}"'
 )
 def set_processor_property_to_match_attribute(

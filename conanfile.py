@@ -13,12 +13,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from conan import ConanFile
-from conan.tools.cmake import CMake, CMakeToolchain
-from conan.tools.files import collect_libs, copy
-from conan.errors import ConanException
 import os
 import shutil
+from typing import ClassVar
+
+from conan import ConanFile
+from conan.errors import ConanException
+from conan.tools.cmake import CMake, CMakeToolchain
+from conan.tools.files import collect_libs, copy
 
 required_conan_version = ">=2.0"
 
@@ -97,7 +99,7 @@ class MiNiFiCppMain(ConanFile):
     license = "Apache-2.0"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"
-    options = {
+    options: ClassVar[dict] = {
         "shared": [True, False],
         "fPIC": [True, False],
         "custom_malloc": [False, "jemalloc", "mimalloc", "rpmalloc"],
@@ -123,7 +125,7 @@ class MiNiFiCppMain(ConanFile):
         "portable": [True, False],
     }
 
-    default_options = {
+    default_options: ClassVar[dict] = {
         "shared": False,
         "fPIC": True,
         "custom_malloc": False,
@@ -259,7 +261,7 @@ class MiNiFiCppMain(ConanFile):
         cmake.build()
 
     def overwrite_libfile(self, oldfile, newfile):
-        print("Copying {} to {}".format(oldfile, newfile))
+        print(f"Copying {oldfile} to {newfile}")
         if os.path.exists(oldfile):
             try:
                 if os.path.exists(newfile):
