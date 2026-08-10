@@ -21,10 +21,10 @@ use crate::StandardPropertyValidator::{
 use crate::{
     ComponentIdentifier, ControllerServiceDefinition, EnableControllerService, MinifiError,
 };
+use minifi_native::StandardPropertyValidator::{F64Validator, I64Validator};
 use std::marker::PhantomData;
 use std::str::FromStr;
 use std::time::Duration;
-use minifi_native::StandardPropertyValidator::{F64Validator, I64Validator};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum StandardPropertyValidator {
@@ -35,7 +35,7 @@ pub enum StandardPropertyValidator {
     U64Validator,
     DataSizeValidator,
     PortValidator,
-    F64Validator
+    F64Validator,
 }
 
 #[derive(Debug, PartialEq)]

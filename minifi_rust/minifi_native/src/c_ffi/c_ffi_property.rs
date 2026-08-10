@@ -22,10 +22,9 @@ use minifi_native_sys::{
     minifi_property_definition, minifi_string_view, minifi_validator,
     minifi_validator_MINIFI_VALIDATOR_ALWAYS_VALID, minifi_validator_MINIFI_VALIDATOR_BOOLEAN,
     minifi_validator_MINIFI_VALIDATOR_DATA_SIZE, minifi_validator_MINIFI_VALIDATOR_INTEGER,
-    minifi_validator_MINIFI_VALIDATOR_NON_BLANK, minifi_validator_MINIFI_VALIDATOR_PORT,
-    minifi_validator_MINIFI_VALIDATOR_TIME_PERIOD,
+    minifi_validator_MINIFI_VALIDATOR_NON_BLANK, minifi_validator_MINIFI_VALIDATOR_NUMBER,
+    minifi_validator_MINIFI_VALIDATOR_PORT, minifi_validator_MINIFI_VALIDATOR_TIME_PERIOD,
     minifi_validator_MINIFI_VALIDATOR_UNSIGNED_INTEGER,
-    minifi_validator_MINIFI_VALIDATOR_NUMBER
 };
 use std::ptr;
 
