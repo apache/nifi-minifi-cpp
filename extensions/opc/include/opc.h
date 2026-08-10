@@ -91,7 +91,7 @@ class Client {
       const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
       const std::vector<std::vector<char>>& trust_buffers);
 
-  UA_Client *client_;
+  UA_Client *client_{nullptr};
   std::shared_ptr<core::logging::Logger> logger_;
   UA_Logger minifi_ua_logger_{};
   bool use_encryption_{false};

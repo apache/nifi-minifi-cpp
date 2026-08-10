@@ -22,6 +22,7 @@
 #include "include/putopc.h"
 #include "utils/StringUtils.h"
 #include "unit/TestUtils.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -69,6 +70,10 @@ void verifyCreatedNode(const NodeData& expected_node, SingleProcessorTestControl
   ref_desc.nodeId.nodeId = found_node_ids[0];
   ref_desc.browseName = UA_QUALIFIEDNAME_ALLOC(expected_node.namespace_index, expected_node.browse_name.c_str());
   ref_desc.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", expected_node.browse_name.c_str());
+  const auto ref_desc_guard = gsl::finally([&ref_desc] {
+    UA_LocalizedText_clear(&ref_desc.displayName);
+    UA_QualifiedName_clear(&ref_desc.browseName);
+  });
   ref_desc.nodeClass = UA_NODECLASS_VARIABLE;
   ref_desc.typeDefinition.nodeId = UA_NODEID_NUMERIC(0, UA_NODEIDTYPE_NUMERIC);
   auto data = client->getNodeData(&ref_desc, expected_node.path);
