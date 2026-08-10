@@ -556,7 +556,7 @@ def setup_controller_service(context: MinifiTestContext, service_name: str):
 @given(
     'a {class_name} controller service named "{service_name}" is set up and the "{property_name}" property set to "{property_value}"'
 )
-def setup_controller_service_with_property(
+def setup_named_controller_service_with_property(
     context: MinifiTestContext,
     class_name: str,
     service_name: str,

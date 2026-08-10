@@ -17,10 +17,10 @@ import pathlib
 import tempfile
 
 from cli import (
-    main_menu,
     do_one_click_build,
-    do_one_click_configuration,
     do_one_click_conan_install,
+    do_one_click_configuration,
+    main_menu,
 )
 from minifi_option import parse_minifi_options
 from package_manager import get_package_manager

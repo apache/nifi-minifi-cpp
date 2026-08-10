@@ -245,14 +245,14 @@ class ApkPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         return self._install(
             dependencies=dependencies,
             install_cmd="sudo apk add --no-cache",
             replace_dict={"libarchive": {"libarchive-dev"}, "python": {"python3-dev"}},
         )
 
-    def _get_installed_packages(self) -> Set[str]:
+    def _get_installed_packages(self) -> set[str]:
         result = subprocess.run(
             ["apk", "info"], text=True, capture_output=True, check=True
         )
