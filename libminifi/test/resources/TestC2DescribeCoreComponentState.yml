@@ -29,6 +29,8 @@ Processors:
     penalization period: 30 sec
     yield period: 1 sec
     run duration nanos: 0
+    Properties:
+      File to Tail: test.log
     auto-terminated relationships list:
       - success
   - name: TailFile2
@@ -40,6 +42,8 @@ Processors:
     penalization period: 30 sec
     yield period: 1 sec
     run duration nanos: 0
+    Properties:
+      File to Tail: test.log
     auto-terminated relationships list:
       - success
 

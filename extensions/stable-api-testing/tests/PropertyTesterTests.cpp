@@ -185,6 +185,9 @@ Remote Process Groups: [ ]
   REQUIRE(my_proc);
   const auto opt_val = my_proc->getProperty("OptionalPropertyWithDefaultValue");
   CHECK(!opt_val);
+  CHECK(!my_proc->getProperty("OptionalPropertyWithoutDefaultValue"));
+  CHECK(my_proc->getProperty("RequiredPropertyWithDefaultValue") == "default_val");
+  CHECK(my_proc->getProperty("RequiredPropertyWithoutDefaultValue") == "foo");
 }
 
 TEST_CASE("Explicitly unsetting optional property (adaptive json)") {
@@ -212,4 +215,7 @@ TEST_CASE("Explicitly unsetting optional property (adaptive json)") {
   REQUIRE(my_proc);
   const auto opt_val = my_proc->getProperty("OptionalPropertyWithDefaultValue");
   CHECK(!opt_val);
+  CHECK(!my_proc->getProperty("OptionalPropertyWithoutDefaultValue"));
+  CHECK(my_proc->getProperty("RequiredPropertyWithDefaultValue") == "default_val");
+  CHECK(my_proc->getProperty("RequiredPropertyWithoutDefaultValue") == "foo");
 }

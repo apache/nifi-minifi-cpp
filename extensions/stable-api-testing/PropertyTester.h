@@ -37,10 +37,16 @@ class PropertyTester : public api::core::ProcessorImpl {
           .isRequired(false)
           .build();
 
+  EXTENSIONAPI static constexpr auto OptionalPropertyWithoutDefaultValue =
+      core::PropertyDefinitionBuilder<>::createProperty("OptionalPropertyWithoutDefaultValue")
+          .withDescription("Test OptionalPropertyWithoutDefaultValue")
+          .isRequired(false)
+          .build();
+
   EXTENSIONAPI static constexpr auto RequiredPropertyWithDefaultValue =
       core::PropertyDefinitionBuilder<>::createProperty("RequiredPropertyWithDefaultValue")
           .withDescription("Test RequiredPropertyWithDefaultValue")
-          .withDefaultValue("foo")
+          .withDefaultValue("default_val")
           .isRequired(true)
           .build();
 
@@ -50,9 +56,8 @@ class PropertyTester : public api::core::ProcessorImpl {
           .isRequired(true)
           .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({OptionalPropertyWithDefaultValue,
-      RequiredPropertyWithDefaultValue,
-      RequiredPropertyWithoutDefaultValue});
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>(
+      {OptionalPropertyWithDefaultValue, OptionalPropertyWithoutDefaultValue, RequiredPropertyWithDefaultValue, RequiredPropertyWithoutDefaultValue});
   EXTENSIONAPI static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -67,6 +72,11 @@ class PropertyTester : public api::core::ProcessorImpl {
       const std::optional<std::string> optional_value_with_default = api::utils::parseOptionalProperty(process_context,
           OptionalPropertyWithDefaultValue);
       logger_->log_critical("OptionalPropertyWithDefaultValue: {}", optional_value_with_default);
+    }
+    {
+      const std::optional<std::string> optional_value_without_default = api::utils::parseOptionalProperty(process_context,
+          OptionalPropertyWithoutDefaultValue);
+      logger_->log_critical("OptionalPropertyWithoutDefaultValue: {}", optional_value_without_default);
     }
     {
       const std::string required_value_with_default = api::utils::parseProperty(process_context, RequiredPropertyWithDefaultValue);
