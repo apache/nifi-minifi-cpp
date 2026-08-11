@@ -16,6 +16,7 @@
  */
 
 #include "AnimalControllerServices.h"
+#include "PropertyTester.h"
 #include "ZooProcessor.h"
 #include "api/core/Resource.h"
 #include "api/utils/minifi-c-utils.h"
@@ -35,5 +36,6 @@ CEXTENSIONAPI void minifi_init_extension(minifi_extension_context* extension_con
       .user_data = nullptr};
   auto* extension = minifi_register_extension(extension_context, &extension_definition);
   minifi::api::core::registerProcessors<minifi::api_testing::ZooProcessor>(extension);
+  minifi::api::core::registerProcessors<minifi::api_testing::PropertyTester>(extension);
   minifi::api::core::registerControllerServices<minifi::api_testing::DogController, minifi::api_testing::DuckController>(extension);
 }

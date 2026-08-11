@@ -39,6 +39,7 @@ class ConfigurableComponent : public virtual CoreComponent {
   virtual std::expected<void, std::error_code> setProperty(std::string_view name, std::string value) = 0;
   virtual std::expected<void, std::error_code> appendProperty(std::string_view name, std::string value) = 0;
   virtual std::expected<void, std::error_code> clearProperty(std::string_view name) = 0;
+  virtual std::expected<void, std::error_code> clearPropertyDefaultValue(std::string_view name) = 0;
 
   [[nodiscard]] virtual std::expected<std::string, std::error_code> getDynamicProperty(std::string_view name) const = 0;
   virtual std::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) = 0;
