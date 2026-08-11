@@ -28,7 +28,7 @@ namespace org::apache::nifi::minifi::api_testing {
 
 class PropertyTester : public api::core::ProcessorImpl {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "To test optional (not-required) properties with default value";
+  EXTENSIONAPI static constexpr const char* Description = "Test processor to test the parsing of properties in the flow configuration";
 
   EXTENSIONAPI static constexpr auto OptionalPropertyWithDefaultValue =
       core::PropertyDefinitionBuilder<>::createProperty("OptionalPropertyWithDefaultValue")
