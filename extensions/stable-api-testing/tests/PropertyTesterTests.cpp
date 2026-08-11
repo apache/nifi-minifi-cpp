@@ -101,7 +101,7 @@ TEST_CASE("Explicitly unsetting required property (adaptive json)") {
       "name": "My processor",
       "Properties": {
           "RequiredPropertyWithDefaultValue": null,
-      },
+      }
     }
   ],
   "Connections": []
@@ -149,7 +149,7 @@ TEST_CASE("Omitting optional property (adaptive json)") {
       "name": "My processor",
       "Properties": {
           "RequiredPropertyWithoutDefaultValue": "foo"
-      },
+      }
     }
   ],
   "Connections": []
@@ -201,7 +201,7 @@ TEST_CASE("Explicitly unsetting optional property (adaptive json)") {
       "Properties": {
           "OptionalPropertyWithDefaultValue": null,
           "RequiredPropertyWithoutDefaultValue": "foo"
-      },
+      }
     }
   ],
   "Connections": []
