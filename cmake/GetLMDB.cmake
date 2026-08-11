@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,23 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-if (NOT (ENABLE_ALL OR ENABLE_LMDB))
-    return()
+if(MINIFI_LMDB_SOURCE STREQUAL "CONAN")
+    message("Using Conan to install LMDB")
+    find_package(lmdb REQUIRED)
+elseif(MINIFI_LMDB_SOURCE STREQUAL "BUILD")
+    message("Using CMake to build LMDB from source")
+    include(LMDB)
 endif()
-
-include(GetLMDB)
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-file(GLOB SOURCES  "*.cpp")
-
-add_minifi_library(minifi-lmdb SHARED ${SOURCES})
-
-target_include_directories(minifi-lmdb PUBLIC ${LMDB_INCLUDE_DIR})
-target_link_libraries(minifi-lmdb PUBLIC lmdb::lmdb)
-target_link_libraries(minifi-lmdb PUBLIC minifi-api minifi-extension-framework)
-target_link_libraries(minifi-lmdb PRIVATE $<LINK_ONLY:core-minifi>)
-
-register_extension(minifi-lmdb "LMDB" LMDB "This enables persistent repositories using LMDB" "extensions/lmdb/tests")

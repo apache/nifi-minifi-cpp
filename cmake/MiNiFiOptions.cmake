@@ -195,6 +195,7 @@ add_minifi_multi_option(MINIFI_WINFLEXBISON_SOURCE "Retrieves winflexbison from 
 add_minifi_multi_option(MINIFI_AWS_SDK_CPP_SOURCE "Retrieves AWS SDK for C++ from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 add_minifi_multi_option(MINIFI_IODBC_SOURCE "Retrieves iODBC from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 add_minifi_multi_option(MINIFI_SOCI_SOURCE "Retrieves SOCI from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
+add_minifi_multi_option(MINIFI_LMDB_SOURCE "Retrieves LMDB from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 
 # Docker options
 

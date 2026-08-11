@@ -1,5 +1,5 @@
 diff --git a/libraries/liblmdb/mdb.c b/libraries/liblmdb/mdb.c
-index 5a06d7b..2c35abf 100644
+index 23c86eb..2c5296a 100644
 --- a/libraries/liblmdb/mdb.c
 +++ b/libraries/liblmdb/mdb.c
 @@ -42,6 +42,7 @@
@@ -48,7 +48,7 @@ index 5a06d7b..2c35abf 100644
  
  /** getpid() returns int; MinGW defines pid_t but MinGW64 typedefs it
   *  as int64 which is wrong. MSVC doesn't define it at all, so just
-@@ -5060,22 +5061,22 @@ mdb_env_map(MDB_env *env, void *addr)
+@@ -5093,22 +5094,22 @@ mdb_env_map(MDB_env *env, void *addr)
  	LARGE_INTEGER fsize;
  	fsize.LowPart = msize & 0xffffffff;
  	fsize.HighPart = msize >> 16 >> 16;
@@ -75,7 +75,7 @@ index 5a06d7b..2c35abf 100644
  	if (rc)
  		return mdb_nt2win32(rc);
  	env->me_map = map;
-@@ -5435,18 +5436,18 @@ mdb_env_open2(MDB_env *env, int prev)
+@@ -5468,18 +5469,18 @@ mdb_env_open2(MDB_env *env, int prev)
  	else
  		env->me_pidquery = PROCESS_QUERY_INFORMATION;
  	/* Grab functions we need from NTDLL */
@@ -101,12 +101,12 @@ index 5a06d7b..2c35abf 100644
  			return MDB_PROBLEM;
  	}
  	env->me_ovs = 0;
-@@ -6909,7 +6910,7 @@ mdb_rpage_get(MDB_txn *txn, pgno_t pg0, int numpgs, MDB_page **ret)
- #define SET_OFF(off,val)	off.QuadPart = val
+@@ -6951,7 +6952,7 @@ mdb_rpage_get(MDB_txn *txn, pgno_t pg0, int numpgs, MDB_page **ret, MDB_page **e
+ #define CHK_OFF(off)		off.QuadPart
  #define MAP(rc,env,addr,len,off)	\
  	addr = NULL; \
--	rc = NtMapViewOfSection(env->me_fmh, GetCurrentProcess(), &addr, 0, \
-+	rc = MDB_NtMapViewOfSection(env->me_fmh, GetCurrentProcess(), &addr, 0, \
+-	rc = NtMapViewOfSection(env->me_fmh, GetCurrentProcess(), (void **)&addr, 0, \
++	rc = MDB_NtMapViewOfSection(env->me_fmh, GetCurrentProcess(), (void **)&addr, 0, \
  		len, &off, &len, ViewUnmap, (env->me_flags & MDB_RDONLY) ? 0 : MEM_RESERVE, PAGE_READONLY); \
  	if (rc) rc = mdb_nt2win32(rc)
  #else
