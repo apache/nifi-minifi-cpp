@@ -43,7 +43,7 @@ extern "C" {
 #define MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
 
 enum : uint32_t {
-  MINIFI_API_VERSION = 1
+  MINIFI_API_VERSION = 2
 };
 
 enum minifi_io_status : int64_t {
