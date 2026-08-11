@@ -17,21 +17,21 @@
 
 include(FetchContent)
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/lmdb/add-cmake-file.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/lmdb/all/patches/add-cmake-file.patch")
 if (WIN32)
-    set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/lmdb/fix-windows-symbols.patch")
+    set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/lmdb/all/patches/fix-windows-symbols.patch")
     set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
+        (\\\"${Patch_EXECUTABLE}\\\" -p0 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p0 -N -i \\\"${PATCH_FILE_1}\\\") &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p0 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p0 -N -i \\\"${PATCH_FILE_2}\\\")")
 else()
     set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\")")
+        (\\\"${Patch_EXECUTABLE}\\\" -p0 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p0 -N -i \\\"${PATCH_FILE_1}\\\")")
 endif()
 
 FetchContent_Declare(
         lmdb
-        URL      https://github.com/LMDB/lmdb/archive/refs/tags/LMDB_1.0.0-branch.tar.gz
-        URL_HASH SHA256=8d3e790194e43a72f172f34c442ea4737b2d1433fc0983f2ef70bae999bc2d28
+        URL      https://github.com/LMDB/lmdb/archive/refs/tags/LMDB_1.0.1.tar.gz
+        URL_HASH SHA256=7ce1db4b8c13f60e0881f12537340c73fb5e0125dba4daa6649a2314341855db
         PATCH_COMMAND "${PC}"
         SOURCE_SUBDIR "libraries/liblmdb"
         SYSTEM
@@ -40,3 +40,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(lmdb)
 
 set(LMDB_INCLUDE_DIR "${lmdb_SOURCE_DIR}/libraries/liblmdb")
+
+if (NOT TARGET lmdb::lmdb)
+    add_library(lmdb::lmdb ALIAS lmdb)
+endif()
