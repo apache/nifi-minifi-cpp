@@ -8417,6 +8417,51 @@
             "processors": [
                 {
                     "propertyDescriptors": {
+                        "OptionalPropertyWithDefaultValue": {
+                            "name": "OptionalPropertyWithDefaultValue",
+                            "description": "Test OptionalPropertyWithDefaultValue",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "default_val"
+                        },
+                        "OptionalPropertyWithoutDefaultValue": {
+                            "name": "OptionalPropertyWithoutDefaultValue",
+                            "description": "Test OptionalPropertyWithoutDefaultValue",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "RequiredPropertyWithDefaultValue": {
+                            "name": "RequiredPropertyWithDefaultValue",
+                            "description": "Test RequiredPropertyWithDefaultValue",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "default_val"
+                        },
+                        "RequiredPropertyWithoutDefaultValue": {
+                            "name": "RequiredPropertyWithoutDefaultValue",
+                            "description": "Test RequiredPropertyWithoutDefaultValue",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "inputRequirement": "INPUT_FORBIDDEN",
+                    "isSingleThreaded": "true",
+                    "supportedRelationships": [],
+                    "typeDescription": "Test processor to test the parsing of properties in the flow configuration",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "org.apache.nifi.minifi.api_testing.PropertyTester"
+                },
+                {
+                    "propertyDescriptors": {
                         "Can fly service": {
                             "typeProvidedByValue": {
                                 "type": "org.apache.nifi.minifi.api_testing.CanFlyControllerApi",
