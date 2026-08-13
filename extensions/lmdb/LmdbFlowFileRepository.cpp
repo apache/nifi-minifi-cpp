@@ -71,6 +71,9 @@ bool LmdbFlowFileRepository::Delete(const std::shared_ptr<core::CoreComponent>& 
 }
 
 bool LmdbFlowFileRepository::Put(const std::string& key, const uint8_t* buf, size_t bufLen) {
+  if (buf == nullptr) {
+    return bufLen == 0 && lmdb_wrapper_.putValue(key, {});
+  }
   return lmdb_wrapper_.putValue(key, std::string(reinterpret_cast<const char*>(buf), bufLen));
 }
 
@@ -197,37 +200,42 @@ void LmdbFlowFileRepository::initialize_repository() {
   gsl_Expects(content_repo_);
   logger_->log_info("Reading existing flow files from database");
 
-  lmdb_wrapper_.forEach([this](const MDB_val& key, const MDB_val& value) {
+  auto result = lmdb_wrapper_.forEach([this](const MDB_val& key, const MDB_val& value) {
     utils::Identifier container_id;
     const std::string key_str = std::string(static_cast<char*>(key.mv_data), key.mv_size);
     const std::string data = std::string(static_cast<char*>(value.mv_data), value.mv_size);
-    auto eventRead = FlowFileRecord::DeSerialize(std::as_bytes(std::span(data.data(), data.size())), content_repo_, container_id);
-    if (!eventRead) {
+    auto event_read = FlowFileRecord::DeSerialize(std::as_bytes(std::span(data.data(), data.size())), content_repo_, container_id);
+    if (!event_read) {
       keys_to_delete_.enqueue({.key = key_str});
       return;
     }
-    auto claim = eventRead->getResourceClaim();
+    auto claim = event_read->getResourceClaim();
     if (claim) {
       claim->increaseFlowFileRecordOwnedCount();
     }
     const auto container = getContainer(container_id.to_string());
     if (!container) {
-      logger_->log_warn("Could not find connection for {}, path {}", container_id.to_string(), eventRead->getContentFullPath());
-      keys_to_delete_.enqueue({.key = key_str, .content = eventRead->getResourceClaim()});
+      logger_->log_warn("Could not find connection for {}, path {}", container_id.to_string(), event_read->getContentFullPath());
+      keys_to_delete_.enqueue({.key = key_str, .content = event_read->getResourceClaim()});
       return;
     }
-    if (check_flowfile_content_size_ && !contentSizeIsAmpleForFlowFile(*eventRead, claim)) {
-      logger_->log_warn("Content is missing or too small for flowfile {}", eventRead->getContentFullPath());
-      keys_to_delete_.enqueue({.key = key_str, .content = eventRead->getResourceClaim()});
+    if (check_flowfile_content_size_ && !contentSizeIsAmpleForFlowFile(*event_read, claim)) {
+      logger_->log_warn("Content is missing or too small for flowfile {}", event_read->getContentFullPath());
+      keys_to_delete_.enqueue({.key = key_str, .content = event_read->getResourceClaim()});
       return;
     }
 
-    logger_->log_debug("Found connection for {}, path {}", container_id.to_string(), eventRead->getContentFullPath());
-    eventRead->setStoredToRepository(true);
+    logger_->log_debug("Found connection for {}, path {}", container_id.to_string(), event_read->getContentFullPath());
+    event_read->setStoredToRepository(true);
     // we found the connection for the persistent flowFile
     // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
-    container->restore(eventRead);
+    container->restore(event_read);
   });
+
+  if (!result) {
+    logger_->log_error("Couldn't load existing flow files from LMDB");
+    return;
+  }
 
   flush();
   content_repo_->clearOrphans();
