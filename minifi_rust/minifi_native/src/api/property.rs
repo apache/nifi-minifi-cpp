@@ -62,16 +62,16 @@ macro_rules! property_definitions {
     };
 }
 
-pub struct Property<K: ?Sized + PropertySchema> {
+pub struct Property<P: ?Sized + PropertySchema> {
     pub(crate) name: &'static str,
     pub(crate) description: &'static str,
     pub(crate) is_sensitive: bool,
     pub(crate) supports_expr_lang: bool,
     pub(crate) default_value: Option<&'static str>,
-    pub(crate) marker: PhantomData<K>,
+    pub(crate) marker: PhantomData<P>,
 }
 
-impl<K: ?Sized + PropertySchema> Property<K> {
+impl<P: ?Sized + PropertySchema> Property<P> {
     pub const fn new(name: &'static str, description: &'static str) -> Self {
         Property {
             name,
@@ -106,11 +106,11 @@ impl<K: ?Sized + PropertySchema> Property<K> {
         PropertyDefinition {
             name: self.name,
             description: self.description,
-            is_required: K::IS_REQUIRED,
+            is_required: P::IS_REQUIRED,
             is_sensitive: self.is_sensitive,
             supports_expr_lang: self.supports_expr_lang,
             default_value: self.default_value,
-            constraints: K::CONSTRAINT,
+            constraints: P::CONSTRAINT,
         }
     }
 
@@ -237,16 +237,16 @@ impl PropertySchema for NonBlankPath {
 }
 
 pub trait GetProperty {
-    fn get_raw_property<K: PropertySchema + ?Sized>(
+    fn get_raw_property<P: PropertySchema + ?Sized>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
     ) -> Result<Option<String>, MinifiError>;
 
-    fn get_property<K: PropertyValue + ?Sized>(
+    fn get_property<P: PropertyValue + ?Sized>(
         &self,
-        property: &Property<K>,
-    ) -> Result<K::Output, MinifiError> {
-        K::from_raw(self.get_raw_property(property)?, property.name)
+        property: &Property<P>,
+    ) -> Result<P::Output, MinifiError> {
+        P::from_raw(self.get_raw_property(property)?, property.name)
     }
 }
 
@@ -297,10 +297,10 @@ where
 }
 
 pub trait GetControllerService {
-    fn get_controller_service<K>(
+    fn get_controller_service<P>(
         &self,
-        property: &Property<K>,
-    ) -> Result<K::Output<'_>, MinifiError>
+        property: &Property<P>,
+    ) -> Result<P::Output<'_>, MinifiError>
     where
-        K: ControllerServiceValue + ?Sized;
+        P: ControllerServiceValue + ?Sized;
 }
