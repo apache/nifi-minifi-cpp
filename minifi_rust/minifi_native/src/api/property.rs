@@ -106,7 +106,7 @@ impl<K: ?Sized + PropertySchema> Property<K> {
         PropertyDefinition {
             name: self.name,
             description: self.description,
-            is_required: K::IS_REQUIRED || self.default_value.is_some(),
+            is_required: K::IS_REQUIRED,
             is_sensitive: self.is_sensitive,
             supports_expr_lang: self.supports_expr_lang,
             default_value: self.default_value,
