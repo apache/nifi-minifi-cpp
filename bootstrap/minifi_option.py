@@ -45,6 +45,7 @@ class MinifiOptions:
             "DOCKER_CREATE_RPM",
             "SKIP_TESTS",
             "PORTABLE",
+            "AWS_ENABLE_UNITY_BUILD",
         ]
         self.use_ninja = CMakeCacheValue(
             "Specifies if CMake should use the Ninja generator or the system default",
@@ -62,6 +63,7 @@ class MinifiOptions:
             self.use_ninja.value = cache_values["USE_NINJA"].value
         if "USE_CONAN" in cache_values:
             self.use_conan.value = cache_values["USE_CONAN"].value
+        minifi_prefixed_extension_options = ["MINIFI_RUST", "MINIFI_LMDB"]
         self.bool_options = {
             name: cache_value
             for name, cache_value in cache_values.items()
@@ -71,12 +73,14 @@ class MinifiOptions:
         self.build_options = {
             name: cache_value
             for name, cache_value in self.bool_options.items()
-            if "MINIFI" in name or name in additional_build_options
+            if ("MINIFI" in name or name in additional_build_options) and name not in minifi_prefixed_extension_options
         }
         self.build_options["USE_NINJA"] = self.use_ninja
         self.build_options["USE_CONAN"] = self.use_conan
         self.extension_options = {
-            name: cache_value for name, cache_value in self.bool_options.items() if "ENABLE" in name
+            name: cache_value
+            for name, cache_value in self.bool_options.items()
+            if name.startswith("ENABLE") or name in minifi_prefixed_extension_options
         }
         self.multi_choice_options = [
             cache_value

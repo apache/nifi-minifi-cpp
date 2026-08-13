@@ -87,7 +87,7 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
             "ENABLE_LLAMACPP",
             "ENABLE_AWS",
             "ENABLE_SQL",
-            "ENABLE_LMDB",
+            "MINIFI_LMDB",
             "PORTABLE",
             "SKIP_TESTS",
         ],

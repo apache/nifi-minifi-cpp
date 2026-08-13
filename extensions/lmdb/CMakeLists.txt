@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT (ENABLE_ALL OR ENABLE_LMDB))
+if (NOT (ENABLE_ALL OR MINIFI_LMDB))
     return()
 endif()
 
