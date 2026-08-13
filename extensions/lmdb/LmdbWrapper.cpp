@@ -44,6 +44,8 @@ bool LmdbWrapper::initialize(const std::string& directory, size_t max_db_size) {
     logger_->log_info("Creating LMDB Repository directory at {}", directory);
     if (!std::filesystem::create_directories(directory)) {
       logger_->log_error("Failed to create LMDB Repository directory at {}", directory);
+      mdb_env_close(lmdb_env_);
+      lmdb_env_ = nullptr;
       return false;
     }
   }
