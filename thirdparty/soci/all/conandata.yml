@@ -1,0 +1,27 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+  "4.1.4":
+    url: "https://github.com/SOCI/soci/archive/v4.1.4.tar.gz"
+    sha256: "144f017cccc2e2d806badb3313d6ab3c67a1925bccaa747a46fb3907108a615d"
+patches:
+  "4.1.4":
+    - patch_file: "patches/disable-sqlwchar-support.patch"
+      patch_description: "Disable SQLWCHAR support for iODBC"
+      patch_type: "portability"
+    - patch_file: "patches/odbc-get-parameter-name-bounds-safe.patch"
+      patch_description: "Return empty name for positional use elements instead of throwing (fixes out_of_range on execute with positional binds)"
+      patch_type: "portability"
