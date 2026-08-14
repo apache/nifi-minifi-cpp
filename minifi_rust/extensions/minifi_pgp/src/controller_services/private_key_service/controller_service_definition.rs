@@ -1,18 +1,19 @@
 use super::PGPPrivateKeyService;
+use crate::controller_services::key_file_property::SecretKeyFile;
+use crate::controller_services::key_property::SecretKey;
 use crate::utils;
 use minifi_native::{
     ControllerServiceDefinition, Property, PropertyDefinition, ProvidedInterface,
     property_definitions,
 };
-use std::path::PathBuf;
 
-pub(super) const KEY_FILE: Property<Option<PathBuf>> = Property::new(
+pub(super) const KEY_FILE: Property<Option<SecretKeyFile>> = Property::new(
     "Key File",
     "File path to PGP Secret Key encoded in binary or ASCII Armor",
 )
 .supports_expression_language();
 
-pub(super) const KEY: Property<Option<String>> =
+pub(super) const KEY: Property<Option<SecretKey>> =
     Property::new("Key", "Secret Key encoded in ASCII Armor").sensitive();
 
 pub(super) const KEY_PASSPHRASE: Property<Option<utils::Password>> = Property::new(

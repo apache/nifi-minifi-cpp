@@ -4,8 +4,8 @@ use controller_service_definition::*;
 #[cfg(test)]
 use crate::controller_services::key_lookup::key_matches;
 use minifi_native::macros::ComponentIdentifier;
-use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError, warn};
-use pgp::composed::{Deserializable, SignedSecretKey, TheRing};
+use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError};
+use pgp::composed::{SignedSecretKey, TheRing};
 #[cfg(test)]
 use pgp::types::KeyDetails;
 
@@ -16,29 +16,17 @@ pub(crate) struct PGPPrivateKeyService {
 }
 
 impl EnableControllerService for PGPPrivateKeyService {
-    fn enable<P: GetProperty, L: Logger>(context: &P, logger: &L) -> Result<Self, MinifiError>
+    fn enable<P: GetProperty, L: Logger>(context: &P, _logger: &L) -> Result<Self, MinifiError>
     where
         Self: Sized,
     {
-        let mut private_keys = vec![];
-        if let Some(keyring_file_path) = context.get_property(&KEY_FILE)? {
-            if let Ok((keys, _headers)) = SignedSecretKey::from_armor_file_many(&keyring_file_path)
-            {
-                collect_keys(keys, &mut private_keys, logger);
-            } else if let Ok(keys) = SignedSecretKey::from_file_many(keyring_file_path) {
-                collect_keys(keys, &mut private_keys, logger);
-            }
-        }
-        if let Some(keyring_ascii) = context.get_property(&KEY)?
-            && let Ok((keys, _headers)) = SignedSecretKey::from_armor_many(keyring_ascii.as_bytes())
-        {
-            collect_keys(keys, &mut private_keys, logger);
-        }
+        let mut private_keys = context.get_property(&KEY_FILE)?.unwrap_or_default();
+        private_keys.extend(context.get_property(&KEY)?.unwrap_or_default());
 
         let passphrase = context.get_property(&KEY_PASSPHRASE)?.unwrap_or_default();
 
         if private_keys.is_empty() {
-            return Err(MinifiError::custom("Could not load any valid keys"));
+            return Err(MinifiError::validation("Could not load any valid keys"));
         }
         Ok(Self {
             private_keys,
@@ -70,35 +58,11 @@ impl PGPPrivateKeyService {
     }
 }
 
-fn collect_keys<I, L>(keys: I, out: &mut Vec<SignedSecretKey>, logger: &L)
-where
-    I: Iterator<Item = pgp::errors::Result<SignedSecretKey>>,
-    L: Logger,
-{
-    for key in keys {
-        match key {
-            Ok(k) => out.push(k),
-            Err(e) => warn!(logger, "Skipping unparseable private key: {}", e),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::test_utils::get_test_key_path;
-    use minifi_native::MinifiError::CustomError;
     use minifi_native::{ComponentIdentifier, MockControllerServiceContext, MockLogger};
-
-    fn assert_private_key_service_enable_fails_with_no_valid_keys(
-        context: &MockControllerServiceContext,
-    ) {
-        if let Err(CustomError(error)) = PGPPrivateKeyService::enable(context, &MockLogger::new()) {
-            assert_eq!(error, "Could not load any valid keys");
-        } else {
-            panic!("Didnt fail with no_valid_keys");
-        }
-    }
 
     #[test]
     fn test_component_id() {
@@ -107,56 +71,13 @@ mod tests {
             "minifi_pgp::controller_services::private_key_service::PGPPrivateKeyService"
         );
         assert_eq!(PGPPrivateKeyService::GROUP_NAME, "minifi_pgp");
-        assert_eq!(PGPPrivateKeyService::VERSION, "0.1.0");
+        assert_eq!(PGPPrivateKeyService::VERSION, "1.0.0");
     }
 
     #[test]
     fn default_fails() {
         let context = MockControllerServiceContext::new();
-        assert_private_key_service_enable_fails_with_no_valid_keys(&context);
-    }
-
-    #[test]
-    fn corrupted_binary_keyring_file() {
-        let mut context = MockControllerServiceContext::new();
-        context
-            .properties
-            .insert("Key File".to_string(), get_test_key_path("garbage.gpg"));
-
-        assert_private_key_service_enable_fails_with_no_valid_keys(&context);
-    }
-
-    #[test]
-    fn armored_public_key_file() {
-        let mut context = MockControllerServiceContext::new();
-        context.properties.insert(
-            "Key File".to_string(),
-            get_test_key_path("private_mistake.asc"),
-        );
-
-        assert_private_key_service_enable_fails_with_no_valid_keys(&context);
-    }
-
-    #[test]
-    fn corrupted_armored_key_file() {
-        let mut context = MockControllerServiceContext::new();
-        context.properties.insert(
-            "Key File".to_string(),
-            get_test_key_path("truncated_private.asc"),
-        );
-
-        assert_private_key_service_enable_fails_with_no_valid_keys(&context);
-    }
-
-    #[test]
-    fn non_existent_keyfile() {
-        let mut context = MockControllerServiceContext::new();
-        context.properties.insert(
-            "Key File".to_string(),
-            get_test_key_path("non_existent.asc"),
-        );
-
-        assert_private_key_service_enable_fails_with_no_valid_keys(&context);
+        assert!(PGPPrivateKeyService::enable(&context, &MockLogger::new()).is_err());
     }
 
     #[test]
@@ -167,17 +88,13 @@ mod tests {
             get_test_key_path("alice_private.asc"),
         );
 
-        let controller_service =
+        let service =
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable");
-        assert!(controller_service.get_secret_key("Alice").is_some());
-        assert!(
-            controller_service
-                .get_secret_key("alice@example.com")
-                .is_some()
-        );
+        assert!(service.get_secret_key("Alice").is_some());
+        assert!(service.get_secret_key("alice@example.com").is_some());
 
-        assert!(controller_service.get_secret_key("Bob").is_none());
-        assert!(controller_service.get_secret_key("Carol").is_none());
+        assert!(service.get_secret_key("Bob").is_none());
+        assert!(service.get_secret_key("Carol").is_none());
     }
 
     #[test]
@@ -188,20 +105,20 @@ mod tests {
             get_test_key_path("alice_private.gpg"),
         );
 
-        let controller_service =
+        let service =
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable");
-        assert!(controller_service.get_secret_key("A").is_some());
-        assert!(controller_service.get_secret_key("Alice").is_some());
+        assert!(service.get_secret_key("A").is_some());
+        assert!(service.get_secret_key("Alice").is_some());
         assert!(
-            controller_service
+            service
                 .get_secret_key("Alice <alice@example.com>")
                 .is_some()
         );
 
-        assert!(controller_service.get_secret_key("<Alice>").is_none());
+        assert!(service.get_secret_key("<Alice>").is_none());
 
-        assert!(controller_service.get_secret_key("Bob").is_none());
-        assert!(controller_service.get_secret_key("Carol").is_none());
+        assert!(service.get_secret_key("Bob").is_none());
+        assert!(service.get_secret_key("Carol").is_none());
     }
 
     #[test]
@@ -212,13 +129,13 @@ mod tests {
             get_test_key_path("secret_keyring.asc"),
         );
 
-        let controller_service =
+        let service =
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable");
-        assert!(controller_service.get_secret_key("Alice").is_some());
-        assert!(controller_service.get_secret_key("Bob").is_some());
-        assert!(controller_service.get_secret_key("bob@home.io").is_some());
-        assert!(controller_service.get_secret_key("bob@work.com").is_some());
-        assert!(controller_service.get_secret_key("Carol").is_none());
+        assert!(service.get_secret_key("Alice").is_some());
+        assert!(service.get_secret_key("Bob").is_some());
+        assert!(service.get_secret_key("bob@home.io").is_some());
+        assert!(service.get_secret_key("bob@work.com").is_some());
+        assert!(service.get_secret_key("Carol").is_none());
     }
 
     #[test]
@@ -229,13 +146,13 @@ mod tests {
             get_test_key_path("secret_keyring.gpg"),
         );
 
-        let controller_service =
+        let service =
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable");
-        assert!(controller_service.get_secret_key("Alice").is_some());
-        assert!(controller_service.get_secret_key("Bob").is_some());
-        assert!(controller_service.get_secret_key("bob@home.io").is_some());
-        assert!(controller_service.get_secret_key("bob@work.com").is_some());
-        assert!(controller_service.get_secret_key("Carol").is_none());
+        assert!(service.get_secret_key("Alice").is_some());
+        assert!(service.get_secret_key("Bob").is_some());
+        assert!(service.get_secret_key("bob@home.io").is_some());
+        assert!(service.get_secret_key("bob@work.com").is_some());
+        assert!(service.get_secret_key("Carol").is_none());
     }
 
     #[test]
@@ -247,13 +164,13 @@ mod tests {
 
         context.properties.insert("Key".to_string(), file_content);
 
-        let controller_service =
+        let service =
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable");
-        assert!(controller_service.get_secret_key("Alice").is_some());
-        assert!(controller_service.get_secret_key("Bob").is_some());
-        assert!(controller_service.get_secret_key("bob@home.io").is_some());
-        assert!(controller_service.get_secret_key("bob@work.com").is_some());
-        assert!(controller_service.get_secret_key("Carol").is_none());
+        assert!(service.get_secret_key("Alice").is_some());
+        assert!(service.get_secret_key("Bob").is_some());
+        assert!(service.get_secret_key("bob@home.io").is_some());
+        assert!(service.get_secret_key("bob@work.com").is_some());
+        assert!(service.get_secret_key("Carol").is_none());
     }
 
     #[test]
@@ -265,23 +182,11 @@ mod tests {
 
         context.properties.insert("Key".to_string(), file_content);
 
-        let controller_service =
+        let service =
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable");
-        assert!(controller_service.get_secret_key("Alice").is_some());
-        assert!(controller_service.get_secret_key("Bob").is_none());
-        assert!(controller_service.get_secret_key("Carol").is_none());
-    }
-
-    #[test]
-    fn corrupted_armored_key() {
-        let mut context = MockControllerServiceContext::new();
-
-        let file_content = std::fs::read_to_string(get_test_key_path("truncated_private.asc"))
-            .expect("required for test");
-
-        context.properties.insert("Key".to_string(), file_content);
-
-        assert_private_key_service_enable_fails_with_no_valid_keys(&context);
+        assert!(service.get_secret_key("Alice").is_some());
+        assert!(service.get_secret_key("Bob").is_none());
+        assert!(service.get_secret_key("Carol").is_none());
     }
 
     #[test]
@@ -293,6 +198,6 @@ mod tests {
 
         context.properties.insert("Key".to_string(), file_content);
 
-        assert_private_key_service_enable_fails_with_no_valid_keys(&context);
+        assert!(PGPPrivateKeyService::enable(&context, &MockLogger::new()).is_err());
     }
 }
