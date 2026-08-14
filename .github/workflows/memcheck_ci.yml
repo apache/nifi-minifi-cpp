@@ -55,3 +55,22 @@ jobs:
           ulimit -c unlimited
           ctest -j$(nproc) -L memchecked -T memcheck
         working-directory: build
+      - name: check valgrind output
+        id: check
+        run: |
+          nonempty_valgrind_outputs=$(find Testing/Temporary -maxdepth 1 -name 'MemoryChecker.*.log' -size +0 -print)
+          if [ -n "$nonempty_valgrind_outputs" ]; then
+            echo "::error::Valgrind reported issues in one or more tests."
+            exit 1
+          fi
+          echo "Valgrind report is clean."
+        working-directory: build
+      - name: upload memcheck logs
+        if: ${{ failure() && steps.check.conclusion == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: memcheck-logs
+          path: |
+            build/Testing/Temporary/MemoryChecker.*.log
+            build/Testing/Temporary/LastDynamicAnalysis_*.log
+          if-no-files-found: ignore

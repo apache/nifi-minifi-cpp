@@ -795,6 +795,7 @@ if (NOT SKIP_TESTS)
     enable_testing()
     set(BUILD_TESTING ON)
     set(CTEST_NEW_FORMAT true)
+    set(MEMORYCHECK_SUPPRESSIONS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/valgrind.supp" CACHE FILEPATH "Valgrind suppression file")
     include(CTest)
     include(BuildTests)
 

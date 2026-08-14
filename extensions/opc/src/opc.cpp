@@ -114,13 +114,20 @@ core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
 Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
                const std::vector<std::vector<char>>& trust_buffers)
-    : client_(UA_Client_new()),
-      use_encryption_(!cert_buffer.empty()) {
+    : use_encryption_(!cert_buffer.empty()) {
+  minifi_ua_logger_ = {logFunc, logger.get(), [](UA_Logger*){}};
+
+  // Build the config with our logger pre-installed so that open62541 doesn't allocate a default stdout logger (as it would with UA_Client_new).
+  UA_ClientConfig config{};
+  config.logging = &minifi_ua_logger_;
+
   if (!use_encryption_) {
-    UA_ClientConfig_setDefault(UA_Client_getConfig(client_));
+    if (UA_StatusCode sc = UA_ClientConfig_setDefault(&config); sc != UA_STATUSCODE_GOOD) {
+      UA_ClientConfig_clear(&config);
+      throw OPCException(GENERAL_EXCEPTION, std::string("Failed to configure the OPC UA client: ") + UA_StatusCode_name(sc));
+    }
   } else {
-    UA_ClientConfig *cc = UA_Client_getConfig(client_);
-    cc->securityMode = UA_MESSAGESECURITYMODE_SIGNANDENCRYPT;
+    config.securityMode = UA_MESSAGESECURITYMODE_SIGNANDENCRYPT;
 
     // Certificate
     UA_ByteString cert_byte_string = UA_STRING_NULL;
@@ -143,7 +150,7 @@ Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::
       trust_list[i].data = reinterpret_cast<UA_Byte*>(UA_malloc(trust_list[i].length * sizeof(UA_Byte)));  // NOLINT(cppcoreguidelines-owning-memory)
       memcpy(trust_list[i].data, trust_buffers[i].data(), trust_list[i].length);
     }
-    UA_StatusCode sc = UA_ClientConfig_setDefaultEncryption(cc, cert_byte_string, key_byte_string,
+    UA_StatusCode sc = UA_ClientConfig_setDefaultEncryption(&config, cert_byte_string, key_byte_string,
                                                             trust_list.data(), trust_buffers.size(),
                                                             nullptr, 0);
     UA_ByteString_clear(&cert_byte_string);
@@ -153,20 +160,22 @@ Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::
     }
     if (sc != UA_STATUSCODE_GOOD) {
       logger->log_error("Configuring the client for encryption failed: {}", UA_StatusCode_name(sc));
-      UA_Client_delete(client_);
-      throw OPCException(GENERAL_EXCEPTION, std::string("Failed to created client with the provided encryption settings: ") + UA_StatusCode_name(sc));
+      UA_ClientConfig_clear(&config);
+      throw OPCException(GENERAL_EXCEPTION, std::string("Failed to create the OPC UA client with the provided encryption settings: ") + UA_StatusCode_name(sc));
     }
   }
 
-  minifi_ua_logger_ = {logFunc, logger.get(), [](UA_Logger*){}};
-
-  UA_ClientConfig *config_ptr = UA_Client_getConfig(client_);
-  config_ptr->logging = &minifi_ua_logger_;
-  config_ptr->allowNonePolicyPassword = true;
+  config.allowNonePolicyPassword = true;
 
   if (!application_uri.empty()) {
-    UA_String_clear(&config_ptr->clientDescription.applicationUri);
-    config_ptr->clientDescription.applicationUri = UA_STRING_ALLOC(application_uri.c_str());
+    UA_String_clear(&config.clientDescription.applicationUri);
+    config.clientDescription.applicationUri = UA_STRING_ALLOC(application_uri.c_str());
+  }
+
+  client_ = UA_Client_newWithConfig(&config);
+  if (client_ == nullptr) {
+    UA_ClientConfig_clear(&config);
+    throw OPCException(GENERAL_EXCEPTION, "Failed to allocate the OPC UA client");
   }
 
   logger_ = logger;
