@@ -1,17 +1,18 @@
 use super::PGPPublicKeyService;
+use crate::controller_services::key_file_property::PublicKeyFile;
+use crate::controller_services::key_property::PublicKey;
 use minifi_native::{
     ControllerServiceDefinition, Property, PropertyDefinition, ProvidedInterface,
     property_definitions,
 };
-use std::path::PathBuf;
 
-pub(crate) const KEYRING_FILE: Property<Option<PathBuf>> = Property::new(
+pub(crate) const KEYRING_FILE: Property<Option<PublicKeyFile>> = Property::new(
     "Keyring File",
     "File path to PGP Keyring or Secret Key encoded in binary or ASCII Armor",
 )
 .supports_expression_language();
 
-pub(crate) const KEYRING: Property<Option<String>> = Property::new(
+pub(crate) const KEYRING: Property<Option<PublicKey>> = Property::new(
     "Keyring",
     "PGP Keyring or Secret Key encoded in ASCII Armor",
 )
