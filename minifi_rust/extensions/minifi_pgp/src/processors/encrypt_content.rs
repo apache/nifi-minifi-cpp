@@ -164,7 +164,7 @@ mod tests {
             "minifi_pgp::processors::encrypt_content::EncryptContentPGP"
         );
         assert_eq!(EncryptContentPGP::GROUP_NAME, "minifi_pgp");
-        assert_eq!(EncryptContentPGP::VERSION, "0.1.0");
+        assert_eq!(EncryptContentPGP::VERSION, "1.0.0");
     }
 
     #[test]

@@ -39,7 +39,7 @@ impl Schedule for DecryptContentPGP {
         let symmetric_password = context.get_property(&SYMMETRIC_PASSWORD)?;
         let has_context_service = context.get_raw_property(&PRIVATE_KEY_SERVICE)?.is_some();
         if !has_context_service && symmetric_password.is_none() {
-            Err(MinifiError::custom(
+            Err(MinifiError::validation(
                 "Either Symmetric Password or Private Key Service must be set",
             ))
         } else {
@@ -139,7 +139,7 @@ mod tests {
             "minifi_pgp::processors::decrypt_content::DecryptContentPGP"
         );
         assert_eq!(DecryptContentPGP::GROUP_NAME, "minifi_pgp");
-        assert_eq!(DecryptContentPGP::VERSION, "0.1.0");
+        assert_eq!(DecryptContentPGP::VERSION, "1.0.0");
     }
 
     #[test]
