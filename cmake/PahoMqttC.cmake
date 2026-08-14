@@ -24,7 +24,7 @@ set(PAHO_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
 set(PAHO_HIGH_PERFORMANCE ON CACHE BOOL "" FORCE)
 
-set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/cmake-openssl.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/all/patches/cmake-openssl.patch")
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
         (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\")")
 
