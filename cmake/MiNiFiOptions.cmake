@@ -120,7 +120,7 @@ add_minifi_option(ENABLE_CONTROLLER "Enables the build of MiNiFi controller bina
 add_minifi_option(ENABLE_LLAMACPP "Enables llama.cpp support." ON)
 add_minifi_option(ENABLE_OPC "Instructs the build system to enable the OPC extension" ON)
 add_minifi_option(MINIFI_RUST "Enables the build of rust based extensions." OFF)
-add_minifi_option(MINIFI_LMDB "Enables the LMDB extension." ON)
+add_minifi_option(MINIFI_LMDB "Enables the LMDB extension." OFF)
 
 set_minifi_cache_variable(CUSTOM_MALLOC OFF "Overwrite malloc implementation.")
 set_property(CACHE CUSTOM_MALLOC PROPERTY STRINGS "jemalloc" "mimalloc" "rpmalloc" OFF)

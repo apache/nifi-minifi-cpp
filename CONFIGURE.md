@@ -625,7 +625,7 @@ The Flow File Repository can be configured with the `nifi.flowfile.repository.cl
     # in minifi.properties
     nifi.flowfile.repository.class.name=NoOpRepository  # VolatileFlowFileRepository can also be used which is an alias for NoOpRepository
 
-The Content Repository can be configured with the `nifi.content.repository.class.name` property. If not specified, it uses the `DatabaseContentRepository` class by default, which persists the content in a RocksDB database. `DatabaseContentRepository` is also the default value specified in the minifi.properties file. Alternatively it can be configured to use a `VolatileContentRepository` that keeps the state in memory (so the state gets lost upon restart), the `FileSystemRepository` to keep the state in regular files, or `LmdbContentRepository` that uses LMDB database as an alternative to RocksDB.
+The Content Repository can be configured with the `nifi.content.repository.class.name` property. If not specified, it uses the `DatabaseContentRepository` class by default, which persists the content in a RocksDB database. `DatabaseContentRepository` is also the default value specified in the minifi.properties file. Alternatively it can be configured to use a `VolatileContentRepository` that keeps the state in memory (so the state gets lost upon restart), the `FileSystemRepository` to keep the state in regular files, or `LmdbContentRepository` (experimental) that uses LMDB database as an alternative to RocksDB.
 
 **NOTE:** RocksDB database has a limit of 4GB for the size of a database object. Due to this if you expect to process larger flow files than 4GB you should use the `FileSystemRepository`. The downside of using `FileSystemRepository` is that it does not have the transactional guarantees of the RocksDB repository implementation.
 
@@ -746,6 +746,8 @@ RocksDB options can also be overridden for a specific repository using the `nifi
     nifi.state.storage.rocksdb.options.use_direct_io_for_flush_and_compaction=false
 
 ### Configuring LMDB content repository
+
+Note: LMDB repository is currently experimental
 
 There is an alternative content repository that can be used: the LMDB database. When `LmdbContentRepository` is set, LMDB is used for storing content, which is a memory-mapped, fast (especially for reads), low-footprint, key-value database. It can be a good alternative on memory-limited edge devices, but each use case should be evaluated separately. The caveats of using this database are the following:
 
