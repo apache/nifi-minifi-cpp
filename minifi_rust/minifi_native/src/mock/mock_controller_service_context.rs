@@ -24,9 +24,9 @@ pub struct MockControllerServiceContext {
 }
 
 impl GetProperty for MockControllerServiceContext {
-    fn get_raw_property<K: PropertySchema + ?Sized>(
+    fn get_raw_property<P: PropertySchema + ?Sized>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
     ) -> Result<Option<String>, MinifiError> {
         self.properties.get_property(property, None)
     }

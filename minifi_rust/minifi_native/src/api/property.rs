@@ -114,7 +114,7 @@ impl<P: ?Sized + PropertySchema> Property<P> {
         }
     }
 
-    pub(crate) const fn with_marker<K2: ?Sized + PropertySchema>(&self) -> Property<K2> {
+    pub(crate) const fn with_marker<P2: ?Sized + PropertySchema>(&self) -> Property<P2> {
         Property {
             name: self.name,
             description: self.description,

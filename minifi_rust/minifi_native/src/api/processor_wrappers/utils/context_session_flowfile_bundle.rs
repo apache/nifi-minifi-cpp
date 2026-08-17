@@ -54,9 +54,9 @@ where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
 {
-    fn get_raw_property<K: PropertySchema + ?Sized>(
+    fn get_raw_property<P: PropertySchema + ?Sized>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
     ) -> Result<Option<String>, MinifiError> {
         self.context.get_raw_property(property, self.flow_file)
     }
@@ -67,12 +67,12 @@ where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
 {
-    fn get_controller_service<K>(
+    fn get_controller_service<P>(
         &self,
-        property: &Property<K>,
-    ) -> Result<K::Output<'_>, MinifiError>
+        property: &Property<P>,
+    ) -> Result<P::Output<'_>, MinifiError>
     where
-        K: ControllerServiceValue + ?Sized,
+        P: ControllerServiceValue + ?Sized,
     {
         GetControllerService::get_controller_service(self.context, property)
     }

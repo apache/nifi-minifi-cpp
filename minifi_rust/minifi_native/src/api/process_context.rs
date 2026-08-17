@@ -24,19 +24,19 @@ use crate::{ControllerServiceApi, EnableControllerService, GetProperty, MinifiEr
 pub trait ProcessContext {
     type FlowFile: FlowFile;
 
-    fn get_raw_property<K: PropertySchema + ?Sized>(
+    fn get_raw_property<P: PropertySchema + ?Sized>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
         flow_file: Option<&Self::FlowFile>,
     ) -> Result<Option<String>, MinifiError>;
 
-    fn get_raw_controller_service<Cs, K>(
+    fn get_raw_controller_service<Cs, P>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
     ) -> Result<Option<&Cs>, MinifiError>
     where
         Cs: RawControllerService + ComponentIdentifier + 'static,
-        K: PropertySchema + ?Sized;
+        P: PropertySchema + ?Sized;
 
     fn get_controller_service<Cs>(
         &self,
@@ -57,9 +57,9 @@ impl<S> GetProperty for S
 where
     S: ProcessContext,
 {
-    fn get_raw_property<K: PropertySchema + ?Sized>(
+    fn get_raw_property<P: PropertySchema + ?Sized>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
     ) -> Result<Option<String>, MinifiError> {
         self.get_raw_property(property, None)
     }
@@ -69,15 +69,15 @@ impl<S> GetControllerService for S
 where
     S: ProcessContext,
 {
-    fn get_controller_service<K>(
+    fn get_controller_service<P>(
         &self,
-        property: &Property<K>,
-    ) -> Result<K::Output<'_>, MinifiError>
+        property: &Property<P>,
+    ) -> Result<P::Output<'_>, MinifiError>
     where
-        K: ControllerServiceValue + ?Sized,
+        P: ControllerServiceValue + ?Sized,
     {
-        let cs_property = property.with_marker::<K::Cs>();
-        let service = ProcessContext::get_controller_service::<K::Cs>(self, &cs_property)?;
-        K::from_service(service, property.name)
+        let cs_property = property.with_marker::<P::Cs>();
+        let service = ProcessContext::get_controller_service::<P::Cs>(self, &cs_property)?;
+        P::from_service(service, property.name)
     }
 }

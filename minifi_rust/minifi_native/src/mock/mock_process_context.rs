@@ -55,9 +55,9 @@ impl MockPropertyMap {
 }
 
 impl MockPropertyMap {
-    pub fn get_property<K: PropertySchema + ?Sized>(
+    pub fn get_property<P: PropertySchema + ?Sized>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
         _flow_file: Option<&MockFlowFile>,
     ) -> Result<Option<String>, MinifiError> {
         if let Some(value) = self.properties.get(property.name) {
@@ -79,21 +79,21 @@ pub struct MockProcessContext {
 impl ProcessContext for MockProcessContext {
     type FlowFile = MockFlowFile;
 
-    fn get_raw_property<K: PropertySchema + ?Sized>(
+    fn get_raw_property<P: PropertySchema + ?Sized>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
         _flow_file: Option<&Self::FlowFile>,
     ) -> Result<Option<String>, MinifiError> {
         self.properties.get_property(property, _flow_file)
     }
 
-    fn get_raw_controller_service<Cs, K>(
+    fn get_raw_controller_service<Cs, P>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
     ) -> Result<Option<&Cs>, MinifiError>
     where
         Cs: RawControllerService + ComponentIdentifier + 'static,
-        K: PropertySchema + ?Sized,
+        P: PropertySchema + ?Sized,
     {
         // Mirror `get_controller_service`: resolve the property to a
         // service name and downcast the registered `Box<dyn Any>`.

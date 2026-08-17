@@ -65,9 +65,9 @@ unsafe extern "C" fn get_property_callback(
 
 impl<'a> ProcessContext for CffiProcessContext<'a> {
     type FlowFile = CffiFlowFile<'a>; // FlowFile shouldn't outlive the ProcessContext
-    fn get_raw_property<K: PropertySchema + ?Sized>(
+    fn get_raw_property<P: PropertySchema + ?Sized>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
         flow_file: Option<&Self::FlowFile>,
     ) -> Result<Option<String>, MinifiError> {
         let ff_ptr = flow_file.map_or(std::ptr::null_mut(), |ff| ff.get_ptr());
@@ -94,13 +94,13 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
         }
     }
 
-    fn get_raw_controller_service<Cs, K>(
+    fn get_raw_controller_service<Cs, P>(
         &self,
-        property: &Property<K>,
+        property: &Property<P>,
     ) -> Result<Option<&'a Cs>, MinifiError>
     where
         Cs: ComponentIdentifier + 'static,
-        K: PropertySchema + ?Sized,
+        P: PropertySchema + ?Sized,
     {
         let str_view = StringView::new(property.name);
 
