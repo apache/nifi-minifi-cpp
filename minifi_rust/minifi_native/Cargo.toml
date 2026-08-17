@@ -13,6 +13,7 @@ strum_macros = "0.28.0"
 humantime = "2.3.0"
 byte-unit = "5.1.6"
 itertools = "0.14.0"
+anyhow = "1.0.104"
 
 [features]
 test-utils = []

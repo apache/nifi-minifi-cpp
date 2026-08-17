@@ -24,18 +24,6 @@ use std::fmt;
 use std::num::{NonZeroU32, ParseFloatError, ParseIntError};
 use std::str::ParseBoolError;
 
-#[derive(Debug, Clone)]
-pub enum ParseError {
-    Strum(strum::ParseError),
-    Bool(ParseBoolError),
-    Int(ParseIntError),
-    Duration(humantime::DurationError),
-    Size(byte_unit::ParseError),
-    Nul(NulError),
-    Float(ParseFloatError),
-    Other,
-}
-
 #[derive(Debug)]
 pub struct RouteError {
     pub relationship: Cow<'static, str>,
@@ -168,7 +156,6 @@ pub enum MinifiError {
     UnscheduledProcessor,
     ValidationError(Cow<'static, str>),
     CustomError(Cow<'static, str>),
-    Parse(ParseError),
     MissingFlowFileError,
     IoError(std::io::Error),
 
@@ -181,51 +168,37 @@ impl From<std::io::Error> for MinifiError {
     }
 }
 
-impl From<strum::ParseError> for MinifiError {
-    fn from(err: strum::ParseError) -> Self {
-        MinifiError::Parse(ParseError::Strum(err))
-    }
+macro_rules! minifi_error_from_validation {
+    ($($t:ty),* $(,)?) => {
+        $(
+            impl From<$t> for MinifiError {
+                fn from(err: $t) -> Self {
+                    MinifiError::ValidationError(err.to_string().into())
+                }
+            }
+        )*
+    };
 }
 
-impl From<ParseBoolError> for MinifiError {
-    fn from(err: ParseBoolError) -> Self {
-        MinifiError::Parse(ParseError::Bool(err))
-    }
-}
-
-impl From<ParseIntError> for MinifiError {
-    fn from(err: ParseIntError) -> Self {
-        MinifiError::Parse(ParseError::Int(err))
-    }
-}
-
-impl From<humantime::DurationError> for MinifiError {
-    fn from(err: humantime::DurationError) -> Self {
-        MinifiError::Parse(ParseError::Duration(err))
-    }
-}
-
-impl From<byte_unit::ParseError> for MinifiError {
-    fn from(err: byte_unit::ParseError) -> Self {
-        MinifiError::Parse(ParseError::Size(err))
-    }
-}
-
-impl From<NulError> for MinifiError {
-    fn from(err: NulError) -> Self {
-        MinifiError::Parse(ParseError::Nul(err))
-    }
-}
-
-impl From<ParseFloatError> for MinifiError {
-    fn from(err: ParseFloatError) -> Self {
-        MinifiError::Parse(ParseError::Float(err))
-    }
-}
+minifi_error_from_validation!(
+    strum::ParseError,
+    ParseBoolError,
+    ParseIntError,
+    humantime::DurationError,
+    byte_unit::ParseError,
+    NulError,
+    ParseFloatError,
+);
 
 impl From<std::convert::Infallible> for MinifiError {
     fn from(_: std::convert::Infallible) -> Self {
         unreachable!("Infallible errors can never happen")
+    }
+}
+
+impl From<anyhow::Error> for MinifiError {
+    fn from(err: anyhow::Error) -> Self {
+        Self::other(err)
     }
 }
 
@@ -241,9 +214,6 @@ impl MinifiError {
             MinifiError::ValidationError(_) => {
                 minifi_native_sys::minifi_status_MINIFI_STATUS_VALIDATION_FAILED
             }
-            MinifiError::Parse(_) => {
-                minifi_native_sys::minifi_status_MINIFI_STATUS_VALIDATION_FAILED
-            }
             MinifiError::StatusError((_, ecode)) => u32::from(*ecode),
             _ => minifi_native_sys::minifi_status_MINIFI_STATUS_UNKNOWN_ERROR,
         }
@@ -255,10 +225,6 @@ impl MinifiError {
 
     pub fn custom<S: Into<Cow<'static, str>>>(msg: S) -> Self {
         MinifiError::CustomError(msg.into())
-    }
-
-    pub fn parse_err() -> Self {
-        MinifiError::Parse(ParseError::Other)
     }
 
     pub fn other<E>(err: E) -> Self
@@ -294,6 +260,7 @@ impl fmt::Display for MinifiError {
                 _ => write!(f, "{} (Unknown Status Code: {})", context, code),
             },
             MinifiError::Other(err) => write!(f, "Custom error: {}", err),
+            MinifiError::ValidationError(msg) => write!(f, "{}", msg),
             _ => write!(f, "{:?}", self),
         }
     }
