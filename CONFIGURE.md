@@ -620,7 +620,7 @@ Apache MiNiFi C++ uses three repositories similarly to Apache NiFi:
 
 The underlying implementation to use for these repositories can be configured in the minifi.properties file.
 
-The Flow File Repository can be configured with the `nifi.flowfile.repository.class.name` property. If not specified, it uses the `FlowFileRepository` class by default, which stores the flow file metadata in a RocksDB database. Alternatively it can be configured to use a `NoOpRepository` for not keeping any state, flow files are only stored in memory while being transferred between processors. Another option is using `LmdbFlowFileRepository` to use LMDB database to store flow file metadata.
+The Flow File Repository can be configured with the `nifi.flowfile.repository.class.name` property. If not specified, it uses the `FlowFileRepository` class by default, which stores the flow file metadata in a RocksDB database. Alternatively it can be configured to use a `NoOpRepository` for not keeping any state, flow files are only stored in memory while being transferred between processors. Another option is using `LmdbFlowFileRepository` to use LMDB database to store flow file metadata (Note: `LmdbFlowFileRepository` is currently experimental).
 
     # in minifi.properties
     nifi.flowfile.repository.class.name=NoOpRepository  # VolatileFlowFileRepository can also be used which is an alias for NoOpRepository
