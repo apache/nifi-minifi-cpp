@@ -138,7 +138,7 @@ impl FlowFileStreamTransform for EncryptContentPGP {
         let file_name = context
             .get_attribute("filename")?
             .unwrap_or(context.get_id()?);
-        let public_key = Self::get_public_key(context)?;
+        let public_key = Self::get_public_key(context).route_err_to_failure()?;
 
         self.encrypt_bytes(input_stream, output_stream, public_key, file_name)
             .route_err_to_failure()?;
