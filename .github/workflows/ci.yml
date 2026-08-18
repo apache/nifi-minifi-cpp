@@ -17,8 +17,17 @@ env:
     -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DENABLE_LLAMACPP=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON -DMINIFI_RUST=OFF -DDOCKER_USE_CONAN=ON \
     -DDOCKER_NIFI_CONAN_USER=${{ secrets.CONAN_USERNAME }} -DDOCKER_NIFI_CONAN_PASSWORD=${{ secrets.CONAN_ACCESS_TOKEN }}
 jobs:
+  check_trigger:
+    if: >-
+      github.event_name != 'push' || 
+      github.repository != 'apache/nifi-minifi-cpp' || 
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Workflow allowed to run!"
   macos_xcode:
     name: "macOS 26 aarch64"
+    needs: check_trigger
     runs-on: macos-26
     timeout-minutes: 240
     env:
@@ -130,6 +139,7 @@ jobs:
           path: build/bin
   windows_VS2022:
     name: "Windows Server 2025 x86_64"
+    needs: check_trigger
     runs-on: windows-2025
     timeout-minutes: 300
     env:
@@ -249,6 +259,7 @@ jobs:
         run: sccache --show-stats
   ubuntu_22_04_clang_arm:
     name: "Ubuntu 22.04 clang aarch64"
+    needs: check_trigger
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 240
     env:
@@ -419,6 +430,7 @@ jobs:
           path: build/bin
   rocky:
     name: "Rocky (docker) x86_64"
+    needs: check_trigger
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     steps:
@@ -489,6 +501,7 @@ jobs:
           path: /tmp/bin
   docker_build:
     name: "Docker build for integration tests (x86_64)"
+    needs: check_trigger
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     steps:
@@ -637,6 +650,7 @@ jobs:
           path: minifi_rust/minifi_rs_behave/output
   linters:
     name: "C++ lint + Shellcheck + Flake8 + Cargo fmt check + Clippy check"
+    needs: check_trigger
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 15
     steps:
