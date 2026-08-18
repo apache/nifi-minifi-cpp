@@ -43,5 +43,5 @@ Feature: ForkEnrichment and JoinEnrichmentAttributes
     And LogAttribute's success relationship is auto-terminated
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "key:enrichment.role value:JOINED" in less than 10 seconds
-    And the Minifi logs contain the following message: "key:extra_prop value:foo" in less than 1 seconds
-    And the Minifi logs contain the following message: "original_content" in less than 1 seconds
+    And the Minifi logs contain the following message: "key:extra_prop value:foo" in less than 1 second
+    And the Minifi logs contain the following message: "original_content" in less than 1 second

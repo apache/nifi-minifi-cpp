@@ -17,5 +17,7 @@
 
 #pragma once
 
+#include <string_view>
+
 constexpr std::string_view ENRICHMENT_ROLE = "enrichment.role";
 constexpr std::string_view ENRICHMENT_GROUP_ID = "enrichment.group.id";

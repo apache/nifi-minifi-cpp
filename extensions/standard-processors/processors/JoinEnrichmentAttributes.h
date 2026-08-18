@@ -17,8 +17,16 @@
 
 #pragma once
 
+#include <array>
+#include <chrono>
+#include <deque>
+#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "core/FlowFileStore.h"
 #include "core/ProcessorImpl.h"
@@ -65,7 +73,7 @@ class TimeOutTracker {
 };
 }  // namespace join_enrichment_attributes
 
-using MapType = std::unordered_map<std::string, std::shared_ptr<core::FlowFile>, utils::string::transparent_string_hash, std::equal_to<>>;
+using StoredFlowFileMap = std::unordered_map<std::string, std::shared_ptr<core::FlowFile>, utils::string::transparent_string_hash, std::equal_to<>>;
 
 class JoinEnrichmentAttributes : public core::ProcessorImpl {
  public:
@@ -129,11 +137,11 @@ class JoinEnrichmentAttributes : public core::ProcessorImpl {
 
   core::FlowFileStore flow_file_store_;
   // We need to track current session's FlowFiles (we cant add those)
-  std::vector<utils::Identifier> session_flow_files_;
+  std::unordered_set<utils::Identifier> session_flow_files_;
 
   std::optional<join_enrichment_attributes::TimeOutTracker> time_out_tracker_;
-  MapType originals_;
-  MapType enrichments_;
+  StoredFlowFileMap originals_;
+  StoredFlowFileMap enrichments_;
   std::optional<uint64_t> max_batch_size_;
 };
 }  // namespace org::apache::nifi::minifi::standard
