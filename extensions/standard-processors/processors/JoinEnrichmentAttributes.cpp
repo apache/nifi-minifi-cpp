@@ -101,7 +101,7 @@ void JoinEnrichmentAttributes::handleFlowFile(std::shared_ptr<core::FlowFile> fl
   }
 
   if (const auto pair_node = pair_map.extract(group_id)) {
-    logger_->log_trace("Match found");
+    logger_->log_trace("Match found for {}", group_id);
     auto [original,
         enrichment] = (*role == EnrichmentRole::ORIGINAL) ? std::tie(flow_file, pair_node.mapped()) : std::tie(pair_node.mapped(), flow_file);
     join(original, enrichment, session);
@@ -122,7 +122,7 @@ void JoinEnrichmentAttributes::onTrigger(core::ProcessContext&, core::ProcessSes
   }
   uint64_t processed = 0;
   while (auto flow_file = session.get()) {
-    session_flow_files_.push_back(flow_file->getUUID());
+    session_flow_files_.insert(flow_file->getUUID());
     handleFlowFile(std::move(flow_file), session, current_time);
     if (max_batch_size_ && ++processed >= max_batch_size_) {
       break;
@@ -131,7 +131,7 @@ void JoinEnrichmentAttributes::onTrigger(core::ProcessContext&, core::ProcessSes
 
   if (time_out_tracker_) {
     for (auto timed_out_group : time_out_tracker_->getTimedOutFlowFiles(current_time)) {
-      const auto removeFromMap = [&](MapType& map) {
+      const auto removeFromMap = [&](StoredFlowFileMap& map) {
         if (auto timed_out_node = map.extract(timed_out_group)) {
           // Fresh FlowFiles shouldn't time out (we only use a single time_point per session)
           gsl_AssertAudit(!std::ranges::contains(session_flow_files_, timed_out_node.mapped()->getUUID()));

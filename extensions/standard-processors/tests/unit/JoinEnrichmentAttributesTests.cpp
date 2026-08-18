@@ -15,6 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <thread>
+
 #include "JoinEnrichmentAttributes.h"
 #include "unit/Catch.h"
 #include "unit/ProcessorUtils.h"
@@ -119,13 +122,15 @@ TEST_CASE("JoinEnrichmentAttributes test timeout") {
 }
 
 TEST_CASE("JoinEnrichmentAttributes no max batch size") {
-  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<JoinEnrichmentAttributes>("JoinEnrichmentAttributes"));
+  minifi::test::SingleProcessorTestController
+      test_controller(minifi::test::utils::make_processor<JoinEnrichmentAttributes>("JoinEnrichmentAttributes"));
   const auto trigger_result = test_controller.trigger({{.content = "one"}, {.content = "two"}, {.content = "three"}});
   REQUIRE(trigger_result.at(JoinEnrichmentAttributes::Invalid).size() == 3);
 }
 
 TEST_CASE("JoinEnrichmentAttributes max batch size 2") {
-  minifi::test::SingleProcessorTestController test_controller(minifi::test::utils::make_processor<JoinEnrichmentAttributes>("JoinEnrichmentAttributes"));
+  minifi::test::SingleProcessorTestController
+      test_controller(minifi::test::utils::make_processor<JoinEnrichmentAttributes>("JoinEnrichmentAttributes"));
   const auto proc = test_controller.getProcessor();
   CHECK(test_controller.plan->setProperty(proc, JoinEnrichmentAttributes::MaxBatchSize.name, "2"));
   const auto trigger_result = test_controller.trigger({{.content = "one"}, {.content = "two"}, {.content = "three"}});
