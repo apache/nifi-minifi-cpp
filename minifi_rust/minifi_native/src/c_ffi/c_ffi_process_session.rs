@@ -541,15 +541,15 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 &mut ctx as *mut _ as *mut c_void,
             );
 
-            if let Some(result) = ctx.result.take() {
-                return result;
-            }
-
             if status != minifi_status_MINIFI_STATUS_SUCCESS {
                 return Err(MinifiError::StatusError((
                     "minifi_process_session_read".into(),
                     NonZeroU32::new_unchecked(status), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
                 )));
+            }
+
+            if let Some(result) = ctx.result.take() {
+                return result;
             }
 
             Err(MinifiError::UnknownError)

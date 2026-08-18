@@ -259,7 +259,7 @@ impl fmt::Display for MinifiError {
                 }
                 _ => write!(f, "{} (Unknown Status Code: {})", context, code),
             },
-            MinifiError::Other(err) => write!(f, "Custom error: {}", err),
+            MinifiError::Other(err) => write!(f, "{}", err),
             MinifiError::ValidationError(msg) => write!(f, "{}", msg),
             _ => write!(f, "{:?}", self),
         }
