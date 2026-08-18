@@ -26,6 +26,7 @@ use crate::{
 };
 use std::borrow::Cow;
 
+#[derive(Debug)]
 pub struct TransformStreamResult {
     target_relationship_name: Cow<'static, str>,
     attributes_to_add: Vec<FlowFileAttribute>,
@@ -60,7 +61,7 @@ impl TransformStreamResult {
     pub fn get_attribute(&self, name: &str) -> Option<&str> {
         self.attributes_to_add
             .iter()
-            .find(|(k, _)| k == name)
+            .rfind(|(k, _)| k == name)
             .map(|(_, v)| v.as_ref())
     }
 
