@@ -81,7 +81,7 @@ impl<'a> TransformedFlowFile<'a> {
     pub fn attribute(&self, name: &str) -> Option<&str> {
         self.attributes_to_add
             .iter()
-            .find(|(k, _)| k == name)
+            .rfind(|(k, _)| k == name)
             .map(|(_, v)| v.as_ref())
     }
 
