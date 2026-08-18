@@ -34,19 +34,11 @@ def setup_prometheus_server_with_ssl(context: MinifiTestContext):
     context.containers["prometheus"] = PrometheusContainer(context, ssl=True)
 
 
-@then(
-    '"{metric_class}" are published to the Prometheus server in less than {timeout_seconds:d} seconds'
-)
-@then(
-    '"{metric_class}" is published to the Prometheus server in less than {timeout_seconds:d} seconds'
-)
-def verify_metric_class_published_to_prometheus(
-    context: MinifiTestContext, metric_class: str, timeout_seconds: int
-):
+@then('"{metric_class}" are published to the Prometheus server in less than {timeout_seconds:d} seconds')
+@then('"{metric_class}" is published to the Prometheus server in less than {timeout_seconds:d} seconds')
+def verify_metric_class_published_to_prometheus(context: MinifiTestContext, metric_class: str, timeout_seconds: int):
     assert wait_for_condition(
-        condition=lambda: context.containers[
-            "prometheus"
-        ].check_metric_class_on_prometheus(metric_class),
+        condition=lambda: context.containers["prometheus"].check_metric_class_on_prometheus(metric_class),
         timeout_seconds=timeout_seconds,
         bail_condition=lambda: context.containers["prometheus"].exited,
         context=context,
@@ -63,9 +55,9 @@ def verify_processor_metric_published_to_prometheus(
     processor_name: str,
 ):
     assert wait_for_condition(
-        condition=lambda: context.containers[
-            "prometheus"
-        ].check_processor_metric_on_prometheus(metric_class, processor_name),
+        condition=lambda: context.containers["prometheus"].check_processor_metric_on_prometheus(
+            metric_class, processor_name
+        ),
         timeout_seconds=timeout_seconds,
         bail_condition=lambda: context.containers["prometheus"].exited,
         context=context,
@@ -78,9 +70,7 @@ def verify_all_prometheus_metric_types_defined_once(context: MinifiTestContext):
 
 
 def _enable_prometheus(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.metrics.publisher.agent.identifier", "Agent1"
-    )
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.agent.identifier", "Agent1")
     context.get_or_create_default_minifi_container().set_property(
         "nifi.metrics.publisher.PrometheusMetricsPublisher.port", "9936"
     )

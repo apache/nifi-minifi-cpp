@@ -47,19 +47,13 @@ class GrafanaLokiContainer(LinuxContainer):
             )
 
             root_ca_content = dump_cert(test_context.root_ca_cert)
-            self.files.append(
-                File("/etc/loki/root_ca.crt", root_ca_content, permissions=0o644)
-            )
+            self.files.append(File("/etc/loki/root_ca.crt", root_ca_content, permissions=0o644))
 
             grafana_loki_cert_content = dump_cert(grafana_loki_cert)
-            self.files.append(
-                File("/etc/loki/cert.pem", grafana_loki_cert_content, permissions=0o644)
-            )
+            self.files.append(File("/etc/loki/cert.pem", grafana_loki_cert_content, permissions=0o644))
 
             grafana_loki_key_content = dump_key(grafana_loki_key)
-            self.files.append(
-                File("/etc/loki/key.pem", grafana_loki_key_content, permissions=0o644)
-            )
+            self.files.append(File("/etc/loki/key.pem", grafana_loki_key_content, permissions=0o644))
 
             extra_ssl_settings = """
   http_tls_config:
@@ -158,9 +152,7 @@ analytics:
         )
 
     @retry_check()
-    def are_lines_present(
-        self, lines: str, timeout: int, ssl: bool, tenant_id: str = ""
-    ) -> bool:
+    def are_lines_present(self, lines: str, timeout: int, ssl: bool, tenant_id: str = "") -> bool:
         try:
             self.client.containers.run(
                 "minifi-grafana-loki-helper:latest",
@@ -180,22 +172,12 @@ analytics:
             )
             return True
         except ContainerError as e:
-            stdout = (
-                e.stdout.decode("utf-8", errors="replace")
-                if hasattr(e, "stdout") and e.stdout
-                else ""
-            )
-            stderr = (
-                e.stderr.decode("utf-8", errors="replace")
-                if hasattr(e, "stderr") and e.stderr
-                else ""
-            )
+            stdout = e.stdout.decode("utf-8", errors="replace") if hasattr(e, "stdout") and e.stdout else ""
+            stderr = e.stderr.decode("utf-8", errors="replace") if hasattr(e, "stderr") and e.stderr else ""
             logger.error(
                 f"Failed to run python command in grafana loki helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'"
             )
             return False
         except Exception as e:
-            logger.error(
-                f"Unexpected error while running python command in grafana loki helper docker: '{e}'"
-            )
+            logger.error(f"Unexpected error while running python command in grafana loki helper docker: '{e}'")
             return False

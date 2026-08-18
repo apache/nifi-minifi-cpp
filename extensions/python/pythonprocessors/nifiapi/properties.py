@@ -304,11 +304,7 @@ class PythonPropertyValue:
         if not self.el_supported or not self.value:
             return self
 
-        getter = (
-            self.cpp_context.getDynamicProperty
-            if self.is_dynamic
-            else self.cpp_context.getProperty
-        )
+        getter = self.cpp_context.getDynamicProperty if self.is_dynamic else self.cpp_context.getProperty
         args = () if flow_file is None else (flow_file.cpp_flow_file,)
         new_string_value = getter(self.name, *args)
         return PythonPropertyValue(
@@ -325,9 +321,7 @@ class PythonPropertyValue:
             raise RuntimeError(
                 "Controller Service definition is not set, getProperty must be called with a property descriptor instead of string value"
             )
-        return self.cpp_context.getControllerService(
-            self.value, self.controller_service_definition
-        )
+        return self.cpp_context.getControllerService(self.value, self.controller_service_definition)
 
 
 class ProcessContext:
@@ -344,9 +338,7 @@ class ProcessContext:
             controller_service_definition = None
         else:
             property_name = descriptor.name
-            expression_language_support = (
-                descriptor.expressionLanguageScope != ExpressionLanguageScope.NONE
-            )
+            expression_language_support = descriptor.expressionLanguageScope != ExpressionLanguageScope.NONE
             controller_service_definition = descriptor.controllerServiceDefinition
         is_dynamic = False
         property_value = self.cpp_context.getRawProperty(property_name)
@@ -375,9 +367,7 @@ class ProcessContext:
 
         for property_descriptor in self.processor.getPropertyDescriptors():
             if property_descriptor.name in cpp_properties:
-                properties[property_descriptor] = cpp_properties[
-                    property_descriptor.name
-                ]
+                properties[property_descriptor] = cpp_properties[property_descriptor.name]
 
         return properties
 

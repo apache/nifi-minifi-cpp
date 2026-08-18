@@ -22,9 +22,7 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 class OPCUAServerContainer(LinuxContainer):
     IMAGE = "lordgamez/open62541:1.5.2"
 
-    def __init__(
-        self, test_context: MinifiTestContext, command: list[str] | None = None
-    ):
+    def __init__(self, test_context: MinifiTestContext, command: list[str] | None = None):
         super().__init__(
             OPCUAServerContainer.IMAGE,
             f"opcua-server-{test_context.scenario_id}",

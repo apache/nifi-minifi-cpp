@@ -24,21 +24,13 @@ from package_manager import PackageManager
 from system_dependency import install_required
 
 
-def install_dependencies(
-    minifi_options: MinifiOptions, package_manager: PackageManager
-) -> bool:
+def install_dependencies(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     res = install_required(minifi_options, package_manager)
-    print(
-        "Installation went smoothly"
-        if res
-        else "There were some error during installation"
-    )
+    print("Installation went smoothly" if res else "There were some error during installation")
     return res
 
 
-def export_custom_conan_recipes(
-    minifi_options: MinifiOptions, package_manager: PackageManager
-) -> bool:
+def export_custom_conan_recipes(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     thirdparty_dir = minifi_options.source_dir / "thirdparty"
     for root, _, files in os.walk(thirdparty_dir):
         for file in files:
@@ -50,9 +42,7 @@ def export_custom_conan_recipes(
 
                 version = next(iter(data["versions"]))
 
-                print(
-                    f"Exporting the custom Conan recipe {root} with version {version}"
-                )
+                print(f"Exporting the custom Conan recipe {root} with version {version}")
                 if not package_manager.run_cmd(
                     f'conan export "{root}" --version={version} --user=minifi --channel=develop'
                 ):
@@ -61,9 +51,7 @@ def export_custom_conan_recipes(
     return True
 
 
-def add_conan_options_from_cmake_options(
-    extension_options: list[str], minifi_options: MinifiOptions
-) -> str:
+def add_conan_options_from_cmake_options(extension_options: list[str], minifi_options: MinifiOptions) -> str:
     conan_options = ""
     for extension_option in extension_options:
         if minifi_options.bool_options[extension_option.upper()].value not in (
@@ -74,9 +62,7 @@ def add_conan_options_from_cmake_options(
     return conan_options
 
 
-def run_conan_install(
-    minifi_options: MinifiOptions, package_manager: PackageManager
-) -> bool:
+def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     if minifi_options.use_conan.value != "ON":
         print("Conan install skipped because USE_CONAN is OFF")
         return True
@@ -106,10 +92,7 @@ def run_conan_install(
         ],
         minifi_options,
     )
-    if (
-        minifi_options.custom_malloc is not None
-        and minifi_options.custom_malloc.value not in (None, "OFF")
-    ):
+    if minifi_options.custom_malloc is not None and minifi_options.custom_malloc.value not in (None, "OFF"):
         conan_options += f' -o "&:custom_malloc={minifi_options.custom_malloc.value}"'
 
     if not package_manager.run_cmd("conan profile detect --exist-ok"):
@@ -118,9 +101,7 @@ def run_conan_install(
 
     if platform.system() == "Linux":
         settings_user = minifi_options.source_dir / "docker" / "settings_user.yml"
-        if not package_manager.run_cmd(
-            f'cp "{settings_user}" "$(conan config home)/settings_user.yml"'
-        ):
+        if not package_manager.run_cmd(f'cp "{settings_user}" "$(conan config home)/settings_user.yml"'):
             return False
         musl_tag_cmd = (
             "if ldd --version 2>&1 | grep -qi musl; then "
@@ -139,11 +120,11 @@ def run_conan_install(
     if "-stdlib=libc++" in os.environ.get("CXXFLAGS", ""):
         compiler_settings += " -s:a compiler.libcxx=libc++"
     generator_setting = (
-        " -c tools.cmake.cmaketoolchain:generator=Ninja"
-        if minifi_options.use_ninja.value == "ON"
-        else ""
+        " -c tools.cmake.cmaketoolchain:generator=Ninja" if minifi_options.use_ninja.value == "ON" else ""
     )
-    conan_remote_add_cmd = "conan remote add nifi-conan https://apache.jfrog.io/artifactory/api/conan/nifi-conan --force"
+    conan_remote_add_cmd = (
+        "conan remote add nifi-conan https://apache.jfrog.io/artifactory/api/conan/nifi-conan --force"
+    )
     if not package_manager.run_cmd(conan_remote_add_cmd):
         print("Adding the nifi-conan remote failed")
         return False
@@ -174,9 +155,7 @@ def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
         f'{minifi_options.create_cmake_options_str()} "{minifi_options.source_dir}" -B "{minifi_options.build_dir}"'
     )
     res = package_manager.run_cmd(cmake_cmd)
-    print(
-        "CMake command run successfully" if res else "CMake command run unsuccessfully"
-    )
+    print("CMake command run successfully" if res else "CMake command run unsuccessfully")
     return res
 
 
@@ -197,9 +176,7 @@ def do_docker_build(minifi_options: MinifiOptions, package_manager: PackageManag
     return package_manager.run_cmd(build_cmd)
 
 
-def do_one_click_build(
-    minifi_options: MinifiOptions, package_manager: PackageManager
-) -> bool:
+def do_one_click_build(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     assert install_dependencies(minifi_options, package_manager)
     assert run_conan_install(minifi_options, package_manager)
     assert run_cmake(minifi_options, package_manager)
@@ -208,18 +185,14 @@ def do_one_click_build(
     return True
 
 
-def do_one_click_configuration(
-    minifi_options: MinifiOptions, package_manager: PackageManager
-) -> bool:
+def do_one_click_configuration(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     assert install_dependencies(minifi_options, package_manager)
     assert run_conan_install(minifi_options, package_manager)
     assert run_cmake(minifi_options, package_manager)
     return True
 
 
-def do_one_click_conan_install(
-    minifi_options: MinifiOptions, package_manager: PackageManager
-) -> bool:
+def do_one_click_conan_install(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     assert run_conan_install(minifi_options, package_manager)
     return True
 
@@ -250,14 +223,10 @@ def main_menu(minifi_options: MinifiOptions, package_manager: PackageManager):
         main_menu_prompt = inquirer.prompt(questions)
         if main_menu_prompt is None:
             break
-        done = main_menu_options[main_menu_prompt["sub_menu"]](
-            minifi_options, package_manager
-        )
+        done = main_menu_options[main_menu_prompt["sub_menu"]](minifi_options, package_manager)
 
 
-def build_type_menu(
-    minifi_options: MinifiOptions, _package_manager: PackageManager
-) -> bool:
+def build_type_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
     questions = [
         inquirer.List(
             "build_type",
@@ -274,9 +243,7 @@ def build_type_menu(
     return False
 
 
-def custom_malloc_menu(
-    minifi_options: MinifiOptions, _package_manager: PackageManager
-) -> bool:
+def custom_malloc_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
     if minifi_options.custom_malloc is None:
         return False
     questions = [
@@ -295,13 +262,9 @@ def custom_malloc_menu(
     return False
 
 
-def build_dir_menu(
-    minifi_options: MinifiOptions, _package_manager: PackageManager
-) -> bool:
+def build_dir_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
     questions = [
-        inquirer.Path(
-            "build_dir", message="Build directory", default=minifi_options.build_dir
-        ),
+        inquirer.Path("build_dir", message="Build directory", default=minifi_options.build_dir),
     ]
     answers = inquirer.prompt(questions)
     if answers is None:
@@ -311,15 +274,9 @@ def build_dir_menu(
     return False
 
 
-def extension_options_menu(
-    minifi_options: MinifiOptions, _package_manager: PackageManager
-) -> bool:
+def extension_options_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
     possible_values = [option_name for option_name in minifi_options.extension_options]
-    selected_values = [
-        option.name
-        for option in minifi_options.extension_options.values()
-        if option.value == "ON"
-    ]
+    selected_values = [option.name for option in minifi_options.extension_options.values() if option.value == "ON"]
     questions = [
         inquirer.Checkbox(
             "options",
@@ -342,15 +299,9 @@ def extension_options_menu(
     return False
 
 
-def build_options_menu(
-    minifi_options: MinifiOptions, _package_manager: PackageManager
-) -> bool:
+def build_options_menu(minifi_options: MinifiOptions, _package_manager: PackageManager) -> bool:
     possible_values = [option_name for option_name in minifi_options.build_options]
-    selected_values = [
-        option.name
-        for option in minifi_options.build_options.values()
-        if option.value == "ON"
-    ]
+    selected_values = [option.name for option in minifi_options.build_options.values() if option.value == "ON"]
     questions = [
         inquirer.Checkbox(
             "options",
@@ -373,9 +324,7 @@ def build_options_menu(
     return False
 
 
-def step_by_step_menu(
-    minifi_options: MinifiOptions, package_manager: PackageManager
-) -> bool:
+def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     done = False
     while not done:
         step_by_step_options = {
@@ -393,18 +342,13 @@ def step_by_step_menu(
             inquirer.List(
                 "selection",
                 message="Step by step menu",
-                choices=[
-                    step_by_step_menu_option_name
-                    for step_by_step_menu_option_name in step_by_step_options
-                ],
+                choices=[step_by_step_menu_option_name for step_by_step_menu_option_name in step_by_step_options],
             ),
         ]
 
         step_by_step_prompt = inquirer.prompt(questions)
         if step_by_step_prompt is None:
             return True
-        step_by_step_options[step_by_step_prompt["selection"]](
-            minifi_options, package_manager
-        )
+        step_by_step_options[step_by_step_prompt["selection"]](minifi_options, package_manager)
         done = step_by_step_prompt["selection"] == "Back"
     return False

@@ -31,12 +31,8 @@ from minifi_behave.steps import (
 )
 
 
-@given(
-    'a {processor_name} processor set up to communicate with an MQTT broker instance in the "{container_name}" flow'
-)
-def setup_mqtt_processor_in_flow(
-    context: MinifiTestContext, processor_name: str, container_name: str
-):
+@given('a {processor_name} processor set up to communicate with an MQTT broker instance in the "{container_name}" flow')
+def setup_mqtt_processor_in_flow(context: MinifiTestContext, processor_name: str, container_name: str):
     processor = Processor(processor_name, processor_name)
     processor.add_property("Broker URI", f"mqtt-broker-{context.scenario_id}:1883")
     processor.add_property("Topic", "testtopic")
@@ -45,18 +41,12 @@ def setup_mqtt_processor_in_flow(
     elif processor_name == "ConsumeMQTT":
         processor.add_property("Client ID", "consumer-client")
     else:
-        raise ValueError(
-            f"Unknown processor to communicate with MQTT broker: {processor_name}"
-        )
+        raise ValueError(f"Unknown processor to communicate with MQTT broker: {processor_name}")
 
-    context.get_or_create_minifi_container(
-        container_name
-    ).flow_definition.add_processor(processor)
+    context.get_or_create_minifi_container(container_name).flow_definition.add_processor(processor)
 
 
-@given(
-    "a {processor_name} processor set up to communicate with an MQTT broker instance"
-)
+@given("a {processor_name} processor set up to communicate with an MQTT broker instance")
 def setup_mqtt_processor(context: MinifiTestContext, processor_name: str):
     context.execute_steps(
         f'given a {processor_name} processor set up to communicate with an MQTT broker instance in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
@@ -70,13 +60,9 @@ def start_mqtt_broker(context: MinifiTestContext):
 
 
 @then('the MQTT broker has a log line matching "{log_line_regex}"')
-def verify_mqtt_broker_log_line_matches(
-    context: MinifiTestContext, log_line_regex: str
-):
+def verify_mqtt_broker_log_line_matches(context: MinifiTestContext, log_line_regex: str):
     assert wait_for_condition(
-        condition=lambda: re.search(
-            log_line_regex, context.containers["mqtt-broker"].get_logs()
-        ),
+        condition=lambda: re.search(log_line_regex, context.containers["mqtt-broker"].get_logs()),
         timeout_seconds=60,
         bail_condition=lambda: context.containers["mqtt-broker"].exited,
         context=None,
@@ -84,16 +70,9 @@ def verify_mqtt_broker_log_line_matches(
 
 
 @then('the MQTT broker has {log_count:d} log lines matching "{log_line_regex}"')
-def verify_mqtt_broker_log_line_count_matches(
-    context: MinifiTestContext, log_count: int, log_line_regex: str
-):
+def verify_mqtt_broker_log_line_count_matches(context: MinifiTestContext, log_count: int, log_line_regex: str):
     assert wait_for_condition(
-        condition=lambda: (
-            len(
-                re.findall(log_line_regex, context.containers["mqtt-broker"].get_logs())
-            )
-            == log_count
-        ),
+        condition=lambda: len(re.findall(log_line_regex, context.containers["mqtt-broker"].get_logs())) == log_count,
         timeout_seconds=60,
         bail_condition=lambda: context.containers["mqtt-broker"].exited,
         context=None,
@@ -101,7 +80,5 @@ def verify_mqtt_broker_log_line_count_matches(
 
 
 @when('a test message "{message}" is published to the MQTT broker on topic "{topic}"')
-def publish_test_message_to_mqtt_broker(
-    context: MinifiTestContext, message: str, topic: str
-):
+def publish_test_message_to_mqtt_broker(context: MinifiTestContext, message: str, topic: str):
     assert context.containers["mqtt-broker"].publish_mqtt_message(topic, message)

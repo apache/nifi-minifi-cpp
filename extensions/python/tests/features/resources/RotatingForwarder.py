@@ -28,9 +28,7 @@ class RotatingForwarder(FlowFileTransform):
     def transform(self, context, flowFile):
         content = flowFile.getContentsAsBytes().decode()
 
-        relationship = self.relationships[
-            self.relationship_index % len(self.relationships)
-        ]
+        relationship = self.relationships[self.relationship_index % len(self.relationships)]
         self.relationship_index += 1
         self.relationship_index %= len(self.relationships)
         return FlowFileTransformResult(relationship, contents=content)

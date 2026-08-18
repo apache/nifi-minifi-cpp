@@ -60,9 +60,7 @@ class Processor:
             "penalization period": self.penalization_period,
         }
         if self.auto_terminated_relationships:
-            data["auto-terminated relationships list"] = (
-                self.auto_terminated_relationships
-            )
+            data["auto-terminated relationships list"] = self.auto_terminated_relationships
         if self.max_concurrent_tasks is not None:
             data["max concurrent tasks"] = self.max_concurrent_tasks
 

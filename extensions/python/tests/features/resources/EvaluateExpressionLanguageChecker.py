@@ -21,9 +21,7 @@ from nifiapi.properties import ExpressionLanguageScope, PropertyDescriptor
 
 class EvaluateExpressionLanguageChecker(FlowFileTransform):
     class Java:
-        implements: ClassVar[list] = [
-            "org.apache.nifi.python.processor.FlowFileTransform"
-        ]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.FlowFileTransform"]
 
     class ProcessorDetails:
         version = "0.1.0"
@@ -49,37 +47,25 @@ class EvaluateExpressionLanguageChecker(FlowFileTransform):
         return self.property_descriptors
 
     def getDynamicPropertyDescriptor(self, propertyname):
-        return PropertyDescriptor(
-            name=propertyname, description="A user-defined property", dynamic=True
-        )
+        return PropertyDescriptor(name=propertyname, description="A user-defined property", dynamic=True)
 
     def transform(self, context, flowFile):
         el_property = context.getProperty(self.EL_PROPERTY)
         el_property_value = el_property.getValue()
         self.logger.info("EL Property value: " + str(el_property_value))
 
-        el_property_value_evaluated = el_property.evaluateAttributeExpressions(
-            flowFile
-        ).getValue()
-        self.logger.info(
-            "Evaluated EL Property value: " + str(el_property_value_evaluated)
-        )
+        el_property_value_evaluated = el_property.evaluateAttributeExpressions(flowFile).getValue()
+        self.logger.info("Evaluated EL Property value: " + str(el_property_value_evaluated))
 
         non_el_property = context.getProperty(self.NON_EL_PROPERTY)
         non_el_property_value = non_el_property.getValue()
         self.logger.info("Non EL Property value: " + str(non_el_property_value))
 
-        non_el_property_value_evaluated = non_el_property.evaluateAttributeExpressions(
-            flowFile
-        ).getValue()
-        self.logger.info(
-            "Evaluated Non EL Property value: " + str(non_el_property_value_evaluated)
-        )
+        non_el_property_value_evaluated = non_el_property.evaluateAttributeExpressions(flowFile).getValue()
+        self.logger.info("Evaluated Non EL Property value: " + str(non_el_property_value_evaluated))
 
         non_existent_value = (
-            context.getProperty("non-existent-property")
-            .evaluateAttributeExpressions(flowFile)
-            .getValue()
+            context.getProperty("non-existent-property").evaluateAttributeExpressions(flowFile).getValue()
         )
         if non_existent_value is None:
             self.logger.info("Non-existent property value is empty")
@@ -87,17 +73,10 @@ class EvaluateExpressionLanguageChecker(FlowFileTransform):
         dynamic_property = context.getProperty("My Dynamic Property")
         dynamic_property_value = dynamic_property.getValue()
         if dynamic_property_value:
-            self.logger.info(
-                "My Dynamic Property value is: " + str(dynamic_property_value)
-            )
+            self.logger.info("My Dynamic Property value is: " + str(dynamic_property_value))
 
-        dynamic_property_evaluated_value = (
-            dynamic_property.evaluateAttributeExpressions(flowFile).getValue()
-        )
+        dynamic_property_evaluated_value = dynamic_property.evaluateAttributeExpressions(flowFile).getValue()
         if dynamic_property_evaluated_value:
-            self.logger.info(
-                "My Dynamic Property evaluated value is: "
-                + str(dynamic_property_evaluated_value)
-            )
+            self.logger.info("My Dynamic Property evaluated value is: " + str(dynamic_property_evaluated_value))
 
         return FlowFileTransformResult("success", contents="Check successful!")

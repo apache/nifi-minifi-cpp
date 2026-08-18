@@ -66,27 +66,19 @@ class PackageManager:
         replace_dict: dict[str, set[str]],
         install_cmd: str,
     ) -> bool:
-        dependencies.update(
-            {k: v for k, v in replace_dict.items() if k in dependencies}
-        )
+        dependencies.update({k: v for k, v in replace_dict.items() if k in dependencies})
         dependencies = self._filter_out_installed_packages(dependencies)
-        dependencies_str = " ".join(
-            str(value) for value_set in dependencies.values() for value in value_set
-        )
+        dependencies_str = " ".join(str(value) for value_set in dependencies.values() for value in value_set)
         if not dependencies_str or dependencies_str.isspace():
             return True
-        return _run_command_with_confirm(
-            f"{install_cmd} {dependencies_str}", self.no_confirm
-        )
+        return _run_command_with_confirm(f"{install_cmd} {dependencies_str}", self.no_confirm)
 
     def _get_installed_packages(self) -> set[str]:
         raise RuntimeError("NotImplementedException")
 
     def _filter_out_installed_packages(self, dependencies: dict[str, set[str]]):
         installed_packages = self._get_installed_packages()
-        filtered_packages = {
-            k: (v - installed_packages) for k, v in dependencies.items()
-        }
+        filtered_packages = {k: (v - installed_packages) for k, v in dependencies.items()}
         for installed_package in installed_packages:
             filtered_packages.pop(installed_package, None)
         return filtered_packages
@@ -112,18 +104,14 @@ class BrewPackageManager(PackageManager):
         return ""
 
     def _get_installed_packages(self) -> set[str]:
-        result = subprocess.run(
-            ["brew", "list"], text=True, capture_output=True, check=True
-        )
+        result = subprocess.run(["brew", "list"], text=True, capture_output=True, check=True)
         lines = result.stdout.splitlines()
         lines = [line.split("@", 1)[0] for line in lines]
         return set(lines)
 
     def run_cmd(self, cmd: str) -> bool:
         add_m4_to_path_cmd = 'export PATH="$(brew --prefix m4)/bin:$PATH"'
-        result = subprocess.run(
-            f"{add_m4_to_path_cmd} && {cmd}", shell=True, text=True, check=False
-        )
+        result = subprocess.run(f"{add_m4_to_path_cmd} && {cmd}", shell=True, text=True, check=False)
         return result.returncode == 0
 
 
@@ -139,9 +127,7 @@ class AptPackageManager(PackageManager):
         )
 
     def _get_installed_packages(self) -> set[str]:
-        result = subprocess.run(
-            ["dpkg", "--get-selections"], text=True, capture_output=True, check=True
-        )
+        result = subprocess.run(["dpkg", "--get-selections"], text=True, capture_output=True, check=True)
         lines = [line.split("\t")[0] for line in result.stdout.splitlines()]
         lines = [line.rsplit(":", 1)[0] for line in lines]
         return set(lines)
@@ -168,9 +154,7 @@ class DnfPackageManager(PackageManager):
         )
 
     def _get_installed_packages(self) -> set[str]:
-        result = subprocess.run(
-            ["dnf", "list", "installed"], text=True, capture_output=True, check=True
-        )
+        result = subprocess.run(["dnf", "list", "installed"], text=True, capture_output=True, check=True)
         lines = [line.split(" ")[0] for line in result.stdout.splitlines()]
         lines = [line.rsplit(".", 1)[0] for line in lines]
         return set(lines)
@@ -192,9 +176,7 @@ class PacmanPackageManager(PackageManager):
         )
 
     def _get_installed_packages(self) -> set[str]:
-        result = subprocess.run(
-            ["pacman", "-Qq"], text=True, capture_output=True, check=True
-        )
+        result = subprocess.run(["pacman", "-Qq"], text=True, capture_output=True, check=True)
         return set(result.stdout.splitlines())
 
     def install_compiler(self) -> str:
@@ -253,9 +235,7 @@ class ApkPackageManager(PackageManager):
         )
 
     def _get_installed_packages(self) -> set[str]:
-        result = subprocess.run(
-            ["apk", "info"], text=True, capture_output=True, check=True
-        )
+        result = subprocess.run(["apk", "info"], text=True, capture_output=True, check=True)
         return set(result.stdout.splitlines())
 
     def install_compiler(self) -> str:
@@ -267,9 +247,7 @@ def _get_vs_dev_cmd_path(vs_where_location: VsWhereLocation):
     if vs_where_location == VsWhereLocation.CHOCO:
         vs_where_path = "vswhere"
     else:
-        vs_where_path = (
-            "%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe"
-        )
+        vs_where_path = "%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe"
 
     vswhere_results = subprocess.run(
         f"{vs_where_path} -products * "
@@ -310,9 +288,7 @@ set build_platform=x64
 
 
 def _create_minifi_setup_env_batch(vs_where_location: VsWhereLocation):
-    with open(
-        pathlib.Path(__file__).parent.resolve() / "build_environment.bat", "w"
-    ) as f:
+    with open(pathlib.Path(__file__).parent.resolve() / "build_environment.bat", "w") as f:
         f.write(_minifi_setup_env_str(vs_where_location))
 
 
@@ -341,9 +317,7 @@ class ChocolateyPackageManager(PackageManager):
         return True
 
     def _get_installed_packages(self) -> set[str]:
-        result = subprocess.run(
-            ["choco", "list"], text=True, capture_output=True, check=True
-        )
+        result = subprocess.run(["choco", "list"], text=True, capture_output=True, check=True)
         lines = [line.split(" ")[0] for line in result.stdout.splitlines()]
         lines = [line.rsplit(".", 1)[0] for line in lines]
         if os.path.exists("C:\\Program Files\\NASM"):
@@ -354,9 +328,7 @@ class ChocolateyPackageManager(PackageManager):
         installed_packages = self._get_installed_packages()
         if "vswhere" in installed_packages:
             return VsWhereLocation.CHOCO
-        vswhere_default_path = (
-            "%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe"
-        )
+        vswhere_default_path = "%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe"
         if os.path.exists(vswhere_default_path):
             return VsWhereLocation.DEFAULT
         self.install({"vswhere": {"vswhere"}})

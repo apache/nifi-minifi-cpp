@@ -29,9 +29,7 @@ from google.cloud.language import enums, types
 
 
 def describe(processor):
-    processor.setDescription(
-        "Performs a sentiment Analysis of incoming flowfile content using Google Cloud."
-    )
+    processor.setDescription("Performs a sentiment Analysis of incoming flowfile content using Google Cloud.")
 
 
 def onInitialize(processor):
@@ -60,16 +58,10 @@ def onTrigger(context, session):
         credentials_filename = context.getProperty("Credentials Path")
         sentiment = ContentExtract()
         session.read(flow_file, sentiment)
-        client = language.LanguageServiceClient.from_service_account_json(
-            credentials_filename
-        )
-        document = types.Document(
-            content=sentiment.content, type=enums.Document.Type.PLAIN_TEXT
-        )
+        client = language.LanguageServiceClient.from_service_account_json(credentials_filename)
+        document = types.Document(content=sentiment.content, type=enums.Document.Type.PLAIN_TEXT)
 
-        annotations = client.analyze_sentiment(
-            document=document, retry=None, timeout=1.0
-        )
+        annotations = client.analyze_sentiment(document=document, retry=None, timeout=1.0)
         score = annotations.document_sentiment.score
         magnitude = annotations.document_sentiment.magnitude
 

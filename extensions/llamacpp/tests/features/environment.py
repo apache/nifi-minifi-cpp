@@ -30,9 +30,7 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 def before_all(context: MinifiTestContext):
     minifi_container_image = get_minifi_container_image()
 
-    wget_with_retry_path = (
-        Path(__file__).resolve().parent / "resources" / "wget_with_retry.sh"
-    )
+    wget_with_retry_path = Path(__file__).resolve().parent / "resources" / "wget_with_retry.sh"
     wget_with_retry_content = None
     with open(wget_with_retry_path, "rb") as f:
         wget_with_retry_content = f.read()

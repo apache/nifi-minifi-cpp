@@ -76,9 +76,7 @@ class OpensearchContainer(ElasticBaseContainer):
         )
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
-        return super().deploy(
-            context, "Hot-reloading of audit configuration is enabled"
-        )
+        return super().deploy(context, "Hot-reloading of audit configuration is enabled")
 
     def add_elastic_user_to_opensearch(self):
         curl_cmd = [

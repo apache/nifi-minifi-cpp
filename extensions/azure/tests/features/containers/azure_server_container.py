@@ -70,9 +70,7 @@ class AzureServerContainer(LinuxContainer):
         (code, file_data) = self.exec_run(["cat", data_file])
         return code == 0 and test_data in file_data
 
-    def add_test_blob(
-        self, blob_name, content="test_data", with_snapshot=False
-    ) -> bool:
+    def add_test_blob(self, blob_name, content="test_data", with_snapshot=False) -> bool:
         cmd_create = [
             "az",
             "storage",
@@ -84,9 +82,7 @@ class AzureServerContainer(LinuxContainer):
             self.azure_connection_string,
         ]
         try:
-            run_cmd_in_docker_image(
-                "mcr.microsoft.com/azure-cli:2.81.0", cmd_create, self.network.name
-            )
+            run_cmd_in_docker_image("mcr.microsoft.com/azure-cli:2.81.0", cmd_create, self.network.name)
         except ContainerError as e:
             logger.error(e)
             return False
@@ -106,9 +102,7 @@ class AzureServerContainer(LinuxContainer):
             self.azure_connection_string,
         ]
         try:
-            run_cmd_in_docker_image(
-                "mcr.microsoft.com/azure-cli:2.81.0", cmd_upload, self.network.name
-            )
+            run_cmd_in_docker_image("mcr.microsoft.com/azure-cli:2.81.0", cmd_upload, self.network.name)
         except ContainerError as e:
             logger.error(e)
             return False
@@ -146,9 +140,7 @@ class AzureServerContainer(LinuxContainer):
         )
 
         try:
-            output = run_cmd_in_docker_image(
-                "mcr.microsoft.com/azure-cli:2.81.0", cmd, self.network.name
-            )
+            output = run_cmd_in_docker_image("mcr.microsoft.com/azure-cli:2.81.0", cmd, self.network.name)
         except ContainerError as e:
             logger.error(e)
             return -1

@@ -26,9 +26,7 @@ from minifi_behave.steps import (
 
 @step("a Google Cloud storage server is set up")
 @step("a Google Cloud storage server is set up with some test data")
-@step(
-    'a Google Cloud storage server is set up and a single object with contents "preloaded data" is present'
-)
+@step('a Google Cloud storage server is set up and a single object with contents "preloaded data" is present')
 def setup_gcs_server(context: MinifiTestContext):
     context.containers["fake-gcs-server"] = FakeGcsServerContainer(context)
     assert context.containers["fake-gcs-server"].deploy(context)
@@ -36,13 +34,9 @@ def setup_gcs_server(context: MinifiTestContext):
 
 @then('an object with the content "{content}" is present in the Google Cloud storage')
 def verify_gcs_object_content(context: MinifiTestContext, content: str):
-    assert context.containers["fake-gcs-server"].check_google_cloud_storage(
-        content
-    ) or log_due_to_failure(context)
+    assert context.containers["fake-gcs-server"].check_google_cloud_storage(content) or log_due_to_failure(context)
 
 
 @then("the test bucket of Google Cloud Storage is empty")
 def verify_gcs_bucket_is_empty(context: MinifiTestContext):
-    assert context.containers[
-        "fake-gcs-server"
-    ].is_gcs_bucket_empty() or log_due_to_failure(context)
+    assert context.containers["fake-gcs-server"].is_gcs_bucket_empty() or log_due_to_failure(context)

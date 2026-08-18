@@ -36,9 +36,7 @@ def setup_splunk_hec(context: MinifiTestContext):
 
 @then('an event is registered in Splunk HEC with the content "{content}"')
 def verify_splunk_event_content(context, content):
-    assert context.containers["splunk"].check_splunk_event(
-        content
-    ) or log_due_to_failure(context)
+    assert context.containers["splunk"].check_splunk_event(content) or log_due_to_failure(context)
 
 
 @then(
@@ -46,16 +44,11 @@ def verify_splunk_event_content(context, content):
 )
 def verify_splunk_event_with_attributes(context, content, source, source_type, host):
     attr = {"source": source, "sourcetype": source_type, "host": host}
-    assert context.containers["splunk"].check_splunk_event_with_attributes(
-        content, attr
-    ) or log_due_to_failure(context)
+    assert context.containers["splunk"].check_splunk_event_with_attributes(content, attr) or log_due_to_failure(context)
 
 
 @step(
     "SSL is enabled for the Splunk HEC and the SSL context service is set up for PutSplunkHTTP and QuerySplunkIndexingStatus"
 )
 def enable_splunk_hec_ssl(context):
-    assert (
-        context.containers["splunk"].enable_splunk_hec_ssl()
-        or context.containers["splunk"].log_app_output()
-    )
+    assert context.containers["splunk"].enable_splunk_hec_ssl() or context.containers["splunk"].log_app_output()

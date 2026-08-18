@@ -25,9 +25,7 @@ from nifiapi.properties import (
 
 class NifiStyleLogDynamicProperties(FlowFileTransform):
     class Java:
-        implements: ClassVar[list] = [
-            "org.apache.nifi.python.processor.FlowFileTransform"
-        ]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.FlowFileTransform"]
 
     class ProcessorDetails:
         version = "1.2.3"
@@ -49,9 +47,7 @@ class NifiStyleLogDynamicProperties(FlowFileTransform):
         return [self.STATIC_PROPERTY]
 
     def getDynamicPropertyDescriptor(self, propertyname):
-        return PropertyDescriptor(
-            name=propertyname, description="A user-defined property", dynamic=True
-        )
+        return PropertyDescriptor(name=propertyname, description="A user-defined property", dynamic=True)
 
     def transform(self, context, flow_file):
         property_value = context.getProperty("Static Property")

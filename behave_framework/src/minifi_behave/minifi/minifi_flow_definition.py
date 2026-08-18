@@ -31,15 +31,9 @@ class MinifiFlowDefinition(FlowDefinition):
         # This is crucial for finding the source/destination IDs for connections
         processors_by_name = {p.name: p for p in self.processors}
         funnels_by_name = {f.name: f for f in self.funnels}
-        remote_input_ports_by_name = {
-            port.name: port
-            for rpg in self.remote_process_groups
-            for port in rpg.input_ports
-        }
+        remote_input_ports_by_name = {port.name: port for rpg in self.remote_process_groups for port in rpg.input_ports}
         remote_output_ports_by_name = {
-            port.name: port
-            for rpg in self.remote_process_groups
-            for port in rpg.output_ports
+            port.name: port for rpg in self.remote_process_groups for port in rpg.output_ports
         }
 
         connectables_by_name = {
@@ -62,9 +56,7 @@ class MinifiFlowDefinition(FlowDefinition):
             "Funnels": [f.to_yaml_dict() for f in self.funnels],
             "Connections": [],
             "Controller Services": [c.to_yaml_dict() for c in self.controller_services],
-            "Remote Processing Groups": [
-                rpg.to_yaml_dict() for rpg in self.remote_process_groups
-            ],
+            "Remote Processing Groups": [rpg.to_yaml_dict() for rpg in self.remote_process_groups],
             "Parameter Context Name": parameter_context_name,
         }
 

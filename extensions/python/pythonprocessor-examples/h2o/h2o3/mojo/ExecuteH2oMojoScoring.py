@@ -169,9 +169,7 @@ def onTrigger(context, session):
         # flow_file.addAttribute("mojo_model_id", mojo_model.model_id)
         # load tabular data str of 1 or more rows into datatable frame
         test_dt_frame = dt.Frame(read_cb.content)
-        test_h2o_frame = h2o.H2OFrame(
-            python_obj=test_dt_frame.to_numpy(), column_names=list(test_dt_frame.names)
-        )
+        test_h2o_frame = h2o.H2OFrame(python_obj=test_dt_frame.to_numpy(), column_names=list(test_dt_frame.names))
         # does test dt frame column names (header) equal m_scorer feature_names (exp_header)
         first_line_header = context.getProperty("Is First Line Header")
         if first_line_header == "False":
@@ -197,7 +195,5 @@ def onTrigger(context, session):
         for i in range(len(pred_header)):
             ff_attr_name = pred_header[i] + "_pred_0"
             flow_file.addAttribute(ff_attr_name, str(preds_pd_df.at[0, pred_header[i]]))
-            log.info(
-                f"getAttribute({ff_attr_name}): {flow_file.getAttribute(ff_attr_name)}"
-            )
+            log.info(f"getAttribute({ff_attr_name}): {flow_file.getAttribute(ff_attr_name)}")
         session.transfer(flow_file, REL_SUCCESS)

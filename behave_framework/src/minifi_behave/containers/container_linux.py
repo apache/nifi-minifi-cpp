@@ -80,9 +80,7 @@ class LinuxContainer(ContainerProtocol):
         exit_code, output = self.exec_run(mkdir_command)
         if exit_code != 0:
             logger.error(f"Error creating directory '{path}' in container: {output}")
-            raise RuntimeError(
-                f"Error creating directory '{path}' in container: {output}"
-            )
+            raise RuntimeError(f"Error creating directory '{path}' in container: {output}")
 
         full_path = os.path.join(path, str(uuid.uuid4()))
         tmp_path = os.path.join("/tmp", str(uuid.uuid4()))
@@ -92,9 +90,7 @@ class LinuxContainer(ContainerProtocol):
             logger.error(f"Error adding file to running container: {output}")
             raise RuntimeError(f"Error adding file to running container: {output}")
 
-    def _write_content_to_file(
-        self, filepath: str, permissions: int | None, content: str | bytes
-    ):
+    def _write_content_to_file(self, filepath: str, permissions: int | None, content: str | bytes):
         write_mode = "w"
         if isinstance(content, bytes):
             write_mode = "wb"
@@ -134,9 +130,7 @@ class LinuxContainer(ContainerProtocol):
 
         try:
             existing_container = self.client.containers.get(self.container_name)
-            logger.warning(
-                f"Found existing container '{self.container_name}'. Removing it first."
-            )
+            logger.warning(f"Found existing container '{self.container_name}'. Removing it first.")
             existing_container.remove(force=True)
         except docker.errors.NotFound:
             pass
@@ -188,9 +182,7 @@ class LinuxContainer(ContainerProtocol):
             try:
                 self.container.remove(force=True)
             except Exception as e:
-                logger.error(
-                    f"Error cleaning up container '{self.container_name}': {e}"
-                )
+                logger.error(f"Error cleaning up container '{self.container_name}': {e}")
 
     def exec_run(self, command) -> tuple[int | None, str]:
         if self.container:
@@ -215,42 +207,31 @@ class LinuxContainer(ContainerProtocol):
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
-        command = "sh -c {}".format(
-            shlex.quote(f"find {directory_path} -maxdepth 1 -type f -empty")
-        )
+        command = "sh -c {}".format(shlex.quote(f"find {directory_path} -maxdepth 1 -type f -empty"))
 
         exit_code, _ = self.exec_run(command)
 
         return exit_code == 0
 
-    def directory_contains_file_with_content(
-        self, directory_path: str, expected_content: str
-    ) -> bool:
+    def directory_contains_file_with_content(self, directory_path: str, expected_content: str) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         quoted_content = shlex.quote(expected_content)
-        command = "sh -c {}".format(
-            shlex.quote(f"grep -l -F -- {quoted_content} {directory_path}/*")
-        )
+        command = "sh -c {}".format(shlex.quote(f"grep -l -F -- {quoted_content} {directory_path}/*"))
 
         exit_code, _ = self.exec_run(command)
 
         return exit_code == 0
 
-    def directory_contains_file_with_regex(
-        self, directory_path: str, regex_str: str
-    ) -> bool:
+    def directory_contains_file_with_regex(self, directory_path: str, regex_str: str) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         safe_dir_path = shlex.quote(directory_path)
         safe_regex_str = shlex.quote(regex_str)
 
-        command = (
-            f"find {safe_dir_path} -maxdepth 1 -type f -print0 | "
-            f"xargs -0 -r grep -l -E -- {safe_regex_str}"
-        )
+        command = f"find {safe_dir_path} -maxdepth 1 -type f -print0 | xargs -0 -r grep -l -E -- {safe_regex_str}"
 
         exit_code, output = self.exec_run(f"sh -c {shlex.quote(command)}")
 
@@ -274,15 +255,11 @@ class LinuxContainer(ContainerProtocol):
         try:
             file_count = int(output.strip())
         except (ValueError, IndexError):
-            logger.error(
-                f"Error parsing output '{output}' from command '{count_command}'"
-            )
+            logger.error(f"Error parsing output '{output}' from command '{count_command}'")
             return False
         return file_count == 1
 
-    def directory_has_single_file_with_content(
-        self, directory_path: str, expected_content: str
-    ) -> bool:
+    def directory_has_single_file_with_content(self, directory_path: str, expected_content: str) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
@@ -296,15 +273,11 @@ class LinuxContainer(ContainerProtocol):
         try:
             file_count = int(output.strip())
         except (ValueError, IndexError):
-            logger.error(
-                f"Error parsing output '{output}' from command '{count_command}'"
-            )
+            logger.error(f"Error parsing output '{output}' from command '{count_command}'")
             return False
 
         if file_count != 1:
-            logger.error(
-                f"{directory_path} has too many or too few ({file_count}) files"
-            )
+            logger.error(f"{directory_path} has too many or too few ({file_count}) files")
             return False
 
         content_command = f"sh -c 'cat {directory_path}/*'"
@@ -359,18 +332,12 @@ class LinuxContainer(ContainerProtocol):
             logger.debug(f"Number of files in '{directory_path}': {file_count}")
             return file_count
         except (ValueError, IndexError):
-            logger.error(
-                f"Error parsing output '{output}' from command '{count_command}'"
-            )
+            logger.error(f"Error parsing output '{output}' from command '{count_command}'")
             return -1
 
-    def _get_contents_of_all_files_in_directory(
-        self, directory_path: str
-    ) -> list[str] | None:
+    def _get_contents_of_all_files_in_directory(self, directory_path: str) -> list[str] | None:
         safe_dir_path = shlex.quote(directory_path)
-        list_files_command = (
-            f"find {safe_dir_path} -mindepth 1 -maxdepth 1 -type f -print0"
-        )
+        list_files_command = f"find {safe_dir_path} -mindepth 1 -maxdepth 1 -type f -print0"
 
         exit_code, output = self.exec_run(f'sh -c "{list_files_command}"')
 
@@ -388,9 +355,7 @@ class LinuxContainer(ContainerProtocol):
             exit_code, content = self.exec_run(read_command)
 
             if exit_code != 0:
-                error_message = (
-                    f"Command to read file '{path}' failed with exit code {exit_code}"
-                )
+                error_message = f"Command to read file '{path}' failed with exit code {exit_code}"
                 logger.error(error_message)
                 return None
 
@@ -398,36 +363,26 @@ class LinuxContainer(ContainerProtocol):
 
         return actual_file_contents
 
-    def _verify_file_contents_in_running_container(
-        self, directory_path: str, expected_contents: list[str]
-    ) -> bool:
+    def _verify_file_contents_in_running_container(self, directory_path: str, expected_contents: list[str]) -> bool:
         if not self.nonempty_dir_exists(directory_path):
             return False
 
-        actual_file_contents = self._get_contents_of_all_files_in_directory(
-            directory_path
-        )
+        actual_file_contents = self._get_contents_of_all_files_in_directory(directory_path)
         if actual_file_contents is None:
             return False
 
         if len(actual_file_contents) != len(expected_contents):
-            logger.debug(
-                f"Expected {len(expected_contents)} files, but found {len(actual_file_contents)}"
-            )
+            logger.debug(f"Expected {len(expected_contents)} files, but found {len(actual_file_contents)}")
             return False
 
         return sorted(actual_file_contents) == sorted(expected_contents)
 
-    def _verify_file_contents_in_stopped_container(
-        self, directory_path: str, expected_contents: list[str]
-    ) -> bool:
+    def _verify_file_contents_in_stopped_container(self, directory_path: str, expected_contents: list[str]) -> bool:
         if not self.container:
             return False
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            extracted_dir = self._extract_directory_from_container(
-                directory_path, temp_dir
-            )
+            extracted_dir = self._extract_directory_from_container(directory_path, temp_dir)
             if not extracted_dir:
                 return False
 
@@ -437,9 +392,7 @@ class LinuxContainer(ContainerProtocol):
 
             return sorted(actual_file_contents) == sorted(expected_contents)
 
-    def _extract_directory_from_container(
-        self, directory_path: str, temp_dir: str
-    ) -> str | None:
+    def _extract_directory_from_container(self, directory_path: str, temp_dir: str) -> str | None:
         try:
             bits, _ = self.container.get_archive(directory_path)
             temp_tar_path = os.path.join(temp_dir, "archive.tar")
@@ -469,21 +422,15 @@ class LinuxContainer(ContainerProtocol):
             logger.error(f"Error reading extracted files: {e}")
             return None
 
-    def verify_file_contents(
-        self, directory_path: str, expected_contents: list[str]
-    ) -> bool:
+    def verify_file_contents(self, directory_path: str, expected_contents: list[str]) -> bool:
         if not self.container:
             return False
 
         self.container.reload()
         if self.container.status == "running":
-            return self._verify_file_contents_in_running_container(
-                directory_path, expected_contents
-            )
+            return self._verify_file_contents_in_running_container(directory_path, expected_contents)
 
-        return self._verify_file_contents_in_stopped_container(
-            directory_path, expected_contents
-        )
+        return self._verify_file_contents_in_stopped_container(directory_path, expected_contents)
 
     def log_app_output(self) -> bool:
         logs = self.get_logs()
@@ -492,13 +439,9 @@ class LinuxContainer(ContainerProtocol):
             logger.info(line)
         return False
 
-    def verify_path_with_json_content(
-        self, directory_path: str, expected_str: str
-    ) -> bool:
+    def verify_path_with_json_content(self, directory_path: str, expected_str: str) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
-            logger.warning(
-                f"Container not running or directory does not exist: {directory_path}"
-            )
+            logger.warning(f"Container not running or directory does not exist: {directory_path}")
             return False
 
         count_command = f"sh -c 'find {directory_path} -maxdepth 1 -type f | wc -l'"
@@ -511,15 +454,11 @@ class LinuxContainer(ContainerProtocol):
         try:
             file_count = int(output.strip())
         except (ValueError, IndexError):
-            logger.error(
-                f"Error parsing output '{output}' from command '{count_command}'"
-            )
+            logger.error(f"Error parsing output '{output}' from command '{count_command}'")
             return False
 
         if file_count != 1:
-            logger.error(
-                f"{directory_path} has too many or too few ({file_count}) files"
-            )
+            logger.error(f"{directory_path} has too many or too few ({file_count}) files")
             return False
 
         content_command = f"sh -c 'cat {directory_path}/*'"
@@ -535,18 +474,12 @@ class LinuxContainer(ContainerProtocol):
 
         return actual_json == expected_json
 
-    def directory_contains_file_with_json_content(
-        self, directory_path: str, expected_content: str
-    ) -> bool:
+    def directory_contains_file_with_json_content(self, directory_path: str, expected_content: str) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
-            logger.warning(
-                f"Container not running or directory does not exist: {directory_path}"
-            )
+            logger.warning(f"Container not running or directory does not exist: {directory_path}")
             return False
 
-        actual_file_contents = self._get_contents_of_all_files_in_directory(
-            directory_path
-        )
+        actual_file_contents = self._get_contents_of_all_files_in_directory(directory_path)
         if actual_file_contents is None:
             return False
 
@@ -556,18 +489,14 @@ class LinuxContainer(ContainerProtocol):
                 expected_json = json.loads(expected_content)
                 if actual_json == expected_json:
                     return True
-                logger.warning(
-                    f"File content does not match expected JSON: {file_content}"
-                )
+                logger.warning(f"File content does not match expected JSON: {file_content}")
             except json.JSONDecodeError:
                 logger.error("Error decoding JSON content from file.")
                 continue
 
         return False
 
-    def directory_contains_file_with_minimum_size(
-        self, directory_path: str, expected_size: int
-    ) -> bool:
+    def directory_contains_file_with_minimum_size(self, directory_path: str, expected_size: int) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
@@ -580,13 +509,9 @@ class LinuxContainer(ContainerProtocol):
         return len(output.strip()) > 0
 
     def get_memory_usage(self) -> int | None:
-        exit_code, output = self.exec_run(
-            ["awk", '/VmRSS.*kB/ { printf "%d", $2 }', "/proc/1/status"]
-        )
+        exit_code, output = self.exec_run(["awk", '/VmRSS.*kB/ { printf "%d", $2 }', "/proc/1/status"])
         if exit_code != 0:
             return None
         memory_usage_in_bytes = int(output) * 1024
-        logger.info(
-            f"{self.container_name} memory usage: {memory_usage_in_bytes} bytes"
-        )
+        logger.info(f"{self.container_name} memory usage: {memory_usage_in_bytes} bytes")
         return memory_usage_in_bytes

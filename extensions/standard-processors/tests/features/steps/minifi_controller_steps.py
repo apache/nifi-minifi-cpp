@@ -37,65 +37,46 @@ def verify_updated_config_is_persisted(context: MinifiTestContext):
 
 @when("the {component} component is stopped through MiNiFi controller")
 def stop_component_via_controller(context: MinifiTestContext, component: str):
-    context.get_or_create_default_minifi_container().controller.stop_component_through_controller(
-        component
-    )
+    context.get_or_create_default_minifi_container().controller.stop_component_through_controller(component)
 
 
 @when("the {component} component is started through MiNiFi controller")
 def start_component_via_controller(context: MinifiTestContext, component: str):
-    context.get_or_create_default_minifi_container().controller.start_component_through_controller(
-        component
-    )
+    context.get_or_create_default_minifi_container().controller.start_component_through_controller(component)
 
 
 @then("the {component} component is not running")
 def verify_component_not_running(context: MinifiTestContext, component: str):
-    assert not context.get_or_create_default_minifi_container().controller.is_component_running(
-        component
-    )
+    assert not context.get_or_create_default_minifi_container().controller.is_component_running(component)
 
 
 @then("the {component} component is running")
 def verify_component_is_running(context: MinifiTestContext, component: str):
-    assert context.get_or_create_default_minifi_container().controller.is_component_running(
-        component
-    )
+    assert context.get_or_create_default_minifi_container().controller.is_component_running(component)
 
 
 @then('connection "{connection}" can be seen through MiNiFi controller')
 def verify_connection_seen_via_controller(context: MinifiTestContext, connection: str):
-    assert context.get_or_create_default_minifi_container().controller.connection_found_through_controller(
-        connection
-    )
+    assert context.get_or_create_default_minifi_container().controller.connection_found_through_controller(connection)
 
 
 @then("{connection_count:d} connections can be seen full through MiNiFi controller")
 def verify_full_connection_count(context: MinifiTestContext, connection_count: int):
-    assert (
-        context.get_or_create_default_minifi_container().controller.get_full_connection_count()
-        == connection_count
-    )
+    assert context.get_or_create_default_minifi_container().controller.get_full_connection_count() == connection_count
 
 
 @retry_check(max_tries=5, retry_interval_seconds=1)
 def check_connection_size_through_controller(
     context: MinifiTestContext, connection: str, size: int, max_size: int
 ) -> bool:
-    return (
-        context.get_or_create_default_minifi_container().controller.get_connection_size(
-            connection
-        )
-        == (size, max_size)
+    return context.get_or_create_default_minifi_container().controller.get_connection_size(connection) == (
+        size,
+        max_size,
     )
 
 
-@then(
-    'connection "{connection}" has {size:d} size and {max_size:d} max size through MiNiFi controller'
-)
-def verify_connection_size_via_controller(
-    context: MinifiTestContext, connection: str, size: int, max_size: int
-):
+@then('connection "{connection}" has {size:d} size and {max_size:d} max size through MiNiFi controller')
+def verify_connection_size_via_controller(context: MinifiTestContext, connection: str, size: int, max_size: int):
     assert check_connection_size_through_controller(context, connection, size, max_size)
 
 
@@ -103,13 +84,9 @@ def verify_connection_size_via_controller(
 def manifest_can_be_retrieved_through_minifi_controller(
     context: MinifiTestContext,
 ) -> bool:
-    manifest = (
-        context.get_or_create_default_minifi_container().controller.get_manifest()
-    )
+    manifest = context.get_or_create_default_minifi_container().controller.get_manifest()
     return (
-        '"agentManifest": {' in manifest
-        and '"componentManifest": {' in manifest
-        and '"agentType": "cpp"' in manifest
+        '"agentManifest": {' in manifest and '"componentManifest": {' in manifest and '"agentType": "cpp"' in manifest
     )
 
 

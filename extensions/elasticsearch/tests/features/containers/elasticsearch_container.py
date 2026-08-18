@@ -42,9 +42,7 @@ class ElasticsearchContainer(ElasticBaseContainer):
             f"elasticsearch-{test_context.scenario_id}",
         )
 
-        http_cert, http_key = make_server_cert(
-            self.container_name, test_context.root_ca_cert, test_context.root_ca_key
-        )
+        http_cert, http_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
         transport_cert, transport_key = make_cert_without_extended_usage(
             self.container_name, test_context.root_ca_cert, test_context.root_ca_key
         )
@@ -134,9 +132,7 @@ class ElasticsearchContainer(ElasticBaseContainer):
             "    }"
             "}"
         )
-        curl_cmd = (
-            f"curl -s -u {api_user} -k -XPOST {api_url} -H {api_headers} -d'{api_data}'"
-        )
+        curl_cmd = f"curl -s -u {api_user} -k -XPOST {api_url} -H {api_headers} -d'{api_data}'"
         (code, output) = self.exec_run(["/bin/bash", "-c", curl_cmd])
         if code != 0:
             return None

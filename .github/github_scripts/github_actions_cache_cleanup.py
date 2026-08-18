@@ -101,9 +101,7 @@ class GithubActionsCacheCleaner:
                 removable_entries.append(entry.key)
                 continue
 
-            self._remove_non_latest_branch_caches(
-                entry, latest_branch_cache_map, removable_entries
-            )
+            self._remove_non_latest_branch_caches(entry, latest_branch_cache_map, removable_entries)
 
         return removable_entries
 
@@ -127,9 +125,7 @@ if __name__ == "__main__":
         help="The name of the repository in <owner>/<repository> format",
         required=True,
     )
-    parser.add_argument(
-        "-t", "--token", help="Github token for API access", required=True
-    )
+    parser.add_argument("-t", "--token", help="Github token for API access", required=True)
     args = parser.parse_args()
     cache_cleaner = GithubActionsCacheCleaner(args.token, args.repository)
     cache_cleaner.remove_obsolete_cache_entries()

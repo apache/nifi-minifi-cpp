@@ -40,9 +40,7 @@ def setup_azure_blob_storage_processor(context: MinifiTestContext, processor_nam
     )
     processor.add_property("Blob", "test-blob")
     processor.add_property("Create Container", "true")
-    context.get_or_create_default_minifi_container().flow_definition.add_processor(
-        processor
-    )
+    context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
 @step("an Azure storage server is set up")
@@ -58,12 +56,8 @@ def verify_azure_storage_server_data(context: MinifiTestContext, object_data: st
     assert azure_server_container.check_azure_storage_server_data(object_data)
 
 
-@step(
-    'test blob "{blob_name}" with the content "{data}" is created on Azure blob storage'
-)
-def create_test_blob_with_content(
-    context: MinifiTestContext, blob_name: str, data: str
-):
+@step('test blob "{blob_name}" with the content "{data}" is created on Azure blob storage')
+def create_test_blob_with_content(context: MinifiTestContext, blob_name: str, data: str):
     azure_server_container = context.containers["azure-storage-server"]
     assert isinstance(azure_server_container, AzureServerContainer)
     assert azure_server_container.add_test_blob(blob_name, content=data)

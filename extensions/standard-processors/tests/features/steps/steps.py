@@ -63,9 +63,7 @@ def setup_tcp_client(context: MinifiTestContext):
 
 @given("C2 is enabled in MiNiFi")
 def enable_c2_in_minifi(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.c2.enable", "true"
-    )
+    context.get_or_create_default_minifi_container().set_property("nifi.c2.enable", "true")
     context.get_or_create_default_minifi_container().set_property(
         "nifi.c2.rest.url",
         f"http://minifi-c2-server-{context.scenario_id}:10090/c2/config/heartbeat",
@@ -82,22 +80,14 @@ def enable_c2_in_minifi(context: MinifiTestContext):
         "nifi.c2.root.classes",
         "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation",
     )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.c2.full.heartbeat", "false"
-    )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.c2.agent.class", "minifi-test-class"
-    )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.c2.agent.identifier", "minifi-test-id"
-    )
+    context.get_or_create_default_minifi_container().set_property("nifi.c2.full.heartbeat", "false")
+    context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.class", "minifi-test-class")
+    context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.identifier", "minifi-test-id")
 
 
 @given("ssl properties are set up for MiNiFi C2 server")
 def setup_ssl_properties_for_c2(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.c2.enable", "true"
-    )
+    context.get_or_create_default_minifi_container().set_property("nifi.c2.enable", "true")
     context.get_or_create_default_minifi_container().set_property(
         "nifi.c2.rest.url",
         f"https://minifi-c2-server-{context.scenario_id}:10090/c2/config/heartbeat",
@@ -114,15 +104,9 @@ def setup_ssl_properties_for_c2(context: MinifiTestContext):
         "nifi.c2.root.classes",
         "DeviceInfoNode,AgentInformation,FlowInformation,AssetInformation",
     )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.c2.full.heartbeat", "false"
-    )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.c2.agent.class", "minifi-test-class"
-    )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.c2.agent.identifier", "minifi-test-id"
-    )
+    context.get_or_create_default_minifi_container().set_property("nifi.c2.full.heartbeat", "false")
+    context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.class", "minifi-test-class")
+    context.get_or_create_default_minifi_container().set_property("nifi.c2.agent.identifier", "minifi-test-id")
     set_up_ssl_properties(context.get_or_create_default_minifi_container())
 
 
@@ -142,17 +126,11 @@ def start_minifi_c2_server(context: MinifiTestContext):
     assert context.containers["minifi-c2-server"].deploy(context)
 
 
-@then(
-    'the MiNiFi C2 server logs contain the following message: "{log_message}" in less than {duration}'
-)
-def verify_c2_server_logs_contain_message(
-    context: MinifiTestContext, log_message: str, duration: str
-):
+@then('the MiNiFi C2 server logs contain the following message: "{log_message}" in less than {duration}')
+def verify_c2_server_logs_contain_message(context: MinifiTestContext, log_message: str, duration: str):
     duration_seconds = humanfriendly.parse_timespan(duration)
     assert wait_for_condition(
-        condition=lambda: (
-            log_message in context.containers["minifi-c2-server"].get_logs()
-        ),
+        condition=lambda: log_message in context.containers["minifi-c2-server"].get_logs(),
         timeout_seconds=duration_seconds,
         bail_condition=lambda: context.containers["minifi-c2-server"].exited,
         context=context,

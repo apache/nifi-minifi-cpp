@@ -102,21 +102,13 @@ class NifiContainer(LinuxContainer):
             ca_cert=test_context.root_ca_cert,
             ca_key=test_context.root_ca_key,
         )
-        self.files.append(
-            File("/tmp/resources/root_ca.crt", dump_cert(test_context.root_ca_cert))
-        )
-        self.files.append(
-            File("/tmp/resources/nifi_client.crt", dump_cert(nifi_client_cert))
-        )
-        self.files.append(
-            File("/tmp/resources/nifi_client.key", dump_key(nifi_client_key))
-        )
+        self.files.append(File("/tmp/resources/root_ca.crt", dump_cert(test_context.root_ca_cert)))
+        self.files.append(File("/tmp/resources/nifi_client.crt", dump_cert(nifi_client_cert)))
+        self.files.append(File("/tmp/resources/nifi_client.key", dump_key(nifi_client_key)))
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_json()
-        logger.info(
-            f"Deploying NiFi container '{self.container_name}' with flow configuration:\n{flow_config}"
-        )
+        logger.info(f"Deploying NiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
         buffer = io.BytesIO()
 
         with gzip.GzipFile(fileobj=buffer, mode="wb") as gz_file:

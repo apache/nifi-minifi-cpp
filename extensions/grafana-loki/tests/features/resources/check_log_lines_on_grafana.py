@@ -31,9 +31,7 @@ def wait_for(action, timeout_seconds, *args, **kwargs) -> bool:
     return False
 
 
-def verify_log_lines_on_grafana_loki(
-    host: str, lines: list[str], ssl: bool, tenant_id: str
-) -> bool:
+def verify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, tenant_id: str) -> bool:
     labels = '{job="minifi"}'
     prefix = "http://"
     if ssl:
@@ -50,11 +48,7 @@ def verify_log_lines_on_grafana_loki(
         return False
 
     json_response = response.json()
-    if (
-        "data" not in json_response
-        or "result" not in json_response["data"]
-        or len(json_response["data"]["result"]) < 1
-    ):
+    if "data" not in json_response or "result" not in json_response["data"] or len(json_response["data"]["result"]) < 1:
         return False
 
     result = json_response["data"]["result"][0]
@@ -87,7 +81,5 @@ if __name__ == "__main__":
     tenant_id = ""
     if len(sys.argv) >= 6:
         tenant_id = sys.argv[5]
-    if not wait_for_lines_on_grafana_loki(
-        host, lines.split(";"), timeout_seconds, ssl, tenant_id
-    ):
+    if not wait_for_lines_on_grafana_loki(host, lines.split(";"), timeout_seconds, ssl, tenant_id):
         sys.exit(1)

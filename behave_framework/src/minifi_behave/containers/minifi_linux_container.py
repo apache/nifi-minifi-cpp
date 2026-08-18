@@ -51,9 +51,7 @@ class NormalDeployment:
         self.bin_path = "/opt/minifi/minifi-current/bin"
         self.extension_pattern = "../extensions/*"
         self.minifi_python_path = "/opt/minifi/minifi-current/minifi-python"
-        self.minifi_python_examples_path = (
-            "/opt/minifi/minifi-current/minifi-python-examples"
-        )
+        self.minifi_python_examples_path = "/opt/minifi/minifi-current/minifi-python-examples"
 
 
 class FHSDeployment:
@@ -62,9 +60,7 @@ class FHSDeployment:
         self.bin_path = "/usr/bin"
         self.extension_pattern = "/usr/lib64/nifi-minifi-cpp/extensions/*"
         self.minifi_python_path = "/var/lib/nifi-minifi-cpp/minifi-python"
-        self.minifi_python_examples_path = (
-            "/usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples"
-        )
+        self.minifi_python_examples_path = "/usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples"
 
 
 class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
@@ -97,20 +93,12 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
             ca_cert=test_context.root_ca_cert,
             ca_key=test_context.root_ca_key,
         )
-        self.files.append(
-            File("/tmp/resources/root_ca.crt", dump_cert(test_context.root_ca_cert))
-        )
+        self.files.append(File("/tmp/resources/root_ca.crt", dump_cert(test_context.root_ca_cert)))
         if test_context.override_default_ca_cert_files:
             for ca_cert_path in CA_CERT_PATHS:
-                self.files.append(
-                    File(ca_cert_path, dump_cert(test_context.root_ca_cert))
-                )
-        self.files.append(
-            File("/tmp/resources/minifi_client.crt", dump_cert(minifi_client_cert))
-        )
-        self.files.append(
-            File("/tmp/resources/minifi_client.key", dump_key(minifi_client_key))
-        )
+                self.files.append(File(ca_cert_path, dump_cert(test_context.root_ca_cert)))
+        self.files.append(File("/tmp/resources/minifi_client.crt", dump_cert(minifi_client_cert)))
+        self.files.append(File("/tmp/resources/minifi_client.key", dump_key(minifi_client_key)))
         self.files.append(
             File(
                 "/tmp/resources/minifi_merged_cert.crt",
@@ -123,12 +111,8 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
             ca_cert=test_context.root_ca_cert,
             ca_key=test_context.root_ca_key,
         )
-        self.files.append(
-            File("/tmp/resources/clientuser.crt", dump_cert(clientuser_cert))
-        )
-        self.files.append(
-            File("/tmp/resources/clientuser.key", dump_key(clientuser_key))
-        )
+        self.files.append(File("/tmp/resources/clientuser.crt", dump_cert(clientuser_cert)))
+        self.files.append(File("/tmp/resources/clientuser.key", dump_key(clientuser_key)))
 
         minifi_server_cert, minifi_server_key = make_server_cert(
             common_name=f"server-{test_context.scenario_id}",
@@ -147,12 +131,8 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_yaml()
-        logger.info(
-            f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}"
-        )
-        self.files.append(
-            File(f"{self.deployment_type.conf_path}/config.yml", flow_config)
-        )
+        logger.info(f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
+        self.files.append(File(f"{self.deployment_type.conf_path}/config.yml", flow_config))
         self.files.append(
             File(
                 f"{self.deployment_type.conf_path}/minifi.properties",
@@ -165,9 +145,7 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
                 self._get_log_properties_file_content(),
             )
         )
-        resource_dir = (
-            Path(__file__).resolve().parent / "resources" / "minifi-controller"
-        )
+        resource_dir = Path(__file__).resolve().parent / "resources" / "minifi-controller"
         self.host_files.append(
             HostFile(
                 "/tmp/resources/minifi-controller/config.yml",
@@ -196,9 +174,7 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         self.log_properties[key] = value
 
     def _fill_default_properties(self):
-        self.properties["nifi.flow.configuration.file"] = (
-            f"{self.deployment_type.conf_path}/config.yml"
-        )
+        self.properties["nifi.flow.configuration.file"] = f"{self.deployment_type.conf_path}/config.yml"
         self.properties["nifi.extension.path"] = self.deployment_type.extension_pattern
         self.properties["nifi.administrative.yield.duration"] = "1 sec"
         self.properties["nifi.bored.yield.duration"] = "100 millis"
@@ -207,9 +183,7 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         else:
             self.properties["nifi.openssl.fips.support.enable"] = "false"
         self.properties["nifi.provenance.repository.class.name"] = "NoOpRepository"
-        self.properties["nifi.python.processor.dir"] = (
-            self.deployment_type.minifi_python_path
-        )
+        self.properties["nifi.python.processor.dir"] = self.deployment_type.minifi_python_path
 
     def _fill_default_log_properties(self):
         self.log_properties["spdlog.pattern"] = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v"

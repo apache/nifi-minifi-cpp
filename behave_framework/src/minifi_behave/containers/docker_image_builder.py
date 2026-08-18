@@ -35,13 +35,9 @@ class DockerImageBuilder:
         build_context_path: str | None = None,
     ):
         if not dockerfile_content and not build_context_path:
-            raise ValueError(
-                "Either 'dockerfile_content' or 'build_context_path' must be provided."
-            )
+            raise ValueError("Either 'dockerfile_content' or 'build_context_path' must be provided.")
         if dockerfile_content and build_context_path:
-            raise ValueError(
-                "Provide either 'dockerfile_content' or 'build_context_path', not both."
-            )
+            raise ValueError("Provide either 'dockerfile_content' or 'build_context_path', not both.")
 
         self.image_tag: str = image_tag
         self.dockerfile_content: str | None = dockerfile_content
@@ -66,18 +62,14 @@ class DockerImageBuilder:
                     with open(file_path, "wb") as f:
                         f.write(content)
 
-        logger.info(
-            f"Building Docker image '{self.image_tag}' from context '{context_path}'..."
-        )
+        logger.info(f"Building Docker image '{self.image_tag}' from context '{context_path}'...")
         try:
             self.image, build_logs = self.client.images.build(
                 path=context_path, tag=self.image_tag, rm=True, forcerm=True
             )
             for log_line in build_logs:
                 logger.debug(log_line.get("stream", "").strip())
-            logger.info(
-                f"Successfully built image '{self.image_tag}' (ID: {self.image.short_id})"
-            )
+            logger.info(f"Successfully built image '{self.image_tag}' (ID: {self.image.short_id})")
             return self.image
         except docker.errors.BuildError as e:
             logger.error(f"Failed to build image '{self.image_tag}'. Build logs:")
@@ -90,9 +82,7 @@ class DockerImageBuilder:
 
     def remove_image(self):
         if not self.image:
-            logger.warning(
-                f"No image object to remove for tag '{self.image_tag}'. Trying to find by tag."
-            )
+            logger.warning(f"No image object to remove for tag '{self.image_tag}'. Trying to find by tag.")
             try:
                 self.image = self.client.images.get(self.image_tag)
             except docker.errors.ImageNotFound:

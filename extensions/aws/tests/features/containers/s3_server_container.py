@@ -89,9 +89,7 @@ class S3ServerContainer(LinuxContainer):
         file_hash = md5_output.split(" ")[0].strip()
         return file_hash == expected_file_hash
 
-    def check_s3_server_object_metadata(
-        self, content_type="application/octet-stream", metadata=None
-    ):
+    def check_s3_server_object_metadata(self, content_type="application/octet-stream", metadata=None):
         if metadata is None:
             metadata = {}
         (code, output) = self.exec_run(
@@ -112,9 +110,7 @@ class S3ServerContainer(LinuxContainer):
         (code, output) = self.exec_run(["cat", s3_mock_dir + "/objectMetadata.json"])
         server_metadata = json.loads(output)
         return (
-            code == 0
-            and server_metadata["contentType"] == content_type
-            and metadata == server_metadata["userMetadata"]
+            code == 0 and server_metadata["contentType"] == content_type and metadata == server_metadata["userMetadata"]
         )
 
     def is_s3_bucket_empty(self):

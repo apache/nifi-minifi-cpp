@@ -202,9 +202,7 @@ The last parameter of addProperty is the controller service type. If the propert
 def onInitialize(processor):
     processor.setSupportsDynamicProperties()
     # arguments: property name, description, default value, is required, expression language supported, is sensitive, property type code, controller service type name
-    processor.addProperty(
-        "property name", "description", "default value", True, False, False, 1, None
-    )
+    processor.addProperty("property name", "description", "default value", True, False, False, 1, None)
 ```
 
 The onSchedule function is passed the context and session factory. This should be where your processor loads and reads properties via

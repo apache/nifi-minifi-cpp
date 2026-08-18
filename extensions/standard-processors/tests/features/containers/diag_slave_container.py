@@ -34,9 +34,7 @@ RUN pip install modbus-cli
 ENV PROTOCOL=tcp
 """)
 
-        builder = DockerImageBuilder(
-            image_tag="minifi-diag-slave-tcp:latest", dockerfile_content=dockerfile
-        )
+        builder = DockerImageBuilder(image_tag="minifi-diag-slave-tcp:latest", dockerfile_content=dockerfile)
         builder.build()
 
         super().__init__(

@@ -200,9 +200,7 @@ class MiNiFiCppMain(ConanFile):
             self.requires("google-cloud-cpp/2.47.1@minifi/develop")
             if not self.options.skip_tests:
                 self.requires("gtest/1.17.0")
-        if (
-            self.options.enable_all or self.options.enable_kubernetes
-        ) and self.settings.os != "Windows":
+        if (self.options.enable_all or self.options.enable_kubernetes) and self.settings.os != "Windows":
             self.requires("kubernetes/0.14.0@minifi/develop")
         if self.options.enable_all or self.options.enable_azure:
             self.requires("azure-sdk-for-cpp/12.18.0@minifi/develop")
@@ -230,9 +228,7 @@ class MiNiFiCppMain(ConanFile):
 
     def configure(self):
         self.options["libarchive"].with_openssl = True
-        self.options["date"].tz_db = (
-            "manual" if self.settings.os == "Windows" else "system"
-        )
+        self.options["date"].tz_db = "manual" if self.settings.os == "Windows" else "system"
         if self.options.enable_all or self.options.enable_bzip2:
             self.options["libarchive"].with_bzip2 = True
         if self.options.enable_all or self.options.enable_lzma:
@@ -242,9 +238,7 @@ class MiNiFiCppMain(ConanFile):
             self.options["librdkafka"].sasl = False
             self.options["librdkafka"].zstd = True
             self.options["librdkafka"].zlib = True
-        if (
-            self.options.enable_all or self.options.enable_gcp
-        ) and not self.options.skip_tests:
+        if (self.options.enable_all or self.options.enable_gcp) and not self.options.skip_tests:
             self.options["google-cloud-cpp"].with_mocks = True
         if self.options.enable_all or self.options.enable_aws:
             self.options["aws-sdk-cpp"].s3 = True
@@ -319,18 +313,12 @@ class MiNiFiCppMain(ConanFile):
             keep_path=False,
         )
 
-        minifi_py_ext_oldfile = os.path.join(
-            self.package_folder, "lib", "libminifi-python-script-extension.so"
-        )
-        minifi_py_ext_copynewfile = os.path.join(
-            self.package_folder, "lib", "libminifi_native.so"
-        )
+        minifi_py_ext_oldfile = os.path.join(self.package_folder, "lib", "libminifi-python-script-extension.so")
+        minifi_py_ext_copynewfile = os.path.join(self.package_folder, "lib", "libminifi_native.so")
         self.overwrite_libfile(minifi_py_ext_oldfile, minifi_py_ext_copynewfile)
 
     def package_info(self):
-        self.cpp_info.libs = collect_libs(
-            self, folder=os.path.join(self.package_folder, "lib")
-        )
+        self.cpp_info.libs = collect_libs(self, folder=os.path.join(self.package_folder, "lib"))
         self.cpp_info.set_property("cmake_file_name", "minifi-cpp")
         self.cpp_info.set_property("cmake_target_name", "minifi-cpp::minifi-cpp")
         self.cpp_info.set_property("pkg_config_name", "minifi-cpp")

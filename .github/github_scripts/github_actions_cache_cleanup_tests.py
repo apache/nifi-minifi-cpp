@@ -140,10 +140,7 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
         cleaner.github_request_sender = self.create_mock_github_request_sender()
         cleaner.remove_obsolete_cache_entries()
         self.assertEqual(
-            {
-                call[0][0]
-                for call in cleaner.github_request_sender.delete_cache.call_args_list
-            },
+            {call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list},
             {
                 "macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
                 "macos-xcode-ccache-refs/heads/MINIFICPP-9999-9d5e183f5bc894af8dfc295e5976a5f1b4664456",
@@ -154,15 +151,10 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
 
     def test_cache_cleanup_with_zero_open_prs(self):
         cleaner = GithubActionsCacheCleaner("mytoken", "githubuser/nifi-minifi-cpp")
-        cleaner.github_request_sender = (
-            self.create_empty_open_pr_mock_github_request_sender()
-        )
+        cleaner.github_request_sender = self.create_empty_open_pr_mock_github_request_sender()
         cleaner.remove_obsolete_cache_entries()
         self.assertEqual(
-            {
-                call[0][0]
-                for call in cleaner.github_request_sender.delete_cache.call_args_list
-            },
+            {call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list},
             {
                 "macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
                 "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
@@ -175,15 +167,10 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
 
     def test_cache_cleanup_with_zero_action_caches(self):
         cleaner = GithubActionsCacheCleaner("mytoken", "githubuser/nifi-minifi-cpp")
-        cleaner.github_request_sender = (
-            self.create_empty_caches_mock_github_request_sender()
-        )
+        cleaner.github_request_sender = self.create_empty_caches_mock_github_request_sender()
         cleaner.remove_obsolete_cache_entries()
         self.assertEqual(
-            {
-                call[0][0]
-                for call in cleaner.github_request_sender.delete_cache.call_args_list
-            },
+            {call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list},
             set(),
         )
 

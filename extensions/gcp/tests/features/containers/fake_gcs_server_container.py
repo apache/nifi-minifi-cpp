@@ -33,9 +33,7 @@ class FakeGcsServerContainer(LinuxContainer):
             test_context.network,
             command=f"-scheme http -host fake-gcs-server-{test_context.scenario_id}",
         )
-        self.dirs.append(
-            Directory(path="/data/test-bucket", files={"test-file": "preloaded data\n"})
-        )
+        self.dirs.append(Directory(path="/data/test-bucket", files={"test-file": "preloaded data\n"}))
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)

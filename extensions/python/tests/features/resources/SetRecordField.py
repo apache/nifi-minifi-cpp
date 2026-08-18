@@ -25,9 +25,7 @@ from nifiapi.recordtransform import RecordTransform, RecordTransformResult
 
 class SetRecordField(RecordTransform):
     class Java:
-        implements: ClassVar[list] = [
-            "org.apache.nifi.python.processor.RecordTransform"
-        ]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.RecordTransform"]
 
     class ProcessorDetails:
         version = "0.0.1-SNAPSHOT"
@@ -42,11 +40,7 @@ class SetRecordField(RecordTransform):
                 continue
 
             propname = key.name
-            record[propname] = (
-                context.getProperty(propname)
-                .evaluateAttributeExpressions(attributemap)
-                .getValue()
-            )
+            record[propname] = context.getProperty(propname).evaluateAttributeExpressions(attributemap).getValue()
 
         # Determine the partition
         if "group" in record:
@@ -55,9 +49,7 @@ class SetRecordField(RecordTransform):
             partition = None
 
         # Return the result
-        return RecordTransformResult(
-            record=record, relationship="success", partition=partition
-        )
+        return RecordTransformResult(record=record, relationship="success", partition=partition)
 
     def getDynamicPropertyDescriptor(self, name):
         return PropertyDescriptor(

@@ -47,9 +47,7 @@ class PostgresContainer(LinuxContainer):
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
                 """
         )
-        builder = DockerImageBuilder(
-            image_tag="minifi-postgres-server:latest", dockerfile_content=dockerfile
-        )
+        builder = DockerImageBuilder(image_tag="minifi-postgres-server:latest", dockerfile_content=dockerfile)
         builder.build()
 
         super().__init__(
@@ -72,8 +70,4 @@ class PostgresContainer(LinuxContainer):
     def check_query_results(self, query: str, number_of_rows: int) -> bool:
         (code, output) = self.exec_run(["psql", "-U", "postgres", "-c", query])
         logger.debug(f"check_query_results: {query} -> {output}")
-        return (
-            code == 0
-            and (str(number_of_rows) + (" row" if number_of_rows == 1 else " rows"))
-            in output
-        )
+        return code == 0 and (str(number_of_rows) + (" row" if number_of_rows == 1 else " rows")) in output

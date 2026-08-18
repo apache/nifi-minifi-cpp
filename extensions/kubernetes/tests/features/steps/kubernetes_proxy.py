@@ -34,15 +34,11 @@ class KubernetesProxy:
         self.temp_directory = tempfile.TemporaryDirectory()
 
         self.resources_directory = Path(__file__).resolve().parent.parent / "resources"
-        self.minifi_conf_directory = os.path.join(
-            self.temp_directory.name, "minifi_conf"
-        )
+        self.minifi_conf_directory = os.path.join(self.temp_directory.name, "minifi_conf")
         os.mkdir(self.minifi_conf_directory)
 
         self.kind_binary_path = os.path.join(self.temp_directory.name, "kind")
-        self.kind_config_path = os.path.join(
-            self.temp_directory.name, "kind-config.yml"
-        )
+        self.kind_config_path = os.path.join(self.temp_directory.name, "kind-config.yml")
         self.__download_kind()
         self.__create_kind_config()
 
@@ -108,12 +104,7 @@ class KubernetesProxy:
         self.status = "running"
 
     def delete_cluster(self):
-        if (
-            subprocess.run(
-                [self.kind_binary_path, "delete", "cluster"], check=False
-            ).returncode
-            != 0
-        ):
+        if subprocess.run([self.kind_binary_path, "delete", "cluster"], check=False).returncode != 0:
             raise RuntimeError("Could not delete the kind Kubernetes cluster")
         self.status = "exited"
 
@@ -125,9 +116,7 @@ class KubernetesProxy:
             ).returncode
             != 0
         ):
-            raise RuntimeError(
-                f"Could not load the {image_name} docker image into the kind Kubernetes cluster"
-            )
+            raise RuntimeError(f"Could not load the {image_name} docker image into the kind Kubernetes cluster")
 
     def create_helper_objects(self):
         self.__wait_for_default_service_account("default")
@@ -152,44 +141,36 @@ class KubernetesProxy:
         for i in range(120):
             if i > 0:
                 time.sleep(1)
-            (code, output) = self.docker_client.containers.get(
-                KUBERNETES_CONTAINER_NAME
-            ).exec_run(["kubectl", "-n", namespace, "get", "pods"])
+            (code, output) = self.docker_client.containers.get(KUBERNETES_CONTAINER_NAME).exec_run(
+                ["kubectl", "-n", namespace, "get", "pods"]
+            )
             if code == 0 and re.search(f"{pod_name}.*Running", output.decode("utf-8")):
                 return
-        raise RuntimeError(
-            f"The pod {namespace}:{pod_name} in the Kubernetes cluster failed to start up"
-        )
+        raise RuntimeError(f"The pod {namespace}:{pod_name} in the Kubernetes cluster failed to start up")
 
     def __wait_for_default_service_account(self, namespace: str):
         for i in range(120):
             if i > 0:
                 time.sleep(1)
-            (code, _output) = self.docker_client.containers.get(
-                KUBERNETES_CONTAINER_NAME
-            ).exec_run(["kubectl", "-n", namespace, "get", "serviceaccount", "default"])
+            (code, _output) = self.docker_client.containers.get(KUBERNETES_CONTAINER_NAME).exec_run(
+                ["kubectl", "-n", namespace, "get", "serviceaccount", "default"]
+            )
             if code == 0:
                 return
-        raise RuntimeError(
-            f"Default service account for namespace '{namespace}' not found"
-        )
+        raise RuntimeError(f"Default service account for namespace '{namespace}' not found")
 
     def __create_objects_of_type(self, type: str) -> list[str]:
         found_objects = []
-        for full_file_name in glob.iglob(
-            os.path.join(self.resources_directory, f"*.{type}.yml")
-        ):
+        for full_file_name in glob.iglob(os.path.join(self.resources_directory, f"*.{type}.yml")):
             file_name = os.path.basename(full_file_name)
             file_name_in_container = os.path.join("/var/tmp", file_name)
 
-            (code, output) = self.docker_client.containers.get(
-                KUBERNETES_CONTAINER_NAME
-            ).exec_run(["kubectl", "apply", "-f", file_name_in_container])
+            (code, output) = self.docker_client.containers.get(KUBERNETES_CONTAINER_NAME).exec_run(
+                ["kubectl", "apply", "-f", file_name_in_container]
+            )
             if code != 0:
                 raise RuntimeError(
-                    "Could not create kubernetes object from file '{}': {}".format(
-                        *full_file_name
-                    ),
+                    "Could not create kubernetes object from file '{}': {}".format(*full_file_name),
                     output.decode("utf-8"),
                 )
 
@@ -208,9 +189,9 @@ class KubernetesProxy:
         return None, b"The kind Kubernetes cluster is not running."
 
     def logs(self) -> bytes:
-        (code, output) = self.docker_client.containers.get(
-            KUBERNETES_CONTAINER_NAME
-        ).exec_run(["kubectl", "-n", "daemon", "logs", "minifi"])
+        (code, output) = self.docker_client.containers.get(KUBERNETES_CONTAINER_NAME).exec_run(
+            ["kubectl", "-n", "daemon", "logs", "minifi"]
+        )
         if code == 0:
             return output
         else:

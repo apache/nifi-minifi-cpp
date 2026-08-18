@@ -61,18 +61,14 @@ class MinifiTestContext(Context):
                     MinifiLinuxContainer,
                 )
 
-                minifi_container = MinifiLinuxContainer(
-                    container_name, self, FHSDeployment()
-                )
+                minifi_container = MinifiLinuxContainer(container_name, self, FHSDeployment())
             else:
                 from minifi_behave.containers.minifi_linux_container import (
                     MinifiLinuxContainer,
                     NormalDeployment,
                 )
 
-                minifi_container = MinifiLinuxContainer(
-                    container_name, self, NormalDeployment()
-                )
+                minifi_container = MinifiLinuxContainer(container_name, self, NormalDeployment())
             self.containers[container_name] = minifi_container
         return self.containers[container_name]
 

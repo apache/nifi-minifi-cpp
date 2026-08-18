@@ -23,9 +23,7 @@ import docker
 
 
 def before_all(context):
-    check_log_lines_path = (
-        Path(__file__).resolve().parent / "resources" / "check_log_lines_on_grafana.py"
-    )
+    check_log_lines_path = Path(__file__).resolve().parent / "resources" / "check_log_lines_on_grafana.py"
     check_log_lines_content = None
     with open(check_log_lines_path, "rb") as f:
         check_log_lines_content = f.read()
@@ -42,9 +40,7 @@ COPY check_log_lines_on_grafana.py /scripts/check_log_lines_on_grafana.py"""
 
     reverse_proxy_builder = DockerImageBuilder(
         image_tag="minifi-reverse-proxy:latest",
-        build_context_path=str(
-            Path(__file__).resolve().parent / "resources" / "reverse-proxy"
-        ),
+        build_context_path=str(Path(__file__).resolve().parent / "resources" / "reverse-proxy"),
     )
     reverse_proxy_builder.build()
     docker.from_env().images.pull(GrafanaLokiContainer.IMAGE)

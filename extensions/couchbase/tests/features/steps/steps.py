@@ -32,38 +32,24 @@ def start_couchbase_server(context: MinifiTestContext):
     assert context.containers["couchbase-server"].deploy(context)
 
 
-@step(
-    "a CouchbaseClusterService controller service is set up to communicate with the Couchbase server"
-)
+@step("a CouchbaseClusterService controller service is set up to communicate with the Couchbase server")
 def setup_couchbase_cluster_service(context: MinifiTestContext):
-    controller_service = ControllerService(
-        class_name="CouchbaseClusterService", service_name="CouchbaseClusterService"
-    )
-    controller_service.add_property(
-        "Connection String", f"couchbase://couchbase-server-{context.scenario_id}"
-    )
+    controller_service = ControllerService(class_name="CouchbaseClusterService", service_name="CouchbaseClusterService")
+    controller_service.add_property("Connection String", f"couchbase://couchbase-server-{context.scenario_id}")
     controller_service.add_property("User Name", "Administrator")
     controller_service.add_property("User Password", "password123")
-    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(
-        controller_service
-    )
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
 @step("a CouchbaseClusterService is set up using SSL connection")
 def setup_couchbase_cluster_service_ssl(context):
-    ssl_context_service = ControllerService(
-        class_name="SSLContextService", service_name="SSLContextService"
-    )
+    ssl_context_service = ControllerService(class_name="SSLContextService", service_name="SSLContextService")
     ssl_context_service.add_property("CA Certificate", "/tmp/resources/root_ca.crt")
-    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(
-        ssl_context_service
-    )
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(ssl_context_service)
     couchbase_cluster_service = ControllerService(
         class_name="CouchbaseClusterService", service_name="CouchbaseClusterService"
     )
-    couchbase_cluster_service.add_property(
-        "Connection String", f"couchbases://couchbase-server-{context.scenario_id}"
-    )
+    couchbase_cluster_service.add_property("Connection String", f"couchbases://couchbase-server-{context.scenario_id}")
     couchbase_cluster_service.add_property("User Name", "Administrator")
     couchbase_cluster_service.add_property("User Password", "password123")
     couchbase_cluster_service.add_property("Linked Services", "SSLContextService")
@@ -75,24 +61,16 @@ def setup_couchbase_cluster_service_ssl(context):
 @step("a CouchbaseClusterService is setup up using mTLS authentication")
 def setup_couchbase_cluster_service_mtls(context: MinifiTestContext):
     add_ssl_context_service_for_minifi(context, "clientuser")
-    controller_service = ControllerService(
-        class_name="CouchbaseClusterService", service_name="CouchbaseClusterService"
-    )
-    controller_service.add_property(
-        "Connection String", f"couchbases://couchbase-server-{context.scenario_id}"
-    )
+    controller_service = ControllerService(class_name="CouchbaseClusterService", service_name="CouchbaseClusterService")
+    controller_service.add_property("Connection String", f"couchbases://couchbase-server-{context.scenario_id}")
     controller_service.add_property("Linked Services", "SSLContextService")
-    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(
-        controller_service
-    )
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
 @then(
     'a document with id "{doc_id}" in bucket "{bucket_name}" is present with data \'{data}\' of type "{data_type}" in Couchbase'
 )
-def verify_couchbase_document_data(
-    context, doc_id: str, bucket_name: str, data: str, data_type: str
-):
+def verify_couchbase_document_data(context, doc_id: str, bucket_name: str, data: str, data_type: str):
     assert context.containers["couchbase-server"].is_data_present_in_couchbase(
         doc_id, bucket_name, data, data_type
     ) or log_due_to_failure(context)

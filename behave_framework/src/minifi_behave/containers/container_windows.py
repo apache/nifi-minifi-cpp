@@ -105,9 +105,7 @@ class WindowsContainer(ContainerProtocol):
 
         try:
             existing_container = self.client.containers.get(self.container_name)
-            logger.warning(
-                f"Found existing container '{self.container_name}'. Removing it first."
-            )
+            logger.warning(f"Found existing container '{self.container_name}'. Removing it first.")
             existing_container.remove(force=True)
         except docker.errors.NotFound:
             pass
@@ -192,9 +190,7 @@ class WindowsContainer(ContainerProtocol):
         if not self.container:
             return None, "Container not running"
 
-        encoded_command = base64.b64encode(ps_script.encode("utf_16_le")).decode(
-            "utf-8"
-        )
+        encoded_command = base64.b64encode(ps_script.encode("utf_16_le")).decode("utf-8")
 
         cmd_parts = [
             "powershell",
@@ -220,9 +216,7 @@ class WindowsContainer(ContainerProtocol):
         exit_code, _ = self._run_powershell(ps_script)
         return exit_code == 0
 
-    def directory_contains_file_with_content(
-        self, directory_path: str, expected_content: str
-    ) -> bool:
+    def directory_contains_file_with_content(self, directory_path: str, expected_content: str) -> bool:
         if not self.container:
             return False
 
@@ -239,9 +233,7 @@ class WindowsContainer(ContainerProtocol):
         exit_code, _ = self._run_powershell(ps_script)
         return exit_code == 0
 
-    def directory_contains_file_with_regex(
-        self, directory_path: str, regex_str: str
-    ) -> bool:
+    def directory_contains_file_with_regex(self, directory_path: str, regex_str: str) -> bool:
         if not self.container:
             return False
 
@@ -275,22 +267,16 @@ class WindowsContainer(ContainerProtocol):
 
         exit_code, output = self._run_powershell(ps_script)
         if exit_code != 0:
-            logger.debug(
-                f"path_with_content_exists failed for {win_path}. Output: {output}"
-            )
+            logger.debug(f"path_with_content_exists failed for {win_path}. Output: {output}")
 
         return exit_code == 0
 
-    def directory_has_single_file_with_content(
-        self, directory_path: str, expected_content: str
-    ) -> bool:
+    def directory_has_single_file_with_content(self, directory_path: str, expected_content: str) -> bool:
         if not self.container:
             return False
 
         win_path = self._normalize_path(directory_path)
-        escaped_content = (
-            expected_content.strip().replace("'", "''").replace("\n", "\r\n")
-        )
+        escaped_content = expected_content.strip().replace("'", "''").replace("\n", "\r\n")
 
         ps_script = (
             f"$files = Get-ChildItem -Path '{win_path}' -File -Depth 0; "
@@ -301,9 +287,7 @@ class WindowsContainer(ContainerProtocol):
 
         exit_code, output = self._run_powershell(ps_script)
         if exit_code != 0:
-            logger.debug(
-                f"Check for single file failed in {win_path}. Output: {output}"
-            )
+            logger.debug(f"Check for single file failed in {win_path}. Output: {output}")
 
         return exit_code == 0
 
@@ -352,9 +336,7 @@ class WindowsContainer(ContainerProtocol):
         except (ValueError, IndexError):
             return -1
 
-    def verify_file_contents(
-        self, directory_path: str, expected_contents: list[str]
-    ) -> bool:
+    def verify_file_contents(self, directory_path: str, expected_contents: list[str]) -> bool:
         if not self.container:
             return False
 
@@ -367,9 +349,7 @@ class WindowsContainer(ContainerProtocol):
             logger.error(f"Error listing files in '{win_path}': {output}")
             return False
 
-        actual_filepaths = [
-            path.strip() for path in output.splitlines() if path.strip()
-        ]
+        actual_filepaths = [path.strip() for path in output.splitlines() if path.strip()]
 
         if len(actual_filepaths) != len(expected_contents):
             return False
@@ -386,10 +366,7 @@ class WindowsContainer(ContainerProtocol):
                 return False
             actual_file_contents.append(content)
 
-        normalized_expected = [
-            s.strip().replace("\r\n", "\n").replace("\r", "\n")
-            for s in expected_contents
-        ]
+        normalized_expected = [s.strip().replace("\r\n", "\n").replace("\r", "\n") for s in expected_contents]
 
         return sorted(actual_file_contents) == sorted(normalized_expected)
 
@@ -413,17 +390,12 @@ class WindowsContainer(ContainerProtocol):
 
         return True
 
-    def directory_contains_file_with_minimum_size(
-        self, directory_path: str, expected_size: int
-    ) -> bool:
+    def directory_contains_file_with_minimum_size(self, directory_path: str, expected_size: int) -> bool:
         if not self.container or not self.nonempty_dir_exists(directory_path):
             return False
 
         win_path = self._normalize_path(directory_path)
-        ps_script = (
-            f"Get-ChildItem -LiteralPath '{win_path}' -File "
-            f"| Where-Object {{ $_.Length -gt {expected_size} }}"
-        )
+        ps_script = f"Get-ChildItem -LiteralPath '{win_path}' -File | Where-Object {{ $_.Length -gt {expected_size} }}"
 
         exit_code, output = self._run_powershell(ps_script)
 

@@ -55,9 +55,7 @@ class FlowFileTransform(ProcessorBase):
         try:
             result = self.transform(context_proxy, flow_file_proxy)
         except Exception:
-            self.logger.error(
-                f"Failed to transform flow file due to error:\n{traceback.format_exc()}"
-            )
+            self.logger.error(f"Failed to transform flow file due to error:\n{traceback.format_exc()}")
             session.remove(flow_file)
             session.transfer(original_flow_file, self.REL_FAILURE)
             return
@@ -98,7 +96,5 @@ class FlowFileTransform(ProcessorBase):
         session.transfer(original_flow_file, self.REL_ORIGINAL)
 
     @abstractmethod
-    def transform(
-        self, context: ProcessContextProxy, flowFile: FlowFileProxy
-    ) -> FlowFileTransformResult:
+    def transform(self, context: ProcessContextProxy, flowFile: FlowFileProxy) -> FlowFileTransformResult:
         pass

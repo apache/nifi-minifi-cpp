@@ -33,12 +33,8 @@ def enable_openssl_fips_mode(minifi: MinifiProtocol):
 
 
 def enable_log_metrics_publisher(minifi: MinifiProtocol):
-    minifi.set_property(
-        "nifi.metrics.publisher.LogMetricsPublisher.metrics", "RepositoryMetrics"
-    )
-    minifi.set_property(
-        "nifi.metrics.publisher.LogMetricsPublisher.logging.interval", "1s"
-    )
+    minifi.set_property("nifi.metrics.publisher.LogMetricsPublisher.metrics", "RepositoryMetrics")
+    minifi.set_property("nifi.metrics.publisher.LogMetricsPublisher.logging.interval", "1s")
     minifi.set_property("nifi.metrics.publisher.class", "LogMetricsPublisher")
 
 
@@ -51,12 +47,6 @@ def conf_c2_flow_url(minifi: MinifiProtocol, scenario_id: str):
 
 def set_up_ssl_properties(minifi: MinifiProtocol):
     minifi.set_property("nifi.remote.input.secure", "true")
-    minifi.set_property(
-        "nifi.security.client.certificate", "/tmp/resources/minifi_client.crt"
-    )
-    minifi.set_property(
-        "nifi.security.client.private.key", "/tmp/resources/minifi_client.key"
-    )
-    minifi.set_property(
-        "nifi.security.client.ca.certificate", "/tmp/resources/root_ca.crt"
-    )
+    minifi.set_property("nifi.security.client.certificate", "/tmp/resources/minifi_client.crt")
+    minifi.set_property("nifi.security.client.private.key", "/tmp/resources/minifi_client.key")
+    minifi.set_property("nifi.security.client.ca.certificate", "/tmp/resources/root_ca.crt")

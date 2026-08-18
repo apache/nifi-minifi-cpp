@@ -65,9 +65,7 @@ splunk:
         self.files.append(
             File(
                 "/opt/splunk/etc/auth/splunk_cert.pem",
-                splunk_cert_content.decode()
-                + splunk_key_content.decode()
-                + root_ca_content.decode(),
+                splunk_cert_content.decode() + splunk_key_content.decode() + root_ca_content.decode(),
                 permissions=0o644,
             )
         )
@@ -81,9 +79,7 @@ splunk:
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)
-        finished_str = (
-            "Ansible playbook complete, will begin streaming splunkd_stderr.log"
-        )
+        finished_str = "Ansible playbook complete, will begin streaming splunkd_stderr.log"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=300,
@@ -108,9 +104,7 @@ splunk:
         return query in output.decode("utf-8")
 
     @retry_check()
-    def check_splunk_event_with_attributes(
-        self, query: str, attributes: dict[str, str]
-    ) -> bool:
+    def check_splunk_event_with_attributes(self, query: str, attributes: dict[str, str]) -> bool:
         (code, output) = self.exec_run(
             [
                 "sudo",
@@ -133,25 +127,13 @@ splunk:
                 continue
             if "result" not in result_line_json:
                 continue
-            if (
-                "host" in attributes
-                and result_line_json["result"]["host"] != attributes["host"]
-            ):
+            if "host" in attributes and result_line_json["result"]["host"] != attributes["host"]:
                 continue
-            if (
-                "source" in attributes
-                and result_line_json["result"]["source"] != attributes["source"]
-            ):
+            if "source" in attributes and result_line_json["result"]["source"] != attributes["source"]:
                 continue
-            if (
-                "sourcetype" in attributes
-                and result_line_json["result"]["sourcetype"] != attributes["sourcetype"]
-            ):
+            if "sourcetype" in attributes and result_line_json["result"]["sourcetype"] != attributes["sourcetype"]:
                 continue
-            if (
-                "index" in attributes
-                and result_line_json["result"]["index"] != attributes["index"]
-            ):
+            if "index" in attributes and result_line_json["result"]["index"] != attributes["index"]:
                 continue
             return True
         return False

@@ -28,9 +28,7 @@ class KinesisServerContainer(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
         builder = DockerImageBuilder(
             image_tag="minifi-kinesis-mock:latest",
-            build_context_path=str(
-                Path(__file__).resolve().parent.parent / "resources" / "kinesis-mock"
-            ),
+            build_context_path=str(Path(__file__).resolve().parent.parent / "resources" / "kinesis-mock"),
         )
         builder.build()
 
@@ -54,8 +52,6 @@ class KinesisServerContainer(LinuxContainer):
 
     @retry_check()
     def check_kinesis_server_record_data(self, record_data):
-        (code, output) = self.exec_run(
-            ["node", "/app/consumer/consumer.js", record_data]
-        )
+        (code, output) = self.exec_run(["node", "/app/consumer/consumer.js", record_data])
         logger.info(f"Kinesis server returned output: '{output}' with code '{code}'")
         return code == 0

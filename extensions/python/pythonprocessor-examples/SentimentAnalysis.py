@@ -18,9 +18,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
 def describe(processor):
-    processor.setDescription(
-        "Provides a sentiment analysis of the content within the flow file"
-    )
+    processor.setDescription("Provides a sentiment analysis of the content within the flow file")
 
 
 def onInitialize(processor):

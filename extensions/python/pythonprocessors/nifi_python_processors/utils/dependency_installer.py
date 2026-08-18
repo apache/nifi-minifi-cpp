@@ -20,10 +20,7 @@ class Visitor(ast.NodeVisitor):
                 # Iterate through the nodes of the 'ProcessorDetails' class
                 for detail in child.body:
                     # Check if the child node is an assignment of the 'dependencies' member variable
-                    if (
-                        isinstance(detail, ast.Assign)
-                        and detail.targets[0].id == "dependencies"
-                    ):
+                    if isinstance(detail, ast.Assign) and detail.targets[0].id == "dependencies":
                         # Iterate through values of the 'dependencies' list member variable
                         for elt in detail.value.elts:
                             # Check if the element is a string constant and add it to the dependencies list
@@ -77,9 +74,7 @@ if __name__ == "__main__":
             dependencies = extract_dependencies(sys.argv[i])
             if dependencies:
                 dependencies_found = True
-                print(
-                    f"Installing dependencies for processor {sys.argv[i]}: {dependencies!s}"
-                )
+                print(f"Installing dependencies for processor {sys.argv[i]}: {dependencies!s}")
                 command += dependencies
 
     if dependencies_found:
@@ -90,6 +85,4 @@ if __name__ == "__main__":
             print(f"Error occurred while installing dependencies: {e}")
             sys.exit(1)
     else:
-        print(
-            "No dependencies were found for MiNiFi python processors. No python packages were installed."
-        )
+        print("No dependencies were found for MiNiFi python processors. No python packages were installed.")

@@ -49,14 +49,10 @@ class FlowFileSource(ProcessorBase):
             if not result:
                 return
         except Exception:
-            self.logger.error(
-                f"Failed to create flow file due to error:\n{traceback.format_exc()}"
-            )
+            self.logger.error(f"Failed to create flow file due to error:\n{traceback.format_exc()}")
             return
 
-        flow_file = self.createFlowFile(
-            session, result.getAttributes(), result.getContents()
-        )
+        flow_file = self.createFlowFile(session, result.getAttributes(), result.getContents())
 
         if result.getRelationship() == "success":
             session.transfer(flow_file, self.REL_SUCCESS)

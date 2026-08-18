@@ -25,9 +25,7 @@ from nifiapi.properties import (
 
 class ExpressionLanguagePropertyWithValidator(FlowFileTransform):
     class Java:
-        implements: ClassVar[list] = [
-            "org.apache.nifi.python.processor.FlowFileTransform"
-        ]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.FlowFileTransform"]
 
     class ProcessorDetails:
         version = "1.2.3"
@@ -49,9 +47,7 @@ class ExpressionLanguagePropertyWithValidator(FlowFileTransform):
         return [self.INTEGER_PROPERTY]
 
     def getDynamicPropertyDescriptor(self, propertyname):
-        return PropertyDescriptor(
-            name=propertyname, description="A user-defined property", dynamic=True
-        )
+        return PropertyDescriptor(name=propertyname, description="A user-defined property", dynamic=True)
 
     def transform(self, context, flow_file):
         integer_value = context.getProperty(self.INTEGER_PROPERTY).asInteger()

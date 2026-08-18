@@ -34,21 +34,15 @@ def __ensure_kubernetes_cluster(context: MinifiTestContext):
         context.containers[DEFAULT_MINIFI_CONTAINER_NAME],
         MinifiAsPodInKubernetesCluster,
     ):
-        context.containers[DEFAULT_MINIFI_CONTAINER_NAME] = (
-            MinifiAsPodInKubernetesCluster("kubernetes", context)
-        )
+        context.containers[DEFAULT_MINIFI_CONTAINER_NAME] = MinifiAsPodInKubernetesCluster("kubernetes", context)
 
 
 @given("a {processor_type} processor in a Kubernetes cluster")
 @given("a {processor_type} processor in the Kubernetes cluster")
-def setup_processor_in_kubernetes_cluster(
-    context: MinifiTestContext, processor_type: str
-):
+def setup_processor_in_kubernetes_cluster(context: MinifiTestContext, processor_type: str):
     __ensure_kubernetes_cluster(context)
     processor = Processor(class_name=processor_type, proc_name=processor_type)
-    context.get_or_create_default_minifi_container().flow_definition.add_processor(
-        processor
-    )
+    context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
 def __set_up_the_kubernetes_controller_service(
@@ -64,23 +58,15 @@ def __set_up_the_kubernetes_controller_service(
     kubernetes_controller_service.properties = properties
     flow = context.get_or_create_default_minifi_container().flow_definition
     flow.controller_services.append(kubernetes_controller_service)
-    flow.get_processor(processor_name).add_property(
-        service_property_name, kubernetes_controller_service.name
-    )
+    flow.get_processor(processor_name).add_property(service_property_name, kubernetes_controller_service.name)
 
 
-@given(
-    "the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service"
-)
-@given(
-    "the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service"
-)
+@given("the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service")
+@given("the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service")
 def setup_kubernetes_controller_service_for_processor(
     context: MinifiTestContext, processor_name: str, service_property_name: str
 ):
-    __set_up_the_kubernetes_controller_service(
-        context, processor_name, service_property_name, {}
-    )
+    __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {})
 
 
 @given(

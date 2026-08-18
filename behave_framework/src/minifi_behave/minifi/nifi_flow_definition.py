@@ -83,9 +83,7 @@ class NifiFlowDefinition(FlowDefinition):
                         "artifact": "nifi-standard-nar",
                         "version": self.NIFI_VERSION,
                     },
-                    "properties": {
-                        key: value for key, value in proc.properties.items() if key
-                    },
+                    "properties": {key: value for key, value in proc.properties.items() if key},
                     "propertyDescriptors": {},
                     "style": {},
                     "schedulingPeriod": "0 sec"
@@ -171,11 +169,7 @@ class NifiFlowDefinition(FlowDefinition):
                 }
             )
 
-        config["rootGroup"]["inputPorts"] = [
-            input_port.to_json_dict() for input_port in self.input_ports
-        ]
-        config["rootGroup"]["outputPorts"] = [
-            output_port.to_json_dict() for output_port in self.output_ports
-        ]
+        config["rootGroup"]["inputPorts"] = [input_port.to_json_dict() for input_port in self.input_ports]
+        config["rootGroup"]["outputPorts"] = [output_port.to_json_dict() for output_port in self.output_ports]
 
         return json.dumps(config)

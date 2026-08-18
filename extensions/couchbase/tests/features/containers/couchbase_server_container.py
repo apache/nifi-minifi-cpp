@@ -157,9 +157,7 @@ class CouchbaseServerContainer(LinuxContainer):
     def _run_couchbase_cli_command(self, command):
         (code, output) = self.exec_run(command)
         if code != 0:
-            logger.error(
-                f"Failed to run command '{command}', returned error code: {code}, output: '{output}'"
-            )
+            logger.error(f"Failed to run command '{command}', returned error code: {code}, output: '{output}'")
             return False
         return True
 
@@ -178,24 +176,14 @@ class CouchbaseServerContainer(LinuxContainer):
             )
             return True
         except ContainerError as e:
-            stdout = (
-                e.stdout.decode("utf-8", errors="replace")
-                if hasattr(e, "stdout") and e.stdout
-                else ""
-            )
-            stderr = (
-                e.stderr.decode("utf-8", errors="replace")
-                if hasattr(e, "stderr") and e.stderr
-                else ""
-            )
+            stdout = e.stdout.decode("utf-8", errors="replace") if hasattr(e, "stdout") and e.stdout else ""
+            stderr = e.stderr.decode("utf-8", errors="replace") if hasattr(e, "stderr") and e.stderr else ""
             logger.error(
                 f"Python command '{command}' failed in couchbase helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'"
             )
             return False
         except Exception as e:
-            logger.error(
-                f"Unexpected error while running python command '{command}' in couchbase helper docker: '{e}'"
-            )
+            logger.error(f"Unexpected error while running python command '{command}' in couchbase helper docker: '{e}'")
             return False
 
     @retry_check(max_tries=15, retry_interval_seconds=2)
@@ -215,9 +203,7 @@ sys.exit(0)
         """
         return self._run_python_in_couchbase_helper_docker(python_command)
 
-    def is_data_present_in_couchbase(
-        self, doc_id: str, bucket_name: str, expected_data: str, expected_data_type: str
-    ):
+    def is_data_present_in_couchbase(self, doc_id: str, bucket_name: str, expected_data: str, expected_data_type: str):
         python_command = f"""
 from couchbase.cluster import Cluster
 from couchbase.options import ClusterOptions

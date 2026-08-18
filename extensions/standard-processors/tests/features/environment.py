@@ -52,9 +52,7 @@ def is_minifi_image_alpine_based(context):
 def before_scenario(context, scenario):
     common_before_scenario(context, scenario)
     if "ALPINE_ONLY" in scenario.tags and not is_minifi_image_alpine_based(context):
-        scenario.skip(
-            "This scenario is only compatible with Alpine-based Minifi images"
-        )
+        scenario.skip("This scenario is only compatible with Alpine-based Minifi images")
 
 
 def after_scenario(context, scenario):

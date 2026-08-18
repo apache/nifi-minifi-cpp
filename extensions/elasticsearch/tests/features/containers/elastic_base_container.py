@@ -19,9 +19,7 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class ElasticBaseContainer(LinuxContainer):
-    def __init__(
-        self, test_context: MinifiTestContext, image: str, container_name: str
-    ):
+    def __init__(self, test_context: MinifiTestContext, image: str, container_name: str):
         super().__init__(image, container_name, test_context.network)
         self.user = None
 
@@ -48,17 +46,12 @@ class ElasticBaseContainer(LinuxContainer):
         )
         return code == 0 and ('"_id":"' + doc_id + '"') in output
 
-    def check_elastic_field_value(
-        self, index_name: str, doc_id: str, field_name: str, field_value: str
-    ) -> bool:
+    def check_elastic_field_value(self, index_name: str, doc_id: str, field_name: str, field_value: str) -> bool:
         (code, output) = self.exec_run(
             [
                 "/bin/bash",
                 "-c",
-                "curl -s -u elastic:password -k -XGET https://localhost:9200/"
-                + index_name
-                + "/_doc/"
-                + doc_id,
+                "curl -s -u elastic:password -k -XGET https://localhost:9200/" + index_name + "/_doc/" + doc_id,
             ]
         )
         return code == 0 and (field_name + '":"' + field_value) in output

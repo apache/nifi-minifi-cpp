@@ -47,9 +47,7 @@ class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
         conf_dir = Directory("\\Program Files\\ApacheNiFiMiNiFi\\nifi-minifi-cpp\\conf")
         conf_dir.add_file("config.yml", self.flow_definition.to_yaml())
         conf_dir.add_file("minifi.properties", self._get_properties_file_content())
-        conf_dir.add_file(
-            "minifi-log.properties", self._get_log_properties_file_content()
-        )
+        conf_dir.add_file("minifi-log.properties", self._get_log_properties_file_content())
 
         self.dirs.append(conf_dir)
         return super().deploy(context)

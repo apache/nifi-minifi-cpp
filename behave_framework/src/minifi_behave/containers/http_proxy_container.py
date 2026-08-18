@@ -52,9 +52,7 @@ class HttpProxy(LinuxContainer):
             )
         )
 
-        builder = DockerImageBuilder(
-            image_tag="minifi-http-proxy:latest", dockerfile_content=dockerfile
-        )
+        builder = DockerImageBuilder(image_tag="minifi-http-proxy:latest", dockerfile_content=dockerfile)
         builder.build()
 
         super().__init__(
@@ -73,11 +71,7 @@ class HttpProxy(LinuxContainer):
                 permissions=0o666,
             )
         )
-        self.files.append(
-            File(
-                "/etc/squid/certs/squid-key.pem", dump_key(squid_key), permissions=0o666
-            )
-        )
+        self.files.append(File("/etc/squid/certs/squid-key.pem", dump_key(squid_key), permissions=0o666))
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)
@@ -96,10 +90,7 @@ class HttpProxy(LinuxContainer):
             code == 0
             and url.lower() in output.lower()
             and (
-                (
-                    output.count("TCP_DENIED") != 0
-                    and output.count("TCP_MISS") >= output.count("TCP_DENIED")
-                )
+                (output.count("TCP_DENIED") != 0 and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
                 or output.count("TCP_DENIED") == 0
                 and "TCP_MISS" in output
                 or output.count("TCP_TUNNEL") > 0

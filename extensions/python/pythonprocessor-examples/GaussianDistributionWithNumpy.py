@@ -26,9 +26,7 @@ class WriteCallback:
 
 
 def describe(processor):
-    processor.setDescription(
-        "Draw random samples from a normal (Gaussian) distribution."
-    )
+    processor.setDescription("Draw random samples from a normal (Gaussian) distribution.")
 
 
 def onInitialize(processor):

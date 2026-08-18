@@ -18,9 +18,7 @@ from typing import ClassVar
 
 class ProcessorConfiguration:
     class Java:
-        implements: ClassVar[list] = [
-            "org.apache.nifi.python.processor.documentation.ProcessorConfigurationDetails"
-        ]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.documentation.ProcessorConfigurationDetails"]
 
     def __init__(self, processor_type: str, configuration: str):
         self.processor_type = processor_type
@@ -63,13 +61,9 @@ def multi_processor_use_case(
 
 class UseCaseDetails:
     class Java:
-        implements: ClassVar[list] = [
-            "org.apache.nifi.python.processor.documentation.UseCaseDetails"
-        ]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.documentation.UseCaseDetails"]
 
-    def __init__(
-        self, description: str, notes: str, keywords: list[str], configuration: str
-    ):
+    def __init__(self, description: str, notes: str, keywords: list[str], configuration: str):
         self.description = description
         self.notes = notes
         self.keywords = keywords
@@ -93,9 +87,7 @@ class UseCaseDetails:
 
 class MultiProcessorUseCaseDetails:
     class Java:
-        implements: ClassVar[list] = [
-            "org.apache.nifi.python.processor.documentation.MultiProcessorUseCaseDetails"
-        ]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.documentation.MultiProcessorUseCaseDetails"]
 
     def __init__(
         self,
@@ -127,9 +119,7 @@ class MultiProcessorUseCaseDetails:
 
 class PropertyDescription:
     class Java:
-        implements: ClassVar[list] = [
-            "org.apache.nifi.python.processor.documentation.PropertyDescription"
-        ]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.documentation.PropertyDescription"]
 
     def __init__(
         self,

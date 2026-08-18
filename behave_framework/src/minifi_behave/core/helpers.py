@@ -73,9 +73,7 @@ def wait_for_condition(
         logger.warning("Exception while waiting for condition: %s", ex)
         log_due_to_failure(context)
         return False
-    logger.warning(
-        f"Timed out after {timeout_seconds} seconds while waiting for condition"
-    )
+    logger.warning(f"Timed out after {timeout_seconds} seconds while waiting for condition")
     log_due_to_failure(context)
     return False
 

@@ -38,9 +38,7 @@ class CreateFlowFile(FlowFileSource):
 
     property_descriptors: ClassVar[list] = [FF_CONTENTS]
 
-    REL_MULTILINE = Relationship(
-        name="space", description="FlowFiles that contain space characters."
-    )
+    REL_MULTILINE = Relationship(name="space", description="FlowFiles that contain space characters.")
 
     def __init__(self, **kwargs):
         pass
@@ -63,6 +61,4 @@ class CreateFlowFile(FlowFileSource):
                     contents=contents_str,
                 )
 
-        return FlowFileSourceResult(
-            relationship="success", attributes={"type": "non-space"}, contents=contents
-        )
+        return FlowFileSourceResult(relationship="success", attributes={"type": "non-space"}, contents=contents)

@@ -41,17 +41,13 @@ def setup_s3_processor(context: MinifiTestContext, processor_name: str):
     processor.add_property("Bucket", "test_bucket")
     processor.add_property("Access Key", "test_access_key")
     processor.add_property("Secret Key", "test_secret")
-    processor.add_property(
-        "Endpoint Override URL", f"http://s3-server-{context.scenario_id}:9090"
-    )
+    processor.add_property("Endpoint Override URL", f"http://s3-server-{context.scenario_id}:9090")
     processor.add_property("Proxy Host", "")
     processor.add_property("Proxy Port", "")
     processor.add_property("Proxy Username", "")
     processor.add_property("Proxy Password", "")
 
-    context.get_or_create_default_minifi_container().flow_definition.add_processor(
-        processor
-    )
+    context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
 @step("the s3 server starts up")
@@ -67,12 +63,8 @@ def verify_s3_object_data(context: MinifiTestContext, object_data: str):
     assert s3_server_container.check_s3_server_object_data(object_data)
 
 
-@step(
-    'the object content type on the s3 server is "{content_type}" and the object metadata matches use metadata'
-)
-def verify_s3_object_content_type_and_metadata(
-    context: MinifiTestContext, content_type: str
-):
+@step('the object content type on the s3 server is "{content_type}" and the object metadata matches use metadata')
+def verify_s3_object_content_type_and_metadata(context: MinifiTestContext, content_type: str):
     s3_server_container = context.containers["s3-server"]
     assert isinstance(s3_server_container, S3ServerContainer)
     assert s3_server_container.check_s3_server_object_metadata(content_type)
@@ -104,14 +96,10 @@ def computeMD5hash(my_string):
     return m.hexdigest()
 
 
-@step(
-    'there is a 6MB file at the "/tmp/input" directory and we keep track of the hash of that'
-)
+@step('there is a 6MB file at the "/tmp/input" directory and we keep track of the hash of that')
 def create_6mb_file_and_track_hash(context):
     size = humanfriendly.parse_size("6MB")
-    content = "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(size)
-    )
+    content = "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(size))
     new_dir = Directory("/tmp/input")
     new_dir.files["input.txt"] = content
     context.get_or_create_default_minifi_container().dirs.append(new_dir)
@@ -125,6 +113,6 @@ def setup_kinesis_server(context):
 
 @then('there is a record on the kinesis server with "{record_data}"')
 def verify_kinesis_record_data(context, record_data):
-    assert context.containers["kinesis-server"].check_kinesis_server_record_data(
-        record_data
-    ) or log_due_to_failure(context)
+    assert context.containers["kinesis-server"].check_kinesis_server_record_data(record_data) or log_due_to_failure(
+        context
+    )

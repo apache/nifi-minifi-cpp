@@ -44,7 +44,5 @@ def _create_system_dependencies(minifi_options: MinifiOptions) -> dict[str, set[
     return system_dependencies
 
 
-def install_required(
-    minifi_options: MinifiOptions, package_manager: PackageManager
-) -> bool:
+def install_required(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     return package_manager.install(_create_system_dependencies(minifi_options))

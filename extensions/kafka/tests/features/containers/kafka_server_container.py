@@ -43,9 +43,7 @@ class KafkaServer(LinuxContainer):
         self.environment.append("KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1")
         self.environment.append("KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1")
         self.environment.append("KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1")
-        self.environment.append(
-            f"KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-server-{test_context.scenario_id}:9096"
-        )
+        self.environment.append(f"KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-server-{test_context.scenario_id}:9096")
         self.environment.append(
             f"KAFKA_LISTENERS=PLAINTEXT://kafka-server-{test_context.scenario_id}:9092,SASL_PLAINTEXT://kafka-server-{test_context.scenario_id}:9094,SSL://kafka-server-{test_context.scenario_id}:9093,SASL_SSL://kafka-server-{test_context.scenario_id}:9095,CONTROLLER://kafka-server-{test_context.scenario_id}:9096"
         )
@@ -90,15 +88,11 @@ class KafkaServer(LinuxContainer):
                 permissions=0o644,
             )
         )
-        self.files.append(
-            File("/etc/kafka/secrets/credentials.conf", b"abcdefgh", permissions=0o644)
-        )
+        self.files.append(File("/etc/kafka/secrets/credentials.conf", b"abcdefgh", permissions=0o644))
 
         trusted_cert = jks.TrustedCertEntry.new(
             "root-ca",  # Alias for the certificate
-            dump_cert(
-                test_context.root_ca_cert, encoding_type=serialization.Encoding.DER
-            ),
+            dump_cert(test_context.root_ca_cert, encoding_type=serialization.Encoding.DER),
         )
 
         # Create a JKS keystore that will serve as a truststore with the trusted cert entry.
@@ -187,18 +181,13 @@ Client {
             stderr=True,
             network=self.network.name,
         )
-        logger.info(
-            f"Run python in kafka helper docker output: '{output.decode('utf-8')}'"
-        )
+        logger.info(f"Run python in kafka helper docker output: '{output.decode('utf-8')}'")
         return True
 
     def wait_for_kafka_consumer_to_be_registered(self, expected_consumer_count: int):
         message_regex = "Assignment received from leader.*for group docker_test_group"
         return wait_for_condition(
-            condition=lambda: (
-                len(re.findall(message_regex, self.get_logs()))
-                >= expected_consumer_count
-            ),
+            condition=lambda: len(re.findall(message_regex, self.get_logs())) >= expected_consumer_count,
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
             context=None,

@@ -43,9 +43,7 @@ def inject_scenario_id(context: MinifiTestContext, step):
     if getattr(step, "table", None):
         for row in step.table:
             row.cells = [
-                cell.replace("${scenario_id}", context.scenario_id)
-                if "${scenario_id}" in cell
-                else cell
+                cell.replace("${scenario_id}", context.scenario_id) if "${scenario_id}" in cell else cell
                 for cell in row.cells
             ]
     if hasattr(step, "text") and step.text and "${scenario_id}" in step.text:
@@ -70,9 +68,7 @@ def common_before_scenario(context: Context, scenario: Scenario):
 
     logger.info("Running scenario: %s", scenario)
     context.scenario_id = (
-        scenario.filename.rsplit("/", 1)[1].split(".")[0]
-        + "-"
-        + str(scenario.parent.scenarios.index(scenario))
+        scenario.filename.rsplit("/", 1)[1].split(".")[0] + "-" + str(scenario.parent.scenarios.index(scenario))
     )
     network_name = f"{context.scenario_id}-net"
     docker_client = docker.client.from_env()

@@ -23,9 +23,7 @@ import docker
 
 
 def before_all(context):
-    check_log_lines_path = (
-        Path(__file__).resolve().parent / "resources" / "publish_mqtt_message.py"
-    )
+    check_log_lines_path = Path(__file__).resolve().parent / "resources" / "publish_mqtt_message.py"
     check_log_lines_content = None
     with open(check_log_lines_path, "rb") as f:
         check_log_lines_content = f.read()

@@ -43,25 +43,17 @@ class ProcessorBase(ABC):
     REL_ORIGINAL = None
 
     def describe(self, processor: Processor):
-        if hasattr(self, "ProcessorDetails") and hasattr(
-            self.ProcessorDetails, "description"
-        ):
+        if hasattr(self, "ProcessorDetails") and hasattr(self.ProcessorDetails, "description"):
             processor.setDescription(self.ProcessorDetails.description)
         else:
             processor.setDescription(self.__class__.__name__)
 
-        if hasattr(self, "ProcessorDetails") and hasattr(
-            self.ProcessorDetails, "version"
-        ):
+        if hasattr(self, "ProcessorDetails") and hasattr(self.ProcessorDetails, "version"):
             processor.setVersion(self.ProcessorDetails.version)
 
     def onInitialize(self, processor: Processor):
-        get_dynamic_property_descriptor_attr = getattr(
-            self, "getDynamicPropertyDescriptor", None
-        )
-        if get_dynamic_property_descriptor_attr and callable(
-            get_dynamic_property_descriptor_attr
-        ):
+        get_dynamic_property_descriptor_attr = getattr(self, "getDynamicPropertyDescriptor", None)
+        if get_dynamic_property_descriptor_attr and callable(get_dynamic_property_descriptor_attr):
             processor.setSupportsDynamicProperties()
             self.supports_dynamic_properties = True
         else:
@@ -71,12 +63,8 @@ class ProcessorBase(ABC):
             processor.setSingleThreaded()
 
         for property in self.getPropertyDescriptors():
-            expression_language_supported = (
-                property.expressionLanguageScope != ExpressionLanguageScope.NONE
-            )
-            property_type_code = translateStandardValidatorToMiNiFiPropertype(
-                property.validators
-            )
+            expression_language_supported = property.expressionLanguageScope != ExpressionLanguageScope.NONE
+            property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
 
             # MiNiFi C++ does not support validators for expression language enabled properties
             if (

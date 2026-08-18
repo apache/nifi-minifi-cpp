@@ -51,13 +51,9 @@ def start_minifi_instance(context: MinifiTestContext):
 
 
 @step('a directory at "{directory}" has a file with the size "{size}"')
-def create_file_with_size_in_directory(
-    context: MinifiTestContext, directory: str, size: str
-):
+def create_file_with_size_in_directory(context: MinifiTestContext, directory: str, size: str):
     size = humanfriendly.parse_size(size)
-    content = "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(size)
-    )
+    content = "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(size))
     dirs = context.get_or_create_default_minifi_container().dirs
     if directory in dirs:
         dirs[directory].files[str(uuid.uuid4())] = content
@@ -85,25 +81,17 @@ def __add_directory_with_file_to_container(
     dirs.append(new_dir)
 
 
-@step(
-    'a directory at "{directory}" has a file with the content "{content}" in the "{flow_name}" flow'
-)
-@step(
-    "a directory at '{directory}' has a file with the content '{content}' in the '{flow_name}' flow"
-)
+@step('a directory at "{directory}" has a file with the content "{content}" in the "{flow_name}" flow')
+@step("a directory at '{directory}' has a file with the content '{content}' in the '{flow_name}' flow")
 def create_file_with_content_in_directory_for_flow(
     context: MinifiTestContext, directory: str, content: str, flow_name: str
 ):
-    __add_directory_with_file_to_container(
-        context, directory, str(uuid.uuid4()), content, flow_name
-    )
+    __add_directory_with_file_to_container(context, directory, str(uuid.uuid4()), content, flow_name)
 
 
 @step('a directory at "{directory}" has a file with the content "{content}"')
 @step("a directory at '{directory}' has a file with the content '{content}'")
-def create_file_with_content_in_directory(
-    context: MinifiTestContext, directory: str, content: str
-):
+def create_file_with_content_in_directory(context: MinifiTestContext, directory: str, content: str):
     context.execute_steps(
         f'given a directory at "{directory}" has a file with the content "{content}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
     )
@@ -111,12 +99,8 @@ def create_file_with_content_in_directory(
 
 @step('a directory at "{directory}" has a file with the content from "{path}"')
 @step("a directory at '{directory}' has a file with the content from '{path}'")
-def create_file_with_content_from_path_in_directory(
-    context: MinifiTestContext, directory: str, path: str
-):
-    assert context.resource_dir is not None, (
-        "Cannot copy file if resource_dir is not set for the context"
-    )
+def create_file_with_content_from_path_in_directory(context: MinifiTestContext, directory: str, path: str):
+    assert context.resource_dir is not None, "Cannot copy file if resource_dir is not set for the context"
     content = None
     with open(context.resource_dir / path, "rb") as f:
         content = f.read()
@@ -125,32 +109,20 @@ def create_file_with_content_from_path_in_directory(
     )
 
 
-@step(
-    'a directory at "{directory}" has a file "{file_name}" with the content "{content}"'
-)
+@step('a directory at "{directory}" has a file "{file_name}" with the content "{content}"')
 def create_file_with_name_and_content_in_directory(
     context: MinifiTestContext, directory: str, file_name: str, content: str
 ):
-    __add_directory_with_file_to_container(
-        context, directory, file_name, content, DEFAULT_MINIFI_CONTAINER_NAME
-    )
+    __add_directory_with_file_to_container(context, directory, file_name, content, DEFAULT_MINIFI_CONTAINER_NAME)
 
 
-@step(
-    'a file with filename "{file_name}" and content "{content}" is present in "{path}"'
-)
-def file_with_name_and_content_present_in_path(
-    context: MinifiTestContext, file_name: str, content: str, path: str
-):
+@step('a file with filename "{file_name}" and content "{content}" is present in "{path}"')
+def file_with_name_and_content_present_in_path(context: MinifiTestContext, file_name: str, content: str, path: str):
     new_content = content.replace("\\n", "\n")
-    context.get_or_create_default_minifi_container().files.append(
-        File(os.path.join(path, file_name), new_content)
-    )
+    context.get_or_create_default_minifi_container().files.append(File(os.path.join(path, file_name), new_content))
 
 
-@given(
-    'a file with the content "{content}" is present in "{path}" in the "{container_name}" flow'
-)
+@given('a file with the content "{content}" is present in "{path}" in the "{container_name}" flow')
 def file_with_content_present_in_path_for_flow(
     context: MinifiTestContext, content: str, path: str, container_name: str
 ):
@@ -162,28 +134,20 @@ def file_with_content_present_in_path_for_flow(
 
 @given('a file with the content "{content}" is present in "{path}"')
 @given("a file with the content '{content}' is present in '{path}'")
-def file_with_content_present_in_path(
-    context: MinifiTestContext, content: str, path: str
-):
+def file_with_content_present_in_path(context: MinifiTestContext, content: str, path: str):
     context.execute_steps(
         f'given a file with the content "{content}" is present in "{path}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
     )
 
 
-@when(
-    'a file with the content "{content}" is placed in "{path}" in the "{container_name}" flow'
-)
-def place_file_with_content_in_path_for_flow(
-    context: MinifiTestContext, content: str, path: str, container_name: str
-):
+@when('a file with the content "{content}" is placed in "{path}" in the "{container_name}" flow')
+def place_file_with_content_in_path_for_flow(context: MinifiTestContext, content: str, path: str, container_name: str):
     new_content = content.replace("\\n", "\n")
     context.containers[container_name].add_file_to_running_container(new_content, path)
 
 
 @when('a file with the content "{content}" is placed in "{path}"')
-def place_file_with_content_in_path(
-    context: MinifiTestContext, content: str, path: str
-):
+def place_file_with_content_in_path(context: MinifiTestContext, content: str, path: str):
     context.execute_steps(
         f'when a file with the content "{content}" is placed in "{path}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
     )
@@ -191,9 +155,7 @@ def place_file_with_content_in_path(
 
 @given('an empty file is present in "{path}"')
 def empty_file_present_in_path(context, path):
-    context.get_or_create_default_minifi_container().files.append(
-        File(os.path.join(path, str(uuid.uuid4())), "")
-    )
+    context.get_or_create_default_minifi_container().files.append(File(os.path.join(path, str(uuid.uuid4())), ""))
 
 
 @given(
@@ -203,17 +165,11 @@ def bind_host_resource_file_to_container_path_for_container(
     context: MinifiTestContext, filename: str, container_path: str, container_name: str
 ):
     path = os.path.join(context.resource_dir, filename)
-    context.get_or_create_minifi_container(container_name).add_host_file(
-        path, container_path
-    )
+    context.get_or_create_minifi_container(container_name).add_host_file(path, container_path)
 
 
-@given(
-    'a host resource file "{filename}" is bound to the "{container_path}" path in the MiNiFi container'
-)
-def bind_host_resource_file_to_container_path(
-    context: MinifiTestContext, filename: str, container_path: str
-):
+@given('a host resource file "{filename}" is bound to the "{container_path}" path in the MiNiFi container')
+def bind_host_resource_file_to_container_path(context: MinifiTestContext, filename: str, container_path: str):
     context.execute_steps(
         f'given a host resource file "{filename}" is bound to the "{container_path}" path in the MiNiFi container "{DEFAULT_MINIFI_CONTAINER_NAME}"'
     )
@@ -273,14 +229,9 @@ def setup_nifi_container_with_ssl(context: MinifiTestContext):
 
 @when("NiFi is started")
 def start_nifi(context):
-    assert (
-        context.containers["nifi"].deploy(context)
-        or context.containers["nifi"].log_app_output()
-    )
+    assert context.containers["nifi"].deploy(context) or context.containers["nifi"].log_app_output()
 
 
 @step("the MiNiFi deployment timeout is set to {timeout_seconds:d} seconds")
 def set_minifi_deployment_timeout(context: MinifiTestContext, timeout_seconds: int):
-    context.get_or_create_default_minifi_container().set_deploy_timeout_seconds(
-        timeout_seconds
-    )
+    context.get_or_create_default_minifi_container().set_deploy_timeout_seconds(timeout_seconds)

@@ -27,9 +27,7 @@ from minifi_behave.steps import (
 
 
 @step("an Elasticsearch server is set up and running")
-@step(
-    'an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index"'
-)
+@step('an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index"')
 @step(
     'an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"'
 )
@@ -37,16 +35,12 @@ def setup_elasticsearch_server(context: MinifiTestContext):
     context.containers["elasticsearch"] = ElasticsearchContainer(context)
     assert context.containers["elasticsearch"].deploy(context)
     assert (
-        context.containers["elasticsearch"].create_doc_elasticsearch(
-            "my_index", "preloaded_id"
-        )
+        context.containers["elasticsearch"].create_doc_elasticsearch("my_index", "preloaded_id")
         or context.containers["elasticsearch"].log_app_output()
     )
 
 
-@given(
-    "an ElasticsearchCredentialsControllerService is set up with Basic Authentication"
-)
+@given("an ElasticsearchCredentialsControllerService is set up with Basic Authentication")
 def setup_elasticsearch_credentials_service_basic_auth(context: MinifiTestContext):
     controller_service = ControllerService(
         class_name="ElasticsearchCredentialsControllerService",
@@ -54,9 +48,7 @@ def setup_elasticsearch_credentials_service_basic_auth(context: MinifiTestContex
     )
     controller_service.add_property("Username", "elastic")
     controller_service.add_property("Password", "password")
-    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(
-        controller_service
-    )
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
 @given("an ElasticsearchCredentialsControllerService is set up with ApiKey")
@@ -67,14 +59,10 @@ def setup_elasticsearch_credentials_service_api_key(context: MinifiTestContext):
     )
     api_key = context.containers["elasticsearch"].elastic_generate_apikey()
     controller_service.add_property("API Key", api_key)
-    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(
-        controller_service
-    )
+    context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
-@then(
-    'Elasticsearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"'
-)
+@then('Elasticsearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
 def verify_elasticsearch_document_field_value(
     context: MinifiTestContext, doc_id: str, index: str, value: str, field: str
 ):
@@ -85,15 +73,11 @@ def verify_elasticsearch_document_field_value(
 
 @then("Elasticsearch is empty")
 def verify_elasticsearch_is_empty(context):
-    assert context.containers[
-        "elasticsearch"
-    ].is_elasticsearch_empty() or log_due_to_failure(context)
+    assert context.containers["elasticsearch"].is_elasticsearch_empty() or log_due_to_failure(context)
 
 
 @given("an Opensearch server is set up and running")
-@given(
-    'an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index"'
-)
+@given('an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index"')
 @given(
     'an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"'
 )
@@ -101,17 +85,11 @@ def setup_opensearch_server(context):
     context.containers["opensearch"] = OpensearchContainer(context)
     context.containers["opensearch"].deploy(context)
     context.containers["opensearch"].add_elastic_user_to_opensearch()
-    context.containers["opensearch"].create_doc_elasticsearch(
-        "my_index", "preloaded_id"
-    )
+    context.containers["opensearch"].create_doc_elasticsearch("my_index", "preloaded_id")
 
 
-@then(
-    'Opensearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"'
-)
-def verify_opensearch_document_field_value(
-    context: MinifiTestContext, doc_id: str, index: str, value: str, field: str
-):
+@then('Opensearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
+def verify_opensearch_document_field_value(context: MinifiTestContext, doc_id: str, index: str, value: str, field: str):
     assert context.containers["opensearch"].check_elastic_field_value(
         index_name=index, doc_id=doc_id, field_name=field, field_value=value
     ) or log_due_to_failure(context)
@@ -119,6 +97,4 @@ def verify_opensearch_document_field_value(
 
 @then("Opensearch is empty")
 def verify_opensearch_is_empty(context):
-    assert context.containers[
-        "opensearch"
-    ].is_elasticsearch_empty() or log_due_to_failure(context)
+    assert context.containers["opensearch"].is_elasticsearch_empty() or log_due_to_failure(context)

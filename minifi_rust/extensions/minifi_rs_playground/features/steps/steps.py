@@ -55,9 +55,5 @@ def minifi_logs_processor_metrics(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().set_property(
         "nifi.metrics.publisher.LogMetricsPublisher.logging.interval", "1s"
     )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.metrics.publisher.class", "LogMetricsPublisher"
-    )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.metrics.publisher.agent.identifier", "Agent1"
-    )
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.class", "LogMetricsPublisher")
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.agent.identifier", "Agent1")

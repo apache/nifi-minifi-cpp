@@ -33,9 +33,7 @@ class WriteToJsonCallback:
 
 
 def describe(processor):
-    processor.setDescription(
-        "Moves content of flow file to JSON file under 'content' key"
-    )
+    processor.setDescription("Moves content of flow file to JSON file under 'content' key")
 
 
 def onInitialize(processor):

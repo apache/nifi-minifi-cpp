@@ -94,9 +94,7 @@ class MinifiC2Server(LinuxContainer):
                 )
             )
 
-        resource_dir = (
-            Path(__file__).resolve().parent / "resources" / "minifi-c2-server"
-        )
+        resource_dir = Path(__file__).resolve().parent / "resources" / "minifi-c2-server"
         self.host_files.append(
             HostFile(
                 "/opt/minifi-c2/minifi-c2-current/files/minifi-test-class/config.text.yml.v1",

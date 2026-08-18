@@ -78,14 +78,8 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
 
         for property in properties:
             if (
-                (
-                    property.name == "Secret Password"
-                    and properties[property] != "mysecret"
-                )
-                or (
-                    property.name == "Request Timeout"
-                    and properties[property] != "60 sec"
-                )
+                (property.name == "Secret Password" and properties[property] != "mysecret")
+                or (property.name == "Request Timeout" and properties[property] != "60 sec")
                 or property.name == "Wish Count"
                 and properties[property] != "3"
             ):

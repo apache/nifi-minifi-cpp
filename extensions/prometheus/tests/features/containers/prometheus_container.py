@@ -125,9 +125,7 @@ scrape_configs:
             logger.error(f"Failed to check metric class {metric_class} on Prometheus")
             return False
 
-    def check_processor_metric_on_prometheus(
-        self, metric_class: str, processor_name: str
-    ) -> bool:
+    def check_processor_metric_on_prometheus(self, metric_class: str, processor_name: str) -> bool:
         try:
             self.client.containers.run(
                 "minifi-prometheus-helper:latest",
@@ -166,7 +164,5 @@ scrape_configs:
             )
             return True
         except Exception:
-            logger.error(
-                "Failed check that all metric types are defined once on Prometheus"
-            )
+            logger.error("Failed check that all metric types are defined once on Prometheus")
             return False

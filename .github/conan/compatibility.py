@@ -25,15 +25,10 @@ def cppstd_compat(conanfile):
     if not compiler or not compiler_version:
         return []
     factors = []  # List of list, each sublist is a potential combination
-    if (
-        cppstd is not None
-        and extension_properties.get("compatibility_cppstd") is not False
-    ):
+    if cppstd is not None and extension_properties.get("compatibility_cppstd") is not False:
         cppstd_possible_values = supported_cppstd(conanfile)
         if cppstd_possible_values is None:
-            conanfile.output.warning(
-                f'No cppstd compatibility defined for compiler "{compiler}"'
-            )
+            conanfile.output.warning(f'No cppstd compatibility defined for compiler "{compiler}"')
         else:  # The current cppst must be included in case there is other factor
             factors.append([{"compiler.cppstd": v} for v in cppstd_possible_values])
 
@@ -41,13 +36,9 @@ def cppstd_compat(conanfile):
     if cstd is not None and extension_properties.get("compatibility_cstd") is not False:
         cstd_possible_values = supported_cstd(conanfile)
         if cstd_possible_values is None:
-            conanfile.output.warning(
-                f'No cstd compatibility defined for compiler "{compiler}"'
-            )
+            conanfile.output.warning(f'No cstd compatibility defined for compiler "{compiler}"')
         else:
-            factors.append(
-                [{"compiler.cstd": v} for v in cstd_possible_values if v != cstd]
-            )
+            factors.append([{"compiler.cstd": v} for v in cstd_possible_values if v != cstd])
     return factors
 
 
@@ -78,11 +69,7 @@ def compatibility(conanfile):
         if current_version is not None:
             min_version = 13
             max_version = 21  # support up to Xcode 27 with apple-clang 21 for now
-            candidate_versions = [
-                str(v)
-                for v in range(min_version, max_version + 1)
-                if v != current_version
-            ]
+            candidate_versions = [str(v) for v in range(min_version, max_version + 1) if v != current_version]
             factors.append([{"compiler.version": v} for v in candidate_versions])
 
     combinations = _factors_combinations(factors)

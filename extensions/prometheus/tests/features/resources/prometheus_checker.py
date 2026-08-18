@@ -21,9 +21,7 @@ from prometheus_api_client import PrometheusConnect
 
 class PrometheusChecker:
     def __init__(self, prometheus_host: str):
-        self.prometheus_client = PrometheusConnect(
-            url=f"http://{prometheus_host}:9090", disable_ssl=True
-        )
+        self.prometheus_client = PrometheusConnect(url=f"http://{prometheus_host}:9090", disable_ssl=True)
 
     def verify_processor_metric(self, metric_class: str, processor_name: str) -> bool:
         if metric_class == "GetFileMetrics":
@@ -43,9 +41,7 @@ class PrometheusChecker:
         elif metric_class == "AgentStatus":
             return self._verify_agent_status_metrics()
         else:
-            raise RuntimeError(
-                f"Metric class '{metric_class}' verification is not implemented"
-            )
+            raise RuntimeError(f"Metric class '{metric_class}' verification is not implemented")
 
     def _verify_repository_metrics(self) -> bool:
         label_list = [
@@ -70,9 +66,7 @@ class PrometheusChecker:
                 for labels in label_list
             )
             and all(
-                self._verify_metric_larger_than_zero(
-                    "minifi_repository_size_bytes", "RepositoryMetrics", labels
-                )
+                self._verify_metric_larger_than_zero("minifi_repository_size_bytes", "RepositoryMetrics", labels)
                 for labels in label_list[1:3]
             )
             and all(
@@ -99,9 +93,7 @@ class PrometheusChecker:
             "QueueMetrics",
         )
 
-    def _verify_general_processor_metrics(
-        self, metric_class: str, processor_name: str
-    ) -> bool:
+    def _verify_general_processor_metrics(self, metric_class: str, processor_name: str) -> bool:
         labels = {"processor_name": processor_name}
         return self._verify_metrics_exist(
             [
@@ -130,9 +122,7 @@ class PrometheusChecker:
 
     def _verify_getfile_metrics(self, metric_class: str, processor_name: str) -> bool:
         labels = {"processor_name": processor_name}
-        return self._verify_general_processor_metrics(
-            metric_class, processor_name
-        ) and self._verify_metrics_exist(
+        return self._verify_general_processor_metrics(metric_class, processor_name) and self._verify_metrics_exist(
             ["minifi_input_bytes", "minifi_accepted_files"], metric_class, labels
         )
 
@@ -153,9 +143,7 @@ class PrometheusChecker:
                 "minifi_processing_nanos",
             ],
             "FlowInformation",
-        ) and self._verify_metric_exists(
-            "minifi_is_running", "FlowInformation", {"component_name": "FlowController"}
-        )
+        ) and self._verify_metric_exists("minifi_is_running", "FlowInformation", {"component_name": "FlowController"})
 
     def _verify_device_info_node_metrics(self) -> bool:
         return self._verify_metrics_exist(
@@ -175,32 +163,18 @@ class PrometheusChecker:
             if not (
                 self._verify_metric_exists("minifi_is_running", "AgentStatus", labels)
                 and self._verify_metric_exists("minifi_is_full", "AgentStatus", labels)
-                and self._verify_metric_exists(
-                    "minifi_max_repository_size_bytes", "AgentStatus", labels
-                )
-                and self._verify_metric_larger_than_zero(
-                    "minifi_repository_size_bytes", "AgentStatus", labels
-                )
-                and self._verify_metric_exists(
-                    "minifi_repository_entry_count", "AgentStatus", labels
-                )
-                and self._verify_metric_exists(
-                    "minifi_rocksdb_table_readers_size_bytes", "AgentStatus", labels
-                )
-                and self._verify_metric_exists(
-                    "minifi_rocksdb_all_memory_tables_size_bytes", "AgentStatus", labels
-                )
+                and self._verify_metric_exists("minifi_max_repository_size_bytes", "AgentStatus", labels)
+                and self._verify_metric_larger_than_zero("minifi_repository_size_bytes", "AgentStatus", labels)
+                and self._verify_metric_exists("minifi_repository_entry_count", "AgentStatus", labels)
+                and self._verify_metric_exists("minifi_rocksdb_table_readers_size_bytes", "AgentStatus", labels)
+                and self._verify_metric_exists("minifi_rocksdb_all_memory_tables_size_bytes", "AgentStatus", labels)
             ):
                 return False
 
         # provenance repository is NoOpRepository by default which has zero size
         if not (
-            self._verify_metric_exists(
-                "minifi_is_running", "AgentStatus", {"repository_name": "provenance"}
-            )
-            and self._verify_metric_exists(
-                "minifi_is_full", "AgentStatus", {"repository_name": "provenance"}
-            )
+            self._verify_metric_exists("minifi_is_running", "AgentStatus", {"repository_name": "provenance"})
+            and self._verify_metric_exists("minifi_is_full", "AgentStatus", {"repository_name": "provenance"})
             and self._verify_metric_exists(
                 "minifi_max_repository_size_bytes",
                 "AgentStatus",
@@ -220,49 +194,27 @@ class PrometheusChecker:
             return False
         return (
             self._verify_metric_exists("minifi_uptime_milliseconds", "AgentStatus")
-            and self._verify_metric_exists(
-                "minifi_agent_memory_usage_bytes", "AgentStatus"
-            )
-            and self._verify_metric_exists(
-                "minifi_agent_cpu_utilization", "AgentStatus"
-            )
+            and self._verify_metric_exists("minifi_agent_memory_usage_bytes", "AgentStatus")
+            and self._verify_metric_exists("minifi_agent_cpu_utilization", "AgentStatus")
         )
 
-    def _verify_metric_exists(
-        self, metric_name: str, metric_class: str, labels: dict | None = None
-    ) -> bool:
+    def _verify_metric_exists(self, metric_name: str, metric_class: str, labels: dict | None = None) -> bool:
         if labels is None:
             labels = {}
         labels["metric_class"] = metric_class
         labels["agent_identifier"] = "Agent1"
-        return (
-            len(
-                self.prometheus_client.get_current_metric_value(
-                    metric_name=metric_name, label_config=labels
-                )
-            )
-            > 0
-        )
+        return len(self.prometheus_client.get_current_metric_value(metric_name=metric_name, label_config=labels)) > 0
 
-    def _verify_metrics_exist(
-        self, metric_names: list, metric_class: str, labels: dict | None = None
-    ) -> bool:
+    def _verify_metrics_exist(self, metric_names: list, metric_class: str, labels: dict | None = None) -> bool:
         if labels is None:
             labels = {}
-        return all(
-            self._verify_metric_exists(metric_name, metric_class, labels)
-            for metric_name in metric_names
-        )
+        return all(self._verify_metric_exists(metric_name, metric_class, labels) for metric_name in metric_names)
 
-    def _verify_metric_larger_than_zero(
-        self, metric_name: str, metric_class: str, labels: dict | None = None
-    ) -> bool:
+    def _verify_metric_larger_than_zero(self, metric_name: str, metric_class: str, labels: dict | None = None) -> bool:
         if labels is None:
             labels = {}
         labels["metric_class"] = metric_class
-        result = self.prometheus_client.get_current_metric_value(
-            metric_name=metric_name, label_config=labels
-        )
+        result = self.prometheus_client.get_current_metric_value(metric_name=metric_name, label_config=labels)
         return len(result) > 0 and int(result[0]["value"][1]) > 0
 
     def _verify_metrics_larger_than_zero(
@@ -271,8 +223,7 @@ class PrometheusChecker:
         if labels is None:
             labels = {}
         return all(
-            self._verify_metric_larger_than_zero(metric_name, metric_class, labels)
-            for metric_name in metric_names
+            self._verify_metric_larger_than_zero(metric_name, metric_class, labels) for metric_name in metric_names
         )
 
 
@@ -300,23 +251,15 @@ if __name__ == "__main__":
         required=False,
         help="Prometheus target to verify all defined metrics are unique",
     )
-    parser.add_argument(
-        "--prometheus-host", type=str, required=False, help="Prometheus server host"
-    )
-    parser.add_argument(
-        "--metric-class", type=str, required=False, help="Metric class to verify"
-    )
-    parser.add_argument(
-        "--processor-name", type=str, required=False, help="Processor name to verify"
-    )
+    parser.add_argument("--prometheus-host", type=str, required=False, help="Prometheus server host")
+    parser.add_argument("--metric-class", type=str, required=False, help="Metric class to verify")
+    parser.add_argument("--processor-name", type=str, required=False, help="Processor name to verify")
 
     args = parser.parse_args()
 
     checker = PrometheusChecker(args.prometheus_host)
     if args.verify_metrics_defined_once:
-        if not verify_all_metric_types_are_defined_once(
-            args.verify_metrics_defined_once
-        ):
+        if not verify_all_metric_types_are_defined_once(args.verify_metrics_defined_once):
             sys.exit(1)
     elif args.processor_name and args.metric_class:
         if not checker.verify_processor_metric(args.metric_class, args.processor_name):

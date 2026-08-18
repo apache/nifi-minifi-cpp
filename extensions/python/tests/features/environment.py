@@ -32,21 +32,15 @@ def get_minifi_container_image():
 def before_all(context):
     context.minifi_container_image = get_minifi_container_image()
     client: docker.DockerClient = docker.from_env()
-    is_fhs = "MINIFI_INSTALLATION_TYPE=FHS" in str(
-        client.images.get(context.minifi_container_image).history()
-    )
+    is_fhs = "MINIFI_INSTALLATION_TYPE=FHS" in str(client.images.get(context.minifi_container_image).history())
     pip3_install_command = ""
     minifi_tag_prefix = os.environ.get("MINIFI_TAG_PREFIX", "")
     if not minifi_tag_prefix:
         pip3_install_command = "RUN apk --update --no-cache add py3-pip"
     minifi_python_dir_path = (
-        "/var/lib/nifi-minifi-cpp/minifi-python"
-        if is_fhs
-        else "/opt/minifi/minifi-current/minifi-python"
+        "/var/lib/nifi-minifi-cpp/minifi-python" if is_fhs else "/opt/minifi/minifi-current/minifi-python"
     )
-    minifi_python_venv_parent = (
-        "/var/lib/nifi-minifi-cpp" if is_fhs else "/opt/minifi/minifi-current"
-    )
+    minifi_python_venv_parent = "/var/lib/nifi-minifi-cpp" if is_fhs else "/opt/minifi/minifi-current"
     dockerfile = f"""
 FROM {context.minifi_container_image}
 USER root
@@ -126,9 +120,7 @@ def before_scenario(context, scenario):
         and not is_conda_available_in_minifi_image(context)
         and get_minifi_image_python_version(context) < (3, 8, 1)
     ):
-        scenario.skip(
-            "NiFi Python processor tests use langchain library which requires Python 3.8.1 or later."
-        )
+        scenario.skip("NiFi Python processor tests use langchain library which requires Python 3.8.1 or later.")
         return
 
     common_before_scenario(context, scenario)

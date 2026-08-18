@@ -38,9 +38,7 @@ class MqttBrokerContainer(LinuxContainer):
             """
         )
 
-        builder = DockerImageBuilder(
-            image_tag="minifi-mqtt-broker:latest", dockerfile_content=dockerfile
-        )
+        builder = DockerImageBuilder(image_tag="minifi-mqtt-broker:latest", dockerfile_content=dockerfile)
         builder.build()
 
         super().__init__(
@@ -77,22 +75,12 @@ class MqttBrokerContainer(LinuxContainer):
             )
             return True
         except ContainerError as e:
-            stdout = (
-                e.stdout.decode("utf-8", errors="replace")
-                if hasattr(e, "stdout") and e.stdout
-                else ""
-            )
-            stderr = (
-                e.stderr.decode("utf-8", errors="replace")
-                if hasattr(e, "stderr") and e.stderr
-                else ""
-            )
+            stdout = e.stdout.decode("utf-8", errors="replace") if hasattr(e, "stdout") and e.stdout else ""
+            stderr = e.stderr.decode("utf-8", errors="replace") if hasattr(e, "stderr") and e.stderr else ""
             logger.error(
                 f"Failed to publish mqtt message in mqtt helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'"
             )
             return False
         except Exception as e:
-            logger.error(
-                f"Unexpected error while publishing mqtt message in mqtt helper docker: '{e}'"
-            )
+            logger.error(f"Unexpected error while publishing mqtt message in mqtt helper docker: '{e}'")
             return False

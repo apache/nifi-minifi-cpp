@@ -27,6 +27,4 @@ class RelativeImporterProcessor(FlowFileTransform):
         number = 1000
         number = double(number)
         number = minus_ten(number)
-        return FlowFileTransformResult(
-            "success", contents=f"The final result is {number}"
-        )
+        return FlowFileTransformResult("success", contents=f"The final result is {number}")

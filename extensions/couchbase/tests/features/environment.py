@@ -24,9 +24,7 @@ def before_all(context):
     dockerfile = """
     FROM python:3.13-slim-bookworm
     RUN pip install couchbase==4.3.5 requests"""
-    builder = DockerImageBuilder(
-        image_tag="minifi-couchbase-helper:latest", dockerfile_content=dockerfile
-    )
+    builder = DockerImageBuilder(image_tag="minifi-couchbase-helper:latest", dockerfile_content=dockerfile)
     builder.build()
     docker.from_env().images.pull(CouchbaseServerContainer.IMAGE)
 
