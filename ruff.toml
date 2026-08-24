@@ -3,7 +3,7 @@ builtins = ["log", "REL_SUCCESS", "REL_FAILURE", "REL_ORIGINAL", "raw_input"]
 
 extend-exclude = [
     "thirdparty",
-    "build",
+    "build*",
     "cmake-build-*",
 ]
 
