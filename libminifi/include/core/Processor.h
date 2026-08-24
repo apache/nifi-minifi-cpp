@@ -123,6 +123,11 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
   void setLoggerCallback(const std::function<void(logging::LOG_LEVEL level, const std::string& message)>& callback);
   void restore(const std::shared_ptr<FlowFile>& file) override;
 
+  // Stashing keeps a flow file owned by this processor across onTrigger invocations (used by the
+  // stable C API's stash/unstash). The owning shared_ptr lives here; sessions hand it in and out.
+  void stashFlowFile(std::shared_ptr<FlowFile> flow_file);
+  std::shared_ptr<FlowFile> unstashFlowFile(const FlowFile* flow_file);
+
   static constexpr auto DynamicProperties = std::array<DynamicPropertyDefinition, 0>{};
 
   static constexpr auto OutputAttributes = std::array<OutputAttributeReference, 0>{};
@@ -158,6 +163,9 @@ class Processor : public ConnectableImpl, public ConfigurableComponentImpl, publ
  private:
   mutable std::mutex mutex_;
   std::atomic<std::chrono::steady_clock::time_point> yield_expiration_{};
+
+  // Flow files stashed with this processor (owning), keyed by identity via unstashFlowFile.
+  std::vector<std::shared_ptr<FlowFile>> stashed_flow_files_;
 
   // must hold the graphMutex
   void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false);

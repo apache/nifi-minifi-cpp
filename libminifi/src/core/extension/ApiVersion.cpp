@@ -22,7 +22,7 @@
 namespace org::apache::nifi::minifi::core::extension {
 
 static uint32_t agent_api_version{MINIFI_API_VERSION};
-static uint32_t min_supported_api_version{MINIFI_API_VERSION};
+static uint32_t min_supported_api_version = 2;  // Since version 2 everything was additive only
 
 uint32_t getAgentApiVersion() {
   return agent_api_version;

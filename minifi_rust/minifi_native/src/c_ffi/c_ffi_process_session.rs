@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use super::c_ffi_flow_file::CffiFlowFile;
+use super::c_ffi_flow_file::{CffiFlowFile, CffiStashedFlowFile};
 use crate::MinifiError;
 use crate::api::process_session::{IoState, OutputStream};
 use crate::api::{InputStream, ProcessSession};
@@ -24,12 +24,14 @@ use crate::c_ffi::c_ffi_streams::{CffiInputStream, CffiOutputStream};
 use minifi_native_sys::{
     minifi_input_stream, minifi_input_stream_read, minifi_input_stream_size,
     minifi_io_status_MINIFI_IO_CANCEL, minifi_io_status_MINIFI_IO_ERROR, minifi_output_stream,
-    minifi_output_stream_write, minifi_process_session, minifi_process_session_create,
-    minifi_process_session_get, minifi_process_session_get_flow_file_attribute,
+    minifi_output_stream_write, minifi_process_session, minifi_process_session_clone,
+    minifi_process_session_create, minifi_process_session_get,
+    minifi_process_session_get_flow_file_attribute,
     minifi_process_session_get_flow_file_attributes, minifi_process_session_get_flow_file_id,
     minifi_process_session_read, minifi_process_session_remove,
-    minifi_process_session_set_flow_file_attribute, minifi_process_session_transfer,
-    minifi_process_session_write, minifi_status_MINIFI_STATUS_SUCCESS, minifi_string_view,
+    minifi_process_session_set_flow_file_attribute, minifi_process_session_stash,
+    minifi_process_session_transfer, minifi_process_session_unstash, minifi_process_session_write,
+    minifi_stashed_flow_file, minifi_status_MINIFI_STATUS_SUCCESS, minifi_string_view,
 };
 use std::ffi::{CString, c_void};
 use std::io::Read;
@@ -163,6 +165,7 @@ impl<'a> CffiProcessSession<'a> {
 
 impl<'a> ProcessSession for CffiProcessSession<'a> {
     type FlowFile = CffiFlowFile<'a>; // FlowFile shouldn't outlive the Session
+    type StashedFlowFile = CffiStashedFlowFile; // detached token, storable across triggers
 
     fn create(&mut self) -> Result<Self::FlowFile, MinifiError> {
         let ff_ptr = unsafe { minifi_process_session_create(self.ptr, std::ptr::null_mut()) };
@@ -179,6 +182,15 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             None
         } else {
             Some(CffiFlowFile::new(ff_ptr))
+        }
+    }
+
+    fn clone_ff(&mut self, flow_file: &Self::FlowFile) -> Result<Self::FlowFile, MinifiError> {
+        let ff_ptr = unsafe { minifi_process_session_clone(self.ptr, flow_file.get_ptr()) };
+        if ff_ptr.is_null() {
+            Err(MinifiError::UnknownError)
+        } else {
+            Ok(CffiFlowFile::new(ff_ptr))
         }
     }
 
@@ -210,6 +222,34 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
                 minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
                 err_code => Err(MinifiError::StatusError((
                     "minifi_process_session_remove".into(),
+                    NonZeroU32::new_unchecked(err_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
+                ))),
+            }
+        }
+    }
+
+    fn stash(&mut self, flow_file: Self::FlowFile) -> Result<Self::StashedFlowFile, MinifiError> {
+        let mut stashed: *mut minifi_stashed_flow_file = std::ptr::null_mut();
+        unsafe {
+            match minifi_process_session_stash(self.ptr, flow_file.get_ptr(), &mut stashed) {
+                #[allow(non_upper_case_globals)]
+                minifi_status_MINIFI_STATUS_SUCCESS => Ok(CffiStashedFlowFile::new(stashed)),
+                err_code => Err(MinifiError::StatusError((
+                    "minifi_process_session_stash".into(),
+                    NonZeroU32::new_unchecked(err_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
+                ))),
+            }
+        }
+    }
+
+    fn unstash(&mut self, stashed: Self::StashedFlowFile) -> Result<Self::FlowFile, MinifiError> {
+        let mut flow_file: *mut minifi_native_sys::minifi_flow_file = std::ptr::null_mut();
+        unsafe {
+            match minifi_process_session_unstash(self.ptr, stashed.get_ptr(), &mut flow_file) {
+                #[allow(non_upper_case_globals)]
+                minifi_status_MINIFI_STATUS_SUCCESS => Ok(CffiFlowFile::new(flow_file)),
+                err_code => Err(MinifiError::StatusError((
+                    "minifi_process_session_unstash".into(),
                     NonZeroU32::new_unchecked(err_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
                 ))),
             }

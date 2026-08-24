@@ -21,7 +21,8 @@ use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
     MinifiError, OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property,
-    PropertyConstraints, PropertyType, Relationship, Schedule, TransformError, TransformedFlowFile,
+    PropertyConstraints, PropertyType, Relationship, Schedule, ScheduleContext, TransformError,
+    TransformedFlowFile,
 };
 use minifi_native::{PropertyDefinition, PropertySchema, property_definitions};
 use std::io::Cursor;
@@ -61,7 +62,7 @@ const LINE_COLOR: Property<LineColor> = Property::new(
 pub(crate) struct DrawBoundingBox {}
 
 impl Schedule for DrawBoundingBox {
-    fn schedule<Ctx: GetProperty, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         _context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>

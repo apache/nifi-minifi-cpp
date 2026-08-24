@@ -47,6 +47,12 @@ else()
     set_target_properties(cargo-build_minifi_pgp PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
+if (MINIFI_EXTENSION_ENRICHMENT)
+    register_rust_extension(minifi_enrichment "Enrichment EXTENSION" MINIFI_EXTENSION_ENRICHMENT "This enables ForkEnrichment and JoinEnrichmentAttributes")
+else()
+    set_target_properties(cargo-build_minifi_enrichment PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
+
 if (MINIFI_EXTENSION_TENSOR)
     register_rust_extension(minifi_tensor "TENSOR EXTENSION" MINIFI_EXTENSION_TENSOR "This enables sonos/tract based tensor processors")
 else()

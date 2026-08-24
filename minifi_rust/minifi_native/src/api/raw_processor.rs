@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::api::errors::MinifiError;
-use crate::{LogLevel, Logger, ProcessContext, ProcessSession};
+use crate::{LogLevel, Logger, ProcessContext, ProcessSession, ScheduleContext};
 
 pub enum ProcessorInputRequirement {
     Required,
@@ -37,7 +37,10 @@ pub trait RawProcessor: Sized {
 
     fn new(logger: Self::LoggerType) -> Self;
     fn log(&self, log_level: LogLevel, args: std::fmt::Arguments);
-    fn schedule<P: ProcessContext>(&mut self, context: &P) -> Result<(), MinifiError>;
+    fn schedule<P: ProcessContext + ScheduleContext>(
+        &mut self,
+        context: &P,
+    ) -> Result<(), MinifiError>;
     fn unschedule(&mut self);
 }
 
