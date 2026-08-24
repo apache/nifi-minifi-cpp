@@ -85,7 +85,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
 
   void yield() override;
 
-  std::shared_ptr<provenance::ProvenanceRepository> getProvenanceRepository() override { return repo_; }
+  std::shared_ptr<provenance::ProvenanceRepository> getProvenanceRepository() override { return provenance_repo_; }
 
   /**
    * Returns a reference to the content repository for the running instance.
@@ -199,7 +199,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   std::shared_ptr<logging::Logger> logger_;
   controller::ControllerServiceProvider* controller_service_provider_;
   std::shared_ptr<core::StateStorage> state_storage_;
-  std::shared_ptr<provenance::ProvenanceRepository> repo_;
+  std::shared_ptr<provenance::ProvenanceRepository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;
   Processor& processor_;

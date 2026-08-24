@@ -145,7 +145,7 @@ TEST_CASE("Test query elements after cursor", "[iterationTest]") {
 
   REQUIRE(provdb.appendEvents(events));
 
-  auto cursor = provdb.cursorFromString(std::nullopt);
+  auto cursor = provdb.cursorFromString("");
   REQUIRE(cursor);
 
   std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events;
@@ -185,7 +185,7 @@ TEST_CASE("Test loading cursor from string", "[cursorSerializationTest]") {
 
   REQUIRE(provdb.appendEvents(events));
 
-  auto cursor = provdb.cursorFromString(std::nullopt);
+  auto cursor = provdb.cursorFromString("");
   REQUIRE(cursor);
 
   std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events;

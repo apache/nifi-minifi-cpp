@@ -48,7 +48,7 @@ class VolatileProvenanceRepository : public VolatileRepository, public provenanc
   }
 
   std::expected<void, std::string> appendEvents(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>& events) override {
-    std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> data;
+    EntryStreams data;
     data.reserve(events.size());
     std::lock_guard guard(next_event_id_mtx_);
     for (auto& event : events) {
@@ -61,7 +61,7 @@ class VolatileProvenanceRepository : public VolatileRepository, public provenanc
     return {};
   }
 
-  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::optional<std::string> /*cursor_str*/) override {
+  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::string_view /*cursor_str*/) override {
     return nullptr;
   }
 

@@ -65,7 +65,7 @@ class VolatileRepository : public core::ThreadedRepositoryImpl {
    * Places new objects into the volatile memory area
    * @param data the key-value pairs to add to the repository
    **/
-  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& data) override;
+  bool MultiPut(const EntryStreams& data) override;
 
   /**
    * Deletes the key

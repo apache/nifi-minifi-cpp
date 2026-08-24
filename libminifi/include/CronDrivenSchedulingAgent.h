@@ -37,12 +37,12 @@ namespace org::apache::nifi::minifi {
 class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
  public:
   CronDrivenSchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider,
-                            std::shared_ptr<provenance::ProvenanceRepository> repo,
+                            std::shared_ptr<provenance::ProvenanceRepository> provenance_repo,
                             std::shared_ptr<core::Repository> flow_repo,
                             std::shared_ptr<core::ContentRepository> content_repo,
                             std::shared_ptr<Configure> configuration,
                             utils::ThreadPool& thread_pool)
-      : ThreadedSchedulingAgent(controller_service_provider, std::move(repo), std::move(flow_repo), std::move(content_repo), std::move(configuration), thread_pool) {
+      : ThreadedSchedulingAgent(controller_service_provider, std::move(provenance_repo), std::move(flow_repo), std::move(content_repo), std::move(configuration), thread_pool) {
   }
 
   ~CronDrivenSchedulingAgent() override = default;

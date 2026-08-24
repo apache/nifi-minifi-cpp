@@ -80,7 +80,7 @@ class RepositoryImpl : public core::CoreComponentImpl, public core::RepositoryMe
     return true;
   }
 
-  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& /*data*/) override {
+  bool MultiPut(const EntryStreams& /*data*/) override {
     return true;
   }
 

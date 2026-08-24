@@ -20,6 +20,7 @@
 #include <string>
 
 #include "core/Resource.h"
+#include "minifi-cpp/utils/Literals.h"
 
 namespace org::apache::nifi::minifi::provenance {
 
@@ -53,8 +54,9 @@ bool RocksDbProvenanceRepository::initialize(const std::shared_ptr<org::apache::
   }
   logger_->log_debug("MiNiFi Provenance Max Partition Bytes {}", max_partition_bytes_);
   if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {
-    if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
+    if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
       max_partition_millis_ = *max_partition;
+    }
   }
   logger_->log_debug("MiNiFi Provenance Max Storage Time: [{}]", max_partition_millis_);
 
@@ -68,8 +70,7 @@ bool RocksDbProvenanceRepository::initialize(const std::shared_ptr<org::apache::
   // Rocksdb write buffers act as a log of database operation: grow till reaching the limit, serialized after
   // This shouldn't go above 16MB and the configured total size of the db should cap it as well
   auto cf_options = [this] (rocksdb::ColumnFamilyOptions& cf_opts) {
-    int64_t max_buffer_size = 16 << 20;
-    cf_opts.write_buffer_size = gsl::narrow<size_t>(std::min(max_buffer_size, max_partition_bytes_));
+    cf_opts.write_buffer_size = std::min<size_t>(16_MiB, max_partition_bytes_);
     cf_opts.max_write_buffer_number = 4;
     cf_opts.min_write_buffer_number_to_merge = 1;
 
@@ -101,7 +102,7 @@ bool RocksDbProvenanceRepository::initialize(const std::shared_ptr<org::apache::
     if (open_state_db->Get(options, NEXT_EVENT_UUID_KEY, &next_event_uuid_str).ok()) {
       next_event_id_ = next_event_uuid_str;
     } else {
-      logger_->log_error("Could not find '{}'", NEXT_EVENT_UUID_KEY);
+      logger_->log_debug("Could not find '{}', using newly generated event uuid", NEXT_EVENT_UUID_KEY);
       next_event_id_ = utils::IdGenerator::getIdGenerator()->generate();
     }
     logger_->log_trace("Using next event uuid: {}", next_event_id_.to_string());
@@ -123,11 +124,8 @@ void RocksDbProvenanceRepository::destroy() {
   db_.reset();
 }
 
-std::unique_ptr<ProvenanceRepository::Cursor> RocksDbProvenanceRepository::cursorFromString(std::optional<std::string> cursor_str) {
-  if (cursor_str.has_value()) {
-    return std::make_unique<EventCursor>(cursor_str.value());
-  }
-  return std::make_unique<EventCursor>("");
+std::unique_ptr<ProvenanceRepository::Cursor> RocksDbProvenanceRepository::cursorFromString(std::string_view cursor_str) {
+  return std::make_unique<EventCursor>(std::string{cursor_str});
 }
 
 std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, std::string> RocksDbProvenanceRepository::getEvents(size_t max_size, Cursor* cursor) {
@@ -175,7 +173,7 @@ std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, s
 }
 
 std::expected<void, std::string> RocksDbProvenanceRepository::appendEvents(const std::vector<std::shared_ptr<ProvenanceEventRecord>>& events) {
-  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> data;
+  EntryStreams data;
   data.reserve(events.size());
   std::lock_guard guard(next_event_id_mtx_);
   for (auto& event : events) {
@@ -193,7 +191,9 @@ std::expected<void, std::string> RocksDbProvenanceRepository::appendEvents(const
   }
   for (auto& event : events) {
     data.emplace_back(event->getUUIDStr(), std::make_unique<io::BufferStream>());
-    event->serialize(*data.back().second);
+    if (!event->serialize(*data.back().second)) {
+      return std::unexpected{fmt::format("Failed to serialize provenance event '{}'", event->getUUIDStr())};
+    }
   }
   if (MultiPut(data)) {
     return {};
@@ -202,6 +202,6 @@ std::expected<void, std::string> RocksDbProvenanceRepository::appendEvents(const
   return std::unexpected{"Failed to append provenance events"};
 }
 
-REGISTER_RESOURCE_AS(RocksDbProvenanceRepository, InternalResource, ("RocksDbProvenanceRepository", "ProvenanceRepository", "provenancerepository"));
+REGISTER_RESOURCE_AS(RocksDbProvenanceRepository, InternalResource, ("RocksDbProvenanceRepository", "rocksdbprovenancerepository", "ProvenanceRepository", "provenancerepository"));
 
 }  // namespace org::apache::nifi::minifi::provenance
