@@ -38,7 +38,9 @@ def before_all(context):
         install_sql_cmd = "dnf -y install postgresql-odbc"
         so_location = "psqlodbca.so"
     elif (
-        ("bullseye" in minifi_tag_prefix or "bookworm" in minifi_tag_prefix or "trixie" in minifi_tag_prefix)
+        "bullseye" in minifi_tag_prefix
+        or "bookworm" in minifi_tag_prefix
+        or "trixie" in minifi_tag_prefix
         or "jammy" in minifi_tag_prefix
         or "noble" in minifi_tag_prefix
     ):
