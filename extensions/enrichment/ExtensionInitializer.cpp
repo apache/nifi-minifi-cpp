@@ -1,0 +1,41 @@
+/**
+* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "api/core/Resource.h"
+#include "api/utils/minifi-c-utils.h"
+#include "JoinEnrichmentAttributes.h"
+#include "ForkEnrichment.h"
+
+#define MKSOC(x) #x
+#define MAKESTRING(x) MKSOC(x)  // NOLINT(cppcoreguidelines-macro-usage)
+
+namespace minifi = org::apache::nifi::minifi;
+
+CEXTENSIONAPI const uint32_t minifi_api_version = MINIFI_API_VERSION;
+
+CEXTENSIONAPI void minifi_init_extension(minifi_extension_context* extension_context) {
+  minifi_extension_definition extension_definition{
+    .name = minifi::api::utils::minifiStringView(MAKESTRING(EXTENSION_NAME)),
+    .version = minifi::api::utils::minifiStringView(MAKESTRING(EXTENSION_VERSION)),
+    .group_name = minifi::api::utils::minifiStringView(MAKESTRING(MINIFI_EXTENSION_GROUP_NAME)),
+    .deinit = nullptr,
+    .user_data = nullptr
+  };
+  auto* extension = minifi_register_extension(extension_context, &extension_definition);
+  minifi::api::core::registerProcessors<minifi::enrichment::ForkEnrichment>(extension);
+  minifi::api::core::registerProcessors<minifi::enrichment::JoinEnrichmentAttributes>(extension);
+}
