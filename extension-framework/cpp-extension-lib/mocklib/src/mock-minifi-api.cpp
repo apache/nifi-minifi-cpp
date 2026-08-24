@@ -17,6 +17,7 @@
 
 #include <stdexcept>
 
+#include "MockProcessSession.h"
 #include "minifi-api.h"
 
 extern "C" {
@@ -72,6 +73,14 @@ minifi_status minifi_process_session_transfer(minifi_process_session*, MINIFI_OW
 }
 
 minifi_status minifi_process_session_remove(minifi_process_session*, MINIFI_OWNED minifi_flow_file*) {
+  throw std::runtime_error("Not implemented");
+}
+
+minifi_status minifi_process_session_stash(minifi_process_session*, MINIFI_OWNED minifi_flow_file*, minifi_stashed_flow_file**) {
+  throw std::runtime_error("Not implemented");
+}
+
+minifi_status minifi_process_session_unstash(minifi_process_session*, MINIFI_OWNED minifi_stashed_flow_file*, minifi_flow_file**) {
   throw std::runtime_error("Not implemented");
 }
 
@@ -143,6 +152,10 @@ minifi_status minifi_process_context_set_trigger_when_empty(minifi_process_conte
 }
 
 minifi_status minifi_process_context_report_metrics(minifi_process_context*, size_t, const minifi_string_view*, const double*) {
+  throw std::runtime_error("Not implemented");
+}
+
+minifi_flow_file* minifi_process_session_clone(minifi_process_session*, minifi_flow_file*) {
   throw std::runtime_error("Not implemented");
 }
 

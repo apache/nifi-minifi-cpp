@@ -73,6 +73,9 @@ MINIFI_API_MAP(minifi_extension, minifi::core::extension::Extension);
 MINIFI_API_MAP(minifi_extension_context, minifi::core::extension::Extension::Context);
 MINIFI_API_MAP(minifi_logger, std::shared_ptr<minifi::core::logging::Logger>);
 MINIFI_API_MAP(minifi_flow_file, std::shared_ptr<minifi::core::FlowFile>);
+// A stashed flow file handle is an opaque, non-owning identity token: the raw FlowFile whose owning
+// shared_ptr lives in the processor's stash. See core::StashedFlowFile / Processor::stashFlowFile.
+MINIFI_API_MAP(minifi_stashed_flow_file, minifi::core::FlowFile);
 
 #undef MINIFI_API_MAP
 

@@ -38,12 +38,15 @@ class ProcessSession {
   ProcessSession& operator=(const ProcessSession&) = delete;
   ProcessSession& operator=(ProcessSession&&) = delete;
 
+  virtual FlowFile clone(const FlowFile& flow_file) = 0;
   virtual FlowFile create(const FlowFile* parent = nullptr) = 0;
   virtual FlowFile get() = 0;
 
   virtual void penalize(FlowFile& ff) = 0;
   virtual void transfer(FlowFile ff, const minifi::core::Relationship& relationship) = 0;
   virtual void remove(FlowFile ff) = 0;
+  virtual StashedFlowFile stash(FlowFile ff) = 0;
+  virtual FlowFile unstash(StashedFlowFile stashed_flow_file) = 0;
   virtual void write(FlowFile& flow, const io::OutputStreamCallback& callback) = 0;
   virtual void read(FlowFile& flow, const io::InputStreamCallback& callback) = 0;
 
@@ -64,10 +67,13 @@ class CffiProcessSession : public ProcessSession {
   explicit CffiProcessSession(minifi_process_session* impl): impl_(impl) {}
 
   FlowFile create(const FlowFile* parent = nullptr) override;
+  FlowFile clone(const FlowFile& flow_file) override;
   FlowFile get() override;
   void penalize(FlowFile& ff) override;
   void transfer(FlowFile ff, const minifi::core::Relationship& relationship) override;
   void remove(FlowFile ff) override;
+  StashedFlowFile stash(FlowFile ff) override;
+  FlowFile unstash(StashedFlowFile stashed_flow_file) override;
   void write(FlowFile& flow, const io::OutputStreamCallback& callback) override;
   void read(FlowFile& flow, const io::InputStreamCallback& callback) override;
 

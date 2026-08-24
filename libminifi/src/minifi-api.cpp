@@ -442,6 +442,15 @@ MINIFI_OWNED minifi_flow_file* minifi_process_session_create(minifi_process_sess
   return nullptr;
 }
 
+MINIFI_OWNED minifi_flow_file* minifi_process_session_clone(minifi_process_session* session, minifi_flow_file* flow_file) {
+  gsl_Assert(session);
+  gsl_Assert(flow_file);
+  if (const auto ff = toCpp(session)->clone(*toRawFlowFile(flow_file))) {
+    return toC(new std::shared_ptr<minifi::core::FlowFile>(ff));  // NOLINT(cppcoreguidelines-owning-memory)
+  }
+  return nullptr;
+}
+
 minifi_status minifi_process_session_penalize(minifi_process_session* session, minifi_flow_file* flowfile) {
   gsl_Assert(session);
   gsl_Assert(flowfile);
@@ -475,6 +484,36 @@ minifi_status minifi_process_session_remove(minifi_process_session* session, MIN
     toCpp(session)->remove(*owned);
     return MINIFI_STATUS_SUCCESS;
   } catch (...) {
+    return MINIFI_STATUS_UNKNOWN_ERROR;
+  }
+}
+
+enum minifi_status minifi_process_session_stash(struct minifi_process_session* session, MINIFI_OWNED struct minifi_flow_file* flow_file, struct minifi_stashed_flow_file** stashed_flow_file) {
+  gsl_Assert(session);
+  gsl_Assert(flow_file);
+  gsl_Assert(stashed_flow_file);
+  const std::unique_ptr<std::shared_ptr<minifi::core::FlowFile>> owned{toCpp(flow_file)};
+  try {
+    *stashed_flow_file = toC(toCpp(session)->stash(std::move(*owned)).flow_file);
+    return MINIFI_STATUS_SUCCESS;
+  } catch (...) {
+    return MINIFI_STATUS_UNKNOWN_ERROR;
+  }
+}
+
+minifi_status minifi_process_session_unstash(struct minifi_process_session* session, MINIFI_OWNED struct minifi_stashed_flow_file* stashed_flow_file, struct minifi_flow_file** flow_file) {
+  gsl_Assert(session);
+  gsl_Assert(flow_file);
+  gsl_Assert(stashed_flow_file);
+  try {
+    auto unstashed = toCpp(session)->unstash(minifi::core::StashedFlowFile{toCpp(stashed_flow_file)});
+    if (!unstashed) {
+      return MINIFI_STATUS_UNKNOWN_ERROR;
+    }
+    *flow_file = toC(new std::shared_ptr<minifi::core::FlowFile>(std::move(unstashed)));  // NOLINT(cppcoreguidelines-owning-memory)
+    return MINIFI_STATUS_SUCCESS;
+  }
+  catch (...) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
 }

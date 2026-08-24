@@ -57,6 +57,16 @@ impl MockFlowFile {
         }
     }
 
+    /// A deep copy with the same content and attributes but a fresh id,
+    /// mirroring `ProcessSession::clone_ff`.
+    pub fn deep_clone(&self) -> MockFlowFile {
+        Self {
+            content: RefCell::new(self.content.borrow().clone()),
+            attributes: self.attributes.clone(),
+            id: next_mock_flow_file_id(),
+        }
+    }
+
     pub fn content_len(&self) -> usize {
         self.content.borrow().len()
     }

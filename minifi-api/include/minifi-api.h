@@ -43,7 +43,7 @@ extern "C" {
 #define MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
 
 enum : uint32_t {
-  MINIFI_API_VERSION = 2
+  MINIFI_API_VERSION = 3
 };
 
 enum minifi_io_status : int64_t {
@@ -99,6 +99,8 @@ struct minifi_input_stream;
 struct minifi_output_stream;
 struct minifi_extension;
 struct minifi_extension_context;
+
+struct minifi_stashed_flow_file;  // MINIFI_API_VERSION >= 3
 
 enum minifi_status : uint32_t {
   MINIFI_STATUS_SUCCESS = 0,
@@ -243,11 +245,32 @@ bool minifi_logger_should_log(struct minifi_logger*, enum minifi_log_level);
 MINIFI_OWNED struct minifi_flow_file* minifi_process_session_get(struct minifi_process_session*);
 MINIFI_OWNED struct minifi_flow_file* minifi_process_session_create(struct minifi_process_session* session,
     MINIFI_NULLABLE struct minifi_flow_file* parent_flowfile);
+MINIFI_OWNED struct minifi_flow_file* minifi_process_session_clone(struct minifi_process_session* session,
+    MINIFI_NULLABLE struct minifi_flow_file* flow_file);
 
 enum minifi_status minifi_process_session_penalize(struct minifi_process_session* session, struct minifi_flow_file* flowfile);
 enum minifi_status minifi_process_session_transfer(struct minifi_process_session* session, MINIFI_OWNED struct minifi_flow_file* flowfile,
     struct minifi_string_view relationship_name);
 enum minifi_status minifi_process_session_remove(struct minifi_process_session* session, MINIFI_OWNED struct minifi_flow_file* flowfile);
+
+// stash/unstash let an extension keep a flow file across onTrigger invocations without the legacy
+// self-relationship trick. The flow file's record/content stay in the repositories throughout; what
+// moves is where it is owned.
+//
+// stash: takes a MINIFI_OWNED flow file (e.g. one from get()) out of the current session - on commit
+//   it is neither routed, persisted, nor deleted - and hands its ownership to the processor, which
+//   outlives the session. It writes an opaque handle to *stashed_flow_file identifying the stashed
+//   flow file. The handle is a lightweight token, not a new allocation: there is nothing to free.
+// unstash: hands a stashed flow file back to a (later) session. It writes a MINIFI_OWNED flow file to
+//   *flow_file, which is owned by that session again and must be transferred or removed as usual.
+//   The stashed_flow_file token is consumed and must not be used again.
+//
+// Because the processor owns stashed flow files, there is no explicit free: a token that is never
+// unstashed simply leaves its flow file in the processor, which reclaims it when the processor is
+// torn down (the record/content stay in the repositories and are recovered on next startup).
+enum minifi_status minifi_process_session_stash(struct minifi_process_session* session, MINIFI_OWNED struct minifi_flow_file* flow_file, struct minifi_stashed_flow_file** stashed_flow_file);
+enum minifi_status minifi_process_session_unstash(struct minifi_process_session* session, MINIFI_OWNED struct minifi_stashed_flow_file* stashed_flow_file, struct minifi_flow_file** flow_file);
+
 
 enum minifi_status minifi_process_session_read(struct minifi_process_session*, struct minifi_flow_file*,
     int64_t (*cb)(void* user_ctx, struct minifi_input_stream*), void* user_ctx);

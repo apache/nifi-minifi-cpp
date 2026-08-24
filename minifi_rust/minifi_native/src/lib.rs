@@ -58,9 +58,9 @@ pub use api::process_session::IoState;
 pub use api::attribute::{GetAttribute, OutputAttribute};
 
 pub use api::{
-    DataSize, FlowFile, GetId, InputStream, NonBlankPath, OnTriggerResult, OutputStream,
-    ProcessContext, ProcessSession, ProcessorInputRequirement, PropertyConstraints, PropertyType,
-    Relationship, StandardPropertyValidator,
+    DataSize, FlowFile, FlowFileStore, GetId, InputStream, NonBlankPath, OnTriggerResult,
+    OutputStream, ProcessContext, ProcessSession, ProcessorInputRequirement, PropertyConstraints,
+    PropertyType, Relationship, StandardPropertyValidator,
 };
 
 pub use minifi_native_macros as macros;
