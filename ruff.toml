@@ -1,7 +1,9 @@
 line-length = 120
 builtins = ["log", "REL_SUCCESS", "REL_FAILURE", "REL_ORIGINAL", "raw_input"]
 
-extend-exclude = ["thirdparty",
+extend-exclude = [
+    "thirdparty",
+    "build",
     "cmake-build-*",
 ]
 
