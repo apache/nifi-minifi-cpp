@@ -46,12 +46,14 @@ limitations under the License.
 - [FetchSFTP](#FetchSFTP)
 - [FetchSmb](#FetchSmb)
 - [FocusArchiveEntry](#FocusArchiveEntry)
+- [ForkEnrichment](#ForkEnrichment)
 - [GenerateFlowFile](#GenerateFlowFile)
 - [GetCouchbaseKey](#GetCouchbaseKey)
 - [GetFile](#GetFile)
 - [GetTCP](#GetTCP)
 - [HashContent](#HashContent)
 - [InvokeHTTP](#InvokeHTTP)
+- [JoinEnrichmentAttributes](#JoinEnrichmentAttributes)
 - [JoltTransformJSON](#JoltTransformJSON)
 - [ListAzureBlobStorage](#ListAzureBlobStorage)
 - [ListAzureDataLakeStorage](#ListAzureDataLakeStorage)
@@ -1067,6 +1069,35 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | success operational on the flow record |
 
 
+## ForkEnrichment
+
+### Description
+
+Used in conjunction with the JoinEnrichmentAttributes processor, this processor is responsible for adding the attributes that are necessary for the JoinEnrichmentAttributes processor to perform its function. Each incoming FlowFile will be cloned. The original FlowFile will have appropriate attributes added and then be transferred to the 'original' relationship. The clone will have appropriate attributes added and then be routed to the 'enrichment' relationship.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name           | Default Value | Allowable Values | Description                                                                                               |
+|----------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------|
+| Max Batch Size |               |                  | The maximum number of flow files to process at a time. If unset, all FlowFiles will be processed at once. |
+
+### Relationships
+
+| Name       | Description                                                                                                |
+|------------|------------------------------------------------------------------------------------------------------------|
+| enrichment | A clone of the incoming FlowFile will be routed to this relationship, after adding appropriate attributes. |
+| original   | The incoming FlowFile will be routed to this relationship, after adding appropriate attributes.            |
+
+### Output Attributes
+
+| Attribute           | Relationship         | Description                                                                                       |
+|---------------------|----------------------|---------------------------------------------------------------------------------------------------|
+| enrichment.role     | enrichment, original | The role to use for enrichment. This will either be ORIGINAL or ENRICHMENT.                       |
+| enrichment.group.id | enrichment, original | The Group ID to use in order to correlate the 'original' FlowFile with the 'enrichment' FlowFile. |
+
+
 ## GenerateFlowFile
 
 ### Description
@@ -1275,6 +1306,31 @@ In the list below, the names of required properties appear in bold. Any other pr
 | invokehttp.status.message | success, response, retry, no retry | The status message that is returned                            |
 | invokehttp.request.url    | success, response, retry, no retry | The original request URL                                       |
 | invokehttp.tx.id          | success, response, retry, no retry | The transaction ID that is returned after reading the response |
+
+
+## JoinEnrichmentAttributes
+
+### Description
+
+Rejoins the forked FlowFiles coming from ForkEnrichment processor, the resulting FlowFile will have the Original's content and all attributes from both of them (prioritizing Enrichment's).
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name           | Default Value | Allowable Values | Description                                                                                                                                                                                      |
+|----------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Timeout        |               |                  | Specifies the maximum amount of time to wait for the second FlowFile once the first arrives at the processor, after which point the first FlowFile will be routed to the 'timeout' relationship. |
+| Max Batch Size |               |                  | The maximum number of flow files to process at a time. If unset, all FlowFiles will be processed at once.                                                                                        |
+
+### Relationships
+
+| Name     | Description                                                                                                                                                                                                                                              |
+|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| invalid  | Any FlowFiles without the requisite attributes will be routed here                                                                                                                                                                                       |
+| joined   | The resultant FlowFile with Records joined together from both the original and enrichment FlowFiles will be routed to this relationship                                                                                                                  |
+| original | Both of the incoming FlowFiles ('original' and 'enrichment') will be routed to this Relationship. I.e., this is the 'original' version of both of these FlowFiles.                                                                                       |
+| timeout  | If one of the incoming FlowFiles (i.e., the 'original' FlowFile or the 'enrichment' FlowFile) arrives to this Processor but the other does not arrive within the configured Timeout period, the FlowFile that did arrive is routed to this relationship. |
 
 
 ## JoltTransformJSON
