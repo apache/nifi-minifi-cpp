@@ -206,7 +206,7 @@ class ProvenanceReporter {
   virtual void clone(const core::FlowFile& parent, const core::FlowFile& child) = 0;
   virtual void expire(const core::FlowFile& flow_file, const std::string& detail) = 0;
   virtual void drop(const core::FlowFile& flow_file, const std::string& reason) = 0;
-  virtual void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) = 0;
+  virtual void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) = 0;
   virtual void fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) = 0;
   virtual void receive(const core::FlowFile& flow_file, const std::string& transitUri,
     const std::string& sourceSystemFlowFileIdentifier, const std::string& detail, std::chrono::milliseconds processingDuration) = 0;

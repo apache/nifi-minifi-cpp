@@ -99,15 +99,6 @@ std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::s
   return processor;
 }
 
-std::unique_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask() {
-  auto impl = std::make_unique<core::reporting::SiteToSiteProvenanceReportingTask>(this->configuration_);
-  auto uuid = impl->getUUID();
-  auto name = impl->getName();
-  auto processor = std::make_unique<core::Processor>("SiteToSiteProvenanceReportingTask", name, uuid, std::move(impl));
-  processor->initialize();
-  return processor;
-}
-
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const std::string& url, const std::string& yamlConfigPayload, const std::optional<std::string>& flow_id) {
   auto old_provider = service_provider_;
   auto old_parameter_contexts = std::move(parameter_contexts_);

@@ -61,11 +61,42 @@ struct SiteToSiteResponse {
   std::string message;
 };
 
+template <typename T>
+concept Yieldable = requires(T t) {
+  { t.yield() } -> std::same_as<void>;
+};
+
 class SiteToSiteClient {
  public:
   explicit SiteToSiteClient(gsl::not_null<std::unique_ptr<SiteToSitePeer>> peer)
       : peer_(std::move(peer)) {
   }
+
+  class YieldAction {
+   public:
+    template<Yieldable T>
+    YieldAction(T& impl)
+      : self_(std::addressof(impl)),
+        method_{[] (void* self) {
+          return static_cast<std::remove_reference_t<T>*>(self)->yield();
+        }}
+    {}
+
+    YieldAction(const YieldAction&) = default;
+    YieldAction(YieldAction&&) = default;
+    YieldAction& operator=(const YieldAction&) = default;
+    YieldAction& operator=(YieldAction&&) = default;
+
+    ~YieldAction() = default;
+
+    void request() {
+      method_(self_);
+    }
+
+   private:
+    void* self_;
+    void(*method_)(void* self);
+  };
 
   SiteToSiteClient(const SiteToSiteClient&) = delete;
   SiteToSiteClient(SiteToSiteClient&&) = delete;
@@ -75,7 +106,7 @@ class SiteToSiteClient {
   virtual ~SiteToSiteClient() = default;
 
   virtual std::optional<std::vector<PeerStatus>> getPeerList() = 0;
-  virtual bool transmitPayload(core::ProcessContext& context, const std::string &payload, const std::map<std::string, std::string>& attributes) = 0;
+  virtual bool transmitPayload(YieldAction yield, const std::string &payload, const std::map<std::string, std::string>& attributes) = 0;
 
   bool transfer(TransferDirection direction, core::ProcessContext& context, core::ProcessSession& session) {
     if (direction == TransferDirection::SEND) {
@@ -145,11 +176,11 @@ class SiteToSiteClient {
   bool sendFlowFile(const std::shared_ptr<Transaction>& transaction, core::FlowFile& flow_file, core::ProcessSession& session);
 
   void cancel(const utils::Identifier &transaction_id);
-  bool complete(core::ProcessContext& context, const utils::Identifier &transaction_id);
+  bool complete(YieldAction yield, const utils::Identifier &transaction_id);
   void error(const utils::Identifier &transaction_id);
   bool confirm(const utils::Identifier &transaction_id);
 
-  void handleTransactionError(const std::shared_ptr<Transaction>& transaction, core::ProcessContext& context, const std::exception& exception);
+  void handleTransactionError(const std::shared_ptr<Transaction>& transaction, YieldAction yield, const std::exception& exception);
 
   PeerState peer_state_{PeerState::IDLE};
   utils::Identifier port_id_;
@@ -187,7 +218,7 @@ class SiteToSiteClient {
   bool confirmReceive(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id);
   bool confirmSend(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id);
   bool completeReceive(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id);
-  bool completeSend(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id, core::ProcessContext& context);
+  bool completeSend(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id, YieldAction yield);
 
   std::expected<void, std::string> readFlowFileHeaderData(io::InputStream& stream, const std::string& transaction_id, SiteToSiteClient::ReceiveFlowFileHeaderResult& result);
   std::expected<ReceiveFlowFileHeaderResult, std::string> receiveFlowFileHeader(io::InputStream& stream, const std::shared_ptr<Transaction>& transaction);
