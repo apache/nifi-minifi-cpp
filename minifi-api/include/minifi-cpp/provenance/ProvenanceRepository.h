@@ -35,8 +35,8 @@ class ProvenanceRepository : public virtual core::Repository {
 
   virtual std::expected<void, std::string> appendEvents(const std::vector<std::shared_ptr<ProvenanceEventRecord>>& events) = 0;
 
-  // if @cursor_str is nullopt it creates a cursor to the beginning if the underlying repository supports it
-  virtual std::unique_ptr<Cursor> cursorFromString(std::optional<std::string> cursor_str) = 0;
+  // if @cursor_str is the empty string it creates a cursor to the beginning if the underlying repository supports it
+  virtual std::unique_ptr<Cursor> cursorFromString(std::string_view cursor_str) = 0;
 
   virtual std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, std::string> getEvents(size_t max_size, Cursor* cursor) = 0;
 };

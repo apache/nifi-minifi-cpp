@@ -17,34 +17,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
-#include <queue>
-#include <map>
-#include <set>
-#include <string>
-#include <memory>
-#include <sstream>
+#include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+
 #include <functional>
 #include <iostream>
+#include <map>
+#include <memory>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <string>
 #include <utility>
+#include <vector>
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/prettywriter.h"
-
-#include "minifi-cpp/core/Repository.h"
-#include "core/reporting/SiteToSiteProvenanceReportingTask.h"
-#include "utils/TimeUtil.h"
-#include "minifi-cpp/core/ProcessContext.h"
-#include "core/ProcessSession.h"
-#include "minifi-cpp/provenance/Provenance.h"
 #include "FlowController.h"
+#include "core/ProcessSession.h"
+#include "minifi-cpp/core/ProcessContext.h"
+#include "minifi-cpp/core/Repository.h"
+#include "minifi-cpp/provenance/Provenance.h"
 #include "minifi-cpp/utils/gsl.h"
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+#include "utils/TimeUtil.h"
+#include "utils/net/NetworkInterfaceInfo.h"
 
 namespace org::apache::nifi::minifi::core::reporting {
 
 const char *SiteToSiteProvenanceReportingTask::ProvenanceAppStr = "MiNiFi Flow";
+
+namespace {
+
+std::unique_ptr<provenance::ProvenanceRepository::Cursor> getCursor(StateManager& state_manager, provenance::ProvenanceRepository& provenance_repository, logging::Logger& logger) {
+  std::string cursor_str;
+  {
+    std::unordered_map<std::string, std::string> state_map;
+    if (state_manager.get(state_map)) {
+      if (auto it = state_map.find("cursor"); it != state_map.end()) {
+        cursor_str = it->second;
+      }
+    }
+  }
+  std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> records;
+  auto cursor = provenance_repository.cursorFromString(cursor_str);
+  if (!cursor_str.empty() && !cursor) {
+    logger.log_error("Failed to parse cursor, falling back to enumerating from the beginning");
+    cursor = provenance_repository.cursorFromString("");
+  }
+  return cursor;
+}
+
+}  // namespace
 
 void SiteToSiteProvenanceReportingTask::initialize() {
   RemoteProcessGroupPort::initialize();
@@ -170,21 +194,8 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
     context.yield();
     return;
   }
-  std::optional<std::string> cursor_str;
-  {
-    std::unordered_map<std::string, std::string> state_map;
-    if (state_manager->get(state_map)) {
-      if (auto it = state_map.find("cursor"); it != state_map.end()) {
-        cursor_str = it->second;
-      }
-    }
-  }
+  auto cursor = getCursor(*state_manager, *repo, *logger_);
   std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> records;
-  auto cursor = repo->cursorFromString(cursor_str);
-  if (cursor_str && !cursor) {
-    logger_->log_error("Failed to parse cursor, falling back to enumerating from the beginning");
-    cursor = repo->cursorFromString(std::nullopt);
-  }
   if (auto result = repo->getEvents(batch_size_, cursor.get())) {
     records = std::move(result.value());
   } else {
@@ -211,6 +222,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context,
     std::map<std::string, std::string> attributes;
     if (!protocol_->transmitPayload(context, jsonStr, attributes)) {
       context.yield();
+      return;
     }
   } catch (...) {
     // if transfer bytes failed, return instead of purge the provenance records

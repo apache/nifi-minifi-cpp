@@ -52,7 +52,7 @@ class NoOpThreadedRepository : public core::ThreadedRepositoryImpl, public prove
     return {};
   }
 
-  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::optional<std::string> /*cursor_str*/) override {
+  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::string_view /*cursor_str*/) override {
     return nullptr;
   }
 

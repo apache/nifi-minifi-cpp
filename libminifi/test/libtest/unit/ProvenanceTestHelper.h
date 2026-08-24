@@ -130,7 +130,7 @@ class TestRepositoryBase : public T_BaseRepository, public org::apache::nifi::mi
     return {};
   }
 
-  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::optional<std::string> /*cursor_str*/) override {
+  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::string_view /*cursor_str*/) override {
     return nullptr;
   }
 
