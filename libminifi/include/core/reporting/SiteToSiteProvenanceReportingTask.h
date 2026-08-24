@@ -36,7 +36,7 @@ class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
  public:
   explicit SiteToSiteProvenanceReportingTask(ReportingTaskMetadata metadata)
       : ReportingTaskBase{metadata},
-        remote_port_{metadata.name, metadata.uuid, std::make_unique<RemoteProcessGroupPort>(metadata.name, "", Configure::create(),
+        remote_port_{"RemoteProcessGroupPort", metadata.name, metadata.uuid, std::make_unique<RemoteProcessGroupPort>(metadata.name, "", Configure::create(),
         metadata.uuid, sitetosite::TransferDirection::SEND, metadata.logger)}
   {
     batch_size_ = 100;
