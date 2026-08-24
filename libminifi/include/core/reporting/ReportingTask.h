@@ -43,8 +43,6 @@ public:
 
   bool isSingleThreaded() const override;
 
-  std::string getProcessorType() const override;
-
   void onTrigger(ProcessContext& context, ProcessSession&) override;
 
   void onSchedule(ProcessContext& context, ProcessSessionFactory&) override;

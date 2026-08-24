@@ -68,10 +68,6 @@ bool ReportingTask::isSingleThreaded() const {
   return true;
 }
 
-std::string ReportingTask::getProcessorType() const {
-  return "ReportingTask";
-}
-
 void ReportingTask::onTrigger(ProcessContext& context, ProcessSession&) {
   impl_->onTrigger(context);
 }

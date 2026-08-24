@@ -198,7 +198,9 @@ public:
 
   [[nodiscard]] gsl::owner<CoreComponent*> createRaw(const std::string &name, const utils::Identifier &uuid) override {
     auto logger = logging::LoggerFactoryBase::getAliasedLogger(getClassName(), uuid);
-    return gsl::owner<CoreComponent*>{new Processor(name, uuid, std::make_unique<reporting::ReportingTask>(factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)})))};
+    return gsl::owner<CoreComponent*>{new Processor(
+        utils::string::partAfterLastOccurrenceOf(factory_->getClassName(), ':'), name, uuid,
+        std::make_unique<reporting::ReportingTask>(factory_->create({.uuid = uuid, .name = name, .logger = std::move(logger)})))};
   }
 
   [[nodiscard]] std::string getModuleName() const override {
