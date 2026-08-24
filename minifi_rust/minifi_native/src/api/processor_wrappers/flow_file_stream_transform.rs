@@ -223,7 +223,9 @@ where
 mod tests {
     use super::*;
     use crate::api::RawProcessor;
-    use crate::{MockFlowFile, MockLogger, MockProcessContext, MockProcessSession};
+    use crate::{
+        MockFlowFile, MockLogger, MockProcessContext, MockProcessSession, ScheduleContext,
+    };
 
     const TEST_RELATIONSHIP: Relationship = Relationship {
         name: "test",
@@ -237,7 +239,10 @@ mod tests {
 
     struct PartialWriteThenError;
     impl Schedule for PartialWriteThenError {
-        fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
+        fn schedule<Ctx: ScheduleContext, L: Logger>(
+            _c: &Ctx,
+            _l: &L,
+        ) -> Result<Self, MinifiError> {
             Ok(PartialWriteThenError)
         }
     }

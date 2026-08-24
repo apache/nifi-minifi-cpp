@@ -215,6 +215,7 @@ bool BinFiles::resurrectFlowFiles(core::ProcessSession &session) {
   for (auto &file : flow_files) {
     std::string group_id = getGroupId(file);
     if (!binManager_.offer(group_id, file)) {
+      session.add(file);
       session.transfer(file, Failure);
       had_failure = true;
     }

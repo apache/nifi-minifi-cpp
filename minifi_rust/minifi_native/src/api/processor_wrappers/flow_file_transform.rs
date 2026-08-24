@@ -261,7 +261,7 @@ mod tests {
     use crate::api::raw_processor::MultiThreadedTrigger;
     use crate::{
         GetControllerService, GetId, MockFlowFile, MockLogger, MockProcessContext,
-        MockProcessSession, TransformError,
+        MockProcessSession, ScheduleContext, TransformError,
     };
 
     const FAILURE: Relationship = Relationship {
@@ -271,7 +271,10 @@ mod tests {
 
     struct RouteToFailure;
     impl Schedule for RouteToFailure {
-        fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
+        fn schedule<Ctx: ScheduleContext, L: Logger>(
+            _c: &Ctx,
+            _l: &L,
+        ) -> Result<Self, MinifiError> {
             Ok(RouteToFailure)
         }
     }
@@ -300,7 +303,10 @@ mod tests {
 
     struct RollbackTransform;
     impl Schedule for RollbackTransform {
-        fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
+        fn schedule<Ctx: ScheduleContext, L: Logger>(
+            _c: &Ctx,
+            _l: &L,
+        ) -> Result<Self, MinifiError> {
             Ok(RollbackTransform)
         }
     }

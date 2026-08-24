@@ -32,6 +32,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "FlowController.h"
+#include "FlowFileRecord.h"
 #include "Connection.h"
 #include "../../include/core/FlowFile.h"
 #include "MergeContent.h"
@@ -923,4 +924,20 @@ TEST_CASE("Empty MergeContent doesnt yield when processing readybins") {
   std::this_thread::sleep_for(100ms);
   auto second_trigger_results = controller.trigger();
   CHECK_FALSE(merge_content->isYield());
+}
+
+TEST_CASE("MergeContent routes a restored flow file rejected by its bin to failure") {
+  minifi::test::SingleProcessorTestController controller{minifi::test::utils::make_processor<minifi::processors::MergeContent>("mergeContent")};
+  const auto merge_content = controller.getProcessor();
+  REQUIRE(controller.plan->setProperty(merge_content, minifi::processors::MergeContent::MergeStrategy,
+      minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT));
+
+  auto restored_flow_file = std::make_shared<minifi::FlowFileRecordImpl>();
+  restored_flow_file->addAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, "group-1");
+  restored_flow_file->addAttribute(minifi::processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, "0");
+  merge_content->restore(restored_flow_file);
+
+  minifi::test::ProcessorTriggerResult results;
+  REQUIRE_NOTHROW(results = controller.trigger());
+  CHECK(results.at(minifi::processors::MergeContent::Failure).size() == 1);
 }

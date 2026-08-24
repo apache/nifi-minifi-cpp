@@ -28,8 +28,8 @@ pub(crate) use classify_output_def::{
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     Content, FlowFileTransform, GetAttribute, GetId, GetProperty, InputStream, Logger, MinifiError,
-    PropertyConstraints, PropertySchema, PropertyType, Relationship, Schedule, TransformError,
-    TransformedFlowFile, route_to_err, warn,
+    PropertyConstraints, PropertySchema, PropertyType, Relationship, Schedule, ScheduleContext,
+    TransformError, TransformedFlowFile, route_to_err, warn,
 };
 use serde::Serialize;
 use tract::Tensor;
@@ -81,7 +81,7 @@ pub(crate) struct ClassifyOutput {
 }
 
 impl Schedule for ClassifyOutput {
-    fn schedule<Ctx: GetProperty, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>

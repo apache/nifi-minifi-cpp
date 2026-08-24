@@ -24,7 +24,7 @@ use classify_image_def::TRACT_MODEL_SERVICE;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, Relationship, Schedule, TransformError, TransformedFlowFile,
+    MinifiError, Relationship, Schedule, ScheduleContext, TransformError, TransformedFlowFile,
 };
 use tract::Tensor;
 
@@ -35,7 +35,7 @@ pub(crate) struct ClassifyImage {
 }
 
 impl Schedule for ClassifyImage {
-    fn schedule<Ctx: GetProperty + GetControllerService, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         context: &Ctx,
         logger: &L,
     ) -> Result<Self, MinifiError>

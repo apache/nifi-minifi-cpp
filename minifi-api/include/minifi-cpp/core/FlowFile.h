@@ -81,4 +81,11 @@ class FlowFile : public virtual CoreComponent, public virtual ReferenceContainer
   static std::shared_ptr<FlowFile> create();
 };
 
+// A non-owning token identifying a flow file stashed with a processor (see
+// ProcessSession::stash / Processor::stashFlowFile). The owning shared_ptr lives in the processor;
+// this only records the flow file's identity so unstash() can retrieve it.
+struct StashedFlowFile {
+  core::FlowFile* flow_file;
+};
+
 }  // namespace org::apache::nifi::minifi::core

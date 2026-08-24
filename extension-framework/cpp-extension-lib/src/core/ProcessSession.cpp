@@ -77,6 +77,10 @@ FlowFile CffiProcessSession::create(const FlowFile* parent) {
   return FlowFile{minifi_process_session_create(impl_, parent ? parent->get() : nullptr)};
 }
 
+FlowFile CffiProcessSession::clone(const FlowFile& flow_file) {
+  return FlowFile{minifi_process_session_clone(impl_, flow_file.get())};
+}
+
 void CffiProcessSession::penalize(FlowFile& ff) {
   if (MINIFI_STATUS_SUCCESS != minifi_process_session_penalize(impl_, ff.get())) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to penalize flowfile");
@@ -94,6 +98,22 @@ void CffiProcessSession::remove(FlowFile ff) {
   if (MINIFI_STATUS_SUCCESS != minifi_process_session_remove(impl_, ff.release())) {
     throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to remove flowfile");
   }
+}
+
+StashedFlowFile CffiProcessSession::stash(FlowFile ff) {
+  minifi_stashed_flow_file* stashed = nullptr;
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_stash(impl_, ff.release(), &stashed)) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to stash flowfile");
+  }
+  return StashedFlowFile{stashed};
+}
+
+FlowFile CffiProcessSession::unstash(StashedFlowFile stashed_flow_file) {
+  minifi_flow_file* ff = nullptr;
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_unstash(impl_, stashed_flow_file.release(), &ff)) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to unstash flowfile");
+  }
+  return FlowFile{ff};
 }
 
 void CffiProcessSession::write(FlowFile& flow_file, const io::OutputStreamCallback& callback) {

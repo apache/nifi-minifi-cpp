@@ -19,8 +19,8 @@ use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetAttribute, GetControllerService, GetProperty, InputStream, Logger, MinifiError,
     MutFlowFileStreamTransform, OutputAttribute, OutputStream, ProcessorDefinition,
-    ProcessorInputRequirement, PropertyDefinition, Relationship, Schedule, TransformError,
-    TransformStreamResult,
+    ProcessorInputRequirement, PropertyDefinition, Relationship, Schedule, ScheduleContext,
+    TransformError, TransformStreamResult,
 };
 
 #[derive(Debug, ComponentIdentifier)]
@@ -37,7 +37,7 @@ pub(crate) const FAILURE: Relationship = Relationship {
 };
 
 impl Schedule for DuplicateStreamText {
-    fn schedule<Ctx: GetProperty, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         _context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>

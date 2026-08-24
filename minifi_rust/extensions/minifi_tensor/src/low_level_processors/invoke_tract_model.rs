@@ -21,7 +21,8 @@ use invoke_tract_model_def::*;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, Relationship, Schedule, TransformError, TransformedFlowFile, route_to_err,
+    MinifiError, Relationship, Schedule, ScheduleContext, TransformError, TransformedFlowFile,
+    route_to_err,
 };
 use tract::__ndarray_interop::TensorInterface;
 use tract::Tensor;
@@ -33,7 +34,7 @@ mod invoke_tract_model_def;
 pub(crate) struct InvokeTractModel {}
 
 impl Schedule for InvokeTractModel {
-    fn schedule<Ctx: GetProperty, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         _context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>

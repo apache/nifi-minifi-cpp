@@ -16,12 +16,13 @@
 // under the License.
 
 use crate::api::property::PropertySchema;
-use crate::api::{GetId, ProcessContext, RawControllerService};
+use crate::api::{GetId, ProcessContext, RawControllerService, ScheduleContext};
 use crate::{
     ComponentIdentifier, ControllerServiceApi, EnableControllerService, GetAttribute, MinifiError,
     MockFlowFile, Property,
 };
 use std::any::Any;
+use std::cell::Cell;
 use std::collections::HashMap;
 
 pub struct MockPropertyMap {
@@ -74,6 +75,7 @@ pub struct MockProcessContext {
     pub properties: MockPropertyMap,
     pub controller_services: HashMap<String, Box<dyn Any>>,
     pub attributes: HashMap<String, String>,
+    pub trigger_when_empty: Cell<bool>,
 }
 
 impl ProcessContext for MockProcessContext {
@@ -143,6 +145,13 @@ impl ProcessContext for MockProcessContext {
     }
 }
 
+impl ScheduleContext for MockProcessContext {
+    fn set_trigger_when_empty(&self, trigger_when_empty: bool) -> Result<(), MinifiError> {
+        self.trigger_when_empty.set(trigger_when_empty);
+        Ok(())
+    }
+}
+
 impl Default for MockProcessContext {
     fn default() -> Self {
         Self::new()
@@ -155,6 +164,7 @@ impl MockProcessContext {
             properties: MockPropertyMap::new(),
             controller_services: HashMap::new(),
             attributes: HashMap::new(),
+            trigger_when_empty: Cell::new(false),
         }
     }
 }
