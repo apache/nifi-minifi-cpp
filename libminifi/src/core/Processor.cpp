@@ -543,6 +543,23 @@ void Processor::restore(const std::shared_ptr<FlowFile>& file) {
   impl_->restore(file);
 }
 
+void Processor::stashFlowFile(std::shared_ptr<FlowFile> flow_file) {
+  const std::lock_guard<std::mutex> lock(mutex_);
+  stashed_flow_files_.push_back(std::move(flow_file));
+}
+
+std::shared_ptr<FlowFile> Processor::unstashFlowFile(const FlowFile* flow_file) {
+  const std::lock_guard<std::mutex> lock(mutex_);
+  for (auto it = stashed_flow_files_.begin(); it != stashed_flow_files_.end(); ++it) {
+    if (it->get() == flow_file) {
+      auto result = std::move(*it);
+      stashed_flow_files_.erase(it);
+      return result;
+    }
+  }
+  return nullptr;
+}
+
 const std::unordered_map<Connection*, std::unordered_set<Processor*>>& Processor::reachable_processors() const {
   return reachable_processors_;
 }

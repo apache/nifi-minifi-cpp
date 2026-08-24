@@ -209,6 +209,35 @@ void ProcessSessionImpl::remove(const std::shared_ptr<core::FlowFile> &flow) {
   provenance_report_->drop(*flow, reason);
 }
 
+StashedFlowFile ProcessSessionImpl::stash(std::shared_ptr<core::FlowFile> flow_file) {
+  logger_->log_trace("Stashing flow file with UUID: {}", flow_file->getUUIDStr());
+  const auto uuid = flow_file->getUUID();
+  // The session forgets this flow file: on commit it is neither routed, persisted, nor deleted.
+  updated_flowfiles_.erase(uuid);
+  updated_relationships_.erase(uuid);
+  added_flowfiles_.erase(uuid);
+  std::erase_if(deleted_flowfiles_, [&uuid](const auto& ff) { return ff->getUUID() == uuid; });
+
+  core::FlowFile* identity = flow_file.get();
+  process_context_->getProcessor().stashFlowFile(std::move(flow_file));
+  return StashedFlowFile{identity};
+}
+
+std::shared_ptr<core::FlowFile> ProcessSessionImpl::unstash(StashedFlowFile stashed_flow_file) {
+  auto record = process_context_->getProcessor().unstashFlowFile(stashed_flow_file.flow_file);
+  if (!record) {
+    return nullptr;
+  }
+  logger_->log_trace("Unstashing flow file with UUID: {}", record->getUUIDStr());
+  const utils::Identifier uuid = record->getUUID();
+  if (updated_flowfiles_.contains(uuid)) {
+    throw Exception(ExceptionType::PROCESSOR_EXCEPTION, "Mustn't unstash a file that was provided by this session");
+  }
+  added_flowfiles_[uuid].flow_file = record;
+  record->setDeleted(false);
+  return record;
+}
+
 void ProcessSessionImpl::putAttribute(core::FlowFile& flow_file, std::string_view key, const std::string& value) {
   flow_file.setAttribute(key, value);
   std::string details = fmt::format("{} modify flow record {} attribute {}:{}", process_context_->getProcessor().getName(), flow_file.getUUIDStr(), key, value);
@@ -233,8 +262,11 @@ void ProcessSessionImpl::transfer(const std::shared_ptr<core::FlowFile>& flow, c
   utils::Identifier uuid = flow->getUUID();
   if (auto it = added_flowfiles_.find(uuid); it != added_flowfiles_.end()) {
     it->second.rel = &*relationships_.insert(relationship).first;
-  } else {
+  } else if (updated_flowfiles_.contains(uuid)) {
     updated_relationships_[uuid] = &*relationships_.insert(relationship).first;
+  } else {
+    throw Exception(PROCESS_SESSION_EXCEPTION,
+        "Cannot transfer flow file " + flow->getUUIDStr() + " that was not obtained from or added to this session");
   }
   flow->setDeleted(false);
 }

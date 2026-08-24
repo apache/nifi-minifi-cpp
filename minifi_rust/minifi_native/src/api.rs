@@ -20,6 +20,7 @@ pub(crate) mod component_definition_traits;
 pub(crate) mod controller_service;
 pub(crate) mod errors;
 mod flow_file;
+pub(crate) mod flow_file_store;
 pub(crate) mod logger;
 mod process_context;
 pub(crate) mod process_session;
@@ -32,6 +33,7 @@ pub(crate) mod raw_processor;
 pub(crate) mod relationship;
 
 pub use flow_file::{FlowFile, GetId};
+pub use flow_file_store::FlowFileStore;
 pub use logger::{LogLevel, Logger};
 pub use process_context::ProcessContext;
 pub use process_session::{InputStream, OutputStream, ProcessSession};

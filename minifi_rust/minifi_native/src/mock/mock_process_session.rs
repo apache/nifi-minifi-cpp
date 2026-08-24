@@ -34,6 +34,7 @@ pub struct MockProcessSession {
 
 impl ProcessSession for MockProcessSession {
     type FlowFile = MockFlowFile;
+    type StashedFlowFile = MockFlowFile;
 
     fn create(&mut self) -> Result<Self::FlowFile, MinifiError> {
         Ok(Self::FlowFile::new())
@@ -41,6 +42,11 @@ impl ProcessSession for MockProcessSession {
     fn get(&mut self) -> Option<Self::FlowFile> {
         self.input_flow_files.pop()
     }
+
+    fn clone_ff(&mut self, flow_file: &Self::FlowFile) -> Result<Self::FlowFile, MinifiError> {
+        Ok(flow_file.deep_clone())
+    }
+
     fn transfer(&self, flow_file: Self::FlowFile, relationship: &str) -> Result<(), MinifiError> {
         self.transferred_flow_files
             .borrow_mut()
@@ -53,6 +59,14 @@ impl ProcessSession for MockProcessSession {
 
     fn remove(&mut self, _flow_file: Self::FlowFile) -> Result<(), MinifiError> {
         Ok(())
+    }
+
+    fn stash(&mut self, flow_file: Self::FlowFile) -> Result<Self::StashedFlowFile, MinifiError> {
+        Ok(flow_file)
+    }
+
+    fn unstash(&mut self, stashed: Self::StashedFlowFile) -> Result<Self::FlowFile, MinifiError> {
+        Ok(stashed)
     }
 
     fn set_attribute(
