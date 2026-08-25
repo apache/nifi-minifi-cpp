@@ -31,6 +31,7 @@
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/Locations.h"
 #include "minifi-cpp/utils/Literals.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -162,8 +163,8 @@ std::shared_ptr<ContentSession> LmdbContentRepository::createSession() {
   return std::make_shared<Session>(sharedFromThis<LmdbContentRepository>());
 }
 
-std::shared_ptr<io::BaseStream> LmdbContentRepository::write(const minifi::ResourceClaim& claim, bool) {
-  return std::make_shared<io::LmdbStream>(claim.getContentFullPath(), lmdb_env_, &lmdb_handle_, true);
+std::shared_ptr<io::BaseStream> LmdbContentRepository::write(const minifi::ResourceClaim& claim, bool append) {
+  return std::make_shared<io::LmdbStream>(claim.getContentFullPath(), lmdb_env_, &lmdb_handle_, true, append);
 }
 
 std::shared_ptr<io::BaseStream> LmdbContentRepository::read(const minifi::ResourceClaim& claim) {
@@ -286,8 +287,7 @@ MDB_stat LmdbContentRepository::getDbStat() const {
 }
 
 uint64_t LmdbContentRepository::getRepositorySize() const {
-  const auto stat = getDbStat();
-  return stat.ms_psize * (stat.ms_branch_pages + stat.ms_leaf_pages + stat.ms_overflow_pages);
+  return utils::file::path_size(directory_);
 }
 
 uint64_t LmdbContentRepository::getRepositoryEntryCount() const {

@@ -270,4 +270,20 @@ TEST_CASE_METHOD(LmdbStreamTest, "Reopening an existing key in write mode append
   REQUIRE(*val == "first-second");
 }
 
+TEST_CASE_METHOD(LmdbStreamTest, "A non-append write overwrites a pre-existing value instead of concatenating") {
+  {
+    io::LmdbStream write_stream(db_path_, lmdb_env_, &lmdb_handle_, true);
+    REQUIRE_FALSE(minifi::io::isError(writeString(write_stream, "old conent")));
+  }
+
+  io::LmdbStream overwrite_stream(db_path_, lmdb_env_, &lmdb_handle_, true, false);
+  REQUIRE(overwrite_stream.size() == 0);
+  REQUIRE_FALSE(minifi::io::isError(writeString(overwrite_stream, "new content")));
+  REQUIRE(overwrite_stream.commit());
+
+  auto val = readValue(db_path_);
+  REQUIRE(val.has_value());
+  REQUIRE(*val == "new content");
+}
+
 }  // namespace org::apache::nifi::minifi::test

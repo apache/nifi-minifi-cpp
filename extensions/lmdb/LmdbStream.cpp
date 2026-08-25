@@ -27,13 +27,20 @@
 
 namespace org::apache::nifi::minifi::io {
 
-LmdbStream::LmdbStream(std::string path, MDB_env* lmdb_env, MDB_dbi* lmdb_handle, bool write_enable)
+LmdbStream::LmdbStream(std::string path, MDB_env* lmdb_env, MDB_dbi* lmdb_handle, bool write_enable, bool append)
     : BaseStreamImpl(),
       path_(std::move(path)),
       write_enable_(write_enable),
       lmdb_env_(lmdb_env),
       lmdb_handle_(lmdb_handle),
-      exists_(loadValue()) {}
+      exists_(loadValue()) {
+  if (write_enable_ && !append) {
+    if (exists_) {
+      logger_->log_warn("Overwriting pre-existing LMDB content for key '{}' on a non-append write", path_);
+    }
+    value_.clear();
+  }
+}
 
 bool LmdbStream::loadValue() {
   MDB_val key{path_.size(), const_cast<char*>(path_.data())};

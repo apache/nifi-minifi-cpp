@@ -194,16 +194,17 @@ TEST_CASE_METHOD(LmdbContentRepositoryTests, "Clear orphan values", "[lmdb]") {
   REQUIRE_FALSE(content_repo_->exists(*claim));
 }
 
-TEST_CASE_METHOD(LmdbContentRepositoryTests, "Empty repository reports zero size and entry count", "[lmdb]") {
+TEST_CASE_METHOD(LmdbContentRepositoryTests, "Empty repository reports zero entry count", "[lmdb]") {
   REQUIRE(content_repo_->getRepositoryEntryCount() == 0);
-  REQUIRE(content_repo_->getRepositorySize() == 0);
 }
 
 TEST_CASE_METHOD(LmdbContentRepositoryTests, "Written value updates repository stats", "[lmdb]") {
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo_);
+  auto start_size = content_repo_->getRepositorySize();
   writeContent(*claim);
   REQUIRE(content_repo_->getRepositoryEntryCount() == 1);
-  REQUIRE(content_repo_->getRepositorySize() > 0);
+  auto end_size = content_repo_->getRepositorySize();
+  REQUIRE(end_size > start_size);
 }
 
 TEST_CASE("Content persists across LmdbContentRepository re-initialization", "[lmdb]") {

@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::io {
 
 class LmdbStream : public io::BaseStreamImpl {
  public:
-  explicit LmdbStream(std::string path, MDB_env* lmdb_env, MDB_dbi* lmdb_handle, bool write_enable);
+  explicit LmdbStream(std::string path, MDB_env* lmdb_env, MDB_dbi* lmdb_handle, bool write_enable, bool append = true);
 
   ~LmdbStream() override { close(); }
 
