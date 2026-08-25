@@ -56,6 +56,7 @@ class Property final {
   std::vector<std::string> getAllowedValues() const { return allowed_values_; }
   void setAllowedValues(std::vector<std::string> allowed_values) { allowed_values_ = std::move(allowed_values); }
   std::optional<std::string> getDefaultValue() const { return default_value_; }
+  void clearDefaultValue() { default_value_ = std::nullopt; }
   std::string getName() const;
   std::string getDisplayName() const;
   std::vector<std::string> getAllowedTypes() const;

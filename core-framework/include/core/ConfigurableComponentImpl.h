@@ -33,6 +33,7 @@ class ConfigurableComponentImpl : public virtual ConfigurableComponent {
   [[nodiscard]] std::expected<std::string, std::error_code> getProperty(std::string_view name) const override;
   std::expected<void, std::error_code> setProperty(std::string_view name, std::string value) override;
   std::expected<void, std::error_code> clearProperty(std::string_view name) override;
+  std::expected<void, std::error_code> clearPropertyDefaultValue(std::string_view name) override;
 
   [[nodiscard]] std::expected<std::string, std::error_code> getDynamicProperty(std::string_view name) const override;
   std::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) override;

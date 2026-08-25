@@ -67,6 +67,16 @@ std::expected<void, std::error_code> ConfigurableComponentImpl::clearProperty(co
   return {};
 }
 
+std::expected<void, std::error_code> ConfigurableComponentImpl::clearPropertyDefaultValue(const std::string_view name) {
+  const std::lock_guard<std::mutex> lock(configuration_mutex_);
+  const auto it = supported_properties_.find(name);
+  if (it == supported_properties_.end()) { return std::unexpected{PropertyErrorCode::NotSupportedProperty}; }
+  Property& prop = it->second;
+
+  prop.clearDefaultValue();
+  return {};
+}
+
 std::expected<void, std::error_code> ConfigurableComponentImpl::appendProperty(const std::string_view name, std::string value) {
   const std::lock_guard<std::mutex> lock(configuration_mutex_);
   const auto it = supported_properties_.find(name);

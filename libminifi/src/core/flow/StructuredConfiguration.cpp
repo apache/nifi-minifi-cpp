@@ -19,7 +19,6 @@
 #include "core/flow/StructuredConfiguration.h"
 
 #include <memory>
-#include <set>
 #include <vector>
 
 #include "Funnel.h"
@@ -29,8 +28,6 @@
 #include "core/ReferenceParser.h"
 #include "core/flow/CheckRequiredField.h"
 #include "core/flow/StructuredConnectionParser.h"
-#include "core/state/Value.h"
-#include "utils/RegexUtils.h"
 #include "utils/TimeUtil.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "utils/PropertyErrors.h"
@@ -244,6 +241,8 @@ void StructuredConfiguration::parseParameterProvidersNode(const Node& parameter_
       logger_->log_debug("Created Parameter Provider with UUID {} and name {}", id, name);
       if (Node propertiesNode = parameter_provider_node[schema_.parameter_provider_properties]) {
         parsePropertiesNode(propertiesNode, *parameter_provider, name, nullptr);
+      } else {
+        validateComponentProperties(*parameter_provider, name, "");
       }
     } else {
       logger_->log_debug("Could not locate {}", type);
@@ -384,6 +383,8 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     // handle processor properties
     if (Node propertiesNode = procNode[schema_.processor_properties]) {
       parsePropertiesNode(propertiesNode, *processor, procCfg.name, parentGroup->getParameterContext());
+    } else {
+      validateComponentProperties(*processor, procCfg.name, "");
     }
 
     // Take care of scheduling
@@ -666,6 +667,8 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
         if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
           parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, parent_group->getParameterContext());
         }
+      } else {
+        validateComponentProperties(*controller_service_node, name, "");
       }
 
       parent_group->addControllerService(controller_service_node->getName(), controller_service_node, controller_service_node->getUUIDStr());
@@ -936,6 +939,18 @@ void StructuredConfiguration::parsePropertyNodeElement(const std::string& proper
     ParameterContext* parameter_context) {
   logger_->log_trace("Encountered {}", property_name);
   if (!property_value_node || property_value_node.isNull()) {
+    auto my_prop = component.getSupportedProperty(property_name);
+    if (!my_prop.has_value()) {
+      // Dynamic property fallback for previous workflow
+      return;
+    }
+    if (my_prop->getRequired()) {
+      raiseComponentError(component.getName(), "", fmt::format("Can't explicitly unset required property: '{}'", property_name));
+    }
+    const auto prop_def_cleared = component.clearPropertyDefaultValue(property_name);
+    if (!prop_def_cleared) {
+      raiseComponentError(component.getName(), "", prop_def_cleared.error().message());
+    }
     return;
   }
   if (property_value_node.isSequence()) {
