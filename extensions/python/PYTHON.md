@@ -180,7 +180,7 @@ Describe is passed the processor and is a required function. You must set the de
 
 ```python
 def describe(processor):
-  processor.setDescription("Adds an attribute to your flow files")
+    processor.setDescription("Adds an attribute to your flow files")
 ```
 
 onInitialize is also passed the processor reference and can be where you set properties. The first argument is the property display name,
@@ -200,9 +200,9 @@ The last parameter of addProperty is the controller service type. If the propert
 
 ```python
 def onInitialize(processor):
-  processor.setSupportsDynamicProperties()
-  # arguments: property name, description, default value, is required, expression language supported, is sensitive, property type code, controller service type name
-  processor.addProperty("property name", "description", "default value", True, False, False, 1, None)
+    processor.setSupportsDynamicProperties()
+    # arguments: property name, description, default value, is required, expression language supported, is sensitive, property type code, controller service type name
+    processor.addProperty("property name", "description", "default value", True, False, False, 1, None)
 ```
 
 The onSchedule function is passed the context and session factory. This should be where your processor loads and reads properties via
@@ -214,19 +214,19 @@ VaderSentiment
 
 ```python
 class VaderSentiment(object):
-  def __init__(self):
-    self.content = None
+    def __init__(self):
+        self.content = None
 
-  def process(self, input_stream):
-    self.content = codecs.getreader('utf-8')(input_stream).read()
-    return len(self.content)
+    def process(self, input_stream):
+        self.content = codecs.getreader("utf-8")(input_stream).read()
+        return len(self.content)
 ```
 
 By default, the MiNiFi C++ style native python processors are executed on multiple threads in parallel if 'max concurrent tasks' is set to more than 1 in the flow configuration, but it is possible to set the processor to be single threaded by calling the `setSingleThreaded()` method in the processor while initializing. When a processor is set to be single threaded, only one thread will execute the processor, and setting 'max concurrent tasks' to more than 1 will not have any effect.
 
 ```python
 def onInitialize(processor):
-  processor.setSingleThreaded()
+    processor.setSingleThreaded()
 ```
 
 ## Using NiFi Python Processors
@@ -262,13 +262,13 @@ from nifiapi.decorators import trigger_serially
 @trigger_serially
 class SingleThreadedProcessor(FlowFileSource):
     class Java:
-        implements = ['org.apache.nifi.python.processor.FlowFileSource']
+        implements = ["org.apache.nifi.python.processor.FlowFileSource"]
 
     def __init__(self, **kwargs):
         pass
 
     def create(self, context):
-        return FlowFileSourceResult(relationship='success', contents="result")
+        return FlowFileSourceResult(relationship="success", contents="result")
 ```
 
 ## Use Python processors from virtualenv

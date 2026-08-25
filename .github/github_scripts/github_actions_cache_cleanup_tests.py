@@ -2,6 +2,7 @@
 
 import unittest
 from unittest.mock import MagicMock
+
 from github_actions_cache_cleanup import GithubActionsCacheCleaner
 
 
@@ -21,7 +22,7 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
             {
                 "number": 229,
                 "title": "MINIFICPP-123 TEST3",
-            }
+            },
         ]
         mock.list_open_pull_requests.return_value = open_pull_requests
         caches = {
@@ -57,7 +58,7 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
                 {
                     "id": 55555,
                     "key": "ubuntu-24.04-all-clang-ccache-refs/heads/main-2f4d283f5bc894af8dfc295e5976a5f1b4664567",
-                }
+                },
             ]
         }
         mock.list_caches = MagicMock()
@@ -102,7 +103,7 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
                 {
                     "id": 55555,
                     "key": "ubuntu-24.04-all-clang-ccache-refs/heads/main-2f4d283f5bc894af8dfc295e5976a5f1b4664567",
-                }
+                },
             ]
         }
         mock.list_caches = MagicMock()
@@ -125,13 +126,11 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
             {
                 "number": 229,
                 "title": "MINIFICPP-123 TEST3",
-            }
+            },
         ]
         mock.list_open_pull_requests.return_value = open_pull_requests
         mock.list_caches = MagicMock()
-        caches = {
-            "actions_caches": []
-        }
+        caches = {"actions_caches": []}
         mock.list_caches.return_value = caches
         mock.delete_cache = MagicMock()
         return mock
@@ -140,30 +139,41 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
         cleaner = GithubActionsCacheCleaner("mytoken", "githubuser/nifi-minifi-cpp")
         cleaner.github_request_sender = self.create_mock_github_request_sender()
         cleaner.remove_obsolete_cache_entries()
-        self.assertEqual(set([call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list]),
-                         {"macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
-                          "macos-xcode-ccache-refs/heads/MINIFICPP-9999-9d5e183f5bc894af8dfc295e5976a5f1b4664456",
-                          "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
-                          "ubuntu-24.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456"})
+        self.assertEqual(
+            {call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list},
+            {
+                "macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
+                "macos-xcode-ccache-refs/heads/MINIFICPP-9999-9d5e183f5bc894af8dfc295e5976a5f1b4664456",
+                "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
+                "ubuntu-24.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456",
+            },
+        )
 
     def test_cache_cleanup_with_zero_open_prs(self):
         cleaner = GithubActionsCacheCleaner("mytoken", "githubuser/nifi-minifi-cpp")
         cleaner.github_request_sender = self.create_empty_open_pr_mock_github_request_sender()
         cleaner.remove_obsolete_cache_entries()
-        self.assertEqual(set([call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list]),
-                         {"macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
-                          "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
-                          "ubuntu-24.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
-                          "macos-xcode-ccache-refs/pull/227/merge-2d6d283f5bc894af8dfc295e5976a5f154753536",
-                          "macos-xcode-ccache-refs/heads/MINIFICPP-9999-9d5e183f5bc894af8dfc295e5976a5f1b4664456",
-                          "ubuntu-24.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456"})
+        self.assertEqual(
+            {call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list},
+            {
+                "macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
+                "ubuntu-24.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
+                "ubuntu-24.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
+                "macos-xcode-ccache-refs/pull/227/merge-2d6d283f5bc894af8dfc295e5976a5f154753536",
+                "macos-xcode-ccache-refs/heads/MINIFICPP-9999-9d5e183f5bc894af8dfc295e5976a5f1b4664456",
+                "ubuntu-24.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456",
+            },
+        )
 
     def test_cache_cleanup_with_zero_action_caches(self):
         cleaner = GithubActionsCacheCleaner("mytoken", "githubuser/nifi-minifi-cpp")
         cleaner.github_request_sender = self.create_empty_caches_mock_github_request_sender()
         cleaner.remove_obsolete_cache_entries()
-        self.assertEqual(set([call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list]), set())
+        self.assertEqual(
+            {call[0][0] for call in cleaner.github_request_sender.delete_cache.call_args_list},
+            set(),
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

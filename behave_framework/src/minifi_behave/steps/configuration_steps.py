@@ -15,13 +15,14 @@
 #  limitations under the License.
 #
 
-from behave import step, given
-
+from behave import given, step
+from minifi_behave.containers.minifi_protocol import (
+    conf_c2_flow_url,
+    enable_log_metrics_publisher,
+    enable_openssl_fips_mode,
+    set_up_ssl_properties,
+)
 from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.containers.minifi_protocol import enable_openssl_fips_mode
-from minifi_behave.containers.minifi_protocol import set_up_ssl_properties
-from minifi_behave.containers.minifi_protocol import enable_log_metrics_publisher
-from minifi_behave.containers.minifi_protocol import conf_c2_flow_url
 
 
 @step('MiNiFi configuration "{config_key}" is set to "{config_value}"')

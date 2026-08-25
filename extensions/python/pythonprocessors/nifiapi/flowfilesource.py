@@ -14,10 +14,12 @@
 # limitations under the License.
 
 import traceback
-from .properties import ProcessContext as ProcessContextProxy
 from abc import abstractmethod
-from minifi_native import ProcessContext, ProcessSession, FlowFile
+
+from minifi_native import FlowFile, ProcessContext, ProcessSession
+
 from .processorbase import ProcessorBase, WriteCallback
+from .properties import ProcessContext as ProcessContextProxy
 
 
 class FlowFileSourceResult:
@@ -47,7 +49,7 @@ class FlowFileSource(ProcessorBase):
             if not result:
                 return
         except Exception:
-            self.logger.error("Failed to create flow file due to error:\n{}".format(traceback.format_exc()))
+            self.logger.error(f"Failed to create flow file due to error:\n{traceback.format_exc()}")
             return
 
         flow_file = self.createFlowFile(session, result.getAttributes(), result.getContents())

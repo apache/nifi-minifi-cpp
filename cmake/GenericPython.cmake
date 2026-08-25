@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-find_package(Python 3.6 REQUIRED COMPONENTS Development Interpreter)
+find_package(Python 3.10 REQUIRED COMPONENTS Development Interpreter)
 
 if(WIN32)
   set(Python_LIBRARIES ${Python_LIBRARY_DIRS}/python3.lib)

@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import ClassVar
+
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import PropertyDescriptor, StandardValidators
 from nifiapi.relationship import Relationship
@@ -22,33 +24,34 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
     """
     Checks ProcessContext interface
     """
+
     SECRET_PASSWORD = PropertyDescriptor(
         name="Secret Password",
         description="Password to access",
         validators=[StandardValidators.NON_EMPTY_VALIDATOR],
         default_value="mysecret",
         required=True,
-        sensitive=True
+        sensitive=True,
     )
     REQUEST_TIMEOUT = PropertyDescriptor(
         name="Request Timeout",
         description="Timeout for the request",
         validators=[StandardValidators.TIME_PERIOD_VALIDATOR],
         default_value="60 sec",
-        required=True
+        required=True,
     )
     WISH_COUNT = PropertyDescriptor(
         name="Wish Count",
         description="Number of wishes",
         default_value="3",
         validators=[StandardValidators.POSITIVE_INTEGER_VALIDATOR],
-        required=True
+        required=True,
     )
 
-    property_descriptors = [
+    property_descriptors: ClassVar[list] = [
         SECRET_PASSWORD,
         REQUEST_TIMEOUT,
-        WISH_COUNT
+        WISH_COUNT,
     ]
 
     def __init__(self, **kwargs):
@@ -66,15 +69,20 @@ class ProcessContextInterfaceChecker(FlowFileTransform):
             return FlowFileTransformResult("failure")
 
         property_names = [property.name for property in properties]
-        if "Secret Password" not in property_names or "Request Timeout" not in property_names or "Wish Count" not in property_names:
+        if (
+            "Secret Password" not in property_names
+            or "Request Timeout" not in property_names
+            or "Wish Count" not in property_names
+        ):
             return FlowFileTransformResult("failure")
 
         for property in properties:
-            if property.name == "Secret Password" and properties[property] != "mysecret":
-                return FlowFileTransformResult("failure")
-            elif property.name == "Request Timeout" and properties[property] != "60 sec":
-                return FlowFileTransformResult("failure")
-            elif property.name == "Wish Count" and properties[property] != "3":
+            if (
+                (property.name == "Secret Password" and properties[property] != "mysecret")
+                or (property.name == "Request Timeout" and properties[property] != "60 sec")
+                or property.name == "Wish Count"
+                and properties[property] != "3"
+            ):
                 return FlowFileTransformResult("failure")
 
         secret_password = context.getProperty(self.SECRET_PASSWORD).getValue()

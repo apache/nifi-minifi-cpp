@@ -19,15 +19,16 @@ from textwrap import dedent
 
 from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from minifi_behave.core.helpers import wait_for_condition, retry_check
-from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.ssl_utils import make_server_cert, dump_cert, dump_key
 from minifi_behave.containers.file import File
+from minifi_behave.core.helpers import retry_check, wait_for_condition
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
 
 
 class HttpProxy(LinuxContainer):
     def __init__(self, test_context: MinifiTestContext):
-        dockerfile = dedent("""\
+        dockerfile = dedent(
+            """\
                 FROM ubuntu:24.04
                 RUN apt -y update && apt install -y squid-openssl apache2-utils
                 RUN htpasswd -b -c /etc/squid/.squid_users {proxy_username} {proxy_password}
@@ -43,19 +44,33 @@ class HttpProxy(LinuxContainer):
                     echo 'max_filedescriptors 1024' >> /etc/squid/squid.conf && \
                     echo 'https_port {proxy_ssl_port} tls-cert=/etc/squid/certs/squid-cert.pem tls-key=/etc/squid/certs/squid-key.pem' >> /etc/squid/squid.conf
                 ENTRYPOINT ["/bin/sh", "-c", "squid -N -f /etc/squid/squid.conf & tail -F --pid=$! /var/log/squid/cache.log /var/log/squid/access.log"]
-                """.format(proxy_username='admin', proxy_password='test101',
-                           proxy_port='3128', proxy_ssl_port='3129'))
-
-        builder = DockerImageBuilder(
-            image_tag="minifi-http-proxy:latest",
-            dockerfile_content=dockerfile
+                """.format(
+                proxy_username="admin",
+                proxy_password="test101",
+                proxy_port="3128",
+                proxy_ssl_port="3129",
+            )
         )
+
+        builder = DockerImageBuilder(image_tag="minifi-http-proxy:latest", dockerfile_content=dockerfile)
         builder.build()
 
-        super().__init__("minifi-http-proxy:latest", f"http-proxy-{test_context.scenario_id}", test_context.network)
-        squid_cert, squid_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
+        super().__init__(
+            "minifi-http-proxy:latest",
+            f"http-proxy-{test_context.scenario_id}",
+            test_context.network,
+        )
+        squid_cert, squid_key = make_server_cert(
+            self.container_name, test_context.root_ca_cert, test_context.root_ca_key
+        )
 
-        self.files.append(File("/etc/squid/certs/squid-cert.pem", dump_cert(squid_cert), permissions=0o666))
+        self.files.append(
+            File(
+                "/etc/squid/certs/squid-cert.pem",
+                dump_cert(squid_cert),
+                permissions=0o666,
+            )
+        )
         self.files.append(File("/etc/squid/certs/squid-key.pem", dump_key(squid_key), permissions=0o666))
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
@@ -65,14 +80,19 @@ class HttpProxy(LinuxContainer):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=30,
             bail_condition=lambda: self.exited,
-            context=context
+            context=context,
         )
 
     @retry_check(10, 1)
     def check_http_proxy_access(self, url):
         (code, output) = self.exec_run(["cat", "/var/log/squid/access.log"])
-        return code == 0 and url.lower() in output.lower() \
-            and ((output.count("TCP_DENIED") != 0
-                  and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
-                 or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output
-                 or output.count("TCP_TUNNEL") > 0)
+        return (
+            code == 0
+            and url.lower() in output.lower()
+            and (
+                (output.count("TCP_DENIED") != 0 and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
+                or output.count("TCP_DENIED") == 0
+                and "TCP_MISS" in output
+                or output.count("TCP_TUNNEL") > 0
+            )
+        )

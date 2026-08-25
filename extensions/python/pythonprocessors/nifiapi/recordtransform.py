@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import traceback
 import json
+import traceback
 from abc import abstractmethod
-from minifi_native import ProcessContext, ProcessSession, Processor
+
+from minifi_native import ProcessContext, Processor, ProcessSession
+
 from .processorbase import ProcessorBase
 from .properties import FlowFile as FlowFileProxy
 from .properties import ProcessContext as ProcessContextProxy
@@ -63,24 +65,44 @@ class RecordTransformResult:
 
 class RecordTransform(ProcessorBase):
     RECORD_READER = PropertyDescriptor(
-        name='Record Reader',
-        display_name='Record Reader',
-        description='''Specifies the Controller Service to use for reading incoming data''',
+        name="Record Reader",
+        display_name="Record Reader",
+        description="""Specifies the Controller Service to use for reading incoming data""",
         required=True,
-        controller_service_definition='RecordSetReader'
+        controller_service_definition="RecordSetReader",
     )
     RECORD_WRITER = PropertyDescriptor(
-        name='Record Writer',
-        display_name='Record Writer',
-        description='''Specifies the Controller Service to use for writing out the records''',
+        name="Record Writer",
+        display_name="Record Writer",
+        description="""Specifies the Controller Service to use for writing out the records""",
         required=True,
-        controller_service_definition='RecordSetWriter',
+        controller_service_definition="RecordSetWriter",
     )
 
     def onInitialize(self, processor: Processor):
-        super(RecordTransform, self).onInitialize(processor)
-        processor.addProperty(self.RECORD_READER.name, self.RECORD_READER.description, None, self.RECORD_READER.required, False, False, None, None, self.RECORD_READER.controllerServiceDefinition)
-        processor.addProperty(self.RECORD_WRITER.name, self.RECORD_WRITER.description, None, self.RECORD_WRITER.required, False, False, None, None, self.RECORD_WRITER.controllerServiceDefinition)
+        super().onInitialize(processor)
+        processor.addProperty(
+            self.RECORD_READER.name,
+            self.RECORD_READER.description,
+            None,
+            self.RECORD_READER.required,
+            False,
+            False,
+            None,
+            None,
+            self.RECORD_READER.controllerServiceDefinition,
+        )
+        processor.addProperty(
+            self.RECORD_WRITER.name,
+            self.RECORD_WRITER.description,
+            None,
+            self.RECORD_WRITER.required,
+            False,
+            False,
+            None,
+            None,
+            self.RECORD_WRITER.controllerServiceDefinition,
+        )
 
     def onTrigger(self, context: ProcessContext, session: ProcessSession):
         flow_file = session.get()
@@ -106,7 +128,7 @@ class RecordTransform(ProcessorBase):
                 session.transfer(flow_file, self.REL_FAILURE)
                 return
         except Exception:
-            self.logger.error("Failed to read flow file records due to the following error:\n{}".format(traceback.format_exc()))
+            self.logger.error(f"Failed to read flow file records due to the following error:\n{traceback.format_exc()}")
             session.transfer(flow_file, self.REL_FAILURE)
             return
 
@@ -120,7 +142,7 @@ class RecordTransform(ProcessorBase):
                 resultjson = None if result_record is None else json.dumps(result_record)
                 results.append(__RecordTransformResult__(result, resultjson))
             except Exception:
-                self.logger.error("Failed to transform record due to the following error:\n{}".format(traceback.format_exc()))
+                self.logger.error(f"Failed to transform record due to the following error:\n{traceback.format_exc()}")
                 session.transfer(flow_file, self.REL_FAILURE)
                 return
 
@@ -139,7 +161,11 @@ class RecordTransform(ProcessorBase):
 
         for single_partition_results in partitioned_results_list:
             partitioned_flow_file = session.create(flow_file)
-            record_writer.write([result.getRecordJson() for result in single_partition_results], partitioned_flow_file, session)
+            record_writer.write(
+                [result.getRecordJson() for result in single_partition_results],
+                partitioned_flow_file,
+                session,
+            )
             if result.getRelationship() == "success":
                 session.transfer(partitioned_flow_file, self.REL_SUCCESS)
             else:
@@ -148,5 +174,7 @@ class RecordTransform(ProcessorBase):
         session.transfer(flow_file, self.REL_ORIGINAL)
 
     @abstractmethod
-    def transform(self, context: ProcessContextProxy, record_json, schema, flowFile: FlowFileProxy) -> RecordTransformResult:
+    def transform(
+        self, context: ProcessContextProxy, record_json, schema, flowFile: FlowFileProxy
+    ) -> RecordTransformResult:
         pass

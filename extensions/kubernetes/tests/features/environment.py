@@ -13,15 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import docker
 import os
 
-from minifi_behave.core.hooks import common_after_scenario, common_before_scenario, get_minifi_container_image
+from minifi_behave.core.hooks import (
+    common_after_scenario,
+    common_before_scenario,
+    get_minifi_container_image,
+)
 from steps.kubernetes_proxy import KubernetesProxy
+
+import docker
 
 
 def before_feature(context, feature):
-    if "rpm" in os.environ['MINIFI_TAG_PREFIX']:
+    if "rpm" in os.environ["MINIFI_TAG_PREFIX"]:
         feature.skip("This feature is not yet supported on RPM installed images")
 
     minifi_image = docker.from_env().images.get(get_minifi_container_image())

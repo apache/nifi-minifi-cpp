@@ -13,13 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import ClassVar
+
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
-from nifiapi.properties import PropertyDescriptor, ExpressionLanguageScope
+from nifiapi.properties import ExpressionLanguageScope, PropertyDescriptor
 
 
 class EvaluateExpressionLanguageChecker(FlowFileTransform):
     class Java:
-        implements = ["org.apache.nifi.python.processor.FlowFileTransform"]
+        implements: ClassVar[list] = ["org.apache.nifi.python.processor.FlowFileTransform"]
 
     class ProcessorDetails:
         version = "0.1.0"
@@ -28,7 +30,7 @@ class EvaluateExpressionLanguageChecker(FlowFileTransform):
     EL_PROPERTY = PropertyDescriptor(
         name="EL Property",
         description="EL property",
-        expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES
+        expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES,
     )
 
     NON_EL_PROPERTY = PropertyDescriptor(
@@ -36,10 +38,7 @@ class EvaluateExpressionLanguageChecker(FlowFileTransform):
         description="Non EL property",
     )
 
-    property_descriptors = [
-        EL_PROPERTY,
-        NON_EL_PROPERTY
-    ]
+    property_descriptors: ClassVar[list] = [EL_PROPERTY, NON_EL_PROPERTY]
 
     def __init__(self, **kwargs):
         pass
@@ -48,9 +47,7 @@ class EvaluateExpressionLanguageChecker(FlowFileTransform):
         return self.property_descriptors
 
     def getDynamicPropertyDescriptor(self, propertyname):
-        return PropertyDescriptor(name=propertyname,
-                                  description="A user-defined property",
-                                  dynamic=True)
+        return PropertyDescriptor(name=propertyname, description="A user-defined property", dynamic=True)
 
     def transform(self, context, flowFile):
         el_property = context.getProperty(self.EL_PROPERTY)
@@ -67,7 +64,9 @@ class EvaluateExpressionLanguageChecker(FlowFileTransform):
         non_el_property_value_evaluated = non_el_property.evaluateAttributeExpressions(flowFile).getValue()
         self.logger.info("Evaluated Non EL Property value: " + str(non_el_property_value_evaluated))
 
-        non_existent_value = context.getProperty("non-existent-property").evaluateAttributeExpressions(flowFile).getValue()
+        non_existent_value = (
+            context.getProperty("non-existent-property").evaluateAttributeExpressions(flowFile).getValue()
+        )
         if non_existent_value is None:
             self.logger.info("Non-existent property value is empty")
 

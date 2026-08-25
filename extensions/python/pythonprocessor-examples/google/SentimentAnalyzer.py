@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -14,18 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-  Install the following with pip ( or pip3 )
+Install the following with pip ( or pip3 )
 
-  pip install google-cloud-language
+pip install google-cloud-language
 
-  -- the following were needed during development as we saw SSL timeout errors
-  pip install requests[security]
-  pip install -U httplib2
+-- the following were needed during development as we saw SSL timeout errors
+pip install requests[security]
+pip install -U httplib2
 """
+
 import codecs
+
 from google.cloud import language
-from google.cloud.language import enums
-from google.cloud.language import types
+from google.cloud.language import enums, types
 
 
 def describe(processor):
@@ -34,15 +34,21 @@ def describe(processor):
 
 def onInitialize(processor):
     # is required,
-    processor.addProperty("Credentials Path", "Path to your Google Credentials JSON File. Must exist on agent hosts.", "", True, False)
+    processor.addProperty(
+        "Credentials Path",
+        "Path to your Google Credentials JSON File. Must exist on agent hosts.",
+        "",
+        True,
+        False,
+    )
 
 
-class ContentExtract(object):
+class ContentExtract:
     def __init__(self):
         self.content = None
 
     def process(self, input_stream):
-        self.content = codecs.getreader('utf-8')(input_stream).read()
+        self.content = codecs.getreader("utf-8")(input_stream).read()
         return len(self.content)
 
 

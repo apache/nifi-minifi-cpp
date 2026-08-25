@@ -14,8 +14,9 @@
 # limitations under the License.
 
 import sys
-import requests
 import time
+
+import requests
 
 
 def wait_for(action, timeout_seconds, *args, **kwargs) -> bool:
@@ -40,7 +41,7 @@ def verify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, ten
 
     headers = None
     if tenant_id:
-        headers = {'X-Scope-OrgID': tenant_id}
+        headers = {"X-Scope-OrgID": tenant_id}
 
     response = requests.get(query_url, verify=False, timeout=30, headers=headers)
     if response.status_code < 200 or response.status_code >= 300:
@@ -60,8 +61,13 @@ def verify_log_lines_on_grafana_loki(host: str, lines: list[str], ssl: bool, ten
     return True
 
 
-def wait_for_lines_on_grafana_loki(host: str, lines: list[str], timeout_seconds: int, ssl: bool, tenant_id: str) -> bool:
-    return wait_for(lambda: verify_log_lines_on_grafana_loki(host, lines, ssl, tenant_id), timeout_seconds)
+def wait_for_lines_on_grafana_loki(
+    host: str, lines: list[str], timeout_seconds: int, ssl: bool, tenant_id: str
+) -> bool:
+    return wait_for(
+        lambda: verify_log_lines_on_grafana_loki(host, lines, ssl, tenant_id),
+        timeout_seconds,
+    )
 
 
 if __name__ == "__main__":

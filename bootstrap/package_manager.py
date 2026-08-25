@@ -18,7 +18,6 @@ import platform
 import subprocess
 import sys
 from enum import Enum
-from typing import Dict, Set
 
 from distro import distro
 
@@ -32,37 +31,41 @@ def _query_yes_no(question: str, no_confirm: bool) -> bool:
     valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
 
     if no_confirm:
-        print("Running {} with noconfirm".format(question))
+        print(f"Running {question} with noconfirm")
         return True
     while True:
-        print("{} [y/n]".format(question), end=' ', flush=True)
+        print(f"{question} [y/n]", end=" ", flush=True)
         choice = input().lower()
         if choice in valid:
             return valid[choice]
         else:
-            print("Please respond with 'yes' or 'no' " "(or 'y' or 'n').")
+            print("Please respond with 'yes' or 'no' (or 'y' or 'n').")
 
 
 def _run_command_with_confirm(command: str, no_confirm: bool) -> bool:
-    if _query_yes_no("Running {}".format(command), no_confirm):
+    if _query_yes_no(f"Running {command}", no_confirm):
         return os.system(command) == 0
 
 
-class PackageManager(object):
+class PackageManager:
     def __init__(self, no_confirm):
         self.no_confirm = no_confirm
-        pass
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
-        raise Exception("NotImplementedException")
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
+        raise RuntimeError("NotImplementedException")
 
     def install_compiler(self) -> str:
-        raise Exception("NotImplementedException")
+        raise RuntimeError("NotImplementedException")
 
     def ensure_environment(self):
         pass
 
-    def _install(self, dependencies: Dict[str, Set[str]], replace_dict: Dict[str, Set[str]], install_cmd: str) -> bool:
+    def _install(
+        self,
+        dependencies: dict[str, set[str]],
+        replace_dict: dict[str, set[str]],
+        install_cmd: str,
+    ) -> bool:
         dependencies.update({k: v for k, v in replace_dict.items() if k in dependencies})
         dependencies = self._filter_out_installed_packages(dependencies)
         dependencies_str = " ".join(str(value) for value_set in dependencies.values() for value in value_set)
@@ -70,10 +73,10 @@ class PackageManager(object):
             return True
         return _run_command_with_confirm(f"{install_cmd} {dependencies_str}", self.no_confirm)
 
-    def _get_installed_packages(self) -> Set[str]:
-        raise Exception("NotImplementedException")
+    def _get_installed_packages(self) -> set[str]:
+        raise RuntimeError("NotImplementedException")
 
-    def _filter_out_installed_packages(self, dependencies: Dict[str, Set[str]]):
+    def _filter_out_installed_packages(self, dependencies: dict[str, set[str]]):
         installed_packages = self._get_installed_packages()
         filtered_packages = {k: (v - installed_packages) for k, v in dependencies.items()}
         for installed_package in installed_packages:
@@ -81,7 +84,7 @@ class PackageManager(object):
         return filtered_packages
 
     def run_cmd(self, cmd: str) -> bool:
-        result = subprocess.run(f"{cmd}", shell=True, text=True)
+        result = subprocess.run(f"{cmd}", shell=True, text=True, check=False)
         return result.returncode == 0
 
 
@@ -89,24 +92,26 @@ class BrewPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
-        return self._install(dependencies=dependencies,
-                             install_cmd="brew install",
-                             replace_dict={"patch": set()})
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
+        return self._install(
+            dependencies=dependencies,
+            install_cmd="brew install",
+            replace_dict={"patch": set()},
+        )
 
     def install_compiler(self) -> str:
         self.install({"compiler": set()})
         return ""
 
-    def _get_installed_packages(self) -> Set[str]:
-        result = subprocess.run(['brew', 'list'], text=True, capture_output=True, check=True)
+    def _get_installed_packages(self) -> set[str]:
+        result = subprocess.run(["brew", "list"], text=True, capture_output=True, check=True)
         lines = result.stdout.splitlines()
-        lines = [line.split('@', 1)[0] for line in lines]
+        lines = [line.split("@", 1)[0] for line in lines]
         return set(lines)
 
     def run_cmd(self, cmd: str) -> bool:
         add_m4_to_path_cmd = 'export PATH="$(brew --prefix m4)/bin:$PATH"'
-        result = subprocess.run(f"{add_m4_to_path_cmd} && {cmd}", shell=True, text=True)
+        result = subprocess.run(f"{add_m4_to_path_cmd} && {cmd}", shell=True, text=True, check=False)
         return result.returncode == 0
 
 
@@ -114,16 +119,17 @@ class AptPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
-        return self._install(dependencies=dependencies,
-                             install_cmd="sudo apt install -y",
-                             replace_dict={"libarchive": {"liblzma-dev"},
-                                           "python": {"libpython3-dev"}})
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
+        return self._install(
+            dependencies=dependencies,
+            install_cmd="sudo apt install -y",
+            replace_dict={"libarchive": {"liblzma-dev"}, "python": {"libpython3-dev"}},
+        )
 
-    def _get_installed_packages(self) -> Set[str]:
-        result = subprocess.run(['dpkg', '--get-selections'], text=True, capture_output=True, check=True)
-        lines = [line.split('\t')[0] for line in result.stdout.splitlines()]
-        lines = [line.rsplit(':', 1)[0] for line in lines]
+    def _get_installed_packages(self) -> set[str]:
+        result = subprocess.run(["dpkg", "--get-selections"], text=True, capture_output=True, check=True)
+        lines = [line.split("\t")[0] for line in result.stdout.splitlines()]
+        lines = [line.rsplit(":", 1)[0] for line in lines]
         return set(lines)
 
     def install_compiler(self) -> str:
@@ -136,19 +142,21 @@ class DnfPackageManager(PackageManager):
         PackageManager.__init__(self, no_confirm)
         self.needs_epel = needs_epel
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
         if self.needs_epel:
             install_cmd = "sudo dnf --enablerepo=crb install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
         else:
             install_cmd = "sudo dnf install -y"
-        return self._install(dependencies=dependencies,
-                             install_cmd=install_cmd,
-                             replace_dict={"python": {"python3-devel"}})
+        return self._install(
+            dependencies=dependencies,
+            install_cmd=install_cmd,
+            replace_dict={"python": {"python3-devel"}},
+        )
 
-    def _get_installed_packages(self) -> Set[str]:
-        result = subprocess.run(['dnf', 'list', 'installed'], text=True, capture_output=True, check=True)
-        lines = [line.split(' ')[0] for line in result.stdout.splitlines()]
-        lines = [line.rsplit('.', 1)[0] for line in lines]
+    def _get_installed_packages(self) -> set[str]:
+        result = subprocess.run(["dnf", "list", "installed"], text=True, capture_output=True, check=True)
+        lines = [line.split(" ")[0] for line in result.stdout.splitlines()]
+        lines = [line.rsplit(".", 1)[0] for line in lines]
         return set(lines)
 
     def install_compiler(self) -> str:
@@ -160,13 +168,15 @@ class PacmanPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
-        return self._install(dependencies=dependencies,
-                             install_cmd="sudo pacman --noconfirm -S",
-                             replace_dict={})
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
+        return self._install(
+            dependencies=dependencies,
+            install_cmd="sudo pacman --noconfirm -S",
+            replace_dict={},
+        )
 
-    def _get_installed_packages(self) -> Set[str]:
-        result = subprocess.run(['pacman', '-Qq'], text=True, capture_output=True, check=True)
+    def _get_installed_packages(self) -> set[str]:
+        result = subprocess.run(["pacman", "-Qq"], text=True, capture_output=True, check=True)
         return set(result.stdout.splitlines())
 
     def install_compiler(self) -> str:
@@ -178,21 +188,30 @@ class ZypperPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
-        return self._install(dependencies=dependencies,
-                             install_cmd="sudo zypper install -y",
-                             replace_dict={"libarchive": {"libarchive-devel"},
-                                           "python": {"python3-devel"}})
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
+        return self._install(
+            dependencies=dependencies,
+            install_cmd="sudo zypper install -y",
+            replace_dict={
+                "libarchive": {"libarchive-devel"},
+                "python": {"python3-devel"},
+            },
+        )
 
-    def _get_installed_packages(self) -> Set[str]:
-        result = subprocess.run(['zypper', 'se', '--installed-only'], text=True, capture_output=True, check=True)
+    def _get_installed_packages(self) -> set[str]:
+        result = subprocess.run(
+            ["zypper", "se", "--installed-only"],
+            text=True,
+            capture_output=True,
+            check=True,
+        )
         lines = result.stdout.splitlines()
         packages = set()
         for line in lines:
-            if line.startswith('S |') or line.startswith('--') or line.startswith(' ') or not line:
+            if line.startswith(("S |", "--", " ")) or not line:
                 continue
 
-            parts = line.split('|')
+            parts = line.split("|")
             if len(parts) > 2:
                 package_name = parts[1].strip()
                 packages.add(package_name)
@@ -208,14 +227,15 @@ class ApkPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
-        return self._install(dependencies=dependencies,
-                             install_cmd="sudo apk add --no-cache",
-                             replace_dict={"libarchive": {"libarchive-dev"},
-                                           "python": {"python3-dev"}})
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
+        return self._install(
+            dependencies=dependencies,
+            install_cmd="sudo apk add --no-cache",
+            replace_dict={"libarchive": {"libarchive-dev"}, "python": {"python3-dev"}},
+        )
 
-    def _get_installed_packages(self) -> Set[str]:
-        result = subprocess.run(['apk', 'info'], text=True, capture_output=True, check=True)
+    def _get_installed_packages(self) -> set[str]:
+        result = subprocess.run(["apk", "info"], text=True, capture_output=True, check=True)
         return set(result.stdout.splitlines())
 
     def install_compiler(self) -> str:
@@ -234,7 +254,9 @@ def _get_vs_dev_cmd_path(vs_where_location: VsWhereLocation):
         f"-property installationPath "
         f"-requires Microsoft.VisualStudio.Component.VC.ATL "
         f"-version 17",
-        capture_output=True)
+        capture_output=True,
+        check=False,
+    )
 
     for vswhere_result in vswhere_results.stdout.splitlines():
         possible_path = f"{vswhere_result.decode()}\\Common7\\Tools\\VsDevCmd.bat"
@@ -274,26 +296,30 @@ class ChocolateyPackageManager(PackageManager):
     def __init__(self, no_confirm):
         PackageManager.__init__(self, no_confirm)
 
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
-        self._install(dependencies=dependencies,
-                      install_cmd="choco install -y",
-                      replace_dict={"python": set(),
-                                    "patch": set(),
-                                    "bison": set(),
-                                    "flex": set(),
-                                    "libarchive": set(),
-                                    "automake": set(),
-                                    "autoconf": set(),
-                                    "libtool": set(),
-                                    "make": set(),
-                                    "m4": {"gnuwin32-m4"},
-                                    "perl": {"strawberryperl", "NASM"}})
+    def install(self, dependencies: dict[str, set[str]]) -> bool:
+        self._install(
+            dependencies=dependencies,
+            install_cmd="choco install -y",
+            replace_dict={
+                "python": set(),
+                "patch": set(),
+                "bison": set(),
+                "flex": set(),
+                "libarchive": set(),
+                "automake": set(),
+                "autoconf": set(),
+                "libtool": set(),
+                "make": set(),
+                "m4": {"gnuwin32-m4"},
+                "perl": {"strawberryperl", "NASM"},
+            },
+        )
         return True
 
-    def _get_installed_packages(self) -> Set[str]:
-        result = subprocess.run(['choco', 'list'], text=True, capture_output=True, check=True)
-        lines = [line.split(' ')[0] for line in result.stdout.splitlines()]
-        lines = [line.rsplit('.', 1)[0] for line in lines]
+    def _get_installed_packages(self) -> set[str]:
+        result = subprocess.run(["choco", "list"], text=True, capture_output=True, check=True)
+        lines = [line.split(" ")[0] for line in result.stdout.splitlines()]
+        lines = [line.rsplit(".", 1)[0] for line in lines]
         if os.path.exists("C:\\Program Files\\NASM"):
             lines.append("NASM")  # choco doesnt remember NASM
         return set(lines)
@@ -313,10 +339,17 @@ class ChocolateyPackageManager(PackageManager):
         vs_dev_path = _get_vs_dev_cmd_path(vs_where_loc)
         if not vs_dev_path:
             self.install(
-                {"visualstudio2022buildtools": {'visualstudio2022buildtools --package-parameters "--wait --quiet '
-                                                '--add Microsoft.VisualStudio.Workload.VCTools '
-                                                '--add Microsoft.VisualStudio.Component.VC.ATL '
-                                                '--includeRecommended"'}})
+                {
+                    "visualstudio2022buildtools": {
+                        (
+                            'visualstudio2022buildtools --package-parameters "--wait --quiet '
+                            "--add Microsoft.VisualStudio.Workload.VCTools "
+                            "--add Microsoft.VisualStudio.Component.VC.ATL "
+                            '--includeRecommended"'
+                        )
+                    }
+                }
+            )
         return ""
 
     def run_cmd(self, cmd: str) -> bool:

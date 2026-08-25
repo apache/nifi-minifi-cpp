@@ -14,18 +14,26 @@
 # limitations under the License.
 
 
-from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.minifi.minifi_flow_definition import MinifiFlowDefinition
-from minifi_behave.containers.directory import Directory
-from .container_windows import WindowsContainer
-from .minifi_protocol import MinifiProtocol
 import logging
 import os
+
+from minifi_behave.containers.directory import Directory
+from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.minifi.minifi_flow_definition import MinifiFlowDefinition
+
+from .container_windows import WindowsContainer
+from .minifi_protocol import MinifiProtocol
+
+logger = logging.getLogger(__name__)
 
 
 class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
     def __init__(self, container_name: str, test_context: MinifiTestContext):
-        super().__init__(test_context.minifi_container_image, f"{container_name}-{test_context.scenario_id}", test_context.network)
+        super().__init__(
+            test_context.minifi_container_image,
+            f"{container_name}-{test_context.scenario_id}",
+            test_context.network,
+        )
         self.flow_config_str: str = ""
         self.flow_definition = MinifiFlowDefinition()
         self.properties: dict[str, str] = {}
@@ -35,7 +43,7 @@ class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
         self._fill_default_log_properties()
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
-        logging.info(self.flow_definition.to_yaml())
+        logger.info(self.flow_definition.to_yaml())
         conf_dir = Directory("\\Program Files\\ApacheNiFiMiNiFi\\nifi-minifi-cpp\\conf")
         conf_dir.add_file("config.yml", self.flow_definition.to_yaml())
         conf_dir.add_file("minifi.properties", self._get_properties_file_content())
@@ -55,7 +63,7 @@ class MinifiWindowsContainer(WindowsContainer, MinifiProtocol):
         self.properties["nifi.extension.path"] = "../extensions/*"
         self.properties["nifi.administrative.yield.duration"] = "1 sec"
         self.properties["nifi.bored.yield.duration"] = "100 millis"
-        if 'MINIFI_FIPS' in os.environ and os.environ["MINIFI_FIPS"] == "true":
+        if "MINIFI_FIPS" in os.environ and os.environ["MINIFI_FIPS"] == "true":
             self.properties["nifi.openssl.fips.support.enable"] = "true"
         else:
             self.properties["nifi.openssl.fips.support.enable"] = "false"

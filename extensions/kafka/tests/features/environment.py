@@ -13,21 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import docker
 from containers.kafka_server_container import KafkaServer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
+
+import docker
 
 
 def before_all(context):
     dockerfile = """
     FROM python:3.13-slim-bookworm
     RUN pip install confluent-kafka"""
-    builder = DockerImageBuilder(
-        image_tag="minifi-kafka-helper:latest",
-        dockerfile_content=dockerfile
-    )
+    builder = DockerImageBuilder(image_tag="minifi-kafka-helper:latest", dockerfile_content=dockerfile)
     builder.build()
     docker.from_env().images.pull(KafkaServer.IMAGE)
 

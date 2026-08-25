@@ -19,12 +19,21 @@ import logging
 import os
 import tempfile
 
-import docker
 from docker.models.images import Image
+
+import docker
+
+logger = logging.getLogger(__name__)
 
 
 class DockerImageBuilder:
-    def __init__(self, image_tag: str, dockerfile_content: str | None = None, files_on_context: dict[str, bytes] | None = None, build_context_path: str | None = None):
+    def __init__(
+        self,
+        image_tag: str,
+        dockerfile_content: str | None = None,
+        files_on_context: dict[str, bytes] | None = None,
+        build_context_path: str | None = None,
+    ):
         if not dockerfile_content and not build_context_path:
             raise ValueError("Either 'dockerfile_content' or 'build_context_path' must be provided.")
         if dockerfile_content and build_context_path:
@@ -43,27 +52,29 @@ class DockerImageBuilder:
         if self.dockerfile_content:
             self._temp_dir = tempfile.TemporaryDirectory()
             context_path = self._temp_dir.name
-            dockerfile_path = os.path.join(context_path, 'Dockerfile')
-            with open(dockerfile_path, 'w') as f:
+            dockerfile_path = os.path.join(context_path, "Dockerfile")
+            with open(dockerfile_path, "w") as f:
                 f.write(self.dockerfile_content)
 
             if self.files_on_context:
                 for filename, content in self.files_on_context.items():
                     file_path = os.path.join(context_path, filename)
-                    with open(file_path, 'wb') as f:
+                    with open(file_path, "wb") as f:
                         f.write(content)
 
-        logging.info(f"Building Docker image '{self.image_tag}' from context '{context_path}'...")
+        logger.info(f"Building Docker image '{self.image_tag}' from context '{context_path}'...")
         try:
-            self.image, build_logs = self.client.images.build(path=context_path, tag=self.image_tag, rm=True, forcerm=True)
+            self.image, build_logs = self.client.images.build(
+                path=context_path, tag=self.image_tag, rm=True, forcerm=True
+            )
             for log_line in build_logs:
-                logging.debug(log_line.get('stream', '').strip())
-            logging.info(f"Successfully built image '{self.image_tag}' (ID: {self.image.short_id})")
+                logger.debug(log_line.get("stream", "").strip())
+            logger.info(f"Successfully built image '{self.image_tag}' (ID: {self.image.short_id})")
             return self.image
         except docker.errors.BuildError as e:
-            logging.error(f"Failed to build image '{self.image_tag}'. Build logs:")
+            logger.error(f"Failed to build image '{self.image_tag}'. Build logs:")
             for log_line in e.build_log:
-                logging.error(log_line.get('stream', '').strip())
+                logger.error(log_line.get("stream", "").strip())
             raise
         finally:
             if self._temp_dir:
@@ -71,18 +82,18 @@ class DockerImageBuilder:
 
     def remove_image(self):
         if not self.image:
-            logging.warning(f"No image object to remove for tag '{self.image_tag}'. Trying to find by tag.")
+            logger.warning(f"No image object to remove for tag '{self.image_tag}'. Trying to find by tag.")
             try:
                 self.image = self.client.images.get(self.image_tag)
             except docker.errors.ImageNotFound:
-                logging.info(f"Image '{self.image_tag}' not found, cleanup not needed.")
+                logger.info(f"Image '{self.image_tag}' not found, cleanup not needed.")
                 return
 
-        logging.info(f"Removing dynamically built image '{self.image_tag}'...")
+        logger.info(f"Removing dynamically built image '{self.image_tag}'...")
         try:
             self.client.images.remove(image=self.image.id, force=True)
-            logging.info("Image removed successfully.")
+            logger.info("Image removed successfully.")
         except docker.errors.ImageNotFound:
-            logging.info("Image was already removed.")
+            logger.info("Image was already removed.")
         except docker.errors.APIError as e:
-            logging.error(f"Error removing image: {e}")
+            logger.error(f"Error removing image: {e}")

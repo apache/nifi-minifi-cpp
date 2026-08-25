@@ -14,20 +14,26 @@
 # limitations under the License.
 
 from behave import given
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-
-from minifi_behave.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
-from minifi_behave.minifi.processor import Processor
-from minifi_behave.minifi.controller_service import ControllerService
 from minifi_as_pod_in_kubernetes_cluster import MinifiAsPodInKubernetesCluster
+from minifi_behave.core.minifi_test_context import (
+    DEFAULT_MINIFI_CONTAINER_NAME,
+    MinifiTestContext,
+)
+from minifi_behave.minifi.controller_service import ControllerService
+from minifi_behave.minifi.processor import Processor
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 def __ensure_kubernetes_cluster(context: MinifiTestContext):
-    if DEFAULT_MINIFI_CONTAINER_NAME not in context.containers or not isinstance(context.containers[DEFAULT_MINIFI_CONTAINER_NAME], MinifiAsPodInKubernetesCluster):
+    if DEFAULT_MINIFI_CONTAINER_NAME not in context.containers or not isinstance(
+        context.containers[DEFAULT_MINIFI_CONTAINER_NAME],
+        MinifiAsPodInKubernetesCluster,
+    ):
         context.containers[DEFAULT_MINIFI_CONTAINER_NAME] = MinifiAsPodInKubernetesCluster("kubernetes", context)
 
 
@@ -39,8 +45,16 @@ def setup_processor_in_kubernetes_cluster(context: MinifiTestContext, processor_
     context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
-def __set_up_the_kubernetes_controller_service(context: MinifiTestContext, processor_name: str, service_property_name: str, properties: dict[str, str]):
-    kubernetes_controller_service = ControllerService(class_name="KubernetesControllerService", service_name="Kubernetes Controller Service")
+def __set_up_the_kubernetes_controller_service(
+    context: MinifiTestContext,
+    processor_name: str,
+    service_property_name: str,
+    properties: dict[str, str],
+):
+    kubernetes_controller_service = ControllerService(
+        class_name="KubernetesControllerService",
+        service_name="Kubernetes Controller Service",
+    )
     kubernetes_controller_service.properties = properties
     flow = context.get_or_create_default_minifi_container().flow_definition
     flow.controller_services.append(kubernetes_controller_service)
@@ -49,11 +63,25 @@ def __set_up_the_kubernetes_controller_service(context: MinifiTestContext, proce
 
 @given("the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service")
 @given("the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service")
-def setup_kubernetes_controller_service_for_processor(context: MinifiTestContext, processor_name: str, service_property_name: str):
+def setup_kubernetes_controller_service_for_processor(
+    context: MinifiTestContext, processor_name: str, service_property_name: str
+):
     __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {})
 
 
-@given("the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service with the \"{property_name}\" property set to \"{property_value}\"")
-@given("the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service with the \"{property_name}\" property set to \"{property_value}\"")
-def setup_kubernetes_controller_service_with_property_for_processor(context: MinifiTestContext, processor_name: str, service_property_name: str, property_name: str, property_value: str):
-    __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {property_name: property_value})
+@given(
+    'the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service with the "{property_name}" property set to "{property_value}"'
+)
+@given(
+    'the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service with the "{property_name}" property set to "{property_value}"'
+)
+def setup_kubernetes_controller_service_with_property_for_processor(
+    context: MinifiTestContext,
+    processor_name: str,
+    service_property_name: str,
+    property_name: str,
+    property_value: str,
+):
+    __set_up_the_kubernetes_controller_service(
+        context, processor_name, service_property_name, {property_name: property_value}
+    )

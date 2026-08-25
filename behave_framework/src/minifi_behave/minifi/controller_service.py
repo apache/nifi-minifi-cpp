@@ -30,6 +30,11 @@ class ControllerService:
         self.properties[property_name] = property_value
 
     def to_yaml_dict(self) -> dict:
-        data = {'name': self.name, 'id': self.id, 'class': self.class_name, 'Properties': self.properties}
+        data = {
+            "name": self.name,
+            "id": self.id,
+            "class": self.class_name,
+            "Properties": self.properties,
+        }
 
         return data

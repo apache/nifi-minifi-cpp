@@ -20,11 +20,11 @@ from abc import ABC
 from .connection import Connection
 from .controller_service import ControllerService
 from .funnel import Funnel
+from .input_port import InputPort
+from .output_port import OutputPort
 from .parameter_context import ParameterContext
 from .processor import Processor
 from .remote_process_group import RemoteProcessGroup
-from .input_port import InputPort
-from .output_port import OutputPort
 
 
 class FlowDefinition(ABC):
@@ -92,11 +92,20 @@ class FlowDefinition(ABC):
         return next((proc for proc in self.processors if proc.name == processor_name), None)
 
     def get_controller_service(self, controller_service_name: str) -> ControllerService | None:
-        return next((controller for controller in self.controller_services if controller.name == controller_service_name), None)
+        return next(
+            (controller for controller in self.controller_services if controller.name == controller_service_name),
+            None,
+        )
 
     def get_parameter_context(self, parameter_context_name: str) -> ParameterContext | None:
-        return next((parameter_context for parameter_context in self.parameter_contexts if
-                     parameter_context.name == parameter_context_name), None)
+        return next(
+            (
+                parameter_context
+                for parameter_context in self.parameter_contexts
+                if parameter_context.name == parameter_context_name
+            ),
+            None,
+        )
 
     def get_remote_process_group(self, rpg_name: str) -> RemoteProcessGroup | None:
         return next((rpg for rpg in self.remote_process_groups if rpg.name == rpg_name), None)

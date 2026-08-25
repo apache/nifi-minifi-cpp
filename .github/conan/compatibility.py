@@ -69,10 +69,7 @@ def compatibility(conanfile):
         if current_version is not None:
             min_version = 13
             max_version = 21  # support up to Xcode 27 with apple-clang 21 for now
-            candidate_versions = [
-                str(v) for v in range(min_version, max_version + 1)
-                if v != current_version
-            ]
+            candidate_versions = [str(v) for v in range(min_version, max_version + 1) if v != current_version]
             factors.append([{"compiler.version": v} for v in candidate_versions])
 
     combinations = _factors_combinations(factors)

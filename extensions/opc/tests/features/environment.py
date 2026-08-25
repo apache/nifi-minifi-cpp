@@ -14,10 +14,11 @@
 # limitations under the License.
 
 import os
-import docker
+
 from containers.opc_ua_server_container import OPCUAServerContainer
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
+
+import docker
 
 
 def before_all(context):
@@ -26,7 +27,7 @@ def before_all(context):
 
 def before_scenario(context, scenario):
     common_before_scenario(context, scenario)
-    context.resource_dir = os.path.join(os.path.dirname(__file__), 'resources')
+    context.resource_dir = os.path.join(os.path.dirname(__file__), "resources")
 
 
 def after_scenario(context, scenario):

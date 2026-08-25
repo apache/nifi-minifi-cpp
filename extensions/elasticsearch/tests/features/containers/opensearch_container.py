@@ -13,39 +13,70 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
+import os
+from pathlib import Path
 
 from elastic_base_container import ElasticBaseContainer
-from pathlib import Path
-from minifi_behave.core.ssl_utils import make_server_cert, dump_cert, dump_key
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
+
+logger = logging.getLogger(__name__)
 
 
 class OpensearchContainer(ElasticBaseContainer):
     IMAGE = "opensearchproject/opensearch:2.6.0"
 
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__(test_context, OpensearchContainer.IMAGE, f"opensearch-{test_context.scenario_id}")
+        super().__init__(
+            test_context,
+            OpensearchContainer.IMAGE,
+            f"opensearch-{test_context.scenario_id}",
+        )
 
-        admin_pem, admin_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
+        admin_pem, admin_key = make_server_cert(
+            self.container_name, test_context.root_ca_cert, test_context.root_ca_key
+        )
 
         root_ca_content = dump_cert(test_context.root_ca_cert)
-        self.files.append(File("/usr/share/opensearch/config/root-ca.pem", root_ca_content, permissions=0o644))
+        self.files.append(
+            File(
+                "/usr/share/opensearch/config/root-ca.pem",
+                root_ca_content,
+                permissions=0o644,
+            )
+        )
 
         admin_pem_content = dump_cert(admin_pem)
-        self.files.append(File("/usr/share/opensearch/config/admin.pem", admin_pem_content, permissions=0o644))
+        self.files.append(
+            File(
+                "/usr/share/opensearch/config/admin.pem",
+                admin_pem_content,
+                permissions=0o644,
+            )
+        )
 
         admin_key_content = dump_key(admin_key)
-        self.files.append(File("/usr/share/opensearch/config/admin-key.pem", admin_key_content, permissions=0o644))
+        self.files.append(
+            File(
+                "/usr/share/opensearch/config/admin-key.pem",
+                admin_key_content,
+                permissions=0o644,
+            )
+        )
 
         features_dir = Path(__file__).resolve().parent.parent
-        self.host_files.append(HostFile('/usr/share/opensearch/config/opensearch.yml', os.path.join(features_dir, "resources", "opensearch.yml")))
+        self.host_files.append(
+            HostFile(
+                "/usr/share/opensearch/config/opensearch.yml",
+                os.path.join(features_dir, "resources", "opensearch.yml"),
+            )
+        )
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
-        return super().deploy(context, 'Hot-reloading of audit configuration is enabled')
+        return super().deploy(context, "Hot-reloading of audit configuration is enabled")
 
     def add_elastic_user_to_opensearch(self):
         curl_cmd = [
@@ -55,9 +86,9 @@ class OpensearchContainer(ElasticBaseContainer):
             "-XPUT",
             f"https://{self.container_name}:9200/_plugins/_security/api/internalusers/elastic",
             "-H 'Content-Type:application/json'",
-            "-d '{\"password\":\"password\",\"backend_roles\":[\"admin\"]}'"
+            '-d \'{"password":"password","backend_roles":["admin"]}\'',
         ]
         full_cmd = " ".join(curl_cmd)
         (code, output) = self.exec_run(["/bin/bash", "-c", full_cmd])
-        logging.info(f"Add elastic user to Opensearch output: {output}")
+        logger.info(f"Add elastic user to Opensearch output: {output}")
         return code == 0 and '"status":"CREATED"' in output

@@ -14,10 +14,15 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import List, Dict
-from minifi_native import ProcessSession, timePeriodStringToMilliseconds, dataSizeStringToBytes
+
 from minifi_native import FlowFile as CppFlowFile
 from minifi_native import ProcessContext as CppProcessContext
+from minifi_native import (
+    ProcessSession,
+    dataSizeStringToBytes,
+    timePeriodStringToMilliseconds,
+)
+
 from .componentstate import StateManager
 
 
@@ -93,7 +98,7 @@ class MinifiPropertyTypes:
     NUMBER_TYPE = 7
 
 
-def translateStandardValidatorToMiNiFiPropertype(validators: List[int]) -> int:
+def translateStandardValidatorToMiNiFiPropertype(validators: list[int]) -> int:
     if validators is None or len(validators) == 0 or len(validators) > 1:
         return None
 
@@ -127,7 +132,14 @@ class PropertyDependency:
 
 
 class ResourceDefinition:
-    def __init__(self, allow_multiple=False, allow_file=True, allow_url=False, allow_directory=False, allow_text=False):
+    def __init__(
+        self,
+        allow_multiple=False,
+        allow_file=True,
+        allow_url=False,
+        allow_directory=False,
+        allow_text=False,
+    ):
         self.allow_multiple = allow_multiple
         self.allow_file = allow_file
         self.allow_url = allow_url
@@ -142,10 +154,22 @@ class ExpressionLanguageScope(Enum):
 
 
 class PropertyDescriptor:
-    def __init__(self, name: str, description: str, required: bool = False, sensitive: bool = False,
-                 display_name: str = None, default_value: str = None, allowable_values: List[str] = None,
-                 dependencies: List[PropertyDependency] = None, expression_language_scope: ExpressionLanguageScope = ExpressionLanguageScope.NONE,
-                 dynamic: bool = False, validators: List[int] = None, resource_definition: ResourceDefinition = None, controller_service_definition: str = None):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        required: bool = False,
+        sensitive: bool = False,
+        display_name: str | None = None,
+        default_value: str | None = None,
+        allowable_values: list[str] | None = None,
+        dependencies: list[PropertyDependency] | None = None,
+        expression_language_scope: ExpressionLanguageScope = ExpressionLanguageScope.NONE,
+        dynamic: bool = False,
+        validators: list[int] | None = None,
+        resource_definition: ResourceDefinition = None,
+        controller_service_definition: str | None = None,
+    ):
         if validators is None:
             validators = [StandardValidators.ALWAYS_VALID]
 
@@ -165,20 +189,20 @@ class PropertyDescriptor:
 
 
 class TimeUnit(Enum):
-    NANOSECONDS = "NANOSECONDS",
-    MICROSECONDS = "MICROSECONDS",
-    MILLISECONDS = "MILLISECONDS",
-    SECONDS = "SECONDS",
-    MINUTES = "MINUTES",
-    HOURS = "HOURS",
+    NANOSECONDS = ("NANOSECONDS",)
+    MICROSECONDS = ("MICROSECONDS",)
+    MILLISECONDS = ("MILLISECONDS",)
+    SECONDS = ("SECONDS",)
+    MINUTES = ("MINUTES",)
+    HOURS = ("HOURS",)
     DAYS = "DAYS"
 
 
 class DataUnit(Enum):
-    B = "B",
-    KB = "KB",
-    MB = "MB",
-    GB = "GB",
+    B = ("B",)
+    KB = ("KB",)
+    MB = ("MB",)
+    GB = ("GB",)
     TB = "TB"
 
 
@@ -201,7 +225,15 @@ class FlowFile:
 
 
 class PythonPropertyValue:
-    def __init__(self, cpp_context: CppProcessContext, name: str, string_value: str, el_supported: bool, controller_service_definition: str, is_dynamic: bool = False):
+    def __init__(
+        self,
+        cpp_context: CppProcessContext,
+        name: str,
+        string_value: str,
+        el_supported: bool,
+        controller_service_definition: str,
+        is_dynamic: bool = False,
+    ):
         self.cpp_context = cpp_context
         self.value = string_value
         self.name = name
@@ -223,7 +255,7 @@ class PythonPropertyValue:
     def asBoolean(self) -> bool:
         if not self.value:
             return None
-        return self.value.lower() == 'true'
+        return self.value.lower() == "true"
 
     def asFloat(self) -> float:
         if not self.value:
@@ -241,13 +273,13 @@ class PythonPropertyValue:
         if time_unit == TimeUnit.MILLISECONDS:
             return milliseconds
         if time_unit == TimeUnit.SECONDS:
-            return int(round(milliseconds / 1000))
+            return round(milliseconds / 1000)
         if time_unit == TimeUnit.MINUTES:
-            return int(round(milliseconds / 1000 / 60))
+            return round(milliseconds / 1000 / 60)
         if time_unit == TimeUnit.HOURS:
-            return int(round(milliseconds / 1000 / 60 / 60))
+            return round(milliseconds / 1000 / 60 / 60)
         if time_unit == TimeUnit.DAYS:
-            return int(round(milliseconds / 1000 / 60 / 60 / 24))
+            return round(milliseconds / 1000 / 60 / 60 / 24)
         return 0
 
     def asDataSize(self, data_unit: DataUnit) -> float:
@@ -275,11 +307,20 @@ class PythonPropertyValue:
         getter = self.cpp_context.getDynamicProperty if self.is_dynamic else self.cpp_context.getProperty
         args = () if flow_file is None else (flow_file.cpp_flow_file,)
         new_string_value = getter(self.name, *args)
-        return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported, self.controller_service_definition, self.is_dynamic)
+        return PythonPropertyValue(
+            self.cpp_context,
+            self.name,
+            new_string_value,
+            self.el_supported,
+            self.controller_service_definition,
+            self.is_dynamic,
+        )
 
     def asControllerService(self):
         if not self.controller_service_definition:
-            raise Exception("Controller Service definition is not set, getProperty must be called with a property descriptor instead of string value")
+            raise RuntimeError(
+                "Controller Service definition is not set, getProperty must be called with a property descriptor instead of string value"
+            )
         return self.cpp_context.getControllerService(self.value, self.controller_service_definition)
 
 
@@ -305,7 +346,14 @@ class ProcessContext:
             property_value = self.cpp_context.getRawDynamicProperty(property_name)
             if property_value is not None:
                 is_dynamic = True
-        return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support, controller_service_definition, is_dynamic)
+        return PythonPropertyValue(
+            self.cpp_context,
+            property_name,
+            property_value,
+            expression_language_support,
+            controller_service_definition,
+            is_dynamic,
+        )
 
     def getStateManager(self) -> StateManager:
         return StateManager(self.cpp_context.getStateManager())
@@ -313,8 +361,8 @@ class ProcessContext:
     def getName(self) -> str:
         return self.cpp_context.getName()
 
-    def getProperties(self) -> Dict[PropertyDescriptor, str]:
-        properties = dict()
+    def getProperties(self) -> dict[PropertyDescriptor, str]:
+        properties = {}
         cpp_properties = self.cpp_context.getProperties()
 
         for property_descriptor in self.processor.getPropertyDescriptors():

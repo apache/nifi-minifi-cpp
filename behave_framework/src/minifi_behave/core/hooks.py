@@ -14,24 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import docker
-import types
 import logging
+import os
+import types
 from pathlib import Path
 
 from behave.model import Scenario
 from behave.runner import Context
-
-from minifi_behave.core.ssl_utils import make_self_signed_cert
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.core.ssl_utils import make_self_signed_cert
+
+import docker
+
+logger = logging.getLogger(__name__)
 
 
 def get_minifi_container_image():
-    if 'MINIFI_TAG_PREFIX' in os.environ and 'MINIFI_VERSION' in os.environ:
-        minifi_tag_prefix = os.environ['MINIFI_TAG_PREFIX']
-        minifi_version = os.environ['MINIFI_VERSION']
-        return 'apacheminificpp:' + minifi_tag_prefix + minifi_version
+    if "MINIFI_TAG_PREFIX" in os.environ and "MINIFI_VERSION" in os.environ:
+        minifi_tag_prefix = os.environ["MINIFI_TAG_PREFIX"]
+        minifi_version = os.environ["MINIFI_VERSION"]
+        return "apacheminificpp:" + minifi_tag_prefix + minifi_version
     return "apacheminificpp:behave"
 
 
@@ -40,13 +42,16 @@ def inject_scenario_id(context: MinifiTestContext, step):
         step.name = step.name.replace("${scenario_id}", context.scenario_id)
     if getattr(step, "table", None):
         for row in step.table:
-            row.cells = [cell.replace("${scenario_id}", context.scenario_id) if "${scenario_id}" in cell else cell for cell in row.cells]
+            row.cells = [
+                cell.replace("${scenario_id}", context.scenario_id) if "${scenario_id}" in cell else cell
+                for cell in row.cells
+            ]
     if hasattr(step, "text") and step.text and "${scenario_id}" in step.text:
         step.text = step.text.replace("${scenario_id}", context.scenario_id)
 
 
 def common_before_scenario(context: Context, scenario: Scenario):
-    if "SUPPORTS_WINDOWS" not in scenario.effective_tags and os.name == 'nt':
+    if "SUPPORTS_WINDOWS" not in scenario.effective_tags and os.name == "nt":
         scenario.skip("No windows support")
         return
 
@@ -55,21 +60,22 @@ def common_before_scenario(context: Context, scenario: Scenario):
 
     method_map = {
         "get_or_create_minifi_container": MinifiTestContext.get_or_create_minifi_container,
-        "get_or_create_default_minifi_container": MinifiTestContext.get_or_create_default_minifi_container
+        "get_or_create_default_minifi_container": MinifiTestContext.get_or_create_default_minifi_container,
     }
     for attr, method in method_map.items():
         if not hasattr(context, attr):
             setattr(context, attr, types.MethodType(method, context))
 
-    logging.info("Running scenario: %s", scenario)
-    context.scenario_id = scenario.filename.rsplit("/", 1)[1].split(".")[0] + "-" + str(
-        scenario.parent.scenarios.index(scenario))
+    logger.info("Running scenario: %s", scenario)
+    context.scenario_id = (
+        scenario.filename.rsplit("/", 1)[1].split(".")[0] + "-" + str(scenario.parent.scenarios.index(scenario))
+    )
     network_name = f"{context.scenario_id}-net"
     docker_client = docker.client.from_env()
 
     try:
         existing_network = docker_client.networks.get(network_name)
-        logging.warning(f"Found existing network '{network_name}'. Removing it first.")
+        logger.warning(f"Found existing network '{network_name}'. Removing it first.")
         existing_network.remove()
     except docker.errors.NotFound:
         pass  # No existing network found, which is good.
@@ -98,8 +104,8 @@ def common_after_scenario(context: MinifiTestContext, scenario: Scenario):
         with open(scenario_info_path, "w") as f:
             f.write(header)
 
-    if hasattr(context, 'containers'):
+    if hasattr(context, "containers"):
         for container in context.containers.values():
             container.clean_up()
-    if hasattr(context, 'network'):
+    if hasattr(context, "network"):
         context.network.remove()

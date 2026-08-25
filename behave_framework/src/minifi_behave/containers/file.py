@@ -15,6 +15,7 @@
 #  limitations under the License.
 #
 
+
 class File:
     def __init__(self, path, content: str | bytes, mode="rw", permissions=None):
         self.path = path

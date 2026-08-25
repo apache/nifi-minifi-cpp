@@ -14,50 +14,86 @@
 # limitations under the License.
 
 import logging
+
+from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.containers.file import File
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.ssl_utils import make_cert_without_extended_usage
-from minifi_behave.containers.file import File
-from minifi_behave.core.ssl_utils import dump_cert, dump_key
-from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.core.ssl_utils import (
+    dump_cert,
+    dump_key,
+    make_cert_without_extended_usage,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class PrometheusContainer(LinuxContainer):
     IMAGE = "prom/prometheus:v3.9.1"
 
     def __init__(self, test_context: MinifiTestContext, ssl: bool = False):
-        super().__init__(PrometheusContainer.IMAGE, f"prometheus-{test_context.scenario_id}", test_context.network)
+        super().__init__(
+            PrometheusContainer.IMAGE,
+            f"prometheus-{test_context.scenario_id}",
+            test_context.network,
+        )
         self.scenario_id = test_context.scenario_id
         extra_ssl_settings = ""
         if ssl:
-            prometheus_cert, prometheus_key = make_cert_without_extended_usage(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
+            prometheus_cert, prometheus_key = make_cert_without_extended_usage(
+                self.container_name, test_context.root_ca_cert, test_context.root_ca_key
+            )
 
             root_ca_content = dump_cert(test_context.root_ca_cert)
-            self.files.append(File("/etc/prometheus/certs/root-ca.pem", root_ca_content, permissions=0o644))
+            self.files.append(
+                File(
+                    "/etc/prometheus/certs/root-ca.pem",
+                    root_ca_content,
+                    permissions=0o644,
+                )
+            )
 
             prometheus_cert_content = dump_cert(prometheus_cert)
-            self.files.append(File("/etc/prometheus/certs/prometheus.crt", prometheus_cert_content, permissions=0o644))
+            self.files.append(
+                File(
+                    "/etc/prometheus/certs/prometheus.crt",
+                    prometheus_cert_content,
+                    permissions=0o644,
+                )
+            )
 
             prometheus_key_content = dump_key(prometheus_key)
-            self.files.append(File("/etc/prometheus/certs/prometheus.key", prometheus_key_content, permissions=0o644))
+            self.files.append(
+                File(
+                    "/etc/prometheus/certs/prometheus.key",
+                    prometheus_key_content,
+                    permissions=0o644,
+                )
+            )
 
             extra_ssl_settings = """
     scheme: https
     tls_config:
       ca_file: /etc/prometheus/certs/root-ca.pem
 """
-        prometheus_yml_content = """
+        prometheus_yml_content = f"""
 global:
   scrape_interval: 2s
   evaluation_interval: 15s
 scrape_configs:
   - job_name: "minifi"
     static_configs:
-      - targets: ["minifi-primary-{scenario_id}:9936"]
+      - targets: ["minifi-primary-{test_context.scenario_id}:9936"]
 {extra_ssl_settings}
-""".format(scenario_id=test_context.scenario_id, extra_ssl_settings=extra_ssl_settings)
+"""
 
-        self.files.append(File("/etc/prometheus/prometheus.yml", prometheus_yml_content, permissions=0o666))
+        self.files.append(
+            File(
+                "/etc/prometheus/prometheus.yml",
+                prometheus_yml_content,
+                permissions=0o666,
+            )
+        )
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)
@@ -66,29 +102,67 @@ scrape_configs:
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
-            context=context
+            context=context,
         )
 
     def check_metric_class_on_prometheus(self, metric_class: str) -> bool:
         try:
-            self.client.containers.run("minifi-prometheus-helper:latest", ["python", "/scripts/prometheus_checker.py", "--prometheus-host", self.container_name, "--metric-class", metric_class], remove=True, network=self.network.name)
+            self.client.containers.run(
+                "minifi-prometheus-helper:latest",
+                [
+                    "python",
+                    "/scripts/prometheus_checker.py",
+                    "--prometheus-host",
+                    self.container_name,
+                    "--metric-class",
+                    metric_class,
+                ],
+                remove=True,
+                network=self.network.name,
+            )
             return True
         except Exception:
-            logging.error(f"Failed to check metric class {metric_class} on Prometheus")
+            logger.error(f"Failed to check metric class {metric_class} on Prometheus")
             return False
 
     def check_processor_metric_on_prometheus(self, metric_class: str, processor_name: str) -> bool:
         try:
-            self.client.containers.run("minifi-prometheus-helper:latest", ["python", "/scripts/prometheus_checker.py", "--prometheus-host", self.container_name, "--metric-class", metric_class, "--processor-name", processor_name], remove=True, network=self.network.name)
+            self.client.containers.run(
+                "minifi-prometheus-helper:latest",
+                [
+                    "python",
+                    "/scripts/prometheus_checker.py",
+                    "--prometheus-host",
+                    self.container_name,
+                    "--metric-class",
+                    metric_class,
+                    "--processor-name",
+                    processor_name,
+                ],
+                remove=True,
+                network=self.network.name,
+            )
             return True
         except Exception:
-            logging.error(f"Failed to check processor metric class {metric_class} for processor {processor_name} on Prometheus")
+            logger.error(
+                f"Failed to check processor metric class {metric_class} for processor {processor_name} on Prometheus"
+            )
             return False
 
     def check_all_metric_types_defined_once(self) -> bool:
         try:
-            self.client.containers.run("minifi-prometheus-helper:latest", ["python", "/scripts/prometheus_checker.py", "--verify-metrics-defined-once", f"minifi-primary-{self.scenario_id}"], remove=True, network=self.network.name)
+            self.client.containers.run(
+                "minifi-prometheus-helper:latest",
+                [
+                    "python",
+                    "/scripts/prometheus_checker.py",
+                    "--verify-metrics-defined-once",
+                    f"minifi-primary-{self.scenario_id}",
+                ],
+                remove=True,
+                network=self.network.name,
+            )
             return True
         except Exception:
-            logging.error("Failed check that all metric types are defined once on Prometheus")
+            logger.error("Failed check that all metric types are defined once on Prometheus")
             return False

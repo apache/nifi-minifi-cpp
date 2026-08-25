@@ -17,24 +17,31 @@
 
 import logging
 import os
+from pathlib import Path
+
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
-from minifi_behave.core.ssl_utils import make_cert_without_extended_usage, make_client_cert, make_server_cert, \
-    dump_cert, dump_key
+from minifi_behave.core.ssl_utils import (
+    dump_cert,
+    dump_key,
+    make_cert_without_extended_usage,
+    make_client_cert,
+    make_server_cert,
+)
 from minifi_behave.minifi.minifi_flow_definition import MinifiFlowDefinition
-from pathlib import Path
 
 from .container_linux import LinuxContainer
 from .minifi_controller import MinifiController
 from .minifi_protocol import MinifiProtocol
 
+logger = logging.getLogger(__name__)
 
 CA_CERT_PATHS = [
     "/usr/local/share/certs/ca-root-nss.crt",
     "/etc/ssl/certs/ca-certificates.crt",
-    "/etc/pki/tls/certs/ca-bundle.crt"
+    "/etc/pki/tls/certs/ca-bundle.crt",
 ]
 
 
@@ -57,10 +64,17 @@ class FHSDeployment:
 
 
 class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
-    def __init__(self, container_name: str, test_context: MinifiTestContext,
-                 deployment: NormalDeployment | FHSDeployment):
-        super().__init__(test_context.minifi_container_image, f"{container_name}-{test_context.scenario_id}",
-                         test_context.network)
+    def __init__(
+        self,
+        container_name: str,
+        test_context: MinifiTestContext,
+        deployment: NormalDeployment | FHSDeployment,
+    ):
+        super().__init__(
+            test_context.minifi_container_image,
+            f"{container_name}-{test_context.scenario_id}",
+            test_context.network,
+        )
         self.flow_definition = MinifiFlowDefinition()
         self.properties: dict[str, str] = {}
         self.log_properties: dict[str, str] = {}
@@ -68,12 +82,17 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         self.deploy_timeout_seconds = 20
         self.deployment_type = deployment
 
-        self.controller = MinifiController(self, f"{self.deployment_type.conf_path}/config.yml",
-                                           self.deployment_type.bin_path)
+        self.controller = MinifiController(
+            self,
+            f"{self.deployment_type.conf_path}/config.yml",
+            self.deployment_type.bin_path,
+        )
 
-        minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=self.container_name,
-                                                                                 ca_cert=test_context.root_ca_cert,
-                                                                                 ca_key=test_context.root_ca_key)
+        minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(
+            common_name=self.container_name,
+            ca_cert=test_context.root_ca_cert,
+            ca_key=test_context.root_ca_key,
+        )
         self.files.append(File("/tmp/resources/root_ca.crt", dump_cert(test_context.root_ca_cert)))
         if test_context.override_default_ca_cert_files:
             for ca_cert_path in CA_CERT_PATHS:
@@ -81,41 +100,69 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         self.files.append(File("/tmp/resources/minifi_client.crt", dump_cert(minifi_client_cert)))
         self.files.append(File("/tmp/resources/minifi_client.key", dump_key(minifi_client_key)))
         self.files.append(
-            File("/tmp/resources/minifi_merged_cert.crt", dump_cert(minifi_client_cert) + dump_key(minifi_client_key)))
+            File(
+                "/tmp/resources/minifi_merged_cert.crt",
+                dump_cert(minifi_client_cert) + dump_key(minifi_client_key),
+            )
+        )
 
-        clientuser_cert, clientuser_key = make_client_cert("clientuser", ca_cert=test_context.root_ca_cert,
-                                                           ca_key=test_context.root_ca_key)
+        clientuser_cert, clientuser_key = make_client_cert(
+            "clientuser",
+            ca_cert=test_context.root_ca_cert,
+            ca_key=test_context.root_ca_key,
+        )
         self.files.append(File("/tmp/resources/clientuser.crt", dump_cert(clientuser_cert)))
         self.files.append(File("/tmp/resources/clientuser.key", dump_key(clientuser_key)))
 
-        minifi_server_cert, minifi_server_key = make_server_cert(common_name=f"server-{test_context.scenario_id}",
-                                                                 ca_cert=test_context.root_ca_cert,
-                                                                 ca_key=test_context.root_ca_key)
+        minifi_server_cert, minifi_server_key = make_server_cert(
+            common_name=f"server-{test_context.scenario_id}",
+            ca_cert=test_context.root_ca_cert,
+            ca_key=test_context.root_ca_key,
+        )
         self.files.append(
-            File("/tmp/resources/minifi_server.crt", dump_cert(cert=minifi_server_cert) + dump_key(minifi_server_key)))
+            File(
+                "/tmp/resources/minifi_server.crt",
+                dump_cert(cert=minifi_server_cert) + dump_key(minifi_server_key),
+            )
+        )
 
         self._fill_default_properties()
         self._fill_default_log_properties()
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         flow_config = self.flow_definition.to_yaml()
-        logging.info(f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
+        logger.info(f"Deploying MiNiFi container '{self.container_name}' with flow configuration:\n{flow_config}")
         self.files.append(File(f"{self.deployment_type.conf_path}/config.yml", flow_config))
         self.files.append(
-            File(f"{self.deployment_type.conf_path}/minifi.properties", self._get_properties_file_content()))
+            File(
+                f"{self.deployment_type.conf_path}/minifi.properties",
+                self._get_properties_file_content(),
+            )
+        )
         self.files.append(
-            File(f"{self.deployment_type.conf_path}/minifi-log.properties", self._get_log_properties_file_content()))
+            File(
+                f"{self.deployment_type.conf_path}/minifi-log.properties",
+                self._get_log_properties_file_content(),
+            )
+        )
         resource_dir = Path(__file__).resolve().parent / "resources" / "minifi-controller"
         self.host_files.append(
-            HostFile("/tmp/resources/minifi-controller/config.yml", os.path.join(resource_dir, "config.yml")))
+            HostFile(
+                "/tmp/resources/minifi-controller/config.yml",
+                os.path.join(resource_dir, "config.yml"),
+            )
+        )
 
         if not super().deploy(context):
             return False
 
         finished_str = "MiNiFi started"
-        return wait_for_condition(condition=lambda: finished_str in self.get_logs(),
-                                  timeout_seconds=self.deploy_timeout_seconds, bail_condition=lambda: self.exited,
-                                  context=context)
+        return wait_for_condition(
+            condition=lambda: finished_str in self.get_logs(),
+            timeout_seconds=self.deploy_timeout_seconds,
+            bail_condition=lambda: self.exited,
+            context=context,
+        )
 
     def set_deploy_timeout_seconds(self, timeout_seconds: int):
         self.deploy_timeout_seconds = timeout_seconds
@@ -131,7 +178,7 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         self.properties["nifi.extension.path"] = self.deployment_type.extension_pattern
         self.properties["nifi.administrative.yield.duration"] = "1 sec"
         self.properties["nifi.bored.yield.duration"] = "100 millis"
-        if 'MINIFI_FIPS' in os.environ and os.environ["MINIFI_FIPS"] == "true":
+        if "MINIFI_FIPS" in os.environ and os.environ["MINIFI_FIPS"] == "true":
             self.properties["nifi.openssl.fips.support.enable"] = "true"
         else:
             self.properties["nifi.openssl.fips.support.enable"] = "false"
@@ -154,5 +201,5 @@ class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):
         return "\n".join(lines)
 
     def add_example_python_processors(self):
-        run_minifi_cmd = f'{self.deployment_type.bin_path}/minifi'
+        run_minifi_cmd = f"{self.deployment_type.bin_path}/minifi"
         self.command = f'sh -c "cp -r {self.deployment_type.minifi_python_examples_path} {self.deployment_type.minifi_python_path}/examples && {run_minifi_cmd}"'

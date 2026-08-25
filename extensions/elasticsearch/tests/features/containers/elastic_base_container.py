@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from minifi_behave.core.helpers import wait_for_condition, retry_check
 from minifi_behave.containers.container_linux import LinuxContainer
+from minifi_behave.core.helpers import retry_check, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
@@ -29,19 +29,44 @@ class ElasticBaseContainer(LinuxContainer):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=300,
             bail_condition=lambda: self.exited,
-            context=context)
+            context=context,
+        )
 
     def create_doc_elasticsearch(self, index_name: str, doc_id: str) -> bool:
-        (code, output) = self.exec_run(["/bin/bash", "-c",
-                                        "curl -s -u elastic:password -k -XPUT https://localhost:9200/" + index_name + "/_doc/"
-                                        + doc_id + " -H Content-Type:application/json -d'{\"field1\":\"value1\"}'"])
+        (code, output) = self.exec_run(
+            [
+                "/bin/bash",
+                "-c",
+                "curl -s -u elastic:password -k -XPUT https://localhost:9200/"
+                + index_name
+                + "/_doc/"
+                + doc_id
+                + ' -H Content-Type:application/json -d\'{"field1":"value1"}\'',
+            ]
+        )
         return code == 0 and ('"_id":"' + doc_id + '"') in output
 
     def check_elastic_field_value(self, index_name: str, doc_id: str, field_name: str, field_value: str) -> bool:
-        (code, output) = self.exec_run(["/bin/bash", "-c", "curl -s -u elastic:password -k -XGET https://localhost:9200/" + index_name + "/_doc/" + doc_id])
+        (code, output) = self.exec_run(
+            [
+                "/bin/bash",
+                "-c",
+                "curl -s -u elastic:password -k -XGET https://localhost:9200/" + index_name + "/_doc/" + doc_id,
+            ]
+        )
         return code == 0 and (field_name + '":"' + field_value) in output
 
     @retry_check()
     def is_elasticsearch_empty(self) -> bool:
-        (code, output) = self.exec_run(["curl", "-s", "-u", "elastic:password", "-k", "-XGET", "https://localhost:9200/_search"])
+        (code, output) = self.exec_run(
+            [
+                "curl",
+                "-s",
+                "-u",
+                "elastic:password",
+                "-k",
+                "-XGET",
+                "https://localhost:9200/_search",
+            ]
+        )
         return code == 0 and '"hits":[]' in output

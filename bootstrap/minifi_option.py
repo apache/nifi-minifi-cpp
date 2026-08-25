@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict
-
-import pathlib
 import json
-import platform
 import os
+import pathlib
+import platform
 
 import cmake_parser
 from cmake_parser import CMakeCacheValue
@@ -26,26 +24,65 @@ from package_manager import PackageManager
 
 
 class MinifiOptions:
-    def __init__(self, cache_values: Dict[str, CMakeCacheValue]):
+    def __init__(self, cache_values: dict[str, CMakeCacheValue]):
         self.cmake_override = ""
-        self.build_type = CMakeCacheValue("Specifies the build type on single-configuration generators",
-                                          "CMAKE_BUILD_TYPE", "STRING", "Release")
-        self.build_type.possible_values = ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]
-        additional_build_options = ["DOCKER_BUILD_ONLY", "DOCKER_USE_CONAN", "DOCKER_SKIP_TESTS", "DOCKER_CREATE_RPM", "SKIP_TESTS", "PORTABLE"]
-        self.use_ninja = CMakeCacheValue("Specifies if CMake should use the Ninja generator or the system default", "USE_NINJA", "BOOL", "ON")
-        self.use_conan = CMakeCacheValue("Specifies if CMake should use Conan package manager", "USE_CONAN", "BOOL", "OFF")
+        self.build_type = CMakeCacheValue(
+            "Specifies the build type on single-configuration generators",
+            "CMAKE_BUILD_TYPE",
+            "STRING",
+            "Release",
+        )
+        self.build_type.possible_values = [
+            "Release",
+            "Debug",
+            "RelWithDebInfo",
+            "MinSizeRel",
+        ]
+        additional_build_options = [
+            "DOCKER_BUILD_ONLY",
+            "DOCKER_USE_CONAN",
+            "DOCKER_SKIP_TESTS",
+            "DOCKER_CREATE_RPM",
+            "SKIP_TESTS",
+            "PORTABLE",
+        ]
+        self.use_ninja = CMakeCacheValue(
+            "Specifies if CMake should use the Ninja generator or the system default",
+            "USE_NINJA",
+            "BOOL",
+            "ON",
+        )
+        self.use_conan = CMakeCacheValue(
+            "Specifies if CMake should use Conan package manager",
+            "USE_CONAN",
+            "BOOL",
+            "OFF",
+        )
         if "USE_NINJA" in cache_values:
             self.use_ninja.value = cache_values["USE_NINJA"].value
         if "USE_CONAN" in cache_values:
             self.use_conan.value = cache_values["USE_CONAN"].value
-        self.bool_options = {name: cache_value for name, cache_value in cache_values.items() if
-                             cache_value.value_type == "BOOL" and ("ENABLE" in name or "MINIFI" in name or name in additional_build_options)}
-        self.build_options = {name: cache_value for name, cache_value in self.bool_options.items() if "MINIFI" in name or name in additional_build_options}
+        self.bool_options = {
+            name: cache_value
+            for name, cache_value in cache_values.items()
+            if cache_value.value_type == "BOOL"
+            and ("ENABLE" in name or "MINIFI" in name or name in additional_build_options)
+        }
+        self.build_options = {
+            name: cache_value
+            for name, cache_value in self.bool_options.items()
+            if "MINIFI" in name or name in additional_build_options
+        }
         self.build_options["USE_NINJA"] = self.use_ninja
         self.build_options["USE_CONAN"] = self.use_conan
-        self.extension_options = {name: cache_value for name, cache_value in self.bool_options.items() if "ENABLE" in name}
-        self.multi_choice_options = [cache_value for name, cache_value in cache_values.items() if
-                                     cache_value.value_type == "STRING" and cache_value.possible_values is not None]
+        self.extension_options = {
+            name: cache_value for name, cache_value in self.bool_options.items() if "ENABLE" in name
+        }
+        self.multi_choice_options = [
+            cache_value
+            for name, cache_value in cache_values.items()
+            if cache_value.value_type == "STRING" and cache_value.possible_values is not None
+        ]
         self.custom_malloc = cache_values.get("CUSTOM_MALLOC")
         self.build_dir = pathlib.Path(__file__).parent.parent.resolve() / "build"
         self.source_dir = pathlib.Path(__file__).parent.parent.resolve()
@@ -57,7 +94,7 @@ class MinifiOptions:
             cmake_options.append(self.custom_malloc.create_cmake_option_str())
         if self.cmake_override:
             cmake_options.append(self.cmake_override)
-        cmake_options.append(f'-DCMAKE_BUILD_TYPE={self.build_type.value}')
+        cmake_options.append(f"-DCMAKE_BUILD_TYPE={self.build_type.value}")
         cmake_options_str = " ".join(filter(None, cmake_options))
         return cmake_options_str
 
@@ -86,7 +123,7 @@ class MinifiOptions:
         self.cmake_override = cmake_override
 
     def save_option_state(self):
-        options_dict = dict()
+        options_dict = {}
         for option_name in self.bool_options:
             options_dict[option_name] = self.bool_options[option_name].value
         options_dict[self.use_ninja.name] = self.use_ninja.value

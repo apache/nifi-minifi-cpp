@@ -15,15 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from behave import then, when, given
 import humanfriendly
-
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
+from behave import given, then, when
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @when("the MiNiFi instance is started without assertions")
@@ -54,9 +55,5 @@ def minifi_logs_processor_metrics(context: MinifiTestContext):
     context.get_or_create_default_minifi_container().set_property(
         "nifi.metrics.publisher.LogMetricsPublisher.logging.interval", "1s"
     )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.metrics.publisher.class", "LogMetricsPublisher"
-    )
-    context.get_or_create_default_minifi_container().set_property(
-        "nifi.metrics.publisher.agent.identifier", "Agent1"
-    )
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.class", "LogMetricsPublisher")
+    context.get_or_create_default_minifi_container().set_property("nifi.metrics.publisher.agent.identifier", "Agent1")

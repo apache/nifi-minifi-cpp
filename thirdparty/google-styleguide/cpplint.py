@@ -1699,6 +1699,7 @@ class _IncludeError(Exception):
     pass
 
 
+
 class FileInfo:
     """Provides utility functions for filenames.
 
@@ -3192,10 +3193,12 @@ class _WrappedInfo(_BlockInfo):
     pass
 
 
+
 class _MemInitListInfo(_WrappedInfo):
     """Stores information about member initializer lists."""
 
     pass
+
 
 
 class _PreprocessorInfo:

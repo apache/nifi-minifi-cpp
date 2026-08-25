@@ -20,6 +20,7 @@ class RotatingForwarder(FlowFileTransform):
     """
     Forwards flow files to a different relationship each time it is called in a round robin manner.
     """
+
     def __init__(self, **kwargs):
         self.relationship_index = 0
         self.relationships = ["first", "second", "third", "fourth"]

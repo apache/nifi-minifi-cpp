@@ -17,26 +17,29 @@
 
 import humanfriendly
 from behave import step, then
+from containers.azure_server_container import AzureServerContainer
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.minifi.processor import Processor
-from minifi_behave.steps import checking_steps  # noqa: F401
-from minifi_behave.steps import configuration_steps  # noqa: F401
-from minifi_behave.steps import core_steps  # noqa: F401
-from minifi_behave.steps import flow_building_steps  # noqa: F401
-
-from containers.azure_server_container import AzureServerContainer
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 @step("a {processor_name} processor set up to communicate with an Azure blob storage")
 def setup_azure_blob_storage_processor(context: MinifiTestContext, processor_name: str):
     processor = Processor(processor_name, processor_name)
     hostname = f"http://azure-storage-server-{context.scenario_id}"
-    processor.add_property('Container Name', 'test-container')
-    processor.add_property('Connection String',
-                           f'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint={hostname}:10000/devstoreaccount1;QueueEndpoint={hostname}:10001/devstoreaccount1;')
-    processor.add_property('Blob', 'test-blob')
-    processor.add_property('Create Container', 'true')
+    processor.add_property("Container Name", "test-container")
+    processor.add_property(
+        "Connection String",
+        f"DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint={hostname}:10000/devstoreaccount1;QueueEndpoint={hostname}:10001/devstoreaccount1;",
+    )
+    processor.add_property("Blob", "test-blob")
+    processor.add_property("Create Container", "true")
     context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
@@ -83,7 +86,8 @@ def verify_azure_blob_storage_is_empty(context: MinifiTestContext, timeout_str: 
         condition=lambda: azure_server_container.check_azure_blob_storage_is_empty(),
         timeout_seconds=timeout_in_seconds,
         bail_condition=lambda: azure_server_container.exited,
-        context=context)
+        context=context,
+    )
 
 
 @then("the blob and snapshot count becomes 1 in {timeout_str}")
@@ -95,4 +99,5 @@ def verify_blob_and_snapshot_count(context: MinifiTestContext, timeout_str: str)
         condition=lambda: azure_server_container.check_azure_blob_and_snapshot_count(1),
         timeout_seconds=timeout_in_seconds,
         bail_condition=lambda: azure_server_container.exited,
-        context=context)
+        context=context,
+    )

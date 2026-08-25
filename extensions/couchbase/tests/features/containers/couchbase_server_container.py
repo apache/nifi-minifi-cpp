@@ -15,28 +15,54 @@
 
 import logging
 
-from minifi_behave.core.helpers import wait_for_condition, retry_check
-from minifi_behave.core.ssl_utils import make_server_cert, dump_cert, dump_key
+from docker.errors import ContainerError
 from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.containers.file import File
+from minifi_behave.core.helpers import retry_check, wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
-from docker.errors import ContainerError
+from minifi_behave.core.ssl_utils import dump_cert, dump_key, make_server_cert
+
+logger = logging.getLogger(__name__)
 
 
 class CouchbaseServerContainer(LinuxContainer):
     IMAGE = "couchbase:enterprise-7.2.5"
 
     def __init__(self, test_context: MinifiTestContext):
-        super().__init__(CouchbaseServerContainer.IMAGE, f"couchbase-server-{test_context.scenario_id}", test_context.network)
+        super().__init__(
+            CouchbaseServerContainer.IMAGE,
+            f"couchbase-server-{test_context.scenario_id}",
+            test_context.network,
+        )
 
-        couchbase_cert, couchbase_key = make_server_cert(self.container_name, test_context.root_ca_cert, test_context.root_ca_key)
+        couchbase_cert, couchbase_key = make_server_cert(
+            self.container_name, test_context.root_ca_cert, test_context.root_ca_key
+        )
 
         root_ca_content = dump_cert(test_context.root_ca_cert)
-        self.files.append(File("/opt/couchbase/var/lib/couchbase/inbox/CA/root_ca.crt", root_ca_content, permissions=0o666))
+        self.files.append(
+            File(
+                "/opt/couchbase/var/lib/couchbase/inbox/CA/root_ca.crt",
+                root_ca_content,
+                permissions=0o666,
+            )
+        )
         couchbase_cert_content = dump_cert(couchbase_cert)
-        self.files.append(File("/opt/couchbase/var/lib/couchbase/inbox/chain.pem", couchbase_cert_content, permissions=0o666))
+        self.files.append(
+            File(
+                "/opt/couchbase/var/lib/couchbase/inbox/chain.pem",
+                couchbase_cert_content,
+                permissions=0o666,
+            )
+        )
         couchbase_key_content = dump_key(couchbase_key)
-        self.files.append(File("/opt/couchbase/var/lib/couchbase/inbox/pkey.key", couchbase_key_content, permissions=0o666))
+        self.files.append(
+            File(
+                "/opt/couchbase/var/lib/couchbase/inbox/pkey.key",
+                couchbase_key_content,
+                permissions=0o666,
+            )
+        )
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)
@@ -45,33 +71,93 @@ class CouchbaseServerContainer(LinuxContainer):
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=30,
             bail_condition=lambda: self.exited,
-            context=context)
+            context=context,
+        )
         return self.run_post_startup_commands()
 
     def run_post_startup_commands(self):
         commands = [
-            ["couchbase-cli", "cluster-init", "-c", "localhost", "--cluster-username", "Administrator", "--cluster-password", "password123", "--services", "data,index,query",
-             "--cluster-ramsize", "2048", "--cluster-index-ramsize", "256"],
-            ["couchbase-cli", "bucket-create", "-c", "localhost", "--username", "Administrator", "--password", "password123", "--bucket", "test_bucket", "--bucket-type", "couchbase",
-             "--bucket-ramsize", "1024", "--max-ttl", "36000"],
-            ["couchbase-cli", "user-manage", "-c", "localhost", "-u", "Administrator", "-p", "password123", "--set", "--rbac-username", "clientuser", "--rbac-password", "password123",
-             "--roles", "data_reader[test_bucket],data_writer[test_bucket]", "--auth-domain", "local"],
-            ["bash", "-c", 'tee /tmp/auth.json <<< \'{"state": "enable", "prefixes": [ {"path": "subject.cn", "prefix": "", "delimiter": "."}]}\''],
-            ['couchbase-cli', 'ssl-manage', '-c', 'localhost', '-u', 'Administrator', '-p', 'password123', '--set-client-auth', '/tmp/auth.json']
+            [
+                "couchbase-cli",
+                "cluster-init",
+                "-c",
+                "localhost",
+                "--cluster-username",
+                "Administrator",
+                "--cluster-password",
+                "password123",
+                "--services",
+                "data,index,query",
+                "--cluster-ramsize",
+                "2048",
+                "--cluster-index-ramsize",
+                "256",
+            ],
+            [
+                "couchbase-cli",
+                "bucket-create",
+                "-c",
+                "localhost",
+                "--username",
+                "Administrator",
+                "--password",
+                "password123",
+                "--bucket",
+                "test_bucket",
+                "--bucket-type",
+                "couchbase",
+                "--bucket-ramsize",
+                "1024",
+                "--max-ttl",
+                "36000",
+            ],
+            [
+                "couchbase-cli",
+                "user-manage",
+                "-c",
+                "localhost",
+                "-u",
+                "Administrator",
+                "-p",
+                "password123",
+                "--set",
+                "--rbac-username",
+                "clientuser",
+                "--rbac-password",
+                "password123",
+                "--roles",
+                "data_reader[test_bucket],data_writer[test_bucket]",
+                "--auth-domain",
+                "local",
+            ],
+            [
+                "bash",
+                "-c",
+                'tee /tmp/auth.json <<< \'{"state": "enable", "prefixes": [ {"path": "subject.cn", "prefix": "", "delimiter": "."}]}\'',
+            ],
+            [
+                "couchbase-cli",
+                "ssl-manage",
+                "-c",
+                "localhost",
+                "-u",
+                "Administrator",
+                "-p",
+                "password123",
+                "--set-client-auth",
+                "/tmp/auth.json",
+            ],
         ]
         if not self._run_couchbase_cli_commands(commands):
             return False
 
-        if not self._load_couchbase_certs():
-            return False
-
-        return True
+        return self._load_couchbase_certs()
 
     @retry_check(max_tries=12, retry_interval_seconds=5)
     def _run_couchbase_cli_command(self, command):
         (code, output) = self.exec_run(command)
         if code != 0:
-            logging.error(f"Failed to run command '{command}', returned error code: {code}, output: '{output}'")
+            logger.error(f"Failed to run command '{command}', returned error code: {code}, output: '{output}'")
             return False
         return True
 
@@ -80,15 +166,24 @@ class CouchbaseServerContainer(LinuxContainer):
 
     def _run_python_in_couchbase_helper_docker(self, command: str):
         try:
-            self.client.containers.run("minifi-couchbase-helper:latest", ["python", "-c", command], remove=True, stdout=True, stderr=True, network=self.network.name)
+            self.client.containers.run(
+                "minifi-couchbase-helper:latest",
+                ["python", "-c", command],
+                remove=True,
+                stdout=True,
+                stderr=True,
+                network=self.network.name,
+            )
             return True
         except ContainerError as e:
             stdout = e.stdout.decode("utf-8", errors="replace") if hasattr(e, "stdout") and e.stdout else ""
             stderr = e.stderr.decode("utf-8", errors="replace") if hasattr(e, "stderr") and e.stderr else ""
-            logging.error(f"Python command '{command}' failed in couchbase helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'")
+            logger.error(
+                f"Python command '{command}' failed in couchbase helper docker with error: '{e}', stdout: '{stdout}', stderr: '{stderr}'"
+            )
             return False
         except Exception as e:
-            logging.error(f"Unexpected error while running python command '{command}' in couchbase helper docker: '{e}'")
+            logger.error(f"Unexpected error while running python command '{command}' in couchbase helper docker: '{e}'")
             return False
 
     @retry_check(max_tries=15, retry_interval_seconds=2)

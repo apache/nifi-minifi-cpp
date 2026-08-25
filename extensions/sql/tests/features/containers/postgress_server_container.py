@@ -17,18 +17,22 @@
 
 import logging
 from textwrap import dedent
+
 from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+
+logger = logging.getLogger(__name__)
 
 
 class PostgresContainer(LinuxContainer):
     IMAGE = "postgres:17.4"
 
     def __init__(self, context):
-        dockerfile = dedent("""\
-                FROM {base_image}
+        dockerfile = dedent(
+            f"""\
+                FROM {PostgresContainer.IMAGE}
                 RUN mkdir -p /docker-entrypoint-initdb.d
                 RUN echo "#!/bin/bash" > /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "set -e" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
@@ -41,26 +45,29 @@ class PostgresContainer(LinuxContainer):
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (5, 'ApPlE');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table2 (int_col, \\"tExT_Col\\") VALUES (6, 'BaNaNa');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
-                """.format(base_image=PostgresContainer.IMAGE))
-        builder = DockerImageBuilder(
-            image_tag="minifi-postgres-server:latest",
-            dockerfile_content=dockerfile
+                """
         )
+        builder = DockerImageBuilder(image_tag="minifi-postgres-server:latest", dockerfile_content=dockerfile)
         builder.build()
 
-        super(PostgresContainer, self).__init__("minifi-postgres-server:latest", f"postgres-server-{context.scenario_id}", context.network)
+        super().__init__(
+            "minifi-postgres-server:latest",
+            f"postgres-server-{context.scenario_id}",
+            context.network,
+        )
         self.environment = ["POSTGRES_PASSWORD=password"]
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
-        super(PostgresContainer, self).deploy(context)
+        super().deploy(context)
         finished_str = "database system is ready to accept connections"
         return wait_for_condition(
             condition=lambda: finished_str in self.get_logs(),
             timeout_seconds=60,
             bail_condition=lambda: self.exited,
-            context=context)
+            context=context,
+        )
 
     def check_query_results(self, query: str, number_of_rows: int) -> bool:
         (code, output) = self.exec_run(["psql", "-U", "postgres", "-c", query])
-        logging.debug(f"check_query_results: {query} -> {output}")
+        logger.debug(f"check_query_results: {query} -> {output}")
         return code == 0 and (str(number_of_rows) + (" row" if number_of_rows == 1 else " rows")) in output

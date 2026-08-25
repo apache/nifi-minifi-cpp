@@ -23,8 +23,8 @@ def describe(processor):
 
 def onTrigger(context, session):
     flow_file = session.get()
-    log.info('Vrrm, vrrrm, processor is running, vrrrm!!')
+    log.info("Vrrm, vrrrm, processor is running, vrrrm!!")
 
     if flow_file is not None:
-        log.info('created flow file: %s' % flow_file.getAttribute('filename'))
+        log.info("created flow file: {}".format(flow_file.getAttribute("filename")))
         session.transfer(flow_file, REL_FAILURE)

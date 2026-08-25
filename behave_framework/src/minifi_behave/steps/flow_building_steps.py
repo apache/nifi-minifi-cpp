@@ -17,15 +17,20 @@
 
 import logging
 import uuid
-from behave import given, step
 
-from minifi_behave.core.minifi_test_context import DEFAULT_MINIFI_CONTAINER_NAME, MinifiTestContext
+from behave import given, step
+from minifi_behave.core.minifi_test_context import (
+    DEFAULT_MINIFI_CONTAINER_NAME,
+    MinifiTestContext,
+)
 from minifi_behave.minifi.connection import Connection
 from minifi_behave.minifi.controller_service import ControllerService
 from minifi_behave.minifi.funnel import Funnel
 from minifi_behave.minifi.parameter import Parameter
 from minifi_behave.minifi.parameter_context import ParameterContext
 from minifi_behave.minifi.processor import Processor
+
+logger = logging.getLogger(__name__)
 
 
 @given("a MiNiFi CPP server with yaml config")
@@ -35,42 +40,77 @@ def minifi_cpp_server_with_yaml_config(context: MinifiTestContext):
 
 @given("a transient MiNiFi flow with a LogOnDestructionProcessor processor")
 def transient_flow_with_logondestructionprocessor(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().command = ["/bin/sh", "-c", "timeout 10s ./bin/minifi.sh run && sleep 100"]
+    context.get_or_create_default_minifi_container().command = [
+        "/bin/sh",
+        "-c",
+        "timeout 10s ./bin/minifi.sh run && sleep 100",
+    ]
     context.get_or_create_default_minifi_container().flow_definition.add_processor(
-        Processor("LogOnDestructionProcessor", "LogOnDestructionProcessor"))
+        Processor("LogOnDestructionProcessor", "LogOnDestructionProcessor")
+    )
 
 
 @given(
-    'a {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"')
-def processor_with_name_and_property(context: MinifiTestContext, processor_type: str, processor_name: str, property_name: str,
-                                     property_value: str):
+    'a {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"'
+)
+def processor_with_name_and_property(
+    context: MinifiTestContext,
+    processor_type: str,
+    processor_name: str,
+    property_name: str,
+    property_value: str,
+):
     processor = Processor(processor_type, processor_name)
     processor.add_property(property_name, property_value)
     context.get_or_create_default_minifi_container().flow_definition.add_processor(processor)
 
 
 @step('a {processor_type} processor with the "{property_name}" property set to "{property_value}"')
-def processor_with_property(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str):
+def processor_with_property(
+    context: MinifiTestContext,
+    processor_type: str,
+    property_name: str,
+    property_value: str,
+):
     context.execute_steps(
-        f'Given a {processor_type} processor with the name "{processor_type}" and the "{property_name}" property set to "{property_value}"')
+        f'Given a {processor_type} processor with the name "{processor_type}" and the "{property_name}" property set to "{property_value}"'
+    )
 
 
-@step('a {processor_type} processor with the "{property_name}" property set to "{property_value}" in the "{minifi_container_name}" flow')
-def processor_with_property_in_minifi_flow(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str, minifi_container_name: str):
+@step(
+    'a {processor_type} processor with the "{property_name}" property set to "{property_value}" in the "{minifi_container_name}" flow'
+)
+def processor_with_property_in_minifi_flow(
+    context: MinifiTestContext,
+    processor_type: str,
+    property_name: str,
+    property_value: str,
+    minifi_container_name: str,
+):
     processor = Processor(processor_type, processor_type)
     processor.add_property(property_name, property_value)
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
 
 @step('a {processor_type} processor with the "{property_name}" property set to "{property_value}" in the NiFi flow')
-def processor_with_property_in_nifi_flow(context: MinifiTestContext, processor_type: str, property_name: str, property_value: str):
+def processor_with_property_in_nifi_flow(
+    context: MinifiTestContext,
+    processor_type: str,
+    property_name: str,
+    property_value: str,
+):
     processor = Processor(processor_type, processor_type)
     processor.add_property(property_name, property_value)
     context.containers["nifi"].flow_definition.add_processor(processor)
 
 
 @given('a {processor_type} processor with the name "{processor_name}" in the "{minifi_container_name}" flow')
-def processor_with_name_in_minifi_flow(context: MinifiTestContext, processor_type: str, processor_name: str, minifi_container_name: str):
+def processor_with_name_in_minifi_flow(
+    context: MinifiTestContext,
+    processor_type: str,
+    processor_name: str,
+    minifi_container_name: str,
+):
     processor = Processor(processor_type, processor_name)
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
@@ -78,10 +118,11 @@ def processor_with_name_in_minifi_flow(context: MinifiTestContext, processor_typ
 @given('a {processor_type} processor with the name "{processor_name}"')
 def processor_with_name(context: MinifiTestContext, processor_type: str, processor_name: str):
     context.execute_steps(
-        f'given a {processor_type} processor with the name "{processor_name}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
+        f'given a {processor_type} processor with the name "{processor_name}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
+    )
 
 
-@given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
+@given('a {processor_type} processor in the "{minifi_container_name}" flow')
 def processor_in_minifi_flow(context: MinifiTestContext, processor_type: str, minifi_container_name: str):
     processor = Processor(processor_type, processor_type)
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
@@ -98,9 +139,19 @@ def processor_setup(context: MinifiTestContext, processor_type: str):
     context.execute_steps(f'given a {processor_type} processor in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
 
 
-@given('the "{property_name}" property of the "{port_name}" port in the "{rpg_name}" remote process group is set to "{property_value}"')
-def set_property_of_port_in_rpg(context: MinifiTestContext, property_name: str, port_name: str, rpg_name: str, property_value: str):
-    rpg = context.get_or_create_minifi_container(DEFAULT_MINIFI_CONTAINER_NAME).flow_definition.get_remote_process_group(rpg_name)
+@given(
+    'the "{property_name}" property of the "{port_name}" port in the "{rpg_name}" remote process group is set to "{property_value}"'
+)
+def set_property_of_port_in_rpg(
+    context: MinifiTestContext,
+    property_name: str,
+    port_name: str,
+    rpg_name: str,
+    property_value: str,
+):
+    rpg = context.get_or_create_minifi_container(
+        DEFAULT_MINIFI_CONTAINER_NAME
+    ).flow_definition.get_remote_process_group(rpg_name)
     if not rpg:
         raise ValueError(f"Remote Process Group with name {rpg_name} not found")
     port = rpg.get_input_port(port_name)
@@ -109,9 +160,19 @@ def set_property_of_port_in_rpg(context: MinifiTestContext, property_name: str, 
     port.add_property(property_name, property_value)
 
 
-@given('the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the "{minifi_container_name}" flow')
-def set_property_of_processor_in_minifi_flow(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str, minifi_container_name: str):
-    processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name)
+@given(
+    'the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the "{minifi_container_name}" flow'
+)
+def set_property_of_processor_in_minifi_flow(
+    context: MinifiTestContext,
+    property_name: str,
+    processor_name: str,
+    property_value: str,
+    minifi_container_name: str,
+):
+    processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(
+        processor_name
+    )
     if property_value == "(not set)":
         processor.remove_property(property_name)
     else:
@@ -119,7 +180,12 @@ def set_property_of_processor_in_minifi_flow(context: MinifiTestContext, propert
 
 
 @given('the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the NiFi flow')
-def set_property_of_processor_in_nifi_flow(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str):
+def set_property_of_processor_in_nifi_flow(
+    context: MinifiTestContext,
+    property_name: str,
+    processor_name: str,
+    property_value: str,
+):
     processor = context.containers["nifi"].flow_definition.get_processor(processor_name)
     if property_value == "(not set)":
         processor.remove_property(property_name)
@@ -128,14 +194,27 @@ def set_property_of_processor_in_nifi_flow(context: MinifiTestContext, property_
 
 
 @given('the "{property_name}" property of the {processor_name} processor is set to "{property_value}"')
-def set_property_of_processor(context: MinifiTestContext, property_name: str, processor_name: str, property_value: str):
+def set_property_of_processor(
+    context: MinifiTestContext,
+    property_name: str,
+    processor_name: str,
+    property_value: str,
+):
     context.execute_steps(
-        f'given the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
+        f'given the "{property_name}" property of the {processor_name} processor is set to "{property_value}" in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
+    )
 
 
 @step('the "{property_name}" property of the {controller_name} controller service is set to "{property_value}"')
-def set_property_of_controller_service(context: MinifiTestContext, property_name: str, controller_name: str, property_value: str):
-    controller_service = context.get_or_create_default_minifi_container().flow_definition.get_controller_service(controller_name)
+def set_property_of_controller_service(
+    context: MinifiTestContext,
+    property_name: str,
+    controller_name: str,
+    property_value: str,
+):
+    controller_service = context.get_or_create_default_minifi_container().flow_definition.get_controller_service(
+        controller_name
+    )
     if property_value == "(not set)":
         controller_service.remove_property(property_name)
     else:
@@ -147,9 +226,19 @@ def setup_funnel(context: MinifiTestContext, funnel_name: str):
     context.get_or_create_default_minifi_container().flow_definition.add_funnel(Funnel(funnel_name))
 
 
-@step('in the "{minifi_container_name}" flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
-@step('in the "{minifi_container_name}" flow the "{relationship_name}" relationship of the {source} node is connected to the {target}')
-def connect_relationship_in_minifi_flow(context: MinifiTestContext, relationship_name: str, source: str, target: str, minifi_container_name: str):
+@step(
+    'in the "{minifi_container_name}" flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}'
+)
+@step(
+    'in the "{minifi_container_name}" flow the "{relationship_name}" relationship of the {source} node is connected to the {target}'
+)
+def connect_relationship_in_minifi_flow(
+    context: MinifiTestContext,
+    relationship_name: str,
+    source: str,
+    target: str,
+    minifi_container_name: str,
+):
     connection = Connection(source_name=source, source_relationship=relationship_name, target_name=target)
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_connection(connection)
 
@@ -163,12 +252,18 @@ def connect_relationship_in_nifi_flow(context: MinifiTestContext, relationship_n
 @step('the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
 @step('the "{relationship_name}" relationship of the {source} node is connected to the {target}')
 def connect_relationship(context: MinifiTestContext, relationship_name: str, source: str, target: str):
-    context.execute_steps(f'given in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}')
+    context.execute_steps(
+        f'given in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow the "{relationship_name}" relationship of the {source} processor is connected to the {target}'
+    )
 
 
-@step("the output port \"{port_name}\" is connected to the {destination_name} processor")
+@step('the output port "{port_name}" is connected to the {destination_name} processor')
 def connect_output_port_to_processor(context: MinifiTestContext, port_name: str, destination_name: str):
-    connection = Connection(source_name=port_name, source_relationship="undefined", target_name=destination_name)
+    connection = Connection(
+        source_name=port_name,
+        source_relationship="undefined",
+        target_name=destination_name,
+    )
     context.get_or_create_minifi_container(DEFAULT_MINIFI_CONTAINER_NAME).flow_definition.add_connection(connection)
 
 
@@ -178,31 +273,54 @@ def connect_funnel_to_target(context: MinifiTestContext, funnel_name: str, targe
     context.get_or_create_default_minifi_container().flow_definition.add_connection(connection)
 
 
-@step("{processor_name}'s {relationship} relationship is auto-terminated in the \"{minifi_container_name}\" flow")
-def auto_terminate_relationship_in_minifi_flow(context: MinifiTestContext, processor_name: str, relationship: str, minifi_container_name: str):
-    context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name).auto_terminated_relationships.append(
-        relationship)
+@step('{processor_name}\'s {relationship} relationship is auto-terminated in the "{minifi_container_name}" flow')
+def auto_terminate_relationship_in_minifi_flow(
+    context: MinifiTestContext,
+    processor_name: str,
+    relationship: str,
+    minifi_container_name: str,
+):
+    context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(
+        processor_name
+    ).auto_terminated_relationships.append(relationship)
 
 
 @step("{processor_name}'s {relationship} relationship is auto-terminated in the NiFi flow")
 def auto_terminate_relationship_in_nifi_flow(context: MinifiTestContext, processor_name: str, relationship: str):
-    context.containers["nifi"].flow_definition.get_processor(processor_name).auto_terminated_relationships.append(relationship)
+    context.containers["nifi"].flow_definition.get_processor(processor_name).auto_terminated_relationships.append(
+        relationship
+    )
 
 
 @step("{processor_name}'s {relationship} relationship is auto-terminated")
-@step("the \"{relationship}\" relationship of the {processor_name} processor is auto-terminated")
+@step('the "{relationship}" relationship of the {processor_name} processor is auto-terminated')
 def auto_terminate_relationship(context: MinifiTestContext, processor_name: str, relationship: str):
-    context.execute_steps(f'given {processor_name}\'s {relationship} relationship is auto-terminated in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow')
+    context.execute_steps(
+        f'given {processor_name}\'s {relationship} relationship is auto-terminated in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
+    )
 
 
 @given("a transient MiNiFi flow is set up")
 def setup_transient_minifi_flow(context: MinifiTestContext):
-    context.get_or_create_default_minifi_container().command = ["/bin/sh", "-c", "timeout 10s ./bin/minifi.sh run && sleep 100"]
+    context.get_or_create_default_minifi_container().command = [
+        "/bin/sh",
+        "-c",
+        "timeout 10s ./bin/minifi.sh run && sleep 100",
+    ]
 
 
-@step('the scheduling period of the {processor_name} processor is set to "{duration_str}" in the "{minifi_container_name}" flow')
-def set_scheduling_period_in_minifi_flow(context: MinifiTestContext, processor_name: str, duration_str: str, minifi_container_name: str):
-    context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name).scheduling_period = duration_str
+@step(
+    'the scheduling period of the {processor_name} processor is set to "{duration_str}" in the "{minifi_container_name}" flow'
+)
+def set_scheduling_period_in_minifi_flow(
+    context: MinifiTestContext,
+    processor_name: str,
+    duration_str: str,
+    minifi_container_name: str,
+):
+    context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(
+        processor_name
+    ).scheduling_period = duration_str
 
 
 @step('the scheduling period of the {processor_name} processor is set to "{duration_str}" in the NiFi flow')
@@ -212,38 +330,58 @@ def set_scheduling_period_in_nifi_flow(context: MinifiTestContext, processor_nam
 
 @step('the scheduling period of the {processor_name} processor is set to "{duration_str}"')
 def set_scheduling_period(context: MinifiTestContext, processor_name: str, duration_str: str):
-    context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name).scheduling_period = duration_str
+    context.get_or_create_default_minifi_container().flow_definition.get_processor(
+        processor_name
+    ).scheduling_period = duration_str
 
 
 @given("parameter context name is set to '{context_name}'")
 def add_parameter_context(context: MinifiTestContext, context_name: str):
-    context.get_or_create_default_minifi_container().flow_definition.parameter_contexts.append(ParameterContext(context_name))
+    context.get_or_create_default_minifi_container().flow_definition.parameter_contexts.append(
+        ParameterContext(context_name)
+    )
 
 
 @step(
-    "a non-sensitive parameter in the flow config called '{parameter_name}' with the value '{parameter_value}' in the parameter context '{context_name}'")
-def add_non_sensitive_parameter(context: MinifiTestContext, parameter_name: str, parameter_value: str, context_name: str):
-    parameter_context = context.get_or_create_default_minifi_container().flow_definition.get_parameter_context(context_name)
+    "a non-sensitive parameter in the flow config called '{parameter_name}' with the value '{parameter_value}' in the parameter context '{context_name}'"
+)
+def add_non_sensitive_parameter(
+    context: MinifiTestContext,
+    parameter_name: str,
+    parameter_value: str,
+    context_name: str,
+):
+    parameter_context = context.get_or_create_default_minifi_container().flow_definition.get_parameter_context(
+        context_name
+    )
     parameter_context.parameters.append(Parameter(parameter_name, parameter_value, False))
 
 
-@given("these processor properties are set in the \"{minifi_container_name}\" flow")
+@given('these processor properties are set in the "{minifi_container_name}" flow')
 def set_processor_properties_in_minifi_flow(context: MinifiTestContext, minifi_container_name: str):
     for row in context.table:
-        processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(row["processor name"])
+        processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(
+            row["processor name"]
+        )
         processor.add_property(row["property name"], row["property value"])
 
 
 @given("these processor properties are set")
 def set_processor_properties(context: MinifiTestContext):
     for row in context.table:
-        processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(row["processor name"])
+        processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(
+            row["processor name"]
+        )
         processor.add_property(row["property name"], row["property value"])
 
 
-@given("a ProxyConfigurationService controller service is set up with {proxy_type} proxy configuration in the \"{container_name}\" flow")
+@given(
+    'a ProxyConfigurationService controller service is set up with {proxy_type} proxy configuration in the "{container_name}" flow'
+)
 def step_impl(context: MinifiTestContext, proxy_type: str, container_name: str):
-    controller_service = ControllerService(class_name="ProxyConfigurationService", service_name="ProxyConfigurationService")
+    controller_service = ControllerService(
+        class_name="ProxyConfigurationService", service_name="ProxyConfigurationService"
+    )
     prefix = proxy_type.lower() if proxy_type.lower() != "direct" else "http"
     controller_service.add_property("Proxy Server Host", f"{prefix}://http-proxy-{context.scenario_id}")
     controller_service.add_property("Proxy User Name", "admin")
@@ -253,12 +391,16 @@ def step_impl(context: MinifiTestContext, proxy_type: str, container_name: str):
         controller_service.add_property("Proxy Server Port", "3128")
     else:
         controller_service.add_property("Proxy Server Port", "3129")
-    context.get_or_create_minifi_container(container_name).flow_definition.controller_services.append(controller_service)
+    context.get_or_create_minifi_container(container_name).flow_definition.controller_services.append(
+        controller_service
+    )
 
 
 @given("a ProxyConfigurationService controller service is set up with {proxy_type} proxy configuration")
-def step_impl(context: MinifiTestContext, proxy_type: str):
-    context.execute_steps(f"given a ProxyConfigurationService controller service is set up with {proxy_type} proxy configuration in the \"{DEFAULT_MINIFI_CONTAINER_NAME}\" flow")
+def set_up_proxy_configuration_service_in_default_flow(context: MinifiTestContext, proxy_type: str):
+    context.execute_steps(
+        f'given a ProxyConfigurationService controller service is set up with {proxy_type} proxy configuration in the "{DEFAULT_MINIFI_CONTAINER_NAME}" flow'
+    )
 
 
 @step("the processors are connected up as described here")
@@ -269,16 +411,24 @@ def connect_processors_from_table(context: MinifiTestContext):
         relationship = row["relationship name"]
         if dest_proc_name == "auto-terminated":
             context.get_or_create_default_minifi_container().flow_definition.get_processor(
-                source_proc_name).auto_terminated_relationships.append(relationship)
+                source_proc_name
+            ).auto_terminated_relationships.append(relationship)
         else:
-            connection = Connection(source_name=row["source name"], source_relationship=relationship,
-                                    target_name=row["destination name"])
+            connection = Connection(
+                source_name=row["source name"],
+                source_relationship=relationship,
+                target_name=row["destination name"],
+            )
             context.get_or_create_default_minifi_container().flow_definition.add_connection(connection)
 
 
-@step("{processor_name} is EVENT_DRIVEN in the \"{minifi_container_name}\" flow")
-def set_processor_event_driven_in_minifi_flow(context: MinifiTestContext, processor_name: str, minifi_container_name: str):
-    processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(processor_name)
+@step('{processor_name} is EVENT_DRIVEN in the "{minifi_container_name}" flow')
+def set_processor_event_driven_in_minifi_flow(
+    context: MinifiTestContext, processor_name: str, minifi_container_name: str
+):
+    processor = context.get_or_create_minifi_container(minifi_container_name).flow_definition.get_processor(
+        processor_name
+    )
     processor.scheduling_strategy = "EVENT_DRIVEN"
 
 
@@ -301,30 +451,51 @@ def setup_controller_service(context: MinifiTestContext, service_name: str):
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
-@given('a {class_name} controller service named "{service_name}" is set up and the "{property_name}" property set to "{property_value}"')
-def setup_controller_service_with_property(context: MinifiTestContext, class_name: str, service_name: str, property_name: str, property_value: str):
+@given(
+    'a {class_name} controller service named "{service_name}" is set up and the "{property_name}" property set to "{property_value}"'
+)
+def setup_named_controller_service_with_property(
+    context: MinifiTestContext,
+    class_name: str,
+    service_name: str,
+    property_name: str,
+    property_value: str,
+):
     controller_service = ControllerService(class_name=class_name, service_name=service_name)
     controller_service.add_property(property_name, property_value)
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
 @given('a {service_name} controller service is set up and the "{property_name}" property set to "{property_value}"')
-def setup_controller_service_with_property(context: MinifiTestContext, service_name: str, property_name: str, property_value: str):
+def setup_controller_service_with_property(
+    context: MinifiTestContext,
+    service_name: str,
+    property_name: str,
+    property_value: str,
+):
     controller_service = ControllerService(class_name=service_name, service_name=service_name)
     controller_service.add_property(property_name, property_value)
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(controller_service)
 
 
-@given("the \"{property_name}\" property of the {processor_name} processor is set to match the attribute \"{attribute_key}\" to \"{attribute_value}\"")
-def set_processor_property_to_match_attribute(context: MinifiTestContext, property_name: str, processor_name: str, attribute_key: str, attribute_value: str):
+@given(
+    'the "{property_name}" property of the {processor_name} processor is set to match the attribute "{attribute_key}" to "{attribute_value}"'
+)
+def set_processor_property_to_match_attribute(
+    context: MinifiTestContext,
+    property_name: str,
+    processor_name: str,
+    attribute_key: str,
+    attribute_value: str,
+):
     processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
     if attribute_value == "(not set)":
         # Ignore filtering
         processor.add_property(property_name, "true")
         return
     filtering = "${" + attribute_key + ":equals('" + attribute_value + "')}"
-    logging.info("Filter: \"%s\"", filtering)
-    logging.info("Key: \"%s\", value: \"%s\"", attribute_key, attribute_value)
+    logger.info('Filter: "%s"', filtering)
+    logger.info('Key: "%s", value: "%s"', attribute_key, attribute_value)
     processor.add_property(property_name, filtering)
 
 
@@ -334,16 +505,24 @@ def set_processor_max_concurrent_tasks(context, processor_name: str, max_concurr
     processor.set_max_concurrent_tasks(max_concurrent_tasks)
 
 
-@given("the \"{property_name}\" properties of the {processor_name_one} and {processor_name_two} processors are set to the same random UUID")
+@given(
+    'the "{property_name}" properties of the {processor_name_one} and {processor_name_two} processors are set to the same random UUID'
+)
 def set_processors_properties_to_same_uuid(context, property_name, processor_name_one, processor_name_two):
     uuid_str = str(uuid.uuid4())
-    context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name_one).add_property(property_name, uuid_str)
-    context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name_two).add_property(property_name, uuid_str)
+    context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name_one).add_property(
+        property_name, uuid_str
+    )
+    context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name_two).add_property(
+        property_name, uuid_str
+    )
 
 
 # TLS
 def add_ssl_context_service_for_minifi(context: MinifiTestContext, cert_name: str, use_system_cert_store: bool = False):
-    ssl_context_service = context.get_or_create_default_minifi_container().flow_definition.get_controller_service("SSLContextService")
+    ssl_context_service = context.get_or_create_default_minifi_container().flow_definition.get_controller_service(
+        "SSLContextService"
+    )
     if ssl_context_service is not None:
         return
     controller_service = ControllerService(class_name="SSLContextService", service_name="SSLContextService")
@@ -366,58 +545,82 @@ def setup_ssl_context_service(context: MinifiTestContext):
 def setup_ssl_context_service_for_processor(context, processor_name):
     add_ssl_context_service_for_minifi(context, "minifi_client")
     processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
-    processor.add_property('SSL Context Service', 'SSLContextService')
+    processor.add_property("SSL Context Service", "SSLContextService")
 
 
 @given("an ssl context service using the system CA cert store is set up for {processor_name}")
 def setup_ssl_context_service_system_ca_for_processor(context: MinifiTestContext, processor_name):
     add_ssl_context_service_for_minifi(context, "minifi_client", use_system_cert_store=True)
     processor = context.get_or_create_default_minifi_container().flow_definition.get_processor(processor_name)
-    processor.add_property('SSL Context Service', 'SSLContextService')
+    processor.add_property("SSL Context Service", "SSLContextService")
 
 
-@given("a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\" with transport protocol set to \"{transport_protocol}\"")
+@given(
+    'a RemoteProcessGroup node with name "{rpg_name}" is opened on "{address}" with transport protocol set to "{transport_protocol}"'
+)
 def open_rpg_with_transport_protocol(context: MinifiTestContext, rpg_name: str, address: str, transport_protocol: str):
-    context.get_or_create_default_minifi_container().flow_definition.add_remote_process_group(address, rpg_name, transport_protocol)
+    context.get_or_create_default_minifi_container().flow_definition.add_remote_process_group(
+        address, rpg_name, transport_protocol
+    )
 
 
-@given("a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\"")
+@given('a RemoteProcessGroup node with name "{rpg_name}" is opened on "{address}"')
 def open_rpg(context: MinifiTestContext, rpg_name: str, address: str):
-    context.execute_steps(f"given a RemoteProcessGroup node with name \"{rpg_name}\" is opened on \"{address}\" with transport protocol set to \"RAW\"")
+    context.execute_steps(
+        f'given a RemoteProcessGroup node with name "{rpg_name}" is opened on "{address}" with transport protocol set to "RAW"'
+    )
 
 
-@given("an input port with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+@given('an input port with name "{port_name}" is created on the RemoteProcessGroup named "{rpg_name}"')
 def create_input_port_on_rpg(context: MinifiTestContext, port_name: str, rpg_name: str):
     context.get_or_create_default_minifi_container().flow_definition.add_input_port_to_rpg(rpg_name, port_name)
 
 
-@given("an input port using compression with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+@given(
+    'an input port using compression with name "{port_name}" is created on the RemoteProcessGroup named "{rpg_name}"'
+)
 def create_input_port_with_compression_on_rpg(context: MinifiTestContext, port_name: str, rpg_name: str):
-    context.get_or_create_default_minifi_container().flow_definition.add_input_port_to_rpg(rpg_name, port_name, use_compression=True)
+    context.get_or_create_default_minifi_container().flow_definition.add_input_port_to_rpg(
+        rpg_name, port_name, use_compression=True
+    )
 
 
-@given("an output port with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+@given('an output port with name "{port_name}" is created on the RemoteProcessGroup named "{rpg_name}"')
 def create_output_port_on_rpg(context: MinifiTestContext, port_name: str, rpg_name: str):
     context.get_or_create_default_minifi_container().flow_definition.add_output_port_to_rpg(rpg_name, port_name)
 
 
-@given("an output port using compression with name \"{port_name}\" is created on the RemoteProcessGroup named \"{rpg_name}\"")
+@given(
+    'an output port using compression with name "{port_name}" is created on the RemoteProcessGroup named "{rpg_name}"'
+)
 def create_output_port_with_compression_on_rpg(context: MinifiTestContext, port_name: str, rpg_name: str):
-    context.get_or_create_default_minifi_container().flow_definition.add_output_port_to_rpg(rpg_name, port_name, use_compression=True)
+    context.get_or_create_default_minifi_container().flow_definition.add_output_port_to_rpg(
+        rpg_name, port_name, use_compression=True
+    )
 
 
-@given("a NiFi flow is receiving data from the RemoteProcessGroup named \"{rpg_name}\" in an input port named \"{input_port_name}\" which has the same id as the port named \"{rpg_port_name}\"")
-def nifi_receive_from_rpg_input_port(context: MinifiTestContext, input_port_name: str, rpg_port_name: str, rpg_name: str):
-    input_port_id = context.get_or_create_default_minifi_container().flow_definition.get_input_port_id_of_rpg(rpg_name, rpg_port_name)
+@given(
+    'a NiFi flow is receiving data from the RemoteProcessGroup named "{rpg_name}" in an input port named "{input_port_name}" which has the same id as the port named "{rpg_port_name}"'
+)
+def nifi_receive_from_rpg_input_port(
+    context: MinifiTestContext, input_port_name: str, rpg_port_name: str, rpg_name: str
+):
+    input_port_id = context.get_or_create_default_minifi_container().flow_definition.get_input_port_id_of_rpg(
+        rpg_name, rpg_port_name
+    )
     context.containers["nifi"].flow_definition.add_input_port(input_port_id, input_port_name)
 
 
-@given("a NiFi flow is sending data to an output port named \"{port_name}\" with the id of the port named \"{rpg_port_name}\" from the RemoteProcessGroup named \"{rpg_name}\"")
+@given(
+    'a NiFi flow is sending data to an output port named "{port_name}" with the id of the port named "{rpg_port_name}" from the RemoteProcessGroup named "{rpg_name}"'
+)
 def nifi_send_to_rpg_output_port(context: MinifiTestContext, port_name: str, rpg_port_name: str, rpg_name: str):
-    output_port_id = context.get_or_create_default_minifi_container().flow_definition.get_output_port_id_of_rpg(rpg_name, rpg_port_name)
+    output_port_id = context.get_or_create_default_minifi_container().flow_definition.get_output_port_id_of_rpg(
+        rpg_name, rpg_port_name
+    )
     context.containers["nifi"].flow_definition.add_output_port(output_port_id, port_name)
 
 
-@given("the connection going to {destination} has \"drop empty\" set")
+@given('the connection going to {destination} has "drop empty" set')
 def set_drop_empty_flag_for_connection(context: MinifiTestContext, destination: str):
     context.get_or_create_default_minifi_container().flow_definition.set_drop_empty_for_destination(destination)
