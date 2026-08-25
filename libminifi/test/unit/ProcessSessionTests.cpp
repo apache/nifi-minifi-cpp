@@ -26,6 +26,8 @@
 #include "core/Processor.h"
 #include "unit/TestUtils.h"
 #include "core/repository/FileSystemRepository.h"
+#include "minifi-api.h"
+#include "utils/minifi-api-utils.h"
 
 namespace {
 
@@ -135,4 +137,32 @@ TEST_CASE("Test ProcessSession::write's possible outcomes") {
   ContentRepositoryDependentTests::testOkWrite(std::make_shared<core::repository::FileSystemRepository>());
   ContentRepositoryDependentTests::testErrWrite(std::make_shared<core::repository::FileSystemRepository>());
   ContentRepositoryDependentTests::testCancelWrite(std::make_shared<core::repository::FileSystemRepository>());
+}
+
+TEST_CASE("Stable C API does not leak the flow file handle", "[minifi-api][flowfilehandle]") {
+  Fixture fixture;
+  auto& process_session = fixture.processSession();
+  auto* c_session = minifi::utils::toC(&process_session);
+
+  auto created = process_session.create();
+  process_session.transfer(created, Success);
+  process_session.commit();
+
+  // Track the underlying FlowFile object; drop every strong reference we hold locally.
+  std::weak_ptr<minifi::core::FlowFile> weak_flow_file = created;
+  created.reset();
+
+  // Pull the flow file out through the stable C API. This does `new std::shared_ptr<FlowFile>`
+  // behind the returned handle, so the handle owns one strong reference to the FlowFile.
+  auto* handle = minifi_process_session_get(c_session);
+  REQUIRE(handle != nullptr);
+
+  // Hand the (MINIFI_OWNED) handle back to minifi and drop the flow file for good.
+  REQUIRE(minifi_process_session_remove(c_session, handle) == MINIFI_STATUS_SUCCESS);
+  process_session.commit();
+
+  // After remove+commit no legitimate owner remains. If the C API failed to free the heap
+  // std::shared_ptr<FlowFile> behind the handle, that leaked strong reference keeps the
+  // FlowFile alive and this assertion fails.
+  REQUIRE(weak_flow_file.expired());
 }
