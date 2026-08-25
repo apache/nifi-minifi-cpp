@@ -50,7 +50,7 @@ bool LmdbWrapper::initialize(const std::string& directory, size_t max_db_size) {
     }
   }
 
-  if (const auto rc = mdb_env_open(lmdb_env_, directory.c_str(), MDB_NOTLS, 0664)) {
+  if (const auto rc = mdb_env_open(lmdb_env_, directory.c_str(), MDB_NOTLS, 0664); rc != MDB_SUCCESS) {
     logger_->log_error("Failed to open LMDB environment: {}", mdb_strerror(rc));
     mdb_env_close(lmdb_env_);
     lmdb_env_ = nullptr;
