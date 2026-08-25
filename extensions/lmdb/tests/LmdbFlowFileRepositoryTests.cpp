@@ -108,7 +108,7 @@ TEST_CASE("initialize throws on an invalid max db size", "[lmdb]") {
   configuration->set(minifi::Configure::nifi_flowfile_repository_lmdb_max_db_size, "not-a-size");
 
   auto flow_file_repo = std::make_shared<extensions::lmdb::LmdbFlowFileRepository>();
-  REQUIRE_THROWS(flow_file_repo->initialize(configuration));
+  REQUIRE_FALSE(flow_file_repo->initialize(configuration));
 }
 
 TEST_CASE_METHOD(LmdbFlowFileRepositoryTests, "Put on empty repository increases entry count", "[lmdb]") {
@@ -266,7 +266,7 @@ TEST_CASE_METHOD(LmdbFlowFileRepositoryTests, "Deleting keys is done in batches 
   REQUIRE(flow_file_repo_->getRepositoryEntryCount() == 1);
   std::string value;
   REQUIRE_FALSE(flow_file_repo_->Get("key1", value));
-  REQUIRE_FALSE(flow_file_repo_->Get("key1", value));
+  REQUIRE_FALSE(flow_file_repo_->Get("key2", value));
   REQUIRE(flow_file_repo_->Get("key3", value));
   REQUIRE(value == "value-three");
 }

@@ -36,23 +36,26 @@ bool LmdbFlowFileRepository::initialize(const std::shared_ptr<Configure> &config
   if (configure->get(Configure::nifi_flowfile_repository_directory_default, value) && !value.empty()) {
     directory_ = value;
   }
+  logger_->log_info("Using LMDB FlowFile Repository directory '{}'", directory_);
+
   check_flowfile_content_size_ = getRepositoryCheckHealth(*configure);
-  logger_->log_debug("NiFi LMDB FlowFile Repository Directory {}", directory_);
+  logger_->log_debug("LMDB FlowFile Repository Check Health: {}", check_flowfile_content_size_ ? "true" : "false");
 
   // Reserve virtual address space for the DB file (max size it can grow to)
-  const auto max_db_size = configure->get(Configure::nifi_flowfile_repository_lmdb_max_db_size) | utils::andThen([](auto max_db_size_str) -> std::optional<uint64_t> {
-    if (max_db_size_str.empty()) { return std::nullopt; }
-    return parsing::parseDataSize(max_db_size_str) | utils::orThrow(fmt::format("{} was set to invalid value: '{}'", Configure::nifi_flowfile_repository_lmdb_max_db_size, max_db_size_str));
-  }) | utils::orElse([] {
-    return std::make_optional<uint64_t>(MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE);
-  });
+  std::expected<uint64_t, std::error_code> max_db_size;
+  auto max_db_size_str_opt = configure->get(Configure::nifi_flowfile_repository_lmdb_max_db_size);
+  if (!max_db_size_str_opt || max_db_size_str_opt->empty()) {
+    max_db_size = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE;
+  } else {
+    max_db_size = parsing::parseDataSize(*max_db_size_str_opt);
+  }
 
   if (!max_db_size) {
     logger_->log_error("Invalid max DB size configuration for LMDB FlowFile Repository");
     return false;
   }
+  logger_->log_debug("LMDB FlowFile Repository max DB size: {} bytes", *max_db_size);
 
-  logger_->log_info("Using LMDB FlowFile Repository directory '{}'", directory_);
   return lmdb_wrapper_.initialize(directory_, *max_db_size);
 }
 
@@ -155,7 +158,7 @@ void LmdbFlowFileRepository::deserializeFlowFilesWithNoContentClaim(std::list<Ex
 
   for (size_t i = 0; i < keys.size(); ++i) {
     if (!values[i]) {
-      logger_->log_error("Failed to read key from LMDB: {}! DB is most probably in an inconsistent state!", keys[i].data());
+      logger_->log_error("Failed to read key from LMDB: {}! DB is most probably in an inconsistent state!", keys[i]);
       flow_files.erase(key_positions.at(i));
       continue;
     }
