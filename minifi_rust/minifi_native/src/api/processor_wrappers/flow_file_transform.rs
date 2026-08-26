@@ -245,7 +245,9 @@ macro_rules! unwrap_or_route {
             Err(e) => {
                 $crate::error!(
                     $custom_logger,
-                    "Failed to {} due to {}. Routing flow file.", $context, e
+                    "Failed to {} due to {}. Routing flow file.",
+                    $context,
+                    e
                 );
                 return Ok($crate::TransformedFlowFile::route_without_changes($route));
             }
