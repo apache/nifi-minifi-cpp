@@ -152,10 +152,9 @@ impl Trigger for GenerateFlowFileRs {
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
-        let non_unique_data_buffer: &[u8];
         let custom_text_for_batch: Option<String>;
 
-        if self.mode == Mode::CustomText {
+        let non_unique_data_buffer: &[u8] = if self.mode == Mode::CustomText {
             // CustomText mode must have the Custom Text property set at
             // trigger time — falling back to `data_generated_during_on_schedule`
             // (which is empty for this mode) would silently produce empty
@@ -170,10 +169,10 @@ impl Trigger for GenerateFlowFileRs {
                         )
                     })?,
             );
-            non_unique_data_buffer = custom_text_for_batch.as_ref().unwrap().as_bytes();
+            custom_text_for_batch.as_ref().unwrap().as_bytes()
         } else {
-            non_unique_data_buffer = self.data_generated_during_on_schedule.as_slice();
-        }
+            self.data_generated_during_on_schedule.as_slice()
+        };
 
         for _ in 0..self.batch_size {
             let ff = session.create()?;

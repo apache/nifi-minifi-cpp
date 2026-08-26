@@ -220,7 +220,7 @@ macro_rules! unwrap_or_route {
         match $result {
             Ok(v) => v,
             Err(_e) => {
-                return Ok(TransformedFlowFile::route_without_changes($route));
+                return Ok($crate::TransformedFlowFile::route_without_changes($route));
             }
         }
     };
@@ -229,12 +229,12 @@ macro_rules! unwrap_or_route {
         match $result {
             Ok(v) => v,
             Err(e) => {
-                minifi_native::error!(
+                $crate::error!(
                     $custom_logger,
                     "Failed to unwrap due to {}. Routing flow file.",
                     e
                 );
-                return Ok(TransformedFlowFile::route_without_changes($route));
+                return Ok($crate::TransformedFlowFile::route_without_changes($route));
             }
         }
     };
@@ -243,11 +243,11 @@ macro_rules! unwrap_or_route {
         match $result {
             Ok(v) => v,
             Err(e) => {
-                error!(
+                $crate::error!(
                     $custom_logger,
                     "Failed to {} due to {}. Routing flow file.", $context, e
                 );
-                return Ok(TransformedFlowFile::route_without_changes($route));
+                return Ok($crate::TransformedFlowFile::route_without_changes($route));
             }
         }
     };
