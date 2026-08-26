@@ -136,13 +136,13 @@ pub trait PropertySchema {
 
 /// The requiredness of the property is enforced via this Option impl
 /// If the property is required it should be registered as Property<T>
-/// If the property is not required it should be registered as Property<Option<T>
+/// If the property is not required it should be registered as Property<Option<T>>
 impl<T: PropertySchema> PropertySchema for Option<T> {
     const CONSTRAINT: Option<PropertyConstraints> = T::CONSTRAINT;
     const IS_REQUIRED: bool = false;
 }
 
-/// Trait required to register property as Property<T> or Property<Option<T>
+/// Trait required to register property as Property<T> or Property<Option<T>>
 /// Output type will be the resulting type of context.get_property call
 /// fn parse(s: &str) will be used to create T from the Property
 /// (as all properties are just Strings from the agent's point of view)
