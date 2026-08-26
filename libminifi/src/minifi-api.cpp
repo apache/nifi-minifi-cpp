@@ -456,8 +456,10 @@ minifi_status minifi_process_session_penalize(minifi_process_session* session, m
 minifi_status minifi_process_session_transfer(minifi_process_session* session, MINIFI_OWNED minifi_flow_file* flowfile, minifi_string_view relationship_name) {
   gsl_Assert(session);
   gsl_Assert(flowfile);
+  // Adopt the MINIFI_OWNED handle: minifi takes ownership, so free the heap std::shared_ptr<FlowFile> when this call returns.
+  const std::unique_ptr<std::shared_ptr<minifi::core::FlowFile>> owned{toCpp(flowfile)};
   try {
-    toCpp(session)->transfer(*toCpp(flowfile), minifi::core::Relationship{toString(relationship_name), ""});
+    toCpp(session)->transfer(*owned, minifi::core::Relationship{toString(relationship_name), ""});
     return MINIFI_STATUS_SUCCESS;
   } catch (...) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
@@ -467,8 +469,10 @@ minifi_status minifi_process_session_transfer(minifi_process_session* session, M
 minifi_status minifi_process_session_remove(minifi_process_session* session, MINIFI_OWNED minifi_flow_file* flowfile) {
   gsl_Assert(session);
   gsl_Assert(flowfile);
+  // Adopt the MINIFI_OWNED handle: minifi takes ownership, so free the heap std::shared_ptr<FlowFile> when this call returns.
+  const std::unique_ptr<std::shared_ptr<minifi::core::FlowFile>> owned{toCpp(flowfile)};
   try {
-    toCpp(session)->remove(*toCpp(flowfile));
+    toCpp(session)->remove(*owned);
     return MINIFI_STATUS_SUCCESS;
   } catch (...) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
