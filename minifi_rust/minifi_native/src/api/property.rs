@@ -126,21 +126,32 @@ impl<P: ?Sized + PropertySchema> Property<P> {
     }
 }
 
+/// Trait required to register Property with the agent
+/// These values will be translated to fill out the
+/// validator, allowed_value, allowed_types, is_required on the agent side
 pub trait PropertySchema {
     const CONSTRAINT: Option<PropertyConstraints>;
     const IS_REQUIRED: bool;
 }
 
+/// The requiredness of the property is enforced via this Option impl
+/// If the property is required it should be registered as Property<T>
+/// If the property is not required it should be registered as Property<Option<T>
 impl<T: PropertySchema> PropertySchema for Option<T> {
     const CONSTRAINT: Option<PropertyConstraints> = T::CONSTRAINT;
     const IS_REQUIRED: bool = false;
 }
 
+/// Trait required to register property as Property<T> or Property<Option<T>
+/// Output type will be the resulting type of context.get_property call
+/// fn parse(s: &str) will be used to create T from the Property
+/// (as all properties are just Strings from the agent's point of view)
 pub trait PropertyType: PropertySchema {
     type Output;
     fn parse(s: &str) -> Result<Self::Output, MinifiError>;
 }
 
+/// Helper trait that handles the parsing and proper error management
 pub trait PropertyValue: PropertySchema {
     type Output;
     fn from_raw(raw: Option<String>, name: &str) -> Result<Self::Output, MinifiError>;
@@ -242,6 +253,7 @@ pub trait GetProperty {
         property: &Property<P>,
     ) -> Result<Option<String>, MinifiError>;
 
+    /// P: PropertyValue which is implemented for T, and Option<T> where T: PropertyType
     fn get_property<P: PropertyValue + ?Sized>(
         &self,
         property: &Property<P>,

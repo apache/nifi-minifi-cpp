@@ -30,14 +30,16 @@ pub trait ProcessContext {
         flow_file: Option<&Self::FlowFile>,
     ) -> Result<Option<String>, MinifiError>;
 
-    fn get_raw_controller_service<Cs, P>(
+    /// Returns the RawControllerService (ControllerService wrapper whose lifetime is managed by the agent)
+    fn get_raw_controller_service<RawCs, P>(
         &self,
         property: &Property<P>,
-    ) -> Result<Option<&Cs>, MinifiError>
+    ) -> Result<Option<&RawCs>, MinifiError>
     where
-        Cs: RawControllerService + ComponentIdentifier + 'static,
+        RawCs: RawControllerService + ComponentIdentifier + 'static,
         P: PropertySchema + ?Sized;
 
+    /// Returns the enabled ControllerService (managed by RawControllerService)
     fn get_controller_service<Cs>(
         &self,
         property: &Property<Cs>,
@@ -45,6 +47,7 @@ pub trait ProcessContext {
     where
         Cs: EnableControllerService + ComponentIdentifier + PropertySchema + 'static;
 
+    /// Returns the enabled type erased ControllerService via the registered ControllerServiceApi
     fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi + PropertySchema>(
         &self,
         property: &Property<Trait>,
