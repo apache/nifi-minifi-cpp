@@ -106,7 +106,7 @@ std::shared_ptr<core::ContentSession> LmdbContentRepository::createSession() {
 }
 
 std::shared_ptr<io::BaseStream> LmdbContentRepository::write(const minifi::ResourceClaim& claim, bool append) {
-  return std::make_shared<LmdbStream>(claim.getContentFullPath(), lmdb_env_, &lmdb_handle_, true, append);
+  return std::make_shared<LmdbStream>(claim.getContentFullPath(), lmdb_wrapper_, true, append);
 }
 
 std::shared_ptr<io::BaseStream> LmdbContentRepository::read(const minifi::ResourceClaim& claim) {
