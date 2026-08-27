@@ -31,6 +31,7 @@
 #include "core/ConfigurableComponentImpl.h"
 #include "minifi-cpp/core/ContentRepository.h"
 #include "core/Core.h"
+#include "core/FlowTopologyProvider.h"
 #include "core/VariableRegistry.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/controllers/keyvalue/KeyValueStateStorage.h"
@@ -56,6 +57,11 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   ProcessContextImpl(Processor& processor, controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<core::StateStorage>& state_storage,
       const std::shared_ptr<provenance::ProvenanceRepository>& repo, const std::shared_ptr<core::Repository>& flow_repo, const std::shared_ptr<minifi::Configure>& configuration,
       const std::shared_ptr<core::ContentRepository>& content_repo = repository::createFileSystemRepository());
+
+  // Optional injection point: the FlowController wires itself in as the FlowTopologyProvider so
+  // reporting tasks can call context.getFlowTopology(). Tests and unit-test contexts leave this
+  // null; getFlowTopology() then returns an empty snapshot.
+  void setFlowTopologyProvider(FlowTopologyProvider* provider) { flow_topology_provider_ = provider; }
 
   // Get Processor associated with the Process Context
   Processor& getProcessor() const override { return processor_; }
@@ -115,6 +121,13 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   std::unique_ptr<StateManager> createStateManager() override;
   StateManager* getStateManager() override;
   void setSessionStateManager(std::unique_ptr<StateManager> state_manager) override;
+
+  reporting::FlowTopology getFlowTopology() const override {
+    if (flow_topology_provider_) {
+      return flow_topology_provider_->getFlowTopology();
+    }
+    return {};
+  }
 
   static std::shared_ptr<core::StateStorage> getOrCreateDefaultStateStorage(
       controller::ControllerServiceProvider* controller_service_provider, const std::shared_ptr<minifi::Configure>& configuration) {
@@ -207,6 +220,7 @@ class ProcessContextImpl : public core::VariableRegistryImpl, public virtual Pro
   std::unique_ptr<ProcessorInfo> info_;
 
   std::unique_ptr<StateManager> session_state_manager_;
+  FlowTopologyProvider* flow_topology_provider_{nullptr};
 
   // each ProcessContextImpl instance is only accessed from one thread at a time, so no synchronization is needed on these caches
   mutable std::unordered_map<std::string, expression::Expression, utils::string::transparent_string_hash, std::equal_to<>> cached_expressions_;

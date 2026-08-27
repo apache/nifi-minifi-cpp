@@ -29,6 +29,8 @@
 #include "FlowController.h"
 #include "core/state/ProcessorController.h"
 #include "core/ProcessGroup.h"
+#include "Connection.h"
+#include "Port.h"
 #include "core/Core.h"
 #include "SchedulingAgent.h"
 #include "core/controller/ForwardingControllerServiceProvider.h"
@@ -291,6 +293,11 @@ void FlowController::load(bool reload) {
   conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
   conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
 
+  // Make the current flow topology available to reporting tasks via their ProcessContext.
+  timer_scheduler_->setFlowTopologyProvider(this);
+  event_scheduler_->setFlowTopologyProvider(this);
+  cron_scheduler_->setFlowTopologyProvider(this);
+
   logger_->log_info("Loaded controller service provider");
 
   /*
@@ -455,6 +462,59 @@ gsl::not_null<std::unique_ptr<state::ProcessorController>> FlowController::creat
     gsl_Assert(false);
   };
   return gsl::make_not_null(std::make_unique<state::ProcessorController>(processor, scheduler()));
+}
+
+core::reporting::FlowTopology FlowController::getFlowTopology() const {
+  core::reporting::FlowTopology topology;
+  const core::ProcessGroup* root = root_wrapper_.getRoot();
+  if (!root) {
+    return topology;
+  }
+  topology.root_group_uuid = root->getUUID();
+  topology.root_group_name = root->getName();
+
+  // Flatten processors from every nested process group into one list. Ports live
+  // inside processors_ too (Port inherits Processor) — split them into
+  // input_ports / output_ports based on PortType, keep the rest as processors.
+  std::vector<core::Processor*> processors;
+  root->getAllProcessors(processors);
+  for (auto* proc : processors) {
+    if (!proc) {
+      continue;
+    }
+    if (auto* port = dynamic_cast<Port*>(proc)) {
+      core::reporting::FlowTopology::Port entry{.uuid = port->getUUID(), .name = port->getName(), .is_input = port->getPortType() == PortType::INPUT};
+      if (entry.is_input) {
+        topology.input_ports.push_back(std::move(entry));
+      } else {
+        topology.output_ports.push_back(std::move(entry));
+      }
+    } else {
+      topology.processors.push_back({.uuid = proc->getUUID(), .name = proc->getName(), .type = proc->getProcessorType()});
+    }
+  }
+
+  // ProcessGroup::getConnections registers every Connection twice (by UUID and by name);
+  // key the intermediate map by UUID string, iterate values, and skip duplicate pointers.
+  std::map<std::string, Connection*> connections;
+  const_cast<core::ProcessGroup*>(root)->getConnections(connections);
+  std::set<Connection*> seen;
+  for (const auto& [_, conn] : connections) {
+    if (!conn || !seen.insert(conn).second) {
+      continue;
+    }
+    core::reporting::FlowTopology::Connection entry{
+        .uuid = conn->getUUID(),
+        .name = conn->getName(),
+        .source_uuid = conn->getSourceUUID(),
+        .destination_uuid = conn->getDestinationUUID(),
+        .relationships = {}};
+    for (const auto& rel : conn->getRelationships()) {
+      entry.relationships.push_back(rel.getName());
+    }
+    topology.connections.push_back(std::move(entry));
+  }
+  return topology;
 }
 
 uint64_t FlowController::getUptime() {

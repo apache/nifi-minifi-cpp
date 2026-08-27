@@ -35,6 +35,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ForwardingControllerServiceProvider.h"
 #include "core/FlowConfiguration.h"
+#include "core/FlowTopologyProvider.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessGroup.h"
@@ -64,7 +65,7 @@ namespace state {
 class ProcessorController;
 }  // namespace state
 
-class FlowController : public core::controller::ForwardingControllerServiceProvider,  public state::StateMonitor {
+class FlowController : public core::controller::ForwardingControllerServiceProvider,  public state::StateMonitor, public core::FlowTopologyProvider {
  public:
   FlowController(std::shared_ptr<provenance::ProvenanceRepository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
@@ -137,6 +138,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   virtual std::string getVersion() {
     return root_wrapper_.getVersion();
   }
+
+  core::reporting::FlowTopology getFlowTopology() const override;
 
   uint64_t getUptime() override;
 

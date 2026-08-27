@@ -46,6 +46,8 @@ class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
 
   static const char *ProvenanceAppStr;
 
+  static constexpr const char* Description = "Publishes Provenance events using the Site To Site protocol.";
+
   MINIFIAPI static constexpr auto DestinationUrl =
       core::PropertyDefinitionBuilder<>::createProperty("Destination URL")
           .withDescription("The URL of the destination NiFi instance in the format of http(s)://host:port/nifi. "
@@ -58,6 +60,8 @@ class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
       RemoteProcessGroupPort::SSLContext,
       RemoteProcessGroupPort::portUUID,
       RemoteProcessGroupPort::idleTimeout});
+
+  static constexpr bool SupportsDynamicProperties = false;
 
   static std::string getJsonReport(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records);
 

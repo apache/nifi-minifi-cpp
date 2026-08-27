@@ -1138,6 +1138,12 @@ void StructuredConfiguration::parseReportingTasks(const Node& reporting_tasks_no
       }
     }
 
+    if (auto max_concurrent_node = reporting_task_node[schema_.max_concurrent_tasks]) {
+      if (auto max_concurrent_tasks = parsing::parseIntegral<uint8_t>(max_concurrent_node.getIntegerAsString().value())) {
+        reporting_task->setMaxConcurrentTasks(*max_concurrent_tasks);
+      }
+    }
+
     if (Node properties_node = reporting_task_node[schema_.processor_properties]) {
       parsePropertiesNode(properties_node, *reporting_task, name, nullptr);
     }

@@ -40,6 +40,7 @@
 #include "properties/Configure.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/Processor.h"
+#include "core/FlowTopologyProvider.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/controller/ControllerServiceProvider.h"
 
@@ -114,6 +115,11 @@ class SchedulingAgent {
 
   std::chrono::milliseconds getAdminYieldDuration() const { return admin_yield_duration_; }
 
+  // Optional: the FlowController sets itself here so that ProcessContexts handed to
+  // reporting tasks can answer getFlowTopology(). Left null in test harnesses that
+  // build a scheduler without a FlowController.
+  void setFlowTopologyProvider(core::FlowTopologyProvider* provider) { flow_topology_provider_ = provider; }
+
  protected:
   std::mutex mutex_;
   std::atomic<bool> running_;
@@ -129,6 +135,7 @@ class SchedulingAgent {
   std::shared_ptr<core::ContentRepository> content_repo_;
   utils::ThreadPool& thread_pool_;
   gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider_;
+  core::FlowTopologyProvider* flow_topology_provider_{nullptr};
 
  private:
   struct SchedulingInfo {

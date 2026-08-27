@@ -273,6 +273,7 @@ class ModularDocumentation {
     os << "\n\n## Table of Contents\n\n";
     writeComponentParts(os, components.getProcessors(), "Processors");
     writeComponentParts(os, components.getControllerServices(), "Controller Services");
+    writeComponentParts(os, components.getReportingTasks(), "Reporting Tasks");
     writeComponentParts(os, components.getParameterProviders(), "Parameter Providers");
   }
 

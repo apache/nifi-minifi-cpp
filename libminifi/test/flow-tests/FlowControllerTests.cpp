@@ -262,6 +262,32 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   REQUIRE(sinkProc.get().trigger_count.load() >= 3);
 }
 
+TEST_CASE("FlowController::getFlowTopology exposes processors and connections", "[FlowTopology]") {
+  TestControllerWithFlow testController(yamlConfig);
+  auto topology = testController.controller_->getFlowTopology();
+
+  REQUIRE(topology.root_group_name == "MiNiFi Flow");
+  REQUIRE(topology.root_group_uuid.to_string().view() == std::string_view{"2438e3c8-015a-1000-79ca-83af40ec1990"});
+  REQUIRE(topology.input_ports.empty());
+  REQUIRE(topology.output_ports.empty());
+
+  REQUIRE(topology.processors.size() == 2);
+  const auto gen = std::ranges::find_if(topology.processors, [](const auto& p) { return p.name == "Generator"; });
+  const auto tst = std::ranges::find_if(topology.processors, [](const auto& p) { return p.name == "TestProcessor"; });
+  REQUIRE(gen != topology.processors.end());
+  REQUIRE(tst != topology.processors.end());
+  REQUIRE(gen->uuid.to_string().view() == std::string_view{"2438e3c8-015a-1000-79ca-83af40ec1991"});
+  REQUIRE(gen->type == "TestFlowFileGenerator");
+
+  REQUIRE(topology.connections.size() == 1);
+  const auto& conn = topology.connections.front();
+  REQUIRE(conn.name == "Gen");
+  REQUIRE(conn.source_uuid == gen->uuid);
+  REQUIRE(conn.destination_uuid == tst->uuid);
+  REQUIRE(conn.relationships.size() == 1);
+  REQUIRE(conn.relationships.front() == "success");
+}
+
 TEST_CASE("FlowController destructor releases resources", "[TestFlow5]") {
   TestControllerWithFlow controller(R"(
 Flow Controller:
