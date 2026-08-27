@@ -6516,6 +6516,185 @@
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
                         },
+                        "Batch Size": {
+                            "name": "Batch Size",
+                            "description": "Maximum number entries to read and return in a single batch. If set to zero or empty all available entries are returned.",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Certificate path": {
+                            "name": "Certificate path",
+                            "description": "Path to the DER-encoded cert file",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "End timestamp": {
+                            "name": "End timestamp",
+                            "description": "Timestamp before which the events should be returned. If not specified entries are returned until the current time.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "History Read Type": {
+                            "name": "History Read Type",
+                            "description": "Whether to fetch raw historical values or the audit trail of modifications to historical values",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "Raw",
+                            "allowableValues": [
+                                {
+                                    "value": "Raw",
+                                    "displayName": "Raw"
+                                },
+                                {
+                                    "value": "Audit",
+                                    "displayName": "Audit"
+                                }
+                            ]
+                        },
+                        "Key path": {
+                            "name": "Key path",
+                            "description": "Path to the DER-encoded key file",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Namespace index": {
+                            "name": "Namespace index",
+                            "description": "The index of the namespace.",
+                            "validator": "INTEGER_VALIDATOR",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "0"
+                        },
+                        "Node ID": {
+                            "name": "Node ID",
+                            "description": "Specifies the ID of the root node to fetch history for. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Node ID type": {
+                            "name": "Node ID type",
+                            "description": "Specifies the type of the provided node ID",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "allowableValues": [
+                                {
+                                    "value": "Path",
+                                    "displayName": "Path"
+                                },
+                                {
+                                    "value": "Int",
+                                    "displayName": "Int"
+                                },
+                                {
+                                    "value": "String",
+                                    "displayName": "String"
+                                },
+                                {
+                                    "value": "Guid",
+                                    "displayName": "Guid"
+                                }
+                            ]
+                        },
+                        "OPC server endpoint": {
+                            "name": "OPC server endpoint",
+                            "description": "Specifies the address, port and relative path of an OPC endpoint",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Password": {
+                            "name": "Password",
+                            "description": "Password to log in with.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Path reference types": {
+                            "name": "Path reference types",
+                            "description": "Specify the reference types between nodes in the path if Path Node ID type is used. If not provided, all reference types are assumed to be Organizes. The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Record Set Writer": {
+                            "typeProvidedByValue": {
+                                "type": "org.apache.nifi.minifi.core.RecordSetWriter",
+                                "group": "org.apache.nifi.minifi",
+                                "artifact": "minifi-system"
+                            },
+                            "name": "Record Set Writer",
+                            "description": "Specifies the Controller Service to use for writing results to a FlowFile instead of using the default output format.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Start timestamp": {
+                            "name": "Start timestamp",
+                            "description": "Timestamp after which the events should be returned. If not specified entries are returned from the beginning of the history.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Trusted server certificate path": {
+                            "name": "Trusted server certificate path",
+                            "description": "Comma separated list of paths to the DER-encoded trusted server certificates",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Username": {
+                            "name": "Username",
+                            "description": "Username to log in with.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "inputRequirement": "INPUT_FORBIDDEN",
+                    "isSingleThreaded": "true",
+                    "supportedRelationships": [
+                        {
+                            "name": "success",
+                            "description": "Successfully retrieved OPC-UA node history entries"
+                        }
+                    ],
+                    "typeDescription": "Fetches OPC-UA node history between the start and end timestamps. A history entry is only fetched once, on every trigger only the not yet fetched entries are returned.",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "org.apache.nifi.minifi.processors.FetchOPCHistory"
+                },
+                {
+                    "propertyDescriptors": {
+                        "Application URI": {
+                            "name": "Application URI",
+                            "description": "Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
                         "Certificate path": {
                             "name": "Certificate path",
                             "description": "Path to the DER-encoded cert file",

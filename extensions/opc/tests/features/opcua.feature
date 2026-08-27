@@ -244,3 +244,97 @@ Feature: Putting and fetching data to OPC UA server
     Then in the "fetch-opc-ua-node" container at least one file with the content "Test" is placed in the "/tmp/output" directory in less than 60 seconds
     And the logs of the "fetch-opc-ua-node" container do not contain the following message: "Username/password authentication is used without encryption, which is not secure. Please consider configuring encryption for better security." after 0 seconds
     And the logs of the "create-opc-ua-node" container do not contain the following message: "Username/password authentication is used without encryption, which is not secure. Please consider configuring encryption for better security." after 0 seconds
+
+  Scenario: Update and fetch historical data from an OPC UA node
+    Given a GenerateFlowFile processor with the "Unique FlowFiles" property set to "false" in the "update-opc-ua-node" flow
+    And the "Custom Text" property of the GenerateFlowFile processor is set to "${nextInt()}" in the "update-opc-ua-node" flow
+    And the "Data Format" property of the GenerateFlowFile processor is set to "Text" in the "update-opc-ua-node" flow
+    And the scheduling period of the GenerateFlowFile processor is set to "1 sec" in the "update-opc-ua-node" flow
+    And a PutOPCProcessor processor in the "update-opc-ua-node" flow
+    And PutOPCProcessor is EVENT_DRIVEN in the "update-opc-ua-node" flow
+    And PutOPCProcessor's success relationship is auto-terminated in the "update-opc-ua-node" flow
+    And a FetchOPCHistory processor in the "fetch-opc-ua-node-history" flow
+    And the scheduling period of the FetchOPCHistory processor is set to "10 sec" in the "fetch-opc-ua-node-history" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node-history" flow
+    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node-history" flow
+    And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node-history" flow
+    And a LogAttribute processor in the "fetch-opc-ua-node-history" flow
+    And LogAttribute is EVENT_DRIVEN in the "fetch-opc-ua-node-history" flow
+    And the "Log Payload" property of the LogAttribute processor is set to "true" in the "fetch-opc-ua-node-history" flow
+    And LogAttribute's success relationship is auto-terminated in the "fetch-opc-ua-node-history" flow
+    And these processor properties are set in the "update-opc-ua-node" flow
+      | processor name    | property name               | property value                                    |
+      | PutOPCProcessor   | Parent node ID              | 85                                                |
+      | PutOPCProcessor   | Parent node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node ID              | myUintValue                                       |
+      | PutOPCProcessor   | Target node ID type         | String                                            |
+      | PutOPCProcessor   | Target node namespace index | 1                                                 |
+      | PutOPCProcessor   | Value type                  | UInt32                                            |
+      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server-${scenario_id}:4840/       |
+      | PutOPCProcessor   | Target node browse name     | testnodename                                      |
+    And these processor properties are set in the "fetch-opc-ua-node-history" flow
+      | processor name    | property name               | property value                                    |
+      | FetchOPCHistory   | Node ID                     | myUintValue                                       |
+      | FetchOPCHistory   | Node ID type                | String                                            |
+      | FetchOPCHistory   | Namespace index             | 1                                                 |
+      | FetchOPCHistory   | OPC server endpoint         | opc.tcp://opcua-server-${scenario_id}:4840/       |
+      | FetchOPCHistory   | Batch Size                  | 3                                                 |
+      | FetchOPCHistory   | History Read Type           | Raw                                               |
+
+    And in the "update-opc-ua-node" flow the "success" relationship of the GenerateFlowFile processor is connected to the PutOPCProcessor
+    And in the "fetch-opc-ua-node-history" flow the "success" relationship of the FetchOPCHistory processor is connected to the PutFile
+    And in the "fetch-opc-ua-node-history" flow the "success" relationship of the PutFile processor is connected to the LogAttribute
+
+    And an OPC UA server is set up with historical data support
+
+    When all instances start up
+    Then in the "fetch-opc-ua-node-history" container files with at least these contents "0,1,2,3,4" are placed in the "/tmp/output" directory in less than 30 seconds
+    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:Namespace index value:1" in less than 10 seconds
+    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:NodeID value:myUintValue" in less than 10 seconds
+    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:Sourcetimestamp value:" in less than 10 seconds
+
+  Scenario: Update and fetch historical data from an OPC UA node in JSON format
+    Given a JsonRecordSetWriter controller service is set up in the "fetch-opc-ua-node-history" flow
+    And a GenerateFlowFile processor with the "Unique FlowFiles" property set to "false" in the "update-opc-ua-node" flow
+    And the "Custom Text" property of the GenerateFlowFile processor is set to "${nextInt()}" in the "update-opc-ua-node" flow
+    And the "Data Format" property of the GenerateFlowFile processor is set to "Text" in the "update-opc-ua-node" flow
+    And the scheduling period of the GenerateFlowFile processor is set to "1 sec" in the "update-opc-ua-node" flow
+    And a PutOPCProcessor processor in the "update-opc-ua-node" flow
+    And PutOPCProcessor is EVENT_DRIVEN in the "update-opc-ua-node" flow
+    And PutOPCProcessor's success relationship is auto-terminated in the "update-opc-ua-node" flow
+    And a FetchOPCHistory processor in the "fetch-opc-ua-node-history" flow
+    And the scheduling period of the FetchOPCHistory processor is set to "10 sec" in the "fetch-opc-ua-node-history" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node-history" flow
+    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node-history" flow
+    And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node-history" flow
+    And a LogAttribute processor in the "fetch-opc-ua-node-history" flow
+    And LogAttribute is EVENT_DRIVEN in the "fetch-opc-ua-node-history" flow
+    And the "Log Payload" property of the LogAttribute processor is set to "true" in the "fetch-opc-ua-node-history" flow
+    And LogAttribute's success relationship is auto-terminated in the "fetch-opc-ua-node-history" flow
+    And these processor properties are set in the "update-opc-ua-node" flow
+      | processor name    | property name               | property value                                    |
+      | PutOPCProcessor   | Parent node ID              | 85                                                |
+      | PutOPCProcessor   | Parent node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node ID              | myUintValue                                       |
+      | PutOPCProcessor   | Target node ID type         | String                                            |
+      | PutOPCProcessor   | Target node namespace index | 1                                                 |
+      | PutOPCProcessor   | Value type                  | UInt32                                            |
+      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server-${scenario_id}:4840/       |
+      | PutOPCProcessor   | Target node browse name     | testnodename                                      |
+    And these processor properties are set in the "fetch-opc-ua-node-history" flow
+      | processor name    | property name               | property value                                    |
+      | FetchOPCHistory   | Node ID                     | myUintValue                                       |
+      | FetchOPCHistory   | Node ID type                | String                                            |
+      | FetchOPCHistory   | Namespace index             | 1                                                 |
+      | FetchOPCHistory   | OPC server endpoint         | opc.tcp://opcua-server-${scenario_id}:4840/       |
+      | FetchOPCHistory   | Batch Size                  | 3                                                 |
+      | FetchOPCHistory   | Record Set Writer           | JsonRecordSetWriter                               |
+
+    And in the "update-opc-ua-node" flow the "success" relationship of the GenerateFlowFile processor is connected to the PutOPCProcessor
+    And in the "fetch-opc-ua-node-history" flow the "success" relationship of the FetchOPCHistory processor is connected to the PutFile
+    And in the "fetch-opc-ua-node-history" flow the "success" relationship of the PutFile processor is connected to the LogAttribute
+
+    And an OPC UA server is set up with historical data support
+
+    When all instances start up
+    Then in the 'fetch-opc-ua-node-history' container at least one file in '/tmp/output' content match the following regex: '\[\{"Sourcetimestamp":".+","NodeID":"myUintValue","Namespace index":"1","Value":"0"\},\{"Sourcetimestamp":".+","NodeID":"myUintValue","Namespace index":"1","Value":"1"\},\{"Sourcetimestamp":".+","NodeID":"myUintValue","Namespace index":"1","Value":"2"\}\]' in less than 30 seconds
