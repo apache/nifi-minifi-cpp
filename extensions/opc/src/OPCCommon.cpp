@@ -493,107 +493,64 @@ template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parent_nod
 template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
   std::string value, UA_NodeId *received_node_id);
 
-std::string nodeValue2String(const NodeData& nd) {
-  std::string ret_val;
-  switch (nd.data_type_id) {
+std::string variantToString(const UA_Variant& variant) {
+  if (variant.type == nullptr || variant.data == nullptr) {
+    throw OPCException(GENERAL_EXCEPTION, "Cannot convert an empty variant to string");
+  }
+  switch (variant.type->typeKind) {
     case UA_DATATYPEKIND_STRING:
     case UA_DATATYPEKIND_LOCALIZEDTEXT:
     case UA_DATATYPEKIND_BYTESTRING: {
-      UA_String value = *reinterpret_cast<UA_String *>(nd.var_->data);
-      ret_val = std::string(reinterpret_cast<const char *>(value.data), value.length);
-      break;
+      const auto *value = static_cast<const UA_String *>(variant.data);
+      return {reinterpret_cast<const char *>(value->data), value->length};
     }
-    case UA_DATATYPEKIND_BOOLEAN: {
-      bool b = false;
-      memcpy(&b, nd.data.data(), sizeof(bool));
-      ret_val = b ? "True" : "False";
-      break;
-    }
-    case UA_DATATYPEKIND_SBYTE: {
-      int8_t i8t = 0;
-      memcpy(&i8t, nd.data.data(), sizeof(i8t));
-      ret_val = std::to_string(i8t);
-      break;
-    }
-    case UA_DATATYPEKIND_BYTE: {
-      uint8_t ui8t = 0;
-      memcpy(&ui8t, nd.data.data(), sizeof(ui8t));
-      ret_val = std::to_string(ui8t);
-      break;
-    }
-    case UA_DATATYPEKIND_INT16: {
-      int16_t i16t = 0;
-      memcpy(&i16t, nd.data.data(), sizeof(i16t));
-      ret_val = std::to_string(i16t);
-      break;
-    }
-    case UA_DATATYPEKIND_UINT16: {
-      uint16_t ui16t = 0;
-      memcpy(&ui16t, nd.data.data(), sizeof(ui16t));
-      ret_val = std::to_string(ui16t);
-      break;
-    }
-    case UA_DATATYPEKIND_INT32: {
-      int32_t i32t = 0;
-      memcpy(&i32t, nd.data.data(), sizeof(i32t));
-      ret_val = std::to_string(i32t);
-      break;
-    }
-    case UA_DATATYPEKIND_UINT32: {
-      uint32_t ui32t = 0;
-      memcpy(&ui32t, nd.data.data(), sizeof(ui32t));
-      ret_val = std::to_string(ui32t);
-      break;
-    }
-    case UA_DATATYPEKIND_INT64: {
-      int64_t i64t = 0;
-      memcpy(&i64t, nd.data.data(), sizeof(i64t));
-      ret_val = std::to_string(i64t);
-      break;
-    }
-    case UA_DATATYPEKIND_UINT64: {
-      uint64_t ui64t = 0;
-      memcpy(&ui64t, nd.data.data(), sizeof(ui64t));
-      ret_val = std::to_string(ui64t);
-      break;
-    }
-    case UA_DATATYPEKIND_FLOAT: {
+    case UA_DATATYPEKIND_BOOLEAN:
+      return *static_cast<const UA_Boolean *>(variant.data) ? "True" : "False";
+    case UA_DATATYPEKIND_SBYTE:
+      return std::to_string(*static_cast<const UA_SByte *>(variant.data));
+    case UA_DATATYPEKIND_BYTE:
+      return std::to_string(*static_cast<const UA_Byte *>(variant.data));
+    case UA_DATATYPEKIND_INT16:
+      return std::to_string(*static_cast<const UA_Int16 *>(variant.data));
+    case UA_DATATYPEKIND_UINT16:
+      return std::to_string(*static_cast<const UA_UInt16 *>(variant.data));
+    case UA_DATATYPEKIND_INT32:
+      return std::to_string(*static_cast<const UA_Int32 *>(variant.data));
+    case UA_DATATYPEKIND_UINT32:
+      return std::to_string(*static_cast<const UA_UInt32 *>(variant.data));
+    case UA_DATATYPEKIND_INT64:
+      return std::to_string(*static_cast<const UA_Int64 *>(variant.data));
+    case UA_DATATYPEKIND_UINT64:
+      return std::to_string(*static_cast<const UA_UInt64 *>(variant.data));
+    case UA_DATATYPEKIND_FLOAT:
       if (sizeof(float) == 4 && std::numeric_limits<float>::is_iec559) {
-        float f = 0;
-        memcpy(&f, nd.data.data(), sizeof(float));
-        ret_val = std::to_string(f);
-      } else {
-        throw OPCException(GENERAL_EXCEPTION, "Float is non-standard on this system, OPC data cannot be extracted!");
+        return std::to_string(*static_cast<const UA_Float *>(variant.data));
       }
-      break;
-    }
-    case UA_DATATYPEKIND_DOUBLE: {
+      throw OPCException(GENERAL_EXCEPTION, "Float is non-standard on this system, OPC data cannot be extracted!");
+    case UA_DATATYPEKIND_DOUBLE:
       if (sizeof(double) == 8 && std::numeric_limits<double>::is_iec559) {
-        double d = 0;
-        memcpy(&d, nd.data.data(), sizeof(double));
-        ret_val = std::to_string(d);
-      } else {
-        throw OPCException(GENERAL_EXCEPTION, "Double is non-standard on this system, OPC data cannot be extracted!");
+        return std::to_string(*static_cast<const UA_Double *>(variant.data));
       }
-      break;
-    }
-    case UA_DATATYPEKIND_DATETIME: {
-      UA_DateTime dt = 0;
-      memcpy(&dt, nd.data.data(), sizeof(UA_DateTime));
-      ret_val = opc::OPCDateTime2String(dt);
-      break;
-    }
+      throw OPCException(GENERAL_EXCEPTION, "Double is non-standard on this system, OPC data cannot be extracted!");
+    case UA_DATATYPEKIND_DATETIME:
+      return opc::OPCDateTime2String(*static_cast<const UA_DateTime *>(variant.data));
     default:
-      throw OPCException(GENERAL_EXCEPTION, "Data type is not supported ");
+      throw OPCException(GENERAL_EXCEPTION, "Data type is not supported: " + std::string(variant.type->typeName));
   }
-  return ret_val;
+}
+
+std::string nodeValue2String(const NodeData& nd) {
+  if (nd.var_ == nullptr) {
+    throw OPCException(GENERAL_EXCEPTION, "Node has no value to convert");
+  }
+  return variantToString(*nd.var_);
 }
 
 std::string OPCDateTime2String(UA_DateTime raw_date) {
   UA_DateTimeStruct dts = UA_DateTime_toStruct(raw_date);
   std::array<char, 100> charBuf{};
 
-  int sz = snprintf(charBuf.data(), charBuf.size(), "%02hu-%02hu-%04hu %02hu:%02hu:%02hu.%03hu", dts.day, dts.month, dts.year, dts.hour, dts.min, dts.sec, dts.milliSec);
+  int sz = snprintf(charBuf.data(), charBuf.size(), "%04hu-%02hu-%02huT%02hu:%02hu:%02hu.%03huZ", dts.year, dts.month, dts.day, dts.hour, dts.min, dts.sec, dts.milliSec);
 
   return {charBuf.data(), gsl::narrow<std::size_t>(sz)};
 }
@@ -617,6 +574,14 @@ std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type) {
   }
 
   return std::nullopt;
+}
+
+UA_StatusCode Client::readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, UA_DateTime start_time, UA_DateTime end_time,
+    void* callback_context) {
+  if (history_type == HistoryReadTypeOption::Audit) {
+    return UA_Client_HistoryRead_modified(client_, &node_id, callback, start_time, end_time, UA_STRING_NULL, false, 0, UA_TIMESTAMPSTORETURN_SOURCE, callback_context);
+  }
+  return UA_Client_HistoryRead_raw(client_, &node_id, callback, start_time, end_time, UA_STRING_NULL, false, 0, UA_TIMESTAMPSTORETURN_SOURCE, callback_context);
 }
 
 }  // namespace org::apache::nifi::minifi::opc
