@@ -34,6 +34,11 @@
 
 namespace org::apache::nifi::minifi::opc {
 
+typedef UA_Boolean
+(*HistoryCallback)(
+    UA_Client *client, const UA_NodeId *nodeId, UA_Boolean moreDataAvailable,
+    const UA_ExtensionObject *data, void *callbackContext);
+
 class OPCException : public minifi::Exception {
  public:
   OPCException(ExceptionType type, std::string &&error_msg)
@@ -44,7 +49,8 @@ class OPCException : public minifi::Exception {
 enum class OPCNodeIDType{
   Path,
   Int,
-  String
+  String,
+  Guid
 };
 
 enum class OPCNodeDataType{
@@ -56,6 +62,11 @@ enum class OPCNodeDataType{
   Float,
   Double,
   String
+};
+
+enum class HistoryReadTypeOption {
+  Raw,
+  Audit
 };
 
 // RAII owner for a UA_NodeId that calls UA_NodeId_clear to free node id allocation
@@ -118,6 +129,8 @@ class Client {
 
   template<typename T>
   UA_StatusCode add_node(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name, T value, UA_NodeId *received_node_id);
+  UA_StatusCode readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, UA_DateTime start_time, UA_DateTime end_time,
+    void *callback_context);
 
   static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                                               const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
@@ -175,6 +188,8 @@ struct NodeData {
 };
 
 std::string nodeValue2String(const NodeData& nd);
+
+std::string variantToString(const UA_Variant& variant);
 
 std::string OPCDateTime2String(UA_DateTime raw_date);
 

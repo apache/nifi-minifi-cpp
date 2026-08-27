@@ -73,10 +73,10 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches OPC-UA node";
 
-  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<magic_enum::enum_count<opc::OPCNodeIDType>()>::createProperty("Node ID type")
+  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<3>::createProperty("Node ID type")
       .withDescription("Specifies the type of the provided node ID")
       .isRequired(true)
-      .withAllowedValues(magic_enum::enum_names<opc::OPCNodeIDType>())
+      .withAllowedValues({"Path", "Int", "String"})
       .build();
   EXTENSIONAPI static constexpr auto NodeID = core::PropertyDefinitionBuilder<>::createProperty("Node ID")
       .withDescription("Specifies the ID of the root node to traverse. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.")
@@ -119,7 +119,7 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto BrowsenameAttr = core::OutputAttributeDefinition<>{"Browsename", { Success }, "The browse name of the node."};
   EXTENSIONAPI static constexpr auto FullPathAttr = core::OutputAttributeDefinition<>{"Full path", { Success }, "The full path of the node."};
   EXTENSIONAPI static constexpr auto SourcetimestampAttr = core::OutputAttributeDefinition<>{"Sourcetimestamp", { Success },
-    "The timestamp of when the node was created in the server as 'MM-dd-yyyy HH:mm:ss.mmm'."};
+    "The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'."};
   EXTENSIONAPI static constexpr auto TypenameAttr = core::OutputAttributeDefinition<>{"Typename", { Success }, "The type name of the node data."};
   EXTENSIONAPI static constexpr auto DatasizeAttr = core::OutputAttributeDefinition<>{"Datasize", { Success }, "The size of the node data."};
 
