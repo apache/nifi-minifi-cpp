@@ -74,6 +74,9 @@ def verify_single_file_content_in_directory(context: MinifiTestContext, content:
 
 
 @then(
+    "in the '{container_name}' container at least one file with the content '{content}' is placed in the '{directory}' directory in less than {duration}"
+)
+@then(
     'in the "{container_name}" container at least one file with the content "{content}" is placed in the "{directory}" directory in less than {duration}'
 )
 def verify_at_least_one_file_content_in_container_directory(
@@ -223,6 +226,27 @@ def verify_at_least_number_of_files_in_directory(context: MinifiTestContext, num
     )
 
 
+@then(
+    'in the "{container_name}" container at least one file in "{directory}" content match the following regex: "{regex_str}" in less than {duration}'
+)
+@then(
+    "in the '{container_name}' container at least one file in '{directory}' content match the following regex: '{regex_str}' in less than {duration}"
+)
+@then(
+    "in the '{container_name}' container the content of at least one file in the \"{directory}\" directory matches the '{regex_str}' regex in less than {duration}"
+)
+def verify_file_content_matches_regex_in_directory_in_container(
+    context: MinifiTestContext, container_name: str, directory: str, regex_str: str, duration: str
+):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    assert wait_for_condition(
+        condition=lambda: context.containers[container_name].directory_contains_file_with_regex(directory, regex_str),
+        timeout_seconds=duration_seconds,
+        bail_condition=lambda: context.containers[container_name].exited,
+        context=context,
+    )
+
+
 @then('at least one file in "{directory}" content match the following regex: "{regex_str}" in less than {duration}')
 @then(
     "the content of at least one file in the \"{directory}\" directory matches the '{regex_str}' regex in less than {duration}"
@@ -230,14 +254,8 @@ def verify_at_least_number_of_files_in_directory(context: MinifiTestContext, num
 def verify_file_content_matches_regex_in_directory(
     context: MinifiTestContext, directory: str, regex_str: str, duration: str
 ):
-    duration_seconds = humanfriendly.parse_timespan(duration)
-    assert wait_for_condition(
-        condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].directory_contains_file_with_regex(
-            directory, regex_str
-        ),
-        timeout_seconds=duration_seconds,
-        bail_condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].exited,
-        context=context,
+    context.execute_steps(
+        f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container at least one file in "{directory}" content match the following regex: "{regex_str}" in less than {duration}'
     )
 
 
@@ -284,21 +302,50 @@ def verify_files_with_contents_in_directory(context: MinifiTestContext, director
 
 
 @then(
-    'files with at least these contents "{contents}" are placed in the "{directory}" directory in less than {timeout}'
+    'in the "{container_name}" container files with at least these contents "{contents}" are placed in the "{directory}" directory in less than {timeout}'
 )
-def verify_files_with_at_least_contents_in_directory(
-    context: MinifiTestContext, directory: str, timeout: str, contents: str
+def verify_files_with_at_least_contents_in_directory_in_container(
+    context: MinifiTestContext, container_name: str, directory: str, timeout: str, contents: str
 ):
     timeout_seconds = humanfriendly.parse_timespan(timeout)
     new_contents = contents.replace("\\n", "\n")
     contents_arr = new_contents.split(",")
     assert wait_for_condition(
         condition=lambda: all(
-            context.containers[DEFAULT_MINIFI_CONTAINER_NAME].directory_contains_file_with_content(directory, content)
+            context.containers[container_name].directory_contains_file_with_content(directory, content)
             for content in contents_arr
         ),
         timeout_seconds=timeout_seconds,
-        bail_condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].exited,
+        bail_condition=lambda: context.containers[container_name].exited,
+        context=context,
+    )
+
+
+@then(
+    'files with at least these contents "{contents}" are placed in the "{directory}" directory in less than {timeout}'
+)
+def verify_files_with_at_least_contents_in_directory(
+    context: MinifiTestContext, directory: str, timeout: str, contents: str
+):
+    context.execute_steps(
+        f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container files with at least these contents "{contents}" are placed in the "{directory}" directory in less than {timeout}'
+    )
+
+
+@then(
+    'in the "{container_name}" container a file with the JSON content "{content}" is placed in the "{directory}" directory in less than {duration}'
+)
+@then(
+    "in the '{container_name}' container a file with the JSON content '{content}' is placed in the '{directory}' directory in less than {duration}"
+)
+def verify_file_with_json_content_in_directory_in_container(
+    context: MinifiTestContext, container_name: str, content: str, directory: str, duration: str
+):
+    timeout_in_seconds = humanfriendly.parse_timespan(duration)
+    assert wait_for_condition(
+        condition=lambda: context.containers[container_name].verify_path_with_json_content(directory, content),
+        timeout_seconds=timeout_in_seconds,
+        bail_condition=lambda: context.containers[container_name].exited,
         context=context,
     )
 
@@ -306,14 +353,8 @@ def verify_files_with_at_least_contents_in_directory(
 @then('a file with the JSON content "{content}" is placed in the "{directory}" directory in less than {duration}')
 @then("a file with the JSON content '{content}' is placed in the '{directory}' directory in less than {duration}")
 def verify_file_with_json_content_in_directory(context: MinifiTestContext, content: str, directory: str, duration: str):
-    timeout_in_seconds = humanfriendly.parse_timespan(duration)
-    assert wait_for_condition(
-        condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].verify_path_with_json_content(
-            directory, content
-        ),
-        timeout_seconds=timeout_in_seconds,
-        bail_condition=lambda: context.containers[DEFAULT_MINIFI_CONTAINER_NAME].exited,
-        context=context,
+    context.execute_steps(
+        f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container a file with the JSON content "{content}" is placed in the "{directory}" directory in less than {duration}'
     )
 
 

@@ -43,7 +43,7 @@ TEST_CASE("Test fetching using path node id", "[fetchopcprocessor]") {
     CHECK(flow_file->getAttribute("Datasize") == "4");
     CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT" + std::to_string(i + 1));
     CHECK(flow_file->getAttribute("NodeID"));
-    CHECK(flow_file->getAttribute("NodeID type") == "numeric");
+    CHECK(flow_file->getAttribute("NodeID type") == "string");
     CHECK(flow_file->getAttribute("Typename") == "Int32");
     CHECK(flow_file->getAttribute("Sourcetimestamp"));
     CHECK(controller.plan->getContent(flow_file) == std::to_string(i + 1));
@@ -54,7 +54,7 @@ TEST_CASE("Test fetching using path node id", "[fetchopcprocessor]") {
   CHECK(flow_file->getAttribute("Datasize") == "4");
   CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT3/INT4");
   CHECK(flow_file->getAttribute("NodeID"));
-  CHECK(flow_file->getAttribute("NodeID type") == "numeric");
+  CHECK(flow_file->getAttribute("NodeID type") == "string");
   CHECK(flow_file->getAttribute("Typename") == "Int32");
   CHECK(flow_file->getAttribute("Sourcetimestamp"));
   CHECK(controller.plan->getContent(flow_file) == "4");
@@ -79,7 +79,7 @@ TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocess
   CHECK(flow_file->getAttribute("Datasize") == "4");
   CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT3");
   CHECK(flow_file->getAttribute("NodeID"));
-  CHECK(flow_file->getAttribute("NodeID type") == "numeric");
+  CHECK(flow_file->getAttribute("NodeID type") == "string");
   CHECK(flow_file->getAttribute("Typename") == "Int32");
   CHECK(flow_file->getAttribute("Sourcetimestamp"));
   CHECK(controller.plan->getContent(flow_file) == "3");
@@ -88,7 +88,7 @@ TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocess
   CHECK(flow_file->getAttribute("Datasize") == "4");
   CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT3/INT4");
   CHECK(flow_file->getAttribute("NodeID"));
-  CHECK(flow_file->getAttribute("NodeID type") == "numeric");
+  CHECK(flow_file->getAttribute("NodeID type") == "string");
   CHECK(flow_file->getAttribute("Typename") == "Int32");
   CHECK(flow_file->getAttribute("Sourcetimestamp"));
   CHECK(controller.plan->getContent(flow_file) == "4");
@@ -242,7 +242,7 @@ TEST_CASE("Test fetch for nodes with changed timestamps with lazy mode", "[fetch
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 4);
 
-  server.updateNodeTimestamp("Simulator/Default/Device1/INT3");
+  server.updateNodeTimestamp("INT3");
   results = controller.trigger();
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
@@ -266,7 +266,7 @@ TEST_CASE("Test no fetch result using lazy new value mode when no values are cha
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 4);
 
-  server.updateNodeTimestamp("Simulator/Default/Device1/INT3");
+  server.updateNodeTimestamp("INT3");
   results = controller.trigger();
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).empty());
@@ -289,8 +289,8 @@ TEST_CASE("Test fetching new values using lazy new value mode", "[fetchopcproces
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 4);
 
-  server.updateNodeTimestamp("Simulator/Default/Device1/INT3");
-  server.updateNodeValue("Simulator/Default/Device1/INT2", 42);
+  server.updateNodeTimestamp("INT3");
+  server.updateNodeValue("INT2", 42);
   results = controller.trigger();
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);

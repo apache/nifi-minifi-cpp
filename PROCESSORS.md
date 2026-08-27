@@ -41,6 +41,7 @@ limitations under the License.
 - [FetchFile](#FetchFile)
 - [FetchGCSObject](#FetchGCSObject)
 - [FetchModbusTcp](#FetchModbusTcp)
+- [FetchOPCHistory](#FetchOPCHistory)
 - [FetchOPCProcessor](#FetchOPCProcessor)
 - [FetchS3Object](#FetchS3Object)
 - [FetchSFTP](#FetchSFTP)
@@ -887,6 +888,53 @@ In the list below, the names of required properties appear in bold. Any other pr
 | failure | An error occurred processing |
 
 
+## FetchOPCHistory
+
+### Description
+
+Fetches OPC-UA node history between the start and end timestamps. A history entry is only fetched once, on every trigger only the not yet fetched entries are returned.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                            | Default Value | Allowable Values                 | Description                                                                                                                                                                                                                                                                                                        |
+|---------------------------------|---------------|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **OPC server endpoint**         |               |                                  | Specifies the address, port and relative path of an OPC endpoint                                                                                                                                                                                                                                                   |
+| Application URI                 |               |                                  | Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.                                                                                                                     |
+| Username                        |               |                                  | Username to log in with.                                                                                                                                                                                                                                                                                           |
+| Password                        |               |                                  | Password to log in with.<br/>**Sensitive Property: true**                                                                                                                                                                                                                                                          |
+| Certificate path                |               |                                  | Path to the DER-encoded cert file                                                                                                                                                                                                                                                                                  |
+| Key path                        |               |                                  | Path to the DER-encoded key file                                                                                                                                                                                                                                                                                   |
+| Trusted server certificate path |               |                                  | Comma separated list of paths to the DER-encoded trusted server certificates                                                                                                                                                                                                                                       |
+| Path reference types            |               |                                  | Specify the reference types between nodes in the path if Path Node ID type is used. If not provided, all reference types are assumed to be Organizes. The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype. |
+| **Node ID type**                |               | Path<br/>Int<br/>String<br/>Guid | Specifies the type of the provided node ID                                                                                                                                                                                                                                                                         |
+| **Node ID**                     |               |                                  | Specifies the ID of the root node to fetch history for. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.                                                                                                                                                               |
+| **Namespace index**             | 0             |                                  | The index of the namespace.                                                                                                                                                                                                                                                                                        |
+| Start timestamp                 |               |                                  | Timestamp after which the events should be returned. If not specified entries are returned from the beginning of the history.                                                                                                                                                                                      |
+| End timestamp                   |               |                                  | Timestamp before which the events should be returned. If not specified entries are returned until the current time.                                                                                                                                                                                                |
+| Batch Size                      |               |                                  | Maximum number entries to read and return in a single batch. If set to zero or empty all available entries are returned.                                                                                                                                                                                           |
+| **History Read Type**           | Raw           | Raw<br/>Audit                    | Whether to fetch raw historical values or the audit trail of modifications to historical values                                                                                                                                                                                                                    |
+| Record Set Writer               |               |                                  | Specifies the Controller Service to use for writing results to a FlowFile instead of using the default output format.                                                                                                                                                                                              |
+
+### Relationships
+
+| Name    | Description                                        |
+|---------|----------------------------------------------------|
+| success | Successfully retrieved OPC-UA node history entries |
+
+### Output Attributes
+
+| Attribute              | Relationship | Description                                                                             |
+|------------------------|--------------|-----------------------------------------------------------------------------------------|
+| NodeID                 | success      | ID of the node.                                                                         |
+| Namespace index        | success      | Namespace index of the node.                                                            |
+| Sourcetimestamp        | success      | The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'. |
+| ModificationUsername   | success      | Username of the user who modified the node.                                             |
+| ModificationTime       | success      | Timestamp of when the node was modified.                                                |
+| ModificationUpdateType | success      | Type of modification performed on the node.                                             |
+
+
 ## FetchOPCProcessor
 
 ### Description
@@ -922,15 +970,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute       | Relationship | Description                                                                            |
-|-----------------|--------------|----------------------------------------------------------------------------------------|
-| NodeID          | success      | ID of the node.                                                                        |
-| NodeID type     | success      | Type of the node ID.                                                                   |
-| Browsename      | success      | The browse name of the node.                                                           |
-| Full path       | success      | The full path of the node.                                                             |
-| Sourcetimestamp | success      | The timestamp of when the node was created in the server as 'MM-dd-yyyy HH:mm:ss.mmm'. |
-| Typename        | success      | The type name of the node data.                                                        |
-| Datasize        | success      | The size of the node data.                                                             |
+| Attribute       | Relationship | Description                                                                             |
+|-----------------|--------------|-----------------------------------------------------------------------------------------|
+| NodeID          | success      | ID of the node.                                                                         |
+| NodeID type     | success      | Type of the node ID.                                                                    |
+| Browsename      | success      | The browse name of the node.                                                            |
+| Full path       | success      | The full path of the node.                                                              |
+| Sourcetimestamp | success      | The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'. |
+| Typename        | success      | The type name of the node data.                                                         |
+| Datasize        | success      | The size of the node data.                                                              |
 
 
 ## FetchS3Object
