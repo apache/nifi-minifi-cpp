@@ -37,6 +37,9 @@ asio::awaitable<void> UdpServer::doReceive() {
 
     auto [receive_error, bytes_received] = co_await socket.async_receive_from(asio::buffer(buffer, MAX_UDP_PACKET_SIZE), sender_endpoint, utils::net::use_nothrow_awaitable);
     if (receive_error) {
+      if (receive_error == asio::error::operation_aborted) {
+        co_return;
+      }
       logger_->log_warn("Error during receive: {}", receive_error.message());
       continue;
     }

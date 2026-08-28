@@ -71,9 +71,9 @@ class CancellableTcpServer : public utils::net::TcpServer {
       auto cancellable_timer = std::make_shared<asio::steady_timer>(io_context_);
       cancellable_timers_.push_back(cancellable_timer);
       if (ssl_data_)
-        co_spawn(io_context_, secureSession(std::move(socket), std::move(remote_address), remote_port, port_) || wait_until_cancelled(cancellable_timer), asio::detached);
+        asyncSpawn(secureSession(std::move(socket), std::move(remote_address), remote_port, port_) || wait_until_cancelled(cancellable_timer));
       else
-        co_spawn(io_context_, insecureSession(std::move(socket), std::move(remote_address), remote_port, port_) || wait_until_cancelled(cancellable_timer), asio::detached);
+        asyncSpawn(insecureSession(std::move(socket), std::move(remote_address), remote_port, port_) || wait_until_cancelled(cancellable_timer));
     }
   }
 

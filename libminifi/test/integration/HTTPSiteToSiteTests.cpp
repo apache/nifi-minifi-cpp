@@ -94,7 +94,7 @@ void run_variance(const std::filesystem::path& test_file_location, const std::st
 
   auto responder = std::make_unique<SiteToSiteLocationResponder>(false);
 
-  auto *transaction_response = new TransactionResponder(url, in_port,
+  auto transaction_response = std::make_unique<TransactionResponder>(url, in_port,
       true, profile.transaction_url_broken, profile.empty_transaction_url);
 
   std::string transaction_id = transaction_response->getTransactionId();
@@ -104,9 +104,9 @@ void run_variance(const std::filesystem::path& test_file_location, const std::st
   std::string controller_loc = url + "/controller";
 
   std::string basesitetosite = url + "/site-to-site";
-  auto *base = new SiteToSiteBaseResponder(basesitetosite);
+  auto base = std::make_unique<SiteToSiteBaseResponder>(basesitetosite);
 
-  harness.setUrl(basesitetosite, base);
+  harness.setUrl(basesitetosite, base.get());
 
   harness.setUrl(controller_loc, responder.get());
 
@@ -116,13 +116,13 @@ void run_variance(const std::filesystem::path& test_file_location, const std::st
   std::string transaction_output_url = url + "/data-transfer/output-ports/" + out_port + "/transactions";
   std::string action_output_url = url + "/site-to-site/output-ports/" + out_port + "/transactions";
 
-  harness.setUrl(transaction_url, transaction_response);
+  harness.setUrl(transaction_url, transaction_response.get());
 
   std::string peer_url = url + "/site-to-site/peers";
 
-  auto *peer_response = new PeerResponder(url);
+  auto peer_response = std::make_unique<PeerResponder>(url);
 
-  harness.setUrl(peer_url, peer_response);
+  harness.setUrl(peer_url, peer_response.get());
 
   std::string flow_url = action_url + "/" + transaction_id + "/flow-files";
 
@@ -130,12 +130,12 @@ void run_variance(const std::filesystem::path& test_file_location, const std::st
   flowResponder->setFlowUrl(flow_url);
   auto producedFlows = flowResponder->getFlows();
 
-  auto *transaction_response_output = new TransactionResponder(url, out_port,
+  auto transaction_response_output = std::make_unique<TransactionResponder>(url, out_port,
       false, profile.transaction_url_broken, profile.empty_transaction_url);
   std::string transaction_output_id = transaction_response_output->getTransactionId();
   transaction_response_output->setFeed(producedFlows);
 
-  harness.setUrl(transaction_output_url, transaction_response_output);
+  harness.setUrl(transaction_output_url, transaction_response_output.get());
 
   std::string flow_output_url = action_output_url + "/" + transaction_output_id + "/flow-files";
 
@@ -147,12 +147,12 @@ void run_variance(const std::filesystem::path& test_file_location, const std::st
   harness.setUrl(flow_output_url, flowOutputResponder.get());
 
   std::string delete_url = transaction_url + "/" + transaction_id;
-  auto *deleteResponse = new DeleteTransactionResponder(delete_url, "201 OK", 12);
-  harness.setUrl(delete_url, deleteResponse);
+  auto deleteResponse = std::make_unique<DeleteTransactionResponder>(delete_url, "201 OK", 12);
+  harness.setUrl(delete_url, deleteResponse.get());
 
   std::string delete_output_url = transaction_output_url + "/" + transaction_output_id;
-  auto *deleteOutputResponse = new DeleteTransactionResponder(delete_output_url, "201 OK", producedFlows);
-  harness.setUrl(delete_output_url, deleteOutputResponse);
+  auto deleteOutputResponse = std::make_unique<DeleteTransactionResponder>(delete_output_url, "201 OK", producedFlows);
+  harness.setUrl(delete_output_url, deleteOutputResponse.get());
 
   harness.run();
 
