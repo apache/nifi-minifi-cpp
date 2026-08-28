@@ -52,10 +52,10 @@ impl<'a> TransformedFlowFile<'a> {
         }
     }
 
-    pub fn new(target_relationship: &Relationship, new_content: Option<Vec<u8>>) -> Self {
+    pub fn new(target_relationship: &Relationship, new_content: Option<Content<'a>>) -> Self {
         Self {
             target_relationship_name: Cow::Borrowed(target_relationship.name),
-            new_content: new_content.map(Content::Buffer),
+            new_content,
             attributes_to_add: Vec::new(),
         }
     }
@@ -346,5 +346,28 @@ mod tests {
             Err(ProcessError::Fatal(MinifiError::CustomError(_)))
         ));
         assert_eq!(session.num_of_transferred_flow_files(), 0);
+    }
+
+    const TEST_RELATIONSHIP: Relationship = Relationship {
+        name: "test",
+        description: "test desc",
+    };
+    #[test]
+    fn test_with_attributes() {
+        let mut gen_ff = TransformedFlowFile::route_without_changes(&TEST_RELATIONSHIP);
+        assert!(gen_ff.attributes_to_add.is_empty());
+
+        gen_ff = gen_ff.with_attribute("foo", "bar");
+        assert_eq!(1, gen_ff.attributes_to_add.len());
+
+        gen_ff = gen_ff.with_attributes([("A", "apple"), ("B", "banana")]);
+        assert_eq!(3, gen_ff.attributes_to_add.len());
+        let (key_1, value_1) = gen_ff.attributes_to_add.get(1).unwrap();
+        assert_eq!(key_1, "A");
+        assert_eq!(value_1, "apple");
+
+        assert!(gen_ff.new_content.is_none());
+        gen_ff = gen_ff.with_content("hello".into());
+        assert!(matches!(gen_ff.new_content.unwrap(), Content::Buffer(_)));
     }
 }

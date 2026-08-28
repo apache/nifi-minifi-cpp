@@ -198,3 +198,28 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Relationship;
+    use minifi_native::TransformStreamResult;
+
+    const TEST_RELATIONSHIP: Relationship = Relationship {
+        name: "test",
+        description: "test desc",
+    };
+    #[test]
+    fn test_with_attributes() {
+        let mut gen_ff = TransformStreamResult::new(&TEST_RELATIONSHIP);
+        assert!(gen_ff.attributes_to_add.is_empty());
+
+        gen_ff = gen_ff.with_attribute("foo", "bar");
+        assert_eq!(1, gen_ff.attributes_to_add.len());
+
+        gen_ff = gen_ff.with_attributes([("A", "apple"), ("B", "banana")]);
+        assert_eq!(3, gen_ff.attributes_to_add.len());
+        let (key_1, value_1) = gen_ff.attributes_to_add.get(1).unwrap();
+        assert_eq!(key_1, "A");
+        assert_eq!(value_1, "apple");
+    }
+}
