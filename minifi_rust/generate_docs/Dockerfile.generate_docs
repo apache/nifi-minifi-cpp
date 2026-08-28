@@ -20,7 +20,7 @@ ARG BASE_IMAGE="apacheminificpp:behave"
 FROM ${BASE_IMAGE} AS builder
 LABEL maintainer="Martin Zink <martinzink@apache.org>"
 
-COPY ./target/release/libminifi_rs_playground.so /opt/minifi/minifi-current/extensions
+COPY ./target/release/libminifi_*.so /opt/minifi/minifi-current/extensions
 
 RUN /opt/minifi/minifi-current/bin/minifi --docs DOCS_OUTPUT
 
