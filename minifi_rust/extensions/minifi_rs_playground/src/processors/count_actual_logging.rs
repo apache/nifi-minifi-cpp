@@ -72,8 +72,5 @@ impl ProcessorDefinition for CountActualLogging {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[];
-
-    fn properties() -> &'static [PropertyDefinition] {
-        &[]
-    }
+    const PROPERTIES: &'static [PropertyDefinition] = &[];
 }

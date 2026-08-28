@@ -30,24 +30,21 @@ impl ProcessorDefinition for PutFileRs {
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
 
-    fn properties() -> &'static [PropertyDefinition] {
-        use std::sync::LazyLock;
-        static COMBINED_PROPERTIES: LazyLock<Vec<PropertyDefinition>> = LazyLock::new(|| {
-            let mut props = Vec::new();
-            props.extend_from_slice(property_definitions![
-                properties::DIRECTORY,
-                properties::CONFLICT_RESOLUTION,
-                properties::CREATE_DIRS,
-                properties::MAX_FILE_COUNT,
-            ]);
-            #[cfg(unix)]
-            {
-                props.push(unix_only_properties::PERMISSIONS.definition());
-                props.push(unix_only_properties::DIRECTORY_PERMISSIONS.definition());
-            }
-            props
-        });
+    #[cfg(windows)]
+    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
+        properties::DIRECTORY,
+        properties::CONFLICT_RESOLUTION,
+        properties::CREATE_DIRS,
+        properties::MAX_FILE_COUNT,
+    ];
 
-        &COMBINED_PROPERTIES
-    }
+    #[cfg(unix)]
+    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![
+        properties::DIRECTORY,
+        properties::CONFLICT_RESOLUTION,
+        properties::CREATE_DIRS,
+        properties::MAX_FILE_COUNT,
+        unix_only_properties::PERMISSIONS,
+        unix_only_properties::DIRECTORY_PERMISSIONS,
+    ];
 }
