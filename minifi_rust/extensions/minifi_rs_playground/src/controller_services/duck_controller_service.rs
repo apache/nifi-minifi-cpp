@@ -22,7 +22,7 @@ use minifi_native::ControllerServiceApi;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
-    Property, ProvidedInterface, create_provided_interface,
+    PropertyDefinition, ProvidedInterface, create_provided_interface,
 };
 
 #[derive(Debug, ComponentIdentifier)]
@@ -51,7 +51,7 @@ impl EnableControllerService for DuckControllerRs {
 
 impl ControllerServiceDefinition for DuckControllerRs {
     const DESCRIPTION: &'static str = "RUST TEST CONTROLLER SERVICE: DuckControllerRs";
-    const PROPERTIES: &'static [Property] = &[];
+    const PROPERTIES: &'static [PropertyDefinition] = &[];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[
         create_provided_interface!(dyn CanFlyControllerApi),
         create_provided_interface!(dyn NumberOfLegsControllerApi),

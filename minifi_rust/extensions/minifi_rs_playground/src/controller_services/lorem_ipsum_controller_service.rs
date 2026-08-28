@@ -19,20 +19,11 @@ use lipsum::lipsum;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     ControllerServiceDefinition, EnableControllerService, GetProperty, Logger, MinifiError,
-    Property, ProvidedInterface, StandardPropertyValidator,
+    Property, PropertyDefinition, ProvidedInterface, property_definitions,
 };
 
-const LENGTH: Property = Property {
-    name: "Length",
-    description: "How many words to generate",
-    is_required: true,
-    is_sensitive: false,
-    supports_expr_lang: false,
-    default_value: Some("25"),
-    validator: StandardPropertyValidator::U64Validator,
-    allowed_values: &[],
-    allowed_type: None,
-};
+const LENGTH: Property<usize> =
+    Property::new("Length", "How many words to generate").with_default("25");
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct LoremIpsumControllerService {
@@ -44,17 +35,13 @@ impl EnableControllerService for LoremIpsumControllerService {
     where
         Self: Sized,
     {
-        let length = context
-            .get_u64_property(&LENGTH)?
-            .ok_or(MinifiError::missing_required_property("Length is required"))?;
-
-        let data = lipsum(length as usize);
+        let data = lipsum(context.get_property(&LENGTH)?);
         Ok(Self { data })
     }
 }
 
 impl ControllerServiceDefinition for LoremIpsumControllerService {
     const DESCRIPTION: &'static str = "RUST TEST CONTROLLER SERVICE: Holds generated lorem ipsum";
-    const PROPERTIES: &'static [Property] = &[LENGTH];
+    const PROPERTIES: &'static [PropertyDefinition] = property_definitions![LENGTH];
     const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
 }

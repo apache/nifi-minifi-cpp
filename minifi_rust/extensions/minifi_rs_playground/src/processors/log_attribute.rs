@@ -18,14 +18,31 @@
 // This is the (not production ready) reimplementation of the already existing standard LogAttribute processor
 
 use crate::processors::log_attribute::properties::{FLOW_FILES_TO_LOG, LOG_LEVEL, LOG_PAYLOAD};
+use minifi_native::StandardPropertyValidator::NonBlankValidator;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetProperty, LogLevel, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
-    Property, Schedule, Trigger, debug, log, trace,
+    PropertyConstraints, PropertySchema, PropertyType, Schedule, Trigger, debug, log, trace,
 };
 
 mod properties;
 mod relationships;
+
+struct AttributeList {}
+
+impl PropertyType for AttributeList {
+    type Output = Vec<String>;
+    fn parse(s: &str) -> Result<Self::Output, MinifiError> {
+        Ok(s.split(',')
+            .map(|s| s.trim().to_string())
+            .collect::<Vec<String>>())
+    }
+}
+impl PropertySchema for AttributeList {
+    const CONSTRAINT: Option<PropertyConstraints> =
+        Some(PropertyConstraints::Validator(NonBlankValidator));
+    const IS_REQUIRED: bool = true;
+}
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct LogAttributeRs {
@@ -121,44 +138,20 @@ impl Trigger for LogAttributeRs {
 
 impl Schedule for LogAttributeRs {
     fn schedule<P: GetProperty, L>(context: &P, _logger: &L) -> Result<Self, MinifiError> {
-        let log_level = context
-            .get_property(&LOG_LEVEL)?
-            .expect("required property")
-            .parse::<LogLevel>()?;
-
-        let log_payload = context
-            .get_bool_property(&LOG_PAYLOAD)?
-            .expect("required property");
-
-        let flow_files_to_log = context
-            .get_property(&FLOW_FILES_TO_LOG)?
-            .expect("required property")
-            .parse::<usize>()?;
-
-        fn get_csv_property<P: GetProperty>(
-            context: &P,
-            property: &Property,
-        ) -> Result<Option<Vec<String>>, MinifiError> {
-            Ok(context.get_property(property)?.map(|s| {
-                s.split(',')
-                    .map(|s| s.trim().to_string())
-                    .collect::<Vec<String>>()
-            }))
-        }
-
-        let attributes_to_log = get_csv_property(context, &properties::ATTRIBUTES_TO_LOG)?;
-        let attributes_to_ignore = get_csv_property(context, &properties::ATTRIBUTES_TO_IGNORE)?;
+        let log_level = context.get_property(&LOG_LEVEL)?;
+        let log_payload = context.get_property(&LOG_PAYLOAD)?;
+        let flow_files_to_log = context.get_property(&FLOW_FILES_TO_LOG)?;
+        let attributes_to_log = context.get_property(&properties::ATTRIBUTES_TO_LOG)?;
+        let attributes_to_ignore = context.get_property(&properties::ATTRIBUTES_TO_IGNORE)?;
 
         let dash_line = format!(
             "{:-^50}",
             context
                 .get_property(&properties::LOG_PREFIX)?
-                .unwrap_or(String::new())
+                .unwrap_or_default()
         );
 
-        let hex_encode_payload = context
-            .get_bool_property(&properties::HEX_ENCODE_PAYLOAD)?
-            .expect("required property");
+        let hex_encode_payload = context.get_property(&properties::HEX_ENCODE_PAYLOAD)?;
 
         Ok(LogAttributeRs {
             log_level,

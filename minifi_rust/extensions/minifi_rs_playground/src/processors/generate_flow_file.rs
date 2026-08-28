@@ -17,7 +17,7 @@
 
 // This is the (not production ready) reimplementation of the already existing standard GenerateFlowFile processor
 
-use minifi_native::macros::ComponentIdentifier;
+use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
     Trigger,
@@ -25,9 +25,19 @@ use minifi_native::{
 use rand::RngExt;
 use rand::distr::Alphanumeric;
 use std::cmp::PartialEq;
+use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
 mod properties;
 mod relationships;
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr, PropertyType,
+)]
+#[strum(const_into_str)]
+pub(crate) enum DataFormat {
+    Text,
+    Binary,
+}
 
 #[derive(Debug, PartialEq)]
 enum Mode {
@@ -52,22 +62,12 @@ impl Schedule for GenerateFlowFileRs {
     where
         Self: Sized,
     {
-        let is_unique = context
-            .get_bool_property(&properties::UNIQUE_FLOW_FILES)?
-            .expect("Required property");
-        let is_text = context
-            .get_property(&properties::DATA_FORMAT)?
-            .expect("Required property")
-            .as_str()
-            == "Text";
+        let is_unique = context.get_property(&properties::UNIQUE_FLOW_FILES)?;
+        let is_text = context.get_property(&properties::DATA_FORMAT)? == DataFormat::Text;
         let has_custom_text = context.get_property(&properties::CUSTOM_TEXT)?.is_some();
 
-        let file_size = context
-            .get_size_property(&properties::FILE_SIZE)?
-            .expect("Required property");
-        let batch_size = context
-            .get_u64_property(&properties::BATCH_SIZE)?
-            .expect("Required property");
+        let file_size = context.get_property(&properties::FILE_SIZE)?;
+        let batch_size = context.get_property(&properties::BATCH_SIZE)?;
 
         let mode = Self::get_mode(is_unique, is_text, has_custom_text, file_size);
         let data_generated_during_on_schedule =
@@ -152,17 +152,16 @@ impl Trigger for GenerateFlowFileRs {
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
-        let non_unique_data_buffer: &[u8];
         let custom_text_for_batch: Option<String>;
 
-        if self.mode == Mode::CustomText {
+        let non_unique_data_buffer: &[u8] = if self.mode == Mode::CustomText {
             // CustomText mode must have the Custom Text property set at
             // trigger time — falling back to `data_generated_during_on_schedule`
             // (which is empty for this mode) would silently produce empty
             // flow files.
             custom_text_for_batch = Some(
                 context
-                    .get_property(&properties::CUSTOM_TEXT, None)?
+                    .get_raw_property(&properties::CUSTOM_TEXT, None)?
                     .ok_or_else(|| {
                         MinifiError::trigger_err(
                             "GenerateFlowFile is in CustomText mode but the \"Custom Text\" \
@@ -170,10 +169,10 @@ impl Trigger for GenerateFlowFileRs {
                         )
                     })?,
             );
-            non_unique_data_buffer = custom_text_for_batch.as_ref().unwrap().as_bytes();
+            custom_text_for_batch.as_ref().unwrap().as_bytes()
         } else {
-            non_unique_data_buffer = self.data_generated_during_on_schedule.as_slice();
-        }
+            self.data_generated_during_on_schedule.as_slice()
+        };
 
         for _ in 0..self.batch_size {
             let ff = session.create()?;

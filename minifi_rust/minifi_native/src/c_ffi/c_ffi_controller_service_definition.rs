@@ -21,7 +21,7 @@ use crate::c_ffi::c_ffi_property::CProperties;
 use crate::c_ffi::{CffiLogger, StaticStrAsMinifiCStr};
 use crate::{
     ComponentIdentifier, ControllerService, ControllerServiceDefinition, EnableControllerService,
-    LogLevel, Property, ProvidedInterface,
+    LogLevel, PropertyDefinition, ProvidedInterface,
 };
 use minifi_native_sys::{
     minifi_controller_service_callbacks, minifi_controller_service_context,
@@ -71,10 +71,10 @@ where
 {
     pub fn new(
         description_text: &'static str,
-        properties: &'static [Property],
+        properties: &'static [PropertyDefinition],
         provided_interfaces: &'static [ProvidedInterface<P>],
     ) -> Self {
-        let c_properties = Property::create_c_properties(properties);
+        let c_properties = PropertyDefinition::create_c_properties(properties);
         let mut c_provided_apis = Vec::new();
         for provided_interface in provided_interfaces {
             c_provided_apis.push(provided_interface.name.as_minifi_c_type());

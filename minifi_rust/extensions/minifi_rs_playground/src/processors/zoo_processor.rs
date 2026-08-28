@@ -18,37 +18,18 @@
 use crate::controller_services::animal_controller_apis::{
     CanFlyControllerApi, NumberOfLegsControllerApi,
 };
-use minifi_native::ControllerServiceApi;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetProperty, Logger, MinifiError, OnTriggerResult, OutputAttribute, ProcessContext,
-    ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property, Relationship,
-    Schedule, StandardPropertyValidator, Trigger, critical, info,
+    ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property, PropertyDefinition,
+    Relationship, Schedule, Trigger, critical, info, property_definitions,
 };
 
-pub(crate) const CAN_FLY_SERVICE: Property = Property {
-    name: "Can fly service",
-    description: "Test CanFlyService",
-    is_required: true,
-    is_sensitive: false,
-    supports_expr_lang: false,
-    default_value: None,
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &[],
-    allowed_type: Some(<dyn CanFlyControllerApi>::INTERFACE_NAME),
-};
+pub(crate) const CAN_FLY_SERVICE: Property<dyn CanFlyControllerApi> =
+    Property::new("Can fly service", "Test CanFlyService");
 
-pub(crate) const NUMBER_OF_LEGS: Property = Property {
-    name: "Number of Legs service",
-    description: "Test NumberOfLegsService",
-    is_required: true,
-    is_sensitive: false,
-    supports_expr_lang: false,
-    default_value: None,
-    validator: StandardPropertyValidator::AlwaysValidValidator,
-    allowed_values: &[],
-    allowed_type: Some(<dyn NumberOfLegsControllerApi>::INTERFACE_NAME),
-};
+pub(crate) const NUMBER_OF_LEGS: Property<dyn NumberOfLegsControllerApi> =
+    Property::new("Number of Legs service", "Test NumberOfLegsService");
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct ZooProcessorRs {}
@@ -78,9 +59,7 @@ impl Trigger for ZooProcessorRs {
         Lggr: Logger,
     {
         info!(logger, "{:?}", self);
-        if let Some(maybe_flyer) =
-            context.get_controller_service_api::<dyn CanFlyControllerApi>(&CAN_FLY_SERVICE)?
-        {
+        if let Some(maybe_flyer) = context.get_controller_service_api(&CAN_FLY_SERVICE)? {
             critical!(
                 logger,
                 "Can {:?} fly? {}",
@@ -88,9 +67,7 @@ impl Trigger for ZooProcessorRs {
                 maybe_flyer.can_fly()
             );
         }
-        if let Some(legged) =
-            context.get_controller_service_api::<dyn NumberOfLegsControllerApi>(&NUMBER_OF_LEGS)?
-        {
+        if let Some(legged) = context.get_controller_service_api(&NUMBER_OF_LEGS)? {
             critical!(logger, "{:?} has {} legs", legged, legged.number_of_legs());
         }
         Ok(OnTriggerResult::Ok)
@@ -104,5 +81,6 @@ impl ProcessorDefinition for ZooProcessorRs {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[];
-    const PROPERTIES: &'static [Property] = &[CAN_FLY_SERVICE, NUMBER_OF_LEGS];
+    const PROPERTIES: &'static [PropertyDefinition] =
+        property_definitions![CAN_FLY_SERVICE, NUMBER_OF_LEGS];
 }

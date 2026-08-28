@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::api::property::PropertySchema;
 use crate::c_ffi::c_ffi_primitives::StringView;
 use crate::{GetProperty, MinifiError, Property};
 use minifi_native_sys::{
@@ -22,7 +23,6 @@ use minifi_native_sys::{
     minifi_status_MINIFI_STATUS_PROPERTY_NOT_SET, minifi_status_MINIFI_STATUS_SUCCESS,
     minifi_string_view,
 };
-use std::borrow::Cow;
 use std::ffi::c_void;
 use std::num::NonZeroU32;
 
@@ -61,7 +61,10 @@ unsafe extern "C" fn property_callback(
 }
 
 impl<'a> GetProperty for CffiControllerServiceContext<'a> {
-    fn get_property(&self, property: &Property) -> Result<Option<String>, MinifiError> {
+    fn get_raw_property<P: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<P>,
+    ) -> Result<Option<String>, MinifiError> {
         let mut result: Option<String> = None;
         let property_name: StringView = StringView::new(property.name);
 
@@ -77,12 +80,7 @@ impl<'a> GetProperty for CffiControllerServiceContext<'a> {
         #[allow(non_upper_case_globals)]
         match status {
             minifi_status_MINIFI_STATUS_SUCCESS => Ok(result),
-            minifi_status_MINIFI_STATUS_PROPERTY_NOT_SET => match property.is_required {
-                true => Err(MinifiError::MissingRequiredProperty(Cow::from(
-                    property.name,
-                ))),
-                false => Ok(None),
-            },
+            minifi_status_MINIFI_STATUS_PROPERTY_NOT_SET => Ok(None),
             err_code => Err(MinifiError::StatusError((
                 format!(
                     "minifi_controller_service_context_get_property({:?})",

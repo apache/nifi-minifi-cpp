@@ -18,9 +18,23 @@
 use std::fmt;
 use std::fmt::Debug;
 
-use strum_macros::{Display, EnumString, VariantNames};
+use minifi_native_macros::PropertyType;
+use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Display, EnumString, VariantNames)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Display,
+    EnumString,
+    VariantNames,
+    IntoStaticStr,
+    PropertyType,
+)]
 #[strum(serialize_all = "PascalCase", const_into_str)]
 pub enum LogLevel {
     Trace,
