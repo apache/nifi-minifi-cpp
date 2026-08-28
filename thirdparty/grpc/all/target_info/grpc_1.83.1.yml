@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-grpc_version: 1.82.0
+grpc_version: 1.83.1
 grpc_targets:
     - name: "address_sorting"
       lib: "address_sorting"

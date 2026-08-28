@@ -29,6 +29,9 @@ asio::awaitable<void> TcpServer::doReceive() {
   while (true) {
     auto [accept_error, socket] = co_await acceptor.async_accept(use_nothrow_awaitable);
     if (accept_error) {
+      if (accept_error == asio::error::operation_aborted) {
+        co_return;
+      }
       logger_->log_error("Error during accepting new connection: {}", accept_error.message());
       co_await utils::net::async_wait(1s);
       continue;
@@ -43,9 +46,9 @@ asio::awaitable<void> TcpServer::doReceive() {
       logger_->log_warn("Error during fetching local endpoint: {}", error.message());
     }
     if (ssl_data_) {
-      co_spawn(io_context_, secureSession(std::move(socket), remote_endpoint.address(), remote_endpoint.port(), local_port), asio::detached);
+      asyncSpawn(secureSession(std::move(socket), remote_endpoint.address(), remote_endpoint.port(), local_port));
     } else {
-      co_spawn(io_context_, insecureSession(std::move(socket), remote_endpoint.address(), remote_endpoint.port(), local_port), asio::detached);
+      asyncSpawn(insecureSession(std::move(socket), remote_endpoint.address(), remote_endpoint.port(), local_port));
     }
   }
 }
@@ -55,7 +58,7 @@ asio::awaitable<void> TcpServer::readLoop(auto& socket, asio::ip::address remote
   while (true) {
     auto [read_error, bytes_read] = co_await asio::async_read_until(socket, asio::dynamic_buffer(read_message), delimiter_, use_nothrow_awaitable);  // NOLINT
     if (read_error) {
-      if (read_error != asio::error::eof) {
+      if (read_error != asio::error::eof && read_error != asio::error::operation_aborted) {
         logger_->log_error("Error during reading from socket: {}", read_error.message());
       }
       co_return;

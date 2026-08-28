@@ -273,7 +273,7 @@ std::vector<LogMessageView> extractLogMessageViews(const std::string& log_str) {
 
   std::vector<HeaderMarker> markers = ranges::subrange<std::sregex_iterator>(std::sregex_iterator(log_str.begin(), log_str.end(), header_pattern),
                                        std::sregex_iterator()) |
-      ranges::views::transform([=](const std::smatch& m) {
+      ranges::views::transform([&log_str](const std::smatch& m) {
         return HeaderMarker{.start = static_cast<size_t>(m.position(0)),
             .timestamp = std::string_view{log_str.data() + m.position(1), static_cast<size_t>(m.length(1))},
             .logger_class = std::string_view{log_str.data() + m.position(2), static_cast<size_t>(m.length(2))},

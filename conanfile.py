@@ -198,7 +198,7 @@ class MiNiFiCppMain(ConanFile):
         if self.options.enable_all or self.options.enable_bustache:
             self.requires("bustache/0.1.0@minifi/develop")
         if self.options.enable_all or self.options.enable_grpc_for_loki:
-            self.requires("grpc/1.82.0@minifi/develop", force=True)
+            self.requires("grpc/1.83.1@minifi/develop", force=True)
         if self.options.enable_all or self.options.enable_gcp:
             self.requires("google-cloud-cpp/2.47.1@minifi/develop")
             if not self.options.skip_tests:

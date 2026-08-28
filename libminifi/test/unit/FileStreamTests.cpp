@@ -124,36 +124,6 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempFile");
 }
 
-TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
-  TestController testController;
-  auto path = testController.createTempDirectory() / "tstFile.ext";
-
-  std::fstream file;
-  file.open(path, std::ios::out);
-  file << "tempFile";
-  file.close();
-
-  minifi::io::FileStream stream(path, 0, true);
-  std::vector<std::byte> readBuffer;
-  readBuffer.resize(stream.size());
-  REQUIRE(stream.read(readBuffer) == stream.size());
-
-  auto* data = readBuffer.data();
-
-  REQUIRE(std::string(reinterpret_cast<char*>(data), readBuffer.size()) == "tempFile");
-
-  stream.seek(4);
-
-  stream.write(nullptr, 0);
-
-  stream.seek(0);
-
-  std::vector<std::byte> verifybuffer;
-  data = verifybuffer.data();
-
-  REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()).empty());
-}
-
 TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   TestController testController;
   const auto path = testController.createTempDirectory() / "tstFile.ext";

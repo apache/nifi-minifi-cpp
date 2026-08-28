@@ -17,6 +17,22 @@
 
 include(GetCatch2)
 
+if (MINIFI_ADVANCED_ASAN_BUILD)
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/asan_logs")
+
+    # Route each test's AddressSanitizer/LeakSanitizer output to <build>/asan_logs/<test-name>.<pid>
+    # and suppress odr-violation warnings (only if the two symbols have the same size). Hundreds of global
+    # symbols are present in two or more .so's, so we don't want to suppress each individually.
+    function(add_test)
+        _add_test(${ARGV})
+        cmake_parse_arguments(MINIFI_TEST "" "NAME" "COMMAND" ${ARGV})
+        if (MINIFI_TEST_NAME)
+            set_property(TEST "${MINIFI_TEST_NAME}" APPEND PROPERTY
+                ENVIRONMENT "ASAN_OPTIONS=detect_odr_violation=1:log_path=${CMAKE_BINARY_DIR}/asan_logs/${MINIFI_TEST_NAME}")
+        endif()
+    endfunction()
+endif()
+
 ### test functions
 MACRO(GETSOURCEFILES result curdir)
     FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
