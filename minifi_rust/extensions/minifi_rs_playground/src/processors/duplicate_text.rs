@@ -66,7 +66,5 @@ impl ProcessorDefinition for DuplicateStreamText {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS];
-    fn properties() -> &'static [PropertyDefinition] {
-        &[]
-    }
+    const PROPERTIES: &'static [PropertyDefinition] = &[];
 }
