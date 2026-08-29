@@ -61,8 +61,8 @@ impl<'a> TransformedFlowFile<'a> {
     }
 
     #[must_use]
-    pub fn with_content(mut self, content: Vec<u8>) -> Self {
-        self.new_content = Some(Content::Buffer(content));
+    pub fn with_content(mut self, content: Content<'a>) -> Self {
+        self.new_content = Some(content);
         self
     }
 
