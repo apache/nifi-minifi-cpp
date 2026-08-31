@@ -15,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cstdio>
-#include <vector>
-#include <string>
 #include "io/InputStream.h"
+
+#include <cstdio>
+#include <string>
+#include <vector>
+
 #include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::io {
@@ -35,7 +37,7 @@ size_t InputStream::read(bool &value) {
 
 size_t InputStream::read(utils::Identifier &value) {
   std::string uuidStr;
-  const auto ret = read(uuidStr);
+  const auto ret = read(uuidStr, LengthPrefixSize::_16BIT, 36 /* characters in a UUID string */);
   if (isError(ret)) {
     return ret;
   }
@@ -47,44 +49,51 @@ size_t InputStream::read(utils::Identifier &value) {
   return ret;
 }
 
-size_t InputStream::read(std::string &str, bool widen) {
+size_t InputStream::read(std::string &str, LengthPrefixSize prefix_size, size_t max_length) {
   uint32_t string_length = 0;
-  size_t length_return = 0;
-  if (!widen) {
-    uint16_t shortLength = 0;
-    length_return = read(shortLength);
-    string_length = shortLength;
-  } else {
-    length_return = read(string_length);
+  size_t length_prefix_size_in_bytes = 0;
+  switch (prefix_size) {
+    case LengthPrefixSize::_16BIT: {
+      uint16_t out_16bit_length = 0;
+      length_prefix_size_in_bytes = read(out_16bit_length);
+      string_length = out_16bit_length;
+    } break;
+    case LengthPrefixSize::_32BIT: {
+      uint32_t out_32bit_length = 0;
+      length_prefix_size_in_bytes = read(out_32bit_length);
+      string_length = out_32bit_length;
+    } break;
   }
 
-  if (length_return == 0 || isError(length_return)) {
-    return length_return;
+  // The zero case should be impossible, read(Integral&) returns the size of the integral type,
+  // or an error code, so this handles the error case and propagates the stream error
+  if (length_prefix_size_in_bytes == 0 || isError(length_prefix_size_in_bytes)) {
+    return length_prefix_size_in_bytes;
   }
 
+  string_length = std::min(string_length, gsl::narrow<uint32_t>(max_length));
   if (string_length == 0) {
     str.clear();
-    return length_return;
+    return length_prefix_size_in_bytes;
   }
 
   str.clear();
-  str.reserve(string_length);
+  str.resize(string_length);
+  std::span<std::byte> dst_buffer = as_writable_bytes(std::span{str});
 
-  size_t bytes_to_read{string_length};
   auto zero_return_retry_count = 0;
-  while (bytes_to_read > 0) {
-    std::vector<std::byte> buffer(bytes_to_read);
-    const auto read_return = read(buffer);
-    if (io::isError(read_return))
+  while (!dst_buffer.empty()) {
+    const auto read_return = read(dst_buffer);
+    if (io::isError(read_return)) {
       return read_return;
+    }
     if (read_return == 0 && ++zero_return_retry_count > 3) {
       return STREAM_ERROR;
     }
-    bytes_to_read -= read_return;
-    str.append(std::string(reinterpret_cast<const char*>(buffer.data()), read_return));
+    dst_buffer = dst_buffer.subspan(read_return);
   }
 
-  return length_return + string_length;
+  return length_prefix_size_in_bytes + string_length;
 }
 
 std::optional<std::byte> InputStream::readByte() {

@@ -200,7 +200,7 @@ class PayloadSerializer {
       case 4:
       default: {
         std::string str;
-        stream->read(str);
+        stream->read(str, io::LengthPrefixSize::_16BIT, 64_KiB);
         node = str;
       }
     }
@@ -228,8 +228,8 @@ class PayloadSerializer {
     for (size_t i = 0; i < payloads; i++) {
       stream->read(op);
       stream->read(st);
-      stream->read(label);
-      stream->read(identifier);
+      stream->read(label, io::LengthPrefixSize::_16BIT, 1_KiB);
+      stream->read(identifier, io::LengthPrefixSize::_16BIT, 36);
       operation = intToOp(op);
       C2Payload subPayload(operation, st == 1 ? state::UpdateState::NESTED : state::UpdateState::READ_COMPLETE);
       subPayload.setIdentifier(identifier);
@@ -240,12 +240,12 @@ class PayloadSerializer {
         std::string content_name;
         uint32_t args = 0;
         C2ContentResponse content(operation);
-        stream->read(content_name);
+        stream->read(content_name, io::LengthPrefixSize::_16BIT, 1_KiB);
         content.name = content_name;
         stream->read(args);
         for (uint32_t j = 0; j < args; j++) {
           std::string first, second;
-          stream->read(first);
+          stream->read(first, io::LengthPrefixSize::_16BIT, 1_KiB);
           content.operation_arguments[first] = C2Value{deserializeValueNode(stream)};
         }
         subPayload.addContent(std::move(content));
@@ -266,8 +266,8 @@ class PayloadSerializer {
     stream.read(op);
     stream.read(version);
     stream.read(st);
-    stream.read(label);
-    stream.read(identifier);
+    stream.read(label, io::LengthPrefixSize::_16BIT, 1_KiB);
+    stream.read(identifier, io::LengthPrefixSize::_16BIT, 36);
 
     Operation operation = intToOp(op);
 
@@ -281,12 +281,12 @@ class PayloadSerializer {
       std::string content_name;
       uint32_t args = 0;
       C2ContentResponse content(operation);
-      stream.read(content_name);
+      stream.read(content_name, io::LengthPrefixSize::_16BIT, 1_KiB);
       content.name = content_name;
       stream.read(args);
       for (uint32_t j = 0; j < args; j++) {
         std::string first, second;
-        stream.read(first);
+        stream.read(first, io::LengthPrefixSize::_16BIT, 1_KiB);
         // stream.readUTF(second);
         content.operation_arguments[first] = C2Value{deserializeValueNode(&stream)};
       }

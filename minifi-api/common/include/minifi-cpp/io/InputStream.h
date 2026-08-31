@@ -28,6 +28,11 @@
 
 namespace org::apache::nifi::minifi::io {
 
+enum class LengthPrefixSize {
+  _16BIT,
+  _32BIT
+};
+
 class InputStream : public virtual Stream {
  public:
   [[nodiscard]] virtual size_t size() const = 0;
@@ -40,11 +45,13 @@ class InputStream : public virtual Stream {
   virtual size_t read(std::span<std::byte> out_buffer) = 0;
 
   /**
-   * Read string from stream. Use isError (Stream.h) to check for errors.
+   * Read length prefixed string from stream. Use isError (Stream.h) to check for errors.
    * @param str reference string
+   * @param length_prefix_size The wideness of the length prefix, 16bit or 32bit
+   * @param max_length The max length of the string, to avoid excessive allocations
    * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
-  size_t read(std::string &str, bool widen = false);
+  size_t read(std::string &str, LengthPrefixSize length_prefix_size, size_t max_length);
 
   /**
    * Read a bool from stream. Use isError (Stream.h) to check for errors.
