@@ -367,7 +367,7 @@ mod tests {
         assert_eq!(value_1, "apple");
 
         assert!(gen_ff.new_content.is_none());
-        gen_ff = gen_ff.with_content("hello".into());
+        gen_ff = gen_ff.with_content(Content::Buffer("hello".into()));
         assert!(matches!(gen_ff.new_content.unwrap(), Content::Buffer(_)));
     }
 }
