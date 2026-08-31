@@ -175,6 +175,23 @@ def bind_host_resource_file_to_container_path(context: MinifiTestContext, filena
     )
 
 
+@given(
+    'a host resource file "{filename}" is copied to the "{container_path}" path in the MiNiFi container "{container_name}"'
+)
+def copy_host_resource_file_to_container_path_for_container(
+    context: MinifiTestContext, filename: str, container_path: str, container_name: str
+):
+    path = os.path.join(context.resource_dir, filename)
+    context.get_or_create_minifi_container(container_name).add_host_file_as_copy(path, container_path)
+
+
+@given('a host resource file "{filename}" is copied to the "{container_path}" path in the MiNiFi container')
+def copy_host_resource_file_to_container_path(context: MinifiTestContext, filename: str, container_path: str):
+    context.execute_steps(
+        f'given a host resource file "{filename}" is copied to the "{container_path}" path in the MiNiFi container "{DEFAULT_MINIFI_CONTAINER_NAME}"'
+    )
+
+
 @step("after {duration} have passed")
 @step("after {duration} has passed")
 @step("{duration} later")

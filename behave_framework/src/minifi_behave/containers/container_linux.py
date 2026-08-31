@@ -23,6 +23,7 @@ import shlex
 import tarfile
 import tempfile
 import uuid
+from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from docker.models.networks import Network
@@ -58,6 +59,7 @@ class LinuxContainer(ContainerProtocol):
         self.files: list[File] = []
         self.dirs: list[Directory] = []
         self.host_files: list[HostFile] = []
+        self._pending_host_copies: list[tuple[str, str]] = []
         self.volumes = {}
         self.command: str | None = command
         self.entrypoint: str | None = entrypoint
@@ -70,6 +72,9 @@ class LinuxContainer(ContainerProtocol):
 
     def add_host_file(self, host_path: str, container_path: str, mode: str = "ro"):
         self.host_files.append(HostFile(container_path, host_path, mode))
+
+    def add_host_file_as_copy(self, host_path: str, container_path: str):
+        self._pending_host_copies.append((host_path, container_path))
 
     def add_file_to_running_container(self, content: str, path: str):
         if not self.container:
@@ -114,6 +119,19 @@ class LinuxContainer(ContainerProtocol):
                 self._write_content_to_file(file_path, None, content)
             self.volumes[temp_path] = {"bind": directory.path, "mode": directory.mode}
 
+    def _configure_volumes_of_host_copies(self):
+        groups: dict[str, list[tuple[str, str]]] = defaultdict(list)
+        for host_path, container_path in self._pending_host_copies:
+            groups[os.path.dirname(container_path)].append((host_path, os.path.basename(container_path)))
+        for container_dir, entries in groups.items():
+            temp_path = self._temp_dir.name + container_dir
+            os.makedirs(temp_path, exist_ok=True)
+            for host_path, filename in entries:
+                with open(host_path, "rb") as f:
+                    content = f.read()
+                self._write_content_to_file(os.path.join(temp_path, filename), None, content)
+            self.volumes[temp_path] = {"bind": container_dir, "mode": "rw"}
+
     def deploy(self, context: MinifiTestContext | None) -> bool:
         if self.is_deployed():
             logger.info(f"Container '{self.container_name}' is already deployed.")
@@ -122,6 +140,7 @@ class LinuxContainer(ContainerProtocol):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._configure_volumes_of_container_files()
         self._configure_volumes_of_container_dirs()
+        self._configure_volumes_of_host_copies()
         for host_file in self.host_files:
             self.volumes[host_file.host_path] = {
                 "bind": host_file.container_path,
