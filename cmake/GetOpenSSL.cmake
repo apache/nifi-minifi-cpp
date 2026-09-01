@@ -23,7 +23,55 @@ if(MINIFI_OPENSSL_SOURCE STREQUAL "CONAN")
 
     set(OPENSSL_BIN_DIR "${openssl_PACKAGE_FOLDER_RELEASE}" CACHE STRING "" FORCE)
 
-    include(BundledOpenSSLFips)
+    find_package(openssl-fips REQUIRED)
+    set(OPENSSL_FIPS_BIN_DIR "${openssl-fips_PACKAGE_FOLDER_RELEASE}" CACHE STRING "" FORCE)
+
+    if(APPLE OR WIN32 OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR CMAKE_SYSTEM_PROCESSOR MATCHES "(arm64)|(ARM64)|(aarch64)|(armv8)")
+        set(LIBDIR "lib")
+    else()
+        set(LIBDIR "lib64")
+    endif()
+
+    if (WIN32)
+        set(BYPRODUCT_DYN_SUFFIX ".dll" CACHE STRING "" FORCE)
+    elseif(APPLE)
+        set(BYPRODUCT_DYN_SUFFIX ".dylib" CACHE STRING "" FORCE)
+    else()
+        set(BYPRODUCT_DYN_SUFFIX ".so" CACHE STRING "" FORCE)
+    endif()
+
+    if (WIN32)
+        set(EXECUTABLE_SUFFIX ".exe" CACHE STRING "" FORCE)
+    else()
+        set(EXECUTABLE_SUFFIX "" CACHE STRING "" FORCE)
+    endif()
+
+    set(FIPS_BYPRODUCTS "${LIBDIR}/ossl-modules/fips${BYPRODUCT_DYN_SUFFIX}")
+
+    FOREACH(BYPRODUCT ${FIPS_BYPRODUCTS})
+        LIST(APPEND OPENSSL_FIPS_FILE_LIST "${OPENSSL_FIPS_BIN_DIR}/${BYPRODUCT}")
+    ENDFOREACH(BYPRODUCT)
+
+    if (MINIFI_PACKAGING_TYPE STREQUAL "RPM")
+        install(FILES ${OPENSSL_FIPS_FILE_LIST}
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/fips
+                COMPONENT bin)
+
+        install(FILES "${OPENSSL_BIN_DIR}/bin/openssl${EXECUTABLE_SUFFIX}"
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/fips
+                COMPONENT bin
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_EXECUTE)
+
+    elseif (MINIFI_PACKAGING_TYPE STREQUAL "TGZ")
+        install(FILES ${OPENSSL_FIPS_FILE_LIST}
+                DESTINATION fips
+                COMPONENT bin)
+
+        install(FILES "${OPENSSL_BIN_DIR}/bin/openssl${EXECUTABLE_SUFFIX}"
+                DESTINATION fips
+                COMPONENT bin
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_EXECUTE)
+    endif()
 
 elseif(MINIFI_OPENSSL_SOURCE STREQUAL "BUILD")
     message("Using CMake to build OpenSSL from source")
