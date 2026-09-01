@@ -8,7 +8,7 @@ on:
         description: Enable Conan package manager usage
         default: false
   schedule:
-  - cron: '0 1 * * 1'
+    - cron: '0 1 * * 1'
 env:
   CMAKE_FLAGS: -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DDOCKER_BUILD_ONLY=ON -DSKIP_TESTS=ON \
     -DDOCKER_USE_CONAN=${{ inputs.enable_conan && 'ON' || 'OFF' }} -DDOCKER_NIFI_CONAN_USER=${{ secrets.CONAN_USERNAME }} -DDOCKER_NIFI_CONAN_PASSWORD=${{ secrets.CONAN_ACCESS_TOKEN }}
@@ -81,7 +81,7 @@ jobs:
         shell: powershell
       - name: Copy conan compatibility.py
         shell: powershell
-        if: always() && ${{ inputs.enable_conan }}
+        if: always() && inputs.enable_conan
         run: |
           $compatDir = Join-Path $env:USERPROFILE ".conan2\extensions\plugins\compatibility"
           New-Item -ItemType Directory -Force -Path $compatDir | Out-Null
@@ -93,10 +93,10 @@ jobs:
         shell: cmd
         working-directory: bootstrap
       - name: Upload conan packages
-        if: always() && ${{ inputs.enable_conan }}
+        if: always() && inputs.enable_conan
         working-directory: bootstrap
         run: |
-          venv\Scripts\activate && conan remote login nifi-conan && conan upload "*" -r nifi-conan --confirm
+          venv\Scripts\activate && conan remote login nifi-conan "%CONAN_LOGIN_USERNAME_NIFI_CONAN%" -p "%CONAN_PASSWORD_NIFI_CONAN%" && conan upload "*" -r nifi-conan --confirm
         shell: cmd
       - name: Upload artifact
         uses: actions/upload-artifact@v7
