@@ -400,6 +400,7 @@ class TestController {
   };
 
   TestController();
+  virtual ~TestController() = default;
 
   std::shared_ptr<TestPlan> createPlan(PlanConfig config);
 

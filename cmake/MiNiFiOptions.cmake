@@ -120,6 +120,7 @@ add_minifi_option(ENABLE_CONTROLLER "Enables the build of MiNiFi controller bina
 add_minifi_option(ENABLE_LLAMACPP "Enables llama.cpp support." ON)
 add_minifi_option(ENABLE_OPC "Instructs the build system to enable the OPC extension" ON)
 add_minifi_option(MINIFI_RUST "Enables the build of rust based extensions." OFF)
+add_minifi_option(MINIFI_LMDB "Enables the LMDB extension." OFF)
 
 set_minifi_cache_variable(CUSTOM_MALLOC OFF "Overwrite malloc implementation.")
 set_property(CACHE CUSTOM_MALLOC PROPERTY STRINGS "jemalloc" "mimalloc" "rpmalloc" OFF)
@@ -194,6 +195,7 @@ add_minifi_multi_option(MINIFI_WINFLEXBISON_SOURCE "Retrieves winflexbison from 
 add_minifi_multi_option(MINIFI_AWS_SDK_CPP_SOURCE "Retrieves AWS SDK for C++ from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 add_minifi_multi_option(MINIFI_IODBC_SOURCE "Retrieves iODBC from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 add_minifi_multi_option(MINIFI_SOCI_SOURCE "Retrieves SOCI from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
+add_minifi_multi_option(MINIFI_LMDB_SOURCE "Retrieves LMDB from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 
 # Docker options
 

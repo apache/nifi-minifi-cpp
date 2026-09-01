@@ -460,7 +460,7 @@ TEST_CASE("FlowFileRepository triggers content repo orphan clear") {
     auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
     REQUIRE(content_repo->initialize(config));
     minifi::ResourceClaimImpl claim(content_repo);
-    content_repo->write(claim)->write("hi");
+    content_repo->write(claim, false)->write("hi", false);
     // ensure that the content is not deleted during resource claim destruction
     content_repo->incrementStreamCount(claim);
   }
@@ -506,7 +506,7 @@ TEST_CASE("FlowFileRepository synchronously pushes existing flow files") {
     auto ff = std::make_shared<minifi::FlowFileRecordImpl>();
     ff_id = ff->getUUID();
     ff->setConnection(conn.get());
-    content_repo->write(*claim)->write("hello");
+    content_repo->write(*claim, false)->write("hello", false);
     ff->setResourceClaim(claim);
     auto stream = std::make_unique<minifi::io::BufferStream>();
     ff->Serialize(*stream);

@@ -122,6 +122,7 @@ class MiNiFiCppMain(ConanFile):
         "enable_llamacpp": [True, False],
         "enable_aws": [True, False],
         "enable_sql": [True, False],
+        "minifi_lmdb": [True, False],
         "skip_tests": [True, False],
         "portable": [True, False],
     }
@@ -149,6 +150,7 @@ class MiNiFiCppMain(ConanFile):
         "enable_llamacpp": False,
         "enable_aws": False,
         "enable_sql": False,
+        "minifi_lmdb": False,
         "skip_tests": False,
         "portable": True,
     }
@@ -210,6 +212,8 @@ class MiNiFiCppMain(ConanFile):
             self.requires("aws-sdk-cpp/1.11.807@minifi/develop")
         if self.options.enable_all or self.options.enable_sql:
             self.requires("soci/4.1.4@minifi/develop")
+        if self.options.enable_all or self.options.minifi_lmdb:
+            self.requires("lmdb/1.0.1@minifi/develop")
 
         if self.options.custom_malloc == "jemalloc":
             self.requires("jemalloc/5.3.1")

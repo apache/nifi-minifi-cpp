@@ -49,7 +49,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 
 
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
-  auto stream = content_repo->write(*claim);
+  auto stream = content_repo->write(*claim, false);
 
   const std::string content = "well hello there";
 
@@ -95,7 +95,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 
 
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
-  auto stream = content_repo->write(*claim);
+  auto stream = content_repo->write(*claim, false);
 
   stream->write("well hello there");
 
@@ -154,7 +154,7 @@ TEST_CASE("Append Claim", "[TestDBCR1]") {
   const std::string content = "well hello there";
 
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
-  content_repo->write(*claim)->write(as_bytes(std::span(content)));
+  content_repo->write(*claim, false)->write(as_bytes(std::span(content)));
 
   // requesting append before content end fails
   CHECK(content_repo->lockAppend(*claim, 0) == nullptr);
@@ -192,7 +192,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   REQUIRE(content_repo->initialize(configuration));
 
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
-  auto stream = content_repo->write(*claim);
+  auto stream = content_repo->write(*claim, false);
 
   // we're writing nothing to the stream.
 
@@ -228,7 +228,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
 
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   auto claim2 = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
-  auto stream = content_repo->write(*claim);
+  auto stream = content_repo->write(*claim, false);
 
   stream->write("well hello there");
 
@@ -268,7 +268,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 
   auto claim = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
   auto claim2 = std::make_shared<minifi::ResourceClaimImpl>(content_repo);
-  auto stream = content_repo->write(*claim);
+  auto stream = content_repo->write(*claim, false);
 
   stream->write("well hello there");
 
@@ -346,7 +346,7 @@ TEST_CASE("DBContentRepository can clear orphan entries") {
     REQUIRE(content_repo->initialize(configuration));
 
     minifi::ResourceClaimImpl claim(content_repo);
-    content_repo->write(claim)->write("hi");
+    content_repo->write(claim, false)->write("hi", false);
     // ensure that the content is not deleted during resource claim destruction
     content_repo->incrementStreamCount(claim);
   }
