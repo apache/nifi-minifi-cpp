@@ -2,10 +2,18 @@ name: "Create Release Artifacts"
 
 on:
   workflow_dispatch:
+    inputs:
+      enable_conan:
+        type: boolean
+        description: Enable Conan package manager usage
+        default: false
   schedule:
   - cron: '0 1 * * 1'
 env:
-  CMAKE_FLAGS: -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DDOCKER_BUILD_ONLY=ON -DSKIP_TESTS=ON
+  CMAKE_FLAGS: -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DDOCKER_BUILD_ONLY=ON -DSKIP_TESTS=ON \
+    -DDOCKER_USE_CONAN=${{ inputs.enable_conan && 'ON' || 'OFF' }} -DDOCKER_NIFI_CONAN_USER=${{ secrets.CONAN_USERNAME }} -DDOCKER_NIFI_CONAN_PASSWORD=${{ secrets.CONAN_ACCESS_TOKEN }}
+  CONAN_LOGIN_USERNAME_NIFI_CONAN: ${{ secrets.CONAN_USERNAME }}
+  CONAN_PASSWORD_NIFI_CONAN: ${{ secrets.CONAN_ACCESS_TOKEN }}
 
 jobs:
   build-linux-artifacts:
@@ -71,11 +79,25 @@ jobs:
           if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "a4804e4f54f42c721df1323c5fcac101a8c7a577e7f20979227324ceab572d51") {Write "Hash mismatch"; Exit 1}
           Start-Process -FilePath ".\sqliteodbc_w64.exe" -ArgumentList "/S" -Wait
         shell: powershell
+      - name: Copy conan compatibility.py
+        shell: powershell
+        if: always() && ${{ inputs.enable_conan }}
+        run: |
+          $compatDir = Join-Path $env:USERPROFILE ".conan2\extensions\plugins\compatibility"
+          New-Item -ItemType Directory -Force -Path $compatDir | Out-Null
+          Copy-Item ".github\conan\compatibility.py" (Join-Path $compatDir "compatibility.py")
       - name: build
         run: |
-          python -m venv venv && venv\Scripts\activate && pip install -r requirements.txt && python main.py --noninteractive --skip-compiler-install --minifi-options="-DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=ON"
+          python -m venv venv && venv\Scripts\activate && pip install -r requirements.txt && ^
+          python main.py --noninteractive --skip-compiler-install --minifi-options="-DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=ON -DUSE_CONAN=${{ inputs.enable_conan && 'ON' || 'OFF' }}"
         shell: cmd
         working-directory: bootstrap
+      - name: Upload conan packages
+        if: always() && ${{ inputs.enable_conan }}
+        working-directory: bootstrap
+        run: |
+          venv\Scripts\activate && conan remote login nifi-conan && conan upload "*" -r nifi-conan --confirm
+        shell: cmd
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
@@ -103,11 +125,11 @@ jobs:
       - name: Bundle SDK Artifacts into ZIP
         run: |
           mkdir minifi-native-sdk
-          
+
           cp behave_framework/dist/*.whl minifi-native-sdk/
           cp minifi-api/minifi-api.def minifi-native-sdk/
           cp minifi-api/include/minifi-api.h minifi-native-sdk/
-          
+
           zip -r minifi-native-sdk.zip minifi-native-sdk/
 
       - name: Upload artifact
