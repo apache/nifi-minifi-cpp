@@ -49,13 +49,10 @@ impl ProcessorDefinition for EncryptContentPGP {
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[FILE_ENCODING_ATTR];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
 
-    fn properties() -> &'static [PropertyDefinition] {
-        const PROPERTIES: &[PropertyDefinition] = property_definitions![
-            FILE_ENCODING,
-            PASSWORD,
-            PUBLIC_KEY_SEARCH,
-            PUBLIC_KEY_SERVICE,
-        ];
-        PROPERTIES
-    }
+    const PROPERTIES: &[PropertyDefinition] = property_definitions![
+        FILE_ENCODING,
+        PASSWORD,
+        PUBLIC_KEY_SEARCH,
+        PUBLIC_KEY_SERVICE,
+    ];
 }

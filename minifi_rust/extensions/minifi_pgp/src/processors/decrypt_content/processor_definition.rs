@@ -53,10 +53,6 @@ impl ProcessorDefinition for DecryptContentPGP {
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] =
         &[LITERAL_DATA_FILENAME, LITERAL_DATA_MODIFIED];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
-
-    fn properties() -> &'static [PropertyDefinition] {
-        const PROPERTIES: &[PropertyDefinition] =
-            property_definitions![DECRYPTION_STRATEGY, SYMMETRIC_PASSWORD, PRIVATE_KEY_SERVICE,];
-        PROPERTIES
-    }
+    const PROPERTIES: &[PropertyDefinition] =
+        property_definitions![DECRYPTION_STRATEGY, SYMMETRIC_PASSWORD, PRIVATE_KEY_SERVICE,];
 }
