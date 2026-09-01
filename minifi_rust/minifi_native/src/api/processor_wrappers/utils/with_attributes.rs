@@ -15,6 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+
+/// Adds implementation with_attribute and with_attribute(s)
+/// used by TransformedFlowFile<'a>, GeneratedFlowFile<'a>, TransformStreamResult
+/// extracted to macro to avoid code duplication
 #[macro_export]
 macro_rules! impl_with_attributes {
     ($name:ident $(<$lt:lifetime>)?) => {
