@@ -106,7 +106,7 @@ jobs:
           python main.py --noninteractive --skip-compiler-install --cmake-options="-DCMAKE_C_FLAGS=${CPPFLAGS} ${CFLAGS} -DCMAKE_CXX_FLAGS=${CPPFLAGS} ${CXXFLAGS}" --minifi-options="${MACOS_MINIFI_OPTIONS}"
         working-directory: bootstrap
       - name: Upload conan packages
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'apache/nifi-minifi-cpp'
         run: |
           source venv/bin/activate && conan remote login nifi-conan && conan upload "*" -r nifi-conan --confirm
         working-directory: bootstrap
@@ -237,7 +237,7 @@ jobs:
           python main.py --noninteractive --skip-compiler-install --minifi-options="%WINDOWS_MINIFI_OPTIONS%" --cmake-options="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
         shell: cmd
       - name: Upload conan packages
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'apache/nifi-minifi-cpp'
         working-directory: bootstrap
         run: |
           venv\Scripts\activate && conan remote login nifi-conan && conan upload "*" -r nifi-conan --confirm
@@ -359,7 +359,7 @@ jobs:
             && python main.py --noninteractive --skip-compiler-install --cmake-options="-DSTRICT_GSL_CHECKS=AUDIT -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" --minifi-options="${UBUNTU_CLANG_MINIFI_OPTIONS}"
         working-directory: bootstrap
       - name: Upload conan packages
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'apache/nifi-minifi-cpp'
         run: |
           source venv/bin/activate && conan remote login nifi-conan && conan upload "*" -r nifi-conan --confirm
         working-directory: bootstrap

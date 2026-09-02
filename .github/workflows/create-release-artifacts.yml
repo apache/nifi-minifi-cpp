@@ -8,7 +8,7 @@ on:
         description: Enable Conan package manager usage
         default: false
   schedule:
-  - cron: '0 1 * * 1'
+    - cron: '0 1 * * 1'
 env:
   CMAKE_FLAGS: -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=OFF -DENABLE_ALL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DDOCKER_BUILD_ONLY=ON -DSKIP_TESTS=ON \
     -DDOCKER_USE_CONAN=${{ inputs.enable_conan && 'ON' || 'OFF' }} -DDOCKER_NIFI_CONAN_USER=${{ secrets.CONAN_USERNAME }} -DDOCKER_NIFI_CONAN_PASSWORD=${{ secrets.CONAN_ACCESS_TOKEN }}
@@ -24,10 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [
-          { arch: "x86_64", tar-artifact: "minifi-x86_64-tar", rpm-artifact: "minifi-x86_64-rpm" },
-          { arch: "aarch64", tar-artifact: "minifi-aarch64-tar", rpm-artifact: "minifi-aarch64-rpm" }
-        ]
+        platform: [ { arch: "x86_64", tar-artifact: "minifi-x86_64-tar", rpm-artifact: "minifi-x86_64-rpm" },
+                    { arch: "aarch64", tar-artifact: "minifi-aarch64-tar", rpm-artifact: "minifi-aarch64-rpm" } ]
 
     steps:
       - id: checkout
@@ -81,7 +79,7 @@ jobs:
         shell: powershell
       - name: Copy conan compatibility.py
         shell: powershell
-        if: always() && ${{ inputs.enable_conan }}
+        if: always() && inputs.enable_conan
         run: |
           $compatDir = Join-Path $env:USERPROFILE ".conan2\extensions\plugins\compatibility"
           New-Item -ItemType Directory -Force -Path $compatDir | Out-Null
@@ -93,7 +91,7 @@ jobs:
         shell: cmd
         working-directory: bootstrap
       - name: Upload conan packages
-        if: always() && ${{ inputs.enable_conan }}
+        if: always() && inputs.enable_conan && github.repository == 'apache/nifi-minifi-cpp'
         working-directory: bootstrap
         run: |
           venv\Scripts\activate && conan remote login nifi-conan && conan upload "*" -r nifi-conan --confirm
