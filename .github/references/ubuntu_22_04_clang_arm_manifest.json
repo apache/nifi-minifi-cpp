@@ -12110,25 +12110,6 @@
             "processors": [
                 {
                     "propertyDescriptors": {
-                        "Decryption Strategy": {
-                            "name": "Decryption Strategy",
-                            "description": "Strategy for writing files to success after decryption",
-                            "validator": "VALID",
-                            "required": "true",
-                            "sensitive": "false",
-                            "expressionLanguageScope": "NONE",
-                            "defaultValue": "DECRYPTED",
-                            "allowableValues": [
-                                {
-                                    "value": "DECRYPTED",
-                                    "displayName": "DECRYPTED"
-                                },
-                                {
-                                    "value": "PACKAGED",
-                                    "displayName": "PACKAGED"
-                                }
-                            ]
-                        },
                         "Private Key Service": {
                             "typeProvidedByValue": {
                                 "type": "minifi_pgp.controller_services.private_key_service.PGPPrivateKeyService",
@@ -12145,7 +12126,7 @@
                         "Symmetric Password": {
                             "name": "Symmetric Password",
                             "description": "Password used for decrypting data encrypted with Password-Based Encryption",
-                            "validator": "VALID",
+                            "validator": "NON_BLANK_VALIDATOR",
                             "required": "false",
                             "sensitive": "true",
                             "expressionLanguageScope": "NONE"
@@ -12163,7 +12144,7 @@
                             "description": "Decryption Succeeded"
                         }
                     ],
-                    "typeDescription": "Decrypt contents of OpenPGP messages. Using the Packaged Decryption Strategy preserves OpenPGP encoding to support subsequent signature verification.",
+                    "typeDescription": "Decrypt contents of OpenPGP messages.",
                     "supportsDynamicRelationships": "false",
                     "supportsDynamicProperties": "false",
                     "type": "minifi_pgp.processors.decrypt_content.DecryptContentPGP"
@@ -12213,7 +12194,7 @@
                         "Symmetric Password": {
                             "name": "Symmetric Password",
                             "description": "Password used for encrypting data with Password-Based Encryption",
-                            "validator": "VALID",
+                            "validator": "NON_BLANK_VALIDATOR",
                             "required": "false",
                             "sensitive": "true",
                             "expressionLanguageScope": "NONE"
@@ -12259,7 +12240,7 @@
                         "Key Passphrase": {
                             "name": "Key Passphrase",
                             "description": "Passphrase used for decrypting Private Keys",
-                            "validator": "VALID",
+                            "validator": "NON_BLANK_VALIDATOR",
                             "required": "false",
                             "sensitive": "true",
                             "expressionLanguageScope": "NONE"
@@ -12274,7 +12255,7 @@
                     "propertyDescriptors": {
                         "Keyring": {
                             "name": "Keyring",
-                            "description": "PGP Keyring or Secret Key encoded in ASCII Armor",
+                            "description": "PGP Keyring or Public Key encoded in ASCII Armor",
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "true",
@@ -12282,7 +12263,7 @@
                         },
                         "Keyring File": {
                             "name": "Keyring File",
-                            "description": "File path to PGP Keyring or Secret Key encoded in binary or ASCII Armor",
+                            "description": "File path to PGP Keyring or Public Key encoded in binary or ASCII Armor",
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",
