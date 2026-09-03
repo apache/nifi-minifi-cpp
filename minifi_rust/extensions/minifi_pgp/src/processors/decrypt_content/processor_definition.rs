@@ -1,4 +1,21 @@
-use super::{DecryptContentPGP, DecryptionStrategy};
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+use super::DecryptContentPGP;
 use crate::controller_services::private_key_service::PGPPrivateKeyService;
 use crate::utils;
 use minifi_native::{
@@ -17,12 +34,6 @@ pub(super) const LITERAL_DATA_MODIFIED: OutputAttribute = OutputAttribute {
     relationships: &["success"],
     description: "Modified Date from decrypted Literal Data (Note that OpenPGP signatures do not include the formatting octet, the file name, and the date field of the Literal Data packet in a signature hash; therefore, those fields are not protected against tampering in a signed document. Therefore a lot of implementations omit these inherently malleable metadata)",
 };
-
-pub(super) const DECRYPTION_STRATEGY: Property<DecryptionStrategy> = Property::new(
-    "Decryption Strategy",
-    "Strategy for writing files to success after decryption",
-)
-.with_default(DecryptionStrategy::Decrypted.into_str());
 
 pub(super) const SYMMETRIC_PASSWORD: Property<Option<utils::Password>> = Property::new(
     "Symmetric Password",
@@ -46,7 +57,7 @@ pub(super) const FAILURE: Relationship = Relationship {
 };
 
 impl ProcessorDefinition for DecryptContentPGP {
-    const DESCRIPTION: &'static str = "Decrypt contents of OpenPGP messages. Using the Packaged Decryption Strategy preserves OpenPGP encoding to support subsequent signature verification.";
+    const DESCRIPTION: &'static str = "Decrypt contents of OpenPGP messages.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
@@ -54,5 +65,5 @@ impl ProcessorDefinition for DecryptContentPGP {
         &[LITERAL_DATA_FILENAME, LITERAL_DATA_MODIFIED];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
     const PROPERTIES: &[PropertyDefinition] =
-        property_definitions![DECRYPTION_STRATEGY, SYMMETRIC_PASSWORD, PRIVATE_KEY_SERVICE,];
+        property_definitions![SYMMETRIC_PASSWORD, PRIVATE_KEY_SERVICE,];
 }
