@@ -230,14 +230,14 @@ std::shared_ptr<FlowFileRecord> FlowFileRecordImpl::DeSerialize(io::InputStream&
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
     {
-      const auto ret = inStream.read(key, true);
+      const auto ret = inStream.read(key, io::LengthPrefixSize::_32BIT, 1_MiB);
       if (ret == 0 || io::isError(ret)) {
         return {};
       }
     }
     std::string value;
     {
-      const auto ret = inStream.read(value, true);
+      const auto ret = inStream.read(value, io::LengthPrefixSize::_32BIT, 1_MiB);
       if (ret == 0 || io::isError(ret)) {
         return {};
       }
@@ -247,7 +247,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecordImpl::DeSerialize(io::InputStream&
 
   std::string content_full_path;
   {
-    const auto ret = inStream.read(content_full_path);
+    const auto ret = inStream.read(content_full_path, io::LengthPrefixSize::_16BIT, 10_KiB);
     if (ret == 0 || io::isError(ret)) {
       return {};
     }

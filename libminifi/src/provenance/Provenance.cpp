@@ -34,6 +34,8 @@
 
 namespace org::apache::nifi::minifi::provenance {
 
+constexpr auto MAX_COMPONENT_NAME_LENGTH = 1_KiB;
+
 std::shared_ptr<utils::IdGenerator> ProvenanceEventRecordImpl::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::shared_ptr<core::logging::Logger> ProvenanceEventRecordImpl::logger_ = core::logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
 
@@ -300,14 +302,14 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   }
 
   {
-    const auto ret = input_stream.read(component_id_);
+    const auto ret = input_stream.read(component_id_, io::LengthPrefixSize::_16BIT, MAX_COMPONENT_NAME_LENGTH);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
   }
 
   {
-    const auto ret = input_stream.read(component_type_);
+    const auto ret = input_stream.read(component_type_, io::LengthPrefixSize::_16BIT, MAX_COMPONENT_NAME_LENGTH);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
@@ -321,7 +323,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   }
 
   {
-    const auto ret = input_stream.read(details_);
+    const auto ret = input_stream.read(details_, io::LengthPrefixSize::_16BIT, 1_MiB);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
@@ -339,14 +341,16 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
     {
-      const auto ret = input_stream.read(key);
+      // clamp attribute name / value to 64k (the 16bit length prefix maximum)
+      const auto ret = input_stream.read(key, io::LengthPrefixSize::_16BIT, 64_KiB);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
     std::string value;
     {
-      const auto ret = input_stream.read(value);
+      // clamp attribute name / value to 64k (the 16bit length prefix maximum)
+      const auto ret = input_stream.read(value, io::LengthPrefixSize::_16BIT, 64_KiB);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
@@ -355,7 +359,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   }
 
   {
-    const auto ret = input_stream.read(content_full_path_);
+    const auto ret = input_stream.read(content_full_path_, io::LengthPrefixSize::_16BIT, 1_KiB);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
@@ -376,7 +380,7 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   }
 
   {
-    const auto ret = input_stream.read(source_queue_identifier_);
+    const auto ret = input_stream.read(source_queue_identifier_, io::LengthPrefixSize::_16BIT, MAX_COMPONENT_NAME_LENGTH);
     if (ret == 0 || io::isError(ret)) {
       return false;
     }
@@ -421,20 +425,20 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
     }
   } else if (event_type_ == ProvenanceEventRecord::SEND || event_type_ == ProvenanceEventRecord::FETCH) {
     {
-      const auto ret = input_stream.read(transit_uri_);
+      const auto ret = input_stream.read(transit_uri_, io::LengthPrefixSize::_16BIT, 10_KiB);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
   } else if (event_type_ == ProvenanceEventRecord::RECEIVE) {
     {
-      const auto ret = input_stream.read(transit_uri_);
+      const auto ret = input_stream.read(transit_uri_, io::LengthPrefixSize::_16BIT, 10_KiB);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
     }
     {
-      const auto ret = input_stream.read(source_system_flow_file_identifier_);
+      const auto ret = input_stream.read(source_system_flow_file_identifier_, io::LengthPrefixSize::_16BIT, 36);
       if (ret == 0 || io::isError(ret)) {
         return false;
       }

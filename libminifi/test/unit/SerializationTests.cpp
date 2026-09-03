@@ -32,7 +32,7 @@ TEST_CASE("TestWriteUTF", "[MINIFI193]") {
   std::string verifyString;
   baseStream.write(stringOne, false);
 
-  baseStream.read(verifyString, false);
+  baseStream.read(verifyString, minifi::io::LengthPrefixSize::_16BIT, 100);
 
   REQUIRE(verifyString == stringOne);
 }
@@ -45,7 +45,7 @@ TEST_CASE("TestWriteUTF2", "[MINIFI193]") {
   std::string verifyString;
   baseStream.write(stringOne, false);
 
-  baseStream.read(verifyString, false);
+  baseStream.read(verifyString, minifi::io::LengthPrefixSize::_16BIT, 100);
 
   REQUIRE(verifyString == stringOne);
 }
@@ -58,7 +58,7 @@ TEST_CASE("TestWriteUTF3", "[MINIFI193]") {
   std::string verifyString;
   baseStream.write(stringOne, false);
 
-  baseStream.read(verifyString, false);
+  baseStream.read(verifyString, minifi::io::LengthPrefixSize::_16BIT, 100);
 
   REQUIRE(verifyString == stringOne);
 }

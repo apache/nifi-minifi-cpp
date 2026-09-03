@@ -61,7 +61,7 @@ std::optional<SiteToSiteResponse> SiteToSiteClient::readResponse(const std::shar
     return std::nullopt;
   }
   if (response_code_context->has_description) {
-    if (const auto ret = peer_->read(response.message); ret == 0 || io::isError(ret)) {
+    if (const auto ret = peer_->read(response.message, io::LengthPrefixSize::_16BIT, 64_KiB); ret == 0 || io::isError(ret)) {
       logger_->log_error("Site2Site read response failed: failed to read response message");
       return std::nullopt;
     }
@@ -569,11 +569,11 @@ std::expected<void, std::string> SiteToSiteClient::readFlowFileHeaderData(io::In
   for (uint64_t i = 0; i < num_attributes; i++) {
     std::string key;
     std::string value;
-    if (const auto ret = stream.read(key, true); ret == 0 || io::isError(ret)) {
+    if (const auto ret = stream.read(key, io::LengthPrefixSize::_32BIT, 1_MiB); ret == 0 || io::isError(ret)) {
       return std::unexpected{fmt::format("Site2Site transaction {} failed to read attribute key", transaction_id_str)};
     }
 
-    if (const auto ret = stream.read(value, true); ret == 0 || io::isError(ret)) {
+    if (const auto ret = stream.read(value, io::LengthPrefixSize::_32BIT, 1_MiB); ret == 0 || io::isError(ret)) {
       return std::unexpected{fmt::format("Site2Site transaction {} failed to read attribute value for key {}", transaction_id_str, key)};
     }
 
