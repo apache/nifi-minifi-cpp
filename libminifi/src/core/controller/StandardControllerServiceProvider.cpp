@@ -34,9 +34,7 @@ std::shared_ptr<ControllerServiceNode> StandardControllerServiceProvider::create
     return nullptr;
   }
 
-  std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service,
-                                                                                                            sharedFromThis<ControllerServiceProvider>(), id,
-                                                                                                            configuration_);
+  std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service, this, id, configuration_);
 
   controller_map_->put(id, new_service_node, parent_group);
   if (alternative_key) {

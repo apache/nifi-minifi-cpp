@@ -1,8 +1,7 @@
-diff --git a/CMake/AbseilDll.cmake b/CMake/AbseilDll.cmake
-index 32cc28fb..8e9dc702 100644
---- a/CMake/AbseilDll.cmake
-+++ b/CMake/AbseilDll.cmake
-@@ -521,7 +521,7 @@ set(ABSL_INTERNAL_DLL_TARGETS
+diff -ur a/CMake/AbseilDll.cmake b/CMake/AbseilDll.cmake
+--- a/CMake/AbseilDll.cmake	2026-08-18 14:53:30.000000000 +0200
++++ b/CMake/AbseilDll.cmake	2026-09-03 13:22:10.161368576 +0200
+@@ -548,7 +548,7 @@
    "crc_cord_state"
    "crc_cpu_detect"
    "crc_internal"
@@ -11,11 +10,10 @@ index 32cc28fb..8e9dc702 100644
    "debugging"
    "debugging_internal"
    "demangle_internal"
-diff --git a/absl/crc/BUILD.bazel b/absl/crc/BUILD.bazel
-index 890d637c..8d680c22 100644
---- a/absl/crc/BUILD.bazel
-+++ b/absl/crc/BUILD.bazel
-@@ -72,7 +72,7 @@ cc_library(
+diff -ur a/absl/crc/BUILD.bazel b/absl/crc/BUILD.bazel
+--- a/absl/crc/BUILD.bazel	2026-08-18 14:53:30.000000000 +0200
++++ b/absl/crc/BUILD.bazel	2026-09-03 13:22:10.161668055 +0200
+@@ -60,7 +60,7 @@
  )
  
  cc_library(
@@ -24,11 +22,10 @@ index 890d637c..8d680c22 100644
      srcs = [
          "crc32c.cc",
          "internal/crc32c_inline.h",
-diff --git a/absl/crc/CMakeLists.txt b/absl/crc/CMakeLists.txt
-index d52a1bc4..3cec9dcb 100644
---- a/absl/crc/CMakeLists.txt
-+++ b/absl/crc/CMakeLists.txt
-@@ -53,7 +53,7 @@ absl_cc_library(
+diff -ur a/absl/crc/CMakeLists.txt b/absl/crc/CMakeLists.txt
+--- a/absl/crc/CMakeLists.txt	2026-08-18 14:53:30.000000000 +0200
++++ b/absl/crc/CMakeLists.txt	2026-09-03 13:22:10.161889990 +0200
+@@ -38,7 +38,7 @@
  
  absl_cc_library(
    NAME
@@ -37,7 +34,7 @@ index d52a1bc4..3cec9dcb 100644
    HDRS
      "crc32c.h"
      "internal/crc32c.h"
-@@ -86,7 +86,7 @@ absl_cc_test(
+@@ -71,7 +71,7 @@
    COPTS
      ${ABSL_DEFAULT_COPTS}
    DEPS
@@ -46,7 +43,7 @@ index d52a1bc4..3cec9dcb 100644
      absl::strings
      absl::str_format
      GTest::gtest_main
-@@ -126,7 +126,7 @@ absl_cc_test(
+@@ -111,7 +111,7 @@
    COPTS
      ${ABSL_DEFAULT_COPTS}
    DEPS
@@ -55,7 +52,7 @@ index d52a1bc4..3cec9dcb 100644
      absl::memory
      absl::random_random
      absl::random_distributions
-@@ -156,7 +156,7 @@ absl_cc_library(
+@@ -141,7 +141,7 @@
    COPTS
      ${ABSL_DEFAULT_COPTS}
    DEPS
@@ -64,7 +61,7 @@ index d52a1bc4..3cec9dcb 100644
      absl::config
      absl::strings
      absl::no_destructor
-@@ -171,6 +171,6 @@ absl_cc_test(
+@@ -156,6 +156,6 @@
      ${ABSL_DEFAULT_COPTS}
    DEPS
      absl::crc_cord_state
@@ -72,11 +69,10 @@ index d52a1bc4..3cec9dcb 100644
 +    absl::crc32c_internal
      GTest::gtest_main
  )
-diff --git a/absl/strings/CMakeLists.txt b/absl/strings/CMakeLists.txt
-index 3a1619e8..2c368cf2 100644
---- a/absl/strings/CMakeLists.txt
-+++ b/absl/strings/CMakeLists.txt
-@@ -987,7 +987,7 @@ absl_cc_library(
+diff -ur a/absl/strings/CMakeLists.txt b/absl/strings/CMakeLists.txt
+--- a/absl/strings/CMakeLists.txt	2026-08-18 14:53:30.000000000 +0200
++++ b/absl/strings/CMakeLists.txt	2026-09-03 13:22:10.162082289 +0200
+@@ -1075,7 +1075,7 @@
      absl::cordz_update_scope
      absl::cordz_update_tracker
      absl::core_headers

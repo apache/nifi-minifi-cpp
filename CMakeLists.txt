@@ -142,6 +142,16 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Use ASAN if instructed
 if (MINIFI_ADVANCED_ASAN_BUILD)
+    if (CUSTOM_MALLOC)
+        message(FATAL_ERROR "MINIFI_ADVANCED_ASAN_BUILD is incompatible with CUSTOM_MALLOC "
+            "(currently '${CUSTOM_MALLOC}'): AddressSanitizer supplies its own allocator. "
+            "Disable one of them.")
+    endif()
+    if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message(WARNING "MINIFI_ADVANCED_ASAN_BUILD is enabled but CMAKE_BUILD_TYPE is "
+            "'${CMAKE_BUILD_TYPE}', not Debug; a Debug build is recommended for the most "
+            "accurate AddressSanitizer diagnostics.")
+    endif()
     set(ASAN_FLAGS "-g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ASAN_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_FLAGS}")

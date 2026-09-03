@@ -1,0 +1,18 @@
+diff --git a/src/openssl.c b/src/openssl.c
+--- a/src/openssl.c
++++ b/src/openssl.c
+@@ -4345,6 +4345,15 @@ _libssh2_ecdh_gen_k(_libssh2_bn **k, _libssh2_ec_key *private_key,
+
+ clean_exit:
+ #ifdef USE_OPENSSL_3
++    if(bn_ctx)
++        BN_CTX_free(bn_ctx);
++
++    if(key_fromdata_ctx)
++        EVP_PKEY_CTX_free(key_fromdata_ctx);
++
++    if(peer_key)
++        EVP_PKEY_free(peer_key);
++
+     if(group_name)
+         OPENSSL_clear_free(group_name, group_name_len);

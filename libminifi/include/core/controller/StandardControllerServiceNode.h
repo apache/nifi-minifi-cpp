@@ -31,10 +31,9 @@ namespace org::apache::nifi::minifi::core::controller {
 
 class StandardControllerServiceNode : public ControllerServiceNode {
  public:
-  explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::shared_ptr<ControllerServiceProvider> provider, std::string id,
-                                         std::shared_ptr<Configure> configuration)
+  explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, ControllerServiceProvider* provider, std::string id, std::shared_ptr<Configure> configuration)
       : ControllerServiceNode(std::move(service), std::move(id), std::move(configuration)),
-        provider(std::move(provider)),
+        provider(provider),
         logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
 
@@ -57,7 +56,7 @@ class StandardControllerServiceNode : public ControllerServiceNode {
   bool disable() override;
 
  protected:
-  std::shared_ptr<ControllerServiceProvider> provider;
+  ControllerServiceProvider* provider;
   std::mutex mutex_;
 
  private:
