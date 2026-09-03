@@ -1,30 +1,35 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 mod processor_definition;
 
 use processor_definition::*;
 
 use crate::controller_services::private_key_service::PGPPrivateKeyService;
 
-use minifi_native::macros::{ComponentIdentifier, PropertyType};
+use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileStreamTransform, GetControllerService, GetProperty, InputStream, Logger, MinifiError,
     OutputStream, ProcessError, RouteErrorExt, Schedule, TransformStreamResult,
 };
 use pgp::composed::{Message, TheRing};
-use std::fmt::Debug;
-use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
-
-#[derive(
-    Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr, PropertyType,
-)]
-#[strum(serialize_all = "UPPERCASE", const_into_str)]
-enum DecryptionStrategy {
-    Decrypted,
-    Packaged,
-}
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct DecryptContentPGP {
-    decompress_data: bool,
     symmetric_password: Option<pgp::types::Password>,
 }
 
@@ -34,8 +39,6 @@ impl Schedule for DecryptContentPGP {
         Self: Sized,
         L: Logger,
     {
-        let decryption_strategy = context.get_property(&DECRYPTION_STRATEGY)?;
-
         let symmetric_password = context.get_property(&SYMMETRIC_PASSWORD)?;
         let has_context_service = context.get_raw_property(&PRIVATE_KEY_SERVICE)?.is_some();
         if !has_context_service && symmetric_password.is_none() {
@@ -43,10 +46,7 @@ impl Schedule for DecryptContentPGP {
                 "Either Symmetric Password or Private Key Service must be set",
             ))
         } else {
-            Ok(DecryptContentPGP {
-                decompress_data: decryption_strategy == DecryptionStrategy::Decrypted,
-                symmetric_password,
-            })
+            Ok(DecryptContentPGP { symmetric_password })
         }
     }
 }
@@ -108,7 +108,7 @@ impl FlowFileStreamTransform for DecryptContentPGP {
             .decrypt_msg(msg, private_key_service)
             .route_err_to_failure()?;
 
-        if self.decompress_data && decrypted_msg.is_compressed() {
+        if decrypted_msg.is_compressed() {
             decrypted_msg = decrypted_msg
                 .decompress()
                 .map_err(MinifiError::other)
@@ -170,20 +170,6 @@ mod tests {
         assert!(decrypt_content.is_ok());
     }
 
-    #[test]
-    fn schedule_rejects_invalid_strategy_without_panicking() {
-        let mut context = MockProcessContext::new();
-        context
-            .properties
-            .insert(DECRYPTION_STRATEGY.name(), "NOT_A_STRATEGY".to_string());
-        context
-            .properties
-            .insert(SYMMETRIC_PASSWORD.name(), "my_secret_password".to_string());
-        // Must return Err, not panic.
-        let result = DecryptContentPGP::schedule(&context, &MockLogger::new());
-        assert!(result.is_err(), "expected schedule to fail on bad strategy");
-    }
-
     #[derive(Copy, Clone)]
     struct PrivateKeyData {
         key_filename: &'static str,
@@ -240,10 +226,11 @@ mod tests {
         );
 
         match expected_result {
-            Ok(_result_bytes) => {
+            Ok(result_bytes) => {
                 let res = res.expect("Should be able to transform");
                 assert_eq!(res.target_relationship_name(), SUCCESS.name);
                 assert_eq!(res.write_status(), IoState::Ok);
+                assert_eq!(output, result_bytes);
                 let data_modified = res
                     .get_attribute(LITERAL_DATA_MODIFIED.name)
                     .unwrap()
