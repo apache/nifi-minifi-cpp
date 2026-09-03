@@ -41,13 +41,13 @@ class KafkaTopicExtractor : public DatasetExtractor {
     DatasetReferences refs;
     std::string topic;
     std::string host;
-    const auto attributes = const_cast<provenance::ProvenanceEventRecord&>(event).getAttributes();
+    const auto attributes = event.getAttributes();
     if (auto it = attributes.find("kafka.topic"); it != attributes.end()) {
       topic = it->second;
     }
     if (topic.empty()) {
       // Parse kafka://host[:port]/topic
-      const auto transit = const_cast<provenance::ProvenanceEventRecord&>(event).getTransitUri();
+      const auto transit = event.getTransitUri();
       constexpr std::string_view scheme = "kafka://";
       if (transit.starts_with(scheme)) {
         const auto rest = transit.substr(scheme.size());

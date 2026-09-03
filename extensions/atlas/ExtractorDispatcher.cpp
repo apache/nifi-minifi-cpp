@@ -47,7 +47,7 @@ ExtractorDispatcher::ExtractorDispatcher() {
 
 DatasetReferences ExtractorDispatcher::dispatch(const provenance::ProvenanceEventRecord& event) const {
   const auto component_type = event.getComponentType();
-  const auto transit_uri = const_cast<provenance::ProvenanceEventRecord&>(event).getTransitUri();
+  const auto transit_uri = event.getTransitUri();
   const auto event_type = event.getEventType();
 
   // Pass 1: componentType regex. Most specific — a Kafka processor's provenance

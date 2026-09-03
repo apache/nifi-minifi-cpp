@@ -33,6 +33,8 @@
 #include "core/Resource.h"
 #include "minifi-cpp/core/ProcessContext.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> PutFile::id_generator_ = utils::IdGenerator::getIdGenerator();
@@ -143,6 +145,9 @@ void PutFile::putFile(core::ProcessSession& session,
   }
 #endif
 
+  if (success) {
+    session.getProvenanceReporter()->send(*flow_file, utils::file::pathToUri(dest_file), "Write file", 0ms);
+  }
   session.transfer(flow_file, success ? Success : Failure);
 }
 

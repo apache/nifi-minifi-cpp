@@ -167,22 +167,22 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   // Build queue entities: one per inter-path connection edge (fan-out end or
   // fan-in start). qualifiedName is <destinationProcessorId>@<ns>.
   // Track which paths get which inputs/outputs so we can wire them up.
-  std::unordered_map<std::string, std::vector<AtlasEntity::Reference>> path_inputs;   // path qname -> refs
-  std::unordered_map<std::string, std::vector<AtlasEntity::Reference>> path_outputs;
+  std::unordered_map<std::string, std::unordered_set<AtlasEntity::Reference>> path_inputs;   // path qname -> refs
+  std::unordered_map<std::string, std::unordered_set<AtlasEntity::Reference>> path_outputs;
 
   // Ports become inputs/outputs directly on the paths whose processors they connect to.
   for (const auto& [proc_uuid, port_uuids_upstream] : proc_upstream_input_ports) {
     const auto path_it = result.processor_to_path.find(proc_uuid);
     if (path_it == result.processor_to_path.end()) continue;
     for (const auto& port_uuid : port_uuids_upstream) {
-      path_inputs[path_it->second.flow_path_qualified_name].push_back({kNifiInputPort, qualifiedName(port_uuid, ns)});
+      path_inputs[path_it->second.flow_path_qualified_name].emplace(kNifiInputPort, qualifiedName(port_uuid, ns));
     }
   }
   for (const auto& [proc_uuid, port_uuids_downstream] : proc_downstream_output_ports) {
     const auto path_it = result.processor_to_path.find(proc_uuid);
     if (path_it == result.processor_to_path.end()) continue;
     for (const auto& port_uuid : port_uuids_downstream) {
-      path_outputs[path_it->second.flow_path_qualified_name].push_back({kNifiOutputPort, qualifiedName(port_uuid, ns)});
+      path_outputs[path_it->second.flow_path_qualified_name].emplace(kNifiOutputPort, qualifiedName(port_uuid, ns));
     }
   }
 
@@ -203,53 +203,53 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
       AtlasEntity q;
       q.type_name = kNifiQueue;
       q.qualified_name = queue_qn;
-      q.display_name = "queue to " + std::string{conn.name.empty() ? proc_by_uuid.at(dst)->name : conn.name};
+      q.string_attributes["name"] = "queue to " + std::string{conn.name.empty() ? proc_by_uuid.at(dst)->name : conn.name};
       queue_entities.push_back(std::move(q));
     }
-    path_outputs[src_path_it->second.flow_path_qualified_name].push_back({kNifiQueue, queue_qn});
-    path_inputs[dst_path_it->second.flow_path_qualified_name].push_back({kNifiQueue, queue_qn});
+    path_outputs[src_path_it->second.flow_path_qualified_name].emplace(kNifiQueue, queue_qn);
+    path_inputs[dst_path_it->second.flow_path_qualified_name].emplace(kNifiQueue, queue_qn);
   }
 
   // Emit nifi_flow.
   AtlasEntity flow;
   flow.type_name = kNifiFlow;
   flow.qualified_name = qualifiedName(topology.root_group_uuid.to_string().view(), ns);
-  flow.display_name = topology.root_group_name.empty() ? "MiNiFi Flow" : topology.root_group_name;
+  flow.string_attributes["name"] = topology.root_group_name.empty() ? "MiNiFi Flow" : topology.root_group_name;
   if (!flow_url.empty()) {
-    flow.string_attributes.emplace_back("url", std::string{flow_url});
+    flow.string_attributes.emplace("url", std::string{flow_url});
   }
 
-  std::vector<AtlasEntity::Reference> flow_paths_refs;
+  std::unordered_set<AtlasEntity::Reference> flow_paths_refs;
   flow_paths_refs.reserve(paths.size());
   for (const auto& bp : paths) {
-    flow_paths_refs.push_back({kNifiFlowPath, bp.qualified_name});
+    flow_paths_refs.emplace(kNifiFlowPath, bp.qualified_name);
   }
   if (!flow_paths_refs.empty()) {
-    flow.ref_list_attributes.emplace_back("flowPaths", std::move(flow_paths_refs));
+    flow.ref_list_attributes.emplace("flowPaths", std::move(flow_paths_refs));
   }
   if (!queue_entities.empty()) {
-    std::vector<AtlasEntity::Reference> queue_refs;
+    std::unordered_set<AtlasEntity::Reference> queue_refs;
     queue_refs.reserve(queue_entities.size());
     for (const auto& q : queue_entities) {
-      queue_refs.push_back({kNifiQueue, q.qualified_name});
+      queue_refs.emplace(kNifiQueue, q.qualified_name);
     }
-    flow.ref_list_attributes.emplace_back("queues", std::move(queue_refs));
+    flow.ref_list_attributes.emplace("queues", std::move(queue_refs));
   }
   if (!topology.input_ports.empty()) {
-    std::vector<AtlasEntity::Reference> port_refs;
+    std::unordered_set<AtlasEntity::Reference> port_refs;
     port_refs.reserve(topology.input_ports.size());
     for (const auto& p : topology.input_ports) {
-      port_refs.push_back({kNifiInputPort, qualifiedName(p.uuid.to_string().view(), ns)});
+      port_refs.emplace(kNifiInputPort, qualifiedName(p.uuid.to_string().view(), ns));
     }
-    flow.ref_list_attributes.emplace_back("inputPorts", std::move(port_refs));
+    flow.ref_list_attributes.emplace("inputPorts", std::move(port_refs));
   }
   if (!topology.output_ports.empty()) {
-    std::vector<AtlasEntity::Reference> port_refs;
+    std::unordered_set<AtlasEntity::Reference> port_refs;
     port_refs.reserve(topology.output_ports.size());
     for (const auto& p : topology.output_ports) {
-      port_refs.push_back({kNifiOutputPort, qualifiedName(p.uuid.to_string().view(), ns)});
+      port_refs.emplace(kNifiOutputPort, qualifiedName(p.uuid.to_string().view(), ns));
     }
-    flow.ref_list_attributes.emplace_back("outputPorts", std::move(port_refs));
+    flow.ref_list_attributes.emplace("outputPorts", std::move(port_refs));
   }
   result.entities.push_back(std::move(flow));
 
@@ -261,26 +261,26 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     AtlasEntity path_entity;
     path_entity.type_name = kNifiFlowPath;
     path_entity.qualified_name = bp.qualified_name;
-    std::string display_name;
+    std::string name;
     for (const auto& proc_uuid : bp.processor_uuids) {
       const auto* proc = proc_by_uuid.at(proc_uuid);
-      if (!display_name.empty()) display_name += ", ";
-      display_name += proc->name;
+      if (!name.empty()) name += ", ";
+      name += proc->name;
     }
-    path_entity.display_name = std::move(display_name);
-    path_entity.ref_attributes.emplace_back("nifiFlow", flow_ref);
+    path_entity.string_attributes["name"] = std::move(name);
+    path_entity.ref_attributes.emplace("nifiFlow", flow_ref);
     if (auto it = path_inputs.find(bp.qualified_name); it != path_inputs.end()) {
-      path_entity.ref_list_attributes.emplace_back("inputs", std::move(it->second));
+      path_entity.ref_list_attributes.emplace("inputs", std::move(it->second));
     }
     if (auto it = path_outputs.find(bp.qualified_name); it != path_outputs.end()) {
-      path_entity.ref_list_attributes.emplace_back("outputs", std::move(it->second));
+      path_entity.ref_list_attributes.emplace("outputs", std::move(it->second));
     }
     result.entities.push_back(std::move(path_entity));
   }
 
   // Emit queue entities.
   for (auto& q : queue_entities) {
-    q.ref_attributes.emplace_back("nifiFlow", flow_ref);
+    q.ref_attributes.emplace("nifiFlow", flow_ref);
     result.entities.push_back(std::move(q));
   }
 
@@ -289,16 +289,16 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     AtlasEntity e;
     e.type_name = kNifiInputPort;
     e.qualified_name = qualifiedName(p.uuid.to_string().view(), ns);
-    e.display_name = p.name;
-    e.ref_attributes.emplace_back("nifiFlow", flow_ref);
+    e.string_attributes["name"] = p.name;
+    e.ref_attributes.emplace("nifiFlow", flow_ref);
     result.entities.push_back(std::move(e));
   }
   for (const auto& p : topology.output_ports) {
     AtlasEntity e;
     e.type_name = kNifiOutputPort;
     e.qualified_name = qualifiedName(p.uuid.to_string().view(), ns);
-    e.display_name = p.name;
-    e.ref_attributes.emplace_back("nifiFlow", flow_ref);
+    e.string_attributes["name"] = p.name;
+    e.ref_attributes.emplace("nifiFlow", flow_ref);
     result.entities.push_back(std::move(e));
   }
 

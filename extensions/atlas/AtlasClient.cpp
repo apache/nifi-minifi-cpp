@@ -18,6 +18,7 @@
 
 #include <sstream>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 
 #include "AtlasTypeDefs.h"
@@ -63,49 +64,72 @@ rapidjson::Value stringValue(std::string_view s, rapidjson::Document::AllocatorT
   return rapidjson::Value{s.data(), gsl::narrow<rapidjson::SizeType>(s.size()), alloc};
 }
 
+// Batch-key for cross-referencing: pairing type + qualifiedName with a NUL byte
+// as separator so entities that happen to share a qualifiedName across types
+// stay distinct. Atlas's uniqueness key is the (typeName, qualifiedName) pair.
+std::string batchKey(std::string_view type_name, std::string_view qualified_name) {
+  std::string key;
+  key.reserve(type_name.size() + 1 + qualified_name.size());
+  key.append(type_name);
+  key.push_back('\0');
+  key.append(qualified_name);
+  return key;
+}
+
+// Emits one reference as a rapidjson object. If the referenced (typeName, qualifiedName)
+// is another entity in the same bulk POST, we emit { "guid": "<peer temp guid>" }: Atlas
+// resolves this against the temp guid of the peer within the batch, letting the whole
+// graph be committed in one call. Otherwise we fall back to the uniqueAttributes shape,
+// which points at an entity Atlas already knows (or will create implicitly).
+rapidjson::Value serializeReferenceObject(
+    const AtlasEntity::Reference& ref,
+    const std::unordered_map<std::string, std::string>& batch_guid_by_key,
+    rapidjson::Document::AllocatorType& alloc) {
+  rapidjson::Value ref_obj{rapidjson::kObjectType};
+  if (const auto it = batch_guid_by_key.find(batchKey(ref.type_name, ref.qualified_name));
+      it != batch_guid_by_key.end()) {
+    ref_obj.AddMember("guid", stringValue(it->second, alloc), alloc);
+    return ref_obj;
+  }
+  ref_obj.AddMember("typeName", stringValue(ref.type_name, alloc), alloc);
+  rapidjson::Value unique{rapidjson::kObjectType};
+  unique.AddMember("qualifiedName", stringValue(ref.qualified_name, alloc), alloc);
+  ref_obj.AddMember("uniqueAttributes", unique, alloc);
+  return ref_obj;
+}
+
 // Serializes an AtlasEntity into a rapidjson Value shaped like Atlas v2 expects:
 //   { "typeName": ..., "attributes": { qualifiedName, name, ...string attrs...,
 //     ...ref attrs... }, "guid": "-<unique-negative>" }
 // The guid uses a negative integer string as Atlas's convention for "new entity";
-// Atlas ignores it when qualifiedName already exists (upsert). We use a running
-// counter passed in by the caller so all entities in one bulk POST get distinct
-// temporary guids.
-rapidjson::Value serializeEntity(const AtlasEntity& entity, int64_t& tmp_guid_seq, rapidjson::Document::AllocatorType& alloc) {
+// Atlas ignores it when qualifiedName already exists (upsert). The guid is pre-minted
+// by the caller so that same-batch references can point at it via serializeReferenceObject.
+rapidjson::Value serializeEntity(
+    const AtlasEntity& entity,
+    std::string_view entity_guid,
+    const std::unordered_map<std::string, std::string>& batch_guid_by_key,
+    rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value obj{rapidjson::kObjectType};
   obj.AddMember("typeName", stringValue(entity.type_name, alloc), alloc);
 
   rapidjson::Value attrs{rapidjson::kObjectType};
   attrs.AddMember("qualifiedName", stringValue(entity.qualified_name, alloc), alloc);
-  if (!entity.display_name.empty()) {
-    attrs.AddMember("name", stringValue(entity.display_name, alloc), alloc);
-  }
   for (const auto& [key, value] : entity.string_attributes) {
     attrs.AddMember(stringValue(key, alloc), stringValue(value, alloc), alloc);
   }
   for (const auto& [key, ref] : entity.ref_attributes) {
-    rapidjson::Value ref_obj{rapidjson::kObjectType};
-    ref_obj.AddMember("typeName", stringValue(ref.type_name, alloc), alloc);
-    rapidjson::Value unique{rapidjson::kObjectType};
-    unique.AddMember("qualifiedName", stringValue(ref.qualified_name, alloc), alloc);
-    ref_obj.AddMember("uniqueAttributes", unique, alloc);
-    attrs.AddMember(stringValue(key, alloc), ref_obj, alloc);
+    attrs.AddMember(stringValue(key, alloc), serializeReferenceObject(ref, batch_guid_by_key, alloc), alloc);
   }
   for (const auto& [key, refs] : entity.ref_list_attributes) {
     rapidjson::Value list{rapidjson::kArrayType};
     for (const auto& ref : refs) {
-      rapidjson::Value ref_obj{rapidjson::kObjectType};
-      ref_obj.AddMember("typeName", stringValue(ref.type_name, alloc), alloc);
-      rapidjson::Value unique{rapidjson::kObjectType};
-      unique.AddMember("qualifiedName", stringValue(ref.qualified_name, alloc), alloc);
-      ref_obj.AddMember("uniqueAttributes", unique, alloc);
-      list.PushBack(ref_obj, alloc);
+      list.PushBack(serializeReferenceObject(ref, batch_guid_by_key, alloc), alloc);
     }
     attrs.AddMember(stringValue(key, alloc), list, alloc);
   }
   obj.AddMember("attributes", attrs, alloc);
 
-  const auto guid = std::to_string(--tmp_guid_seq);  // -1, -2, -3, ...
-  obj.AddMember("guid", stringValue(guid, alloc), alloc);
+  obj.AddMember("guid", stringValue(entity_guid, alloc), alloc);
   return obj;
 }
 
@@ -157,10 +181,25 @@ std::expected<void, std::string> AtlasClient::createOrUpdateEntities(const std::
   }
   rapidjson::Document doc{rapidjson::kObjectType};
   auto& alloc = doc.GetAllocator();
+
+  // First pass: mint one temp guid per entity in this batch and index them by
+  // (typeName, qualifiedName) so that references to peers in the same batch can
+  // be emitted as { "guid": "-N" } — the only shape Atlas resolves against
+  // not-yet-persisted peers within a single bulk POST.
+  std::vector<std::string> entity_guids;
+  entity_guids.reserve(entities.size());
+  std::unordered_map<std::string, std::string> batch_guid_by_key;
+  batch_guid_by_key.reserve(entities.size());
+  for (std::size_t i = 0; i < entities.size(); ++i) {
+    entity_guids.push_back(std::to_string(-static_cast<int64_t>(i + 1)));
+    batch_guid_by_key.emplace(
+        batchKey(entities[i].type_name, entities[i].qualified_name),
+        entity_guids.back());
+  }
+
   rapidjson::Value entities_arr{rapidjson::kArrayType};
-  int64_t tmp_guid_seq = 0;
-  for (const auto& entity : entities) {
-    entities_arr.PushBack(serializeEntity(entity, tmp_guid_seq, alloc), alloc);
+  for (std::size_t i = 0; i < entities.size(); ++i) {
+    entities_arr.PushBack(serializeEntity(entities[i], entity_guids[i], batch_guid_by_key, alloc), alloc);
   }
   doc.AddMember("entities", entities_arr, alloc);
 
@@ -168,9 +207,11 @@ std::expected<void, std::string> AtlasClient::createOrUpdateEntities(const std::
   rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
   doc.Accept(writer);
 
+  std::string update_str{buffer.GetString(), buffer.GetSize()};
+
   http::HTTPClient client;
   prepareClient(client, http::HttpRequestMethod::Post, "/api/atlas/v2/entity/bulk");
-  client.setPostFields(std::string{buffer.GetString(), buffer.GetSize()});
+  client.setPostFields(update_str);
   if (!client.submit()) {
     return std::unexpected{"Atlas entity bulk POST failed: transport error"};
   }

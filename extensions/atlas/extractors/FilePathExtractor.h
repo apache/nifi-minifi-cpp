@@ -40,7 +40,7 @@ class FilePathExtractor : public DatasetExtractor {
 
   DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const override {
     DatasetReferences refs;
-    const auto uri = const_cast<provenance::ProvenanceEventRecord&>(event).getTransitUri();
+    const auto uri = event.getTransitUri();
     // Accept both "file:///abs/path" and "file:/abs/path"; extract everything after
     // the scheme's leading "file:".
     constexpr std::string_view scheme = "file:";
@@ -58,6 +58,8 @@ class FilePathExtractor : public DatasetExtractor {
     if (path.empty()) return refs;
 
     Dataset ds{.system = "file", .identifier = std::string{path}, .host = std::string{"localhost"}, .attributes = {}};
+    ds.attributes["name"] = std::filesystem::path{path}.filename();
+    ds.attributes["path"] = std::filesystem::path{path}.string();
     if (event.getEventType() == provenance::ProvenanceEventRecord::SEND) {
       refs.outputs.push_back(std::move(ds));
     } else {

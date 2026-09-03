@@ -38,14 +38,15 @@ struct AtlasEntity {
   struct Reference {
     std::string type_name;
     std::string qualified_name;
+
+    bool operator==(const Reference& other) const = default;
   };
 
   std::string type_name;
   std::string qualified_name;
-  std::string display_name;                                  // maps to "name" attribute
-  std::vector<std::pair<std::string, std::string>> string_attributes;
-  std::vector<std::pair<std::string, Reference>> ref_attributes;
-  std::vector<std::pair<std::string, std::vector<Reference>>> ref_list_attributes;
+  std::unordered_map<std::string, std::string> string_attributes;
+  std::unordered_map<std::string, Reference> ref_attributes;
+  std::unordered_map<std::string, std::unordered_set<Reference>> ref_list_attributes;
 };
 
 // Minimal typed handle to an Atlas entity fetched via getEntityByUniqueAttribute.
@@ -99,3 +100,14 @@ class AtlasClient {
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::atlas
+
+namespace std {
+template<>
+struct hash<org::apache::nifi::minifi::extensions::atlas::AtlasEntity::Reference> {
+  size_t operator()(const org::apache::nifi::minifi::extensions::atlas::AtlasEntity::Reference& entry_ref) const noexcept {
+    return org::apache::nifi::minifi::utils::hash_combine(
+        std::hash<std::string_view>{}(entry_ref.type_name),
+        std::hash<std::string_view>{}(entry_ref.qualified_name));
+  }
+};
+}  // namespace std

@@ -104,4 +104,6 @@ class filesystem_error : public std::system_error {
 space_info space(path);
 space_info space(path, std::error_code&) noexcept;
 
+std::string pathToUri(const std::filesystem::path& path);
+
 }  // namespace org::apache::nifi::minifi::utils::file

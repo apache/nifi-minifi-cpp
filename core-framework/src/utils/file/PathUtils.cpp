@@ -84,4 +84,33 @@ space_info space(const path path) {
   return result;
 }
 
+std::string pathToUri(const std::filesystem::path& path) {
+  std::string percent_encoded_path;
+  for (char ch : std::filesystem::absolute(path).generic_string()) {
+    if (std::isalnum(ch) || ch == '-' || ch == '_' || ch == '.' || ch == '~' || ch == '/' || ch == ':') {
+      percent_encoded_path += ch;
+    } else {
+      percent_encoded_path += '%';
+      percent_encoded_path += string::to_hex(std::string_view{&ch, 1}, true);
+    }
+  }
+
+  // windows //server/path/to/file
+  if (percent_encoded_path.starts_with("//")) {
+    return "file:" + percent_encoded_path;
+  }
+
+  // window C:/path/to/file
+  if (percent_encoded_path.size() > 1 && percent_encoded_path[1] == ':') {
+    return "file:///" + percent_encoded_path;
+  }
+
+  // posix /home/path/to/file
+  if (percent_encoded_path.starts_with("/")) {
+    return "file://" + percent_encoded_path;
+  }
+
+  return "file:///" + percent_encoded_path;
+}
+
 }  // namespace org::apache::nifi::minifi::utils::file

@@ -83,8 +83,7 @@ TEST_CASE("AtlasClient createOrUpdateEntities serializes strings, refs, and ref 
   AtlasEntity flow_path{
       .type_name = "nifi_flow_path",
       .qualified_name = "abcd-1234@my-cluster",
-      .display_name = "ConsumeKafka, PutS3Object",
-      .string_attributes = {{"url", "http://minifi/flow/abcd-1234"}},
+      .string_attributes = {{"name", "ConsumeKafka, PutS3Object"}, {"url", "http://minifi/flow/abcd-1234"}},
       .ref_attributes = {{"nifiFlow", {"nifi_flow", "root-uuid@my-cluster"}}},
       .ref_list_attributes = {{"inputs", {{"kafka_topic", "orders@my-cluster"}}}, {"outputs", {{"aws_s3_v2_directory", "s3://bkt/pfx/@my-cluster"}}}},
   };
@@ -121,6 +120,67 @@ TEST_CASE("AtlasClient createOrUpdateEntities on empty vector is a no-op", "[atl
 
   REQUIRE(client.createOrUpdateEntities({}).has_value());
   REQUIRE(mock.entities().requests().empty());
+}
+
+TEST_CASE("AtlasClient createOrUpdateEntities links same-batch references by temp guid", "[atlas][client]") {
+  // The Atlas bulk endpoint can only resolve inter-entity references within a
+  // single POST if they point at a peer's temp guid — a uniqueAttributes-only
+  // reference to a not-yet-persisted peer resolves to guid='null' and Atlas
+  // rejects the whole batch with 404. This test pins the two-form emission:
+  // peer refs use { "guid" }, everything else keeps the uniqueAttributes shape.
+  MockAtlas mock{"38907"};
+  AtlasClient client{configFor(mock)};
+
+  AtlasEntity flow_path{
+      .type_name = "nifi_flow_path",
+      .qualified_name = "path-uuid@my-cluster",
+      .string_attributes = {{"name", "GetFile, PutFile"}},
+      .ref_attributes = {{"nifiFlow", {"nifi_flow", "root-uuid@my-cluster"}}},
+  };
+  AtlasEntity flow{
+      .type_name = "nifi_flow",
+      .qualified_name = "root-uuid@my-cluster",
+      .string_attributes = {{"name", "MiNiFi Flow"}},
+      .ref_list_attributes = {
+          {"flowPaths", {{"nifi_flow_path", "path-uuid@my-cluster"}}},              // in-batch peer
+          {"queues", {{"nifi_queue", "external-queue@my-cluster"}}},                 // not in batch
+      },
+  };
+
+  REQUIRE(client.createOrUpdateEntities({flow, flow_path}).has_value());
+
+  const auto requests = mock.entities().requests();
+  REQUIRE(requests.size() == 1);
+  rapidjson::Document body;
+  REQUIRE_FALSE(body.Parse(requests[0].body.c_str()).HasParseError());
+  REQUIRE(body["entities"].Size() == 2);
+  const auto& flow_e = body["entities"][0];
+  const auto& path_e = body["entities"][1];
+  REQUIRE(std::string{flow_e["typeName"].GetString()} == "nifi_flow");
+  REQUIRE(std::string{path_e["typeName"].GetString()} == "nifi_flow_path");
+  const std::string path_temp_guid = path_e["guid"].GetString();
+  REQUIRE(path_temp_guid.starts_with("-"));
+
+  // The in-batch flowPaths reference must use the peer's temp guid — not uniqueAttributes.
+  const auto& flow_paths_ref = flow_e["attributes"]["flowPaths"][0];
+  REQUIRE(flow_paths_ref.HasMember("guid"));
+  REQUIRE(std::string{flow_paths_ref["guid"].GetString()} == path_temp_guid);
+  REQUIRE_FALSE(flow_paths_ref.HasMember("uniqueAttributes"));
+  REQUIRE_FALSE(flow_paths_ref.HasMember("typeName"));
+
+  // The out-of-batch queue reference keeps the uniqueAttributes shape so Atlas
+  // resolves it against already-persisted state (or creates it implicitly).
+  const auto& queue_ref = flow_e["attributes"]["queues"][0];
+  REQUIRE_FALSE(queue_ref.HasMember("guid"));
+  REQUIRE(std::string{queue_ref["typeName"].GetString()} == "nifi_queue");
+  REQUIRE(std::string{queue_ref["uniqueAttributes"]["qualifiedName"].GetString()} == "external-queue@my-cluster");
+
+  // The single-Reference ref_attribute on the path (nifiFlow) points at an
+  // in-batch peer (the flow entity); it should also collapse to { "guid" }.
+  const auto& nifi_flow_ref = path_e["attributes"]["nifiFlow"];
+  REQUIRE(nifi_flow_ref.HasMember("guid"));
+  REQUIRE(std::string{nifi_flow_ref["guid"].GetString()} == flow_e["guid"].GetString());
+  REQUIRE_FALSE(nifi_flow_ref.HasMember("uniqueAttributes"));
 }
 
 TEST_CASE("AtlasClient sends Basic auth header when credentials are provided", "[atlas][client]") {

@@ -39,10 +39,10 @@ class InvokeHttpExtractor : public DatasetExtractor {
 
   DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const override {
     DatasetReferences refs;
-    const auto uri = const_cast<provenance::ProvenanceEventRecord&>(event).getTransitUri();
+    const auto uri = event.getTransitUri();
     if (uri.empty()) return refs;
 
-    const auto attributes = const_cast<provenance::ProvenanceEventRecord&>(event).getAttributes();
+    const auto attributes = event.getAttributes();
     std::string method = "GET";
     if (auto it = attributes.find("invokehttp.request.method"); it != attributes.end()) {
       method = it->second;

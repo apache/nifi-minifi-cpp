@@ -42,7 +42,7 @@ class JdbcExtractor : public DatasetExtractor {
 
   DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const override {
     DatasetReferences refs;
-    const auto transit = const_cast<provenance::ProvenanceEventRecord&>(event).getTransitUri();
+    const auto transit = event.getTransitUri();
     if (transit.empty() || !transit.starts_with("jdbc:")) {
       return refs;
     }

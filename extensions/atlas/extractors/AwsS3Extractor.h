@@ -39,7 +39,7 @@ class AwsS3Extractor : public DatasetExtractor {
 
   DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const override {
     DatasetReferences refs;
-    const auto uri = const_cast<provenance::ProvenanceEventRecord&>(event).getTransitUri();
+    const auto uri = event.getTransitUri();
     // Locate the ':' after the scheme prefix and skip "//".
     const auto scheme_end = uri.find("://");
     if (scheme_end == std::string::npos) return refs;

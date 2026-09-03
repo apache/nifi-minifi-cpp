@@ -50,18 +50,6 @@ std::string atlasTypeFor(const Dataset& ds, ReportLineageToAtlas::S3ModelVersion
   return ds.system;
 }
 
-// Deduplicate a vector of Reference entries in-place. Two entries are duplicates
-// if their (typeName, qualifiedName) pair matches.
-void dedupeRefs(std::vector<AtlasEntity::Reference>& refs) {
-  std::sort(refs.begin(), refs.end(), [](const auto& a, const auto& b) {
-    if (a.type_name != b.type_name) return a.type_name < b.type_name;
-    return a.qualified_name < b.qualified_name;
-  });
-  refs.erase(std::unique(refs.begin(), refs.end(), [](const auto& a, const auto& b) {
-    return a.type_name == b.type_name && a.qualified_name == b.qualified_name;
-  }), refs.end());
-}
-
 std::vector<std::string> splitCsv(std::string_view input) {
   return utils::string::splitAndTrimRemovingEmpty(input, ",");
 }
@@ -223,10 +211,11 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
     return;
   }
 
+  std::unordered_map<std::string, AtlasEntity> external_entities;
   // For each event, look up the owning flow path (via componentId) and append
   // the extracted Datasets to that path's accumulated inputs/outputs.
-  std::unordered_map<std::string, std::vector<AtlasEntity::Reference>> path_inputs;
-  std::unordered_map<std::string, std::vector<AtlasEntity::Reference>> path_outputs;
+  std::unordered_map<std::string, std::unordered_set<AtlasEntity::Reference>> path_inputs;
+  std::unordered_map<std::string, std::unordered_set<AtlasEntity::Reference>> path_outputs;
   for (const auto& event : events) {
     if (!event) continue;
     const auto refs = extractor_dispatcher_.dispatch(*event);
@@ -244,60 +233,38 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
         identifier = dirOf(identifier);
       }
       const auto ns = namespace_resolver_.resolve(ds.host.value_or(""));
-      return AtlasEntity::Reference{type, identifier + "@" + ns};
+      AtlasEntity entry;
+      entry.type_name = type;
+      entry.qualified_name = identifier + "@" + ns;
+      entry.string_attributes = ds.attributes;
+      external_entities[entry.qualified_name] = entry;
+      return AtlasEntity::Reference{entry.type_name, entry.qualified_name};
     };
-    for (const auto& in : refs.inputs) path_inputs[path_qn].push_back(convert(in));
-    for (const auto& out : refs.outputs) path_outputs[path_qn].push_back(convert(out));
+    for (const auto& in : refs.inputs) path_inputs[path_qn].insert(convert(in));
+    for (const auto& out : refs.outputs) path_outputs[path_qn].insert(convert(out));
   }
 
   // 5. Build partial-update entities: one nifi_flow_path per path that saw new
   //    events, with the accumulated (deduped) inputs/outputs. Atlas upserts by
   //    qualifiedName, so this merges into whatever's already there.
-  std::vector<AtlasEntity> updates;
-  std::unordered_map<std::string, AtlasEntity*> updates_by_qn;
+  std::unordered_map<std::string, AtlasEntity> updates;
   const auto touch_path = [&](const std::string& path_qn) -> AtlasEntity& {
-    if (auto it = updates_by_qn.find(path_qn); it != updates_by_qn.end()) return *it->second;
-    AtlasEntity path_entity;
-    path_entity.type_name = "nifi_flow_path";
-    path_entity.qualified_name = path_qn;
-    updates.push_back(std::move(path_entity));
-    updates_by_qn.emplace(path_qn, &updates.back());
-    return updates.back();
-  };
-  const auto external_types_referenced = [&](std::vector<AtlasEntity::Reference>& refs) {
-    dedupeRefs(refs);
-    return refs;
-  };
-
-  // Materialize external dataset entities first (Atlas needs them to exist to
-  // wire references). Then build the flow_path partial updates.
-  std::vector<AtlasEntity> external_entities;
-  std::unordered_map<std::string, AtlasEntity*> external_by_qn;
-  const auto ensure_external = [&](const AtlasEntity::Reference& ref) {
-    if (external_by_qn.contains(ref.qualified_name)) return;
-    AtlasEntity e;
-    e.type_name = ref.type_name;
-    e.qualified_name = ref.qualified_name;
-    external_entities.push_back(std::move(e));
-    external_by_qn.emplace(ref.qualified_name, &external_entities.back());
+    auto it = std::find_if(flow_result.entities.cbegin(), flow_result.entities.cend(), [&] (const AtlasEntity& e) {return e.qualified_name == path_qn;});
+    return updates.insert({path_qn, *it}).first->second;
   };
 
   for (auto& [path_qn, refs] : path_inputs) {
-    external_types_referenced(refs);
-    for (const auto& r : refs) ensure_external(r);
-    touch_path(path_qn).ref_list_attributes.emplace_back("inputs", refs);
+    touch_path(path_qn).ref_list_attributes["inputs"] = refs;
   }
   for (auto& [path_qn, refs] : path_outputs) {
-    external_types_referenced(refs);
-    for (const auto& r : refs) ensure_external(r);
-    touch_path(path_qn).ref_list_attributes.emplace_back("outputs", refs);
+    touch_path(path_qn).ref_list_attributes["outputs"] = refs;
   }
 
   // Send external entities first, then path partial updates.
   std::vector<AtlasEntity> to_publish;
   to_publish.reserve(external_entities.size() + updates.size());
-  for (auto& e : external_entities) to_publish.push_back(std::move(e));
-  for (auto& e : updates) to_publish.push_back(std::move(e));
+  for (auto& [_, e] : external_entities) to_publish.push_back(std::move(e));
+  for (auto& [_, e] : updates) to_publish.push_back(std::move(e));
 
   if (!to_publish.empty()) {
     if (auto res = atlas.createOrUpdateEntities(to_publish); !res) {

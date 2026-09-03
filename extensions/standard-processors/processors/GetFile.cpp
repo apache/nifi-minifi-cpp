@@ -33,6 +33,7 @@
 #include "utils/ConfigurationUtils.h"
 #include "utils/file/FileReaderCallback.h"
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 
 using namespace std::literals::chrono_literals;
@@ -105,6 +106,7 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem
 
   try {
     session.write(flow_file, utils::FileReaderCallback{file_path, buffer_size_});
+    session.getProvenanceReporter()->receive(*flow_file, utils::file::pathToUri(file_path), getUUIDStr(), "Read file", 0ms);
     session.transfer(flow_file, Success);
     if (!request_.keepSourceFile) {
       std::error_code remove_error;

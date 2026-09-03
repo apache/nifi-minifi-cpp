@@ -135,7 +135,7 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
     details_ = details;
   }
 
-  std::string getTransitUri() override {
+  std::string getTransitUri() const override {
     return transit_uri_;
   }
 
