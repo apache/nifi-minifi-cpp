@@ -36,7 +36,7 @@ Feature: API error handling and logging
 
     When the MiNiFi instance starts up
 
-    Then the Minifi logs contain the following message: "KamikazeProcessorRs] [error] Error during schedule: ScheduleError("it was designed to fail during schedule")" in less than 10 seconds
+    Then the Minifi logs contain the following message: "KamikazeProcessorRs] [error] Error during schedule: CustomError("it was designed to fail during schedule")" in less than 10 seconds
     And the Minifi logs contain the following message: "(KamikazeProcessorRs): Process Schedule Operation: Error while scheduling processor" in less than 10 seconds
 
   Scenario: Minifi handles errors from trigger
@@ -46,7 +46,7 @@ Feature: API error handling and logging
 
     When the MiNiFi instance starts up
 
-    Then the Minifi logs contain the following message: "KamikazeProcessorRs] [error] Error during trigger TriggerError("it was designed to fail in trigger")" in less than 10 seconds
+    Then the Minifi logs contain the following message: "KamikazeProcessorRs] [error] Error during trigger CustomError("it was designed to fail in trigger")" in less than 10 seconds
     And the Minifi logs contain the following message: "Trigger and commit failed for processor KamikazeProcessorRs" in less than 10 seconds
 
   Scenario: Panic in extension's schedule crashes the agent aswell

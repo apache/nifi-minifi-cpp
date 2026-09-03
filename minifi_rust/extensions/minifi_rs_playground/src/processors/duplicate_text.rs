@@ -18,10 +18,9 @@
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetAttribute, GetControllerService, GetProperty, InputStream, Logger, MinifiError,
-    MutFlowFileStreamTransform, OutputAttribute, OutputStream, ProcessorDefinition,
+    MutFlowFileStreamTransform, OutputAttribute, OutputStream, ProcessError, ProcessorDefinition,
     ProcessorInputRequirement, PropertyDefinition, Relationship, Schedule, TransformStreamResult,
 };
-use std::collections::HashMap;
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct DuplicateStreamText {}
@@ -50,13 +49,13 @@ impl MutFlowFileStreamTransform for DuplicateStreamText {
         input_stream: &mut dyn InputStream,
         output_stream: &mut dyn OutputStream,
         _logger: &LoggerImpl,
-    ) -> Result<TransformStreamResult, MinifiError> {
+    ) -> Result<TransformStreamResult, ProcessError> {
         let mut byte = [0u8; 1];
         while input_stream.read(&mut byte)? > 0 {
             let _ = output_stream.write(&byte)?;
             let _ = output_stream.write(&byte)?;
         }
-        Ok(TransformStreamResult::new(&SUCCESS, HashMap::new()))
+        Ok(TransformStreamResult::new(&SUCCESS))
     }
 }
 

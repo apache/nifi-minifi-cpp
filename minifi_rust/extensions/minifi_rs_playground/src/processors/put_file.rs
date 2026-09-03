@@ -22,7 +22,7 @@ use crate::processors::put_file::unix_permissions::PutFileUnixPermissions;
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, Schedule, TransformedFlowFile, trace, unwrap_or_route, warn,
+    MinifiError, ProcessError, RouteErrorExt, Schedule, TransformedFlowFile, trace, warn,
 };
 use std::path::{Path, PathBuf};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
@@ -171,11 +171,10 @@ impl FlowFileTransform for PutFileRs {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, MinifiError> {
+    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
         trace!(logger, "on_trigger: {:?}", self);
 
-        let destination_path =
-            unwrap_or_route!(Self::get_destination_path(context), &FAILURE, logger);
+        let destination_path = Self::get_destination_path(context).route_err_to_failure()?;
 
         if self.directory_is_full(&destination_path) {
             warn!(logger, "Directory is full");

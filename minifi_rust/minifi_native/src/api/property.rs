@@ -26,7 +26,7 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 use std::time::Duration;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum StandardPropertyValidator {
     NonBlankValidator,
     TimePeriodValidator,
@@ -38,13 +38,14 @@ pub enum StandardPropertyValidator {
     F64Validator,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum PropertyConstraints {
     Validator(StandardPropertyValidator),
     AllowedValues(&'static [&'static str]),
     ControllerService(&'static str),
 }
 
+#[derive(Clone)]
 pub struct PropertyDefinition {
     pub name: &'static str,
     pub description: &'static str,
@@ -162,7 +163,7 @@ impl<T: PropertyType> PropertyValue for T {
     fn from_raw(raw: Option<String>, name: &str) -> Result<Self::Output, MinifiError> {
         match raw {
             Some(value) => T::parse(&value),
-            None => Err(MinifiError::missing_required_property(name.to_string())),
+            None => Err(MinifiError::MissingRequiredProperty(name.to_owned().into())),
         }
     }
 }
@@ -286,7 +287,7 @@ where
     type Cs = Cs;
     type Output<'a> = &'a Cs;
     fn from_service<'a>(service: Option<&'a Cs>, name: &str) -> Result<&'a Cs, MinifiError> {
-        service.ok_or_else(|| MinifiError::missing_required_property(name.to_string()))
+        service.ok_or_else(|| MinifiError::MissingRequiredProperty(name.to_owned().into()))
     }
 }
 
