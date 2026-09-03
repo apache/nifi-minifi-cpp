@@ -454,15 +454,7 @@ void ProvenanceReporterImpl::commit() {
     return;
   }
 
-  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
-
-  for (auto& event : events_) {
-    auto stramptr = std::make_unique<io::BufferStream>();
-    event->serialize(*stramptr);
-
-    flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));
-  }
-  repo_->MultiPut(flowData);
+  repo_->appendEvents(events_);
 }
 
 void ProvenanceReporterImpl::create(const core::FlowFile& flow_file, const std::string& detail) {
@@ -543,7 +535,7 @@ void ProvenanceReporterImpl::send(const core::FlowFile& flow_file, const std::st
       add(event);
     } else {
       if (!repo_->isFull())
-        repo_->storeElement(event);
+        repo_->appendEvents({event});
     }
   }
 }

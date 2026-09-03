@@ -41,7 +41,7 @@ using namespace std::literals::chrono_literals;
 const int64_t TEST_MAX_REPOSITORY_STORAGE_SIZE = 100;
 
 template <typename T_BaseRepository>
-class TestRepositoryBase : public T_BaseRepository {
+class TestRepositoryBase : public T_BaseRepository, public org::apache::nifi::minifi::provenance::ProvenanceRepository {
  public:
   TestRepositoryBase()
     : T_BaseRepository("repo_name", "./dir", 1s, TEST_MAX_REPOSITORY_STORAGE_SIZE, 0ms) {
@@ -89,11 +89,14 @@ class TestRepositoryBase : public T_BaseRepository {
     }
   }
 
-  std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>> getElements(size_t max_size) override {
+  std::expected<std::vector<std::shared_ptr<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>>, std::string> getEvents(size_t max_size, Cursor* cursor) override {
+    if (cursor) {
+      return std::unexpected{"Cursor based query is not supported"};
+    }
     if (max_size == 0) {
       return {};
     }
-    std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>> store;
+    std::vector<std::shared_ptr<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>> store;
     std::lock_guard<std::mutex> lock{repository_results_mutex_};
     for (const auto &entry : repository_results_) {
       const auto eventRead = org::apache::nifi::minifi::provenance::ProvenanceEventRecord::create();
@@ -111,6 +114,24 @@ class TestRepositoryBase : public T_BaseRepository {
   std::map<std::string, std::string> getRepoMap() const {
     std::lock_guard<std::mutex> lock{repository_results_mutex_};
     return repository_results_;
+  }
+
+  std::expected<void, std::string> appendEvents(const std::vector<std::shared_ptr<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>>& events) override {
+    std::vector<std::pair<std::string, std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>>> data;
+    data.reserve(events.size());
+    for (auto& event : events) {
+      data.emplace_back(event->getUUIDStr(), std::make_unique<org::apache::nifi::minifi::io::BufferStream>());
+      event->serialize(*data.back().second);
+    }
+    if (!MultiPut(data)) {
+      return std::unexpected{"Failed to store provenance events"};
+    }
+
+    return {};
+  }
+
+  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::string_view /*cursor_str*/) override {
+    return nullptr;
   }
 
  protected:

@@ -148,6 +148,8 @@ class ProvenanceEventRecord : public virtual core::SerializableComponent {
 
   ~ProvenanceEventRecord() override = default;
 
+  virtual std::optional<uint64_t> getEventOrdinal() const = 0;
+  virtual void setEventOrdinal(uint64_t value) = 0;
   virtual utils::Identifier getEventId() const = 0;
   virtual void setEventId(const utils::Identifier &id) = 0;
   virtual std::map<std::string, std::string> getAttributes() const = 0;
@@ -192,9 +194,8 @@ class ProvenanceReporter {
  public:
   virtual ~ProvenanceReporter() = default;
 
-  virtual std::set<std::shared_ptr<ProvenanceEventRecord>> getEvents() const = 0;
+  virtual std::vector<std::shared_ptr<ProvenanceEventRecord>> getEvents() const = 0;
   virtual void add(const std::shared_ptr<ProvenanceEventRecord> &event) = 0;
-  virtual void remove(const std::shared_ptr<ProvenanceEventRecord> &event) = 0;
   virtual void clear() = 0;
 
   virtual void commit() = 0;
