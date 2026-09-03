@@ -29,17 +29,16 @@ limitations under the License.
 
 ### Description
 
-Decrypt contents of OpenPGP messages. Using the Packaged Decryption Strategy preserves OpenPGP encoding to support subsequent signature verification.
+Decrypt contents of OpenPGP messages.
 
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                | Default Value | Allowable Values       | Description                                                                                                 |
-|---------------------|---------------|------------------------|-------------------------------------------------------------------------------------------------------------|
-| Decryption Strategy | DECRYPTED     | DECRYPTED<br/>PACKAGED | Strategy for writing files to success after decryption                                                      |
-| Symmetric Password  |               |                        | Password used for decrypting data encrypted with Password-Based Encryption<br/>**Sensitive Property: true** |
-| Private Key Service |               |                        | PGP Private Key Service for decrypting data encrypted with Public Key Encryption                            |
+| Name                | Default Value | Allowable Values | Description                                                                                                 |
+|---------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------|
+| Symmetric Password  |               |                  | Password used for decrypting data encrypted with Password-Based Encryption<br/>**Sensitive Property: true** |
+| Private Key Service |               |                  | PGP Private Key Service for decrypting data encrypted with Public Key Encryption                            |
 
 ### Relationships
 

@@ -1,3 +1,20 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 use minifi_native::{
     FlowFileStreamTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream,
     Logger, MinifiError, OutputStream, ProcessError, RouteErrorExt, Schedule,
@@ -99,7 +116,7 @@ impl Schedule for EncryptContentPGP {
         let symmetric_password = context.get_property(&PASSWORD)?;
 
         let has_public_key = context.get_raw_property(&PUBLIC_KEY_SERVICE)?.is_some()
-            && context.get_property(&PUBLIC_KEY_SEARCH)?.is_some();
+            && context.get_raw_property(&PUBLIC_KEY_SEARCH)?.is_some();
 
         Self::check_validity(&symmetric_password, has_public_key)?;
         Ok(EncryptContentPGP {
@@ -117,7 +134,12 @@ impl EncryptContentPGP {
             context.get_property(&PUBLIC_KEY_SEARCH)?,
             context.get_controller_service(&PUBLIC_KEY_SERVICE)?,
         ) {
-            Ok(public_key_service.get(&pub_key_search))
+            match public_key_service.get(&pub_key_search) {
+                Some(public_key) => Ok(Some(public_key)),
+                None => Err(MinifiError::custom(format!(
+                    "No public key matching '{pub_key_search}' found in the configured Public Key Service"
+                ))),
+            }
         } else {
             Ok(None)
         }
@@ -268,6 +290,29 @@ mod tests {
         context.properties.extend([
             ("Public Key Service", "my_controller_service"),
             ("Public Key Search", "Carol"),
+        ]);
+
+        context.controller_services.insert(
+            "my_controller_service".to_string(),
+            Box::new(public_key_service()),
+        );
+
+        let mut result: Vec<u8> = Vec::new();
+        let mut input_stream = std::io::Cursor::new("foo".as_bytes());
+        let processor =
+            EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
+        let res = processor.transform(&context, &mut input_stream, &mut result, &MockLogger::new());
+
+        test::assert_routed_to(res, &FAILURE);
+    }
+
+    #[test]
+    fn configured_public_key_miss_fails_even_with_password() {
+        let mut context = MockProcessContext::new();
+        context.properties.extend([
+            ("Public Key Service", "my_controller_service"),
+            ("Public Key Search", "Carol"),
+            ("Symmetric Password", "password"),
         ]);
 
         context.controller_services.insert(
