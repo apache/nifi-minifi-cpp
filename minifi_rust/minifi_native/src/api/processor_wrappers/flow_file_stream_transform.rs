@@ -24,6 +24,7 @@ use crate::{
     MultiThreaded, OnTriggerResult, OutputStream, ProcessContext, ProcessError, ProcessSession,
     Processor, Relationship, Schedule, SingleThreaded,
 };
+use minifi_native::GetId;
 use std::borrow::Cow;
 
 #[derive(Debug)]
@@ -73,7 +74,10 @@ impl TransformStreamResult {
 impl_with_attributes!(TransformStreamResult);
 
 pub trait FlowFileStreamTransform {
-    fn transform<Ctx: GetProperty + GetControllerService + GetAttribute, LoggerImpl: Logger>(
+    fn transform<
+        Ctx: GetProperty + GetControllerService + GetAttribute + GetId,
+        LoggerImpl: Logger,
+    >(
         &self,
         context: &Ctx,
         input_stream: &mut dyn InputStream,

@@ -12109,6 +12109,203 @@
         "componentManifest": {
             "processors": [
                 {
+                    "propertyDescriptors": {
+                        "Decryption Strategy": {
+                            "name": "Decryption Strategy",
+                            "description": "Strategy for writing files to success after decryption",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "DECRYPTED",
+                            "allowableValues": [
+                                {
+                                    "value": "DECRYPTED",
+                                    "displayName": "DECRYPTED"
+                                },
+                                {
+                                    "value": "PACKAGED",
+                                    "displayName": "PACKAGED"
+                                }
+                            ]
+                        },
+                        "Private Key Service": {
+                            "typeProvidedByValue": {
+                                "type": "minifi_pgp.controller_services.private_key_service.PGPPrivateKeyService",
+                                "group": "org.apache.nifi.minifi.rust",
+                                "artifact": "minifi_pgp"
+                            },
+                            "name": "Private Key Service",
+                            "description": "PGP Private Key Service for decrypting data encrypted with Public Key Encryption",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Symmetric Password": {
+                            "name": "Symmetric Password",
+                            "description": "Password used for decrypting data encrypted with Password-Based Encryption",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "inputRequirement": "INPUT_REQUIRED",
+                    "isSingleThreaded": "false",
+                    "supportedRelationships": [
+                        {
+                            "name": "failure",
+                            "description": "Decryption Failed"
+                        },
+                        {
+                            "name": "success",
+                            "description": "Decryption Succeeded"
+                        }
+                    ],
+                    "typeDescription": "Decrypt contents of OpenPGP messages. Using the Packaged Decryption Strategy preserves OpenPGP encoding to support subsequent signature verification.",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "minifi_pgp.processors.decrypt_content.DecryptContentPGP"
+                },
+                {
+                    "propertyDescriptors": {
+                        "File Encoding": {
+                            "name": "File Encoding",
+                            "description": "File Encoding for encryption",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "BINARY",
+                            "allowableValues": [
+                                {
+                                    "value": "ASCII",
+                                    "displayName": "ASCII"
+                                },
+                                {
+                                    "value": "BINARY",
+                                    "displayName": "BINARY"
+                                }
+                            ]
+                        },
+                        "Public Key Search": {
+                            "name": "Public Key Search",
+                            "description": "PGP Public Key Search will be used to match against the User ID or Key ID when formatted as uppercase hexadecimal string of 16 characters",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                        },
+                        "Public Key Service": {
+                            "typeProvidedByValue": {
+                                "type": "minifi_pgp.controller_services.public_key_service.PGPPublicKeyService",
+                                "group": "org.apache.nifi.minifi.rust",
+                                "artifact": "minifi_pgp"
+                            },
+                            "name": "Public Key Service",
+                            "description": "PGP Public Key Service for encrypting data with Public Key Encryption",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Symmetric Password": {
+                            "name": "Symmetric Password",
+                            "description": "Password used for encrypting data with Password-Based Encryption",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "inputRequirement": "INPUT_REQUIRED",
+                    "isSingleThreaded": "false",
+                    "supportedRelationships": [
+                        {
+                            "name": "failure",
+                            "description": "Encryption Failed"
+                        },
+                        {
+                            "name": "success",
+                            "description": "Encryption Succeeded"
+                        }
+                    ],
+                    "typeDescription": "Encrypt contents using OpenPGP.",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "minifi_pgp.processors.encrypt_content.EncryptContentPGP"
+                }
+            ],
+            "controllerServices": [
+                {
+                    "propertyDescriptors": {
+                        "Key": {
+                            "name": "Key",
+                            "description": "Secret Key encoded in ASCII Armor",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Key File": {
+                            "name": "Key File",
+                            "description": "File path to PGP Secret Key encoded in binary or ASCII Armor",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                        },
+                        "Key Passphrase": {
+                            "name": "Key Passphrase",
+                            "description": "Passphrase used for decrypting Private Keys",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "typeDescription": "PGP Private Key Service provides Private Keys loaded from files or properties",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "minifi_pgp.controller_services.private_key_service.PGPPrivateKeyService"
+                },
+                {
+                    "propertyDescriptors": {
+                        "Keyring": {
+                            "name": "Keyring",
+                            "description": "PGP Keyring or Secret Key encoded in ASCII Armor",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Keyring File": {
+                            "name": "Keyring File",
+                            "description": "File path to PGP Keyring or Secret Key encoded in binary or ASCII Armor",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                        }
+                    },
+                    "typeDescription": "PGP Public Key Service providing Public Keys loaded from files",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "minifi_pgp.controller_services.public_key_service.PGPPublicKeyService"
+                }
+            ]
+        },
+        "group": "org.apache.nifi.minifi.rust",
+        "artifact": "minifi_pgp",
+        "version": "1.0.0"
+    }
+},
+{
+    "bundles": {
+        "componentManifest": {
+            "processors": [
+                {
                     "inputRequirement": "INPUT_REQUIRED",
                     "isSingleThreaded": "false",
                     "supportedRelationships": [
