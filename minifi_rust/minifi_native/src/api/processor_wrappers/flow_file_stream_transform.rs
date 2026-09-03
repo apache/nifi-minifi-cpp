@@ -24,11 +24,10 @@ use crate::{
     MultiThreaded, OnTriggerResult, OutputStream, ProcessContext, ProcessError, ProcessSession,
     Processor, Relationship, Schedule, SingleThreaded,
 };
-use std::borrow::Cow;
 
 #[derive(Debug)]
 pub struct TransformStreamResult {
-    target_relationship_name: Cow<'static, str>,
+    target_relationship_name: &'static str,
     attributes_to_add: Vec<FlowFileAttribute>,
     write_status: IoState,
 }
@@ -36,17 +35,17 @@ pub struct TransformStreamResult {
 impl TransformStreamResult {
     pub fn new(target_relationship: &Relationship) -> Self {
         Self {
-            target_relationship_name: Cow::Borrowed(target_relationship.name),
+            target_relationship_name: target_relationship.name,
             attributes_to_add: Vec::new(),
             write_status: IoState::Ok,
         }
     }
 
     pub fn route_without_changes(target_relationship: &Relationship) -> Self {
-        Self::route_without_changes_by_name(Cow::Borrowed(target_relationship.name))
+        Self::route_without_changes_by_name(target_relationship.name)
     }
 
-    pub fn route_without_changes_by_name(relationship: Cow<'static, str>) -> Self {
+    pub fn route_without_changes_by_name(relationship: &'static str) -> Self {
         Self {
             target_relationship_name: relationship,
             attributes_to_add: Vec::new(),
@@ -55,7 +54,7 @@ impl TransformStreamResult {
     }
 
     pub fn target_relationship_name(&self) -> &str {
-        &self.target_relationship_name
+        self.target_relationship_name
     }
 
     pub fn get_attribute(&self, name: &str) -> Option<&str> {

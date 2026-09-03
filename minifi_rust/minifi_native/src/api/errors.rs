@@ -26,7 +26,7 @@ use std::str::ParseBoolError;
 
 #[derive(Debug)]
 pub struct RouteError {
-    pub relationship: Cow<'static, str>,
+    pub relationship: &'static str,
     pub source: Box<dyn Error + Send + Sync + 'static>,
     pub log_level: LogLevel,
 }
@@ -111,11 +111,7 @@ impl Error for ProcessError {}
 pub trait RouteErrorExt<T> {
     fn route_err(self, rel: &Relationship, level: LogLevel) -> Result<T, ProcessError>;
 
-    fn route_to<S: Into<Cow<'static, str>>>(
-        self,
-        relationship: S,
-        level: LogLevel,
-    ) -> Result<T, ProcessError>;
+    fn route_to(self, relationship: &'static str, level: LogLevel) -> Result<T, ProcessError>;
 
     fn route_err_to_failure(self) -> Result<T, ProcessError>;
 }
@@ -128,14 +124,10 @@ where
         self.route_to(rel.name, level)
     }
 
-    fn route_to<S: Into<Cow<'static, str>>>(
-        self,
-        relationship: S,
-        level: LogLevel,
-    ) -> Result<T, ProcessError> {
+    fn route_to(self, relationship_name: &'static str, level: LogLevel) -> Result<T, ProcessError> {
         self.map_err(|e| {
             ProcessError::Route(RouteError {
-                relationship: relationship.into(),
+                relationship: relationship_name,
                 source: e.into(),
                 log_level: level,
             })
@@ -281,7 +273,7 @@ mod tests {
         let res: Result<(), std::io::Error> = Err(io_err());
         match res.route_err_to_failure() {
             Err(ProcessError::Route(route)) => {
-                assert_eq!(route.relationship.as_ref(), "failure");
+                assert_eq!(route.relationship, "failure");
                 assert_eq!(route.log_level, LogLevel::Warn);
                 assert_eq!(route.source.to_string(), "boom");
             }
@@ -298,7 +290,7 @@ mod tests {
         let res: Result<(), std::io::Error> = Err(io_err());
         match res.route_err(&REJECT, LogLevel::Info) {
             Err(ProcessError::Route(route)) => {
-                assert_eq!(route.relationship.as_ref(), "reject");
+                assert_eq!(route.relationship, "reject");
                 assert_eq!(route.log_level, LogLevel::Info);
             }
             other => panic!("expected a route error, got {other:?}"),

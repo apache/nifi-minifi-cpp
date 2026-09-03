@@ -23,10 +23,9 @@ use crate::{
     ProcessContext, ProcessError, ProcessSession, Processor, Relationship, Schedule,
     SingleThreaded,
 };
-use std::borrow::Cow;
 
 pub struct GeneratedFlowFile<'a> {
-    target_relationship_name: Cow<'static, str>,
+    target_relationship_name: &'static str,
     new_content: Option<Content<'a>>,
     attributes_to_add: Vec<FlowFileAttribute>,
 }
@@ -34,14 +33,14 @@ pub struct GeneratedFlowFile<'a> {
 impl<'a> GeneratedFlowFile<'a> {
     pub fn new(target_relationship: &'a Relationship, new_content: Option<Content<'a>>) -> Self {
         Self {
-            target_relationship_name: Cow::Borrowed(target_relationship.name),
+            target_relationship_name: target_relationship.name,
             new_content,
             attributes_to_add: Vec::new(),
         }
     }
 
     pub fn target_relationship_name(&self) -> &str {
-        &self.target_relationship_name
+        self.target_relationship_name
     }
 }
 
