@@ -34,17 +34,17 @@ pub type FlowFileAttribute = (Cow<'static, str>, Cow<'static, str>);
 
 #[derive(Debug)]
 pub struct TransformedFlowFile<'a> {
-    target_relationship_name: Cow<'static, str>,
+    target_relationship_name: &'static str,
     new_content: Option<Content<'a>>, // If None, the content doesn't change
     attributes_to_add: Vec<FlowFileAttribute>,
 }
 
 impl<'a> TransformedFlowFile<'a> {
     pub fn route_without_changes(target_relationship: &Relationship) -> Self {
-        Self::route_without_changes_by_name(Cow::Borrowed(target_relationship.name))
+        Self::route_without_changes_by_name(target_relationship.name)
     }
 
-    pub fn route_without_changes_by_name(relationship: Cow<'static, str>) -> Self {
+    pub fn route_without_changes_by_name(relationship: &'static str) -> Self {
         Self {
             target_relationship_name: relationship,
             new_content: None,
@@ -54,7 +54,7 @@ impl<'a> TransformedFlowFile<'a> {
 
     pub fn new(target_relationship: &Relationship, new_content: Option<Content<'a>>) -> Self {
         Self {
-            target_relationship_name: Cow::Borrowed(target_relationship.name),
+            target_relationship_name: target_relationship.name,
             new_content,
             attributes_to_add: Vec::new(),
         }
@@ -71,7 +71,7 @@ impl<'a> TransformedFlowFile<'a> {
     }
 
     pub fn target_relationship(&self) -> &str {
-        &self.target_relationship_name
+        self.target_relationship_name
     }
 
     pub fn attributes_to_add(&self) -> &[FlowFileAttribute] {
