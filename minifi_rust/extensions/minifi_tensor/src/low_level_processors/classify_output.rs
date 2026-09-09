@@ -403,7 +403,7 @@ mod tests {
             .transform(&context, &mut stream, &MockLogger::new())
             .expect_err("batched scores should be rejected");
         match err {
-            ProcessError::Route(route) => assert_eq!(route.relationship.as_ref(), FAILURE.name),
+            ProcessError::Route(route) => assert_eq!(route.relationship, FAILURE.name),
             other => panic!("expected route to failure, got {other:?}"),
         }
     }
@@ -418,7 +418,7 @@ mod tests {
             .expect_err("missing attribute should route to failure via a Route error");
         match err {
             ProcessError::Route(route) => {
-                assert_eq!(route.relationship.as_ref(), FAILURE.name)
+                assert_eq!(route.relationship, FAILURE.name)
             }
             other => panic!("expected route to failure, got {other:?}"),
         }
