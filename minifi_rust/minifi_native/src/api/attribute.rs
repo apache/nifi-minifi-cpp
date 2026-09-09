@@ -16,6 +16,7 @@
 // under the License.
 
 use crate::MinifiError;
+use std::borrow::Cow;
 
 pub struct OutputAttribute {
     pub name: &'static str,
@@ -23,10 +24,18 @@ pub struct OutputAttribute {
     pub description: &'static str,
 }
 
+impl From<&OutputAttribute> for Cow<'static, str> {
+    fn from(attr: &OutputAttribute) -> Self {
+        Cow::Borrowed(attr.name)
+    }
+}
+
 pub trait GetAttribute {
     fn get_attribute(&self, name: &str) -> Result<Option<String>, MinifiError>;
     fn get_required_attribute(&self, name: &str) -> Result<String, MinifiError> {
         self.get_attribute(name)?
-            .ok_or(MinifiError::missing_required_attribute(name.to_owned()))
+            .ok_or(MinifiError::MissingRequiredAttribute(
+                name.to_owned().into(),
+            ))
     }
 }

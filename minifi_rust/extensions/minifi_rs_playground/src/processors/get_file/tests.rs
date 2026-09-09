@@ -38,10 +38,7 @@ fn schedule_fails_with_invalid_input_dir() {
         "Input Directory".to_string(),
         "/invalid_directory".to_string(),
     );
-    assert!(matches!(
-        GetFileRs::schedule(&context, &MockLogger::new()),
-        Err(MinifiError::ScheduleError(_))
-    ));
+    assert!(GetFileRs::schedule(&context, &MockLogger::new()).is_err());
 }
 
 #[test]

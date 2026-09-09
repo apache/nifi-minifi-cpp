@@ -21,8 +21,8 @@ use crate::controller_services::animal_controller_apis::{
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetProperty, Logger, MinifiError, OnTriggerResult, OutputAttribute, ProcessContext,
-    ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property, PropertyDefinition,
-    Relationship, Schedule, Trigger, critical, info, property_definitions,
+    ProcessError, ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property,
+    PropertyDefinition, Relationship, Schedule, Trigger, critical, info, property_definitions,
 };
 
 pub(crate) const CAN_FLY_SERVICE: Property<dyn CanFlyControllerApi> =
@@ -52,7 +52,7 @@ impl Trigger for ZooProcessorRs {
         context: &mut Context,
         _session: &mut Session,
         logger: &Lggr,
-    ) -> Result<OnTriggerResult, MinifiError>
+    ) -> Result<OnTriggerResult, ProcessError>
     where
         Context: ProcessContext,
         Session: ProcessSession<FlowFile = Context::FlowFile>,

@@ -25,9 +25,8 @@ use crate::processors::lorem_ipsum_cs_user::relationships::SUCCESS;
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     Content, FlowFileSource, GeneratedFlowFile, GetControllerService, GetProperty, Logger,
-    MinifiError, Schedule, trace,
+    MinifiError, ProcessError, Schedule, trace,
 };
-use std::collections::HashMap;
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
 #[derive(
@@ -59,7 +58,7 @@ impl FlowFileSource for LoremIpsumCSUser {
         &self,
         context: &'a mut Context,
         logger: &LoggerImpl,
-    ) -> Result<Vec<GeneratedFlowFile<'a>>, MinifiError> {
+    ) -> Result<Vec<GeneratedFlowFile<'a>>, ProcessError> {
         trace!(logger, "generate call {:?}", self);
         let dummy_controller_service = context.get_controller_service(&DUMMY_CONTROLLER_SERVICE)?;
         trace!(
@@ -72,15 +71,13 @@ impl FlowFileSource for LoremIpsumCSUser {
                 let generated_flow_file = GeneratedFlowFile::new(
                     &SUCCESS,
                     Some(Content::from(controller_service.data.clone())),
-                    HashMap::new(),
                 );
                 Ok(vec![generated_flow_file])
             }
             WriteMethod::Stream => {
                 let reader = controller_service.data.as_bytes();
                 let content = Content::Stream(Box::new(reader));
-                let generated_flow_file =
-                    GeneratedFlowFile::new(&SUCCESS, Some(content), HashMap::new());
+                let generated_flow_file = GeneratedFlowFile::new(&SUCCESS, Some(content));
                 Ok(vec![generated_flow_file])
             }
         }

@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::api::errors::MinifiError;
-use crate::{LogLevel, Logger, ProcessContext, ProcessSession};
+use crate::{LogLevel, Logger, ProcessContext, ProcessError, ProcessSession};
 
 pub enum ProcessorInputRequirement {
     Required,
@@ -69,7 +69,7 @@ pub trait SingleThreadedTrigger: RawProcessor<Threading = SingleThreaded> {
         &mut self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
+    ) -> Result<OnTriggerResult, ProcessError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>;
@@ -80,7 +80,7 @@ pub trait MultiThreadedTrigger: RawProcessor<Threading = MultiThreaded> {
         &self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
+    ) -> Result<OnTriggerResult, ProcessError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>;

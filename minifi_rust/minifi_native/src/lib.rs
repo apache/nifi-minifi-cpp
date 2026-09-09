@@ -20,7 +20,7 @@ mod api;
 pub mod c_ffi;
 pub mod mock;
 
-pub use api::errors::MinifiError;
+pub use api::errors::{MinifiError, ProcessError, RouteError, RouteErrorExt};
 
 pub use api::component_definition_traits::{
     ComponentIdentifier, ControllerServiceDefinition, ProcessorDefinition,
@@ -35,7 +35,7 @@ pub use api::processor_wrappers::flow_file_stream_transform::{
     TransformStreamResult,
 };
 pub use api::processor_wrappers::flow_file_transform::{
-    FlowFileTransform, FlowFileTransformProcessorType, TransformedFlowFile,
+    FlowFileAttribute, FlowFileTransform, FlowFileTransformProcessorType, TransformedFlowFile,
 };
 
 pub use api::processor_wrappers::utils::flow_file_content::Content;
