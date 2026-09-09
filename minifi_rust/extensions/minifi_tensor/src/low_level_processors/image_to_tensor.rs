@@ -483,7 +483,7 @@ mod tests {
 
         match err {
             ProcessError::Route(route) => {
-                assert_eq!(route.relationship.as_ref(), FAILURE.name)
+                assert_eq!(route.relationship, FAILURE.name)
             }
             other => panic!("expected route to failure, got {other:?}"),
         }
