@@ -29,6 +29,7 @@ from minifi_behave.core.hooks import (
 )
 
 _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+_DOWNLOAD_TIMEOUT_S = 60
 
 
 class RemoteAsset:
@@ -43,8 +44,16 @@ class RemoteAsset:
         os.makedirs(cache_dir, exist_ok=True)
         tmp = dest + ".part"
         print(f"[minifi_tensor tests] fetching {filename} from {self.url}")
-        with urllib.request.urlopen(self.url, context=_SSL_CONTEXT) as response, open(tmp, "wb") as out:
-            shutil.copyfileobj(response, out)
+        try:
+            with (
+                urllib.request.urlopen(self.url, context=_SSL_CONTEXT, timeout=_DOWNLOAD_TIMEOUT_S) as response,
+                open(tmp, "wb") as out,
+            ):
+                shutil.copyfileobj(response, out)
+        except OSError as e:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+            raise RuntimeError(f"failed to fetch {filename} from {self.url}: {e}") from e
         if not self._verify(tmp):
             actual = self._digest(tmp)
             os.remove(tmp)

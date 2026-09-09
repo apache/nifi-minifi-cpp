@@ -182,7 +182,10 @@ impl ClassifyOutput {
             ),
             Some(output_attr) => (
                 None,
-                Some((output_attr, serde_json::to_string(&predictions).unwrap())),
+                Some((
+                    output_attr,
+                    serde_json::to_string(&predictions).route_err_to_failure()?,
+                )),
             ),
         };
 
