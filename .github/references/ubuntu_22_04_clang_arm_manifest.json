@@ -13490,7 +13490,7 @@
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",
-                            "expressionLanguageScope": "NONE",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
                             "defaultValue": "${enrichment.value}"
                         },
                         "Line color": {
