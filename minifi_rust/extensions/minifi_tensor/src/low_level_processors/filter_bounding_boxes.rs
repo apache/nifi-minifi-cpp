@@ -255,6 +255,9 @@ impl FilterBoundingBoxes {
                     if raw_class < 0.0 {
                         continue;
                     }
+                    if !confidence.is_finite() || !raw_class.is_finite() {
+                        continue;
+                    }
                     let class_id = raw_class.round() as usize;
                     if self.background_class_index == Some(class_id) {
                         continue;
@@ -309,7 +312,10 @@ impl FilterBoundingBoxes {
             None => (Some(Content::Buffer(json_output)), None),
             Some(output_attr) => (
                 None,
-                Some((output_attr, serde_json::to_string(&filtered_boxes).unwrap())),
+                Some((
+                    output_attr,
+                    serde_json::to_string(&filtered_boxes).route_err_to_failure()?,
+                )),
             ),
         };
 

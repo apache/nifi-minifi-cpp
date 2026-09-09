@@ -9,7 +9,8 @@ dependencies = [
     "PyYAML==6.0.3",
     "humanfriendly==10.0",
     "cryptography==50.0.0",
-    "pyjks==20.0.0"
+    "pyjks==20.0.0",
+    "certifi==2026.7.22"
 ]
 
 [tool.setuptools]
