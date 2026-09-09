@@ -25,8 +25,6 @@ from minifi_behave.core.hooks import (
     common_before_scenario,
 )
 
-ssl._create_default_https_context = ssl._create_unverified_context
-
 # Model / label / image assets fetched on first use. All hosted on
 # public buckets or the sonos/tract repo
 REMOTE_ASSETS: dict[str, str] = {
