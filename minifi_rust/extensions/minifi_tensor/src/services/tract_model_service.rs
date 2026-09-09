@@ -20,7 +20,6 @@ use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError, trace};
 use std::path::Path;
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
-use tract::__ndarray_interop::anyhow;
 use tract::prelude::*;
 
 mod service_definition;
@@ -107,10 +106,10 @@ impl TractModelService {
     pub fn run_inference(
         &self,
         inputs: impl IntoIterator<Item = Tensor>,
-    ) -> anyhow::Result<Vec<Tensor>> {
+    ) -> Result<Vec<Tensor>, MinifiError> {
         let vec_inputs: Vec<Tensor> = inputs.into_iter().collect();
 
-        self.runnable_model.run(vec_inputs)
+        Ok(self.runnable_model.run(vec_inputs)?)
     }
 }
 
