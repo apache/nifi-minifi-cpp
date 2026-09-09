@@ -22,13 +22,11 @@ import ssl
 import urllib.request
 
 import certifi
-
 from minifi_behave.core.hooks import (
     add_extension_to_minifi_container,
     common_after_scenario,
     common_before_scenario,
 )
-
 
 _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
@@ -50,9 +48,7 @@ class RemoteAsset:
         if not self._verify(tmp):
             actual = self._digest(tmp)
             os.remove(tmp)
-            raise RuntimeError(
-                f"sha256 mismatch for {filename}: expected {self.sha256}, got {actual}"
-            )
+            raise RuntimeError(f"sha256 mismatch for {filename}: expected {self.sha256}, got {actual}")
         os.replace(tmp, dest)
         return dest
 
@@ -78,15 +74,13 @@ REMOTE_ASSETS: dict[str, RemoteAsset] = {
     ),
     # 1000-class ImageNet labels (line N = class N; line 0 is "dummy")
     "imagenet_slim_labels.txt": RemoteAsset(
-        "https://raw.githubusercontent.com/sonos/tract/main/examples/"
-        "onnx-mobilenet-v2/imagenet_slim_labels.txt",
+        "https://raw.githubusercontent.com/sonos/tract/main/examples/onnx-mobilenet-v2/imagenet_slim_labels.txt",
         "e8d2cef25bb7b3c8c6923ad3c463b47de8b8535cadf4bd62a2ca2532c587eb9f",
     ),
     # Same test image tract's example uses. MobileNetV2 confidently
     # classifies this as "military uniform".
     "grace_hopper.jpg": RemoteAsset(
-        "https://raw.githubusercontent.com/sonos/tract/main/examples/"
-        "onnx-mobilenet-v2/grace_hopper.jpg",
+        "https://raw.githubusercontent.com/sonos/tract/main/examples/onnx-mobilenet-v2/grace_hopper.jpg",
         "e1f57e98cf38076c0f9a058d74ffddf90f20453e436033784606b63c8ed2e49a",
     ),
     # UltraFace RFB-320 (~1.2 MB): 2-output SSD-style detector matching the
