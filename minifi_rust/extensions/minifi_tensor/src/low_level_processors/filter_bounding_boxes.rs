@@ -17,6 +17,7 @@
 
 mod filter_bounding_boxes_def;
 
+use crate::low_level_processors::image_to_tensor::ResizeMode;
 use crate::utils::bounding_box::BoundingBox;
 use crate::utils::dimensions::Dimensions;
 use crate::utils::score_activation::ScoreActivation;
@@ -181,14 +182,27 @@ impl FilterBoundingBoxes {
         tensors: Vec<Tensor>,
         orig_dim: Dimensions,
         target_dim: Dimensions,
+        resize_mode: ResizeMode,
     ) -> Result<TransformedFlowFile<'a>, ProcessError> {
         let score_floats =
             tensor_as_f32(&tensors, self.score_output_index).route_err_to_failure()?;
         let box_floats = tensor_as_f32(&tensors, self.box_output_index).route_err_to_failure()?;
 
-        let scale = (target_dim.width / orig_dim.width).min(target_dim.height / orig_dim.height);
-        let pad_x = (target_dim.width - (orig_dim.width * scale)) / 2.0;
-        let pad_y = (target_dim.height - (orig_dim.height * scale)) / 2.0;
+        let (scale_x, scale_y, pad_x, pad_y) = match resize_mode {
+            ResizeMode::Letterbox => {
+                let scale =
+                    (target_dim.width / orig_dim.width).min(target_dim.height / orig_dim.height);
+                let pad_x = (target_dim.width - (orig_dim.width * scale)) / 2.0;
+                let pad_y = (target_dim.height - (orig_dim.height * scale)) / 2.0;
+                (scale, scale, pad_x, pad_y)
+            }
+            ResizeMode::Stretch => (
+                target_dim.width / orig_dim.width,
+                target_dim.height / orig_dim.height,
+                0.0,
+                0.0,
+            ),
+        };
 
         if !box_floats.len().is_multiple_of(4) {
             return Err(MinifiError::custom(
@@ -208,10 +222,12 @@ impl FilterBoundingBoxes {
         let make_box = |i: usize, class_id: usize, confidence: f32| -> BoundingBox {
             let (raw_x_min, raw_y_min, raw_x_max, raw_y_max) =
                 decode_box(&box_floats, i * 4, self.box_format);
-            let true_x_min = (((raw_x_min * target_dim.width) - pad_x) / scale) / orig_dim.width;
-            let true_y_min = (((raw_y_min * target_dim.height) - pad_y) / scale) / orig_dim.height;
-            let true_x_max = (((raw_x_max * target_dim.width) - pad_x) / scale) / orig_dim.width;
-            let true_y_max = (((raw_y_max * target_dim.height) - pad_y) / scale) / orig_dim.height;
+            let true_x_min = (((raw_x_min * target_dim.width) - pad_x) / scale_x) / orig_dim.width;
+            let true_y_min =
+                (((raw_y_min * target_dim.height) - pad_y) / scale_y) / orig_dim.height;
+            let true_x_max = (((raw_x_max * target_dim.width) - pad_x) / scale_x) / orig_dim.width;
+            let true_y_max =
+                (((raw_y_max * target_dim.height) - pad_y) / scale_y) / orig_dim.height;
             BoundingBox {
                 class_id,
                 confidence,
@@ -329,6 +345,15 @@ impl FilterBoundingBoxes {
     }
 }
 
+fn resize_mode_from_attributes<Context: GetAttribute>(context: &Context) -> ResizeMode {
+    context
+        .get_attribute("image.resize.mode")
+        .ok()
+        .flatten()
+        .and_then(|raw| raw.parse::<ResizeMode>().ok())
+        .unwrap_or(ResizeMode::Letterbox)
+}
+
 impl FlowFileTransform for FilterBoundingBoxes {
     fn transform<'a, Context: GetProperty + GetAttribute + GetId, LoggerImpl: Logger>(
         &self,
@@ -338,10 +363,11 @@ impl FlowFileTransform for FilterBoundingBoxes {
     ) -> Result<TransformedFlowFile<'a>, ProcessError> {
         let orig_dim = Dimensions::original_from_attributes(context).route_err_to_failure()?;
         let target_dim = Dimensions::target_from_attributes(context).route_err_to_failure()?;
+        let resize_mode = resize_mode_from_attributes(context);
 
         let tensors = deserialize_tensors(context, input_stream).route_err_to_failure()?;
 
-        self.filter(context, logger, tensors, orig_dim, target_dim)
+        self.filter(context, logger, tensors, orig_dim, target_dim, resize_mode)
     }
 }
 
@@ -454,6 +480,7 @@ mod tests {
                 vec![scores, boxes, classes],
                 dim,
                 dim,
+                ResizeMode::Letterbox,
             )
             .expect("filter should succeed");
 
@@ -462,6 +489,53 @@ mod tests {
         let json = String::from_utf8(result.into_bytes().unwrap().unwrap()).unwrap();
         assert!(json.contains("\"class_id\":5"));
         assert!(!json.contains("\"class_id\":3"));
+    }
+
+    #[test]
+    fn test_resize_mode_changes_coordinate_un_mapping() {
+        use minifi_native::{MockLogger, MockProcessContext};
+        use tract::__ndarray_interop::TensorInterface;
+
+        let run = |mode: ResizeMode| -> BoundingBox {
+            // One interior box (avoids clamping) in normalised Xyxy.
+            let scores = Tensor::from_slice::<f32>(&[1], &[0.9]).unwrap();
+            let boxes = Tensor::from_slice::<f32>(&[1, 4], &[0.4, 0.4, 0.6, 0.6]).unwrap();
+            let classes = Tensor::from_slice::<i64>(&[1], &[5]).unwrap();
+
+            let result = class_index_processor()
+                .filter(
+                    &MockProcessContext::new(),
+                    &MockLogger::new(),
+                    vec![scores, boxes, classes],
+                    Dimensions {
+                        width: 200.0,
+                        height: 100.0,
+                    },
+                    Dimensions {
+                        width: 100.0,
+                        height: 100.0,
+                    },
+                    mode,
+                )
+                .expect("filter should succeed");
+            let json = result.into_bytes().unwrap().unwrap();
+            let boxes: Vec<BoundingBox> = serde_json::from_slice(&json).unwrap();
+            boxes.into_iter().next().expect("one box expected")
+        };
+
+        // Stretch: scale_x = 100/200, scale_y = 100/100, no padding → identity in
+        // normalised space.
+        let stretched = run(ResizeMode::Stretch);
+        assert!((stretched.y_min - 0.4).abs() < 1e-5);
+        assert!((stretched.y_max - 0.6).abs() < 1e-5);
+
+        // Letterbox: uniform scale 0.5, symmetric vertical pad of 25px removed →
+        // y expands to 0.3..0.7. x is unchanged (pad_x = 0, same scale on x).
+        let letterboxed = run(ResizeMode::Letterbox);
+        assert!((letterboxed.x_min - 0.4).abs() < 1e-5);
+        assert!((letterboxed.x_max - 0.6).abs() < 1e-5);
+        assert!((letterboxed.y_min - 0.3).abs() < 1e-5);
+        assert!((letterboxed.y_max - 0.7).abs() < 1e-5);
     }
 
     #[test]
@@ -485,6 +559,7 @@ mod tests {
             vec![scores, boxes, classes],
             dim,
             dim,
+            ResizeMode::Letterbox,
         );
         assert!(result.is_err(), "mismatched score/box counts should error");
     }

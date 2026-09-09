@@ -156,6 +156,14 @@ pub(super) const IMG_TRG_WIDTH_ATTR: OutputAttribute = OutputAttribute {
     description: "The width of the image after the resizing.",
 };
 
+pub(super) const IMG_RESIZE_MODE_ATTR: OutputAttribute = OutputAttribute {
+    name: "image.resize.mode",
+    relationships: &["success"],
+    description: "The resize mode ('Stretch' or 'Letterbox') applied to fit the image into the \
+                  target dimensions. Downstream processors such as FilterBoundingBoxes use this \
+                  to invert the coordinate mapping correctly.",
+};
+
 impl ProcessorDefinition for ImageToTensor {
     const DESCRIPTION: &'static str = "Decodes an image from the flow file content and converts it into a normalised numeric \
          tensor suitable for feeding into a downstream inference processor such as \
@@ -174,6 +182,7 @@ impl ProcessorDefinition for ImageToTensor {
         IMG_ORG_HEIGHT_ATTR,
         IMG_TRG_WIDTH_ATTR,
         IMG_TRG_HEIGHT_ATTR,
+        IMG_RESIZE_MODE_ATTR,
     ];
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
     const PROPERTIES: &[PropertyDefinition] = property_definitions![
