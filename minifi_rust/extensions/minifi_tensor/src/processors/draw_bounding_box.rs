@@ -26,7 +26,8 @@ pub(crate) const BOUNDING_BOXES: Property<BoundingBoxes> = Property::new(
      y_min, x_max, y_max; coordinates normalised to [0,1] against the image). Typically the \
      attribute produced by an upstream DetectObject or FilterBoundingBoxes processor.",
 )
-.with_default("${enrichment.value}");
+.with_default("${enrichment.value}")
+.supports_expression_language();
 
 const LINE_THICKNESS: Property<u32> = Property::new(
     "Line thickness",

@@ -79,8 +79,14 @@ impl FlowFileTransform for DetectObject {
             .route_err_to_failure()?;
 
         // FilterBoundingBox
-        self.filter_bounding_boxes
-            .filter(context, logger, output_tensors, orig_dim, target_dim)
+        self.filter_bounding_boxes.filter(
+            context,
+            logger,
+            output_tensors,
+            orig_dim,
+            target_dim,
+            self.image_to_tensor.get_resize_mode(),
+        )
     }
 }
 
