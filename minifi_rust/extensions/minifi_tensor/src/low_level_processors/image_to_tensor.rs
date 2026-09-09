@@ -74,8 +74,8 @@ pub(crate) enum ColorFormat {
 )]
 #[strum(serialize_all = "UPPERCASE", const_into_str)]
 pub(crate) enum TensorShapeFormat {
-    Chw, // center, height, width
-    Hwc, // height, width, center
+    Chw, // channel, height, width
+    Hwc, // height, width, channel
 }
 
 #[derive(
