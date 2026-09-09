@@ -24,7 +24,8 @@ pub(crate) use image_to_tensor_def::{
     TARGET_HEIGHT, TARGET_WIDTH, TENSOR_SHAPE_FORMAT,
 };
 use image_to_tensor_def::{
-    IMG_ORG_HEIGHT_ATTR, IMG_ORG_WIDTH_ATTR, SUCCESS, TENSOR_DTYPE_ATTR, TENSOR_SHAPE_ATTR,
+    IMG_ORG_HEIGHT_ATTR, IMG_ORG_WIDTH_ATTR, IMG_RESIZE_MODE_ATTR, SUCCESS, TENSOR_DTYPE_ATTR,
+    TENSOR_SHAPE_ATTR,
 };
 use image_to_tensor_def::{IMG_TRG_HEIGHT_ATTR, IMG_TRG_WIDTH_ATTR, TENSORS_LEN_ATTR};
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
@@ -305,6 +306,10 @@ impl ImageToTensor {
         }
     }
 
+    pub fn get_resize_mode(&self) -> ResizeMode {
+        self.resize_mode
+    }
+
     pub fn get_tensor(&self, img: image::DynamicImage) -> Result<Tensor, MinifiError> {
         let f32_data: Vec<f32> = self
             .tensor_bytes(img)
@@ -344,6 +349,7 @@ impl FlowFileTransform for ImageToTensor {
                 (&IMG_ORG_WIDTH_ATTR, orig_dim.width.to_string()),
                 (&IMG_TRG_HEIGHT_ATTR, self.target_height.to_string()),
                 (&IMG_TRG_WIDTH_ATTR, self.target_width.to_string()),
+                (&IMG_RESIZE_MODE_ATTR, self.resize_mode.to_string()),
             ]),
         )
     }
@@ -419,6 +425,12 @@ mod tests {
                 .attribute("tensor.0.dtype")
                 .expect("Missing dtype attribute"),
             "F32"
+        );
+        assert_eq!(
+            result
+                .attribute("image.resize.mode")
+                .expect("Missing resize mode attribute"),
+            "Stretch"
         );
 
         let payload: Vec<u8> = result
