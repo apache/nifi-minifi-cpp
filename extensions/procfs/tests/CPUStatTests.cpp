@@ -25,18 +25,19 @@
 namespace org::apache::nifi::minifi::extensions::procfs::tests {
 
 void cpu_stat_period_total_should_be_one(const CpuStatData& cpu_stat) {
-  double percentage = 0;
-  percentage += cpu_stat.getUser() / cpu_stat.getTotal();
-  percentage += cpu_stat.getNice() / cpu_stat.getTotal();
-  percentage += cpu_stat.getSystem() / cpu_stat.getTotal();
-  percentage += cpu_stat.getIdle() / cpu_stat.getTotal();
-  percentage += cpu_stat.getIoWait() / cpu_stat.getTotal();
-  percentage += cpu_stat.getIrq() / cpu_stat.getTotal();
-  percentage += cpu_stat.getSoftIrq() / cpu_stat.getTotal();
-  percentage += cpu_stat.getSteal() / cpu_stat.getTotal();
-  percentage += cpu_stat.getGuest() / cpu_stat.getTotal();
-  percentage += cpu_stat.getGuestNice() / cpu_stat.getTotal();
-  REQUIRE(percentage == Catch::Approx(1.0));
+  const auto sum_of_parts = cpu_stat.getUser()
+      + cpu_stat.getNice()
+      + cpu_stat.getSystem()
+      + cpu_stat.getIdle()
+      + cpu_stat.getIoWait()
+      + cpu_stat.getIrq()
+      + cpu_stat.getSoftIrq()
+      + cpu_stat.getSteal()
+      // according to the comment of getTotal, User and Nice already includes VirtAll (Guest + GuestNice), so adding them again would push us above 1
+      //+ cpu_stat.getGuest()
+      //+ cpu_stat.getGuestNice()
+  ;
+  REQUIRE(sum_of_parts == cpu_stat.getTotal());
 }
 
 TEST_CASE("ProcFSTest stat test with mock", "[procfsstatmockabsolutetest]") {
