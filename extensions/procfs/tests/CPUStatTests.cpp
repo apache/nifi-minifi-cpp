@@ -25,6 +25,7 @@
 namespace org::apache::nifi::minifi::extensions::procfs::tests {
 
 void cpu_stat_period_total_should_be_one(const CpuStatData& cpu_stat) {
+  // according to the comment of getTotal, User and Nice already includes VirtAll (Guest + GuestNice), so adding them again would push us above 1
   const auto sum_of_parts = cpu_stat.getUser()
       + cpu_stat.getNice()
       + cpu_stat.getSystem()
@@ -32,11 +33,7 @@ void cpu_stat_period_total_should_be_one(const CpuStatData& cpu_stat) {
       + cpu_stat.getIoWait()
       + cpu_stat.getIrq()
       + cpu_stat.getSoftIrq()
-      + cpu_stat.getSteal()
-      // according to the comment of getTotal, User and Nice already includes VirtAll (Guest + GuestNice), so adding them again would push us above 1
-      //+ cpu_stat.getGuest()
-      //+ cpu_stat.getGuestNice()
-  ;
+      + cpu_stat.getSteal();
   REQUIRE(sum_of_parts == cpu_stat.getTotal());
 }
 
