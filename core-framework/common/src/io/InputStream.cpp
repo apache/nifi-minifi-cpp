@@ -94,15 +94,17 @@ size_t InputStream::read(std::string &str, LengthPrefixSize prefix_size, size_t 
   }
 
   // if max_length truncated the string, consume the rest of it from the stream, and throw it away, to keep subsequent reads aligned
-  for (ssize_t remaining = string_length - limited_length; remaining > 0;) {
+  // ptrdiff_t because I want currently impossible math errors to flip the remainder negative and terminate minifi
+  for (std::ptrdiff_t remaining = string_length - limited_length; remaining != 0;) {
+    gsl_Assert(remaining > 0);
     std::array<std::byte, 8192> throwaway_buf{};
     std::span<std::byte> dst_span = throwaway_buf;
-    if (remaining < gsl::narrow<ssize_t>(dst_span.size())) { dst_span = dst_span.subspan(0, remaining); }
+    if (remaining < gsl::narrow<std::ptrdiff_t>(dst_span.size())) { dst_span = dst_span.subspan(0, remaining); }
     const auto read_return = read(dst_span);
     if (io::isError(read_return)) {
       return read_return;
     }
-    remaining -= gsl::narrow<ssize_t>(read_return);
+    remaining -= gsl::narrow<std::ptrdiff_t>(read_return);
   }
 
   return length_prefix_size_in_bytes + string_length;
