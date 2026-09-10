@@ -71,14 +71,14 @@ size_t InputStream::read(std::string &str, LengthPrefixSize prefix_size, size_t 
     return length_prefix_size_in_bytes;
   }
 
-  string_length = std::min(string_length, gsl::narrow<uint32_t>(max_length));
-  if (string_length == 0) {
+  const auto limited_length = std::min(string_length, gsl::narrow<uint32_t>(max_length));
+  if (limited_length == 0) {
     str.clear();
     return length_prefix_size_in_bytes;
   }
 
   str.clear();
-  str.resize(string_length);
+  str.resize(limited_length);
   std::span<std::byte> dst_buffer = as_writable_bytes(std::span{str});
 
   auto zero_return_retry_count = 0;
@@ -91,6 +91,18 @@ size_t InputStream::read(std::string &str, LengthPrefixSize prefix_size, size_t 
       return STREAM_ERROR;
     }
     dst_buffer = dst_buffer.subspan(read_return);
+  }
+
+  // if max_length truncated the string, consume the rest of it from the stream, and throw it away, to keep subsequent reads aligned
+  for (ssize_t remaining = string_length - limited_length; remaining > 0;) {
+    std::array<std::byte, 8192> throwaway_buf{};
+    std::span<std::byte> dst_span = throwaway_buf;
+    if (remaining < gsl::narrow<ssize_t>(dst_span.size())) { dst_span = dst_span.subspan(0, remaining); }
+    const auto read_return = read(dst_span);
+    if (io::isError(read_return)) {
+      return read_return;
+    }
+    remaining -= gsl::narrow<ssize_t>(read_return);
   }
 
   return length_prefix_size_in_bytes + string_length;

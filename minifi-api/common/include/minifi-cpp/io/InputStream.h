@@ -47,7 +47,7 @@ class InputStream : public virtual Stream {
   /**
    * Read length prefixed string from stream. Use isError (Stream.h) to check for errors.
    * @param str reference string
-   * @param length_prefix_size The wideness of the length prefix, 16bit or 32bit
+   * @param length_prefix_size The bit width of the length prefix, 16bit or 32bit
    * @param max_length The max length of the string, to avoid excessive allocations
    * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/

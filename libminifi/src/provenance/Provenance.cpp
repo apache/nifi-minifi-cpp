@@ -341,7 +341,6 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
   for (uint32_t i = 0; i < numAttributes; i++) {
     std::string key;
     {
-      // clamp attribute name / value to 64k (the 16bit length prefix maximum)
       const auto ret = input_stream.read(key, io::LengthPrefixSize::_16BIT, 64_KiB);
       if (ret == 0 || io::isError(ret)) {
         return false;
@@ -349,7 +348,6 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
     }
     std::string value;
     {
-      // clamp attribute name / value to 64k (the 16bit length prefix maximum)
       const auto ret = input_stream.read(value, io::LengthPrefixSize::_16BIT, 64_KiB);
       if (ret == 0 || io::isError(ret)) {
         return false;
