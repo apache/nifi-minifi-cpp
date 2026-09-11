@@ -21,7 +21,7 @@ use crate::processors::asciify_german::relationships::FAILURE;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileStreamTransform, GetProperty, InputStream, Logger, MinifiError, OutputStream,
-    ProcessError, RouteErrorExt, Schedule, TransformStreamResult,
+    ProcessError, Schedule, TransformStreamResult,
 };
 
 mod relationships;
@@ -56,8 +56,9 @@ impl FlowFileStreamTransform for AsciifyGerman {
                 0xC3 => {
                     let mut next = [0u8; 1];
                     if input_stream.read(&mut next)? == 0 {
-                        Err(MinifiError::custom("Truncated multi-byte sequence at EOF"))
-                            .route_err_to_failure()?
+                        return Err(ProcessError::route_to_failure(
+                            "Truncated multi-byte sequence at EOF",
+                        ));
                     }
                     match next[0] {
                         0xA4 => output_stream.write_all(b"ae")?, // ä
