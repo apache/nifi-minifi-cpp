@@ -164,11 +164,11 @@ Decodes the image from the flow file content, draws each bounding box supplied v
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name               | Default Value       | Allowable Values | Description                                                                                                                                                                                                                                                      |
-|--------------------|---------------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Bounding boxes     | ${enrichment.value} |                  | JSON array of bounding boxes to draw onto the image (fields class_id, confidence, x_min, y_min, x_max, y_max; coordinates normalised to [0,1] against the image). Typically the attribute produced by an upstream DetectObject or FilterBoundingBoxes processor. |
-| Line color         | [0, 255, 0]         |                  | Outline colour as '[R, G, B]' u8 channels (0-255).                                                                                                                                                                                                               |
-| **Line thickness** | 5                   |                  | Thickness in pixels of the drawn box outline.                                                                                                                                                                                                                    |
+| Name               | Default Value       | Allowable Values | Description                                                                                                                                                                                                                                                                                                 |
+|--------------------|---------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Bounding boxes     | ${enrichment.value} |                  | JSON array of bounding boxes to draw onto the image (fields class_id, confidence, x_min, y_min, x_max, y_max; coordinates normalised to [0,1] against the image). Typically the attribute produced by an upstream DetectObject or FilterBoundingBoxes processor.<br/>**Supports Expression Language: true** |
+| Line color         | [0, 255, 0]         |                  | Outline colour as '[R, G, B]' u8 channels (0-255).                                                                                                                                                                                                                                                          |
+| **Line thickness** | 5                   |                  | Thickness in pixels of the drawn box outline.                                                                                                                                                                                                                                                               |
 
 ### Relationships
 
@@ -247,15 +247,16 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute             | Relationship | Description                                                                                                                                             |
-|-----------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| image.original.height | success      | The height of the original image before the resizing.                                                                                                   |
-| image.original.width  | success      | The width of the original image before the resizing.                                                                                                    |
-| image.target.height   | success      | The height of the image after the resizing.                                                                                                             |
-| image.target.width    | success      | The width of the image after the resizing.                                                                                                              |
-| tensor.0.dtype        | success      | Element type of the values in the output tensor. Currently always 'F32'.                                                                                |
-| tensor.0.shape        | success      | Comma-separated dimensions of the output tensor in the chosen layout, always including a leading batch dimension of 1 (e.g. '1,3,224,224' for RGB CHW). |
-| tensors.len           | success      | Number of tensors in the output FlowFile. Currently always '1'                                                                                          |
+| Attribute             | Relationship | Description                                                                                                                                                                                            |
+|-----------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| image.original.height | success      | The height of the original image before the resizing.                                                                                                                                                  |
+| image.original.width  | success      | The width of the original image before the resizing.                                                                                                                                                   |
+| image.resize.mode     | success      | The resize mode ('Stretch' or 'Letterbox') applied to fit the image into the target dimensions. Downstream processors such as FilterBoundingBoxes use this to invert the coordinate mapping correctly. |
+| image.target.height   | success      | The height of the image after the resizing.                                                                                                                                                            |
+| image.target.width    | success      | The width of the image after the resizing.                                                                                                                                                             |
+| tensor.0.dtype        | success      | Element type of the values in the output tensor. Currently always 'F32'.                                                                                                                               |
+| tensor.0.shape        | success      | Comma-separated dimensions of the output tensor in the chosen layout, always including a leading batch dimension of 1 (e.g. '1,3,224,224' for RGB CHW).                                                |
+| tensors.len           | success      | Number of tensors in the output FlowFile. Currently always '1'                                                                                                                                         |
 
 
 ## InvokeTractModel
