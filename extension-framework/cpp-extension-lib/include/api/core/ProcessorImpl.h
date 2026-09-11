@@ -63,7 +63,7 @@ class ProcessorImpl {
 
   [[nodiscard]] std::string getName() const;
   [[nodiscard]] minifi::utils::Identifier getUUID() const;
-  [[nodiscard]] minifi::utils::SmallString<utils::Identifier::UUID_STR_LEN> getUUIDStr() const;
+  [[nodiscard]] minifi::utils::SmallString<minifi::utils::Identifier::UUID_STR_LEN> getUUIDStr() const;
 
  protected:
   virtual minifi_status onTriggerImpl(ProcessContext&, ProcessSession&) {return MINIFI_STATUS_SUCCESS;}
