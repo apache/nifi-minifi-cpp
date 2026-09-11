@@ -40,7 +40,7 @@ pub(super) const SUCCESS: Relationship = Relationship {
 pub(super) const FAILURE: Relationship = Relationship {
     name: "failure",
     description: "The image could not be decoded, the input tensor could not be built, the model \
-                  failed to run, or the model outputs could not be interpreted as scores + boxes.",
+                  failed to run, or the model outputs could not be interpreted as classification.",
 };
 
 impl ProcessorDefinition for ClassifyImage {
