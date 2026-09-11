@@ -41,7 +41,7 @@ Feature: ImageToTensor preprocesses image bytes into normalised tensors
     And the Minifi logs contain the following message: "key:tensor.0.dtype value:F32" in less than 1 seconds
     And the Minifi logs do not contain errors
 
-  Scenario: HWC layout is reflected in the tensor.shape attribute
+  Scenario: HWC layout is reflected in the tensor.0.shape attribute
     Given a host resource file "grace_hopper.jpg" is copied to the "/tmp/input/grace_hopper.jpg" path in the MiNiFi container
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "false"
