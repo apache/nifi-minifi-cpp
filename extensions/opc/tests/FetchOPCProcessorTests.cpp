@@ -19,7 +19,7 @@
 #include "unit/Catch.h"
 #include "OpcUaTestServer.h"
 #include "unit/SingleProcessorTestController.h"
-#include "include/fetchopc.h"
+#include "include/FetchOPCProcessor.h"
 #include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -92,6 +92,30 @@ TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocess
   CHECK(flow_file->getAttribute("Typename") == "Int32");
   CHECK(flow_file->getAttribute("Sourcetimestamp"));
   CHECK(controller.plan->getContent(flow_file) == "4");
+}
+
+TEST_CASE("Test fetching using string node id", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "String"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "the.answer.node"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  const auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
+  auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
+  CHECK(flow_file->getAttribute("Browsename") == "StringNode");
+  CHECK(flow_file->getAttribute("Datasize") == "4");
+  CHECK(flow_file->getAttribute("Full path") == "/StringNode");
+  CHECK(flow_file->getAttribute("NodeID") == "the.answer.node");
+  CHECK(flow_file->getAttribute("NodeID type") == "string");
+  CHECK(flow_file->getAttribute("Typename") == "Int32");
+  CHECK(flow_file->getAttribute("Sourcetimestamp"));
+  CHECK(controller.plan->getContent(flow_file) == "42");
 }
 
 TEST_CASE("Test missing path reference types", "[fetchopcprocessor]") {

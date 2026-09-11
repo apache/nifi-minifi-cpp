@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "opc.h"
+#include "OPCCommon.h"
 
 #include <cstdlib>
 #include <memory>
@@ -357,7 +357,7 @@ bool Client::exists(UA_NodeId node_id) {
   return retval;
 }
 
-UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& found_node_ids, int32_t namespace_index,
+UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, int32_t namespace_index,
     const std::vector<UA_UInt32>& path_reference_types, const std::shared_ptr<core::logging::Logger>& logger) {
   logger->log_trace("Trying to find node ids for {}", path.c_str());
 
@@ -414,9 +414,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
     UA_BrowsePathResult res = response.results[i];
     for (size_t j = 0; j < res.targetsSize; ++j) {
       found_data = true;
-      UA_NodeId resultId;
-      UA_NodeId_copy(&res.targets[j].targetId.nodeId, &resultId);
-      found_node_ids.push_back(resultId);
+      found_node_ids.push_back(NodeId::copyOf(res.targets[j].targetId.nodeId));
     }
   }
 

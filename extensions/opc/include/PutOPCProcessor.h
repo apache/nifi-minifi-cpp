@@ -22,8 +22,8 @@
 #include <utility>
 #include <vector>
 
-#include "opc.h"
-#include "opcbase.h"
+#include "OPCCommon.h"
+#include "BaseOPCProcessor.h"
 #include "minifi-cpp/FlowFileRecord.h"
 #include "core/ProcessSession.h"
 #include "minifi-cpp/core/Property.h"
@@ -118,11 +118,11 @@ class PutOPCProcessor final : public BaseOPCProcessor {
 
  private:
   bool readParentNodeId();
-  std::expected<std::pair<bool, UA_NodeId>, std::string> configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const;
+  std::expected<std::pair<bool, opc::NodeId>, std::string> configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const;
   void updateNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
   void createNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
 
-  UA_NodeId parent_node_id_{};
+  opc::NodeId parent_node_id_;
   opc::OPCNodeDataType node_data_type_{};
   UA_UInt32 create_node_reference_type_ = UA_NS0ID_HASCOMPONENT;
 };

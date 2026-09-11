@@ -73,6 +73,8 @@ class OpcUaTestServer {
     node_ids_["Simulator/Default/Device1/INT3"] = int3_node;
     auto int4_node = addIntVariable("INT4", int3_node, 4);
     node_ids_["Simulator/Default/Device1/INT4"] = int4_node;
+
+    addStringVariable("StringNode", "the.answer.node", UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), 42);
   }
 
   void start() {
@@ -177,6 +179,34 @@ class OpcUaTestServer {
 
     UA_LocalizedText_clear(&attr.displayName);
     return node_id;
+  }
+
+  void addStringVariable(const char* name, const char* node_id_str, UA_NodeId parent, UA_Int32 value) {
+    UA_VariableAttributes attr = UA_VariableAttributes_default;
+    attr.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", name);
+    attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
+
+    UA_Variant_setScalar(&attr.value, &value, &UA_TYPES[UA_TYPES_INT32]);
+
+    UA_NodeId requested_id = UA_NODEID_STRING_ALLOC(ns_index_, node_id_str);
+    auto status = UA_Server_addVariableNode(server_,
+        requested_id,
+        parent,
+        UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+        UA_QUALIFIEDNAME(ns_index_, const_cast<char*>(name)),
+        UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE),
+        attr,
+        nullptr,
+        nullptr);
+
+    UA_NodeId_clear(&requested_id);
+
+    if (status != UA_STATUSCODE_GOOD) {
+      UA_LocalizedText_clear(&attr.displayName);
+      throw std::runtime_error("Failed to add string variable node");
+    }
+
+    UA_LocalizedText_clear(&attr.displayName);
   }
 
   void ensureConnection() {
