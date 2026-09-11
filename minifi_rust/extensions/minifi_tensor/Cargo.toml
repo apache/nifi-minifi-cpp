@@ -8,7 +8,6 @@ crate-type = ["cdylib"]
 
 [features]
 low-level-processors = []
-all = ["low-level-processors"]
 
 [dependencies]
 minifi_native = { path = "../../minifi_native" }
