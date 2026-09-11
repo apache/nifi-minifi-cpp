@@ -61,9 +61,9 @@ class ProcessorImpl {
 
   static constexpr auto OutputAttributes = std::array<minifi::core::OutputAttributeReference, 0>{};
 
-  std::string getName() const;
-  minifi::utils::Identifier getUUID() const;
-  minifi::utils::SmallString<36> getUUIDStr() const;
+  [[nodiscard]] std::string getName() const;
+  [[nodiscard]] minifi::utils::Identifier getUUID() const;
+  [[nodiscard]] minifi::utils::SmallString<minifi::utils::Identifier::UUID_STR_LEN> getUUIDStr() const;
 
  protected:
   virtual minifi_status onTriggerImpl(ProcessContext&, ProcessSession&) {return MINIFI_STATUS_SUCCESS;}

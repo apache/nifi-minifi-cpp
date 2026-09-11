@@ -107,7 +107,7 @@ class CoreComponentImpl : public virtual CoreComponent {
 
   [[nodiscard]] utils::Identifier getUUID() const override;
 
-  [[nodiscard]] utils::SmallString<36> getUUIDStr() const override {
+  [[nodiscard]] utils::SmallString<utils::Identifier::UUID_STR_LEN> getUUIDStr() const override {
     return uuid_.to_string();
   }
 

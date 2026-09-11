@@ -48,7 +48,7 @@ class ControllerServiceImpl {
 
   [[nodiscard]] std::string getName() const;
   [[nodiscard]] minifi::utils::Identifier getUUID() const;
-  [[nodiscard]] minifi::utils::SmallString<36> getUUIDStr() const;
+  [[nodiscard]] minifi::utils::SmallString<minifi::utils::Identifier::UUID_STR_LEN> getUUIDStr() const;
 
  protected:
   virtual minifi_status enableImpl(api::core::ControllerServiceContext&) = 0;

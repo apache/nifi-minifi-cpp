@@ -122,7 +122,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
     auto read_stream = content_repo->read(*claim);
 
     // error tells us we have an invalid stream
-    REQUIRE(minifi::io::isError(read_stream->read(readstr)));
+    REQUIRE(minifi::io::isError(read_stream->read(readstr, minifi::io::LengthPrefixSize::_16BIT, 100)));
   }
 
   SECTION("Async") {
@@ -133,10 +133,10 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
     content_repo->remove(*claim);
 
     // an immediate read will still be able to access the content
-    REQUIRE_FALSE(minifi::io::isError(content_repo->read(*claim)->read(readstr)));
+    REQUIRE_FALSE(minifi::io::isError(content_repo->read(*claim)->read(readstr, minifi::io::LengthPrefixSize::_16BIT, 100)));
 
     REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(1s, [&] {
-      return minifi::io::isError(content_repo->read(*claim)->read(readstr));
+      return minifi::io::isError(content_repo->read(*claim)->read(readstr, minifi::io::LengthPrefixSize::_16BIT, 100));
     }));
   }
 }
@@ -214,7 +214,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   std::string readstr;
 
   // error tells us we have an invalid stream
-  REQUIRE(minifi::io::isError(read_stream->read(readstr)));
+  REQUIRE(minifi::io::isError(read_stream->read(readstr, minifi::io::LengthPrefixSize::_16BIT, 100)));
 }
 
 TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
@@ -252,7 +252,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
 
   std::string readstr;
 
-  read_stream->read(readstr);
+  read_stream->read(readstr, minifi::io::LengthPrefixSize::_16BIT, 100);
 
   REQUIRE(readstr == "well hello there");
 }
@@ -298,7 +298,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 
   std::string readstr;
 
-  read_stream->read(readstr);
+  read_stream->read(readstr, minifi::io::LengthPrefixSize::_16BIT, 100);
 
   REQUIRE(readstr == "well hello there");
 }

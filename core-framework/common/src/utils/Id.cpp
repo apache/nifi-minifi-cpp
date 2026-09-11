@@ -19,7 +19,6 @@
 #include "minifi-cpp/utils/Id.h"
 
 #include "utils/StringUtils.h"
-#include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -55,8 +54,8 @@ bool Identifier::operator<(const Identifier &other) const {
   return data_ < other.data_;
 }
 
-SmallString<36> Identifier::to_string() const {
-  SmallString<36> uuidStr;
+SmallString<Identifier::UUID_STR_LEN> Identifier::to_string() const {
+  SmallString<UUID_STR_LEN> uuidStr;
   // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx is 36 long: 16 bytes * 2 hex digits / byte + 4 hyphens
   int byteIdx = 0;
   int charIdx = 0;
@@ -92,7 +91,7 @@ SmallString<36> Identifier::to_string() const {
 std::optional<Identifier> Identifier::parse(const std::string &str) {
   Identifier id;
   // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx is 36 long: 16 bytes * 2 hex digits / byte + 4 hyphens
-  if (str.length() != 36) return {};
+  if (str.length() != UUID_STR_LEN) return {};
   int charIdx = 0;
   int byteIdx = 0;
   auto input = reinterpret_cast<const uint8_t*>(str.c_str());

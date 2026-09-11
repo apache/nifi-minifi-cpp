@@ -36,6 +36,7 @@
 #include "utils/net/AsioSocketUtils.h"
 
 namespace org::apache::nifi::minifi::c2 {
+constexpr auto MAX_COMPONENT_NAME_LENGTH = 1_KiB;
 
 ControllerSocketProtocol::SocketRestartCommandProcessor::SocketRestartCommandProcessor(state::StateMonitor& update_sink, const std::shared_ptr<core::logging::Logger>& logger) :
     update_sink_(update_sink),
@@ -185,7 +186,7 @@ void ControllerSocketProtocol::setRoot(core::ProcessGroup* root) {
 
 void ControllerSocketProtocol::handleStart(io::BaseStream &stream) {
   std::string component_str;
-  const auto size = stream.read(component_str);
+  const auto size = stream.read(component_str, io::LengthPrefixSize::_16BIT, MAX_COMPONENT_NAME_LENGTH);
   if (!io::isError(size)) {
     if (component_str == "FlowController") {
       // Starting flow controller resets socket
@@ -202,7 +203,7 @@ void ControllerSocketProtocol::handleStart(io::BaseStream &stream) {
 
 void ControllerSocketProtocol::handleStop(io::BaseStream &stream) {
   std::string component_str;
-  const auto size = stream.read(component_str);
+  const auto size = stream.read(component_str, io::LengthPrefixSize::_16BIT, MAX_COMPONENT_NAME_LENGTH);
   if (!io::isError(size)) {
     update_sink_.executeOnComponent(component_str, [](state::StateController& component) {
       component.stop();
@@ -214,7 +215,7 @@ void ControllerSocketProtocol::handleStop(io::BaseStream &stream) {
 
 void ControllerSocketProtocol::handleClear(io::BaseStream &stream) {
   std::string connection;
-  const auto size = stream.read(connection);
+  const auto size = stream.read(connection, io::LengthPrefixSize::_16BIT, MAX_COMPONENT_NAME_LENGTH);
   if (!io::isError(size)) {
     update_sink_.clearConnection(connection);
   }
@@ -223,7 +224,7 @@ void ControllerSocketProtocol::handleClear(io::BaseStream &stream) {
 void ControllerSocketProtocol::handleUpdate(io::BaseStream &stream) {
   std::string what;
   {
-    const auto size = stream.read(what);
+    const auto size = stream.read(what, io::LengthPrefixSize::_16BIT, MAX_COMPONENT_NAME_LENGTH);
     if (io::isError(size)) {
       logger_->log_error("Connection broke");
       return;
@@ -232,7 +233,7 @@ void ControllerSocketProtocol::handleUpdate(io::BaseStream &stream) {
   if (what == "flow") {
     std::string ff_loc;
     {
-      const auto size = stream.read(ff_loc);
+      const auto size = stream.read(ff_loc, io::LengthPrefixSize::_16BIT, 1_KiB);
       if (io::isError(size)) {
         logger_->log_error("Connection broke");
         return;
@@ -247,7 +248,7 @@ void ControllerSocketProtocol::handleUpdate(io::BaseStream &stream) {
 
 void ControllerSocketProtocol::writeQueueSizesResponse(io::BaseStream &stream) {
   std::string connection;
-  const auto size_ = stream.read(connection);
+  const auto size_ = stream.read(connection, io::LengthPrefixSize::_16BIT, MAX_COMPONENT_NAME_LENGTH);
   if (io::isError(size_)) {
     logger_->log_error("Connection broke");
     return;
@@ -361,7 +362,7 @@ void ControllerSocketProtocol::writeJstackResponse(io::BaseStream &stream) {
 void ControllerSocketProtocol::writeFlowStatusResponse(io::BaseStream &stream) {
   std::string query;
   {
-    const auto size = stream.read(query);
+    const auto size = stream.read(query, io::LengthPrefixSize::_16BIT, 1_MiB);
     if (io::isError(size)) {
       logger_->log_error("Connection broke");
       return;
@@ -389,7 +390,7 @@ void ControllerSocketProtocol::writeFlowStatusResponse(io::BaseStream &stream) {
 
 void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
   std::string what;
-  const auto size = stream.read(what);
+  const auto size = stream.read(what, io::LengthPrefixSize::_16BIT, 1_KiB);
   if (io::isError(size)) {
     logger_->log_error("Connection broke");
     return;
@@ -442,7 +443,7 @@ void ControllerSocketProtocol::writeDebugBundleResponse(io::BaseStream &stream) 
 
 void ControllerSocketProtocol::handleTransfer(io::BaseStream &stream) {
   std::string what;
-  const auto size = stream.read(what);
+  const auto size = stream.read(what, io::LengthPrefixSize::_16BIT, 1_KiB);
   if (io::isError(size)) {
     logger_->log_error("Connection broke");
     return;

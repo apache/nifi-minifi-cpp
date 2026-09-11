@@ -16,13 +16,10 @@
  */
 #pragma once
 
-#include <atomic>
-#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
 #include <thread>
-#include <utility>
 #include <array>
 
 #include "SmallString.h"
@@ -35,6 +32,10 @@ class Identifier {
 
  public:
   using Data = std::array<uint8_t, 16>;
+
+  // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx is 36 long: 16 bytes * 2 hex digits / byte + 4 hyphens
+  // only the string contents, excluding a null terminator
+  static constexpr auto UUID_STR_LEN = 36;
 
   Identifier() = default;
   explicit Identifier(const Data& data);
@@ -60,7 +61,7 @@ class Identifier {
   // building the representation itself takes 10ns, while
   // subsequently turning it into a std::string would take
   // 70ns more.
-  SmallString<36> to_string() const;
+  [[nodiscard]] SmallString<UUID_STR_LEN> to_string() const;
 
   static std::optional<Identifier> parse(const std::string& str);
 
