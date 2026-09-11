@@ -30,7 +30,7 @@ pub(crate) use filter_bounding_boxes_def::{
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     Content, FlowFileTransform, GetAttribute, GetId, GetProperty, InputStream, Logger, MinifiError,
-    ProcessError, RouteErrorExt, Schedule, TransformedFlowFile, debug,
+    ProcessError, RouteErrorExt, Schedule, TransformedFlowFile, debug, trace,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 use tract::Tensor;
@@ -175,6 +175,33 @@ impl Schedule for FilterBoundingBoxes {
 }
 
 impl FilterBoundingBoxes {
+    fn result_via_output_attribute<'a, Context: GetProperty>(
+        &self,
+        context: &Context,
+        filtered_boxes: Vec<BoundingBox>,
+    ) -> Result<TransformedFlowFile<'a>, MinifiError> {
+        let output_attr = context.get_property(&OUTPUT_ATTRIBUTE_NAME)?;
+        let content = if output_attr.is_some() {
+            None
+        } else {
+            Some(Content::Buffer(
+                serde_json::to_vec(&filtered_boxes).map_err(MinifiError::other)?,
+            ))
+        };
+
+        let mut transformed = TransformedFlowFile::new(&SUCCESS, content)
+            .with_attribute("object.count", filtered_boxes.len().to_string());
+        if let Some(attr) = output_attr {
+            transformed = transformed.with_attribute(
+                attr,
+                serde_json::to_string(&filtered_boxes).map_err(MinifiError::other)?,
+            )
+        } else {
+            transformed = transformed.with_attribute("mime.type", "application/json");
+        }
+        Ok(transformed)
+    }
+
     pub(crate) fn filter<'a, Context: GetProperty, LoggerImpl: Logger>(
         &self,
         context: &Context,
@@ -213,10 +240,9 @@ impl FilterBoundingBoxes {
         let num_boxes = box_floats.len() / 4;
         if num_boxes == 0 {
             debug!(logger, "No boxes to filter; emitting empty array");
-            return Ok(TransformedFlowFile::new(&SUCCESS, None)
-                .with_content(b"[]".to_vec().into())
-                .with_attribute("object.count", "0")
-                .with_attribute("mime.type", "application/json"));
+            return self
+                .result_via_output_attribute(context, vec![])
+                .route_err_to_failure();
         }
 
         let make_box = |i: usize, class_id: usize, confidence: f32| -> BoundingBox {
@@ -254,7 +280,7 @@ impl FilterBoundingBoxes {
                     ))
                     .into());
                 }
-                debug!(
+                trace!(
                     logger,
                     "Filtering {} boxes with separate class-id tensor (activation={:?}, \
                      box_format={:?})...",
@@ -292,7 +318,7 @@ impl FilterBoundingBoxes {
                     .into());
                 }
                 let num_classes = score_floats.len() / num_boxes;
-                debug!(
+                trace!(
                     logger,
                     "Filtering {} boxes across {} potential classes (activation={:?}, \
                      box_format={:?})...",
@@ -312,7 +338,7 @@ impl FilterBoundingBoxes {
             }
         }
 
-        debug!(
+        trace!(
             logger,
             "Found {} boxes exceeding the {} threshold.",
             valid_boxes.len(),
@@ -322,26 +348,8 @@ impl FilterBoundingBoxes {
         let filtered_boxes =
             BoundingBox::apply_non_maximum_suppression(valid_boxes, self.iou_threshold);
 
-        let json_output = serde_json::to_vec(&filtered_boxes).route_err_to_failure()?;
-
-        let (content, extra_attribute) = match context.get_property(&OUTPUT_ATTRIBUTE_NAME)? {
-            None => (Some(Content::Buffer(json_output)), None),
-            Some(output_attr) => (
-                None,
-                Some((
-                    output_attr,
-                    serde_json::to_string(&filtered_boxes).route_err_to_failure()?,
-                )),
-            ),
-        };
-
-        let mut transformed = TransformedFlowFile::new(&SUCCESS, content)
-            .with_attribute("object.count", filtered_boxes.len().to_string())
-            .with_attribute("mime.type", "application/json");
-        if let Some((key, value)) = extra_attribute {
-            transformed = transformed.with_attribute(key, value);
-        }
-        Ok(transformed)
+        self.result_via_output_attribute(context, filtered_boxes)
+            .route_err_to_failure()
     }
 }
 
