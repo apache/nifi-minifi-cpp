@@ -61,6 +61,16 @@ pub enum ProcessError {
     Fatal(MinifiError),
 }
 
+impl ProcessError {
+    pub fn route_to_failure<S: Into<Cow<'static, str>>>(reason: S) -> Self {
+        ProcessError::Route(RouteError {
+            relationship: "failure".into(),
+            source: Box::new(MinifiError::custom(reason)),
+            log_level: LogLevel::Warn,
+        })
+    }
+}
+
 impl From<RouteError> for ProcessError {
     fn from(err: RouteError) -> Self {
         ProcessError::Route(err)
