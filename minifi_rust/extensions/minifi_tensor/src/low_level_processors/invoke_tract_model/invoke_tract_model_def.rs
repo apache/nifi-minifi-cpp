@@ -36,8 +36,8 @@ pub(super) const SUCCESS: Relationship = Relationship {
 
 pub(super) const FAILURE: Relationship = Relationship {
     name: "failure",
-    description: "The input tensor could not be built (missing/invalid tensor.shape, unsupported \
-                  tensor.dtype, malformed payload) or the model failed to run.",
+    description: "The input tensor could not be built (missing/invalid tensor.0.shape, unsupported \
+                  tensor.0.dtype, malformed payload) or the model failed to run.",
 };
 
 const OUTPUT_COUNT_ATTR: OutputAttribute = OutputAttribute {
@@ -69,11 +69,10 @@ const OUTPUT_DTYPE_ATTR: OutputAttribute = OutputAttribute {
 impl ProcessorDefinition for super::InvokeTractModel {
     const DESCRIPTION: &'static str = "Runs a single inference against the compiled model owned by the referenced \
          TractModelService. Reads the input tensor from the flow file content plus the \
-         'tensor.shape' and (optionally) 'tensor.dtype' attributes produced by an upstream \
+         'tensor.0.shape' and (optionally) 'tensor.0.dtype' attributes produced by an upstream \
          processor such as ImageToTensor. The flow file's new content is every output tensor's \
          raw bytes concatenated in model order; per-tensor shape, byte length, and dtype are \
-         written to attributes. Only a single input tensor and only f32 input dtype are \
-         supported in this pass.";
+         written to attributes.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

@@ -169,7 +169,7 @@ impl ProcessorDefinition for ImageToTensor {
          tensor suitable for feeding into a downstream inference processor such as \
          InvokeTractModel. Supports RGB / BGR / Grayscale, CHW / HWC layouts, stretch or \
          letterbox resizing, and scalar or per-channel mean/std normalisation. The output payload \
-         is the raw little-endian f32 tensor; the 'tensor.shape' and 'tensor.dtype' attributes \
+         is the raw little-endian f32 tensor; the 'tensors.len', 'tensor.{i}.shape' and 'tensor.{i}.dtype' attributes \
          describe its layout.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
