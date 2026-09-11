@@ -64,7 +64,7 @@ pub enum ProcessError {
 impl ProcessError {
     pub fn route_to_failure<S: Into<Cow<'static, str>>>(reason: S) -> Self {
         ProcessError::Route(RouteError {
-            relationship: "failure".into(),
+            relationship: "failure",
             source: Box::new(MinifiError::custom(reason)),
             log_level: LogLevel::Warn,
         })
