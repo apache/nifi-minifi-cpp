@@ -58,6 +58,43 @@ enum class OPCNodeDataType{
   String
 };
 
+// RAII owner for a UA_NodeId that calls UA_NodeId_clear to free node id allocation
+class NodeId {
+ public:
+  NodeId() = default;
+  explicit NodeId(UA_NodeId id) noexcept : id_(id) {}  // takes ownership of an already-built node id
+  NodeId(const NodeId&) = delete;
+  NodeId& operator=(const NodeId&) = delete;
+  NodeId(NodeId&& other) noexcept : id_(other.id_) { other.id_ = UA_NODEID_NULL; }
+  NodeId& operator=(NodeId&& other) noexcept {
+    if (this != &other) {
+      UA_NodeId_clear(&id_);
+      id_ = other.id_;
+      other.id_ = UA_NODEID_NULL;
+    }
+    return *this;
+  }
+  ~NodeId() { UA_NodeId_clear(&id_); }
+
+  static NodeId copyOf(const UA_NodeId& id) {
+    NodeId result;
+    UA_NodeId_copy(&id, &result.id_);
+    return result;
+  }
+
+  operator const UA_NodeId&() const noexcept { return id_; }  // NOLINT(google-explicit-constructor) implicit passthrough to the C API is intended
+  [[nodiscard]] const UA_NodeId& get() const noexcept { return id_; }
+
+  // Returns a pointer to the (cleared) node id for an open62541 out-parameter to write a freshly created node id into.
+  UA_NodeId* receive() noexcept {
+    UA_NodeId_clear(&id_);
+    return &id_;
+  }
+
+ private:
+  UA_NodeId id_ = UA_NODEID_NULL;
+};
+
 struct NodeData;
 
 class Client;
@@ -73,7 +110,7 @@ class Client {
   UA_ReferenceDescription * getNodeReference(UA_NodeId node_id);
   void traverse(UA_NodeId node_id, const std::function<NodeFoundCallBackFunc>& cb, const std::string& base_path = "", uint64_t max_depth = 0, bool fetch_root = true);
   bool exists(UA_NodeId node_id);
-  UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& found_node_ids, int32_t namespace_index,
+  UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, int32_t namespace_index,
     const std::vector<UA_UInt32>& path_reference_types, const std::shared_ptr<core::logging::Logger>& logger);
 
   template<typename T>

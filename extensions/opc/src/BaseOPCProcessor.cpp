@@ -18,8 +18,8 @@
 #include <memory>
 #include <string>
 
-#include "opc.h"
-#include "opcbase.h"
+#include "OPCCommon.h"
+#include "BaseOPCProcessor.h"
 #include "minifi-cpp/FlowFileRecord.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
