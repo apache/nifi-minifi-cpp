@@ -88,6 +88,11 @@ pub(crate) fn deserialize_tensors<Context: GetAttribute>(
             .parse::<usize>()?;
         let tensor_shape = parse_tensor_shape(context, i)?;
         let tensor_dtype = parse_tensor_dtype(context, i)?;
+        if cursor + tensor_len > flow_file_contents.len() {
+            return Err(MinifiError::custom(
+                "FlowFile contents are not in sync with tensor attributes",
+            ));
+        }
         let tensor_data = &flow_file_contents[cursor..cursor + tensor_len];
         result.push(Tensor::from_bytes(
             tensor_dtype,
@@ -97,7 +102,13 @@ pub(crate) fn deserialize_tensors<Context: GetAttribute>(
         cursor += tensor_len;
     }
 
-    Ok(result)
+    if cursor != flow_file_contents.len() {
+        Err(MinifiError::custom(
+            "FlowFile contents are not in sync with tensor attributes",
+        ))
+    } else {
+        Ok(result)
+    }
 }
 
 pub(crate) fn tensor_as_f32(tensors: &[Tensor], index: usize) -> Result<Vec<f32>, MinifiError> {
@@ -125,6 +136,9 @@ pub(crate) fn load_as_image(input_stream: &mut dyn InputStream) -> ImageResult<D
 #[cfg(test)]
 mod tests {
     use super::*;
+    use minifi_native::MockProcessContext;
+    use std::assert_matches;
+    use std::io::Cursor;
 
     #[test]
     fn test_tensor_as_f32_reads_f32_tensor() {
@@ -152,5 +166,45 @@ mod tests {
         assert_eq!(numeric_datum_type_from_str("U8"), Some(DatumType::U8));
         assert_eq!(numeric_datum_type_from_str("String"), None);
         assert_eq!(numeric_datum_type_from_str("Bool"), None);
+    }
+
+    #[test]
+    fn misaligned_attrs_and_content_deserialize_tensors() {
+        let mut context = MockProcessContext::new();
+        let floats: Vec<f32> = vec![0.0f32; 6];
+
+        let bytes: Vec<u8> = floats.into_iter().flat_map(|f| f.to_le_bytes()).collect();
+        let input_stream = Cursor::new(bytes);
+        assert_matches!(
+            deserialize_tensors(&context, &mut input_stream.clone()),
+            Err(MinifiError::MissingRequiredAttribute(msg)) if msg == "tensors.len"
+        );
+        context.attributes.insert("tensors.len".into(), "1".into());
+        assert_matches!(
+            deserialize_tensors(&context, &mut input_stream.clone()),
+            Err(MinifiError::MissingRequiredAttribute(msg)) if msg == "tensor.0.bytes"
+        );
+        context
+            .attributes
+            .insert("tensor.0.bytes".into(), "24".into());
+        assert_matches!(
+            deserialize_tensors(&context, &mut input_stream.clone()),
+            Err(MinifiError::MissingRequiredAttribute(msg)) if msg == "tensor.0.shape"
+        );
+        context
+            .attributes
+            .insert("tensor.0.shape".into(), "2,3".into());
+        assert_matches!(
+            deserialize_tensors(&context, &mut input_stream.clone()),
+            Err(MinifiError::MissingRequiredAttribute(msg)) if msg == "tensor.0.dtype"
+        );
+        context
+            .attributes
+            .insert("tensor.0.dtype".into(), "F32".into());
+
+        assert_matches!(
+            deserialize_tensors(&context, &mut input_stream.clone()),
+            Ok(_)
+        );
     }
 }
