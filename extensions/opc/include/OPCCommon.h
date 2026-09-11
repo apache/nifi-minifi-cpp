@@ -74,7 +74,7 @@ class NodeId {
     }
     return *this;
   }
-  ~NodeId() { UA_NodeId_clear(&id_); }
+  ~NodeId() noexcept { UA_NodeId_clear(&id_); }
 
   static NodeId copyOf(const UA_NodeId& id) {
     NodeId result;
