@@ -1,0 +1,5 @@
+# Test-time downloads (models, labels, images). Fetched on first test run by
+# environment.py. Do not commit — several are megabytes and licensed by their
+# upstream projects.
+*
+!.gitignore

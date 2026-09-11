@@ -24,10 +24,9 @@ use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
     GetAttribute, LogLevel, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
     ProcessError, ProcessSession, Relationship, Schedule, SingleThreaded, impl_with_attributes,
-    info,
 };
 
-use minifi_native::InputStream;
+use minifi_native::{InputStream, trace};
 use std::borrow::Cow;
 
 pub type FlowFileAttribute = (Cow<'static, str>, Cow<'static, str>);
@@ -159,7 +158,7 @@ where
                 }
             };
 
-            info!(logger, "{:?}", transformed);
+            trace!(logger, "{:?}", transformed);
             match transformed.new_content {
                 None => {}
                 Some(Content::Buffer(buffer)) => {

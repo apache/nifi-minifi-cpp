@@ -27,7 +27,7 @@ use crate::processors::get_file::properties::{
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessError,
-    ProcessSession, Schedule, Trigger, debug, info, trace, warn,
+    ProcessSession, Schedule, Trigger, debug, trace, warn,
 };
 use std::collections::VecDeque;
 use std::error;
@@ -179,7 +179,7 @@ impl GetFileRs {
         logger: &L,
         path: &Path,
     ) -> Result<(), MinifiError> {
-        info!(logger, "GetFile process {:?}", path);
+        trace!(logger, "GetFile process {:?}", path);
         let mut ff = session
             .create()
             .expect("Successful FlowFile creation is expected");
