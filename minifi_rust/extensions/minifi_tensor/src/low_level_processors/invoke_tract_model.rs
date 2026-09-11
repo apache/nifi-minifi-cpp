@@ -176,7 +176,10 @@ mod tests {
     fn test_get_shape_missing_attribute_fails() {
         let context = MockProcessContext::new(); // Empty attributes
         let result = InvokeTractModel::get_shape_from_attribute(&context);
-        assert!(result.is_err(), "Should fail when tensor.shape is missing");
+        assert!(
+            result.is_err(),
+            "Should fail when tensor.0.shape is missing"
+        );
     }
 
     #[test]
