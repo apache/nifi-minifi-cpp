@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod classify_object_def;
+mod classify_image_def;
 
 use crate::low_level_processors::classify_output::ClassifyOutput;
 use crate::low_level_processors::image_to_tensor::ImageToTensor;
 use crate::utils::tensor_helpers::load_as_image;
-use classify_object_def::TRACT_MODEL_SERVICE;
+use classify_image_def::TRACT_MODEL_SERVICE;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
