@@ -229,7 +229,7 @@ class PayloadSerializer {
       stream->read(op);
       stream->read(st);
       stream->read(label, io::LengthPrefixSize::_16BIT, 1_KiB);
-      stream->read(identifier, io::LengthPrefixSize::_16BIT, 36);
+      stream->read(identifier, io::LengthPrefixSize::_16BIT, utils::Identifier::UUID_STR_LEN);
       operation = intToOp(op);
       C2Payload subPayload(operation, st == 1 ? state::UpdateState::NESTED : state::UpdateState::READ_COMPLETE);
       subPayload.setIdentifier(identifier);
@@ -267,7 +267,7 @@ class PayloadSerializer {
     stream.read(version);
     stream.read(st);
     stream.read(label, io::LengthPrefixSize::_16BIT, 1_KiB);
-    stream.read(identifier, io::LengthPrefixSize::_16BIT, 36);
+    stream.read(identifier, io::LengthPrefixSize::_16BIT, utils::Identifier::UUID_STR_LEN);
 
     Operation operation = intToOp(op);
 

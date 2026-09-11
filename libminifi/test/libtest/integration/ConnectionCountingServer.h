@@ -23,6 +23,7 @@
 #include <string>
 #include <set>
 #include "CivetServer.h"
+#include "utils/Id.h"
 #include "utils/SmallString.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -31,7 +32,7 @@ namespace details {
 
 class NumberedMethodResponder : public CivetHandler {
  public:
-  explicit NumberedMethodResponder(std::set<minifi::utils::SmallString<36>>& connections) : connections_(connections) {}
+  explicit NumberedMethodResponder(std::set<minifi::utils::SmallString<utils::Identifier::UUID_STR_LEN>>& connections) : connections_(connections) {}
 
   bool handleGet(CivetServer*, struct mg_connection* conn) override;
   bool handlePost(CivetServer*, struct mg_connection* conn) override;
@@ -43,19 +44,19 @@ class NumberedMethodResponder : public CivetHandler {
   void saveConnectionId(struct mg_connection* conn);
 
   uint64_t response_id_ = 0;
-  std::set<minifi::utils::SmallString<36>>& connections_;
+  std::set<minifi::utils::SmallString<utils::Identifier::UUID_STR_LEN>>& connections_;
 };
 
 class ReverseBodyPostHandler : public CivetHandler {
  public:
-  explicit ReverseBodyPostHandler(std::set<minifi::utils::SmallString<36>>& connections) : connections_(connections) {}
+  explicit ReverseBodyPostHandler(std::set<minifi::utils::SmallString<utils::Identifier::UUID_STR_LEN>>& connections) : connections_(connections) {}
 
   bool handlePost(CivetServer* /*server*/, struct mg_connection* conn) override;
 
  private:
   void saveConnectionId(struct mg_connection* conn);
 
-  std::set<minifi::utils::SmallString<36>>& connections_;
+  std::set<minifi::utils::SmallString<utils::Identifier::UUID_STR_LEN>>& connections_;
 };
 
 struct AddIdToUserConnectionData : public CivetCallbacks {
@@ -78,7 +79,7 @@ class ConnectionCountingServer {
       "num_threads", "1",
       "listening_ports", "0"};
 
-  std::set<minifi::utils::SmallString<36>> connections_;
+  std::set<minifi::utils::SmallString<utils::Identifier::UUID_STR_LEN>> connections_;
   details::AddIdToUserConnectionData add_id_to_user_connection_data_;
   CivetServer server_{options, &add_id_to_user_connection_data_};
   details::ReverseBodyPostHandler reverse_body_post_handler_{connections_};

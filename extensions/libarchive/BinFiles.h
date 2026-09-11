@@ -101,7 +101,7 @@ class Bin {
   [[nodiscard]] int getSize() const {
     return gsl::narrow<int>(queue_.size());
   }
-  [[nodiscard]] utils::SmallString<36> getUUIDStr() const {
+  [[nodiscard]] utils::SmallString<utils::Identifier::UUID_STR_LEN> getUUIDStr() const {
     return uuid_.to_string();
   }
   [[nodiscard]] std::string getGroupId() const {

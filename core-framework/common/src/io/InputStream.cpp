@@ -37,7 +37,7 @@ size_t InputStream::read(bool &value) {
 
 size_t InputStream::read(utils::Identifier &value) {
   std::string uuidStr;
-  const auto ret = read(uuidStr, LengthPrefixSize::_16BIT, 36 /* characters in a UUID string */);
+  const auto ret = read(uuidStr, LengthPrefixSize::_16BIT, utils::Identifier::UUID_STR_LEN);
   if (isError(ret)) {
     return ret;
   }

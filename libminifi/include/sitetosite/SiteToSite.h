@@ -195,7 +195,7 @@ class Transaction {
 
   virtual ~Transaction() = default;
 
-  [[nodiscard]] utils::SmallString<36> getUUIDStr() const {
+  [[nodiscard]] utils::SmallString<utils::Identifier::UUID_STR_LEN> getUUIDStr() const {
     return uuid_.to_string();
   }
 
