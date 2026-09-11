@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include <asio/read.hpp>
 
 #include "utils/net/AsioCoro.h"
@@ -64,7 +66,7 @@ class ConnectionHandler final : public ConnectionHandlerBase {
   [[nodiscard]] asio::awaitable<std::error_code> setupUsableSocket(asio::io_context& io_context) override;
   [[nodiscard]] bool hasUsableSocket() const { return socket_ && socket_->lowest_layer().is_open(); }
 
-  asio::awaitable<std::error_code> establishNewConnection(const asio::ip::tcp::resolver::results_type& endpoints, asio::io_context& io_context_);
+  asio::awaitable<std::error_code> establishNewConnection(const std::vector<asio::ip::tcp::endpoint>& endpoints, asio::io_context& io_context_);
   [[nodiscard]] asio::awaitable<std::tuple<std::error_code, size_t>> write(const asio::const_buffer& buffer) override;
   [[nodiscard]] asio::awaitable<std::tuple<std::error_code, size_t>> read(asio::mutable_buffer& buffer) override;
 
@@ -116,19 +118,19 @@ inline void ConnectionHandler<SslSocket>::shutdownSocket() {
 }
 
 template<class SocketType>
-asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConnection(const asio::ip::tcp::resolver::results_type& endpoints, asio::io_context& io_context) {
+asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConnection(const std::vector<asio::ip::tcp::endpoint>& endpoints, asio::io_context& io_context) {
   auto socket = createNewSocket(io_context);
   std::error_code last_error;
   for (const auto& endpoint : endpoints) {
     auto [connection_error] = co_await asyncOperationWithTimeout(socket.lowest_layer().async_connect(endpoint, use_nothrow_awaitable), timeout_duration_);
     if (connection_error) {
-      logger_->log_debug("Connecting to {} failed due to {}", endpoint.endpoint(), connection_error.message());
+      logger_->log_debug("Connecting to {} failed due to {}", endpoint, connection_error.message());
       last_error = connection_error;
       continue;
     }
     auto [handshake_error] = co_await handshake(socket, timeout_duration_);
     if (handshake_error) {
-      logger_->log_debug("Handshake with {} failed due to {}", endpoint.endpoint(), handshake_error.message());
+      logger_->log_debug("Handshake with {} failed due to {}", endpoint, handshake_error.message());
       last_error = handshake_error;
       continue;
     }
@@ -144,12 +146,19 @@ template<class SocketType>
 [[nodiscard]] asio::awaitable<std::error_code> ConnectionHandler<SocketType>::setupUsableSocket(asio::io_context& io_context) {
   if (hasUsableSocket())
     co_return std::error_code();
-  asio::ip::tcp::resolver resolver(io_context);
-  auto [resolve_error, resolve_result] = co_await asyncOperationWithTimeout(
-      resolver.async_resolve(connection_id_.getHostname(), connection_id_.getService(), use_nothrow_awaitable), timeout_duration_);
-  if (resolve_error)
-    co_return resolve_error;
-  co_return co_await establishNewConnection(resolve_result, io_context);
+  std::vector<asio::ip::tcp::endpoint> endpoints;
+  {
+    asio::ip::tcp::resolver resolver(io_context);
+    auto [resolve_error, resolve_result] = co_await asyncOperationWithTimeout(
+        resolver.async_resolve(connection_id_.getHostname(), connection_id_.getService(), use_nothrow_awaitable), timeout_duration_);
+    if (resolve_error) {
+      co_return resolve_error;
+    }
+    for (const auto& entry : resolve_result) {
+      endpoints.push_back(entry.endpoint());
+    }
+  }
+  co_return co_await establishNewConnection(endpoints, io_context);
 }
 
 template<class SocketType>

@@ -28,6 +28,7 @@
 
 #include "s3/S3RequestSender.h"
 #include "aws/core/utils/DateTime.h"
+#include "aws/core/utils/memory/AWSMemory.h"
 
 const std::string S3_VERSION_1 = "1.2.3";
 const std::string S3_VERSION_2 = "1.2.4";
@@ -133,7 +134,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       get_s3_result.SetExpiration(S3_EXPIRATION);
       get_s3_result.SetServerSideEncryption(S3_SSEALGORITHM);
       get_s3_result.SetContentType(S3_CONTENT_TYPE);
-      get_s3_result.ReplaceBody(new std::stringstream(S3_CONTENT));
+      get_s3_result.ReplaceBody(Aws::New<std::stringstream>("MockS3RequestSender", S3_CONTENT));
       get_s3_result.SetContentLength(S3_CONTENT.size());
       get_s3_result.SetMetadata(S3_OBJECT_USER_METADATA);
     }
