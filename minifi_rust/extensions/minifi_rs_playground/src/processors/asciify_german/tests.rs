@@ -83,9 +83,9 @@ fn truncated_umlaut_at_eof_routes_to_failure() {
     let mut input_stream = BufReader::new(input_bytes);
     let mut output_vec: Vec<u8> = Vec::new();
 
-    let result = asciify_german
-        .transform(&context, &mut input_stream, &mut output_vec, &logger)
-        .expect("Should succeed");
-    assert_eq!(result.write_status(), IoState::Cancel);
-    assert_eq!(result.target_relationship_name(), FAILURE.name);
+    let result = asciify_german.transform(&context, &mut input_stream, &mut output_vec, &logger);
+    match result {
+        Err(ProcessError::Route(route)) => assert_eq!(route.relationship, FAILURE.name),
+        other => panic!("expected a route error to failure, got {other:?}"),
+    }
 }
