@@ -22,7 +22,7 @@ pub(crate) struct SecretKeyFile {}
 
 impl PropertySchema for SecretKeyFile {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for SecretKeyFile {
@@ -48,7 +48,7 @@ impl PropertyType for SecretKeyFile {
 pub(crate) struct PublicKeyFile {}
 impl PropertySchema for PublicKeyFile {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for PublicKeyFile {

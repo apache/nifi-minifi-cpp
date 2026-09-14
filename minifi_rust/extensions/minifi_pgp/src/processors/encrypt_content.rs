@@ -95,30 +95,29 @@ impl EncryptContentPGP {
                 .map_err(MinifiError::other),
         }
     }
-
-    fn check_validity(password: &Option<Password>, has_pub_key: bool) -> Result<(), MinifiError> {
-        if password.is_none() && !has_pub_key {
-            Err(MinifiError::custom(
-                "Either a password or Public Key Service with Public Key Search should be configured to encrypt files",
-            ))
-        } else {
-            Ok(())
-        }
-    }
 }
 
 impl Schedule for EncryptContentPGP {
-    fn schedule<P: GetProperty, L: Logger>(context: &P, _logger: &L) -> Result<Self, MinifiError>
+    fn schedule<P: GetProperty + GetControllerService, L: Logger>(
+        context: &P,
+        _logger: &L,
+    ) -> Result<Self, MinifiError>
     where
         Self: Sized,
     {
-        let file_encoding = context.get_property::<FileEncoding>(&FILE_ENCODING)?;
+        let file_encoding = context.get_property(&FILE_ENCODING)?;
         let symmetric_password = context.get_property(&PASSWORD)?;
 
-        let has_public_key = context.get_raw_property(&PUBLIC_KEY_SERVICE)?.is_some()
-            && context.get_raw_property(&PUBLIC_KEY_SEARCH)?.is_some();
+        let public_key_service = context.get_controller_service(&PUBLIC_KEY_SERVICE)?;
+        let public_key_search = context.get_raw_property(&PUBLIC_KEY_SEARCH)?;
 
-        Self::check_validity(&symmetric_password, has_public_key)?;
+        if symmetric_password.is_none()
+            && (public_key_search.is_none() || public_key_service.is_none())
+        {
+            return Err(MinifiError::custom(
+                "Either a password or Public Key Service with Public Key Search should be configured to encrypt files",
+            ));
+        }
         Ok(EncryptContentPGP {
             file_encoding,
             symmetric_password,

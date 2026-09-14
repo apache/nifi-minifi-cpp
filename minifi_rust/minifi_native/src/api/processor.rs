@@ -15,12 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::GetControllerService;
 use crate::api::{RawProcessor, ThreadingModel};
 use crate::{GetProperty, LogLevel, Logger, MinifiError, ProcessContext};
 use std::marker::PhantomData;
 
 pub trait Schedule {
-    fn schedule<Ctx: GetProperty, L: Logger>(
+    fn schedule<Ctx: GetProperty + GetControllerService, L: Logger>(
         context: &Ctx,
         logger: &L,
     ) -> Result<Self, MinifiError>

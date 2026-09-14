@@ -25,7 +25,7 @@ impl PropertySchema for Password {
     const CONSTRAINT: Option<PropertyConstraints> = Some(PropertyConstraints::Validator(
         StandardPropertyValidator::NonBlankValidator,
     ));
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for Password {
