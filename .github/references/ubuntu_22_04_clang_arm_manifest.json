@@ -13013,7 +13013,7 @@
                     "supportedRelationships": [
                         {
                             "name": "failure",
-                            "description": "The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as scores + boxes."
+                            "description": "The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as classification."
                         },
                         {
                             "name": "success",
