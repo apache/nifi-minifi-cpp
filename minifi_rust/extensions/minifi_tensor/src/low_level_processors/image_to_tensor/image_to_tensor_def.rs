@@ -119,6 +119,12 @@ pub(super) const TENSORS_LEN_ATTR: OutputAttribute = OutputAttribute {
     description: "Number of tensors in the output FlowFile. Currently always '1'",
 };
 
+pub(super) const TENSOR_BYTES_ATTR: OutputAttribute = OutputAttribute {
+    name: "tensor.0.bytes",
+    relationships: &["success"],
+    description: "Byte length of output tensor.",
+};
+
 pub(super) const TENSOR_SHAPE_ATTR: OutputAttribute = OutputAttribute {
     name: "tensor.0.shape",
     relationships: &["success"],

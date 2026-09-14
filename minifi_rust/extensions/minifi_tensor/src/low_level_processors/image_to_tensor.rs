@@ -16,6 +16,7 @@
 // under the License.
 pub(crate) mod image_to_tensor_def;
 
+use crate::low_level_processors::image_to_tensor::image_to_tensor_def::TENSOR_BYTES_ATTR;
 use crate::utils::dimensions::Dimensions;
 use crate::utils::per_channel_f32::PerChannelF32;
 use crate::utils::tensor_helpers::{MinifiDatumType, load_as_image};
@@ -339,11 +340,13 @@ impl FlowFileTransform for ImageToTensor {
         let orig_dim = Dimensions::from_image(&img);
 
         let tensor_bytes = self.tensor_bytes(img);
+        let tensor_bytes_len = tensor_bytes.len();
 
         Ok(
             TransformedFlowFile::new(&SUCCESS, Some(tensor_bytes.into())).with_attributes([
                 (&TENSORS_LEN_ATTR, "1".to_string()),
                 (&TENSOR_SHAPE_ATTR, self.get_shape_str()),
+                (&TENSOR_BYTES_ATTR, tensor_bytes_len.to_string()),
                 (&TENSOR_DTYPE_ATTR, MinifiDatumType::F32.to_string()),
                 (&IMG_ORG_HEIGHT_ATTR, orig_dim.height.to_string()),
                 (&IMG_ORG_WIDTH_ATTR, orig_dim.width.to_string()),
