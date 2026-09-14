@@ -1,5 +1,5 @@
 use crate::utils::bounding_box::{BoundingBox, BoundingBoxes};
-use image::{ImageFormat, Rgb, load_from_memory};
+use image::Rgb;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
@@ -108,8 +108,7 @@ impl FlowFileTransform for DrawBoundingBox {
         let mut image_bytes = Vec::new();
         input_stream.read_to_end(&mut image_bytes)?;
 
-        let format = image::guess_format(&image_bytes)
-            .route_err_to_failure()?;
+        let format = image::guess_format(&image_bytes).route_err_to_failure()?;
 
         let mut img = image::load_from_memory_with_format(&image_bytes, format)
             .map(|dyn_img| dyn_img.to_rgb8())
