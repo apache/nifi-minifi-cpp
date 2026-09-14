@@ -90,9 +90,10 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description |
-|---------|-------------|
-| success |             |
+| Name    | Description                                            |
+|---------|--------------------------------------------------------|
+| failure | Flowfiles that could not be duplicated are routed here |
+| success |                                                        |
 
 
 ## GenerateFlowFileRs

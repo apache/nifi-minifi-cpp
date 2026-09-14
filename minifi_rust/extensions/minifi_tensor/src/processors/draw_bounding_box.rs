@@ -20,9 +20,8 @@ use image::Rgb;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, OutputAttribute, ProcessError, ProcessorDefinition, ProcessorInputRequirement,
-    Property, PropertyConstraints, PropertyType, Relationship, RouteErrorExt, Schedule,
-    TransformedFlowFile,
+    MinifiError, OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property,
+    PropertyConstraints, PropertyType, Relationship, Schedule, TransformError, TransformedFlowFile,
 };
 use minifi_native::{PropertyDefinition, PropertySchema, property_definitions};
 use std::io::Cursor;
@@ -106,6 +105,8 @@ impl PropertyType for LineColor {
 }
 
 impl FlowFileTransform for DrawBoundingBox {
+    const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
     fn transform<
         'a,
         Context: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -115,31 +116,25 @@ impl FlowFileTransform for DrawBoundingBox {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         _logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
-        let line_thickness = context
-            .get_property(&LINE_THICKNESS)
-            .route_err_to_failure()?;
-        let line_color = context.get_property(&LINE_COLOR).route_err_to_failure()?;
-        let boxes: Vec<BoundingBox> = context
-            .get_property(&BOUNDING_BOXES)
-            .route_err_to_failure()?;
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
+        let line_thickness = context.get_property(&LINE_THICKNESS)?;
+        let line_color = context.get_property(&LINE_COLOR)?;
+        let boxes: Vec<BoundingBox> = context.get_property(&BOUNDING_BOXES)?;
 
         let mut image_bytes = Vec::new();
         input_stream.read_to_end(&mut image_bytes)?;
 
-        let format = image::guess_format(&image_bytes).route_err_to_failure()?;
+        let format = image::guess_format(&image_bytes)?;
 
         let mut img = image::load_from_memory_with_format(&image_bytes, format)
-            .map(|dyn_img| dyn_img.to_rgb8())
-            .route_err_to_failure()?;
+            .map(|dyn_img| dyn_img.to_rgb8())?;
 
         boxes
             .iter()
             .for_each(|bbox| bbox.draw_onto(&mut img, line_thickness, line_color));
 
         let mut output_bytes = Vec::new();
-        img.write_to(&mut Cursor::new(&mut output_bytes), format)
-            .route_err_to_failure()?;
+        img.write_to(&mut Cursor::new(&mut output_bytes), format)?;
 
         Ok(TransformedFlowFile::new(
             &SUCCESS,
