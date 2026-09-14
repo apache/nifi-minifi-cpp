@@ -1,0 +1,236 @@
+{
+  "aws_s3_bucket": {
+    "entities": [],
+    "query": null
+  },
+  "aws_s3_pseudo_dir": {
+    "entities": [],
+    "query": null
+  },
+  "aws_s3_v2_bucket": {
+    "entities": [],
+    "query": null
+  },
+  "aws_s3_v2_directory": {
+    "entities": [],
+    "query": null
+  },
+  "fs_path": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/out/hello.txt",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/out/hello.txt@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/out/hello.txt",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/in/hello.txt",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/in/hello.txt@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/in/hello.txt",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      }
+    ],
+    "query": null
+  },
+  "kafka_topic": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "baseline-kafka-topic",
+          "owner": "",
+          "qualifiedName": "baseline-kafka-topic@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "baseline-kafka-topic",
+        "meaningNames": [],
+        "typeName": "kafka_topic"
+      }
+    ],
+    "query": null
+  },
+  "nifi_data": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "name": "GenerateFlowFile",
+          "owner": "",
+          "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "GenerateFlowFile",
+        "meaningNames": [],
+        "typeName": "nifi_data"
+      },
+      {
+        "attributes": {
+          "description": "SEND was performed by PutS3Object",
+          "name": "PutS3Object",
+          "owner": "",
+          "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "PutS3Object",
+        "meaningNames": [],
+        "typeName": "nifi_data"
+      },
+      {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "name": "GenerateFlowFile",
+          "owner": "",
+          "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "GenerateFlowFile",
+        "meaningNames": [],
+        "typeName": "nifi_data"
+      },
+      {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "name": "GenerateFlowFile",
+          "owner": "",
+          "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "GenerateFlowFile",
+        "meaningNames": [],
+        "typeName": "nifi_data"
+      }
+    ],
+    "query": null
+  },
+  "nifi_flow": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "NiFi Flow",
+          "owner": "",
+          "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "NiFi Flow",
+        "meaningNames": [],
+        "typeName": "nifi_flow"
+      }
+    ],
+    "query": null
+  },
+  "nifi_flow_path": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "kafka-consume::67cb250e-01a0-1000-5fbd-3db37aa48503, kafka-sink::67cb251d-01a0-1000-df4d-f52c0ea137b0",
+          "name": "kafka-consume, kafka-sink",
+          "owner": "",
+          "qualifiedName": "67cb250e-01a0-1000-5fbd-3db37aa48503@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "kafka-consume, kafka-sink",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "baseline-input::67cb24b1-01a0-1000-de74-970cd7c119a7, s2s-sink::67cb24ca-01a0-1000-4545-794dc96e6f06",
+          "name": "baseline-input, s2s-sink",
+          "owner": "",
+          "qualifiedName": "67cb24b1-01a0-1000-de74-970cd7c119a7@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "baseline-input, s2s-sink",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "s3-source::67cb254b-01a0-1000-b6c6-9105dd2cdfe3, s3-put::67cb2562-01a0-1000-68c4-25a121e9f411",
+          "name": "s3-source, s3-put",
+          "owner": "",
+          "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "s3-source, s3-put",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "kafka-source::67cb24fb-01a0-1000-25c0-9ad5b1913eff, kafka-publish::67cb2502-01a0-1000-2479-111e3288e34c",
+          "name": "kafka-source, kafka-publish",
+          "owner": "",
+          "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "kafka-source, kafka-publish",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "file-get::67cb2536-01a0-1000-9400-6cea63132761, file-put::67cb253c-01a0-1000-bf4e-be9481abac85",
+          "name": "file-get, file-put",
+          "owner": "",
+          "qualifiedName": "67cb2536-01a0-1000-9400-6cea63132761@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "file-get, file-put",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "s2s-source::67cb257e-01a0-1000-717d-89d3a514fb69",
+          "name": "s2s-source",
+          "owner": "",
+          "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "s2s-source",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      }
+    ],
+    "query": null
+  },
+  "nifi_input_port": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "baseline-input",
+          "owner": "",
+          "qualifiedName": "67cb24b1-01a0-1000-de74-970cd7c119a7@baseline"
+        },
+        "classificationNames": [],
+        "displayText": "baseline-input",
+        "meaningNames": [],
+        "typeName": "nifi_input_port"
+      }
+    ],
+    "query": null
+  },
+  "nifi_output_port": {
+    "entities": [],
+    "query": null
+  },
+  "nifi_queue": {
+    "entities": [],
+    "query": null
+  }
+}

@@ -1,0 +1,1025 @@
+{
+  "aws_s3_bucket": [],
+  "aws_s3_pseudo_dir": [],
+  "aws_s3_v2_bucket": [],
+  "aws_s3_v2_directory": [],
+  "fs_path": [
+    {
+      "entity": {
+        "attributes": {
+          "description": null,
+          "displayName": null,
+          "fileSize": 0,
+          "group": null,
+          "isFile": false,
+          "isSymlink": false,
+          "modifiedTime": 0,
+          "name": "/tmp/atlas-baseline/out/hello.txt",
+          "owner": null,
+          "path": "/tmp/atlas-baseline/out/hello.txt",
+          "posixPermissions": null,
+          "qualifiedName": "/tmp/atlas-baseline/out/hello.txt@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "hiveDb": null,
+          "inputToProcesses": [],
+          "model": null,
+          "outputFromProcesses": [
+            {
+              "displayText": "file-get, file-put",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb2536-01a0-1000-9400-6cea63132761@baseline",
+              "relationshipAttributes": {
+                "typeName": "process_dataset_outputs"
+              },
+              "relationshipGuid": "00fbf5a5-5514-4b33-a563-09908910fb99",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "process_dataset_outputs",
+              "typeName": "nifi_flow_path"
+            }
+          ],
+          "pipeline": null,
+          "schema": []
+        },
+        "typeName": "fs_path"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": null,
+          "displayName": null,
+          "fileSize": 0,
+          "group": null,
+          "isFile": false,
+          "isSymlink": false,
+          "modifiedTime": 0,
+          "name": "/tmp/atlas-baseline/in/hello.txt",
+          "owner": null,
+          "path": "/tmp/atlas-baseline/in/hello.txt",
+          "posixPermissions": null,
+          "qualifiedName": "/tmp/atlas-baseline/in/hello.txt@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "hiveDb": null,
+          "inputToProcesses": [
+            {
+              "displayText": "file-get, file-put",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb2536-01a0-1000-9400-6cea63132761@baseline",
+              "relationshipAttributes": {
+                "typeName": "dataset_process_inputs"
+              },
+              "relationshipGuid": "d7b812e4-2135-4815-b897-c7795d9ba165",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "dataset_process_inputs",
+              "typeName": "nifi_flow_path"
+            }
+          ],
+          "model": null,
+          "outputFromProcesses": [],
+          "pipeline": null,
+          "schema": []
+        },
+        "typeName": "fs_path"
+      },
+      "referredEntities": {}
+    }
+  ],
+  "kafka_topic": [
+    {
+      "entity": {
+        "attributes": {
+          "avgMessageSizeInBytes": 0,
+          "avroSchema": [],
+          "contactInfo": null,
+          "description": null,
+          "desiredRetentionInHrs": 0,
+          "displayName": null,
+          "keyClassname": null,
+          "maxThroughputPerSec": 0,
+          "name": "baseline-kafka-topic",
+          "numberOfEventsPerDay": 0,
+          "owner": null,
+          "partitionCount": 0,
+          "partitionCountLocal": 0,
+          "partitionCountNational": 0,
+          "qualifiedName": "baseline-kafka-topic@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "replicationFactorLocal": 0,
+          "replicationFactorNational": 0,
+          "retentionBytesLocal": 0,
+          "retentionBytesNational": 0,
+          "retentiontimeLocalInHrs": 0,
+          "retentiontimeNationalInHrs": 0,
+          "segmentBytesLocal": 0,
+          "segmentBytesNational": 0,
+          "topic": "baseline-kafka-topic",
+          "type": null,
+          "uri": "PLAINTEXT://localhost:19092/baseline-kafka-topic",
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "avroSchema": [],
+          "inputToProcesses": [],
+          "model": null,
+          "outputFromProcesses": [
+            {
+              "displayText": "kafka-source, kafka-publish",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline",
+              "relationshipAttributes": {
+                "typeName": "process_dataset_outputs"
+              },
+              "relationshipGuid": "f14fb154-0e0a-4b5a-abc9-7cf39626538b",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "process_dataset_outputs",
+              "typeName": "nifi_flow_path"
+            }
+          ],
+          "pipeline": null,
+          "schema": []
+        },
+        "typeName": "kafka_topic"
+      },
+      "referredEntities": {}
+    }
+  ],
+  "nifi_data": [
+    {
+      "entity": {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "displayName": null,
+          "name": "GenerateFlowFile",
+          "nifiFlow": null,
+          "owner": null,
+          "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputToProcesses": [
+            {
+              "displayText": "s3-source, s3-put",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline",
+              "relationshipAttributes": {
+                "typeName": "dataset_process_inputs"
+              },
+              "relationshipGuid": "b7d2d1e4-52b8-4ab2-918e-de3eec998802",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "dataset_process_inputs",
+              "typeName": "nifi_flow_path"
+            }
+          ],
+          "model": null,
+          "outputFromProcesses": [],
+          "pipeline": null,
+          "schema": []
+        },
+        "typeName": "nifi_data"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": "SEND was performed by PutS3Object",
+          "displayName": null,
+          "name": "PutS3Object",
+          "nifiFlow": null,
+          "owner": null,
+          "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputToProcesses": [],
+          "model": null,
+          "outputFromProcesses": [
+            {
+              "displayText": "s3-source, s3-put",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline",
+              "relationshipAttributes": {
+                "typeName": "process_dataset_outputs"
+              },
+              "relationshipGuid": "e075b1b6-e8c5-4fbe-922c-bbad51681edf",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "process_dataset_outputs",
+              "typeName": "nifi_flow_path"
+            }
+          ],
+          "pipeline": null,
+          "schema": []
+        },
+        "typeName": "nifi_data"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "displayName": null,
+          "name": "GenerateFlowFile",
+          "nifiFlow": null,
+          "owner": null,
+          "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputToProcesses": [
+            {
+              "displayText": "kafka-source, kafka-publish",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline",
+              "relationshipAttributes": {
+                "typeName": "dataset_process_inputs"
+              },
+              "relationshipGuid": "fb50157a-c801-4212-999e-4b4bfe00f58e",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "dataset_process_inputs",
+              "typeName": "nifi_flow_path"
+            }
+          ],
+          "model": null,
+          "outputFromProcesses": [],
+          "pipeline": null,
+          "schema": []
+        },
+        "typeName": "nifi_data"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "displayName": null,
+          "name": "GenerateFlowFile",
+          "nifiFlow": null,
+          "owner": null,
+          "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputToProcesses": [
+            {
+              "displayText": "s2s-source",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline",
+              "relationshipAttributes": {
+                "typeName": "dataset_process_inputs"
+              },
+              "relationshipGuid": "568911ec-465a-46a9-a8c2-606c4add4e51",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "dataset_process_inputs",
+              "typeName": "nifi_flow_path"
+            }
+          ],
+          "model": null,
+          "outputFromProcesses": [],
+          "pipeline": null,
+          "schema": []
+        },
+        "typeName": "nifi_data"
+      },
+      "referredEntities": {}
+    }
+  ],
+  "nifi_flow": [
+    {
+      "entity": {
+        "attributes": {
+          "description": null,
+          "displayName": null,
+          "flowPaths": [
+            {
+              "typeName": "nifi_flow_path"
+            },
+            {
+              "typeName": "nifi_flow_path"
+            },
+            {
+              "typeName": "nifi_flow_path"
+            },
+            {
+              "typeName": "nifi_flow_path"
+            },
+            {
+              "typeName": "nifi_flow_path"
+            },
+            {
+              "typeName": "nifi_flow_path"
+            }
+          ],
+          "inputPorts": [
+            {
+              "typeName": "nifi_input_port"
+            }
+          ],
+          "name": "NiFi Flow",
+          "outputPorts": [],
+          "owner": null,
+          "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline",
+          "queues": [],
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "url": "https://nifi1:8443/nifi",
+          "userDescription": null
+        },
+        "relationshipAttributes": {},
+        "typeName": "nifi_flow"
+      },
+      "referredEntities": {
+        "1187ba9d-d9fd-4f42-8f0b-13a7cd1c9585": {
+          "attributes": {
+            "description": null,
+            "displayName": null,
+            "name": "baseline-input",
+            "nifiFlow": {
+              "typeName": "nifi_flow",
+              "uniqueAttributes": {
+                "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+              }
+            },
+            "owner": null,
+            "qualifiedName": "67cb24b1-01a0-1000-de74-970cd7c119a7@baseline",
+            "replicatedFrom": null,
+            "replicatedTo": null,
+            "userDescription": null
+          },
+          "relationshipAttributes": {
+            "inputToProcesses": [],
+            "model": null,
+            "outputFromProcesses": [],
+            "pipeline": null,
+            "schema": []
+          },
+          "typeName": "nifi_input_port"
+        },
+        "1ea0423e-5ec9-46b1-b9a4-fd8066b87a8f": {
+          "attributes": {
+            "description": "baseline-input::67cb24b1-01a0-1000-de74-970cd7c119a7, s2s-sink::67cb24ca-01a0-1000-4545-794dc96e6f06",
+            "displayName": null,
+            "inputs": [],
+            "name": "baseline-input, s2s-sink",
+            "nifiFlow": {
+              "typeName": "nifi_flow",
+              "uniqueAttributes": {
+                "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+              }
+            },
+            "outputs": [],
+            "owner": null,
+            "qualifiedName": "67cb24b1-01a0-1000-de74-970cd7c119a7@baseline",
+            "replicatedFrom": null,
+            "replicatedTo": null,
+            "url": "https://nifi1:8443/nifi?processGroupId=1aaa188b-019e-1000-c5d6-a707a458a858&componentIds=67cb24b1-01a0-1000-de74-970cd7c119a7",
+            "userDescription": null
+          },
+          "relationshipAttributes": {
+            "inputs": [],
+            "outputs": []
+          },
+          "typeName": "nifi_flow_path"
+        },
+        "20462896-b658-4e22-89f1-0cc1cfad761b": {
+          "attributes": {
+            "description": "file-get::67cb2536-01a0-1000-9400-6cea63132761, file-put::67cb253c-01a0-1000-bf4e-be9481abac85",
+            "displayName": null,
+            "inputs": [
+              {
+                "typeName": "fs_path",
+                "uniqueAttributes": {
+                  "qualifiedName": "/tmp/atlas-baseline/in/hello.txt@baseline"
+                }
+              }
+            ],
+            "name": "file-get, file-put",
+            "nifiFlow": {
+              "typeName": "nifi_flow",
+              "uniqueAttributes": {
+                "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+              }
+            },
+            "outputs": [
+              {
+                "typeName": "fs_path",
+                "uniqueAttributes": {
+                  "qualifiedName": "/tmp/atlas-baseline/out/hello.txt@baseline"
+                }
+              }
+            ],
+            "owner": null,
+            "qualifiedName": "67cb2536-01a0-1000-9400-6cea63132761@baseline",
+            "replicatedFrom": null,
+            "replicatedTo": null,
+            "url": "https://nifi1:8443/nifi?processGroupId=67cb2530-01a0-1000-a5f9-ed4e1ae2000b&componentIds=67cb2536-01a0-1000-9400-6cea63132761",
+            "userDescription": null
+          },
+          "relationshipAttributes": {
+            "inputs": [
+              {
+                "displayText": "/tmp/atlas-baseline/in/hello.txt",
+                "entityStatus": "ACTIVE",
+                "qualifiedName": "/tmp/atlas-baseline/in/hello.txt@baseline",
+                "relationshipAttributes": {
+                  "typeName": "dataset_process_inputs"
+                },
+                "relationshipGuid": "d7b812e4-2135-4815-b897-c7795d9ba165",
+                "relationshipStatus": "ACTIVE",
+                "relationshipType": "dataset_process_inputs",
+                "typeName": "fs_path"
+              }
+            ],
+            "outputs": [
+              {
+                "displayText": "/tmp/atlas-baseline/out/hello.txt",
+                "entityStatus": "ACTIVE",
+                "qualifiedName": "/tmp/atlas-baseline/out/hello.txt@baseline",
+                "relationshipAttributes": {
+                  "typeName": "process_dataset_outputs"
+                },
+                "relationshipGuid": "00fbf5a5-5514-4b33-a563-09908910fb99",
+                "relationshipStatus": "ACTIVE",
+                "relationshipType": "process_dataset_outputs",
+                "typeName": "fs_path"
+              }
+            ]
+          },
+          "typeName": "nifi_flow_path"
+        },
+        "2418d14e-c876-4949-9c83-f5e6cf38ac15": {
+          "attributes": {
+            "description": "kafka-source::67cb24fb-01a0-1000-25c0-9ad5b1913eff, kafka-publish::67cb2502-01a0-1000-2479-111e3288e34c",
+            "displayName": null,
+            "inputs": [
+              {
+                "typeName": "nifi_data",
+                "uniqueAttributes": {
+                  "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline"
+                }
+              }
+            ],
+            "name": "kafka-source, kafka-publish",
+            "nifiFlow": {
+              "typeName": "nifi_flow",
+              "uniqueAttributes": {
+                "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+              }
+            },
+            "outputs": [
+              {
+                "typeName": "kafka_topic",
+                "uniqueAttributes": {
+                  "qualifiedName": "baseline-kafka-topic@baseline"
+                }
+              }
+            ],
+            "owner": null,
+            "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline",
+            "replicatedFrom": null,
+            "replicatedTo": null,
+            "url": "https://nifi1:8443/nifi?processGroupId=67cb24f6-01a0-1000-cbd5-5e428ebb7289&componentIds=67cb24fb-01a0-1000-25c0-9ad5b1913eff",
+            "userDescription": null
+          },
+          "relationshipAttributes": {
+            "inputs": [
+              {
+                "displayText": "GenerateFlowFile",
+                "entityStatus": "ACTIVE",
+                "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline",
+                "relationshipAttributes": {
+                  "typeName": "dataset_process_inputs"
+                },
+                "relationshipGuid": "fb50157a-c801-4212-999e-4b4bfe00f58e",
+                "relationshipStatus": "ACTIVE",
+                "relationshipType": "dataset_process_inputs",
+                "typeName": "nifi_data"
+              }
+            ],
+            "outputs": [
+              {
+                "displayText": "baseline-kafka-topic",
+                "entityStatus": "ACTIVE",
+                "qualifiedName": "baseline-kafka-topic@baseline",
+                "relationshipAttributes": {
+                  "typeName": "process_dataset_outputs"
+                },
+                "relationshipGuid": "f14fb154-0e0a-4b5a-abc9-7cf39626538b",
+                "relationshipStatus": "ACTIVE",
+                "relationshipType": "process_dataset_outputs",
+                "typeName": "kafka_topic"
+              }
+            ]
+          },
+          "typeName": "nifi_flow_path"
+        },
+        "7eb51437-dee9-4170-b877-616a26e12eb2": {
+          "attributes": {
+            "description": "s3-source::67cb254b-01a0-1000-b6c6-9105dd2cdfe3, s3-put::67cb2562-01a0-1000-68c4-25a121e9f411",
+            "displayName": null,
+            "inputs": [
+              {
+                "typeName": "nifi_data",
+                "uniqueAttributes": {
+                  "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline"
+                }
+              }
+            ],
+            "name": "s3-source, s3-put",
+            "nifiFlow": {
+              "typeName": "nifi_flow",
+              "uniqueAttributes": {
+                "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+              }
+            },
+            "outputs": [
+              {
+                "typeName": "nifi_data",
+                "uniqueAttributes": {
+                  "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline"
+                }
+              }
+            ],
+            "owner": null,
+            "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline",
+            "replicatedFrom": null,
+            "replicatedTo": null,
+            "url": "https://nifi1:8443/nifi?processGroupId=67cb2546-01a0-1000-00b8-9c9d900a9f0c&componentIds=67cb254b-01a0-1000-b6c6-9105dd2cdfe3",
+            "userDescription": null
+          },
+          "relationshipAttributes": {
+            "inputs": [
+              {
+                "displayText": "GenerateFlowFile",
+                "entityStatus": "ACTIVE",
+                "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline",
+                "relationshipAttributes": {
+                  "typeName": "dataset_process_inputs"
+                },
+                "relationshipGuid": "b7d2d1e4-52b8-4ab2-918e-de3eec998802",
+                "relationshipStatus": "ACTIVE",
+                "relationshipType": "dataset_process_inputs",
+                "typeName": "nifi_data"
+              }
+            ],
+            "outputs": [
+              {
+                "displayText": "PutS3Object",
+                "entityStatus": "ACTIVE",
+                "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline",
+                "relationshipAttributes": {
+                  "typeName": "process_dataset_outputs"
+                },
+                "relationshipGuid": "e075b1b6-e8c5-4fbe-922c-bbad51681edf",
+                "relationshipStatus": "ACTIVE",
+                "relationshipType": "process_dataset_outputs",
+                "typeName": "nifi_data"
+              }
+            ]
+          },
+          "typeName": "nifi_flow_path"
+        },
+        "8935a93d-ed42-48fd-a8fc-5880476d0cae": {
+          "attributes": {
+            "description": "s2s-source::67cb257e-01a0-1000-717d-89d3a514fb69",
+            "displayName": null,
+            "inputs": [
+              {
+                "typeName": "nifi_data",
+                "uniqueAttributes": {
+                  "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline"
+                }
+              }
+            ],
+            "name": "s2s-source",
+            "nifiFlow": {
+              "typeName": "nifi_flow",
+              "uniqueAttributes": {
+                "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+              }
+            },
+            "outputs": [],
+            "owner": null,
+            "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline",
+            "replicatedFrom": null,
+            "replicatedTo": null,
+            "url": "https://nifi1:8443/nifi?processGroupId=67cb2578-01a0-1000-a2d0-567d0a36bca1&componentIds=67cb257e-01a0-1000-717d-89d3a514fb69",
+            "userDescription": null
+          },
+          "relationshipAttributes": {
+            "inputs": [
+              {
+                "displayText": "GenerateFlowFile",
+                "entityStatus": "ACTIVE",
+                "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline",
+                "relationshipAttributes": {
+                  "typeName": "dataset_process_inputs"
+                },
+                "relationshipGuid": "568911ec-465a-46a9-a8c2-606c4add4e51",
+                "relationshipStatus": "ACTIVE",
+                "relationshipType": "dataset_process_inputs",
+                "typeName": "nifi_data"
+              }
+            ],
+            "outputs": []
+          },
+          "typeName": "nifi_flow_path"
+        },
+        "c2bd5195-5c11-4c9d-b568-a081f1e884d1": {
+          "attributes": {
+            "description": "kafka-consume::67cb250e-01a0-1000-5fbd-3db37aa48503, kafka-sink::67cb251d-01a0-1000-df4d-f52c0ea137b0",
+            "displayName": null,
+            "inputs": [],
+            "name": "kafka-consume, kafka-sink",
+            "nifiFlow": {
+              "typeName": "nifi_flow",
+              "uniqueAttributes": {
+                "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+              }
+            },
+            "outputs": [],
+            "owner": null,
+            "qualifiedName": "67cb250e-01a0-1000-5fbd-3db37aa48503@baseline",
+            "replicatedFrom": null,
+            "replicatedTo": null,
+            "url": "https://nifi1:8443/nifi?processGroupId=67cb24f6-01a0-1000-cbd5-5e428ebb7289&componentIds=67cb250e-01a0-1000-5fbd-3db37aa48503",
+            "userDescription": null
+          },
+          "relationshipAttributes": {
+            "inputs": [],
+            "outputs": []
+          },
+          "typeName": "nifi_flow_path"
+        }
+      }
+    }
+  ],
+  "nifi_flow_path": [
+    {
+      "entity": {
+        "attributes": {
+          "description": "kafka-consume::67cb250e-01a0-1000-5fbd-3db37aa48503, kafka-sink::67cb251d-01a0-1000-df4d-f52c0ea137b0",
+          "displayName": null,
+          "inputs": [],
+          "name": "kafka-consume, kafka-sink",
+          "nifiFlow": {
+            "typeName": "nifi_flow",
+            "uniqueAttributes": {
+              "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+            }
+          },
+          "outputs": [],
+          "owner": null,
+          "qualifiedName": "67cb250e-01a0-1000-5fbd-3db37aa48503@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "url": "https://nifi1:8443/nifi?processGroupId=67cb24f6-01a0-1000-cbd5-5e428ebb7289&componentIds=67cb250e-01a0-1000-5fbd-3db37aa48503",
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputs": [],
+          "outputs": []
+        },
+        "typeName": "nifi_flow_path"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": "baseline-input::67cb24b1-01a0-1000-de74-970cd7c119a7, s2s-sink::67cb24ca-01a0-1000-4545-794dc96e6f06",
+          "displayName": null,
+          "inputs": [],
+          "name": "baseline-input, s2s-sink",
+          "nifiFlow": {
+            "typeName": "nifi_flow",
+            "uniqueAttributes": {
+              "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+            }
+          },
+          "outputs": [],
+          "owner": null,
+          "qualifiedName": "67cb24b1-01a0-1000-de74-970cd7c119a7@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "url": "https://nifi1:8443/nifi?processGroupId=1aaa188b-019e-1000-c5d6-a707a458a858&componentIds=67cb24b1-01a0-1000-de74-970cd7c119a7",
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputs": [],
+          "outputs": []
+        },
+        "typeName": "nifi_flow_path"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": "s3-source::67cb254b-01a0-1000-b6c6-9105dd2cdfe3, s3-put::67cb2562-01a0-1000-68c4-25a121e9f411",
+          "displayName": null,
+          "inputs": [
+            {
+              "typeName": "nifi_data",
+              "uniqueAttributes": {
+                "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline"
+              }
+            }
+          ],
+          "name": "s3-source, s3-put",
+          "nifiFlow": {
+            "typeName": "nifi_flow",
+            "uniqueAttributes": {
+              "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+            }
+          },
+          "outputs": [
+            {
+              "typeName": "nifi_data",
+              "uniqueAttributes": {
+                "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline"
+              }
+            }
+          ],
+          "owner": null,
+          "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "url": "https://nifi1:8443/nifi?processGroupId=67cb2546-01a0-1000-00b8-9c9d900a9f0c&componentIds=67cb254b-01a0-1000-b6c6-9105dd2cdfe3",
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputs": [
+            {
+              "displayText": "GenerateFlowFile",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline",
+              "relationshipAttributes": {
+                "typeName": "dataset_process_inputs"
+              },
+              "relationshipGuid": "b7d2d1e4-52b8-4ab2-918e-de3eec998802",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "dataset_process_inputs",
+              "typeName": "nifi_data"
+            }
+          ],
+          "outputs": [
+            {
+              "displayText": "PutS3Object",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline",
+              "relationshipAttributes": {
+                "typeName": "process_dataset_outputs"
+              },
+              "relationshipGuid": "e075b1b6-e8c5-4fbe-922c-bbad51681edf",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "process_dataset_outputs",
+              "typeName": "nifi_data"
+            }
+          ]
+        },
+        "typeName": "nifi_flow_path"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": "kafka-source::67cb24fb-01a0-1000-25c0-9ad5b1913eff, kafka-publish::67cb2502-01a0-1000-2479-111e3288e34c",
+          "displayName": null,
+          "inputs": [
+            {
+              "typeName": "nifi_data",
+              "uniqueAttributes": {
+                "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline"
+              }
+            }
+          ],
+          "name": "kafka-source, kafka-publish",
+          "nifiFlow": {
+            "typeName": "nifi_flow",
+            "uniqueAttributes": {
+              "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+            }
+          },
+          "outputs": [
+            {
+              "typeName": "kafka_topic",
+              "uniqueAttributes": {
+                "qualifiedName": "baseline-kafka-topic@baseline"
+              }
+            }
+          ],
+          "owner": null,
+          "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "url": "https://nifi1:8443/nifi?processGroupId=67cb24f6-01a0-1000-cbd5-5e428ebb7289&componentIds=67cb24fb-01a0-1000-25c0-9ad5b1913eff",
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputs": [
+            {
+              "displayText": "GenerateFlowFile",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline",
+              "relationshipAttributes": {
+                "typeName": "dataset_process_inputs"
+              },
+              "relationshipGuid": "fb50157a-c801-4212-999e-4b4bfe00f58e",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "dataset_process_inputs",
+              "typeName": "nifi_data"
+            }
+          ],
+          "outputs": [
+            {
+              "displayText": "baseline-kafka-topic",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "baseline-kafka-topic@baseline",
+              "relationshipAttributes": {
+                "typeName": "process_dataset_outputs"
+              },
+              "relationshipGuid": "f14fb154-0e0a-4b5a-abc9-7cf39626538b",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "process_dataset_outputs",
+              "typeName": "kafka_topic"
+            }
+          ]
+        },
+        "typeName": "nifi_flow_path"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": "file-get::67cb2536-01a0-1000-9400-6cea63132761, file-put::67cb253c-01a0-1000-bf4e-be9481abac85",
+          "displayName": null,
+          "inputs": [
+            {
+              "typeName": "fs_path",
+              "uniqueAttributes": {
+                "qualifiedName": "/tmp/atlas-baseline/in/hello.txt@baseline"
+              }
+            }
+          ],
+          "name": "file-get, file-put",
+          "nifiFlow": {
+            "typeName": "nifi_flow",
+            "uniqueAttributes": {
+              "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+            }
+          },
+          "outputs": [
+            {
+              "typeName": "fs_path",
+              "uniqueAttributes": {
+                "qualifiedName": "/tmp/atlas-baseline/out/hello.txt@baseline"
+              }
+            }
+          ],
+          "owner": null,
+          "qualifiedName": "67cb2536-01a0-1000-9400-6cea63132761@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "url": "https://nifi1:8443/nifi?processGroupId=67cb2530-01a0-1000-a5f9-ed4e1ae2000b&componentIds=67cb2536-01a0-1000-9400-6cea63132761",
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputs": [
+            {
+              "displayText": "/tmp/atlas-baseline/in/hello.txt",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "/tmp/atlas-baseline/in/hello.txt@baseline",
+              "relationshipAttributes": {
+                "typeName": "dataset_process_inputs"
+              },
+              "relationshipGuid": "d7b812e4-2135-4815-b897-c7795d9ba165",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "dataset_process_inputs",
+              "typeName": "fs_path"
+            }
+          ],
+          "outputs": [
+            {
+              "displayText": "/tmp/atlas-baseline/out/hello.txt",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "/tmp/atlas-baseline/out/hello.txt@baseline",
+              "relationshipAttributes": {
+                "typeName": "process_dataset_outputs"
+              },
+              "relationshipGuid": "00fbf5a5-5514-4b33-a563-09908910fb99",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "process_dataset_outputs",
+              "typeName": "fs_path"
+            }
+          ]
+        },
+        "typeName": "nifi_flow_path"
+      },
+      "referredEntities": {}
+    },
+    {
+      "entity": {
+        "attributes": {
+          "description": "s2s-source::67cb257e-01a0-1000-717d-89d3a514fb69",
+          "displayName": null,
+          "inputs": [
+            {
+              "typeName": "nifi_data",
+              "uniqueAttributes": {
+                "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline"
+              }
+            }
+          ],
+          "name": "s2s-source",
+          "nifiFlow": {
+            "typeName": "nifi_flow",
+            "uniqueAttributes": {
+              "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+            }
+          },
+          "outputs": [],
+          "owner": null,
+          "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "url": "https://nifi1:8443/nifi?processGroupId=67cb2578-01a0-1000-a2d0-567d0a36bca1&componentIds=67cb257e-01a0-1000-717d-89d3a514fb69",
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputs": [
+            {
+              "displayText": "GenerateFlowFile",
+              "entityStatus": "ACTIVE",
+              "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline",
+              "relationshipAttributes": {
+                "typeName": "dataset_process_inputs"
+              },
+              "relationshipGuid": "568911ec-465a-46a9-a8c2-606c4add4e51",
+              "relationshipStatus": "ACTIVE",
+              "relationshipType": "dataset_process_inputs",
+              "typeName": "nifi_data"
+            }
+          ],
+          "outputs": []
+        },
+        "typeName": "nifi_flow_path"
+      },
+      "referredEntities": {}
+    }
+  ],
+  "nifi_input_port": [
+    {
+      "entity": {
+        "attributes": {
+          "description": null,
+          "displayName": null,
+          "name": "baseline-input",
+          "nifiFlow": {
+            "typeName": "nifi_flow",
+            "uniqueAttributes": {
+              "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline"
+            }
+          },
+          "owner": null,
+          "qualifiedName": "67cb24b1-01a0-1000-de74-970cd7c119a7@baseline",
+          "replicatedFrom": null,
+          "replicatedTo": null,
+          "userDescription": null
+        },
+        "relationshipAttributes": {
+          "inputToProcesses": [],
+          "model": null,
+          "outputFromProcesses": [],
+          "pipeline": null,
+          "schema": []
+        },
+        "typeName": "nifi_input_port"
+      },
+      "referredEntities": {}
+    }
+  ],
+  "nifi_output_port": [],
+  "nifi_queue": []
+}

@@ -1,0 +1,561 @@
+{
+  "aws_s3_bucket": {
+    "entities": [],
+    "query": null
+  },
+  "aws_s3_pseudo_dir": {
+    "entities": [],
+    "query": null
+  },
+  "aws_s3_v2_bucket": {
+    "entities": [],
+    "query": null
+  },
+  "aws_s3_v2_directory": {
+    "entities": [],
+    "query": null
+  },
+  "fs_path": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/bba0b5b1-045c-4d50-81d3-af0279ee6bc3",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/bba0b5b1-045c-4d50-81d3-af0279ee6bc3@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/bba0b5b1-045c-4d50-81d3-af0279ee6bc3",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/in/hello4.txt",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/in/hello4.txt@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/in/hello4.txt",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/in/hello3.txt",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/in/hello3.txt@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/in/hello3.txt",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/out/hello4.txt",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/out/hello4.txt@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/out/hello4.txt",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/out/hello3.txt",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/out/hello3.txt@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/out/hello3.txt",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/2c0bbc00-d4ab-4947-bbed-ad8dd48051f3",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/2c0bbc00-d4ab-4947-bbed-ad8dd48051f3@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/2c0bbc00-d4ab-4947-bbed-ad8dd48051f3",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/64236d68-5a8c-4289-b19b-ba2176fd38e4",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/64236d68-5a8c-4289-b19b-ba2176fd38e4@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/64236d68-5a8c-4289-b19b-ba2176fd38e4",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/8317aa33-e6cf-4dc7-b215-d3d247106229",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/8317aa33-e6cf-4dc7-b215-d3d247106229@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/8317aa33-e6cf-4dc7-b215-d3d247106229",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/a86c8a7b-11b8-4e0a-80f1-8a013a7732c1",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/a86c8a7b-11b8-4e0a-80f1-8a013a7732c1@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/a86c8a7b-11b8-4e0a-80f1-8a013a7732c1",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/1b130a44-a73f-49cd-a458-d96a83a973db",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/1b130a44-a73f-49cd-a458-d96a83a973db@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/1b130a44-a73f-49cd-a458-d96a83a973db",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/ec4809f4-4ed6-45ab-94c1-f261febfb5ed",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/ec4809f4-4ed6-45ab-94c1-f261febfb5ed@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/ec4809f4-4ed6-45ab-94c1-f261febfb5ed",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/fa5ce3c1-f6a9-4ae6-b9a2-ac0b25ad9341",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/fa5ce3c1-f6a9-4ae6-b9a2-ac0b25ad9341@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/fa5ce3c1-f6a9-4ae6-b9a2-ac0b25ad9341",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/1095e247-ab31-4a64-9f9a-0224843b97d7",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/1095e247-ab31-4a64-9f9a-0224843b97d7@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/1095e247-ab31-4a64-9f9a-0224843b97d7",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/3facd579-285e-4bee-bd63-04fe0b1dfeb2",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/3facd579-285e-4bee-bd63-04fe0b1dfeb2@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/3facd579-285e-4bee-bd63-04fe0b1dfeb2",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/7e530d42-e647-4702-a89d-c8c396d8182a",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/7e530d42-e647-4702-a89d-c8c396d8182a@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/7e530d42-e647-4702-a89d-c8c396d8182a",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/255df3a8-7b74-46e2-8946-96d042e9bb16",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/255df3a8-7b74-46e2-8946-96d042e9bb16@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/255df3a8-7b74-46e2-8946-96d042e9bb16",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/bd0fa7b2-5ffe-4c2b-b231-ecd96f56599a",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/bd0fa7b2-5ffe-4c2b-b231-ecd96f56599a@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/bd0fa7b2-5ffe-4c2b-b231-ecd96f56599a",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/cc5009ab-38ad-4ba1-99ba-21c24bd2b56b",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/cc5009ab-38ad-4ba1-99ba-21c24bd2b56b@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/cc5009ab-38ad-4ba1-99ba-21c24bd2b56b",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/bfdae630-77f2-4503-94bd-0a5f020369e4",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/bfdae630-77f2-4503-94bd-0a5f020369e4@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/bfdae630-77f2-4503-94bd-0a5f020369e4",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/836dda10-a12d-4f51-893c-260ae5f1d03d",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/836dda10-a12d-4f51-893c-260ae5f1d03d@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/836dda10-a12d-4f51-893c-260ae5f1d03d",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/c66f38d5-1114-4541-aa5a-56c44f63c6f3",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/c66f38d5-1114-4541-aa5a-56c44f63c6f3@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/c66f38d5-1114-4541-aa5a-56c44f63c6f3",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/552162e5-09df-4624-80a2-3ceebc06da98",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/552162e5-09df-4624-80a2-3ceebc06da98@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/552162e5-09df-4624-80a2-3ceebc06da98",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/cabe5e69-fc4d-48df-aac7-27ed1346c290",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/cabe5e69-fc4d-48df-aac7-27ed1346c290@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/cabe5e69-fc4d-48df-aac7-27ed1346c290",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/e7e7f4fd-d64d-4e77-a252-fdab393ad6b3",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/e7e7f4fd-d64d-4e77-a252-fdab393ad6b3@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/e7e7f4fd-d64d-4e77-a252-fdab393ad6b3",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/89e07a78-d063-42de-b6cf-228e2cc29c94",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/89e07a78-d063-42de-b6cf-228e2cc29c94@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/89e07a78-d063-42de-b6cf-228e2cc29c94",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/7650fae5-620c-4f24-9e7e-9e5917fe5589",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/7650fae5-620c-4f24-9e7e-9e5917fe5589@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/7650fae5-620c-4f24-9e7e-9e5917fe5589",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      },
+      {
+        "attributes": {
+          "description": "",
+          "name": "/tmp/atlas-baseline/s2s-out/15c57eb4-8384-4d52-a659-28a683abc3d3",
+          "owner": "",
+          "qualifiedName": "/tmp/atlas-baseline/s2s-out/15c57eb4-8384-4d52-a659-28a683abc3d3@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "/tmp/atlas-baseline/s2s-out/15c57eb4-8384-4d52-a659-28a683abc3d3",
+        "meaningNames": [],
+        "typeName": "fs_path"
+      }
+    ],
+    "query": null
+  },
+  "kafka_topic": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "baseline-kafka-topic",
+          "owner": "",
+          "qualifiedName": "baseline-kafka-topic@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "baseline-kafka-topic",
+        "meaningNames": [],
+        "typeName": "kafka_topic"
+      }
+    ],
+    "query": null
+  },
+  "nifi_data": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "name": "GenerateFlowFile",
+          "owner": "",
+          "qualifiedName": "67fceadf-01a0-1000-2988-867ea905b0c8@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "GenerateFlowFile",
+        "meaningNames": [],
+        "typeName": "nifi_data"
+      },
+      {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "name": "GenerateFlowFile",
+          "owner": "",
+          "qualifiedName": "67fceb23-01a0-1000-d304-75f07b6b727b@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "GenerateFlowFile",
+        "meaningNames": [],
+        "typeName": "nifi_data"
+      },
+      {
+        "attributes": {
+          "description": "SEND was performed by PutS3Object",
+          "name": "PutS3Object",
+          "owner": "",
+          "qualifiedName": "67fceb27-01a0-1000-b297-dd785e5ccf12@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "PutS3Object",
+        "meaningNames": [],
+        "typeName": "nifi_data"
+      },
+      {
+        "attributes": {
+          "description": "CREATE was performed by GenerateFlowFile",
+          "name": "GenerateFlowFile",
+          "owner": "",
+          "qualifiedName": "67fcebab-01a0-1000-91e6-72e2824e76e0@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "GenerateFlowFile",
+        "meaningNames": [],
+        "typeName": "nifi_data"
+      }
+    ],
+    "query": null
+  },
+  "nifi_flow": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "NiFi Flow",
+          "owner": "",
+          "qualifiedName": "1aaa188b-019e-1000-c5d6-a707a458a858@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "NiFi Flow",
+        "meaningNames": [],
+        "typeName": "nifi_flow"
+      }
+    ],
+    "query": null
+  },
+  "nifi_flow_path": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "Remote Input Port",
+          "owner": "",
+          "qualifiedName": "26d15138-47d8-3bff-aa67-e6bec15c2c20@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "Remote Input Port",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "kafka-source::67fceadf-01a0-1000-2988-867ea905b0c8, kafka-publish::67fceae5-01a0-1000-4672-a209c01e55a6",
+          "name": "kafka-source, kafka-publish",
+          "owner": "",
+          "qualifiedName": "67fceadf-01a0-1000-2988-867ea905b0c8@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "kafka-source, kafka-publish",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "s3-source::67fceb23-01a0-1000-d304-75f07b6b727b, s3-put::67fceb27-01a0-1000-b297-dd785e5ccf12",
+          "name": "s3-source, s3-put",
+          "owner": "",
+          "qualifiedName": "67fceb23-01a0-1000-d304-75f07b6b727b@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "s3-source, s3-put",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "s2s-source::67fcebab-01a0-1000-91e6-72e2824e76e0",
+          "name": "s2s-source",
+          "owner": "",
+          "qualifiedName": "67fcebab-01a0-1000-91e6-72e2824e76e0@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "s2s-source",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "file-get::67fceb0e-01a0-1000-bbf8-6dfaa9f20ddb, file-put::67fceb13-01a0-1000-9d48-99b3ae8f8738",
+          "name": "file-get, file-put",
+          "owner": "",
+          "qualifiedName": "67fceb0e-01a0-1000-bbf8-6dfaa9f20ddb@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "file-get, file-put",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "kafka-consume::67fceaee-01a0-1000-f73d-366da137bf99, kafka-sink::67fceaf4-01a0-1000-e743-b220dad6deb4",
+          "name": "kafka-consume, kafka-sink",
+          "owner": "",
+          "qualifiedName": "67fceaee-01a0-1000-f73d-366da137bf99@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "kafka-consume, kafka-sink",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      },
+      {
+        "attributes": {
+          "description": "baseline-input::67fceaac-01a0-1000-1f81-9894fb3cceac, s2s-sink::67fceab8-01a0-1000-2cfb-adefa8e8f997",
+          "name": "baseline-input, s2s-sink",
+          "owner": "",
+          "qualifiedName": "67fceaac-01a0-1000-1f81-9894fb3cceac@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "baseline-input, s2s-sink",
+        "meaningNames": [],
+        "typeName": "nifi_flow_path"
+      }
+    ],
+    "query": null
+  },
+  "nifi_input_port": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "baseline-input",
+          "owner": "",
+          "qualifiedName": "67fceaac-01a0-1000-1f81-9894fb3cceac@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "baseline-input",
+        "meaningNames": [],
+        "typeName": "nifi_input_port"
+      }
+    ],
+    "query": null
+  },
+  "nifi_output_port": {
+    "entities": [],
+    "query": null
+  },
+  "nifi_queue": {
+    "entities": [
+      {
+        "attributes": {
+          "description": "",
+          "name": "queue",
+          "owner": "",
+          "qualifiedName": "26d15138-47d8-3bff-aa67-e6bec15c2c20@baseline-s2s"
+        },
+        "classificationNames": [],
+        "displayText": "queue",
+        "meaningNames": [],
+        "typeName": "nifi_queue"
+      }
+    ],
+    "query": null
+  }
+}

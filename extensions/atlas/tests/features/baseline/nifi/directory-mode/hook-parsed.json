@@ -1,0 +1,929 @@
+[
+  {
+    "message": {
+      "entities": {
+        "entities": []
+      },
+      "type": "ENTITY_CREATE_V2",
+      "user": "admin"
+    },
+    "msgCompressionKind": "NONE",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "version": {
+      "version": "1.0.0"
+    }
+  },
+  {
+    "message": {
+      "entities": [
+        {
+          "id": {
+            "id": "-12324574749996",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "nifi_data",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "nifi_data",
+          "values": {
+            "description": "CREATE was performed by GenerateFlowFile",
+            "name": "GenerateFlowFile",
+            "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline"
+          }
+        },
+        {
+          "id": {
+            "id": "-12324574749993",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "nifi_data",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "nifi_data",
+          "values": {
+            "description": "CREATE was performed by GenerateFlowFile",
+            "name": "GenerateFlowFile",
+            "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline"
+          }
+        },
+        {
+          "id": {
+            "id": "-12324574749990",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "nifi_data",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "nifi_data",
+          "values": {
+            "description": "CREATE was performed by GenerateFlowFile",
+            "name": "GenerateFlowFile",
+            "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline"
+          }
+        },
+        {
+          "id": {
+            "id": "-12324574749987",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "fs_path",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "fs_path",
+          "values": {
+            "name": "/tmp/atlas-baseline/in/hello.txt",
+            "path": "/tmp/atlas-baseline/in/hello.txt",
+            "qualifiedName": "/tmp/atlas-baseline/in/hello.txt@baseline"
+          }
+        },
+        {
+          "id": {
+            "id": "-12324574749984",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "fs_path",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "fs_path",
+          "values": {
+            "name": "/tmp/atlas-baseline/out/hello.txt",
+            "path": "/tmp/atlas-baseline/out/hello.txt",
+            "qualifiedName": "/tmp/atlas-baseline/out/hello.txt@baseline"
+          }
+        },
+        {
+          "id": {
+            "id": "-12324574749981",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "nifi_data",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "nifi_data",
+          "values": {
+            "description": "SEND was performed by PutS3Object",
+            "name": "PutS3Object",
+            "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline"
+          }
+        },
+        {
+          "id": {
+            "id": "-12324574749978",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "kafka_topic",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "kafka_topic",
+          "values": {
+            "name": "baseline-kafka-topic",
+            "qualifiedName": "baseline-kafka-topic@baseline",
+            "topic": "baseline-kafka-topic",
+            "uri": "PLAINTEXT://localhost:19092/baseline-kafka-topic"
+          }
+        }
+      ],
+      "type": "ENTITY_CREATE",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448080978,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "attribute": "qualifiedName",
+      "attributeValue": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline",
+      "entity": {
+        "id": {
+          "id": "7eb51437-dee9-4170-b877-616a26e12eb2",
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+          "state": "ACTIVE",
+          "typeName": "nifi_flow_path",
+          "version": 0
+        },
+        "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+        "systemAttributes": null,
+        "traitNames": [],
+        "traits": {},
+        "typeName": "nifi_flow_path",
+        "values": {
+          "inputs": [
+            {
+              "id": {
+                "id": "-12324574749996",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "nifi_data",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "nifi_data",
+              "values": {
+                "description": "CREATE was performed by GenerateFlowFile",
+                "name": "GenerateFlowFile",
+                "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": {
+                "id": "-12324574749981",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "nifi_data",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "nifi_data",
+              "values": {
+                "description": "SEND was performed by PutS3Object",
+                "name": "PutS3Object",
+                "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline"
+              }
+            }
+          ]
+        }
+      },
+      "type": "ENTITY_PARTIAL_UPDATE",
+      "typeName": "nifi_flow_path",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448081242,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "attribute": "qualifiedName",
+      "attributeValue": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline",
+      "entity": {
+        "id": {
+          "id": "2418d14e-c876-4949-9c83-f5e6cf38ac15",
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+          "state": "ACTIVE",
+          "typeName": "nifi_flow_path",
+          "version": 0
+        },
+        "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+        "systemAttributes": null,
+        "traitNames": [],
+        "traits": {},
+        "typeName": "nifi_flow_path",
+        "values": {
+          "inputs": [
+            {
+              "id": {
+                "id": "-12324574749990",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "nifi_data",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "nifi_data",
+              "values": {
+                "description": "CREATE was performed by GenerateFlowFile",
+                "name": "GenerateFlowFile",
+                "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": {
+                "id": "-12324574749978",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "kafka_topic",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "kafka_topic",
+              "values": {
+                "name": "baseline-kafka-topic",
+                "qualifiedName": "baseline-kafka-topic@baseline",
+                "topic": "baseline-kafka-topic",
+                "uri": "PLAINTEXT://localhost:19092/baseline-kafka-topic"
+              }
+            }
+          ]
+        }
+      },
+      "type": "ENTITY_PARTIAL_UPDATE",
+      "typeName": "nifi_flow_path",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448081242,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "attribute": "qualifiedName",
+      "attributeValue": "67cb2536-01a0-1000-9400-6cea63132761@baseline",
+      "entity": {
+        "id": {
+          "id": "20462896-b658-4e22-89f1-0cc1cfad761b",
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+          "state": "ACTIVE",
+          "typeName": "nifi_flow_path",
+          "version": 0
+        },
+        "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+        "systemAttributes": null,
+        "traitNames": [],
+        "traits": {},
+        "typeName": "nifi_flow_path",
+        "values": {
+          "inputs": [
+            {
+              "id": {
+                "id": "-12324574749987",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "fs_path",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "fs_path",
+              "values": {
+                "name": "/tmp/atlas-baseline/in/hello.txt",
+                "path": "/tmp/atlas-baseline/in/hello.txt",
+                "qualifiedName": "/tmp/atlas-baseline/in/hello.txt@baseline"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": {
+                "id": "-12324574749984",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "fs_path",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "fs_path",
+              "values": {
+                "name": "/tmp/atlas-baseline/out/hello.txt",
+                "path": "/tmp/atlas-baseline/out/hello.txt",
+                "qualifiedName": "/tmp/atlas-baseline/out/hello.txt@baseline"
+              }
+            }
+          ]
+        }
+      },
+      "type": "ENTITY_PARTIAL_UPDATE",
+      "typeName": "nifi_flow_path",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448081243,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "attribute": "qualifiedName",
+      "attributeValue": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline",
+      "entity": {
+        "id": {
+          "id": "8935a93d-ed42-48fd-a8fc-5880476d0cae",
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+          "state": "ACTIVE",
+          "typeName": "nifi_flow_path",
+          "version": 0
+        },
+        "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+        "systemAttributes": null,
+        "traitNames": [],
+        "traits": {},
+        "typeName": "nifi_flow_path",
+        "values": {
+          "inputs": [
+            {
+              "id": {
+                "id": "-12324574749993",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "nifi_data",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "nifi_data",
+              "values": {
+                "description": "CREATE was performed by GenerateFlowFile",
+                "name": "GenerateFlowFile",
+                "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline"
+              }
+            }
+          ],
+          "outputs": []
+        }
+      },
+      "type": "ENTITY_PARTIAL_UPDATE",
+      "typeName": "nifi_flow_path",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448081244,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "entities": [
+        {
+          "id": {
+            "id": "-12860427198662",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "nifi_data",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "nifi_data",
+          "values": {
+            "description": "CREATE was performed by GenerateFlowFile",
+            "name": "GenerateFlowFile",
+            "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline-dir"
+          }
+        },
+        {
+          "id": {
+            "id": "-12860427198659",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "nifi_data",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "nifi_data",
+          "values": {
+            "description": "CREATE was performed by GenerateFlowFile",
+            "name": "GenerateFlowFile",
+            "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline-dir"
+          }
+        },
+        {
+          "id": {
+            "id": "-12860427198656",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "nifi_data",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "nifi_data",
+          "values": {
+            "description": "CREATE was performed by GenerateFlowFile",
+            "name": "GenerateFlowFile",
+            "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline-dir"
+          }
+        },
+        {
+          "id": {
+            "id": "-12860427198653",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "fs_path",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "fs_path",
+          "values": {
+            "name": "/tmp/atlas-baseline/in",
+            "path": "/tmp/atlas-baseline/in",
+            "qualifiedName": "/tmp/atlas-baseline/in@baseline-dir"
+          }
+        },
+        {
+          "id": {
+            "id": "-12860427198650",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "fs_path",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "fs_path",
+          "values": {
+            "name": "/tmp/atlas-baseline/out",
+            "path": "/tmp/atlas-baseline/out",
+            "qualifiedName": "/tmp/atlas-baseline/out@baseline-dir"
+          }
+        },
+        {
+          "id": {
+            "id": "-12860427198647",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "nifi_data",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "nifi_data",
+          "values": {
+            "description": "SEND was performed by PutS3Object",
+            "name": "PutS3Object",
+            "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline-dir"
+          }
+        },
+        {
+          "id": {
+            "id": "-12860427198644",
+            "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+            "state": "ACTIVE",
+            "typeName": "kafka_topic",
+            "version": 0
+          },
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+          "systemAttributes": null,
+          "traitNames": [],
+          "traits": {},
+          "typeName": "kafka_topic",
+          "values": {
+            "name": "baseline-kafka-topic",
+            "qualifiedName": "baseline-kafka-topic@baseline-dir",
+            "topic": "baseline-kafka-topic",
+            "uri": "PLAINTEXT://localhost:19092/baseline-kafka-topic"
+          }
+        }
+      ],
+      "type": "ENTITY_CREATE",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448616837,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "attribute": "qualifiedName",
+      "attributeValue": "67cb2536-01a0-1000-9400-6cea63132761@baseline-dir",
+      "entity": {
+        "id": {
+          "id": "bc3a9ca1-1c47-4ef9-836a-77eeb614adda",
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+          "state": "ACTIVE",
+          "typeName": "nifi_flow_path",
+          "version": 0
+        },
+        "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+        "systemAttributes": null,
+        "traitNames": [],
+        "traits": {},
+        "typeName": "nifi_flow_path",
+        "values": {
+          "inputs": [
+            {
+              "id": {
+                "id": "-12860427198653",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "fs_path",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "fs_path",
+              "values": {
+                "name": "/tmp/atlas-baseline/in",
+                "path": "/tmp/atlas-baseline/in",
+                "qualifiedName": "/tmp/atlas-baseline/in@baseline-dir"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": {
+                "id": "-12860427198650",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "fs_path",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "fs_path",
+              "values": {
+                "name": "/tmp/atlas-baseline/out",
+                "path": "/tmp/atlas-baseline/out",
+                "qualifiedName": "/tmp/atlas-baseline/out@baseline-dir"
+              }
+            }
+          ]
+        }
+      },
+      "type": "ENTITY_PARTIAL_UPDATE",
+      "typeName": "nifi_flow_path",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448617101,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "attribute": "qualifiedName",
+      "attributeValue": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline-dir",
+      "entity": {
+        "id": {
+          "id": "62c8ee79-3f95-4da3-a49b-6e950d69ea65",
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+          "state": "ACTIVE",
+          "typeName": "nifi_flow_path",
+          "version": 0
+        },
+        "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+        "systemAttributes": null,
+        "traitNames": [],
+        "traits": {},
+        "typeName": "nifi_flow_path",
+        "values": {
+          "inputs": [
+            {
+              "id": {
+                "id": "-12860427198659",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "nifi_data",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "nifi_data",
+              "values": {
+                "description": "CREATE was performed by GenerateFlowFile",
+                "name": "GenerateFlowFile",
+                "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline-dir"
+              }
+            }
+          ],
+          "outputs": []
+        }
+      },
+      "type": "ENTITY_PARTIAL_UPDATE",
+      "typeName": "nifi_flow_path",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448617102,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "attribute": "qualifiedName",
+      "attributeValue": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline-dir",
+      "entity": {
+        "id": {
+          "id": "2b4bd064-fc76-4b7e-a211-56952294c6f8",
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+          "state": "ACTIVE",
+          "typeName": "nifi_flow_path",
+          "version": 0
+        },
+        "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+        "systemAttributes": null,
+        "traitNames": [],
+        "traits": {},
+        "typeName": "nifi_flow_path",
+        "values": {
+          "inputs": [
+            {
+              "id": {
+                "id": "-12860427198662",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "nifi_data",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "nifi_data",
+              "values": {
+                "description": "CREATE was performed by GenerateFlowFile",
+                "name": "GenerateFlowFile",
+                "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline-dir"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": {
+                "id": "-12860427198647",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "nifi_data",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "nifi_data",
+              "values": {
+                "description": "SEND was performed by PutS3Object",
+                "name": "PutS3Object",
+                "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline-dir"
+              }
+            }
+          ]
+        }
+      },
+      "type": "ENTITY_PARTIAL_UPDATE",
+      "typeName": "nifi_flow_path",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448617102,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  },
+  {
+    "message": {
+      "attribute": "qualifiedName",
+      "attributeValue": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline-dir",
+      "entity": {
+        "id": {
+          "id": "f6c4848f-31fa-4a8e-aedb-e46430d39c66",
+          "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+          "state": "ACTIVE",
+          "typeName": "nifi_flow_path",
+          "version": 0
+        },
+        "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+        "systemAttributes": null,
+        "traitNames": [],
+        "traits": {},
+        "typeName": "nifi_flow_path",
+        "values": {
+          "inputs": [
+            {
+              "id": {
+                "id": "-12860427198656",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "nifi_data",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "nifi_data",
+              "values": {
+                "description": "CREATE was performed by GenerateFlowFile",
+                "name": "GenerateFlowFile",
+                "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline-dir"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": {
+                "id": "-12860427198644",
+                "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Id",
+                "state": "ACTIVE",
+                "typeName": "kafka_topic",
+                "version": 0
+              },
+              "jsonClass": "org.apache.atlas.typesystem.json.InstanceSerialization$_Reference",
+              "systemAttributes": null,
+              "traitNames": [],
+              "traits": {},
+              "typeName": "kafka_topic",
+              "values": {
+                "name": "baseline-kafka-topic",
+                "qualifiedName": "baseline-kafka-topic@baseline-dir",
+                "topic": "baseline-kafka-topic",
+                "uri": "PLAINTEXT://localhost:19092/baseline-kafka-topic"
+              }
+            }
+          ]
+        }
+      },
+      "type": "ENTITY_PARTIAL_UPDATE",
+      "typeName": "nifi_flow_path",
+      "user": "nifi"
+    },
+    "msgCompressionKind": "NONE",
+    "msgCreatedBy": "adebreceni",
+    "msgCreationTime": 1788448617102,
+    "msgSourceIP": "192.168.100.187",
+    "msgSplitCount": 1,
+    "msgSplitIdx": 1,
+    "spooled": false,
+    "version": {
+      "version": "1.0.0",
+      "versionParts": [
+        1
+      ]
+    }
+  }
+]

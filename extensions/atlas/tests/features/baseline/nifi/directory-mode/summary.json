@@ -1,0 +1,95 @@
+{
+  "counts": {
+    "fs_path": 2,
+    "kafka_topic": 1,
+    "nifi_data": 4,
+    "nifi_flow": 1,
+    "nifi_flow_path": 6,
+    "nifi_input_port": 1
+  },
+  "datasets": {
+    "fs_path": [
+      {
+        "name": "/tmp/atlas-baseline/out",
+        "path": null,
+        "qualifiedName": "/tmp/atlas-baseline/out@baseline-dir",
+        "uri": null
+      },
+      {
+        "name": "/tmp/atlas-baseline/in",
+        "path": null,
+        "qualifiedName": "/tmp/atlas-baseline/in@baseline-dir",
+        "uri": null
+      }
+    ],
+    "kafka_topic": [
+      {
+        "name": "baseline-kafka-topic",
+        "path": null,
+        "qualifiedName": "baseline-kafka-topic@baseline-dir",
+        "uri": null
+      }
+    ],
+    "nifi_data": [
+      {
+        "name": "GenerateFlowFile",
+        "path": null,
+        "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline-dir",
+        "uri": null
+      },
+      {
+        "name": "GenerateFlowFile",
+        "path": null,
+        "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline-dir",
+        "uri": null
+      },
+      {
+        "name": "PutS3Object",
+        "path": null,
+        "qualifiedName": "67cb2562-01a0-1000-68c4-25a121e9f411@baseline-dir",
+        "uri": null
+      },
+      {
+        "name": "GenerateFlowFile",
+        "path": null,
+        "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline-dir",
+        "uri": null
+      }
+    ],
+    "nifi_input_port": [
+      {
+        "name": "baseline-input",
+        "path": null,
+        "qualifiedName": "67cb24b1-01a0-1000-de74-970cd7c119a7@baseline-dir",
+        "uri": null
+      }
+    ]
+  },
+  "flow_paths": [
+    {
+      "name": "kafka-consume, kafka-sink",
+      "qualifiedName": "67cb250e-01a0-1000-5fbd-3db37aa48503@baseline-dir"
+    },
+    {
+      "name": "baseline-input, s2s-sink",
+      "qualifiedName": "67cb24b1-01a0-1000-de74-970cd7c119a7@baseline-dir"
+    },
+    {
+      "name": "file-get, file-put",
+      "qualifiedName": "67cb2536-01a0-1000-9400-6cea63132761@baseline-dir"
+    },
+    {
+      "name": "s2s-source",
+      "qualifiedName": "67cb257e-01a0-1000-717d-89d3a514fb69@baseline-dir"
+    },
+    {
+      "name": "s3-source, s3-put",
+      "qualifiedName": "67cb254b-01a0-1000-b6c6-9105dd2cdfe3@baseline-dir"
+    },
+    {
+      "name": "kafka-source, kafka-publish",
+      "qualifiedName": "67cb24fb-01a0-1000-25c0-9ad5b1913eff@baseline-dir"
+    }
+  ],
+  "namespace": "baseline-dir"
+}
