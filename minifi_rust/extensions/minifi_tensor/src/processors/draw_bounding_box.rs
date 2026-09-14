@@ -108,7 +108,10 @@ impl FlowFileTransform for DrawBoundingBox {
         let mut image_bytes = Vec::new();
         input_stream.read_to_end(&mut image_bytes)?;
 
-        let mut img = load_from_memory(&image_bytes)
+        let format = image::guess_format(&image_bytes)
+            .route_err_to_failure()?;
+
+        let mut img = image::load_from_memory_with_format(&image_bytes, format)
             .map(|dyn_img| dyn_img.to_rgb8())
             .route_err_to_failure()?;
 
@@ -117,7 +120,7 @@ impl FlowFileTransform for DrawBoundingBox {
             .for_each(|bbox| bbox.draw_onto(&mut img, line_thickness, line_color));
 
         let mut output_bytes = Vec::new();
-        img.write_to(&mut Cursor::new(&mut output_bytes), ImageFormat::Png)
+        img.write_to(&mut Cursor::new(&mut output_bytes), format)
             .route_err_to_failure()?;
 
         Ok(TransformedFlowFile::new(
