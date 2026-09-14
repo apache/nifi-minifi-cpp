@@ -26,8 +26,8 @@ use crate::processors::get_file::properties::{
 };
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessError,
-    ProcessSession, Schedule, Trigger, debug, info, trace, warn,
+    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
+    Schedule, Trigger, debug, info, trace, warn,
 };
 use std::collections::VecDeque;
 use std::error;
@@ -269,7 +269,7 @@ impl Trigger for GetFileRs {
         context: &mut PC,
         session: &mut PS,
         logger: &L,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,

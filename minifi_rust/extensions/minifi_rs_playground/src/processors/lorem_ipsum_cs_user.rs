@@ -25,7 +25,7 @@ use crate::processors::lorem_ipsum_cs_user::relationships::SUCCESS;
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     Content, FlowFileSource, GeneratedFlowFile, GetControllerService, GetProperty, Logger,
-    MinifiError, ProcessError, Schedule, trace,
+    MinifiError, Schedule, trace,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
@@ -58,7 +58,7 @@ impl FlowFileSource for LoremIpsumCSUser {
         &self,
         context: &'a mut Context,
         logger: &LoggerImpl,
-    ) -> Result<Vec<GeneratedFlowFile<'a>>, ProcessError> {
+    ) -> Result<Vec<GeneratedFlowFile<'a>>, MinifiError> {
         trace!(logger, "generate call {:?}", self);
         let dummy_controller_service = context.get_controller_service(&DUMMY_CONTROLLER_SERVICE)?;
         trace!(

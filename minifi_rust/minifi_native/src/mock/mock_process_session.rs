@@ -108,8 +108,10 @@ impl ProcessSession for MockProcessSession {
     {
         let mut new_content: Vec<u8> = Vec::new();
         let mut cursor = std::io::Cursor::new(&mut new_content);
-        let (r, _state) = callback(&mut cursor)?;
-        *flow_file.content.borrow_mut() = new_content;
+        let (r, state) = callback(&mut cursor)?;
+        if state == IoState::Ok {
+            *flow_file.content.borrow_mut() = new_content;
+        }
         Ok(r)
     }
 

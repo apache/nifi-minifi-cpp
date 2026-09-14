@@ -21,9 +21,8 @@ use crate::processors::log_attribute::properties::{FLOW_FILES_TO_LOG, LOG_LEVEL,
 use minifi_native::StandardPropertyValidator::NonBlankValidator;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, LogLevel, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessError,
-    ProcessSession, PropertyConstraints, PropertySchema, PropertyType, Schedule, Trigger, debug,
-    log, trace,
+    GetProperty, LogLevel, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
+    PropertyConstraints, PropertySchema, PropertyType, Schedule, Trigger, debug, log, trace,
 };
 
 mod properties;
@@ -105,7 +104,7 @@ impl Trigger for LogAttributeRs {
         _context: &mut PC,
         session: &mut PS,
         logger: &L,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
