@@ -22,7 +22,7 @@ pub(crate) struct SecretKey {}
 
 impl PropertySchema for SecretKey {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for SecretKey {
@@ -45,7 +45,7 @@ impl PropertyType for SecretKey {
 pub(crate) struct PublicKey {}
 impl PropertySchema for PublicKey {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for PublicKey {

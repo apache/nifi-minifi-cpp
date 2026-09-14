@@ -34,14 +34,17 @@ pub(crate) struct DecryptContentPGP {
 }
 
 impl Schedule for DecryptContentPGP {
-    fn schedule<P: GetProperty, L>(context: &P, _logger: &L) -> Result<Self, MinifiError>
+    fn schedule<P: GetProperty + GetControllerService, L>(
+        context: &P,
+        _logger: &L,
+    ) -> Result<Self, MinifiError>
     where
         Self: Sized,
         L: Logger,
     {
         let symmetric_password = context.get_property(&SYMMETRIC_PASSWORD)?;
-        let has_context_service = context.get_raw_property(&PRIVATE_KEY_SERVICE)?.is_some();
-        if !has_context_service && symmetric_password.is_none() {
+        let private_key_service = context.get_controller_service(&PRIVATE_KEY_SERVICE)?;
+        if private_key_service.is_none() && symmetric_password.is_none() {
             Err(MinifiError::validation(
                 "Either Symmetric Password or Private Key Service must be set",
             ))
