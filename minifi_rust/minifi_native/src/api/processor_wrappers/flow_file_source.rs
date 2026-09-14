@@ -20,8 +20,7 @@ use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{FlowFileAttribute, impl_with_attributes};
 use crate::{
     GetControllerService, GetProperty, Logger, MinifiError, MultiThreaded, OnTriggerResult,
-    ProcessContext, ProcessError, ProcessSession, Processor, Relationship, Schedule,
-    SingleThreaded,
+    ProcessContext, ProcessSession, Processor, Relationship, Schedule, SingleThreaded,
 };
 
 pub struct GeneratedFlowFile<'a> {
@@ -51,7 +50,7 @@ pub trait FlowFileSource {
         &self,
         context: &'a mut Context,
         logger: &LoggerImpl,
-    ) -> Result<Vec<GeneratedFlowFile<'a>>, ProcessError>;
+    ) -> Result<Vec<GeneratedFlowFile<'a>>, MinifiError>;
 }
 
 pub trait MutFlowFileSource {
@@ -59,13 +58,13 @@ pub trait MutFlowFileSource {
         &mut self,
         context: &'a mut Context,
         logger: &LoggerImpl,
-    ) -> Result<Vec<GeneratedFlowFile<'a>>, ProcessError>;
+    ) -> Result<Vec<GeneratedFlowFile<'a>>, MinifiError>;
 }
 
 fn handle_generated_flow_files<PC, PS>(
     session: &mut PS,
     generated_flow_files: Vec<GeneratedFlowFile>,
-) -> Result<OnTriggerResult, ProcessError>
+) -> Result<OnTriggerResult, MinifiError>
 where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -101,7 +100,7 @@ where
         &self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -110,7 +109,7 @@ where
             let files = scheduled_impl.generate(context, &self.logger)?;
             handle_generated_flow_files::<PC, PS>(session, files)
         } else {
-            Err(MinifiError::UnscheduledProcessor.into())
+            Err(MinifiError::UnscheduledProcessor)
         }
     }
 }
@@ -125,7 +124,7 @@ where
         &mut self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -134,7 +133,7 @@ where
             let files = scheduled_impl.generate(context, &self.logger)?;
             handle_generated_flow_files::<PC, PS>(session, files)
         } else {
-            Err(MinifiError::UnscheduledProcessor.into())
+            Err(MinifiError::UnscheduledProcessor)
         }
     }
 }

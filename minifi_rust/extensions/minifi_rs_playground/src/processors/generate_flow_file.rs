@@ -19,8 +19,8 @@
 
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessError,
-    ProcessSession, Schedule, Trigger,
+    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
+    Trigger,
 };
 use rand::RngExt;
 use rand::distr::Alphanumeric;
@@ -147,7 +147,7 @@ impl Trigger for GenerateFlowFileRs {
         context: &mut PC,
         session: &mut PS,
         _logger: &L,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,

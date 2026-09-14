@@ -22,7 +22,7 @@ use crate::controller_services::private_key_service::PGPPrivateKeyService;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileStreamTransform, GetControllerService, GetProperty, InputStream, Logger, MinifiError,
-    OutputStream, ProcessError, RouteErrorExt, Schedule, TransformStreamResult,
+    OutputStream, Relationship, Schedule, TransformError, TransformStreamResult,
 };
 use pgp::composed::{Message, TheRing};
 
@@ -75,32 +75,26 @@ impl DecryptContentPGP {
 }
 
 impl FlowFileStreamTransform for DecryptContentPGP {
+    const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
     fn transform<Ctx: GetProperty + GetControllerService, LoggerImpl: Logger>(
         &self,
         context: &Ctx,
         input_stream: &mut dyn InputStream,
         output_stream: &mut dyn OutputStream,
         _logger: &LoggerImpl,
-    ) -> Result<TransformStreamResult, ProcessError> {
+    ) -> Result<TransformStreamResult, TransformError> {
         let private_key_service = context.get_controller_service(&PRIVATE_KEY_SERVICE)?;
 
-        let msg = Message::from_reader(input_stream)
-            .map(|(msg, _header)| msg)
-            .route_err_to_failure()?;
+        let msg = Message::from_reader(input_stream).map(|(msg, _header)| msg)?;
 
-        let mut decrypted_msg = self
-            .decrypt_msg(msg, private_key_service)
-            .route_err_to_failure()?;
+        let mut decrypted_msg = self.decrypt_msg(msg, private_key_service)?;
 
         if decrypted_msg.is_compressed() {
-            decrypted_msg = decrypted_msg
-                .decompress()
-                .map_err(MinifiError::other)
-                .route_err_to_failure()?
+            decrypted_msg = decrypted_msg.decompress()?
         };
 
-        let _written_bytes =
-            std::io::copy(&mut decrypted_msg.into_inner(), output_stream).route_err_to_failure()?;
+        let _written_bytes = std::io::copy(&mut decrypted_msg.into_inner(), output_stream)?;
 
         Ok(TransformStreamResult::new(&SUCCESS))
     }
@@ -259,7 +253,7 @@ mod tests {
                 assert_eq!(res.write_status(), IoState::Ok);
                 assert_eq!(output, result_bytes);
             }
-            Err(_) => test::assert_routed_to(res, &FAILURE),
+            Err(_) => test::assert_stream_routed_to::<DecryptContentPGP>(res, &FAILURE),
         }
     }
 
@@ -436,7 +430,7 @@ mod tests {
         let mut ciphertext = std::io::Cursor::new(ciphertext);
         let res =
             decrypt_content.transform(&context, &mut ciphertext, &mut output, &MockLogger::new());
-        test::assert_routed_to(res, &FAILURE);
+        test::assert_stream_routed_to::<DecryptContentPGP>(res, &FAILURE);
     }
 
     #[test]
@@ -469,6 +463,6 @@ mod tests {
             &logger,
         );
 
-        test::assert_routed_to(res, &FAILURE);
+        test::assert_stream_routed_to::<DecryptContentPGP>(res, &FAILURE);
     }
 }
