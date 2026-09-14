@@ -21,7 +21,7 @@ use invoke_tract_model_def::*;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, ProcessError, RouteErrorExt, Schedule, TransformedFlowFile,
+    MinifiError, Relationship, Schedule, TransformError, TransformedFlowFile, route_to_err,
 };
 use tract::__ndarray_interop::TensorInterface;
 use tract::Tensor;
@@ -45,6 +45,8 @@ impl Schedule for InvokeTractModel {
 }
 
 impl FlowFileTransform for InvokeTractModel {
+    const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
     fn transform<
         'a,
         Context: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -54,18 +56,15 @@ impl FlowFileTransform for InvokeTractModel {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         _logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
         let controller_service = context.get_controller_service(&TRACT_MODEL_SERVICE)?;
 
-        let input_tensors: Vec<Tensor> =
-            deserialize_tensors(context, input_stream).route_err_to_failure()?;
+        let input_tensors: Vec<Tensor> = deserialize_tensors(context, input_stream)?;
         if input_tensors.len() != 1 {
-            return Err(ProcessError::route_to_failure("Invalid input"));
+            route_to_err!("Invalid input");
         };
 
-        let output_tensors = controller_service
-            .run_inference(input_tensors)
-            .route_err_to_failure()?;
+        let output_tensors = controller_service.run_inference(input_tensors)?;
         let mut output_bytes = Vec::new();
         let mut transformed = TransformedFlowFile::new(&SUCCESS, None)
             .with_attribute("tensors.len", output_tensors.len().to_string());
@@ -73,7 +72,7 @@ impl FlowFileTransform for InvokeTractModel {
         for (i, tensor) in output_tensors.iter().enumerate() {
             let (datum_type, out_shape, raw_tensor_bytes) = tensor
                 .as_bytes()
-                .map_err(|e| MinifiError::custom(format!("Failed to read tensor bytes: {}", e)))?;
+                .map_err(|e| format!("Failed to read tensor bytes: {e}"))?;
 
             output_bytes.extend_from_slice(raw_tensor_bytes);
 

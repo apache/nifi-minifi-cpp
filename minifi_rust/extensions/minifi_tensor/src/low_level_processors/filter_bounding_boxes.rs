@@ -17,6 +17,7 @@
 
 mod filter_bounding_boxes_def;
 
+use crate::low_level_processors::filter_bounding_boxes::filter_bounding_boxes_def::FAILURE;
 use crate::low_level_processors::image_to_tensor::ResizeMode;
 use crate::utils::bounding_box::BoundingBox;
 use crate::utils::dimensions::Dimensions;
@@ -30,7 +31,7 @@ pub(crate) use filter_bounding_boxes_def::{
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     Content, FlowFileTransform, GetAttribute, GetId, GetProperty, InputStream, Logger, MinifiError,
-    ProcessError, RouteErrorExt, Schedule, TransformedFlowFile, debug, trace,
+    Relationship, Schedule, TransformError, TransformedFlowFile, debug, route_to_err, trace,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 use tract::Tensor;
@@ -159,23 +160,18 @@ impl FilterBoundingBoxes {
         &self,
         context: &Context,
         filtered_boxes: Vec<BoundingBox>,
-    ) -> Result<TransformedFlowFile<'a>, MinifiError> {
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
         let output_attr = context.get_property(&OUTPUT_ATTRIBUTE_NAME)?;
         let content = if output_attr.is_some() {
             None
         } else {
-            Some(Content::Buffer(
-                serde_json::to_vec(&filtered_boxes).map_err(MinifiError::other)?,
-            ))
+            Some(Content::Buffer(serde_json::to_vec(&filtered_boxes)?))
         };
 
         let mut transformed = TransformedFlowFile::new(&SUCCESS, content)
             .with_attribute("object.count", filtered_boxes.len().to_string());
         if let Some(attr) = output_attr {
-            transformed = transformed.with_attribute(
-                attr,
-                serde_json::to_string(&filtered_boxes).map_err(MinifiError::other)?,
-            )
+            transformed = transformed.with_attribute(attr, serde_json::to_string(&filtered_boxes)?)
         } else {
             transformed = transformed.with_attribute(MIME_TYPE_ATTR.name, "application/json");
         }
@@ -190,10 +186,9 @@ impl FilterBoundingBoxes {
         orig_dim: Dimensions,
         target_dim: Dimensions,
         resize_mode: ResizeMode,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
-        let score_floats =
-            tensor_as_f32(&tensors, self.score_output_index).route_err_to_failure()?;
-        let box_floats = tensor_as_f32(&tensors, self.box_output_index).route_err_to_failure()?;
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
+        let score_floats = tensor_as_f32(&tensors, self.score_output_index)?;
+        let box_floats = tensor_as_f32(&tensors, self.box_output_index)?;
 
         let (scale_x, scale_y, pad_x, pad_y) = match resize_mode {
             ResizeMode::Letterbox => {
@@ -214,16 +209,12 @@ impl FilterBoundingBoxes {
         };
 
         if !box_floats.len().is_multiple_of(4) {
-            return Err(ProcessError::route_to_failure(
-                "Box tensor byte length is not a multiple of 16 (4 f32 per box)",
-            ));
+            route_to_err!("Box tensor byte length is not a multiple of 16 (4 f32 per box)");
         }
         let num_boxes = box_floats.len() / 4;
         if num_boxes == 0 {
             debug!(logger, "No boxes to filter; emitting empty array");
-            return self
-                .result_via_output_attribute(context, vec![])
-                .route_err_to_failure();
+            return self.result_via_output_attribute(context, vec![]);
         }
 
         let make_box = |i: usize, class_id: usize, confidence: f32| -> BoundingBox {
@@ -252,15 +243,15 @@ impl FilterBoundingBoxes {
         match self.class_output_index {
             // Separate class-id tensor: one score and one class id per box
             Some(class_index) => {
-                let class_floats = tensor_as_f32(&tensors, class_index).route_err_to_failure()?;
+                let class_floats = tensor_as_f32(&tensors, class_index)?;
                 if score_floats.len() != num_boxes || class_floats.len() != num_boxes {
-                    return Err(ProcessError::route_to_failure(format!(
+                    route_to_err!(
                         "'Class output index' mode expects one score and one class id per box \
                          (num_boxes={}, scores={}, classes={})",
                         num_boxes,
                         score_floats.len(),
                         class_floats.len()
-                    )));
+                    );
                 }
                 trace!(
                     logger,
@@ -292,11 +283,11 @@ impl FilterBoundingBoxes {
             // Per-class score matrix: argmax over classes per box.
             None => {
                 if !score_floats.len().is_multiple_of(num_boxes) {
-                    return Err(ProcessError::route_to_failure(format!(
+                    route_to_err!(
                         "Scores length ({}) not divisible by number of boxes ({})",
                         score_floats.len(),
                         num_boxes
-                    )));
+                    );
                 }
                 let num_classes = score_floats.len() / num_boxes;
                 trace!(
@@ -330,7 +321,6 @@ impl FilterBoundingBoxes {
             BoundingBox::apply_non_maximum_suppression(valid_boxes, self.iou_threshold);
 
         self.result_via_output_attribute(context, filtered_boxes)
-            .route_err_to_failure()
     }
 }
 
@@ -344,17 +334,19 @@ fn resize_mode_from_attributes<Context: GetAttribute>(context: &Context) -> Resi
 }
 
 impl FlowFileTransform for FilterBoundingBoxes {
+    const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
     fn transform<'a, Context: GetProperty + GetAttribute + GetId, LoggerImpl: Logger>(
         &self,
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
-        let orig_dim = Dimensions::original_from_attributes(context).route_err_to_failure()?;
-        let target_dim = Dimensions::target_from_attributes(context).route_err_to_failure()?;
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
+        let orig_dim = Dimensions::original_from_attributes(context)?;
+        let target_dim = Dimensions::target_from_attributes(context)?;
         let resize_mode = resize_mode_from_attributes(context);
 
-        let tensors = deserialize_tensors(context, input_stream).route_err_to_failure()?;
+        let tensors = deserialize_tensors(context, input_stream)?;
 
         self.filter(context, logger, tensors, orig_dim, target_dim, resize_mode)
     }
