@@ -745,19 +745,20 @@ RocksDB options can also be overridden for a specific repository using the `nifi
     nifi.provenance.repository.rocksdb.options.use_direct_reads=false
     nifi.state.storage.rocksdb.options.use_direct_io_for_flush_and_compaction=false
 
-### Configuring LMDB content repository
+### Configuring LMDB repositories
 
 Note: LMDB repository is currently experimental
 
-There is an alternative content repository that can be used: the LMDB database. When `LmdbContentRepository` is set, LMDB is used for storing content, which is a memory-mapped, fast (especially for reads), low-footprint, key-value database. It can be a good alternative on memory-limited edge devices, but each use case should be evaluated separately. The caveats of using this database are the following:
+There is an alternative repository that can be used: the LMDB database. When `LmdbContentRepository` is set, LMDB is used for storing content and flowfile data, which is a memory-mapped, fast (especially for reads), low-footprint, key-value database. It can be a good alternative on memory-limited edge devices, but each use case should be evaluated separately. The caveats of using this database are the following:
 
 - Single writer only — concurrent writes are serialized, which can be a bottleneck for write-heavy workloads
 - Database file never shrinks automatically — occasional large flow files could keep the database size permanently high on disk and in the reserved virtual address space
 - No compression - stores everything uncompressed on disk
-- The maximum database size must be set upfront, which is done in the minifi.properties file with the following property, with the current default value set to 10 GB:
+- The maximum database size must be set upfront, which is done in the minifi.properties file with the following property, with the current default value set to 10 GB for content repository and 1 GB for flowfile repository:
 
     # in minifi.properties
     nifi.content.repository.lmdb.max.db.size=10 GB
+    nifi.flowfile.repository.lmdb.max.db.size=1 GB
 
 #### Shared database
 

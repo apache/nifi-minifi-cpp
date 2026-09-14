@@ -44,7 +44,7 @@ constexpr auto FLOWFILE_CHECKPOINT_DIRECTORY = ".\\flowfile_checkpoint";
 constexpr auto FLOWFILE_REPOSITORY_DIRECTORY = "./flowfile_repository";
 constexpr auto FLOWFILE_CHECKPOINT_DIRECTORY = "./flowfile_checkpoint";
 #endif
-constexpr auto MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE = 100_MiB;
+constexpr auto MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE = 1_GiB;
 constexpr auto MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
 constexpr auto FLOWFILE_REPOSITORY_PURGE_PERIOD = std::chrono::seconds(2);
 
