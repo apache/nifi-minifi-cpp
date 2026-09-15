@@ -33,6 +33,8 @@ FOREACH(testfile ${COUCHBASE_TESTS})
     # Demote preprocessor warnings so <ciso646> doesn't break the build
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         target_compile_options(${testfilename} PRIVATE -Wno-error=cpp)
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(${testfilename} PRIVATE -Wno-error=\#warnings)
     endif()
     createTests("${testfilename}")
     target_link_libraries(${testfilename} Catch2WithMain)
