@@ -119,3 +119,17 @@
    fun:*ChannelInit*BuildStackConfig*
    ...
 }
+
+# grpc_core::BasicMemoryQuota::AddNewAllocator populates the process-lifetime
+# default MemoryAllocator singleton when a channel idle-timer fires on a
+# background event-engine thread. The abseil-hash backing array is held via
+# interior pointers and freed by the OS at exit. Timing-dependent, not a leak.
+{
+   possibly_lost_grpc_default_memory_allocator
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:*BasicMemoryQuota*AddNewAllocator*
+   ...
+}
