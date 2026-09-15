@@ -84,4 +84,14 @@ uint64_t MockProcessSession::getFlowFileSize(const api::core::FlowFile& ff) cons
 void MockProcessSession::addInputFlowFile(std::unique_ptr<minifi_flow_file> flow_file) {
   input_flow_files_.push_back(std::move(flow_file));
 }
+
+void MockProcessSession::provenanceSend(api::core::FlowFile& ff, std::string_view transit_uri, std::string_view detail) {
+  provenance_events_.push_back({RecordedProvenanceEvent::Kind::Send, ff->id, std::string{transit_uri}, {}, std::string{detail}});
+}
+
+void MockProcessSession::provenanceReceive(api::core::FlowFile& ff, std::string_view transit_uri,
+    std::string_view source_system_flow_file_identifier, std::string_view detail) {
+  provenance_events_.push_back({RecordedProvenanceEvent::Kind::Receive, ff->id, std::string{transit_uri},
+      std::string{source_system_flow_file_identifier}, std::string{detail}});
+}
 }  // namespace org::apache::nifi::minifi::mock

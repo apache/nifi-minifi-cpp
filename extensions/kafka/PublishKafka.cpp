@@ -54,6 +54,9 @@ struct MessageResult {
 struct FlowFileResult {
   bool flow_file_error = false;
   std::vector<MessageResult> messages;
+  // Transit URI ("kafka://<brokers>/<topic>") captured once the topic is resolved, so the
+  // provenance SEND event can be emitted on the transfer pass after delivery confirmation.
+  std::string transit_uri;
 };
 }  // namespace
 
@@ -76,7 +79,7 @@ class PublishKafka::Messages {
     std::ostringstream oss;
     if (interrupted_) { oss << "interrupted, "; }
     for (size_t ffi = 0; ffi < flow_files_.size(); ++ffi) {
-      const auto& [flow_file_error, messages] = flow_files_[ffi];
+      const auto& [flow_file_error, messages, transit_uri] = flow_files_[ffi];
       if (!flow_file_error && ranges::all_of(messages, messageresult_ok)) {
         continue;  // don't log the happy path to reduce log spam
       }
@@ -654,6 +657,10 @@ minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, ap
     const uint64_t flow_file_size = session.getFlowFileSize(flow_file);
     if (topic) {
       logger_->log_debug("PublishKafka: topic for flow file {} is '{}'", flow_file_id, *topic);
+      const auto& brokers = conn_->getKey()->brokers_;
+      messages->modifyResult(flow_file_index, [&](FlowFileResult& flow_file_result) {
+        flow_file_result.transit_uri = "kafka://" + brokers + "/" + *topic;
+      });
     } else {
       logger_->log_error("Flow file {} does not have a valid Topic", flow_file_id);
       messages->modifyResult(flow_file_index,
@@ -768,6 +775,7 @@ minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, ap
       }
     }
     if (success) {
+      session.provenanceSend(flowFiles[index], flow_file.transit_uri, "Send FlowFile to Kafka");
       session.transfer(std::move(flowFiles[index]), Success);
     } else {
       session.penalize(flowFiles[index]);

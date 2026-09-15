@@ -163,6 +163,24 @@ uint64_t CffiProcessSession::getFlowFileSize(const FlowFile& ff) const {
   return minifi_process_session_get_flow_file_size(impl_, ff.get());
 }
 
+void CffiProcessSession::provenanceSend(FlowFile& ff, std::string_view transit_uri, std::string_view detail) {
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_provenance_send(impl_, ff.get(),
+      utils::minifiStringView(transit_uri),
+      utils::minifiStringView(detail))) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to emit SEND provenance event");
+  }
+}
+
+void CffiProcessSession::provenanceReceive(FlowFile& ff, std::string_view transit_uri,
+    std::string_view source_system_flow_file_identifier, std::string_view detail) {
+  if (MINIFI_STATUS_SUCCESS != minifi_process_session_provenance_receive(impl_, ff.get(),
+      utils::minifiStringView(transit_uri),
+      utils::minifiStringView(source_system_flow_file_identifier),
+      utils::minifiStringView(detail))) {
+    throw minifi::Exception(minifi::FILE_OPERATION_EXCEPTION, "Failed to emit RECEIVE provenance event");
+  }
+}
+
 void ProcessSession::writeBuffer(FlowFile& flow_file, std::span<const char> buffer) {
   writeBuffer(flow_file, as_bytes(buffer));
 }

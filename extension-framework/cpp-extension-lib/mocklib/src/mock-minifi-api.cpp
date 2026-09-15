@@ -123,6 +123,16 @@ minifi_status minifi_process_session_get_flow_file_id(minifi_process_session*, m
   throw std::runtime_error("Not implemented");
 }
 
+minifi_status minifi_process_session_provenance_send(minifi_process_session*, minifi_flow_file*,
+    minifi_string_view, minifi_string_view) {
+  throw std::runtime_error("Not implemented");
+}
+
+minifi_status minifi_process_session_provenance_receive(minifi_process_session*, minifi_flow_file*,
+    minifi_string_view, minifi_string_view, minifi_string_view) {
+  throw std::runtime_error("Not implemented");
+}
+
 enum minifi_status minifi_controller_service_context_get_property(struct minifi_controller_service_context*, minifi_string_view,
     void (*)(void* user_ctx, minifi_string_view property_value), void*) {
   throw std::runtime_error("Not implemented");

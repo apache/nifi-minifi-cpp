@@ -69,7 +69,11 @@ ProcessSessionImpl::ProcessSessionImpl(std::shared_ptr<ProcessContext> processCo
           stateManager_(process_context_->getStateManager()) {
   logger_->log_trace("ProcessSession created for {}", process_context_->getProcessor().getName());
   auto repo = process_context_->getProvenanceRepository();
-  provenance_report_ = std::make_shared<provenance::ProvenanceReporterImpl>(repo, process_context_->getProcessor().getUUID(), process_context_->getProcessor().getName());
+  // Provenance events carry the processor's class name as componentType (matching NiFi's convention);
+  // downstream consumers like ReportLineageToAtlas dispatch extractors on the class name, not the instance
+  // name. Using getName() here previously broke every extractor because the instance name (e.g. "to_nifi")
+  // never matched an extractor's componentType regex (e.g. "^RemoteProcessGroupPort$").
+  provenance_report_ = std::make_shared<provenance::ProvenanceReporterImpl>(repo, process_context_->getProcessor().getUUID(), process_context_->getProcessor().getProcessorType());
   content_session_ = process_context_->getContentRepository()->createSession();
 
   if (stateManager_ && !stateManager_->beginTransaction()) {

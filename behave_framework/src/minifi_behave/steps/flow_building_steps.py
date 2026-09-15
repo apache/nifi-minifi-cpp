@@ -660,3 +660,32 @@ def nifi_receive_from_reporting_task(context: MinifiTestContext, nifi_port_name:
     if not port_id:
         raise ValueError(f"ReportingTask '{reporting_task_name}' has no Port UUID property set.")
     context.containers["nifi"].flow_definition.add_input_port(port_id, nifi_port_name)
+
+
+# --- Generic reporting-task steps -----------------------------------------------------------------
+# These mirror the processor equivalents at lines ~113 (property) and ~214 (scheduling period);
+# they exist so any extension (Atlas, S2S, future reporting tasks) can build up an RT declaratively.
+
+
+@given("a ReportLineageToAtlas reporting task with the name \"{name}\"")
+def add_report_lineage_to_atlas_reporting_task(context: MinifiTestContext, name: str):
+    flow_definition = context.get_or_create_default_minifi_container().flow_definition
+    flow_definition.add_reporting_task(ReportingTask("ReportLineageToAtlas", name))
+
+
+@step('the "{property_name}" property of the "{reporting_task_name}" reporting task is set to "{property_value}"')
+def set_property_of_reporting_task(context: MinifiTestContext, property_name: str, reporting_task_name: str, property_value: str):
+    flow_definition = context.get_or_create_default_minifi_container().flow_definition
+    reporting_task = flow_definition.get_reporting_task(reporting_task_name)
+    if reporting_task is None:
+        raise ValueError(f"ReportingTask '{reporting_task_name}' not found in the MiNiFi flow.")
+    reporting_task.add_property(property_name, property_value)
+
+
+@step('the scheduling period of the "{reporting_task_name}" reporting task is set to "{duration_str}"')
+def set_scheduling_period_of_reporting_task(context: MinifiTestContext, reporting_task_name: str, duration_str: str):
+    flow_definition = context.get_or_create_default_minifi_container().flow_definition
+    reporting_task = flow_definition.get_reporting_task(reporting_task_name)
+    if reporting_task is None:
+        raise ValueError(f"ReportingTask '{reporting_task_name}' not found in the MiNiFi flow.")
+    reporting_task.scheduling_period = duration_str

@@ -122,7 +122,8 @@ void ConsumeKafka::configureNewConnection(api::core::ProcessContext& context) {
   using utils::setKafkaConfigurationField;
   namespace utils = api::utils;
 
-  setKafkaConfigurationField(*conf_, "bootstrap.servers", utils::parseProperty(context, KafkaBrokers));
+  brokers_ = utils::parseProperty(context, KafkaBrokers);
+  setKafkaConfigurationField(*conf_, "bootstrap.servers", brokers_);
   setKafkaConfigurationField(*conf_, "allow.auto.create.topics", "true");
   setKafkaConfigurationField(*conf_,
       "auto.offset.reset",
@@ -346,6 +347,8 @@ minifi_status ConsumeKafka::processMessages(api::core::ProcessSession& session, 
       auto flow_file = session.create();
       session.writeBuffer(flow_file, message_content);
       addAttributesToSingleMessageFlowFile(session, flow_file, *message);
+      const std::string transit_uri = "kafka://" + brokers_ + "/" + rd_kafka_topic_name(message->rkt);
+      session.provenanceReceive(flow_file, transit_uri, "", "Receive FlowFile from Kafka");
       session.transfer(std::move(flow_file), Success);
     }
   }
@@ -362,6 +365,8 @@ minifi_status ConsumeKafka::processMessageBundles(api::core::ProcessSession& ses
     });
     session.writeBuffer(flow_file, merged_message_content);
     addAttributesToMessageBundleFlowFile(session, flow_file, msg_bundle);
+    const std::string transit_uri = "kafka://" + brokers_ + "/" + rd_kafka_topic_name(msg_bundle.getMessages().front()->rkt);
+    session.provenanceReceive(flow_file, transit_uri, "", "Receive FlowFile from Kafka");
     session.transfer(std::move(flow_file), Success);
   }
   return MINIFI_STATUS_SUCCESS;

@@ -20,6 +20,7 @@
 #include <regex>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 
 #include "DatasetExtractor.h"
@@ -41,29 +42,39 @@ class KafkaTopicExtractor : public DatasetExtractor {
     DatasetReferences refs;
     std::string topic;
     std::string host;
+    // Kafka processors set `kafka.topic` on every flow file they produce, so we prefer that
+    // when available. It's authoritative and the transit URI is a derived thing.
     const auto attributes = event.getAttributes();
     if (auto it = attributes.find("kafka.topic"); it != attributes.end()) {
       topic = it->second;
     }
-    if (topic.empty()) {
-      // Parse kafka://host[:port]/topic
-      const auto transit = event.getTransitUri();
+    // The transit URI ("kafka://<broker>/<topic>") is emitted by MiNiFi's Kafka processors on
+    // the SEND/RECEIVE provenance events and is what Atlas expects to persist as kafka_topic.uri.
+    // Even if kafka.topic set the topic, we still want the URI here.
+    const auto transit_uri = event.getTransitUri();
+    if (topic.empty() || host.empty()) {
       constexpr std::string_view scheme = "kafka://";
-      if (transit.starts_with(scheme)) {
-        const auto rest = transit.substr(scheme.size());
+      if (transit_uri.starts_with(scheme)) {
+        const auto rest = transit_uri.substr(scheme.size());
         const auto slash = rest.find('/');
         if (slash != std::string::npos) {
           host = rest.substr(0, slash);
           const auto colon = host.find(':');
           if (colon != std::string::npos) host = host.substr(0, colon);
-          topic = rest.substr(slash + 1);
+          if (topic.empty()) topic = rest.substr(slash + 1);
         }
       }
     }
     if (topic.empty()) {
       return refs;
     }
-    Dataset ds{.system = "kafka", .identifier = topic, .host = host.empty() ? std::nullopt : std::optional{host}, .attributes = {}};
+    // Atlas' kafka_topic type declares `topic` and `uri` as mandatory attributes (plus `name`
+    // via the base Asset trait). Populate all three explicitly - if any is missing Atlas
+    // rejects the whole bulk POST.
+    std::unordered_map<std::string, std::string> ds_attrs{{"topic", topic}, {"name", topic}};
+    if (!transit_uri.empty()) ds_attrs["uri"] = transit_uri;
+    Dataset ds{.system = "kafka", .identifier = topic, .host = host.empty() ? std::nullopt : std::optional{host},
+        .attributes = std::move(ds_attrs)};
     const auto component_type = event.getComponentType();
     if (component_type.starts_with("Consume")) {
       refs.inputs.push_back(std::move(ds));

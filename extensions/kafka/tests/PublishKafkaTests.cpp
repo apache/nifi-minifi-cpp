@@ -53,6 +53,9 @@ TEST_CASE("Trigger without valid broker", "[PublishKafka]") {
   REQUIRE_NOTHROW(publish_kafka.onTriggerImpl(context, session));
 
   CHECK_FALSE(logger->logs_.empty());
+  // No SEND provenance event should fire when delivery fails: emitting one on a Failure route would
+  // mislead lineage consumers (e.g. Atlas) into recording a transfer that never happened.
+  CHECK(session.getProvenanceEvents().empty());
 }
 
 }  // namespace org::apache::nifi::minifi::processors::test

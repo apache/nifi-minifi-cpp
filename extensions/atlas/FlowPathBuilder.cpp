@@ -256,7 +256,8 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   // Emit nifi_flow_path entities, each with a comma-joined display name and any
   // inputs/outputs collected above. The nifiFlow back-reference lets Atlas render
   // path ownership.
-  AtlasEntity::Reference flow_ref{kNifiFlow, qualifiedName(topology.root_group_uuid.to_string().view(), ns)};
+  const auto root_group_uuid_str = std::string{topology.root_group_uuid.to_string().view()};
+  AtlasEntity::Reference flow_ref{kNifiFlow, qualifiedName(root_group_uuid_str, ns)};
   for (auto& bp : paths) {
     AtlasEntity path_entity;
     path_entity.type_name = kNifiFlowPath;
@@ -269,6 +270,16 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     }
     path_entity.string_attributes["name"] = std::move(name);
     path_entity.ref_attributes.emplace("nifiFlow", flow_ref);
+    // Atlas rejects the bulk POST with a 404 if nifi_flow_path.url is missing (the type
+    // declares it mandatory). NiFi's shape is `<flow_url>?processGroupId=<root>&componentIds=<head>`;
+    // we mirror that. flow_url is passed in unconditionally by ReportLineageToAtlas, so we don't
+    // guard on emptiness here - a blank URL still satisfies Atlas' mandatory-attribute check.
+    if (!bp.processor_uuids.empty()) {
+      path_entity.string_attributes["url"] = std::string{flow_url} + "?processGroupId=" +
+          root_group_uuid_str + "&componentIds=" + bp.processor_uuids.front();
+    } else {
+      path_entity.string_attributes["url"] = std::string{flow_url};
+    }
     if (auto it = path_inputs.find(bp.qualified_name); it != path_inputs.end()) {
       path_entity.ref_list_attributes.emplace("inputs", std::move(it->second));
     }

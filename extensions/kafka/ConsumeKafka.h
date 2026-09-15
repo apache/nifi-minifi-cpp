@@ -346,6 +346,10 @@ class ConsumeKafka final : public KafkaProcessorBase {
   std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;
   std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;
   std::unique_ptr<rd_kafka_topic_partition_list_t, utils::rd_kafka_topic_partition_list_deleter> kf_topic_partition_list_;
+
+  // Comma-separated broker list captured from the Kafka Brokers property; used to build the
+  // "kafka://<brokers>/<topic>" transit URI on RECEIVE provenance events.
+  std::string brokers_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -43,7 +43,7 @@ extern "C" {
 #define MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
 
 enum : uint32_t {
-  MINIFI_API_VERSION = 2
+  MINIFI_API_VERSION = 3
 };
 
 enum minifi_io_status : int64_t {
@@ -295,6 +295,17 @@ void minifi_process_session_get_flow_file_attributes(struct minifi_process_sessi
 uint64_t minifi_process_session_get_flow_file_size(struct minifi_process_session* session, struct minifi_flow_file* flowfile);
 enum minifi_status minifi_process_session_get_flow_file_id(struct minifi_process_session* session, struct minifi_flow_file* flowfile,
     void (*cb)(void* user_ctx, struct minifi_string_view flow_file_id), void* user_ctx);
+
+/// Emit a SEND provenance event for the given flow file. transit_uri identifies where the payload was sent
+/// (e.g. "kafka://broker:9092/topic"); detail is a free-form human-readable description.
+enum minifi_status minifi_process_session_provenance_send(struct minifi_process_session* session, struct minifi_flow_file* flowfile,
+    struct minifi_string_view transit_uri, struct minifi_string_view detail);
+
+/// Emit a RECEIVE provenance event for the given flow file. transit_uri identifies where the payload came from;
+/// source_system_flow_file_identifier is the upstream system's identifier for the message (may be empty);
+/// detail is a free-form human-readable description.
+enum minifi_status minifi_process_session_provenance_receive(struct minifi_process_session* session, struct minifi_flow_file* flowfile,
+    struct minifi_string_view transit_uri, struct minifi_string_view source_system_flow_file_identifier, struct minifi_string_view detail);
 
 enum minifi_status minifi_controller_service_context_get_property(struct minifi_controller_service_context* context,
     struct minifi_string_view property_name, void (*cb)(void* user_ctx, struct minifi_string_view property_value), void* user_ctx);

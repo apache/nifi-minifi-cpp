@@ -71,7 +71,7 @@ TEST_CASE("FlowPathBuilder: linear flow becomes one flow_path", "[atlas][paths]"
   const auto* path = findEntity(result.entities, "11111111-1111-1111-1111-111111111111@my-cluster");
   REQUIRE(path != nullptr);
   REQUIRE(path->type_name == "nifi_flow_path");
-  REQUIRE(path->display_name == "ConsumeKafka, UpdateAttribute, PutS3Object");
+  REQUIRE(path->string_attributes.at("name") == "ConsumeKafka, UpdateAttribute, PutS3Object");
 
   // All three processors are assigned to the same path.
   REQUIRE(result.processor_to_path.size() == 3);
@@ -110,14 +110,14 @@ TEST_CASE("FlowPathBuilder: fork produces 3 paths joined by a queue", "[atlas][p
   // it in the same path. The walk terminates at RouteOnAttribute because its
   // outgoing degree is 2 (fan-out). The two downstream sinks (PutS3Object, PutFile)
   // each start a separate path.
-  REQUIRE(upstream_path->display_name == "ConsumeKafka, RouteOnAttribute");
+  REQUIRE(upstream_path->string_attributes.at("name") == "ConsumeKafka, RouteOnAttribute");
 
   const auto* s3_path = findEntity(result.entities, "33333333-3333-3333-3333-333333333333@my-cluster");
   REQUIRE(s3_path != nullptr);
-  REQUIRE(s3_path->display_name == "PutS3Object");
+  REQUIRE(s3_path->string_attributes.at("name") == "PutS3Object");
   const auto* file_path = findEntity(result.entities, "44444444-4444-4444-4444-444444444444@my-cluster");
   REQUIRE(file_path != nullptr);
-  REQUIRE(file_path->display_name == "PutFile");
+  REQUIRE(file_path->string_attributes.at("name") == "PutFile");
 
   // Upstream path outputs contain queues to both downstream sinks.
   size_t queue_outputs = 0;

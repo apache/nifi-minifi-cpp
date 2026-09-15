@@ -571,6 +571,37 @@ minifi_status minifi_process_session_get_flow_file_id(minifi_process_session* se
   return MINIFI_STATUS_SUCCESS;
 }
 
+minifi_status minifi_process_session_provenance_send(minifi_process_session* session, minifi_flow_file* flowfile,
+    minifi_string_view transit_uri, minifi_string_view detail) {
+  gsl_Assert(session);
+  gsl_Assert(flowfile);
+  try {
+    toCpp(session)->getProvenanceReporter()->send(*toRawFlowFile(flowfile),
+        std::string{toStringView(transit_uri)},
+        std::string{toStringView(detail)},
+        std::chrono::milliseconds{0});
+    return MINIFI_STATUS_SUCCESS;
+  } catch (...) {
+    return MINIFI_STATUS_UNKNOWN_ERROR;
+  }
+}
+
+minifi_status minifi_process_session_provenance_receive(minifi_process_session* session, minifi_flow_file* flowfile,
+    minifi_string_view transit_uri, minifi_string_view source_system_flow_file_identifier, minifi_string_view detail) {
+  gsl_Assert(session);
+  gsl_Assert(flowfile);
+  try {
+    toCpp(session)->getProvenanceReporter()->receive(*toRawFlowFile(flowfile),
+        std::string{toStringView(transit_uri)},
+        std::string{toStringView(source_system_flow_file_identifier)},
+        std::string{toStringView(detail)},
+        std::chrono::milliseconds{0});
+    return MINIFI_STATUS_SUCCESS;
+  } catch (...) {
+    return MINIFI_STATUS_UNKNOWN_ERROR;
+  }
+}
+
 minifi_status minifi_controller_service_context_get_property(minifi_controller_service_context* context, minifi_string_view property_name,
     void (*result_cb)(void* user_ctx, minifi_string_view result), void* user_ctx) {
   gsl_Assert(context);

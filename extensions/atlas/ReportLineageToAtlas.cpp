@@ -237,6 +237,14 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
       entry.type_name = type;
       entry.qualified_name = identifier + "@" + ns;
       entry.string_attributes = ds.attributes;
+      // Atlas' base "Asset" trait declares `name` as mandatory. Every dataset type we emit
+      // (fs_path, kafka_topic, nifi_output_port, nifi_input_port, aws_s3_v2_*, hive_table)
+      // inherits from Asset, so a missing name gets the whole bulk POST rejected with
+      // "mandatory attribute value missing in type Asset". Use the identifier as a
+      // sensible default when the extractor didn't already supply a `name`.
+      if (!entry.string_attributes.contains("name")) {
+        entry.string_attributes["name"] = identifier;
+      }
       external_entities[entry.qualified_name] = entry;
       return AtlasEntity::Reference{entry.type_name, entry.qualified_name};
     };
