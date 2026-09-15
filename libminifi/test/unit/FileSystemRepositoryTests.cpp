@@ -20,6 +20,14 @@
 // as we measure the absolute memory usage that would fail this test
 #define EXTENSION_LIST ""  // NOLINT(cppcoreguidelines-macro-usage)
 
+#if defined(__SANITIZE_ADDRESS__)  // GCC
+#  define MINIFI_ASAN_ENABLED 1
+#elif defined(__has_feature)
+#  if __has_feature(address_sanitizer)  // Clang
+#    define MINIFI_ASAN_ENABLED 1
+#  endif
+#endif
+
 #include <list>
 
 #include "minifi-cpp/utils/gsl.h"
@@ -45,6 +53,9 @@ class TestFileSystemRepository : public minifi::core::repository::FileSystemRepo
 };
 
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
+#ifdef MINIFI_ASAN_ENABLED
+  SKIP("Under AddressSanitizer builds, memory isn't released, so this test fails.");
+#endif
   TestController controller;
   auto dir = controller.createTempDirectory();
   auto fs_repo = std::make_shared<minifi::core::repository::FileSystemRepository>();
