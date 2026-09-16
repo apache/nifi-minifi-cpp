@@ -44,8 +44,7 @@ class ProcessGroupTestHarness : public IntegrationBase {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
-        "key:test_attribute value:success"));
+    REQUIRE(verifyLogLinePresenceInPollTime(wait_time_, "key:test_attribute value:success"));
   }
 };
 

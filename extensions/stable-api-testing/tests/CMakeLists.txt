@@ -32,5 +32,5 @@ FOREACH (testfile ${SOURCES})
 
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME ${testfilename} COMMAND ${testfilename} WORKING_DIRECTORY ${TEST_DIR})
-    set_tests_properties("${testfilename}" PROPERTIES LABELS "memchecked")
+    set_tests_properties("${testfilename}" PROPERTIES LABELS "stable-api-testing")
 ENDFOREACH ()

@@ -89,17 +89,6 @@ Controller Services:
           - value: flowcontrollertests_state.txt
 )";
 
-template<typename Fn>
-bool verifyWithBusyWait(std::chrono::milliseconds timeout, const Fn& fn) {
-  auto start = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() - start < timeout) {
-    if (fn()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
   TestControllerWithFlow testController(yamlConfig);
   auto controller = testController.controller_;
@@ -156,7 +145,7 @@ TEST_CASE("Flow shutdown waits for a while", "[TestFlow2]") {
 
   // wait for the source processor to enqueue its flowFiles
   auto flowFilesEnqueued = [&] { return root->getTotalFlowFileCount() >= 3; };
-  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{500}, flowFilesEnqueued));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(500ms, flowFilesEnqueued));
 
   REQUIRE(sourceProc.get().trigger_count.load() >= 1);
 
@@ -193,7 +182,7 @@ TEST_CASE("Flow stopped after grace period", "[TestFlow3]") {
 
   // wait for the source processor to enqueue its flowFiles
   auto flowFilesEnqueued = [&] { return root->getTotalFlowFileCount() >= 3; };
-  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{500}, flowFilesEnqueued));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(500ms, flowFilesEnqueued));
 
   REQUIRE(sourceProc.get().trigger_count.load() >= 1);
 
@@ -232,7 +221,7 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
 
   // wait for the source processor to enqueue its flowFiles
   auto flowFilesEnqueued = [&] { return root->getTotalFlowFileCount() >= 3; };
-  REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{500}, flowFilesEnqueued));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(500ms, flowFilesEnqueued));
 
   REQUIRE(sourceProc.get().trigger_count.load() >= 1);
 

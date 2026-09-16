@@ -363,6 +363,11 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     explicit TestFlowFileRepository(const std::string& name)
       : FlowFileRepository(name, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
                            10min, core::repository::MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 50ms) {}
+    TestFlowFileRepository(const TestFlowFileRepository&) = delete;
+    TestFlowFileRepository(TestFlowFileRepository&&) = delete;
+    TestFlowFileRepository& operator=(const TestFlowFileRepository&) = delete;
+    TestFlowFileRepository& operator=(TestFlowFileRepository&&) = delete;
+    ~TestFlowFileRepository() override { stop(); }
 
     void flush() override {
       FlowFileRepository::flush();

@@ -29,6 +29,7 @@
 #include "utils/net/AsioCoro.h"
 #include "utils/expected.h"
 #include "unit/TestUtils.h"
+#include "fmt/chrono.h"
 
 using namespace std::literals::chrono_literals;
 using org::apache::nifi::minifi::test::utils::verifyLogLineVariantPresenceInPollTime;
@@ -105,7 +106,7 @@ class PutTCPTestFixture {
     LogTestController::getInstance().setInfo<core::ProcessSession>();
     LogTestController::getInstance().setTrace<utils::net::Server>();
     REQUIRE(put_tcp_->setProperty(PutTCP::Hostname.name, "${literal('localhost')}"));
-    REQUIRE(put_tcp_->setProperty(PutTCP::Timeout.name, "200 ms"));
+    REQUIRE(put_tcp_->setProperty(PutTCP::Timeout.name, fmt::format("{}", minifi::test::utils::timeout(200ms))));
     REQUIRE(put_tcp_->setProperty(PutTCP::OutgoingMessageDelimiter.name, "\n"));
   }
 
@@ -143,7 +144,7 @@ class PutTCPTestFixture {
         cancellable_tcp_server->cancelEverything();
       }
     }
-    std::this_thread::sleep_for(200ms);
+    std::this_thread::sleep_for(minifi::test::utils::timeout(200ms));
   }
 
   auto trigger(std::string_view message, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
@@ -155,7 +156,7 @@ class PutTCPTestFixture {
   }
 
   std::optional<utils::net::Message> tryDequeueReceivedMessage(std::optional<uint16_t> port = std::nullopt) {
-    auto timeout = 200ms;
+    auto timeout = minifi::test::utils::timeout(200ms);
     auto interval = 10ms;
 
     auto start_time = std::chrono::system_clock::now();

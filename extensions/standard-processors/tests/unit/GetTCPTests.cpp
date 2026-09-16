@@ -25,6 +25,7 @@
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "minifi-cpp/utils/gsl.h"
+#include "fmt/chrono.h"
 
 using GetTCP = org::apache::nifi::minifi::processors::GetTCP;
 
@@ -155,8 +156,8 @@ TEST_CASE("GetTCP test with delimiter", "[GetTCP]") {
   SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
+  REQUIRE(get_tcp->setProperty(GetTCP::Timeout.name, fmt::format("{}", minifi::test::utils::timeout(1s))));
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
-
 
   TcpTestServer tcp_test_server;
 
@@ -186,6 +187,7 @@ TEST_CASE("GetTCP test with too large message", "[GetTCP]") {
   SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
+  REQUIRE(get_tcp->setProperty(GetTCP::Timeout.name, fmt::format("{}", minifi::test::utils::timeout(1s))));
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
   REQUIRE(get_tcp->setProperty(GetTCP::MaxMessageSize.name, "10"));
   REQUIRE(get_tcp->setProperty(GetTCP::MessageDelimiter.name, "\r"));
@@ -227,6 +229,7 @@ TEST_CASE("GetTCP test multiple endpoints", "[GetTCP]") {
   SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
+  REQUIRE(get_tcp->setProperty(GetTCP::Timeout.name, fmt::format("{}", minifi::test::utils::timeout(1s))));
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "2"));
 
   TcpTestServer server_1;
@@ -271,6 +274,7 @@ TEST_CASE("GetTCP max queue and max batch size test", "[GetTCP]") {
   SingleProcessorTestController controller{minifi::test::utils::make_processor<GetTCP>("GetTCP")};
   const auto get_tcp = controller.getProcessor();
   LogTestController::getInstance().setTrace<GetTCP>();
+  REQUIRE(get_tcp->setProperty(GetTCP::Timeout.name, fmt::format("{}", minifi::test::utils::timeout(1s))));
   REQUIRE(get_tcp->setProperty(GetTCP::MaxBatchSize.name, "10"));
   REQUIRE(get_tcp->setProperty(GetTCP::MaxQueueSize.name, "50"));
 

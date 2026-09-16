@@ -158,6 +158,7 @@ void IntegrationBase::run() {
     flowController_->stop();
   }
 
+  flowController_.reset();  // stop the C2Agent before cleanup() resets the logger
   cleanup();
 }
 
