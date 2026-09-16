@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod controller_service_definition;
-use controller_service_definition::*;
+mod private_key_service_def;
+use private_key_service_def::*;
 
 #[cfg(test)]
 use crate::controller_services::key_lookup::key_matches;

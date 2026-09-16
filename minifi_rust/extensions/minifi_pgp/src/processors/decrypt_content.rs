@@ -15,9 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod processor_definition;
+mod decrypt_content_def;
 
-use processor_definition::*;
+use decrypt_content_def::*;
 
 use crate::controller_services::private_key_service::PGPPrivateKeyService;
 

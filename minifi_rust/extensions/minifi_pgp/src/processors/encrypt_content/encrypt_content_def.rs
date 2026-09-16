@@ -26,7 +26,7 @@ use minifi_native::{
 pub(crate) const FILE_ENCODING: Property<FileEncoding> =
     Property::new("File Encoding", "File Encoding for encryption")
         .with_default(FileEncoding::Binary.into_str());
-pub(crate) const PASSWORD: Property<Option<utils::Password>> = Property::new(
+pub(crate) const SYMMETRIC_PASSWORD: Property<Option<utils::Password>> = Property::new(
     "Symmetric Password",
     "Password used for encrypting data with Password-Based Encryption",
 )
@@ -68,7 +68,7 @@ impl ProcessorDefinition for EncryptContentPGP {
 
     const PROPERTIES: &[PropertyDefinition] = property_definitions![
         FILE_ENCODING,
-        PASSWORD,
+        SYMMETRIC_PASSWORD,
         PUBLIC_KEY_SEARCH,
         PUBLIC_KEY_SERVICE,
     ];
