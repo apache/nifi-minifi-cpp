@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <span>
 #include <vector>
 
 #include <asio/read.hpp>
@@ -66,7 +67,7 @@ class ConnectionHandler final : public ConnectionHandlerBase {
   [[nodiscard]] asio::awaitable<std::error_code> setupUsableSocket(asio::io_context& io_context) override;
   [[nodiscard]] bool hasUsableSocket() const { return socket_ && socket_->lowest_layer().is_open(); }
 
-  asio::awaitable<std::error_code> establishNewConnection(const std::vector<asio::ip::tcp::endpoint>& endpoints, asio::io_context& io_context_);
+  asio::awaitable<std::error_code> establishNewConnection(std::span<asio::ip::tcp::endpoint> endpoints, asio::io_context& io_context_);
   [[nodiscard]] asio::awaitable<std::tuple<std::error_code, size_t>> write(const asio::const_buffer& buffer) override;
   [[nodiscard]] asio::awaitable<std::tuple<std::error_code, size_t>> read(asio::mutable_buffer& buffer) override;
 
@@ -118,7 +119,7 @@ inline void ConnectionHandler<SslSocket>::shutdownSocket() {
 }
 
 template<class SocketType>
-asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConnection(const std::vector<asio::ip::tcp::endpoint>& endpoints, asio::io_context& io_context) {
+asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConnection(std::span<asio::ip::tcp::endpoint> endpoints, asio::io_context& io_context) {
   auto socket = createNewSocket(io_context);
   std::error_code last_error;
   for (const auto& endpoint : endpoints) {
