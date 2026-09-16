@@ -23,9 +23,7 @@ use minifi_native::{
 use pgp::composed::{ArmorOptions, MessageBuilder, SignedPublicKey};
 use pgp::types::{Password, StringToKey};
 
-mod encrypt_content_def;
-
-use encrypt_content_def::*;
+use proc_def::*;
 
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
@@ -169,6 +167,67 @@ impl FlowFileStreamTransform for EncryptContentPGP {
     }
 }
 
+mod proc_def {
+    use super::*;
+    use crate::controller_services::public_key_service::PGPPublicKeyService;
+    use crate::utils;
+    use minifi_native::{
+        OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property,
+        PropertyDefinition, Relationship, property_definitions,
+    };
+
+    pub(crate) const FILE_ENCODING: Property<FileEncoding> =
+        Property::new("File Encoding", "File Encoding for encryption")
+            .with_default(FileEncoding::Binary.into_str());
+    pub(crate) const SYMMETRIC_PASSWORD: Property<Option<utils::Password>> = Property::new(
+        "Symmetric Password",
+        "Password used for encrypting data with Password-Based Encryption",
+    )
+    .sensitive();
+
+    pub(crate) const PUBLIC_KEY_SEARCH: Property<Option<String>> = Property::new(
+        "Public Key Search",
+        "PGP Public Key Search will be used to match against the User ID or Key ID when formatted as uppercase hexadecimal string of 16 characters",
+    ).supports_expression_language();
+
+    pub(crate) const PUBLIC_KEY_SERVICE: Property<Option<PGPPublicKeyService>> = Property::new(
+        "Public Key Service",
+        "PGP Public Key Service for encrypting data with Public Key Encryption",
+    );
+
+    pub(super) const FILE_ENCODING_ATTR: OutputAttribute = OutputAttribute {
+        name: "pgp.file.encoding",
+        relationships: &["success"],
+        description: "File Encoding",
+    };
+
+    pub(super) const SUCCESS: Relationship = Relationship {
+        name: "success",
+        description: "Encryption Succeeded",
+    };
+
+    pub(super) const FAILURE: Relationship = Relationship {
+        name: "failure",
+        description: "Encryption Failed",
+    };
+
+    impl ProcessorDefinition for EncryptContentPGP {
+        const DESCRIPTION: &'static str = "Encrypt contents using OpenPGP.";
+        const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
+        const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
+        const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
+        const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[FILE_ENCODING_ATTR];
+        const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
+
+        const PROPERTIES: &[PropertyDefinition] = property_definitions![
+            FILE_ENCODING,
+            SYMMETRIC_PASSWORD,
+            PUBLIC_KEY_SEARCH,
+            PUBLIC_KEY_SERVICE,
+        ];
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -207,7 +266,9 @@ mod tests {
     #[test]
     fn encrypts_via_passphrase() {
         let mut context = MockProcessContext::new();
-        context.properties.insert(SYMMETRIC_PASSWORD.name(), "password");
+        context
+            .properties
+            .insert(SYMMETRIC_PASSWORD.name(), "password");
 
         let mut result: Vec<u8> = Vec::new();
         let mut input_stream = std::io::Cursor::new("foo".as_bytes());

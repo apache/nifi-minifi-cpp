@@ -15,14 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod public_key_service_def;
-use public_key_service_def::*;
-
 use crate::controller_services::key_lookup::key_matches;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError};
 use pgp::composed::SignedPublicKey;
 use pgp::types::KeyDetails;
+use service_def::*;
 
 #[derive(Debug, ComponentIdentifier, PartialEq)]
 pub(crate) struct PGPPublicKeyService {
@@ -53,6 +51,36 @@ impl PGPPublicKeyService {
                 target_id,
             )
         })
+    }
+}
+
+mod service_def {
+    use crate::controller_services::key_file_property::PublicKeyFile;
+    use crate::controller_services::key_property::PublicKey;
+    use crate::controller_services::public_key_service::PGPPublicKeyService;
+    use minifi_native::{
+        ControllerServiceDefinition, Property, PropertyDefinition, ProvidedInterface,
+        property_definitions,
+    };
+
+    pub(crate) const KEYRING_FILE: Property<Option<PublicKeyFile>> = Property::new(
+        "Keyring File",
+        "File path to PGP Keyring or Public Key encoded in binary or ASCII Armor",
+    )
+    .supports_expression_language();
+
+    pub(crate) const KEYRING: Property<Option<PublicKey>> = Property::new(
+        "Keyring",
+        "PGP Keyring or Public Key encoded in ASCII Armor",
+    )
+    .sensitive();
+
+    impl ControllerServiceDefinition for PGPPublicKeyService {
+        const DESCRIPTION: &'static str =
+            "PGP Public Key Service providing Public Keys loaded from files";
+        const PROPERTIES: &'static [PropertyDefinition] =
+            property_definitions![KEYRING_FILE, KEYRING];
+        const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
     }
 }
 
