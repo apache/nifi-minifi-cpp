@@ -23,9 +23,9 @@ use minifi_native::{
 use pgp::composed::{ArmorOptions, MessageBuilder, SignedPublicKey};
 use pgp::types::{Password, StringToKey};
 
-mod processor_definition;
+mod encrypt_content_def;
 
-use processor_definition::*;
+use encrypt_content_def::*;
 
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
@@ -106,7 +106,7 @@ impl Schedule for EncryptContentPGP {
         Self: Sized,
     {
         let file_encoding = context.get_property(&FILE_ENCODING)?;
-        let symmetric_password = context.get_property(&PASSWORD)?;
+        let symmetric_password = context.get_property(&SYMMETRIC_PASSWORD)?;
 
         let public_key_service = context.get_controller_service(&PUBLIC_KEY_SERVICE)?;
         let public_key_search = context.get_raw_property(&PUBLIC_KEY_SEARCH)?;
@@ -207,7 +207,7 @@ mod tests {
     #[test]
     fn encrypts_via_passphrase() {
         let mut context = MockProcessContext::new();
-        context.properties.insert(PASSWORD.name(), "password");
+        context.properties.insert(SYMMETRIC_PASSWORD.name(), "password");
 
         let mut result: Vec<u8> = Vec::new();
         let mut input_stream = std::io::Cursor::new("foo".as_bytes());
