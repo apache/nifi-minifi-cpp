@@ -39,6 +39,10 @@ if (NOT ENABLE_TEST_PROCESSORS)
     set_target_properties(cargo-build_minifi_rs_playground PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
+if (NOT MINIFI_EXTENSION_PGP)
+    set_target_properties(cargo-build_minifi_pgp PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
+
 include(CTest)
 
 add_test(
