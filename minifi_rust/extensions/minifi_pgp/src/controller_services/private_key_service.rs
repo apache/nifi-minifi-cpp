@@ -15,9 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod private_key_service_def;
-use private_key_service_def::*;
-
 #[cfg(test)]
 use crate::controller_services::key_lookup::key_matches;
 use minifi_native::macros::ComponentIdentifier;
@@ -25,6 +22,7 @@ use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError};
 use pgp::composed::{SignedSecretKey, TheRing};
 #[cfg(test)]
 use pgp::types::KeyDetails;
+use service_def::*;
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct PGPPrivateKeyService {
@@ -72,6 +70,40 @@ impl PGPPrivateKeyService {
                 target_id,
             )
         })
+    }
+}
+
+mod service_def {
+    use crate::controller_services::key_file_property::SecretKeyFile;
+    use crate::controller_services::key_property::SecretKey;
+    use crate::controller_services::private_key_service::PGPPrivateKeyService;
+    use crate::utils;
+    use minifi_native::{
+        ControllerServiceDefinition, Property, PropertyDefinition, ProvidedInterface,
+        property_definitions,
+    };
+
+    pub(super) const KEY_FILE: Property<Option<SecretKeyFile>> = Property::new(
+        "Key File",
+        "File path to PGP Secret Key encoded in binary or ASCII Armor",
+    )
+    .supports_expression_language();
+
+    pub(super) const KEY: Property<Option<SecretKey>> =
+        Property::new("Key", "Secret Key encoded in ASCII Armor").sensitive();
+
+    pub(super) const KEY_PASSPHRASE: Property<Option<utils::Password>> = Property::new(
+        "Key Passphrase",
+        "Passphrase used for decrypting Private Keys",
+    )
+    .sensitive();
+
+    impl ControllerServiceDefinition for PGPPrivateKeyService {
+        const DESCRIPTION: &'static str =
+            "PGP Private Key Service provides Private Keys loaded from files or properties";
+        const PROPERTIES: &'static [PropertyDefinition] =
+            property_definitions![KEY_FILE, KEY, KEY_PASSPHRASE];
+        const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
     }
 }
 
