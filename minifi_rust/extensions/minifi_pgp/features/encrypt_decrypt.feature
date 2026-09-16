@@ -16,8 +16,6 @@
 @SUPPORTS_WINDOWS
 Feature: Test PGP extension's encryption and decryption capabilities
 
-  Background: The pgp library is successfully built on linux
-
   Scenario: The pgp library is loaded into minifi
     Given log property "logger.org::apache::nifi::minifi::core::extension::ExtensionManager" is set to "TRACE,stderr"
     And log property "logger.org::apache::nifi::minifi::core::ClassLoader" is set to "TRACE,stderr"

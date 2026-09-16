@@ -16,6 +16,7 @@
 # under the License.
 
 import os
+from pathlib import Path
 
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.hooks import common_after_scenario, common_before_scenario, get_minifi_container_image
@@ -71,6 +72,7 @@ def before_all(context):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     build_path = os.path.normpath(os.path.join(dir_path, "../../../target/release/"))
     add_extension_to_minifi_container("minifi_pgp", [build_path], context)
+    context.resource_dir = Path(f"{dir_path}/../..")
 
 
 def before_scenario(context, scenario):
