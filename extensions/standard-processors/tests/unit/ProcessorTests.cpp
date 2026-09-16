@@ -134,15 +134,15 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
     records = reporter->getEvents();
 
     for (const auto& provEventRecord : records) {
-      REQUIRE(provEventRecord->getComponentType() == processor->getName());
+      REQUIRE(provEventRecord->getComponentType() == processor->getProcessorType());
     }
     session->commit();
     std::shared_ptr<core::FlowFile> ffr = session->get();
     REQUIRE(ffr);  // GetFile successfully read the contents and created a flowFile
 
-    // one CREATE, one MODIFY, and one FF contents, as we use the same
+    // one CREATE, one MODIFY, one RECEIVE, and one FF contents, as we use the same
     // underlying repo for both provenance and flowFileRepo
-    REQUIRE(repo->getRepoMap().size() == gsl::narrow<size_t>(3 * i));
+    REQUIRE(repo->getRepoMap().size() == gsl::narrow<size_t>(4 * i));
   }
 }
 
@@ -436,13 +436,14 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
   for (const auto& provEventRecord : records) {
-    REQUIRE(provEventRecord->getComponentType() == processor->getName());
+    REQUIRE(provEventRecord->getComponentType() == processor->getProcessorType());
   }
   std::shared_ptr<core::FlowFile> ffr = plan->getCurrentFlowFile();
   REQUIRE(ffr != nullptr);
   ffr->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
   auto repo = std::dynamic_pointer_cast<TestRepository>(plan->getProvenanceRepo());
-  REQUIRE(2 == repo->getRepoMap().size());
+  // CREATE, MODIFY_CONTENT, RECEIVE
+  REQUIRE(3 == repo->getRepoMap().size());
 
   for (auto entry : repo->getRepoMap()) {
     auto newRecord = minifi::provenance::ProvenanceEventRecordImpl::create();
@@ -476,7 +477,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
         auto json_str = taskReport->getJsonReport(recordsReport.value());
         REQUIRE(recordsReport->size() == 1);
         REQUIRE(processorReport->getName() == "reporter");
-        REQUIRE(json_str.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
+        REQUIRE(json_str.find("\"componentType\": \"GetFile\"") != std::string::npos);
         REQUIRE(recordsReport->at(0)->getEventOrdinal() == 1);
         REQUIRE(json_str.find("\"eventOrdinal\": 1") != std::string::npos);
       };

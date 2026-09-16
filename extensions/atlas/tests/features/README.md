@@ -76,16 +76,3 @@ Individual features can be driven directly with `behave` -- run from
 Cold-start is dominated by NiFi (for `site_to_site_extractor.feature`) and
 Atlas' Kafka-hook consumption cadence (30-60 s per push). Plan
 `--behave-timeout` accordingly if you're wrapping this in CI.
-
-## Deferred extractors
-
-The remaining extractors in the C++ port are out of scope for this test cut:
-
-- `AwsS3Extractor` -- MiNiFi's `PutS3Object` doesn't emit `send()` provenance
-  events today (and NiFi's `PutS3Object` emits an `http://...` transit URI its
-  own analyzer misses, so there's no baseline to conform to anyway).
-- `InvokeHttpExtractor` and `JdbcExtractor` -- C++ only; no NiFi analog under
-  the same shape, so we can't conform to a baseline.
-
-When those get end-to-end coverage, they'll follow the same pattern as these
-three feature files.

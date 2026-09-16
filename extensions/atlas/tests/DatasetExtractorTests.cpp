@@ -77,25 +77,6 @@ TEST_CASE("Kafka extractor: kafka.topic attribute takes precedence over transit 
   REQUIRE(refs.inputs[0].identifier == "orders");
 }
 
-TEST_CASE("S3 extractor: PutS3Object SEND → aws_s3 output at prefix", "[atlas][extractor][s3]") {
-  ExtractorDispatcher dispatcher;
-  auto event = make(provenance::ProvenanceEventRecord::SEND, "PutS3Object", "s3://mybucket/data/2024/03/abc123.parquet");
-
-  const auto refs = dispatcher.dispatch(*event);
-  REQUIRE(refs.outputs.size() == 1);
-  REQUIRE(refs.outputs[0].system == "s3");
-  REQUIRE(refs.outputs[0].identifier == "s3://mybucket/data/2024/03/");  // key stripped to prefix
-  REQUIRE(refs.outputs[0].host == "mybucket");
-}
-
-TEST_CASE("S3 extractor: also matches s3a:// and s3n:// schemes", "[atlas][extractor][s3]") {
-  ExtractorDispatcher dispatcher;
-  auto e1 = make(provenance::ProvenanceEventRecord::FETCH, "FetchS3Object", "s3a://bkt/prefix/file.txt");
-  const auto refs = dispatcher.dispatch(*e1);
-  REQUIRE(refs.inputs.size() == 1);
-  REQUIRE(refs.inputs[0].identifier == "s3://bkt/prefix/");
-}
-
 TEST_CASE("FilePath extractor: file:///path → fs_path", "[atlas][extractor][file]") {
   ExtractorDispatcher dispatcher;
   auto event = make(provenance::ProvenanceEventRecord::FETCH, "FetchFile", "file:///data/input/foo.csv");
@@ -116,37 +97,6 @@ TEST_CASE("FilePath extractor: PutFile SEND → output", "[atlas][extractor][fil
   REQUIRE(refs.outputs[0].identifier == "/data/output/result.parquet");
 }
 
-TEST_CASE("InvokeHttp extractor: emits method+url with host for namespace resolution", "[atlas][extractor][http]") {
-  ExtractorDispatcher dispatcher;
-  TestProvenanceEvent event{provenance::ProvenanceEventRecord::SEND, "InvokeHTTP"};
-  event.setTransitUri("https://api.example.com:443/v1/orders");
-  event.addAttribute("invokehttp.request.method", "POST");
-
-  const auto refs = dispatcher.dispatch(event);
-  REQUIRE(refs.outputs.size() == 1);
-  REQUIRE(refs.outputs[0].system == "http");
-  REQUIRE(refs.outputs[0].identifier == "POST https://api.example.com:443/v1/orders");
-  REQUIRE(refs.outputs[0].host == "api.example.com");
-}
-
-TEST_CASE("JDBC extractor: PutSQL → output rdbms_instance", "[atlas][extractor][jdbc]") {
-  ExtractorDispatcher dispatcher;
-  auto event = make(provenance::ProvenanceEventRecord::SEND, "PutSQL", "jdbc:postgresql://db.example.com:5432/warehouse");
-  const auto refs = dispatcher.dispatch(*event);
-  REQUIRE(refs.outputs.size() == 1);
-  REQUIRE(refs.outputs[0].system == "jdbc");
-  REQUIRE(refs.outputs[0].identifier == "jdbc:postgresql://db.example.com:5432/warehouse");
-  REQUIRE(refs.outputs[0].host == "db.example.com");
-}
-
-TEST_CASE("JDBC extractor: ExecuteSQL → input rdbms_instance", "[atlas][extractor][jdbc]") {
-  ExtractorDispatcher dispatcher;
-  auto event = make(provenance::ProvenanceEventRecord::FETCH, "ExecuteSQL", "jdbc:mysql://db.example.com:3306/orders");
-  const auto refs = dispatcher.dispatch(*event);
-  REQUIRE(refs.inputs.size() == 1);
-  REQUIRE(refs.inputs[0].system == "jdbc");
-}
-
 TEST_CASE("SiteToSitePort extractor: RemoteProcessGroupPort with URL", "[atlas][extractor][s2s]") {
   ExtractorDispatcher dispatcher;
   auto event = make(provenance::ProvenanceEventRecord::SEND, "RemoteProcessGroupPort", "https://remote-nifi.example.com/nifi-api/data-transfer/output-ports/some-port-id/transactions");
@@ -161,16 +111,6 @@ TEST_CASE("Unrecognized event returns empty refs", "[atlas][extractor]") {
   auto event = make(provenance::ProvenanceEventRecord::ATTRIBUTES_MODIFIED, "UpdateAttribute", "");
   const auto refs = dispatcher.dispatch(*event);
   REQUIRE(refs.empty());
-}
-
-TEST_CASE("componentType match wins over transit-URI match", "[atlas][extractor][dispatch]") {
-  ExtractorDispatcher dispatcher;
-  // A processor named InvokeHTTP whose transit URI accidentally matches s3://
-  // (would not happen in practice) is still dispatched by componentType.
-  auto event = make(provenance::ProvenanceEventRecord::SEND, "InvokeHTTP", "s3://bucket/prefix/key");
-  const auto refs = dispatcher.dispatch(*event);
-  REQUIRE(refs.outputs.size() == 1);
-  REQUIRE(refs.outputs[0].system == "http");
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::atlas::test

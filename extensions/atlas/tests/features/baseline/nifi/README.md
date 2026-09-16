@@ -70,10 +70,7 @@ See `common/atlas-application.properties.*` for the auto-generated Atlas client 
 |----------------------|-----------------|-------|
 | `KafkaTopicExtractor`   | ✅ yes          | `kafka_topic` entity, qn `baseline-kafka-topic@baseline`, uri `PLAINTEXT://localhost:19092/baseline-kafka-topic`. |
 | `FilePathExtractor`     | ✅ yes          | Two modes captured — FILE: `/tmp/atlas-baseline/in/hello.txt@baseline`; DIRECTORY: `/tmp/atlas-baseline/in@baseline-dir`. |
-| `AwsS3Extractor`        | ⚠️ gap         | NiFi's PutS3Object emits transit URI `http://<endpoint>/<bucket>/<key>`, NOT `s3://` or `s3a://`, so NiFi's own AwsS3Directory analyzer (regex `^s3a://.+/.+$`) misses it and falls through to `unknown.Send`, producing a `nifi_data` entity (see `summary.md`). MiNiFi C++'s S3 processors emit `s3://…` transit URIs, so the C++ port's extractor should be tested with a MiNiFi-only flow. |
 | `SiteToSitePortExtractor` | ✅ yes (unsecure NiFi, `file-mode-with-s2s/`) | Full 3-flow-path chain captured: `s2s-source` → `nifi_queue` → `Remote Input Port` → `nifi_input_port` → `baseline-input, s2s-sink`. Transit URI shape is `http://nifi1:8080/nifi-api/data-transfer/input-ports/<remote-port-uuid>/transactions/…` for HTTP transport. Requires unauth'd NiFi (SingleUserAuthorizer blocks self-loop RPG under secure mode). |
-| `InvokeHttpExtractor`   | ⚠️ C++-only    | NiFi has no InvokeHTTP-specific analyzer; falls through to `unknown.Send` at best. Spec the behave test from C++ behavior. |
-| `JdbcExtractor`         | ⚠️ C++-only    | NiFi only handles `jdbc:hive2` via `Hive2JDBC`; generic RDBMS transit URIs fall through. Spec the behave test from C++ behavior. |
 
 ## Notable observations from the captures
 

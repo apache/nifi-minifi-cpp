@@ -17,19 +17,13 @@
 #include "ExtractorDispatcher.h"
 
 #include "extractors/KafkaTopicExtractor.h"
-#include "extractors/AwsS3Extractor.h"
 #include "extractors/FilePathExtractor.h"
-#include "extractors/InvokeHttpExtractor.h"
-#include "extractors/JdbcExtractor.h"
 #include "extractors/SiteToSitePortExtractor.h"
 
 namespace org::apache::nifi::minifi::extensions::atlas {
 
 using extractors::KafkaTopicExtractor;
-using extractors::AwsS3Extractor;
 using extractors::FilePathExtractor;
-using extractors::InvokeHttpExtractor;
-using extractors::JdbcExtractor;
 using extractors::SiteToSitePortExtractor;
 
 ExtractorDispatcher::ExtractorDispatcher() {
@@ -39,9 +33,6 @@ ExtractorDispatcher::ExtractorDispatcher() {
   // dispatch walks by-componentType FIRST regardless.
   extractors_.push_back(std::make_unique<KafkaTopicExtractor>());
   extractors_.push_back(std::make_unique<SiteToSitePortExtractor>());
-  extractors_.push_back(std::make_unique<InvokeHttpExtractor>());
-  extractors_.push_back(std::make_unique<JdbcExtractor>());
-  extractors_.push_back(std::make_unique<AwsS3Extractor>());
   extractors_.push_back(std::make_unique<FilePathExtractor>());
 }
 

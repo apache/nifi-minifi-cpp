@@ -60,7 +60,7 @@ class AtlasServerContainer:
     """
 
     HOST_CONTAINER_NAME = "atlas"
-    IMAGE = "atlas:latest"
+    IMAGE = "adamdebreceni/atlas:latest"
     REST_PORT = 21000
     USERNAME = "admin"
     PASSWORD = "admin"
