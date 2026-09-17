@@ -80,10 +80,12 @@ class BaseOPCProcessor : public core::ProcessorImpl {
  protected:
   virtual bool reconnect();
   void readPathReferenceTypes(core::ProcessContext& context, const std::string& node_id);
-  void parseIdType(core::ProcessContext& context, const core::PropertyReference& prop);
+  void parseNode(core::ProcessContext& context);
 
   std::string node_id_;
-  int32_t namespace_idx_ = 0;
+  UA_UInt16 namespace_idx_ = 0;
+  bool path_node_id_resolved_ = false;
+  opc::NodeId node_;
   opc::OPCNodeIDType id_type_{};
 
   opc::ClientPtr connection_;
