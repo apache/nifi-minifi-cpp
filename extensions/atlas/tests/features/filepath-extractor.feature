@@ -21,3 +21,12 @@ Feature: FilePathExtractor emits fs_path entities matching NiFi's baseline
     When all instances start up
     Then a "fs_path" entity with qualified name "/tmp/input/hello.txt@${scenario_id}" exists in Atlas within 120 seconds
     And a "fs_path" entity with qualified name "/tmp/output/hello.txt@${scenario_id}" exists in Atlas within 60 seconds
+    # FilePathExtractor sets name = the file's basename and path = the full path.
+    And the "fs_path" entity with qualified name "/tmp/input/hello.txt@${scenario_id}" has attribute "name" equal to "hello.txt"
+    And the "fs_path" entity with qualified name "/tmp/input/hello.txt@${scenario_id}" has attribute "path" equal to "/tmp/input/hello.txt"
+    And the "fs_path" entity with qualified name "/tmp/output/hello.txt@${scenario_id}" has attribute "name" equal to "hello.txt"
+    And the "fs_path" entity with qualified name "/tmp/output/hello.txt@${scenario_id}" has attribute "path" equal to "/tmp/output/hello.txt"
+    # GetFile and PutFile form one linear path "GetFile, PutFile"; the RECEIVE lands as an input
+    # fs_path and the SEND as an output fs_path on that flow path.
+    And the "nifi_flow_path" entity named "GetFile, PutFile" has an input of type "fs_path" with qualified name "/tmp/input/hello.txt@${scenario_id}" within 60 seconds
+    And the "nifi_flow_path" entity named "GetFile, PutFile" has an output of type "fs_path" with qualified name "/tmp/output/hello.txt@${scenario_id}" within 60 seconds

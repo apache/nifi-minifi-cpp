@@ -132,6 +132,34 @@ def entity_attribute_equals(context: MinifiTestContext, type_name: str, qualifie
     assert str(actual) == attr_value, f"Attribute '{attr_name}' on {type_name}('{qualified_name}'): expected '{attr_value}', got '{actual}'."
 
 
+def _find_entity_by_attr(atlas: AtlasServerContainer, type_name: str, attr_name: str, attr_value: str) -> dict | None:
+    """Locate the first entity of `type_name` whose `attr_name` equals `attr_value`.
+
+    Topology entities (nifi_flow, nifi_flow_path, nifi_queue) have UUID-bearing qualifiedNames
+    that a scenario can't predict, so we match on a stable attribute (usually `name`) instead.
+    Because each scenario has its own metadata namespace, search_entities returns only this
+    scenario's entities of the type - so the match is unambiguous. Basic-search hits carry a
+    trimmed attribute set, so fall back to the full entity when the attribute isn't in the hit."""
+    for hit in atlas.search_entities(type_name):
+        if hit.get("attributes", {}).get(attr_name) == attr_value:
+            return atlas.get_entity(hit["guid"])
+        # Attribute not surfaced by basic search - fetch the full entity and re-check.
+        entity = atlas.get_entity(hit["guid"])
+        if entity is not None and entity.get("attributes", {}).get(attr_name) == attr_value:
+            return entity
+    return None
+
+
+@then("a \"{type_name}\" entity with attribute \"{attr_name}\" equal to \"{attr_value}\" exists in Atlas within {timeout_seconds:d} seconds")
+def entity_with_attribute_exists(context: MinifiTestContext, type_name: str, attr_name: str, attr_value: str, timeout_seconds: int):
+    """Existence check for entities whose qualifiedName isn't predictable (topology entities),
+    matched on a stable attribute value instead."""
+    atlas = _atlas(context)
+    ok = wait_for_condition(condition=lambda: _find_entity_by_attr(atlas, type_name, attr_name, attr_value) is not None,
+                            timeout_seconds=float(timeout_seconds), bail_condition=lambda: False, context=context)
+    assert ok, f"No {type_name} with attribute '{attr_name}'='{attr_value}' appeared within {timeout_seconds}s."
+
+
 def _entity_ref_list_contains(refs, ref_type: str, ref_qn: str) -> bool:
     for ref in refs or []:
         if ref.get("typeName") != ref_type:
@@ -159,3 +187,36 @@ def entity_has_output(context: MinifiTestContext, type_name: str, qualified_name
     outputs = entity.get("attributes", {}).get("outputs")
     assert _entity_ref_list_contains(outputs, ref_type, ref_qn), (
         f"{type_name}('{qualified_name}').outputs does not contain a {ref_type}('{ref_qn}'). Actual: {outputs}")
+
+
+def _wait_for_ref_on_named_entity(context: MinifiTestContext, type_name: str, name: str,
+                                  ref_list_attr: str, ref_type: str, ref_qn: str, timeout_seconds: int):
+    """Poll until the entity of `type_name` named `name` carries a `ref_list_attr` reference to
+    `ref_type`('ref_qn'). Used for lineage edges on nifi_flow_path, whose qualifiedName embeds a
+    UUID (so we find it by name) and whose inputs/outputs are filled on a later reporting cycle
+    than the topology itself (so we poll rather than fetch once)."""
+    atlas = _atlas(context)
+    last: list[object] = [None]
+
+    def _found() -> bool:
+        entity = _find_entity_by_attr(atlas, type_name, "name", name)
+        if entity is None:
+            return False
+        refs = entity.get("attributes", {}).get(ref_list_attr)
+        last[0] = refs
+        return _entity_ref_list_contains(refs, ref_type, ref_qn)
+
+    ok = wait_for_condition(condition=_found, timeout_seconds=float(timeout_seconds),
+                            bail_condition=lambda: False, context=context)
+    assert ok, (f"{type_name} named '{name}' did not gain a {ref_list_attr} {ref_type}('{ref_qn}') "
+                f"within {timeout_seconds}s. Last seen {ref_list_attr}: {last[0]}")
+
+
+@then("the \"{type_name}\" entity named \"{name}\" has an input of type \"{ref_type}\" with qualified name \"{ref_qn}\" within {timeout_seconds:d} seconds")
+def entity_named_has_input(context: MinifiTestContext, type_name: str, name: str, ref_type: str, ref_qn: str, timeout_seconds: int):
+    _wait_for_ref_on_named_entity(context, type_name, name, "inputs", ref_type, ref_qn, timeout_seconds)
+
+
+@then("the \"{type_name}\" entity named \"{name}\" has an output of type \"{ref_type}\" with qualified name \"{ref_qn}\" within {timeout_seconds:d} seconds")
+def entity_named_has_output(context: MinifiTestContext, type_name: str, name: str, ref_type: str, ref_qn: str, timeout_seconds: int):
+    _wait_for_ref_on_named_entity(context, type_name, name, "outputs", ref_type, ref_qn, timeout_seconds)

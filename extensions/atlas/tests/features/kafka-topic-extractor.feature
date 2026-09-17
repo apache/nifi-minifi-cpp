@@ -30,6 +30,12 @@ Feature: KafkaTopicExtractor emits kafka_topic entities matching NiFi's baseline
     When the Kafka server is started
     And all instances start up
     Then a "kafka_topic" entity with qualified name "atlas-publish-topic@${scenario_id}" exists in Atlas within 120 seconds
+    # KafkaTopicExtractor sets topic and name to the topic. (uri = the raw kafka:// transit URI,
+    # which embeds the broker string - left unasserted since its exact shape is broker-dependent.)
+    And the "kafka_topic" entity with qualified name "atlas-publish-topic@${scenario_id}" has attribute "topic" equal to "atlas-publish-topic"
+    And the "kafka_topic" entity with qualified name "atlas-publish-topic@${scenario_id}" has attribute "name" equal to "atlas-publish-topic"
+    # Publish is a SEND, so the topic lands as an output on the "GenerateFlowFile, PublishKafka" path.
+    And the "nifi_flow_path" entity named "GenerateFlowFile, PublishKafka" has an output of type "kafka_topic" with qualified name "atlas-publish-topic@${scenario_id}" within 60 seconds
 
   Scenario: ConsumeKafka receives from a topic and Atlas gets a kafka_topic input entity
     Given an Atlas server is available
@@ -54,3 +60,7 @@ Feature: KafkaTopicExtractor emits kafka_topic entities matching NiFi's baseline
     And a message with content "kafka-payload" is published to the "atlas-consume-topic" topic
     And all instances start up
     Then a "kafka_topic" entity with qualified name "atlas-consume-topic@${scenario_id}" exists in Atlas within 120 seconds
+    And the "kafka_topic" entity with qualified name "atlas-consume-topic@${scenario_id}" has attribute "topic" equal to "atlas-consume-topic"
+    And the "kafka_topic" entity with qualified name "atlas-consume-topic@${scenario_id}" has attribute "name" equal to "atlas-consume-topic"
+    # Consume is a RECEIVE, so the topic lands as an input on the "ConsumeKafka, PutFile" path.
+    And the "nifi_flow_path" entity named "ConsumeKafka, PutFile" has an input of type "kafka_topic" with qualified name "atlas-consume-topic@${scenario_id}" within 60 seconds

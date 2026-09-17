@@ -1,10 +1,27 @@
 # Atlas extractor behave tests
 
 This directory contains behave integration tests for MiNiFi's C++
-`ReportLineageToAtlas` reporting task. Each feature file targets one extractor
-under the `KafkaTopicExtractor` / `FilePathExtractor` /
+`ReportLineageToAtlas` reporting task. The per-extractor feature files target one
+extractor each under the `KafkaTopicExtractor` / `FilePathExtractor` /
 `SiteToSitePortExtractor` triangle -- the extractors for which we have a NiFi
-baseline under `baseline/nifi/` to conform to.
+baseline under `baseline/nifi/` to conform to. `flow-topology.feature` covers the
+graph-derived entities that `FlowPathBuilder` emits independent of any extractor.
+
+## What is asserted
+
+- **Dataset entities** (`fs_path`, `kafka_topic`): existence by `qualifiedName`, plus
+  attribute values the extractors set (`fs_path.name`/`path`, `kafka_topic.topic`/`name`).
+- **Lineage edges**: the `inputs`/`outputs` reference lists on the owning `nifi_flow_path`
+  (a RECEIVE lands as an input dataset, a SEND as an output), matched by locating the
+  flow path via its `name`.
+- **Topology entities** (`nifi_flow`, `nifi_flow_path`, `nifi_queue`): existence, matched by
+  their deterministic `name` since their `qualifiedName`s embed component UUIDs.
+
+Not yet covered: the topology-derived `nifi_input_port` / `nifi_output_port` (the shared test
+framework has no way to declare a local root-group port on a MiNiFi flow -- `nifi_output_port`
+existence is exercised via the Site-to-Site provenance path instead), DIRECTORY-level
+filesystem paths, and the baseline concepts the C++ port does not implement (`nifi_data`
+fallback, S3/HTTP/JDBC datasets, the Remote Input Port flow path, `CompletePath` strategy).
 
 ## Prerequisites
 
@@ -54,6 +71,7 @@ clarity and to keep qualifiedNames stable across reruns.
 | `kafka_topic_extractor.feature`     | `PublishKafka`/`ConsumeKafka` + provenance calls added in    | `KafkaTopicExtractor`  |
 |                                     | this change set                                              |                        |
 | `site_to_site_extractor.feature`    | `SiteToSiteClient` (already emits provenance today)          | `SiteToSitePortExtractor` |
+| `flow-topology.feature`             | `GetFile`/`PutFile`/`GenerateFlowFile` (flow graph only)     | `FlowPathBuilder` (topology) |
 
 ## Running
 
