@@ -73,10 +73,10 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches OPC-UA node";
 
-  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<3>::createProperty("Node ID type")
+  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<magic_enum::enum_count<opc::OPCNodeIDType>()>::createProperty("Node ID type")
       .withDescription("Specifies the type of the provided node ID")
       .isRequired(true)
-      .withAllowedValues({"Path", "Int", "String"})
+      .withAllowedValues(magic_enum::enum_names<opc::OPCNodeIDType>())
       .build();
   EXTENSIONAPI static constexpr auto NodeID = core::PropertyDefinitionBuilder<>::createProperty("Node ID")
       .withDescription("Specifies the ID of the root node to traverse. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.")
@@ -84,7 +84,7 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
       .build();
   EXTENSIONAPI static constexpr auto NameSpaceIndex = core::PropertyDefinitionBuilder<>::createProperty("Namespace index")
       .withDescription("The index of the namespace.")
-      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .isRequired(true)
       .build();
@@ -115,6 +115,7 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr auto NodeIDAttr = core::OutputAttributeDefinition<>{"NodeID", { Success }, "ID of the node."};
+  EXTENSIONAPI static constexpr auto NamespaceIndexAttr = core::OutputAttributeDefinition<>{"Namespace index", {Success}, "Namespace index of the node."};
   EXTENSIONAPI static constexpr auto NodeIDTypeAttr = core::OutputAttributeDefinition<>{"NodeID type", { Success }, "Type of the node ID."};
   EXTENSIONAPI static constexpr auto BrowsenameAttr = core::OutputAttributeDefinition<>{"Browsename", { Success }, "The browse name of the node."};
   EXTENSIONAPI static constexpr auto FullPathAttr = core::OutputAttributeDefinition<>{"Full path", { Success }, "The full path of the node."};
@@ -123,8 +124,8 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto TypenameAttr = core::OutputAttributeDefinition<>{"Typename", { Success }, "The type name of the node data."};
   EXTENSIONAPI static constexpr auto DatasizeAttr = core::OutputAttributeDefinition<>{"Datasize", { Success }, "The size of the node data."};
 
-  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 7> {NodeIDAttr, NodeIDTypeAttr, BrowsenameAttr, FullPathAttr, SourcetimestampAttr,
-    TypenameAttr, DatasizeAttr};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 8> {NodeIDAttr,
+    NamespaceIndexAttr, NodeIDTypeAttr, BrowsenameAttr, FullPathAttr, SourcetimestampAttr, TypenameAttr, DatasizeAttr};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -149,7 +150,7 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
 
   uint64_t max_depth_ = 0;
   LazyModeOptions lazy_mode_ = LazyModeOptions::Off;
-  std::vector<opc::NodeId> translated_node_ids_;  // Only used when user provides path, path->nodeid translation is only done once
+  std::vector<opc::NodeId> translated_node_ids_;  // Only used when user provides path; cached translation, re-resolved on (re)connect (see path_node_id_resolved_)
 };
 
 }  // namespace org::apache::nifi::minifi::processors
