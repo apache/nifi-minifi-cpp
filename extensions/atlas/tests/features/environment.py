@@ -14,14 +14,22 @@
 # limitations under the License.
 import platform
 
+import docker
+
+from containers.atlas_server_container import AtlasServerContainer
 from minifi_behave.core.hooks import common_before_scenario
 from minifi_behave.core.hooks import common_after_scenario
 
-# These hooks are executed by behave before and after each scenario
-# The common_before_scenario and common_after_scenario must be called for proper setup and tear down.
-# common_after_scenario iterates context.containers and calls clean_up on each, so the
-# AtlasServerContainer wrapper's clean_up (which just disconnects from the scenario network) is invoked
-# automatically - the pre-running Atlas container itself keeps running for the next scenario.
+# These hooks are executed by behave before and after each scenario.
+# common_before_scenario and common_after_scenario must be called for proper setup and tear down.
+# common_after_scenario iterates context.containers and calls clean_up() on each, so the
+# per-scenario Atlas container is torn down like every other container (Kafka, MiNiFi, etc.).
+
+
+def before_all(context):
+    # Pull the Atlas image once for the whole run so the pull latency doesn't count against
+    # any single scenario's cold-start budget. Mirrors what the Kafka feature does.
+    docker.from_env().images.pull(AtlasServerContainer.IMAGE)
 
 
 def before_feature(context, feature):

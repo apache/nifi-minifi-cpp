@@ -8,40 +8,34 @@ baseline under `baseline/nifi/` to conform to.
 
 ## Prerequisites
 
-### `atlas:latest` image
+### Atlas image
 
-Apache does not publish an official Atlas image. **You must build (or otherwise
-obtain) an `atlas:latest` image locally** before invoking the tests. Verify with:
+The tests use the `adamdebreceni/atlas:latest` image (Apache does not publish
+an official Atlas image). `before_all` in `environment.py` pulls it from Docker
+Hub at the start of the run, and `LinuxContainer.deploy()` auto-pulls on demand
+too, so you don't need to fetch it yourself. If you want to verify it locally:
 
-    docker images | grep atlas:latest
+    docker images | grep adamdebreceni/atlas
 
 ### Atlas container lifecycle
 
-`AtlasServerContainer` self-provisions the atlas container - you don't need to
-start one yourself. On the first scenario in a run it either:
+`AtlasServerContainer` provisions a fresh `atlas-<scenario_id>` container from
+`atlas:latest` at the start of every scenario, publishing REST on host port
+`21000` and Kafka on `9092`, and waits up to 5 minutes for cold start. The
+container is destroyed at the end of the scenario by the generic teardown hook
+like every other per-scenario container (Kafka, MiNiFi, etc.).
 
-- Reuses a running container named `atlas` if its `/api/atlas/admin/status`
-  endpoint returns ACTIVE within a few seconds, OR
-- Removes any existing `atlas` container and starts a fresh one from
-  `atlas:latest`, publishing REST on `21000` and Kafka on `9092`, then waits
-  up to 5 minutes for cold start.
-
-Subsequent scenarios in the same run reuse the container (per-scenario
-namespacing via `@<scenario_id>` in every qualifiedName keeps them isolated on
-Atlas' side). Only network attach/detach happens per scenario.
-
-Set `ATLAS_FORCE_RECREATE=1` in the environment to force a clean rebuild - useful
-when the atlas image has gotten wedged (the `atlas:latest` image is known to hang
-its bulk-entity endpoint after some load; a fresh container clears the corruption).
+Note: because every scenario now pays the full 2-3 minute Atlas cold start,
+overall behave wall-clock grows materially compared to the earlier
+shared-instance model. Budget CI (and `--behave-timeout`) accordingly.
 
 ### Namespace isolation
 
-To keep multiple scenarios (or reruns of the same scenario) from colliding on
-the shared Atlas state, each scenario uses `context.scenario_id` as its Atlas
-metadata namespace. Every `qualifiedName` we assert on ends with
-`@<scenario_id>`, so the graph accumulates entities per scenario forever but
-they never overwrite each other. Bulk-clean the Atlas dev instance
-periodically if the graph gets unwieldy.
+Each scenario uses `context.scenario_id` as its Atlas metadata namespace and
+every `qualifiedName` we assert on ends with `@<scenario_id>`. Now that each
+scenario runs against a fresh Atlas container, this suffix is no longer required
+for isolation between scenarios in the same run; it is kept for scenario-log
+clarity and to keep qualifiedNames stable across reruns.
 
 ### CMake flags
 
