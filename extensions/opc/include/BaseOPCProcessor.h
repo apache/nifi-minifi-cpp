@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "opc.h"
+#include "OPCCommon.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "minifi-cpp/core/PropertyDefinition.h"

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "fetchopc.h"
+#include "FetchOPCProcessor.h"
 
 #include <list>
 #include <memory>
@@ -24,7 +24,7 @@
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "opc.h"
+#include "OPCCommon.h"
 #include "utils/Enum.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -77,14 +77,12 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
   };
 
   if (id_type_ != opc::OPCNodeIDType::Path) {
-    UA_NodeId my_id;
-    my_id.namespaceIndex = namespace_idx_;
+    const auto namespace_index = gsl::narrow_cast<UA_UInt16>(namespace_idx_);
+    opc::NodeId my_id;
     if (id_type_ == opc::OPCNodeIDType::Int) {
-      my_id.identifierType = UA_NODEIDTYPE_NUMERIC;
-      my_id.identifier.numeric = std::stoi(node_id_);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+      my_id = opc::NodeId{UA_NODEID_NUMERIC(namespace_index, std::stoi(node_id_))};
     } else if (id_type_ == opc::OPCNodeIDType::String) {
-      my_id.identifierType = UA_NODEIDTYPE_STRING;
-      my_id.identifier.string = UA_STRING_ALLOC(node_id_.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
+      my_id = opc::NodeId{UA_NODEID_STRING_ALLOC(namespace_index, node_id_.c_str())};
     } else {
       logger_->log_error("Unhandled id type: '{}'. No flowfiles are generated.", magic_enum::enum_underlying(id_type_));
       context.yield();

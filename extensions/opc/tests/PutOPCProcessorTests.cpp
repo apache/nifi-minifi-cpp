@@ -19,7 +19,7 @@
 #include "unit/Catch.h"
 #include "OpcUaTestServer.h"
 #include "unit/SingleProcessorTestController.h"
-#include "include/putopc.h"
+#include "include/PutOPCProcessor.h"
 #include "utils/StringUtils.h"
 #include "unit/TestUtils.h"
 #include "minifi-cpp/utils/gsl.h"
@@ -39,7 +39,7 @@ struct NodeData {
 void verifyCreatedNode(const NodeData& expected_node, SingleProcessorTestController& controller) {
   auto client = minifi::opc::Client::createClient(controller.getLogger(), "", {}, {}, {});
   REQUIRE(client->connect("opc.tcp://127.0.0.1:4840/") == UA_STATUSCODE_GOOD);
-  std::vector<UA_NodeId> found_node_ids;
+  std::vector<opc::NodeId> found_node_ids;
   std::vector<UA_UInt32> reference_types;
 
   if (!expected_node.path_reference_types.empty()) {
@@ -60,14 +60,14 @@ void verifyCreatedNode(const NodeData& expected_node, SingleProcessorTestControl
   }, 100ms));
 
   REQUIRE(found_node_ids.size() == 1);
-  REQUIRE(found_node_ids[0].namespaceIndex == expected_node.namespace_index);
-  REQUIRE(found_node_ids[0].identifierType == UA_NODEIDTYPE_NUMERIC);
-  REQUIRE(found_node_ids[0].identifier.numeric == expected_node.node_id);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+  REQUIRE(found_node_ids[0].get().namespaceIndex == expected_node.namespace_index);
+  REQUIRE(found_node_ids[0].get().identifierType == UA_NODEIDTYPE_NUMERIC);
+  REQUIRE(found_node_ids[0].get().identifier.numeric == expected_node.node_id);  // NOLINT(cppcoreguidelines-pro-type-union-access)
 
   UA_ReferenceDescription ref_desc;
   ref_desc.isForward = true;
   ref_desc.referenceTypeId = UA_NODEID_NUMERIC(0, UA_NODEIDTYPE_NUMERIC);
-  ref_desc.nodeId.nodeId = found_node_ids[0];
+  ref_desc.nodeId.nodeId = found_node_ids[0].get();
   ref_desc.browseName = UA_QUALIFIEDNAME_ALLOC(expected_node.namespace_index, expected_node.browse_name.c_str());
   ref_desc.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", expected_node.browse_name.c_str());
   const auto ref_desc_guard = gsl::finally([&ref_desc] {

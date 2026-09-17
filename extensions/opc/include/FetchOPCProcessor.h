@@ -22,8 +22,8 @@
 #include <utility>
 #include <vector>
 
-#include "opc.h"
-#include "opcbase.h"
+#include "OPCCommon.h"
+#include "BaseOPCProcessor.h"
 #include "minifi-cpp/FlowFileRecord.h"
 #include "core/ProcessSession.h"
 #include "minifi-cpp/core/Property.h"
@@ -149,7 +149,7 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
 
   uint64_t max_depth_ = 0;
   LazyModeOptions lazy_mode_ = LazyModeOptions::Off;
-  std::vector<UA_NodeId> translated_node_ids_;  // Only used when user provides path, path->nodeid translation is only done once
+  std::vector<opc::NodeId> translated_node_ids_;  // Only used when user provides path, path->nodeid translation is only done once
 };
 
 }  // namespace org::apache::nifi::minifi::processors
