@@ -34,6 +34,11 @@
 #include "utils/net/DNS.h"
 #include "io/validation.h"
 
+namespace {
+std::atomic<int> transaction_id;
+std::atomic<int> transaction_id_output;
+}  // namespace
+
 namespace org::apache::nifi::minifi::test {
 
 bool SiteToSiteLocationResponder::handleGet(CivetServer* /*server*/, struct mg_connection *conn) {

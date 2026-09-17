@@ -40,9 +40,6 @@
 
 namespace org::apache::nifi::minifi::test {
 
-static std::atomic<int> transaction_id;
-static std::atomic<int> transaction_id_output;
-
 struct FlowObj {
   FlowObj() = default;
 

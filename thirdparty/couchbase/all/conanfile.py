@@ -69,7 +69,7 @@ class CouchbaseCxxClientConan(ConanFile):
         self.requires("openssl/[>=1.1 <4]")
 
     def build_requirements(self):
-        self.tool_requires("cmake/[>=3.19.0]")
+        self.tool_requires("cmake/[>=3.19.0 <4]")
 
     def layout(self):
         cmake_layout(self, src_folder="src")

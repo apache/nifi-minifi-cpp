@@ -34,6 +34,8 @@ target_include_directories(minifi-couchbase SYSTEM PRIVATE ${COUCHBASE_INCLUDE_D
 # Demote preprocessor warnings so <ciso646> doesn't break the build
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(minifi-couchbase PRIVATE -Wno-error=cpp)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(minifi-couchbase PRIVATE -Wno-error=\#warnings)
 endif()
 target_link_libraries(minifi-couchbase ${LIBMINIFI} couchbase_cxx_client::couchbase_cxx_client hdr_histogram_static snappy llhttp::llhttp taocpp::json)
 

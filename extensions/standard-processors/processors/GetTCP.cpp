@@ -231,17 +231,23 @@ asio::awaitable<std::error_code> GetTCP::TcpClient::doReceiveFromEndpoint(const 
 
 asio::awaitable<void> GetTCP::TcpClient::doReceiveFrom(const utils::net::ConnectionId& connection_id) {
   while (true) {
-    asio::ip::tcp::resolver resolver(io_context_);
-    auto [resolve_error, resolve_result] = co_await utils::net::asyncOperationWithTimeout(  // NOLINT
-        resolver.async_resolve(connection_id.getHostname(), connection_id.getService(), utils::net::use_nothrow_awaitable), timeout_duration_);
-    if (resolve_error) {
-      logger_->log_error("Error during resolution: {}", resolve_error.message());
-      co_await utils::net::async_wait(reconnection_interval_);
-      continue;
+    std::vector<asio::ip::tcp::endpoint> endpoints;
+    {
+      asio::ip::tcp::resolver resolver(io_context_);
+      auto [resolve_error, resolve_result] = co_await utils::net::asyncOperationWithTimeout(
+          resolver.async_resolve(connection_id.getHostname(), connection_id.getService(), utils::net::use_nothrow_awaitable), timeout_duration_);
+      if (resolve_error) {
+        logger_->log_error("Error during resolution: {}", resolve_error.message());
+        co_await utils::net::async_wait(reconnection_interval_);
+        continue;
+      }
+      for (const auto& entry : resolve_result) {
+        endpoints.push_back(entry.endpoint());
+      }
     }
 
     std::error_code last_error;
-    for (const auto& endpoint : resolve_result) {
+    for (const auto& endpoint : endpoints) {
       if (ssl_context_) {
         utils::net::SslSocket ssl_socket{io_context_, *ssl_context_};
         last_error = co_await doReceiveFromEndpoint<utils::net::SslSocket>(endpoint, ssl_socket);

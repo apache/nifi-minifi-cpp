@@ -27,6 +27,7 @@
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "minifi-cpp/SwapManager.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "Connection.h"
 
 namespace {
@@ -113,11 +114,19 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   auto old_parameter_contexts = std::move(parameter_contexts_);
   auto old_parameter_providers = std::move(parameter_providers_);
   service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(std::make_unique<core::controller::ControllerServiceNodeMap>(), configuration_);
+
+  bool success = false;
+  auto restore_on_failure = gsl::finally([&] {
+    if (!success) {
+      service_provider_->clearControllerServices();
+      service_provider_ = old_provider;
+      parameter_contexts_ = std::move(old_parameter_contexts);
+      parameter_providers_ = std::move(old_parameter_providers);
+    }
+  });
+
   auto payload = getRootFromPayload(yamlConfigPayload);
   if (!payload) {
-    service_provider_ = old_provider;
-    parameter_contexts_ = std::move(old_parameter_contexts);
-    parameter_providers_ = std::move(old_parameter_providers);
     return nullptr;
   }
 
@@ -135,6 +144,7 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
     flow_version_->setFlowVersion(url, bucket_id, flow_id ? *flow_id : payload_flow_id);
   }
 
+  success = true;
   return payload;
 }
 

@@ -91,18 +91,22 @@
    ...
 }
 
-# glibc grows the Thread-Local-Storage descriptor vector (DTV) via malloc the
-# first time spdlog::details::os::thread_id() runs on a new thread. The block
-# is kept for the thread's lifetime and freed by the OS at exit. Not a leak.
+# glibc grows the Thread-Local-Storage descriptor vector (DTV) the first time a
+# thread touches a dynamically-loaded TLS variable. The DTV block is kept for
+# the thread's lifetime and freed by the OS at exit; the growth happens only
+# through this __tls_get_addr -> _dl_update_slotinfo -> _dl_resize_dtv chain, so
+# whatever sits above it (spdlog thread_id, __cxa_throw's __cxa_get_globals,
+# std::call_once, ...) is irrelevant. Never a real leak.
 {
-   possibly_lost_tls_dtv_spdlog_thread_id
+   possibly_lost_tls_dtv_growth
    Memcheck:Leak
    match-leak-kinds: possible
    fun:malloc
    ...
    fun:_dl_resize_dtv
-   ...
-   fun:*spdlog*thread_id*
+   fun:_dl_update_slotinfo
+   fun:update_get_addr
+   fun:__tls_get_addr
    ...
 }
 
@@ -117,5 +121,65 @@
    fun:_Znwm
    ...
    fun:*ChannelInit*BuildStackConfig*
+   ...
+}
+
+# absl::flags_internal::FlagRegistry::RegisterFlag populates the process-lifetime
+# global flag registry (an absl flat-hash-map) from static initializers (e.g.
+# gRPC's config_vars.cc) at dlopen()/startup time. Held via interior abseil-hash
+# pointers, freed by the OS at exit. Not a leak.
+{
+   possibly_lost_absl_flags_registry_static_init
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:*FlagRegistry*RegisterFlag*
+   ...
+}
+
+# grpc_core::instrument_detail::InstrumentIndex::Register populates the
+# process-lifetime instrument/telemetry registry (a global absl node-hash-map).
+# It runs from static initializers in gRPC's telemetry.cc/instrument.cc while an
+# extension is dlopen()ed. The map is held via interior abseil-hash pointers and
+# freed by the OS at exit. Not a leak.
+{
+   possibly_lost_grpc_instrument_registry_static_init
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:*instrument_detail*Register*
+   ...
+}
+
+# grpc_core::BasicMemoryQuota::AddNewAllocator inserts each new allocator into
+# the process-lifetime MemoryQuota's allocator set (an absl flat-hash-set). This
+# runs on gRPC's own EventEngine worker threads, which are still alive at exit,
+# so valgrind reaches the set's backing array via an interior pointer and flags
+# it "possibly lost". Owned by a process-lifetime singleton; not a leak.
+{
+   possibly_lost_grpc_memory_quota_add_allocator
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:*BasicMemoryQuota*AddNewAllocator*
+   ...
+}
+
+# grpc_core::CollectionScope registers itself (into an absl flat-hash-set) with
+# the process-lifetime GlobalStatsPluginRegistry the first time a channel/server
+# is created (GetStatsPluginsForChannel / ...ForServer -> CreateCollectionScope).
+# This runs on gRPC's EventEngine/WorkSerializer threads, so the set's backing
+# array is reached via an interior pointer and flagged "possibly lost". Owned by
+# a process-lifetime singleton; not a leak.
+{
+   possibly_lost_grpc_stats_plugin_collection_scope
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:*CollectionScope*
    ...
 }

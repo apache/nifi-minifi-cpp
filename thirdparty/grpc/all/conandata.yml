@@ -14,11 +14,11 @@
 # limitations under the License.
 
 sources:
-  "1.82.0":
-    url: "https://github.com/grpc/grpc/archive/refs/tags/v1.82.0.tar.gz"
-    sha256: "d6851f59b9c4edb3218d2659a3abf1138e5bb4d2871c9e89c9330ed71756ed0b"
+  "1.83.1":
+    url: "https://github.com/grpc/grpc/archive/refs/tags/v1.83.1.tar.gz"
+    sha256: "60caa8397426d8a500e3e57ab6a49d1cb5aa62a36f2591eb9da3d77fa38ad8c9"
 patches:
-  "1.82.0":
+  "1.83.1":
     - patch_file: "patches/fix-msvc-auto-return-type-template-arg.patch"
       patch_description: "Temporary patch for issue https://github.com/grpc/grpc/issues/41436"
       patch_type: "fix"
