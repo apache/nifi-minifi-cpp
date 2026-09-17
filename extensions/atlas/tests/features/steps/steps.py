@@ -71,8 +71,10 @@ def _atlas(context: MinifiTestContext) -> AtlasServerContainer:
 @given("an Atlas server is available")
 def atlas_server_is_available(context: MinifiTestContext):
     atlas = AtlasServerContainer(context)
-    assert atlas.deploy(context), "Atlas server is not reachable - see extensions/atlas/tests/features/README.md."
+    # Register the container before deploy so that if deploy fails/times out, common_after_scenario's
+    # generic log_due_to_failure loop still finds it and dumps its logs.
     context.containers[ATLAS_CONTAINER_KEY] = atlas
+    assert atlas.deploy(context) or atlas.log_app_output(), "Atlas server is not reachable - see extensions/atlas/tests/features/README.md."
 
 
 @given("the \"{reporting_task_name}\" reporting task is configured for the Atlas server")
