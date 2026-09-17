@@ -114,7 +114,7 @@ class ProcessorImpl : public virtual ProcessorApi {
 
   std::string getName() const;
   utils::Identifier getUUID() const;
-  utils::SmallString<36> getUUIDStr() const;
+  utils::SmallString<utils::Identifier::UUID_STR_LEN> getUUIDStr() const;
 
  protected:
   void notifyStop() override {

@@ -49,7 +49,7 @@ class CoreComponent {
   virtual void setName(std::string name) = 0;
   virtual void setUUID(const utils::Identifier& uuid) = 0;
   [[nodiscard]] virtual utils::Identifier getUUID() const = 0;
-  [[nodiscard]] virtual utils::SmallString<36> getUUIDStr() const = 0;
+  [[nodiscard]] virtual utils::SmallString<utils::Identifier::UUID_STR_LEN> getUUIDStr() const = 0;
   virtual void configure(const std::shared_ptr<Configure>& /*configuration*/) = 0;
 };
 

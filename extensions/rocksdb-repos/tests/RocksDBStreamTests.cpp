@@ -52,7 +52,7 @@ TEST_CASE_METHOD(RocksDBStreamTest, "Verify simple operation") {
   REQUIRE_FALSE(minifi::io::isError(second_write_result));
   minifi::io::RocksDbStream inStream("one", gsl::make_not_null(db.get()));
   std::string str;
-  inStream.read(str);
+  inStream.read(str, minifi::io::LengthPrefixSize::_16BIT, 100);
   REQUIRE(str == content);
 }
 

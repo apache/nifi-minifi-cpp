@@ -26,11 +26,15 @@
 #include "asio/ssl/stream.hpp"
 #include "asio/connect.hpp"
 #include "minifi-cpp/core/logging/Logger.h"
+#include "minifi-cpp/utils/Literals.h"
 #include "utils/ConfigurationUtils.h"
 #include "utils/net/AsioSocketUtils.h"
 #include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::controller {
+
+constexpr auto MAX_MANIFEST_SIZE = 10_MiB;
+constexpr auto MAX_NAME_SIZE = 1_KiB;
 
 bool sendSingleCommand(const utils::net::SocketData& socket_data, uint8_t op, const std::string& value) {
   const auto connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
@@ -74,11 +78,11 @@ bool updateFlow(const utils::net::SocketData& socket_data, std::ostream &out, co
   if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     uint16_t connections = 0;
     connection_stream->read(connections);
-    out << connections << " are full" << std::endl;
+    out << connections << " are full\n";
     for (uint16_t i = 0; i < connections; i++) {
       std::string fullcomponent;
-      connection_stream->read(fullcomponent);
-      out << fullcomponent << " is full" << std::endl;
+      connection_stream->read(fullcomponent, io::LengthPrefixSize::_16BIT, MAX_NAME_SIZE);
+      out << fullcomponent << " is full\n";
     }
   }
   return true;
@@ -102,11 +106,11 @@ bool getFullConnections(const utils::net::SocketData& socket_data, std::ostream 
   if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     uint16_t connections = 0;
     connection_stream->read(connections);
-    out << connections << " are full" << std::endl;
+    out << connections << " are full\n";
     for (uint16_t i = 0; i < connections; i++) {
       std::string fullcomponent;
-      connection_stream->read(fullcomponent);
-      out << fullcomponent << " is full" << std::endl;
+      connection_stream->read(fullcomponent, io::LengthPrefixSize::_16BIT, MAX_NAME_SIZE);
+      out << fullcomponent << " is full\n";
     }
   }
   return true;
@@ -130,8 +134,8 @@ bool getConnectionSize(const utils::net::SocketData& socket_data, std::ostream &
   connection_stream->read(resp);
   if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     std::string size;
-    connection_stream->read(size);
-    out << "Size/Max of " << connection << " " << size << std::endl;
+    connection_stream->read(size, io::LengthPrefixSize::_16BIT, MAX_NAME_SIZE);
+    out << "Size/Max of " << connection << " " << size << "\n";
   }
   return true;
 }
@@ -152,14 +156,14 @@ bool listComponents(const utils::net::SocketData& socket_data, std::ostream &out
   connection_stream->read(op);
   connection_stream->read(responses);
   if (show_header)
-    out << "Components:" << std::endl;
+    out << "Components:\n";
 
   for (uint16_t i = 0; i < responses; i++) {
     std::string name;
-    connection_stream->read(name, false);
+    connection_stream->read(name, io::LengthPrefixSize::_16BIT, MAX_NAME_SIZE);
     std::string status;
-    connection_stream->read(status, false);
-    out << name << ", running: " << status << std::endl;
+    connection_stream->read(status, io::LengthPrefixSize::_16BIT, MAX_NAME_SIZE);
+    out << name << ", running: " << status << "\n";
   }
   return true;
 }
@@ -180,12 +184,12 @@ bool listConnections(const utils::net::SocketData& socket_data, std::ostream &ou
   connection_stream->read(op);
   connection_stream->read(responses);
   if (show_header)
-    out << "Connection Names:" << std::endl;
+    out << "Connection Names:\n";
 
   for (uint16_t i = 0; i < responses; i++) {
     std::string name;
-    connection_stream->read(name, false);
-    out << name << std::endl;
+    connection_stream->read(name, io::LengthPrefixSize::_16BIT, MAX_NAME_SIZE);
+    out << name << "\n";
   }
   return true;
 }
@@ -204,8 +208,8 @@ bool printManifest(const utils::net::SocketData& socket_data, std::ostream &out)
   }
   connection_stream->read(op);
   std::string manifest;
-  connection_stream->read(manifest, true);
-  out << manifest << std::endl;
+  connection_stream->read(manifest, io::LengthPrefixSize::_32BIT, MAX_MANIFEST_SIZE);
+  out << manifest << "\n";
   return true;
 }
 
@@ -223,8 +227,8 @@ bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out) {
   }
   connection_stream->read(op);
   std::string manifest;
-  connection_stream->read(manifest, true);
-  out << manifest << std::endl;
+  connection_stream->read(manifest, io::LengthPrefixSize::_32BIT, MAX_MANIFEST_SIZE);
+  out << manifest << "\n";
   return true;
 }
 
@@ -282,8 +286,8 @@ bool getFlowStatus(const utils::net::SocketData& socket_data, const std::string&
   }
   connection_stream->read(op);
   std::string manifest;
-  connection_stream->read(manifest, true);
-  out << manifest << std::endl;
+  connection_stream->read(manifest, io::LengthPrefixSize::_32BIT, MAX_MANIFEST_SIZE);
+  out << manifest << "\n";
   return true;
 }
 

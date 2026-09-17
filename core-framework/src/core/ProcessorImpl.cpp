@@ -68,7 +68,7 @@ utils::Identifier ProcessorImpl::getUUID() const {
   return metadata_.uuid;
 }
 
-utils::SmallString<36> ProcessorImpl::getUUIDStr() const {
+utils::SmallString<utils::Identifier::UUID_STR_LEN> ProcessorImpl::getUUIDStr() const {
   return getUUID().to_string();
 }
 

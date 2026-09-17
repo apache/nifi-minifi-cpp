@@ -85,7 +85,6 @@ TEST_CASE("GenerateFlowFileCustomTextTest") {
   minifi::test::SingleProcessorTestController test_controller{minifi::test::utils::make_processor<GenerateFlowFile>("GenerateFlowFile")};
   auto generate_flow_file = test_controller.getProcessor();
 
-  constexpr auto uuid_string_length = 36;
 
   CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${UUID()}"));
   CHECK(test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false"));
@@ -94,7 +93,7 @@ TEST_CASE("GenerateFlowFileCustomTextTest") {
   auto result = test_controller.trigger();
   REQUIRE(result.at(GenerateFlowFile::Success).size() == 1);
   auto result_0 = test_controller.plan->getContent(result.at(GenerateFlowFile::Success)[0]);
-  CHECK(result_0.length() == uuid_string_length);
+  CHECK(result_0.length() == utils::Identifier::UUID_STR_LEN);
 }
 
 TEST_CASE("GenerateFlowFileCustomTextEmptyTest") {

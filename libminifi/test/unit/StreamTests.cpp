@@ -16,17 +16,18 @@
  * limitations under the License.
  */
 
-#include <thread>
-#include <random>
 #include <chrono>
-#include <vector>
-#include <string>
 #include <memory>
+#include <random>
+#include <string>
+#include <thread>
 #include <utility>
-#include "unit/TestBase.h"
-#include "unit/Catch.h"
-#include "minifi-cpp/io/BaseStream.h"
+#include <vector>
+
 #include "io/StreamSlice.h"
+#include "minifi-cpp/io/BaseStream.h"
+#include "unit/Catch.h"
+#include "unit/TestBase.h"
 #include "utils/span.h"
 
 TEST_CASE("TestReadData", "[testread]") {
@@ -104,4 +105,34 @@ TEST_CASE("StreamSliceTest1", "[teststreamslice]") {
   buffer2.resize(4);
   REQUIRE(buffer == buffer2);
   REQUIRE(utils::span_to<std::vector>(utils::as_span<uint8_t>(std::span(buffer))) == std::vector<uint8_t>({3, 4, 5, 6}));
+}
+
+TEST_CASE("InputStream max_length test", "[stream][input][maxlength]") {
+  minifi::io::BufferStream buffer_stream;
+  constexpr auto& test_str =
+      "Hello world, partial length prefixed string read from stream test, it should return the truncated string, but read the full string from the "
+      "stream";
+  constexpr auto& test_str2 = "subsequent string";
+  constexpr auto test_str_serialized_length = sizeof(test_str) + 4 /* bytes for length prefix */ - 1 /* null terminator byte */;
+  constexpr auto test_str2_serialized_length = sizeof(test_str2) + 2 /* length prefix */ - 1 /* null terminator */;
+  buffer_stream.write(test_str, /* 32bit length prefix: */ true);
+  REQUIRE(buffer_stream.size() == test_str_serialized_length);
+  buffer_stream.write(test_str2, false);
+  REQUIRE(buffer_stream.size() == test_str_serialized_length + test_str2_serialized_length);
+  {
+    // read the first test string
+    std::string out_str;
+    const auto number_of_bytes_consumed_from_the_stream = buffer_stream.read(out_str, minifi::io::LengthPrefixSize::_32BIT, /* max length: */ 20);
+    REQUIRE(!minifi::io::isError(number_of_bytes_consumed_from_the_stream));
+    REQUIRE(number_of_bytes_consumed_from_the_stream == test_str_serialized_length);
+    REQUIRE(out_str == "Hello world, partial");
+  }
+  {
+    // read the second test string, to ensure that subsequent reads/writes remain aligned
+    std::string out_str;
+    const auto number_of_bytes_consumed_from_the_stream = buffer_stream.read(out_str, minifi::io::LengthPrefixSize::_16BIT, /* max length: */ 20);
+    REQUIRE(!minifi::io::isError(number_of_bytes_consumed_from_the_stream));
+    REQUIRE(number_of_bytes_consumed_from_the_stream == test_str2_serialized_length);
+    REQUIRE(out_str == test_str2);
+  }
 }

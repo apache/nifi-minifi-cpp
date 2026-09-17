@@ -58,7 +58,7 @@ utils::Identifier ControllerServiceImpl::getUUID() const {
   return metadata_.uuid;
 }
 
-utils::SmallString<36> ControllerServiceImpl::getUUIDStr() const {
+utils::SmallString<utils::Identifier::UUID_STR_LEN> ControllerServiceImpl::getUUIDStr() const {
   return getUUID().to_string();
 }
 

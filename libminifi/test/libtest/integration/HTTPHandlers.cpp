@@ -160,13 +160,13 @@ bool FlowFileResponder::handlePost(CivetServer* /*server*/, struct mg_connection
       std::string name;
       std::string value;
       {
-        const auto read = stream.read(name, true);
+        const auto read = stream.read(name, io::LengthPrefixSize::_32BIT, 1_MiB);
         if (!isServerRunning()) return false;
         REQUIRE(read > 0);
         total_size += read;
       }
       {
-        const auto read = stream.read(value, true);
+        const auto read = stream.read(value, io::LengthPrefixSize::_32BIT, 1_MiB);
         if (!isServerRunning()) return false;
         REQUIRE(read > 0);
         total_size += read;

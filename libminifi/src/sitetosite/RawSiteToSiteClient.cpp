@@ -251,7 +251,7 @@ std::optional<std::vector<PeerStatus>> RawSiteToSiteClient::getPeerList() {
 
   for (uint32_t i = 0; i < number_of_peers; i++) {
     std::string host;
-    if (const auto ret = peer_->read(host); ret == 0 || io::isError(ret)) {
+    if (const auto ret = peer_->read(host, io::LengthPrefixSize::_16BIT, 1_KiB); ret == 0 || io::isError(ret)) {
       tearDown();
       return std::nullopt;
     }
