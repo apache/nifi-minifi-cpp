@@ -73,10 +73,10 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches OPC-UA node";
 
-  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<3>::createProperty("Node ID type")
+  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<magic_enum::enum_count<opc::OPCNodeIDType>()>::createProperty("Node ID type")
       .withDescription("Specifies the type of the provided node ID")
       .isRequired(true)
-      .withAllowedValues({"Path", "Int", "String"})
+      .withAllowedValues(magic_enum::enum_names<opc::OPCNodeIDType>())
       .build();
   EXTENSIONAPI static constexpr auto NodeID = core::PropertyDefinitionBuilder<>::createProperty("Node ID")
       .withDescription("Specifies the ID of the root node to traverse. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.")
@@ -84,7 +84,7 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
       .build();
   EXTENSIONAPI static constexpr auto NameSpaceIndex = core::PropertyDefinitionBuilder<>::createProperty("Namespace index")
       .withDescription("The index of the namespace.")
-      .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
+      .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
       .withDefaultValue("0")
       .isRequired(true)
       .build();

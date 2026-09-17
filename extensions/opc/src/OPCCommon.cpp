@@ -17,6 +17,7 @@
 
 #include "OPCCommon.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <memory>
 #include <vector>
@@ -236,6 +237,14 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC) {
       nodedata.attributes["NodeID"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
       nodedata.attributes["NodeID type"] = "numeric";
+    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_GUID) {
+      const auto& guid = ref->nodeId.nodeId.identifier.guid;  // NOLINT(cppcoreguidelines-pro-type-union-access)
+      std::array<char, 37> guid_str_array;
+      snprintf(guid_str_array.data(), guid_str_array.size(), "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+          guid.data1, guid.data2, guid.data3, guid.data4[0], guid.data4[1], guid.data4[2],
+          guid.data4[3], guid.data4[4], guid.data4[5], guid.data4[6], guid.data4[7]);
+      nodedata.attributes["NodeID"] = std::string(guid_str_array.data());
+      nodedata.attributes["NodeID type"] = "guid";
     }
     nodedata.attributes["Browsename"] = browsename;
 
@@ -582,6 +591,29 @@ UA_StatusCode Client::readHistory(HistoryReadTypeOption history_type, const UA_N
     return UA_Client_HistoryRead_modified(client_, &node_id, callback, start_time, end_time, UA_STRING_NULL, false, 0, UA_TIMESTAMPSTORETURN_SOURCE, callback_context);
   }
   return UA_Client_HistoryRead_raw(client_, &node_id, callback, start_time, end_time, UA_STRING_NULL, false, 0, UA_TIMESTAMPSTORETURN_SOURCE, callback_context);
+}
+
+std::expected<opc::NodeId, std::string> buildNodeId(opc::OPCNodeIDType id_type, UA_UInt16 namespace_idx, const std::string& node_id) {
+  switch (id_type) {
+    case opc::OPCNodeIDType::String:
+      return opc::NodeId{UA_NODEID_STRING_ALLOC(namespace_idx, node_id.c_str())};
+    case opc::OPCNodeIDType::Int:
+      try {
+        return opc::NodeId{UA_NODEID_NUMERIC(namespace_idx, std::stoi(node_id))};
+      } catch(const std::exception&) {
+        auto error_msg = utils::string::join_pack(node_id, " cannot be used as an int type node ID");
+        return std::unexpected{error_msg};
+      }
+    case opc::OPCNodeIDType::Guid: {
+      UA_Guid guid;
+      if (UA_Guid_parse(&guid, UA_STRING(const_cast<char*>(node_id.c_str()))) != UA_STATUSCODE_GOOD) {
+        return std::unexpected{fmt::format("{} cannot be used as a GUID type node ID", node_id)};
+      }
+      return opc::NodeId{UA_NODEID_GUID(namespace_idx, guid)};
+    }
+    default:
+      return std::unexpected{fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type))};
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::opc
