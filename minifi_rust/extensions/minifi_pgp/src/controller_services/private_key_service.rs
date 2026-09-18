@@ -92,11 +92,8 @@ mod service_def {
     pub(super) const KEY: Property<Option<SecretKey>> =
         Property::new("Key", "Secret Key encoded in ASCII Armor").sensitive();
 
-    pub(super) const KEY_PASSWORD: Property<Option<utils::Password>> = Property::new(
-        "Key Password",
-        "Password used for decrypting Private Keys",
-    )
-    .sensitive();
+    pub(super) const KEY_PASSWORD: Property<Option<utils::Password>> =
+        Property::new("Key Password", "Password used for decrypting Private Keys").sensitive();
 
     impl ControllerServiceDefinition for PGPPrivateKeyService {
         const DESCRIPTION: &'static str =
