@@ -60,7 +60,7 @@ class TestProcessor : public minifi::core::ProcessorImpl {
 };
 
 struct TestFlow{
-  TestFlow(const std::shared_ptr<core::Repository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<core::Repository>& prov_repo,
+  TestFlow(const std::shared_ptr<core::Repository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<minifi::provenance::ProvenanceRepository>& prov_repo,
         const std::function<std::unique_ptr<core::Processor>(utils::Identifier&)>& processorGenerator, const core::Relationship& relationshipToOutput)
       : ff_repository(ff_repository), content_repo(content_repo), prov_repo(prov_repo) {
     // setup processor
@@ -178,7 +178,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
-  std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
+  auto prov_repo = std::make_shared<TestThreadedRepository>();
   auto ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
   ff_repository->initialize(config);
@@ -292,7 +292,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
   config->set(minifi::Configure::nifi_dbcontent_repository_purge_period, "0 s");
 
-  std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
+  auto prov_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
   std::shared_ptr<core::ContentRepository> content_repo;
   SECTION("VolatileContentRepository") {
