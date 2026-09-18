@@ -38,7 +38,7 @@ impl EnableControllerService for PGPPrivateKeyService {
         let mut private_keys = context.get_property(&KEY_FILE)?.unwrap_or_default();
         private_keys.extend(context.get_property(&KEY)?.unwrap_or_default());
 
-        let passphrase = context.get_property(&KEY_PASSPHRASE)?.unwrap_or_default();
+        let passphrase = context.get_property(&KEY_PASSWORD)?.unwrap_or_default();
 
         if private_keys.is_empty() {
             return Err(MinifiError::validation("Could not load any valid keys"));
@@ -92,9 +92,9 @@ mod service_def {
     pub(super) const KEY: Property<Option<SecretKey>> =
         Property::new("Key", "Secret Key encoded in ASCII Armor").sensitive();
 
-    pub(super) const KEY_PASSPHRASE: Property<Option<utils::Password>> = Property::new(
-        "Key Passphrase",
-        "Passphrase used for decrypting Private Keys",
+    pub(super) const KEY_PASSWORD: Property<Option<utils::Password>> = Property::new(
+        "Key Password",
+        "Password used for decrypting Private Keys",
     )
     .sensitive();
 
@@ -102,7 +102,7 @@ mod service_def {
         const DESCRIPTION: &'static str =
             "PGP Private Key Service provides Private Keys loaded from files or properties";
         const PROPERTIES: &'static [PropertyDefinition] =
-            property_definitions![KEY_FILE, KEY, KEY_PASSPHRASE];
+            property_definitions![KEY_FILE, KEY, KEY_PASSWORD];
         const PROVIDED_APIS: &'static [ProvidedInterface<Self>] = &[];
     }
 }
