@@ -104,7 +104,7 @@ impl Schedule for EncryptContentPGP {
         Self: Sized,
     {
         let file_encoding = context.get_property(&FILE_ENCODING)?;
-        let symmetric_password = context.get_property(&SYMMETRIC_PASSWORD)?;
+        let symmetric_password = context.get_property(&SYMMETRIC_PASSPHRASE)?;
 
         let public_key_service = context.get_controller_service(&PUBLIC_KEY_SERVICE)?;
         let public_key_search = context.get_raw_property(&PUBLIC_KEY_SEARCH)?;
@@ -179,9 +179,10 @@ mod proc_def {
     pub(crate) const FILE_ENCODING: Property<FileEncoding> =
         Property::new("File Encoding", "File Encoding for encryption")
             .with_default(FileEncoding::Binary.into_str());
-    pub(crate) const SYMMETRIC_PASSWORD: Property<Option<utils::Password>> = Property::new(
-        "Symmetric Password",
-        "Password used for encrypting data with Password-Based Encryption",
+
+    pub(crate) const SYMMETRIC_PASSPHRASE: Property<Option<utils::Password>> = Property::new(
+        "Passphrase",
+        "Passphrase used for encrypting data with Password-Based Encryption",
     )
     .sensitive();
 
@@ -221,7 +222,7 @@ mod proc_def {
 
         const PROPERTIES: &[PropertyDefinition] = property_definitions![
             FILE_ENCODING,
-            SYMMETRIC_PASSWORD,
+            SYMMETRIC_PASSPHRASE,
             PUBLIC_KEY_SEARCH,
             PUBLIC_KEY_SERVICE,
         ];
@@ -268,7 +269,7 @@ mod tests {
         let mut context = MockProcessContext::new();
         context
             .properties
-            .insert(SYMMETRIC_PASSWORD.name(), "password");
+            .insert(SYMMETRIC_PASSPHRASE.name(), "password");
 
         let mut result: Vec<u8> = Vec::new();
         let mut input_stream = std::io::Cursor::new("foo".as_bytes());

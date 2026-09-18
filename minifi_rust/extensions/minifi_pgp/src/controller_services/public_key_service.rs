@@ -72,8 +72,7 @@ mod service_def {
     pub(crate) const KEYRING: Property<Option<PublicKey>> = Property::new(
         "Keyring",
         "PGP Keyring or Public Key encoded in ASCII Armor",
-    )
-    .sensitive();
+    );
 
     impl ControllerServiceDefinition for PGPPublicKeyService {
         const DESCRIPTION: &'static str =
