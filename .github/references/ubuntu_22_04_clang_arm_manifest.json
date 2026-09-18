@@ -12110,6 +12110,14 @@
             "processors": [
                 {
                     "propertyDescriptors": {
+                        "Passphrase": {
+                            "name": "Passphrase",
+                            "description": "Passphrase used for decrypting data encrypted with Password-Based Encryption",
+                            "validator": "NON_BLANK_VALIDATOR",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
                         "Private Key Service": {
                             "typeProvidedByValue": {
                                 "type": "minifi_pgp.controller_services.private_key_service.PGPPrivateKeyService",
@@ -12121,14 +12129,6 @@
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",
-                            "expressionLanguageScope": "NONE"
-                        },
-                        "Symmetric Password": {
-                            "name": "Symmetric Password",
-                            "description": "Password used for decrypting data encrypted with Password-Based Encryption",
-                            "validator": "NON_BLANK_VALIDATOR",
-                            "required": "false",
-                            "sensitive": "true",
                             "expressionLanguageScope": "NONE"
                         }
                     },
@@ -12170,6 +12170,14 @@
                                 }
                             ]
                         },
+                        "Passphrase": {
+                            "name": "Passphrase",
+                            "description": "Passphrase used for encrypting data with Password-Based Encryption",
+                            "validator": "NON_BLANK_VALIDATOR",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
                         "Public Key Search": {
                             "name": "Public Key Search",
                             "description": "PGP Public Key Search will be used to match against the User ID or Key ID when formatted as uppercase hexadecimal string of 16 characters",
@@ -12189,14 +12197,6 @@
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",
-                            "expressionLanguageScope": "NONE"
-                        },
-                        "Symmetric Password": {
-                            "name": "Symmetric Password",
-                            "description": "Password used for encrypting data with Password-Based Encryption",
-                            "validator": "NON_BLANK_VALIDATOR",
-                            "required": "false",
-                            "sensitive": "true",
                             "expressionLanguageScope": "NONE"
                         }
                     },
@@ -12237,9 +12237,9 @@
                             "sensitive": "false",
                             "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
                         },
-                        "Key Passphrase": {
-                            "name": "Key Passphrase",
-                            "description": "Passphrase used for decrypting Private Keys",
+                        "Key Password": {
+                            "name": "Key Password",
+                            "description": "Password used for decrypting Private Keys",
                             "validator": "NON_BLANK_VALIDATOR",
                             "required": "false",
                             "sensitive": "true",
@@ -12258,7 +12258,7 @@
                             "description": "PGP Keyring or Public Key encoded in ASCII Armor",
                             "validator": "VALID",
                             "required": "false",
-                            "sensitive": "true",
+                            "sensitive": "false",
                             "expressionLanguageScope": "NONE"
                         },
                         "Keyring File": {
