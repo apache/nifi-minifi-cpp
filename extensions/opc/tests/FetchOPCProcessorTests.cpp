@@ -118,6 +118,104 @@ TEST_CASE("Test fetching using string node id", "[fetchopcprocessor]") {
   CHECK(controller.plan->getContent(flow_file) == "42");
 }
 
+TEST_CASE("Test fetching using int node id", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Int"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "666"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  const auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
+  auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
+  CHECK(flow_file->getAttribute("Browsename") == "666");
+  CHECK(flow_file->getAttribute("Datasize") == "4");
+  CHECK(flow_file->getAttribute("NodeID") == "666");
+  CHECK(flow_file->getAttribute("NodeID type") == "numeric");
+  CHECK(flow_file->getAttribute("Typename") == "Int32");
+  CHECK(flow_file->getAttribute("Sourcetimestamp"));
+  CHECK(controller.plan->getContent(flow_file) == "256");
+}
+
+TEST_CASE("Test fetching using guid node id", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Guid"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "72962b91-fa75-4ae6-8d28-b404dc7daf63"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  const auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
+  auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
+  CHECK(flow_file->getAttribute("Browsename") == "72962b91-fa75-4ae6-8d28-b404dc7daf63");
+  CHECK(flow_file->getAttribute("Datasize") == "4");
+  CHECK(flow_file->getAttribute("NodeID") == "72962b91-fa75-4ae6-8d28-b404dc7daf63");
+  CHECK(flow_file->getAttribute("NodeID type") == "guid");
+  CHECK(flow_file->getAttribute("Typename") == "Int32");
+  CHECK(flow_file->getAttribute("Sourcetimestamp"));
+  CHECK(controller.plan->getContent(flow_file) == "7");
+}
+
+TEST_CASE("Test fetching with limited max depth", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::MaxDepth.name, "2"));
+
+  const auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 3);
+  for (size_t i = 0; i < 3; i++) {
+    auto flow_file = results.at(processors::FetchOPCProcessor::Success)[i];
+    CHECK(flow_file->getAttribute("Browsename") == "INT" + std::to_string(i + 1));
+    CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT" + std::to_string(i + 1));
+  }
+}
+
+TEST_CASE("Test invalid guid node id", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Guid"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "not-a-valid-guid"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  REQUIRE_THROWS_WITH(controller.trigger(), "Process Schedule Operation: not-a-valid-guid cannot be used as a GUID type node ID");
+}
+
+TEST_CASE("Test no variables found when fetching a node without variable children", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  LogTestController::getInstance().setWarn<processors::FetchOPCProcessor>();
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "Simulator/Default/Device2/GuidObject"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::PathReferenceTypes.name, "Organizes/Organizes/Organizes"));
+
+  const auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).empty());
+  REQUIRE(LogTestController::getInstance().contains("Found no variables when traversing the specified node. No flowfiles are generated. Yielding..."));
+}
+
 TEST_CASE("Test missing path reference types", "[fetchopcprocessor]") {
   SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
   auto fetch_opc_processor = controller.getProcessor();

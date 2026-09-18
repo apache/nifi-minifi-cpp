@@ -24,6 +24,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <expected>
 #include <string_view>
 #include <utility>
 #include <optional>
@@ -196,6 +197,8 @@ std::string OPCDateTime2String(UA_DateTime raw_date);
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args);
 
 std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type);
+
+std::expected<opc::NodeId, std::string> buildNodeId(opc::OPCNodeIDType id_type, UA_UInt16 namespace_idx, const std::string& node_id);
 
 }  // namespace org::apache::nifi::minifi::opc
 

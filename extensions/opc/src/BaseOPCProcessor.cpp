@@ -109,6 +109,7 @@ bool BaseOPCProcessor::reconnect() {
 }
 
 void BaseOPCProcessor::readPathReferenceTypes(core::ProcessContext& context, const std::string& node_id) {
+  path_reference_types_.clear();
   const auto value = context.getProperty(PathReferenceTypes).value_or("");
   if (value.empty()) {
     return;
@@ -126,16 +127,24 @@ void BaseOPCProcessor::readPathReferenceTypes(core::ProcessContext& context, con
   }
 }
 
-void BaseOPCProcessor::parseIdType(core::ProcessContext& context, const core::PropertyReference& prop) {
-  id_type_ = utils::parseEnumProperty<opc::OPCNodeIDType>(context, prop);
-
-  if (id_type_ == opc::OPCNodeIDType::Int) {
-    try {
-      static_cast<void>(std::stoi(node_id_));
-    } catch(const std::exception&) {
-      auto error_msg = utils::string::join_pack(node_id_, " cannot be used as an int type node ID");
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
+void BaseOPCProcessor::parseNode(core::ProcessContext& context) {
+  switch (id_type_) {
+    case opc::OPCNodeIDType::String:
+    case opc::OPCNodeIDType::Int:
+    case opc::OPCNodeIDType::Guid: {
+      if (auto result = opc::buildNodeId(id_type_, namespace_idx_, node_id_)) {
+        node_ = std::move(*result);
+      } else {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, result.error());
+      }
+      break;
     }
+    case opc::OPCNodeIDType::Path:
+      readPathReferenceTypes(context, node_id_);
+      path_node_id_resolved_ = false;
+      break;
+    default:
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type_)));
   }
 }
 

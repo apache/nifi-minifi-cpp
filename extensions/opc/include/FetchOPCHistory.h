@@ -80,7 +80,7 @@ class FetchOPCHistory final : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto NameSpaceIndex =
       core::PropertyDefinitionBuilder<>::createProperty("Namespace index")
           .withDescription("The index of the namespace.")
-          .withValidator(core::StandardPropertyValidators::INTEGER_VALIDATOR)
+          .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
           .withDefaultValue("0")
           .isRequired(true)
           .build();
@@ -151,8 +151,6 @@ class FetchOPCHistory final : public BaseOPCProcessor {
   std::optional<std::chrono::system_clock::time_point> end_timestamp_;
   uint64_t batch_size_ = 0;
   std::shared_ptr<core::RecordSetWriter> record_set_writer_;
-  opc::NodeId node_;
-  bool path_node_id_resolved_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
