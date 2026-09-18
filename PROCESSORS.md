@@ -26,11 +26,13 @@ limitations under the License.
 - [ConsumeMQTT](#ConsumeMQTT)
 - [ConsumeWindowsEventLog](#ConsumeWindowsEventLog)
 - [ConvertRecord](#ConvertRecord)
+- [DecryptContentPGP](#DecryptContentPGP)
 - [DefragmentText](#DefragmentText)
 - [DeleteAzureBlobStorage](#DeleteAzureBlobStorage)
 - [DeleteAzureDataLakeStorage](#DeleteAzureDataLakeStorage)
 - [DeleteGCSObject](#DeleteGCSObject)
 - [DeleteS3Object](#DeleteS3Object)
+- [EncryptContentPGP](#EncryptContentPGP)
 - [EvaluateJsonPath](#EvaluateJsonPath)
 - [ExecuteProcess](#ExecuteProcess)
 - [ExecuteScript](#ExecuteScript)
@@ -436,6 +438,29 @@ In the list below, the names of required properties appear in bold. Any other pr
 | record.error.message | failure      | This attribute provides on failure the error message encountered by the Reader or Writer. |
 
 
+## DecryptContentPGP
+
+### Description
+
+Decrypt contents of OpenPGP messages.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                | Default Value | Allowable Values | Description                                                                                                   |
+|---------------------|---------------|------------------|---------------------------------------------------------------------------------------------------------------|
+| Passphrase          |               |                  | Passphrase used for decrypting data encrypted with Password-Based Encryption<br/>**Sensitive Property: true** |
+| Private Key Service |               |                  | PGP Private Key Service for decrypting data encrypted with Public Key Encryption                              |
+
+### Relationships
+
+| Name    | Description          |
+|---------|----------------------|
+| failure | Decryption Failed    |
+| success | Decryption Succeeded |
+
+
 ## DefragmentText
 
 ### Description
@@ -592,6 +617,37 @@ In the list below, the names of required properties appear in bold. Any other pr
 |---------|----------------------------------------------|
 | success | FlowFiles are routed to success relationship |
 | failure | FlowFiles are routed to failure relationship |
+
+
+## EncryptContentPGP
+
+### Description
+
+Encrypt contents using OpenPGP.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name               | Default Value | Allowable Values | Description                                                                                                                                                                          |
+|--------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **File Encoding**  | BINARY        | ASCII<br/>BINARY | File Encoding for encryption                                                                                                                                                         |
+| Passphrase         |               |                  | Passphrase used for encrypting data with Password-Based Encryption<br/>**Sensitive Property: true**                                                                                  |
+| Public Key Search  |               |                  | PGP Public Key Search will be used to match against the User ID or Key ID when formatted as uppercase hexadecimal string of 16 characters<br/>**Supports Expression Language: true** |
+| Public Key Service |               |                  | PGP Public Key Service for encrypting data with Public Key Encryption                                                                                                                |
+
+### Relationships
+
+| Name    | Description          |
+|---------|----------------------|
+| failure | Encryption Failed    |
+| success | Encryption Succeeded |
+
+### Output Attributes
+
+| Attribute         | Relationship | Description   |
+|-------------------|--------------|---------------|
+| pgp.file.encoding | success      | File Encoding |
 
 
 ## EvaluateJsonPath
