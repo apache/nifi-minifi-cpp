@@ -1,8 +1,8 @@
 use crate::processors::attributes::{FORK_ROLE_ATTR, GROUP_ID_ATTR};
 use crate::processors::fork_enrichment::ForkEnrichment;
 use minifi_native::{
-    property_definitions, OutputAttribute, ProcessorDefinition, ProcessorInputRequirement,
-    PropertyDefinition, Relationship,
+    OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
+    Relationship, property_definitions,
 };
 
 pub(crate) const ORIGINAL: Relationship = Relationship {

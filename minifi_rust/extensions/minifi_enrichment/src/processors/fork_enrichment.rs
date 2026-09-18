@@ -10,8 +10,7 @@ use minifi_native::{
 use uuid::Uuid;
 
 #[derive(ComponentIdentifier)]
-pub(crate) struct ForkEnrichment {
-}
+pub(crate) struct ForkEnrichment {}
 
 impl Schedule for ForkEnrichment {
     fn schedule<Ctx: GetProperty, L: Logger>(
@@ -21,8 +20,7 @@ impl Schedule for ForkEnrichment {
     where
         Self: Sized,
     {
-        Ok(Self {
-        })
+        Ok(Self {})
     }
 }
 
