@@ -210,7 +210,7 @@ mod tests {
                 .insert("Key File", test_utils::get_test_key_path(self.key_filename));
 
             if let Some(passphrase) = self.passphrase {
-                context.properties.insert("Key Passphrase", passphrase);
+                context.properties.insert("Key Password", passphrase);
             }
 
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable")

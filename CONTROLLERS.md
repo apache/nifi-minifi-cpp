@@ -257,11 +257,11 @@ PGP Private Key Service provides Private Keys loaded from files or properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name           | Default Value | Allowable Values | Description                                                                                             |
-|----------------|---------------|------------------|---------------------------------------------------------------------------------------------------------|
-| Key File       |               |                  | File path to PGP Secret Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true** |
-| Key            |               |                  | Secret Key encoded in ASCII Armor<br/>**Sensitive Property: true**                                      |
-| Key Passphrase |               |                  | Passphrase used for decrypting Private Keys<br/>**Sensitive Property: true**                            |
+| Name         | Default Value | Allowable Values | Description                                                                                             |
+|--------------|---------------|------------------|---------------------------------------------------------------------------------------------------------|
+| Key          |               |                  | Secret Key encoded in ASCII Armor<br/>**Sensitive Property: true**                                      |
+| Key File     |               |                  | File path to PGP Secret Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true** |
+| Key Password |               |                  | Password used for decrypting Private Keys<br/>**Sensitive Property: true**                              |
 
 
 ## PGPPublicKeyService
@@ -276,8 +276,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name         | Default Value | Allowable Values | Description                                                                                                        |
 |--------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------|
+| Keyring      |               |                  | PGP Keyring or Public Key encoded in ASCII Armor                                                                   |
 | Keyring File |               |                  | File path to PGP Keyring or Public Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true** |
-| Keyring      |               |                  | PGP Keyring or Public Key encoded in ASCII Armor<br/>**Sensitive Property: true**                                  |
 
 
 ## ProxyConfigurationService
