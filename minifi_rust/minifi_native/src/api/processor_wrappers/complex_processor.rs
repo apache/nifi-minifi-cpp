@@ -18,7 +18,7 @@
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
     ComponentIdentifier, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
-    ProcessError, ProcessSession, Processor, ProcessorDefinition, Schedule, SingleThreaded,
+    ProcessSession, Processor, ProcessorDefinition, Schedule, SingleThreaded,
 };
 
 pub trait MutTrigger {
@@ -27,7 +27,7 @@ pub trait MutTrigger {
         context: &mut Ctx,
         session: &mut Session,
         logger: &Lggr,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         Ctx: ProcessContext,
         Session: ProcessSession<FlowFile = Ctx::FlowFile>,
@@ -40,7 +40,7 @@ pub trait Trigger {
         context: &mut Context,
         session: &mut Session,
         logger: &Lggr,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         Context: ProcessContext,
         Session: ProcessSession<FlowFile = Context::FlowFile>,
@@ -59,7 +59,7 @@ where
         &mut self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -67,7 +67,7 @@ where
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
             scheduled_impl.trigger(context, session, &self.logger)
         } else {
-            Err(MinifiError::UnscheduledProcessor.into())
+            Err(MinifiError::UnscheduledProcessor)
         }
     }
 }
@@ -82,7 +82,7 @@ where
         &self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -90,7 +90,7 @@ where
         if let Some(ref scheduled_impl) = self.scheduled_impl {
             scheduled_impl.trigger(context, session, &self.logger)
         } else {
-            Err(MinifiError::UnscheduledProcessor.into())
+            Err(MinifiError::UnscheduledProcessor)
         }
     }
 }

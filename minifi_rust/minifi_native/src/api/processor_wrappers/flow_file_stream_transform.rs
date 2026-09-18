@@ -21,8 +21,8 @@ use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{FlowFileAttribute, impl_with_attributes};
 use crate::{
     GetAttribute, GetControllerService, GetProperty, InputStream, LogLevel, Logger, MinifiError,
-    MultiThreaded, OnTriggerResult, OutputStream, ProcessContext, ProcessError, ProcessSession,
-    Processor, Relationship, Schedule, SingleThreaded,
+    MultiThreaded, OnTriggerResult, OutputStream, ProcessContext, ProcessSession, Processor,
+    Relationship, Schedule, SingleThreaded, TransformError,
 };
 
 #[derive(Debug)]
@@ -72,23 +72,31 @@ impl TransformStreamResult {
 impl_with_attributes!(TransformStreamResult);
 
 pub trait FlowFileStreamTransform {
+    /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
+    /// are routed to.
+    const ERROR_RELATIONSHIP: &'static Relationship;
+
     fn transform<Ctx: GetProperty + GetControllerService + GetAttribute, LoggerImpl: Logger>(
         &self,
         context: &Ctx,
         input_stream: &mut dyn InputStream,
         output_stream: &mut dyn OutputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformStreamResult, ProcessError>;
+    ) -> Result<TransformStreamResult, TransformError>;
 }
 
 pub trait MutFlowFileStreamTransform {
+    /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
+    /// are routed to.
+    const ERROR_RELATIONSHIP: &'static Relationship;
+
     fn transform<Ctx: GetProperty + GetControllerService + GetAttribute, LoggerImpl: Logger>(
         &mut self,
         context: &Ctx,
         input_stream: &mut dyn InputStream,
         output_stream: &mut dyn OutputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformStreamResult, ProcessError>;
+    ) -> Result<TransformStreamResult, TransformError>;
 }
 
 pub struct FlowFileStreamTransformProcessorType {}
@@ -97,8 +105,9 @@ fn handle_stream_transform<PC, PS, L, F>(
     context: &mut PC,
     session: &mut PS,
     logger: &L,
+    error_relationship: &Relationship,
     mut transform_fn: F,
-) -> Result<OnTriggerResult, ProcessError>
+) -> Result<OnTriggerResult, MinifiError>
 where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -107,7 +116,7 @@ where
         &ContextSessionFlowFileBundle<PC, PS>,
         &mut dyn InputStream,
         &mut dyn OutputStream,
-    ) -> Result<TransformStreamResult, ProcessError>,
+    ) -> Result<TransformStreamResult, TransformError>,
 {
     if let Some(mut flow_file) = session.get() {
         let simple_context = ContextSessionFlowFileBundle::new(context, session, Some(&flow_file));
@@ -116,13 +125,13 @@ where
             session.write_stream(&flow_file, |output_stream| {
                 let transformed = match transform_fn(&simple_context, input_stream, output_stream) {
                     Ok(t) => t,
-                    Err(ProcessError::Route(route)) => {
-                        route.log(logger);
-                        TransformStreamResult::route_without_changes_by_name(route.relationship)
-                    }
-                    Err(ProcessError::Fatal(e)) => {
-                        return Err(e);
-                    }
+                    Err(err) => match err.into_route(error_relationship) {
+                        Ok(route) => {
+                            route.log(logger);
+                            TransformStreamResult::route_without_changes_by_name(route.relationship)
+                        }
+                        Err(minifi_error) => return Err(minifi_error),
+                    },
                 };
 
                 Ok((
@@ -158,17 +167,21 @@ where
         &self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
         if let Some(ref scheduled_impl) = self.scheduled_impl {
-            handle_stream_transform(context, session, &self.logger, |ctx, input, output| {
-                scheduled_impl.transform(ctx, input, output, &self.logger)
-            })
+            handle_stream_transform(
+                context,
+                session,
+                &self.logger,
+                Implementation::ERROR_RELATIONSHIP,
+                |ctx, input, output| scheduled_impl.transform(ctx, input, output, &self.logger),
+            )
         } else {
-            Err(MinifiError::UnscheduledProcessor.into())
+            Err(MinifiError::UnscheduledProcessor)
         }
     }
 }
@@ -183,30 +196,90 @@ where
         &mut self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
-            handle_stream_transform(context, session, &self.logger, |ctx, input, output| {
-                scheduled_impl.transform(ctx, input, output, &self.logger)
-            })
+            handle_stream_transform(
+                context,
+                session,
+                &self.logger,
+                Implementation::ERROR_RELATIONSHIP,
+                |ctx, input, output| scheduled_impl.transform(ctx, input, output, &self.logger),
+            )
         } else {
-            Err(MinifiError::UnscheduledProcessor.into())
+            Err(MinifiError::UnscheduledProcessor)
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::Relationship;
-    use minifi_native::TransformStreamResult;
+    use super::*;
+    use crate::api::RawProcessor;
+    use crate::{MockFlowFile, MockLogger, MockProcessContext, MockProcessSession};
 
     const TEST_RELATIONSHIP: Relationship = Relationship {
         name: "test",
         description: "test desc",
     };
+
+    const FAILURE: Relationship = Relationship {
+        name: "failure",
+        description: "test failure relationship",
+    };
+
+    struct PartialWriteThenError;
+    impl Schedule for PartialWriteThenError {
+        fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
+            Ok(PartialWriteThenError)
+        }
+    }
+    impl FlowFileStreamTransform for PartialWriteThenError {
+        const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
+        fn transform<Ctx: GetProperty + GetControllerService + GetAttribute, LoggerImpl: Logger>(
+            &self,
+            _context: &Ctx,
+            _input_stream: &mut dyn InputStream,
+            output_stream: &mut dyn OutputStream,
+            _logger: &LoggerImpl,
+        ) -> Result<TransformStreamResult, TransformError> {
+            output_stream.write_all(b"PARTIAL")?;
+            Err(MinifiError::custom("boom"))?
+        }
+    }
+
+    #[test]
+    fn bubbled_error_routes_to_error_relationship_with_unchanged_content() {
+        let mut processor: Processor<
+            PartialWriteThenError,
+            FlowFileStreamTransformProcessorType,
+            MultiThreaded,
+            MockLogger,
+        > = Processor::new(MockLogger::new());
+        processor.scheduled_impl = Some(PartialWriteThenError);
+
+        let mut context = MockProcessContext::new();
+        let mut session = MockProcessSession::new();
+        session
+            .input_flow_files
+            .push(MockFlowFile::with_content(b"original"));
+
+        let result = MultiThreadedTrigger::trigger(&processor, &mut context, &mut session);
+        assert_eq!(
+            result.expect("should route to failure, not roll back"),
+            OnTriggerResult::Ok
+        );
+
+        let transferred = session.transferred_flow_files.borrow();
+        assert_eq!(transferred.len(), 1);
+        assert_eq!(transferred[0].relationship, "failure");
+        assert_eq!(*transferred[0].flow_file.content.borrow(), b"original");
+    }
+
     #[test]
     fn test_with_attributes() {
         let mut gen_ff = TransformStreamResult::new(&TEST_RELATIONSHIP);

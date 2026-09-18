@@ -90,9 +90,10 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description |
-|---------|-------------|
-| success |             |
+| Name    | Description                                            |
+|---------|--------------------------------------------------------|
+| failure | Flowfiles that could not be duplicated are routed here |
+| success |                                                        |
 
 
 ## GenerateFlowFileRs
@@ -218,6 +219,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                               | Default Value | Allowable Values  | Description                                |
 |------------------------------------|---------------|-------------------|--------------------------------------------|
+| Dummy Controller Service           |               |                   | Optional dummy controller service          |
 | **Lorem Ipsum Controller Service** |               |                   | Name of the lorem ipsum controller service |
 | **Write Method**                   | Buffer        | Buffer<br/>Stream | Which API to test                          |
 
