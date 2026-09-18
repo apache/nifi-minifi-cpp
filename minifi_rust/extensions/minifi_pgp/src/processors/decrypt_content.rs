@@ -40,7 +40,7 @@ impl Schedule for DecryptContentPGP {
         Self: Sized,
         L: Logger,
     {
-        let symmetric_password = context.get_property(&SYMMETRIC_PASSWORD)?;
+        let symmetric_password = context.get_property(&SYMMETRIC_PASSPHRASE)?;
         let private_key_service = context.get_controller_service(&PRIVATE_KEY_SERVICE)?;
         if private_key_service.is_none() && symmetric_password.is_none() {
             Err(MinifiError::validation(
@@ -72,23 +72,6 @@ impl DecryptContentPGP {
         let (decrypted_msg, _ring_result) = msg.decrypt_the_ring(ring, false)?;
         Ok(decrypted_msg)
     }
-
-    fn extract_attributes_from_decrypted_message(
-        decrypted_msg: &Message,
-    ) -> Vec<(&'static str, String)> {
-        let mut res = Vec::new();
-        if let Some(literal_data_header) = decrypted_msg.literal_data_header() {
-            if let Ok(file_name) = str::from_utf8(literal_data_header.file_name()) {
-                res.push((LITERAL_DATA_FILENAME.name, file_name.to_string()));
-            }
-            // NiFi uses ms timestamp
-            res.push((
-                LITERAL_DATA_MODIFIED.name,
-                (1000u64 * literal_data_header.created().as_secs() as u64).to_string(),
-            ));
-        }
-        res
-    }
 }
 
 impl FlowFileStreamTransform for DecryptContentPGP {
@@ -116,11 +99,10 @@ impl FlowFileStreamTransform for DecryptContentPGP {
                 .route_err_to_failure()?
         };
 
-        let attributes_to_add = Self::extract_attributes_from_decrypted_message(&decrypted_msg);
         let _written_bytes =
             std::io::copy(&mut decrypted_msg.into_inner(), output_stream).route_err_to_failure()?;
 
-        Ok(TransformStreamResult::new(&SUCCESS).with_attributes(attributes_to_add))
+        Ok(TransformStreamResult::new(&SUCCESS))
     }
 }
 
@@ -133,21 +115,9 @@ mod proc_def {
         PropertyDefinition, Relationship, property_definitions,
     };
 
-    pub(super) const LITERAL_DATA_FILENAME: OutputAttribute = OutputAttribute {
-        name: "pgp.literal.data.filename",
-        relationships: &["success"],
-        description: "Filename from decrypted Literal Data (Note that OpenPGP signatures do not include the formatting octet, the file name, and the date field of the Literal Data packet in a signature hash; therefore, those fields are not protected against tampering in a signed document. Therefore a lot of implementations omit these inherently malleable metadata)",
-    };
-
-    pub(super) const LITERAL_DATA_MODIFIED: OutputAttribute = OutputAttribute {
-        name: "pgp.literal.data.modified",
-        relationships: &["success"],
-        description: "Modified Date from decrypted Literal Data (Note that OpenPGP signatures do not include the formatting octet, the file name, and the date field of the Literal Data packet in a signature hash; therefore, those fields are not protected against tampering in a signed document. Therefore a lot of implementations omit these inherently malleable metadata)",
-    };
-
-    pub(super) const SYMMETRIC_PASSWORD: Property<Option<utils::Password>> = Property::new(
-        "Symmetric Password",
-        "Password used for decrypting data encrypted with Password-Based Encryption",
+    pub(super) const SYMMETRIC_PASSPHRASE: Property<Option<utils::Password>> = Property::new(
+        "Passphrase",
+        "Passphrase used for decrypting data encrypted with Password-Based Encryption",
     )
     .sensitive();
 
@@ -171,11 +141,10 @@ mod proc_def {
         const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
         const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
         const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
-        const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] =
-            &[LITERAL_DATA_FILENAME, LITERAL_DATA_MODIFIED];
+        const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
         const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
         const PROPERTIES: &[PropertyDefinition] =
-            property_definitions![SYMMETRIC_PASSWORD, PRIVATE_KEY_SERVICE,];
+            property_definitions![SYMMETRIC_PASSPHRASE, PRIVATE_KEY_SERVICE,];
     }
 }
 
@@ -208,9 +177,10 @@ mod tests {
     #[test]
     fn schedules_with_password() {
         let mut context = MockProcessContext::new();
-        context
-            .properties
-            .insert(SYMMETRIC_PASSWORD.name(), "my_secret_password".to_string());
+        context.properties.insert(
+            SYMMETRIC_PASSPHRASE.name(),
+            "my_secret_password".to_string(),
+        );
         let decrypt_content = DecryptContentPGP::schedule(&context, &MockLogger::new());
         assert!(decrypt_content.is_ok());
     }
@@ -267,7 +237,7 @@ mod tests {
         if let Some(symmetric_password) = symmetric_password {
             processor_context
                 .properties
-                .insert(SYMMETRIC_PASSWORD.name(), symmetric_password.to_string());
+                .insert(SYMMETRIC_PASSPHRASE.name(), symmetric_password.to_string());
         }
 
         let decrypt_content = DecryptContentPGP::schedule(&processor_context, &MockLogger::new())
@@ -287,14 +257,6 @@ mod tests {
                 assert_eq!(res.target_relationship_name(), SUCCESS.name);
                 assert_eq!(res.write_status(), IoState::Ok);
                 assert_eq!(output, result_bytes);
-                let data_modified = res
-                    .get_attribute(LITERAL_DATA_MODIFIED.name)
-                    .unwrap()
-                    .parse::<u64>()
-                    .expect("Should be u64");
-                assert!(data_modified > 1770000000000);
-                assert!(data_modified < 1780000000000);
-                assert!(res.get_attribute(LITERAL_DATA_FILENAME.name).is_some());
             }
             Err(_) => test::assert_routed_to(res, &FAILURE),
         }

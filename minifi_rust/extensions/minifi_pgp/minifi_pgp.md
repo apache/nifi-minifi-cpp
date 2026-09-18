@@ -35,24 +35,17 @@ Decrypt contents of OpenPGP messages.
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                | Default Value | Allowable Values | Description                                                                                                 |
-|---------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------|
-| Symmetric Password  |               |                  | Password used for decrypting data encrypted with Password-Based Encryption<br/>**Sensitive Property: true** |
-| Private Key Service |               |                  | PGP Private Key Service for decrypting data encrypted with Public Key Encryption                            |
+| Name                | Default Value | Allowable Values | Description                                                                                                   |
+|---------------------|---------------|------------------|---------------------------------------------------------------------------------------------------------------|
+| Passphrase          |               |                  | Passphrase used for decrypting data encrypted with Password-Based Encryption<br/>**Sensitive Property: true** |
+| Private Key Service |               |                  | PGP Private Key Service for decrypting data encrypted with Public Key Encryption                              |
 
 ### Relationships
 
 | Name    | Description          |
 |---------|----------------------|
-| success | Decryption Succeeded |
 | failure | Decryption Failed    |
-
-### Output Attributes
-
-| Attribute                 | Relationship | Description                                                                                                                                                                                                                                                                                                                                                  |
-|---------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| pgp.literal.data.filename | success      | Filename from decrypted Literal Data (Note that OpenPGP signatures do not include the formatting octet, the file name, and the date field of the Literal Data packet in a signature hash; therefore, those fields are not protected against tampering in a signed document. Therefore a lot of implementation omit these inherently malleable metadata)      |
-| pgp.literal.data.modified | success      | Modified Date from decrypted Literal Data (Note that OpenPGP signatures do not include the formatting octet, the file name, and the date field of the Literal Data packet in a signature hash; therefore, those fields are not protected against tampering in a signed document. Therefore a lot of implementation omit these inherently malleable metadata) |
+| success | Decryption Succeeded |
 
 
 ## EncryptContentPGP
@@ -68,7 +61,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name               | Default Value | Allowable Values | Description                                                                                                                                                                          |
 |--------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **File Encoding**  | BINARY        | ASCII<br/>BINARY | File Encoding for encryption                                                                                                                                                         |
-| Symmetric Password |               |                  | Password used for encrypting data with Password-Based Encryption<br/>**Sensitive Property: true**                                                                                    |
+| Passphrase         |               |                  | Passphrase used for encrypting data with Password-Based Encryption<br/>**Sensitive Property: true**                                                                                  |
 | Public Key Search  |               |                  | PGP Public Key Search will be used to match against the User ID or Key ID when formatted as uppercase hexadecimal string of 16 characters<br/>**Supports Expression Language: true** |
 | Public Key Service |               |                  | PGP Public Key Service for encrypting data with Public Key Encryption                                                                                                                |
 
@@ -76,8 +69,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name    | Description          |
 |---------|----------------------|
-| success | Encryption Succeeded |
 | failure | Encryption Failed    |
+| success | Encryption Succeeded |
 
 ### Output Attributes
 
@@ -98,8 +91,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name           | Default Value | Allowable Values | Description                                                                                             |
 |----------------|---------------|------------------|---------------------------------------------------------------------------------------------------------|
-| Key File       |               |                  | File path to PGP Secret Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true** |
 | Key            |               |                  | Secret Key encoded in ASCII Armor<br/>**Sensitive Property: true**                                      |
+| Key File       |               |                  | File path to PGP Secret Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true** |
 | Key Passphrase |               |                  | Passphrase used for decrypting Private Keys<br/>**Sensitive Property: true**                            |
 
 
@@ -115,5 +108,5 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name         | Default Value | Allowable Values | Description                                                                                                        |
 |--------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------|
-| Keyring File |               |                  | File path to PGP Keyring or Secret Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true** |
-| Keyring      |               |                  | PGP Keyring or Secret Key encoded in ASCII Armor<br/>**Sensitive Property: true**                                  |
+| Keyring      |               |                  | PGP Keyring or Public Key encoded in ASCII Armor                                                                   |
+| Keyring File |               |                  | File path to PGP Keyring or Public Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true** |
