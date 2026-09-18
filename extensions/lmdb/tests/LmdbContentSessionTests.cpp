@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::test {
 
 class LmdbContentSessionController : public TestController {
  public:
-  LmdbContentSessionController() : content_repository_(std::make_shared<core::repository::LmdbContentRepository>()) {
+  LmdbContentSessionController() : content_repository_(std::make_shared<extensions::lmdb::LmdbContentRepository>()) {
     auto content_repo_path = createTempDirectory();
     auto config = std::make_shared<ConfigureImpl>();
     config->set(Configure::nifi_dbcontent_repository_directory_default, content_repo_path.string());
