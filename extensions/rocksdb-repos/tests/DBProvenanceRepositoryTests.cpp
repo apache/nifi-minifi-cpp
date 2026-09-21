@@ -21,7 +21,7 @@
 #include <random>
 #include <vector>
 
-#include "ProvenanceRepository.h"
+#include "RocksDbProvenanceRepository.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 
@@ -61,13 +61,24 @@ void verifyMaxKeyCount(const minifi::provenance::ProvenanceRepository& repo, uin
   REQUIRE(k < keyCount);
 }
 
+std::vector<std::byte> serializeEvent(minifi::provenance::ProvenanceEventRecord& event) {
+  minifi::io::BufferStream stream;
+  event.serialize(stream);
+  return stream.moveBuffer();
+}
+
+template<typename T>
+void appendAll(std::vector<T>& sink, const std::vector<T>& source) {
+  sink.insert(sink.end(), source.begin(), source.end());
+}
+
 TEST_CASE("Test size limit", "[sizeLimitTest]") {
   TestController testController;
   auto temp_dir = testController.createTempDirectory();
   REQUIRE(!temp_dir.empty());
 
   // 60 sec, 100 KB - going to exceed the size limit
-  minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1min, TEST_PROVENANCE_STORAGE_SIZE, 1s);
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1min, TEST_PROVENANCE_STORAGE_SIZE, 1s);
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
@@ -87,7 +98,7 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
   REQUIRE(!temp_dir.empty());
 
   // 1 sec, 100 MB - going to exceed TTL
-  minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
@@ -113,4 +124,129 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
   provisionRepo(provdb, keyCount /2, 102400);
 
   verifyMaxKeyCount(provdb, 400);
+}
+
+TEST_CASE("Test query elements after cursor", "[iterationTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
+  for (size_t i = 0; i < 8; ++i) {
+    events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+  }
+
+  REQUIRE(provdb.appendEvents(events));
+
+  auto cursor = provdb.cursorFromString("");
+  REQUIRE(cursor);
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events;
+
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 3);
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 6);
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 8);
+
+  std::string last_event_id;
+
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(last_event_id < std::string{queried_events.at(i)->getUUIDStr()});
+    last_event_id = queried_events.at(i)->getUUIDStr();
+    REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
+}
+
+TEST_CASE("Test loading cursor from string", "[cursorSerializationTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
+  for (size_t i = 0; i < 8; ++i) {
+    events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+  }
+
+  REQUIRE(provdb.appendEvents(events));
+
+  auto cursor = provdb.cursorFromString("");
+  REQUIRE(cursor);
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events;
+
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 3);
+
+  cursor = provdb.cursorFromString(cursor->toString());
+  REQUIRE(cursor);
+
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 6);
+
+  std::string last_event_id;
+
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(last_event_id < std::string{queried_events.at(i)->getUUIDStr()});
+    last_event_id = queried_events.at(i)->getUUIDStr();
+    REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
+}
+
+TEST_CASE("Test opening existing database loads monotonic counter", "[eventUuidMonotonicTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  auto provdb = std::make_unique<minifi::provenance::RocksDbProvenanceRepository>("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb->initialize(configuration));
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
+  for (size_t i = 0; i < 4; ++i) {
+    events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+  }
+
+  REQUIRE(provdb->appendEvents(events));
+
+  provdb = std::make_unique<minifi::provenance::RocksDbProvenanceRepository>("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  REQUIRE(provdb->initialize(configuration));
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> new_events;
+  for (size_t i = 0; i < 4; ++i) {
+    new_events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+    events.push_back(new_events.back());
+  }
+
+  REQUIRE(provdb->appendEvents(new_events));
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events = provdb->getEvents(8, nullptr).value();
+  REQUIRE(queried_events.size() == 8);
+
+  std::string last_event_id;
+
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(last_event_id < std::string{queried_events.at(i)->getUUIDStr()});
+    last_event_id = queried_events.at(i)->getUUIDStr();
+    REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
 }

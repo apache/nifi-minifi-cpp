@@ -47,6 +47,9 @@ class Identifier {
     return !isNil();
   }
 
+  Identifier& operator++();
+  Identifier operator++(int);
+
   bool operator!=(const Identifier& other) const;
   bool operator==(const Identifier& other) const;
   bool operator<(const Identifier& other) const;

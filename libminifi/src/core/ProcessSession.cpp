@@ -1065,7 +1065,7 @@ void ProcessSessionImpl::persistFlowFilesBeforeTransfer(
     return;
   }
 
-  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
+  Repository::EntryStreams flowData;
 
   enum class Type {
     Dropped, Transferred
