@@ -27,14 +27,24 @@
 
 namespace org::apache::nifi::minifi::extensions::atlas::extractors {
 
-// Site-to-Site: matched on componentType (RemoteProcessGroupPort). The transit
-// URI is the remote NiFi endpoint URL. Direction is unambiguous from event type
-// (SEND → the remote port is a downstream sink; RECEIVE/FETCH → upstream source).
-// The dataset system name "site-to-site-port" is mapped by the reporting task to
-// nifi_input_port / nifi_output_port depending on direction (an input to us is
-// an output_port on the remote NiFi, and vice versa).
+// Site-to-Site: matched on componentType (RemoteProcessGroupPort).
+//
+// The dataset is keyed on the remote port's UUID, stamped onto the event by SiteToSiteClient
+// as the "s2s.port.id" attribute. That id equals the receiving instance's own port component
+// id, so the resulting <port-uuid>@<namespace> qualifiedName merges in Atlas with the entity
+// the receiver advertises for the same port — this is what makes cross-instance lineage work.
+// (The transit URI can't be used for this: it embeds a per-transfer flow-file UUID, so it
+// changes every transfer and never matches the receiver. We keep it only for the peer host,
+// which the reporting task resolves to the port's namespace, and as a last-resort identifier.)
+//
+// The entity type follows the remote port's real kind, which both sides agree on: a SEND
+// targets a remote input port (nifi_input_port); a RECEIVE pulls from a remote output port
+// (nifi_output_port). The reporting task maps the direction-specific system names accordingly.
 class SiteToSitePortExtractor : public DatasetExtractor {
  public:
+  // NiFi's SiteToSiteAttributes.S2S_PORT_ID; set by SiteToSiteClient on the SEND/RECEIVE event.
+  static constexpr std::string_view S2S_PORT_ID_ATTRIBUTE = "s2s.port.id";
+
   std::optional<std::regex> componentTypePattern() const override {
     static const std::regex pattern{"^RemoteProcessGroupPort$"};
     return pattern;
@@ -56,8 +66,22 @@ class SiteToSitePortExtractor : public DatasetExtractor {
       }
     }
 
-    Dataset ds{.system = "site-to-site-port", .identifier = transit, .host = host.empty() ? std::nullopt : std::optional{host}, .attributes = {}};
-    if (event.getEventType() == provenance::ProvenanceEventRecord::SEND) {
+    // Prefer the remote port UUID; fall back to the transit URI only if the attribute is
+    // absent (e.g. an older MiNiFi that didn't stamp it), which keeps some lineage rather
+    // than dropping the event, at the cost of not being correlatable.
+    std::string identifier{transit};
+    const auto attributes = event.getAttributes();
+    if (const auto it = attributes.find(std::string{S2S_PORT_ID_ATTRIBUTE}); it != attributes.end() && !it->second.empty()) {
+      identifier = it->second;
+    }
+
+    const bool is_send = event.getEventType() == provenance::ProvenanceEventRecord::SEND;
+    Dataset ds{
+        .system = is_send ? "site-to-site-input-port" : "site-to-site-output-port",
+        .identifier = std::move(identifier),
+        .host = host.empty() ? std::nullopt : std::optional{host},
+        .attributes = {}};
+    if (is_send) {
       refs.outputs.push_back(std::move(ds));
     } else {
       refs.inputs.push_back(std::move(ds));

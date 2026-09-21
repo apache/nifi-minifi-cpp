@@ -16,12 +16,25 @@ graph-derived entities that `FlowPathBuilder` emits independent of any extractor
   flow path via its `name`.
 - **Topology entities** (`nifi_flow`, `nifi_flow_path`, `nifi_queue`): existence, matched by
   their deterministic `name` since their `qualifiedName`s embed component UUIDs.
+- **Site-to-Site ports**: a SEND to a remote input port produces a `nifi_input_port` (a RECEIVE
+  from a remote output port a `nifi_output_port`) keyed on the **remote port UUID** as
+  `<port-uuid>@<namespace>` -- the same entity the receiving instance advertises, so Atlas
+  merges them and lineage spans both systems. The port UUID reaches the extractor via the
+  `s2s.port.id` attribute stamped by `SiteToSiteClient` (mirroring NiFi's
+  `SiteToSiteAttributes.S2S_PORT_ID`); the type follows the remote port's real kind, not the
+  local perspective.
 
-Not yet covered: the topology-derived `nifi_input_port` / `nifi_output_port` (the shared test
-framework has no way to declare a local root-group port on a MiNiFi flow -- `nifi_output_port`
-existence is exercised via the Site-to-Site provenance path instead), DIRECTORY-level
+  For a real cross-instance merge the port must land in the **receiver's** namespace on both
+  sides. MiNiFi resolves it from the peer host, so the sender's reporting task needs a
+  `hostnamePattern.<receiver-ns>` dynamic property whose regex matches the remote host;
+  otherwise the port falls back to MiNiFi's default namespace. Only the boundary port entity
+  crosses namespaces -- MiNiFi's own flow/paths/queues stay in the local namespace.
+
+Not yet covered: the topology-derived local `nifi_input_port` / `nifi_output_port` (the shared
+test framework has no way to declare a local root-group port on a MiNiFi flow), DIRECTORY-level
 filesystem paths, and the baseline concepts the C++ port does not implement (`nifi_data`
-fallback, S3/HTTP/JDBC datasets, the Remote Input Port flow path, `CompletePath` strategy).
+fallback, S3/HTTP/JDBC datasets, the synthetic Remote Input Port flow path, `CompletePath`
+strategy).
 
 ## Prerequisites
 

@@ -1,16 +1,22 @@
 @ENABLE_ATLAS
-Feature: SiteToSitePortExtractor emits nifi_output_port entities matching NiFi's baseline
+Feature: SiteToSitePortExtractor emits cross-instance-correlatable port entities
 
-  # Mirrors extensions/atlas/tests/features/baseline/nifi/file-mode-with-s2s/. MiNiFi's
-  # SiteToSiteClient already emits SEND provenance events with the peer URL as transit URI,
-  # so no processor-side changes are needed for this scenario.
+  # Mirrors extensions/atlas/tests/features/baseline/nifi/file-mode-with-s2s/. A MiNiFi-side
+  # SEND to a remote NiFi input port must produce a `nifi_input_port` entity keyed on the
+  # REMOTE PORT UUID (<port-uuid>@<namespace>), because that is exactly the entity the
+  # receiving instance advertises for the same port - so Atlas merges the two and lineage
+  # spans both systems. The port UUID is delivered to the extractor via the `s2s.port.id`
+  # attribute stamped by SiteToSiteClient (mirroring NiFi's SiteToSiteAttributes.S2S_PORT_ID);
+  # the type is `nifi_input_port` because we send to a remote *input* port (the same kind both
+  # sides see - it is not perspective-flipped).
   #
-  # Note on the entity type: SiteToSitePortExtractor hardcodes `nifi_output_port` regardless
-  # of direction - a MiNiFi-side SEND to a NiFi input port still lands in Atlas as a
-  # nifi_output_port entity. This is a known simplification in the C++ port that this test
-  # locks in.
+  # The remote port's UUID here is the RPG port's id, which this flow also assigns to the NiFi
+  # receiver's input port, so the assertion can spell the exact qualifiedName. Namespace note:
+  # with no `hostnamePattern.*` rule the port resolves to MiNiFi's default namespace
+  # (${scenario_id}); a real cross-instance merge needs a `hostnamePattern.<receiver-ns>` rule
+  # so the port lands in the receiver's namespace (see the features README).
 
-  Scenario: MiNiFi's RPG-driven Site-to-Site produces nifi_output_port lineage
+  Scenario: MiNiFi's RPG-driven Site-to-Site produces a correlatable nifi_input_port
     Given an Atlas server is available
     And a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a RemoteProcessGroup node with name "RemoteProcessGroup" is opened on "http://nifi-${scenario_id}:8080/nifi"
@@ -31,7 +37,7 @@ Feature: SiteToSitePortExtractor emits nifi_output_port entities matching NiFi's
     When NiFi is started
     And all instances start up
 
-    # SiteToSiteClient's transit URI is "<peer-url>/<port-uuid>". The extractor uses the
-    # transit URI verbatim (plus the @<ns> suffix) as the nifi_output_port's qualifiedName,
-    # so we can't spell the full qn up-front - assert on the namespace suffix instead.
-    Then a "nifi_output_port" entity with qualified name ending in "@${scenario_id}" exists in Atlas within 180 seconds
+    # The nifi_input_port is keyed on the remote port UUID (the "to_nifi" RPG port id), not the
+    # transit URI, so its qualifiedName is a stable <port-uuid>@<namespace> that matches what the
+    # receiver advertises. We resolve that id from the flow definition to assert the exact qn.
+    Then a "nifi_input_port" entity for the RemoteProcessGroup "RemoteProcessGroup" input port "to_nifi" exists in Atlas in namespace "${scenario_id}" within 180 seconds

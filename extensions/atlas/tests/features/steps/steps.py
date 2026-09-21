@@ -220,3 +220,19 @@ def entity_named_has_input(context: MinifiTestContext, type_name: str, name: str
 @then("the \"{type_name}\" entity named \"{name}\" has an output of type \"{ref_type}\" with qualified name \"{ref_qn}\" within {timeout_seconds:d} seconds")
 def entity_named_has_output(context: MinifiTestContext, type_name: str, name: str, ref_type: str, ref_qn: str, timeout_seconds: int):
     _wait_for_ref_on_named_entity(context, type_name, name, "outputs", ref_type, ref_qn, timeout_seconds)
+
+
+@then("a \"{type_name}\" entity for the RemoteProcessGroup \"{rpg_name}\" input port \"{port_name}\" exists in Atlas in namespace \"{namespace}\" within {timeout_seconds:d} seconds")
+def s2s_input_port_entity_exists(context: MinifiTestContext, type_name: str, rpg_name: str, port_name: str, namespace: str, timeout_seconds: int):
+    """Assert the Site-to-Site port entity is keyed on the remote port's UUID (the RPG port's
+    id, which the receiving instance shares) rather than the volatile transit URI. We resolve
+    that id straight from the flow definition so we can spell the exact qualifiedName
+    (<port-uuid>@<namespace>) - the value cross-instance stitching depends on."""
+    flow_definition = context.get_or_create_default_minifi_container().flow_definition
+    port_id = flow_definition.get_input_port_id_of_rpg(rpg_name, port_name)
+    qualified_name = f"{port_id}@{namespace}"
+    atlas = _atlas(context)
+    entity = atlas.wait_for_entity(type_name, qualified_name, float(timeout_seconds), context=context)
+    assert entity is not None, (
+        f"No {type_name} with qualifiedName '{qualified_name}' (RemoteProcessGroup '{rpg_name}' "
+        f"input port '{port_name}') appeared within {timeout_seconds}s.")

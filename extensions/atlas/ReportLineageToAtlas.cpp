@@ -46,7 +46,10 @@ std::string atlasTypeFor(const Dataset& ds, ReportLineageToAtlas::S3ModelVersion
   if (ds.system == "file") return "fs_path";
   if (ds.system == "http") return "http_endpoint";
   if (ds.system == "jdbc") return "rdbms_instance";
-  if (ds.system == "site-to-site-port") return "nifi_output_port";  // remote sink; remote source would use nifi_input_port
+  // The remote port's real kind, agreed on by both instances so their entities merge in Atlas:
+  // a SEND targets a remote input port, a RECEIVE pulls from a remote output port.
+  if (ds.system == "site-to-site-input-port") return "nifi_input_port";
+  if (ds.system == "site-to-site-output-port") return "nifi_output_port";
   return ds.system;
 }
 
