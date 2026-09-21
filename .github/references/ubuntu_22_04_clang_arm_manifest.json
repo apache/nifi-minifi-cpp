@@ -6518,6 +6518,194 @@
                         },
                         "Batch size": {
                             "name": "Batch size",
+                            "description": "Maximum number of events to put in a single flow file. If set to zero or empty all events retrieved in a single trigger are put in a single flow file.",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Certificate path": {
+                            "name": "Certificate path",
+                            "description": "Path to the DER-encoded cert file",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Event filter expression": {
+                            "name": "Event filter expression",
+                            "description": "Custom filter expression to apply to the OPC-UA events. It is an open62541 library specific query language syntax. This overrides the other filter properties (Event type node ID, Select fields, Minimum severity). Example: SELECT /Message, /Severity WHERE /Severity >= 100",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Event type node ID": {
+                            "name": "Event type node ID",
+                            "description": "Adds event type to the event filter. Only events of this type or its subtypes are reported. i=2041 (BaseEventType) is inherited by every event type, so it applies no type filtering.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "i=2041"
+                        },
+                        "Key path": {
+                            "name": "Key path",
+                            "description": "Path to the DER-encoded key file",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Max size of message queue": {
+                            "name": "Max size of message queue",
+                            "description": "Maximum number of events allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the oldest events are dropped. If not set or set to zero the buffer is unlimited.",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "10000"
+                        },
+                        "Minimum severity": {
+                            "name": "Minimum severity",
+                            "description": "Specifies the minimum severity of events to fetch. 0 disables the severity filter.",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "0"
+                        },
+                        "Namespace index": {
+                            "name": "Namespace index",
+                            "description": "Specifies the index of the namespace for the target OPC-UA node.",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "0"
+                        },
+                        "Node ID": {
+                            "name": "Node ID",
+                            "description": "Specifies the node ID of the target OPC-UA node to subscribe to. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Node ID type": {
+                            "name": "Node ID type",
+                            "description": "Specifies the type of the provided node ID",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "allowableValues": [
+                                {
+                                    "value": "Path",
+                                    "displayName": "Path"
+                                },
+                                {
+                                    "value": "Int",
+                                    "displayName": "Int"
+                                },
+                                {
+                                    "value": "String",
+                                    "displayName": "String"
+                                },
+                                {
+                                    "value": "Guid",
+                                    "displayName": "Guid"
+                                }
+                            ]
+                        },
+                        "OPC server endpoint": {
+                            "name": "OPC server endpoint",
+                            "description": "Specifies the address, port and relative path of an OPC endpoint",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Password": {
+                            "name": "Password",
+                            "description": "Password to log in with.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Path reference types": {
+                            "name": "Path reference types",
+                            "description": "Specify the reference types between nodes in the path if Path Node ID type is used. If not provided, all reference types are assumed to be Organizes. The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Record set writer": {
+                            "typeProvidedByValue": {
+                                "type": "org.apache.nifi.minifi.core.RecordSetWriter",
+                                "group": "org.apache.nifi.minifi",
+                                "artifact": "minifi-system"
+                            },
+                            "name": "Record set writer",
+                            "description": "Specifies the Controller Service to use for writing results to a FlowFile.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Select fields": {
+                            "name": "Select fields",
+                            "description": "Comma separated browse paths of the event fields to return, e.g. 'EventId,Time,Message,Severity,SourceName'. Nested paths use '/', e.g. 'Tool/Diameter', and a browse name outside namespace 0 is prefixed with its namespace index, e.g. '1:Diameter'. A path can be prefixed with the node ID of an event type to restrict the field to the instances of that type, e.g. 'i=2052/ActionTimeStamp', but the server rejects the whole subscription unless it knows that event type and the field belongs to it. Each field is named after its path in the record.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "EventId,EventType,SourceName,Time,Message,Severity"
+                        },
+                        "Trusted server certificate path": {
+                            "name": "Trusted server certificate path",
+                            "description": "Comma separated list of paths to the DER-encoded trusted server certificates",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Username": {
+                            "name": "Username",
+                            "description": "Username to log in with.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "inputRequirement": "INPUT_FORBIDDEN",
+                    "isSingleThreaded": "true",
+                    "supportedRelationships": [
+                        {
+                            "name": "success",
+                            "description": "Successfully retrieved OPC-UA events"
+                        }
+                    ],
+                    "typeDescription": "Subscribes to OPC-UA events from the specified node. The processor will continuously listen for events and write them to flow file records when the processor is triggered. The events can be filtered using the filtering criteria specified in the processor properties.",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "org.apache.nifi.minifi.processors.FetchOPCEvents"
+                },
+                {
+                    "propertyDescriptors": {
+                        "Application URI": {
+                            "name": "Application URI",
+                            "description": "Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Batch size": {
+                            "name": "Batch size",
                             "description": "Maximum number entries to read and return in a single batch. If set to zero or empty all available entries are returned.",
                             "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
                             "required": "false",

@@ -92,7 +92,7 @@ void BaseOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSe
 
 bool BaseOPCProcessor::reconnect() {
   if (connection_ == nullptr) {
-    connection_ = opc::Client::createClient(logger_, application_uri_, cert_buffer_, key_buffer_, trust_buffers_);
+    connection_ = opc::Client::createClient(logger_, application_uri_, cert_buffer_, key_buffer_, trust_buffers_, max_event_queue_size_);
   }
 
   if (connection_->isConnected()) {

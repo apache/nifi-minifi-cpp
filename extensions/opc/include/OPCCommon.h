@@ -19,9 +19,13 @@
 #pragma once
 
 #include <array>
+#include <chrono>
+#include <deque>
 #include <string>
 #include <functional>
 #include <map>
+#include <unordered_map>
+#include <mutex>
 #include <vector>
 #include <memory>
 #include <expected>
@@ -112,6 +116,19 @@ class NodeId {
   UA_NodeId id_ = UA_NODEID_NULL;
 };
 
+struct Event {
+  std::unordered_map<std::string, std::string> fields;
+};
+
+struct EventFilter {
+  std::vector<std::string> select_fields;
+  std::string event_type_node_id;
+  std::optional<uint64_t> minimum_severity;
+  std::string filter_expression;
+};
+
+std::string buildEventFilterExpression(const EventFilter& options);
+
 struct NodeData;
 
 class Client;
@@ -138,17 +155,49 @@ class Client {
   UA_StatusCode readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, UA_DateTime start_time, UA_DateTime end_time,
     void *callback_context);
 
+  UA_StatusCode subscribeToEvents(const UA_NodeId& node_id, const EventFilter& event_filter);
+  [[nodiscard]] bool hasEventSubscription() const noexcept { return subscription_ && subscription_->alive; }
+  UA_StatusCode processSubscriptionNotifications(UA_UInt32 timeout_milliseconds);
+  std::vector<Event> drainEvents();
+  uint64_t getDroppedEventCountSinceLastCall();
+
   static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                                               const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
-                                              const std::vector<std::vector<char>>& trust_buffers);
+                                              const std::vector<std::vector<char>>& trust_buffers, std::optional<size_t> max_event_queue_size);
 
  private:
   Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
       const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
-      const std::vector<std::vector<char>>& trust_buffers);
+      const std::vector<std::vector<char>>& trust_buffers, std::optional<size_t> max_event_queue_size);
+
+  static void eventNotificationCallback(UA_Client *client, UA_UInt32 sub_id, void *sub_context, UA_UInt32 mon_id, void *mon_context,
+    const UA_KeyValueMap event_fields);
+
+  static void subscriptionStatusChangeCallback(UA_Client *client, UA_UInt32 sub_id, void *sub_context, UA_StatusChangeNotification *notification);
+  static void subscriptionDeleteCallback(UA_Client *client, UA_UInt32 sub_id, void *sub_context);
+  static void subscriptionInactivityCallback(UA_Client *client, UA_UInt32 sub_id, void *sub_context);
+  void markSubscriptionDead() noexcept {
+    if (subscription_) {
+      subscription_->alive = false;
+    }
+  }
+
+  void pushEvent(Event&& event);
+
+  struct EventSubscription {
+    UA_UInt32 id = 0;
+    bool alive = false;
+  };
 
   UA_Client *client_{nullptr};
   std::shared_ptr<core::logging::Logger> logger_;
+
+  std::optional<EventSubscription> subscription_;
+  std::mutex event_queue_mutex_;
+  std::deque<Event> event_queue_;
+  std::optional<size_t> max_event_queue_size_;
+  uint64_t dropped_event_count_{0};
+
   UA_Logger minifi_ua_logger_{};
   bool use_encryption_{false};
 };
