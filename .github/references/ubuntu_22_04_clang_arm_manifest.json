@@ -12140,6 +12140,10 @@
                     "isSingleThreaded": "true",
                     "supportedRelationships": [
                         {
+                            "name": "failure",
+                            "description": "Flowfiles that could not be duplicated are routed here"
+                        },
+                        {
                             "name": "success",
                             "description": {}
                         }

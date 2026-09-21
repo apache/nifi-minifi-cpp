@@ -41,8 +41,26 @@ endif()
 
 include(CTest)
 
-add_test(
-        NAME cargo_tests
-        COMMAND cargo test
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
+find_program(CARGO_NEXTEST_EXECUTABLE cargo-nextest)
+
+if (CARGO_NEXTEST_EXECUTABLE)
+    message(STATUS "Found cargo-nextest, using it for Rust tests.")
+    add_test(
+            NAME cargo_tests
+            COMMAND cargo nextest run
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    add_test(
+            NAME cargo_doctests
+            COMMAND cargo test --doc
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+else()
+    message(WARNING "cargo-nextest not found. Falling back to standard cargo test. "
+            "For faster test execution, install it via: cargo install cargo-nextest --locked")
+    add_test(
+            NAME cargo_tests
+            COMMAND cargo test
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+endif()
