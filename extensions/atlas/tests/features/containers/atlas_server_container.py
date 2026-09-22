@@ -17,9 +17,13 @@
 
 Each scenario provisions its own fresh `atlas-<scenario_id>` container from
 `adamdebreceni/atlas:latest` (see extensions/atlas/tests/features/README.md for how the
-image is built), publishing REST on host port 21000 and Kafka on 9092. `deploy()` starts
-the container via the shared `LinuxContainer` base and polls `/api/atlas/admin/status`
-until ACTIVE (up to `COLD_START_TIMEOUT_SECONDS`). Teardown is handled by the generic
+image is built), publishing the REST API on a Docker-assigned (ephemeral) host port so
+that features running in parallel don't collide on a fixed host port. `deploy()` starts
+the container via the shared `LinuxContainer` base, resolves the host port Docker mapped,
+then polls `/api/atlas/admin/status` until ACTIVE (up to `COLD_START_TIMEOUT_SECONDS`).
+MiNiFi itself never uses the host port - it reaches Atlas over the scenario's Docker
+network via `in_network_url` (`atlas-<scenario_id>:21000`); the host port is only used by
+the host-side REST probes/assertions in this class. Teardown is handled by the generic
 `common_after_scenario` -> `LinuxContainer.clean_up()` path, which removes the container
 along with every other per-scenario container.
 """
@@ -38,7 +42,7 @@ from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 
 class AtlasServerContainer(LinuxContainer):
-    """Per-scenario Apache Atlas container. Publishes REST on host port 21000 and Kafka on 9092."""
+    """Per-scenario Apache Atlas container. Publishes the REST API on a Docker-assigned host port."""
 
     IMAGE = "adamdebreceni/atlas:latest"
     REST_PORT = 21000
@@ -52,22 +56,55 @@ class AtlasServerContainer(LinuxContainer):
         super().__init__(AtlasServerContainer.IMAGE,
                          f"atlas-{test_context.scenario_id}",
                          test_context.network)
-        # Publish REST + embedded Kafka on the loopback interface so host-side probes and the
-        # framework's assertion helpers can hit them directly.
-        self.ports = {f"{AtlasServerContainer.REST_PORT}/tcp": AtlasServerContainer.REST_PORT,
-                      "9092/tcp": 9092}
-        self._base_url = f"http://localhost:{AtlasServerContainer.REST_PORT}"
+        # Publish the REST API on a Docker-assigned host port (value None) so multiple Atlas
+        # containers from parallel features can bind concurrently without colliding on a fixed
+        # host port. The actual mapped port is resolved in deploy(). We intentionally don't
+        # publish the embedded Kafka (9092) to the host: nothing host-side uses it (MiNiFi's
+        # reporting task talks to Atlas over the Docker network via REST only), and a fixed
+        # host publish would reintroduce the very collision we're removing.
+        self.ports = {f"{AtlasServerContainer.REST_PORT}/tcp": None}
+        # Resolved from the Docker-assigned host port once the container is running.
+        self._base_url: str | None = None
         self._auth = HTTPBasicAuth(AtlasServerContainer.USERNAME, AtlasServerContainer.PASSWORD)
 
     # --- Lifecycle -------------------------------------------------------------------------------
 
     def deploy(self, context: MinifiTestContext | None) -> bool:
-        super().deploy(context)
+        if not super().deploy(context):
+            return False
+        # Resolve the host port Docker assigned before polling: _is_active() (the wait
+        # condition below) issues host-side REST calls against self._base_url.
+        self._base_url = f"http://localhost:{self._published_rest_port(context)}"
         return wait_for_condition(
             condition=self._is_active,
             timeout_seconds=AtlasServerContainer.COLD_START_TIMEOUT_SECONDS,
             bail_condition=lambda: self.exited,
             context=context)
+
+    def _published_rest_port(self, context: MinifiTestContext | None) -> int:
+        """Return the host port Docker assigned to the container's REST port (21000).
+
+        Docker allocates the ephemeral host port at start time, but the binding can take a
+        moment to surface in the container's attrs - notably when several containers start
+        concurrently (parallel features), where the first reload usually returns an empty
+        binding list. Poll (reloading each time) until it appears.
+        """
+        port: int | None = None
+
+        def _resolved() -> bool:
+            nonlocal port
+            self.container.reload()
+            bindings = self.container.ports.get(f"{AtlasServerContainer.REST_PORT}/tcp")
+            if bindings:
+                port = int(bindings[0]["HostPort"])
+            return port is not None
+
+        if not wait_for_condition(condition=_resolved, timeout_seconds=30,
+                                  bail_condition=lambda: self.exited, context=context):
+            raise RuntimeError(
+                f"Atlas container '{self.container_name}' never published a host port for "
+                f"{AtlasServerContainer.REST_PORT}/tcp; ports={self.container.ports}")
+        return port
 
     # --- Addressing ------------------------------------------------------------------------------
 
