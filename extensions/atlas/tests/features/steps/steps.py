@@ -55,14 +55,11 @@ if _KAFKA_FEATURES.is_dir():
                            _KAFKA_FEATURES / "steps" / "steps.py")
 
 
-ATLAS_CONTAINER_KEY = "atlas"
-
-
 def _atlas(context: MinifiTestContext) -> AtlasServerContainer:
-    container = context.containers.get(ATLAS_CONTAINER_KEY)
-    if not isinstance(container, AtlasServerContainer):
-        raise AssertionError("Atlas server has not been set up in this scenario; missing 'Given an Atlas server is available'.")
-    return container
+    atlas = getattr(context, "atlas", None)
+    if not isinstance(atlas, AtlasServerContainer):
+        raise AssertionError("Shared Atlas server was not set up in before_all (see environment.py).")
+    return atlas
 
 
 # --- Setup ----------------------------------------------------------------------------------------
@@ -70,11 +67,9 @@ def _atlas(context: MinifiTestContext) -> AtlasServerContainer:
 
 @given("an Atlas server is available")
 def atlas_server_is_available(context: MinifiTestContext):
-    atlas = AtlasServerContainer(context)
-    # Register the container before deploy so that if deploy fails/times out, common_after_scenario's
-    # generic log_due_to_failure loop still finds it and dumps its logs.
-    context.containers[ATLAS_CONTAINER_KEY] = atlas
-    assert atlas.deploy(context) or atlas.log_app_output(), "Atlas server is not reachable - see extensions/atlas/tests/features/README.md."
+    # The single shared Atlas is booted once in before_all and connected to this scenario's
+    # network in before_scenario, so this step only asserts it is up (no per-scenario deploy).
+    assert _atlas(context).is_active(), "Shared Atlas server is not reachable - see extensions/atlas/tests/features/README.md."
 
 
 @given("the \"{reporting_task_name}\" reporting task is configured for the Atlas server")
