@@ -12239,7 +12239,7 @@
                         },
                         "Key Password": {
                             "name": "Key Password",
-                            "description": "Password used for decrypting Private Keys",
+                            "description": "Password used for decrypting Private Keys. Multiple passwords may be supplied one per line, each of them is tried in turn",
                             "validator": "NON_BLANK_VALIDATOR",
                             "required": "false",
                             "sensitive": "true",

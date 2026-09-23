@@ -15,7 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::controller_services::key_lookup::key_matches;
+use crate::controller_services::key_lookup::find_unique_key;
+use crate::controller_services::key_parsing::load_service_keys;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError};
 use pgp::composed::SignedPublicKey;
@@ -32,24 +33,15 @@ impl EnableControllerService for PGPPublicKeyService {
     where
         Self: Sized,
     {
-        let mut public_keys = context.get_property(&KEYRING_FILE)?.unwrap_or_default();
-        public_keys.extend(context.get_property(&KEYRING)?.unwrap_or_default());
-
-        if public_keys.is_empty() {
-            return Err(MinifiError::validation("Could not load any valid keys"));
-        }
+        let public_keys = load_service_keys(context, &KEYRING_FILE, &KEYRING)?;
         Ok(Self { public_keys })
     }
 }
 
 impl PGPPublicKeyService {
-    pub fn get(&self, target_id: &str) -> Option<&SignedPublicKey> {
-        self.public_keys.iter().find(|public_key| {
-            key_matches(
-                &public_key.primary_key.legacy_key_id(),
-                &public_key.details,
-                target_id,
-            )
+    pub fn get(&self, target_id: &str) -> Result<&SignedPublicKey, MinifiError> {
+        find_unique_key(&self.public_keys, target_id, |public_key| {
+            (public_key.primary_key.legacy_key_id(), &public_key.details)
         })
     }
 }
@@ -127,11 +119,11 @@ mod tests {
         let controller_service = PGPPublicKeyService::enable(&context, &MockLogger::new())
             .expect("enable should succeed");
 
-        assert!(controller_service.get("Alice").is_some());
-        assert!(controller_service.get("alice@example.com").is_some());
+        assert!(controller_service.get("Alice").is_ok());
+        assert!(controller_service.get("alice@example.com").is_ok());
 
-        assert!(controller_service.get("Bob").is_none());
-        assert!(controller_service.get("Carol").is_none());
+        assert!(controller_service.get("Bob").is_err());
+        assert!(controller_service.get("Carol").is_err());
     }
 
     #[test]
@@ -143,14 +135,14 @@ mod tests {
 
         let service = PGPPublicKeyService::enable(&context, &MockLogger::new())
             .expect("enable should succeed");
-        assert!(service.get("A").is_some());
-        assert!(service.get("Alice").is_some());
-        assert!(service.get("Alice <alice@example.com>").is_some());
+        assert!(service.get("A").is_ok());
+        assert!(service.get("Alice").is_ok());
+        assert!(service.get("Alice <alice@example.com>").is_ok());
 
-        assert!(service.get("<Alice>").is_none());
+        assert!(service.get("<Alice>").is_err());
 
-        assert!(service.get("Bob").is_none());
-        assert!(service.get("Carol").is_none());
+        assert!(service.get("Bob").is_err());
+        assert!(service.get("Carol").is_err());
     }
 
     #[test]
@@ -162,11 +154,11 @@ mod tests {
 
         let service = PGPPublicKeyService::enable(&context, &MockLogger::new())
             .expect("enable should succeed");
-        assert!(service.get("Alice").is_some());
-        assert!(service.get("Bob").is_some());
-        assert!(service.get("bob@home.io").is_some());
-        assert!(service.get("bob@work.com").is_some());
-        assert!(service.get("Carol").is_none());
+        assert!(service.get("Alice").is_ok());
+        assert!(service.get("Bob").is_ok());
+        assert!(service.get("bob@home.io").is_ok());
+        assert!(service.get("bob@work.com").is_ok());
+        assert!(service.get("Carol").is_err());
     }
 
     #[test]
@@ -178,11 +170,11 @@ mod tests {
 
         let service = PGPPublicKeyService::enable(&context, &MockLogger::new())
             .expect("enable should succeed");
-        assert!(service.get("Alice").is_some());
-        assert!(service.get("Bob").is_some());
-        assert!(service.get("bob@home.io").is_some());
-        assert!(service.get("bob@work.com").is_some());
-        assert!(service.get("Carol").is_none());
+        assert!(service.get("Alice").is_ok());
+        assert!(service.get("Bob").is_ok());
+        assert!(service.get("bob@home.io").is_ok());
+        assert!(service.get("bob@work.com").is_ok());
+        assert!(service.get("Carol").is_err());
     }
 
     #[test]
@@ -198,11 +190,11 @@ mod tests {
 
         let service = PGPPublicKeyService::enable(&context, &MockLogger::new())
             .expect("enable should succeed");
-        assert!(service.get("Alice").is_some());
-        assert!(service.get("Bob").is_some());
-        assert!(service.get("bob@home.io").is_some());
-        assert!(service.get("bob@work.com").is_some());
-        assert!(service.get("Carol").is_none());
+        assert!(service.get("Alice").is_ok());
+        assert!(service.get("Bob").is_ok());
+        assert!(service.get("bob@home.io").is_ok());
+        assert!(service.get("bob@work.com").is_ok());
+        assert!(service.get("Carol").is_err());
     }
 
     #[test]
@@ -218,9 +210,9 @@ mod tests {
 
         let service = PGPPublicKeyService::enable(&context, &MockLogger::new())
             .expect("enable should succeed");
-        assert!(service.get("Alice").is_some());
-        assert!(service.get("Bob").is_none());
-        assert!(service.get("Carol").is_none());
+        assert!(service.get("Alice").is_ok());
+        assert!(service.get("Bob").is_err());
+        assert!(service.get("Carol").is_err());
     }
 
     #[test]
@@ -250,9 +242,55 @@ mod tests {
         let alice = service.get("Alice").expect("Alice should exist");
         let key_id_hex = alice.primary_key.legacy_key_id().to_string();
         assert_eq!(key_id_hex.len(), 16);
-        assert!(service.get(&key_id_hex).is_some());
-        assert!(service.get(&key_id_hex.to_ascii_uppercase()).is_some());
-        assert!(service.get(&key_id_hex[..8]).is_none());
-        assert!(service.get("0123456789abcdef").is_none());
+        assert!(service.get(&key_id_hex).is_ok());
+        assert!(service.get(&key_id_hex.to_ascii_uppercase()).is_ok());
+        assert!(service.get(&key_id_hex[..8]).is_err());
+        assert!(service.get("0123456789abcdef").is_err());
+    }
+
+    fn ambiguous_keyring_service() -> PGPPublicKeyService {
+        let mut context = MockControllerServiceContext::new();
+        context.properties.insert(
+            "Keyring File".to_string(),
+            get_test_key_path("ambiguous_keyring.gpg"),
+        );
+
+        PGPPublicKeyService::enable(&context, &MockLogger::new()).expect("enable should succeed")
+    }
+
+    /// A User ID search that matches more than one key must fail loudly instead of picking one
+    /// of them, otherwise a look-alike key silently becomes the recipient.
+    #[test]
+    fn a_user_id_matching_several_keys_is_reported_as_ambiguous() {
+        let service = ambiguous_keyring_service();
+
+        // "bob@home.io" is a substring of the look-alike "bob@home.io.attacker.test" too.
+        let err = service.get("bob@home.io").unwrap_err().to_string();
+        assert!(err.contains("ambiguous"), "{err}");
+        assert!(err.contains("bob@home.io"), "{err}");
+
+        // Unaffected searches still resolve.
+        assert!(service.get("Alice").is_ok());
+        assert!(service.get("bob@work.com").is_ok());
+        assert!(service.get("bob@home.io.attacker.test").is_ok());
+    }
+
+    /// An exact Key ID is never ambiguous, so it stays usable as the way to disambiguate.
+    #[test]
+    fn a_key_id_search_wins_over_an_ambiguous_user_id() {
+        let service = ambiguous_keyring_service();
+
+        let real_bob = service
+            .get("bob@work.com")
+            .expect("the real Bob should be found by his unique User ID");
+        let real_bob_key_id = real_bob.primary_key.legacy_key_id().to_string();
+
+        let found = service
+            .get(&real_bob_key_id)
+            .expect("a Key ID search should never be ambiguous");
+        assert_eq!(
+            found.primary_key.legacy_key_id(),
+            real_bob.primary_key.legacy_key_id()
+        );
     }
 }

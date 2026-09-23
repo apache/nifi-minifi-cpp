@@ -326,6 +326,118 @@ mod tests {
         );
     }
 
+    /// Encrypts `content` for `public_key_search` using `keyring_file` and returns the ciphertext.
+    fn encrypt_for(keyring_file: &str, public_key_search: &str, content: &[u8]) -> Vec<u8> {
+        use crate::controller_services::public_key_service::PGPPublicKeyService;
+        use crate::processors::encrypt_content::EncryptContentPGP;
+
+        let mut key_service_context = MockControllerServiceContext::new();
+        key_service_context.properties.insert(
+            "Keyring File".to_string(),
+            test_utils::get_test_key_path(keyring_file),
+        );
+        let key_service = PGPPublicKeyService::enable(&key_service_context, &MockLogger::new())
+            .expect("should enable");
+
+        let mut context = MockProcessContext::new();
+        context.properties.extend([
+            ("Public Key Service", "my_public_key_service"),
+            ("Public Key Search", public_key_search),
+        ]);
+        context
+            .controller_services
+            .insert("my_public_key_service".to_string(), Box::new(key_service));
+
+        let mut ciphertext: Vec<u8> = Vec::new();
+        let mut plaintext = std::io::Cursor::new(content);
+        let encrypt_content =
+            EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
+        encrypt_content
+            .transform(
+                &context,
+                &mut plaintext,
+                &mut ciphertext,
+                &MockLogger::new(),
+            )
+            .expect("should encrypt");
+        ciphertext
+    }
+
+    fn decrypt_with(private_key_data: PrivateKeyData, ciphertext: Vec<u8>) -> Vec<u8> {
+        let mut context = MockProcessContext::new();
+        context.controller_services.insert(
+            "my_private_key_service".to_string(),
+            Box::new(private_key_data.into_controller()),
+        );
+        context.properties.insert(
+            PRIVATE_KEY_SERVICE.name(),
+            "my_private_key_service".to_string(),
+        );
+
+        let decrypt_content =
+            DecryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
+        let mut output: Vec<u8> = Vec::new();
+        let mut ciphertext = std::io::Cursor::new(ciphertext);
+        let res = decrypt_content
+            .transform(&context, &mut ciphertext, &mut output, &MockLogger::new())
+            .expect("should decrypt");
+        assert_eq!(res.target_relationship_name(), SUCCESS.name);
+        assert_eq!(res.write_status(), IoState::Ok);
+        output
+    }
+
+    /// Dave's primary key is Ed25519, which cannot encrypt; only his Cv25519 subkey can. This
+    /// round trip only works if EncryptContentPGP encrypts to the subkey.
+    #[test]
+    fn round_trip_with_a_sign_only_primary_key() {
+        let ciphertext = encrypt_for("dave.asc", "dave@example.com", b"for dave only");
+
+        let dave_private_key = PrivateKeyData {
+            key_filename: "dave_private.asc",
+            passphrase: Some("gardenparty"),
+        };
+        assert_eq!(decrypt_with(dave_private_key, ciphertext), b"for dave only");
+    }
+
+    /// A keyring holding keys with different passphrases needs every one of those passphrases,
+    /// which "Key Password" accepts one per line.
+    #[test]
+    fn decrypts_with_one_of_several_key_passwords() {
+        let ciphertext = encrypt_for("dave.asc", "dave@example.com", b"for dave only");
+
+        // mixed_secret_keyring.gpg holds Alice (whiterabbit) and Dave (gardenparty).
+        let both_passwords = PrivateKeyData {
+            key_filename: "mixed_secret_keyring.gpg",
+            passphrase: Some("whiterabbit\ngardenparty"),
+        };
+        assert_eq!(
+            decrypt_with(both_passwords, ciphertext.clone()),
+            b"for dave only"
+        );
+
+        // Alice's passphrase alone cannot unlock Dave's key.
+        let alice_password_only = PrivateKeyData {
+            key_filename: "mixed_secret_keyring.gpg",
+            passphrase: Some("whiterabbit"),
+        };
+        let mut context = MockProcessContext::new();
+        context.controller_services.insert(
+            "my_private_key_service".to_string(),
+            Box::new(alice_password_only.into_controller()),
+        );
+        context.properties.insert(
+            PRIVATE_KEY_SERVICE.name(),
+            "my_private_key_service".to_string(),
+        );
+        let decrypt_content =
+            DecryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
+        let mut output: Vec<u8> = Vec::new();
+        let mut ciphertext = std::io::Cursor::new(ciphertext);
+        let res =
+            decrypt_content.transform(&context, &mut ciphertext, &mut output, &MockLogger::new());
+        test::assert_routed_to(res, &FAILURE);
+    }
+
     #[test]
     fn decryption_of_not_encrypted_data() {
         let alice_private_key = PrivateKeyData {

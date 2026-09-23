@@ -15,8 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+pub(crate) mod encryption_key;
 mod key_file_property;
 mod key_lookup;
+mod key_parsing;
 mod key_property;
 pub(crate) mod private_key_service;
 pub(crate) mod public_key_service;

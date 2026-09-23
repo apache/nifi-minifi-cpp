@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::controller_services::encryption_key::{EncryptionTarget, select_encryption_target};
 use minifi_native::{
     FlowFileStreamTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream,
     Logger, MinifiError, OutputStream, ProcessError, RouteErrorExt, Schedule,
@@ -73,9 +74,14 @@ impl EncryptContentPGP {
         );
 
         if let Some(pub_key) = pub_key {
-            builder
-                .encrypt_to_key(rand::thread_rng(), pub_key)
-                .map_err(MinifiError::other)?;
+            match select_encryption_target(pub_key)? {
+                EncryptionTarget::Primary(primary_key) => builder
+                    .encrypt_to_key(rand::thread_rng(), primary_key)
+                    .map_err(MinifiError::other)?,
+                EncryptionTarget::Subkey(subkey) => builder
+                    .encrypt_to_key(rand::thread_rng(), subkey)
+                    .map_err(MinifiError::other)?,
+            };
         }
 
         if let Some(password) = &self.symmetric_password {
@@ -131,12 +137,7 @@ impl EncryptContentPGP {
             context.get_property(&PUBLIC_KEY_SEARCH)?,
             context.get_controller_service(&PUBLIC_KEY_SERVICE)?,
         ) {
-            match public_key_service.get(&pub_key_search) {
-                Some(public_key) => Ok(Some(public_key)),
-                None => Err(MinifiError::custom(format!(
-                    "No public key matching '{pub_key_search}' found in the configured Public Key Service"
-                ))),
-            }
+            Ok(Some(public_key_service.get(&pub_key_search)?))
         } else {
             Ok(None)
         }
@@ -154,9 +155,10 @@ impl FlowFileStreamTransform for EncryptContentPGP {
         output_stream: &mut dyn OutputStream,
         _logger: &LoggerImpl,
     ) -> Result<TransformStreamResult, ProcessError> {
-        let file_name = context
-            .get_attribute("filename")?
-            .unwrap_or(context.get_id()?);
+        let file_name = match context.get_attribute("filename")? {
+            Some(file_name) => file_name,
+            None => context.get_id()?,
+        };
         let public_key = Self::get_public_key(context).route_err_to_failure()?;
 
         self.encrypt_bytes(input_stream, output_stream, public_key, file_name)

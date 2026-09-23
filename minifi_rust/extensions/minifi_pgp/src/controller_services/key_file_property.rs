@@ -15,8 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::controller_services::key_parsing::{KeyKind, parse_key_file};
 use minifi_native::{MinifiError, PropertyConstraints, PropertySchema, PropertyType};
-use pgp::composed::{Deserializable, SignedPublicKey, SignedSecretKey};
+use pgp::composed::{SignedPublicKey, SignedSecretKey};
 
 pub(crate) struct SecretKeyFile {}
 
@@ -29,19 +30,7 @@ impl PropertyType for SecretKeyFile {
     type Output = Vec<SignedSecretKey>;
 
     fn parse(s: &str) -> Result<Self::Output, MinifiError> {
-        let mut result: Vec<SignedSecretKey> = Vec::new();
-        if let Ok((keys, _headers)) = SignedSecretKey::from_armor_file_many(s) {
-            result.extend(keys.filter_map(Result::ok));
-        } else if let Ok(keys) = SignedSecretKey::from_file_many(s) {
-            result.extend(keys.filter_map(Result::ok));
-        }
-        if result.is_empty() {
-            Err(MinifiError::validation(
-                "Couldn't load any valid secret keys",
-            ))
-        } else {
-            Ok(result)
-        }
+        parse_key_file(s, KeyKind::Secret)
     }
 }
 
@@ -55,19 +44,7 @@ impl PropertyType for PublicKeyFile {
     type Output = Vec<SignedPublicKey>;
 
     fn parse(s: &str) -> Result<Self::Output, MinifiError> {
-        let mut result: Vec<SignedPublicKey> = Vec::new();
-        if let Ok((keys, _headers)) = SignedPublicKey::from_armor_file_many(s) {
-            result.extend(keys.filter_map(Result::ok));
-        } else if let Ok(keys) = SignedPublicKey::from_file_many(s) {
-            result.extend(keys.filter_map(Result::ok));
-        }
-        if result.is_empty() {
-            Err(MinifiError::validation(
-                "Couldn't load any valid public keys",
-            ))
-        } else {
-            Ok(result)
-        }
+        parse_key_file(s, KeyKind::Public)
     }
 }
 
