@@ -129,6 +129,14 @@ pub(crate) const OUTPUT_ATTRIBUTE_NAME: Property<Option<String>> = Property::new
 )
 .supports_expression_language();
 
+pub(crate) const CLASSIFY_OUTPUT_ATTRIBUTES: &[OutputAttribute] = &[
+    MIME_TYPE_ATTR,
+    CLASS_COUNT_ATTR,
+    CLASS_TOP1_ID_ATTR,
+    CLASS_TOP1_CONFIDENCE_ATTR,
+    CLASS_TOP1_NAME_ATTR,
+];
+
 impl ProcessorDefinition for ClassifyOutput {
     const DESCRIPTION: &'static str = "Post-processes the output of a classification model invoked via InvokeTractModel. Reads \
          the flattened score vector from the configured output tensor index, applies the chosen \
@@ -141,13 +149,7 @@ impl ProcessorDefinition for ClassifyOutput {
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
-    const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[
-        MIME_TYPE_ATTR,
-        CLASS_COUNT_ATTR,
-        CLASS_TOP1_ID_ATTR,
-        CLASS_TOP1_CONFIDENCE_ATTR,
-        CLASS_TOP1_NAME_ATTR,
-    ];
+    const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = CLASSIFY_OUTPUT_ATTRIBUTES;
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
 
     const PROPERTIES: &[PropertyDefinition] = property_definitions![

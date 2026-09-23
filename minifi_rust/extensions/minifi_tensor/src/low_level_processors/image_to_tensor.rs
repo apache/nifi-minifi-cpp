@@ -17,7 +17,7 @@
 pub(crate) mod image_to_tensor_def;
 
 use crate::low_level_processors::image_to_tensor::image_to_tensor_def::TENSOR_BYTES_ATTR;
-use crate::utils::dimensions::Dimensions;
+use crate::utils::dimensions::{Dimensions, LetterboxGeometry};
 use crate::utils::per_channel_f32::PerChannelF32;
 use crate::utils::tensor_helpers::{MinifiDatumType, load_as_image};
 pub(crate) use image_to_tensor_def::{
@@ -113,6 +113,11 @@ impl Schedule for ImageToTensor {
     {
         let target_width = context.get_property(&TARGET_WIDTH)?;
         let target_height = context.get_property(&TARGET_HEIGHT)?;
+        if target_width == 0 || target_height == 0 {
+            return Err(MinifiError::validation(
+                "Target width and Target height must be greater than zero",
+            ));
+        }
         let resize_filter = context.get_property(&RESIZE_FILTER)?;
         let resize_mode = context.get_property(&RESIZE_MODE)?;
         let color_format = context.get_property(&COLOR_FORMAT)?;
@@ -151,6 +156,10 @@ struct MaskedRgbImage {
 }
 
 impl ImageToTensor {
+    fn total_pixels(&self) -> usize {
+        self.target_width as usize * self.target_height as usize
+    }
+
     fn stretch_resize(&self, img: image::DynamicImage) -> MaskedRgbImage {
         let resized = img
             .resize_exact(
@@ -159,21 +168,21 @@ impl ImageToTensor {
                 self.resize_filter.into(),
             )
             .to_rgb8();
-        let mask = vec![true; (self.target_width * self.target_height) as usize];
+        let mask = vec![true; self.total_pixels()];
         MaskedRgbImage { img: resized, mask }
     }
 
     fn letterbox_resize(&self, img: image::DynamicImage) -> MaskedRgbImage {
-        let (src_w, src_h) = (img.width() as f32, img.height() as f32);
-        let scale = (self.target_width as f32 / src_w).min(self.target_height as f32 / src_h);
-        let new_w = (src_w * scale).round().max(1.0) as u32;
-        let new_h = (src_h * scale).round().max(1.0) as u32;
+        let LetterboxGeometry {
+            new_width: new_w,
+            new_height: new_h,
+            pad_x,
+            pad_y,
+            ..
+        } = Dimensions::from_image(&img).letterbox_into(self.get_target_dim());
         let scaled = img
             .resize_exact(new_w, new_h, self.resize_filter.into())
             .to_rgb8();
-
-        let pad_x = (self.target_width - new_w) / 2;
-        let pad_y = (self.target_height - new_h) / 2;
 
         let mut canvas = image::RgbImage::from_pixel(
             self.target_width,
@@ -183,10 +192,10 @@ impl ImageToTensor {
         image::imageops::overlay(&mut canvas, &scaled, pad_x as i64, pad_y as i64);
 
         // Mask to track which pixel is part of source and which is padding
-        let mut mask = vec![false; (self.target_width * self.target_height) as usize];
+        let mut mask = vec![false; self.total_pixels()];
         for y in pad_y..(new_h + pad_y) {
             for x in pad_x..(new_w + pad_x) {
-                mask[(y * self.target_width + x) as usize] = true;
+                mask[y as usize * self.target_width as usize + x as usize] = true;
             }
         }
         MaskedRgbImage { img: canvas, mask }
@@ -204,7 +213,7 @@ impl ImageToTensor {
             ColorFormat::Grayscale => 1,
             _ => 3,
         };
-        let total_pixels = (self.target_width * self.target_height) as usize;
+        let total_pixels = self.total_pixels();
         let mut tensor_bytes = Vec::with_capacity(total_pixels * num_channels * 4);
 
         let masked_img = self.resize_rgb(img);
@@ -214,7 +223,9 @@ impl ImageToTensor {
             let std_dev = self.std_dev.per_channel(0);
             for (idx, pixel) in masked_img.img.pixels().enumerate() {
                 let val = if masked_img.mask[idx] {
-                    // Rec. 601 luma coefficients — matches image::to_luma8().
+                    // Rec. 601 luma coefficients, as used by OpenCV and most ML
+                    // preprocessing pipelines. Note this is deliberately *not*
+                    // image::to_luma8(), which applies Rec. 709.
                     let luma =
                         0.299 * pixel[0] as f32 + 0.587 * pixel[1] as f32 + 0.114 * pixel[2] as f32;
                     (luma / self.pixel_divisor - mean) / std_dev
@@ -401,6 +412,34 @@ mod tests {
             .iter()
             .map(|c| f32::from_le_bytes(*c))
             .collect()
+    }
+
+    #[test]
+    fn test_schedule_rejects_zero_target_dimensions() {
+        for (width, height) in [("0", "100"), ("100", "0"), ("0", "0")] {
+            let mut context = MockProcessContext::new();
+            context.properties.insert(TARGET_WIDTH.name(), width);
+            context.properties.insert(TARGET_HEIGHT.name(), height);
+            context.properties.insert(PIXEL_DIVISOR.name(), "1.0");
+
+            assert!(
+                matches!(
+                    ImageToTensor::schedule(&context, &MockLogger::new()),
+                    Err(MinifiError::ValidationError(_))
+                ),
+                "expected {width}x{height} to be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn test_schedule_accepts_non_zero_target_dimensions() {
+        let mut context = MockProcessContext::new();
+        context.properties.insert(TARGET_WIDTH.name(), "224");
+        context.properties.insert(TARGET_HEIGHT.name(), "224");
+        context.properties.insert(PIXEL_DIVISOR.name(), "1.0");
+
+        assert!(ImageToTensor::schedule(&context, &MockLogger::new()).is_ok());
     }
 
     #[test]
