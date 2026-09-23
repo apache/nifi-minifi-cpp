@@ -64,7 +64,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name    | Description                                                                                                                                                                                         |
 |---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| failure | The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as scores + boxes.                                      |
+| failure | The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as classification.                                      |
 | success | Inference and post-processing completed. The flow file content is the original, unchanged image; the classifications are written to the configured output attribute as a JSON array (may be empty). |
 
 
@@ -219,7 +219,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Decodes an image from the flow file content and converts it into a normalised numeric tensor suitable for feeding into a downstream inference processor such as InvokeTractModel. Supports RGB / BGR / Grayscale, CHW / HWC layouts, stretch or letterbox resizing, and scalar or per-channel mean/std normalisation. The output payload is the raw little-endian f32 tensor; the 'tensor.shape' and 'tensor.dtype' attributes describe its layout.
+Decodes an image from the flow file content and converts it into a normalised numeric tensor suitable for feeding into a downstream inference processor such as InvokeTractModel. Supports RGB / BGR / Grayscale, CHW / HWC layouts, stretch or letterbox resizing, and scalar or per-channel mean/std normalisation. The output payload is the raw little-endian f32 tensor; the 'tensors.len', 'tensor.{i}.shape' and 'tensor.{i}.dtype' attributes describe its layout.
 
 ### Properties
 
@@ -263,7 +263,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Runs a single inference against the compiled model owned by the referenced TractModelService. Reads the input tensor from the flow file content plus the 'tensor.shape' and (optionally) 'tensor.dtype' attributes produced by an upstream processor such as ImageToTensor. The flow file's new content is every output tensor's raw bytes concatenated in model order; per-tensor shape, byte length, and dtype are written to attributes. Only a single input tensor and only f32 input dtype are supported in this pass.
+Runs a single inference against the compiled model owned by the referenced TractModelService. Reads the input tensor from the flow file content plus the 'tensor.0.shape' and (optionally) 'tensor.0.dtype' attributes produced by an upstream processor such as ImageToTensor. The flow file's new content is every output tensor's raw bytes concatenated in model order; per-tensor shape, byte length, and dtype are written to attributes.
 
 ### Properties
 
@@ -275,10 +275,10 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description                                                                                                                                 |
-|---------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| failure | The input tensor could not be built (missing/invalid tensor.shape, unsupported tensor.dtype, malformed payload) or the model failed to run. |
-| success | Inference completed. The flow file's content is the concatenation of every output tensor's raw bytes in model output order.                 |
+| Name    | Description                                                                                                                                     |
+|---------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| failure | The input tensor could not be built (missing/invalid tensor.0.shape, unsupported tensor.0.dtype, malformed payload) or the model failed to run. |
+| success | Inference completed. The flow file's content is the concatenation of every output tensor's raw bytes in model output order.                     |
 
 ### Output Attributes
 

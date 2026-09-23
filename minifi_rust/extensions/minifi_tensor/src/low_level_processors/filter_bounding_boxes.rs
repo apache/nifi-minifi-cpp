@@ -20,7 +20,7 @@ mod filter_bounding_boxes_def;
 use crate::low_level_processors::image_to_tensor::ResizeMode;
 use crate::utils::bounding_box::BoundingBox;
 use crate::utils::dimensions::Dimensions;
-use crate::utils::score_activation::ScoreActivation;
+use crate::utils::score_activation::{ScoreActivation, SoftmaxTerms};
 use crate::utils::tensor_helpers::{deserialize_tensors, tensor_as_f32};
 use filter_bounding_boxes_def::SUCCESS;
 pub(crate) use filter_bounding_boxes_def::{
@@ -97,41 +97,11 @@ fn score_box(
         }
     };
 
-    let confidence = match activation {
-        ScoreActivation::Softmax => {
-            let max_logit = logits
-                .iter()
-                .copied()
-                .filter(|l| l.is_finite())
-                .reduce(f32::max)
-                .unwrap_or(f32::NEG_INFINITY);
-            let sum_exp: f32 = logits
-                .iter()
-                .filter(|l| l.is_finite())
-                .map(|&l| (l - max_logit).exp())
-                .sum();
-
-            (best_logit - max_logit).exp() / sum_exp
-        }
-        ScoreActivation::Sigmoid => 1.0 / (1.0 + (-best_logit).exp()),
-        ScoreActivation::None => best_logit,
-    };
+    let confidence = activation.confidence(best_logit, SoftmaxTerms::over(logits.iter().copied()));
 
     ScoredClass {
         class_id,
         confidence,
-    }
-}
-
-/// Turn a single per-box score into a confidence for the "separate class-id
-/// tensor" path.
-/// Sigmoid maps a raw logit to a probability;
-/// Softmax has no meaning over a single scalar, thus pass-through.
-/// None passes the score through.
-fn activate_scalar(score: f32, activation: ScoreActivation) -> f32 {
-    match activation {
-        ScoreActivation::Sigmoid => 1.0 / (1.0 + (-score).exp()),
-        ScoreActivation::Softmax | ScoreActivation::None => score,
     }
 }
 
@@ -217,11 +187,13 @@ impl FilterBoundingBoxes {
 
         let (scale_x, scale_y, pad_x, pad_y) = match resize_mode {
             ResizeMode::Letterbox => {
-                let scale =
-                    (target_dim.width / orig_dim.width).min(target_dim.height / orig_dim.height);
-                let pad_x = (target_dim.width - (orig_dim.width * scale)) / 2.0;
-                let pad_y = (target_dim.height - (orig_dim.height * scale)) / 2.0;
-                (scale, scale, pad_x, pad_y)
+                let geometry = orig_dim.letterbox_into(target_dim);
+                (
+                    geometry.scale,
+                    geometry.scale,
+                    geometry.pad_x as f32,
+                    geometry.pad_y as f32,
+                )
             }
             ResizeMode::Stretch => (
                 target_dim.width / orig_dim.width,
@@ -289,7 +261,7 @@ impl FilterBoundingBoxes {
                     self.box_format
                 );
                 for i in 0..num_boxes {
-                    let confidence = activate_scalar(score_floats[i], self.score_activation);
+                    let confidence = self.score_activation.confidence_of_scalar(score_floats[i]);
                     if confidence < self.confidence_threshold {
                         continue;
                     }
@@ -444,10 +416,10 @@ mod tests {
 
     #[test]
     fn test_activate_scalar_sigmoid_and_passthrough() {
-        assert!((activate_scalar(0.0, ScoreActivation::Sigmoid) - 0.5).abs() < 1e-6);
-        assert_eq!(activate_scalar(0.42, ScoreActivation::None), 0.42);
+        assert!((ScoreActivation::Sigmoid.confidence_of_scalar(0.0) - 0.5).abs() < 1e-6);
+        assert_eq!(ScoreActivation::None.confidence_of_scalar(0.42), 0.42);
         // Softmax over a scalar has no meaning → pass-through.
-        assert_eq!(activate_scalar(0.42, ScoreActivation::Softmax), 0.42);
+        assert_eq!(ScoreActivation::Softmax.confidence_of_scalar(0.42), 0.42);
     }
 
     fn class_index_processor() -> FilterBoundingBoxes {
@@ -544,6 +516,53 @@ mod tests {
         assert!((letterboxed.x_max - 0.6).abs() < 1e-5);
         assert!((letterboxed.y_min - 0.3).abs() < 1e-5);
         assert!((letterboxed.y_max - 0.7).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_letterbox_un_mapping_uses_the_integer_padding_that_was_applied() {
+        use minifi_native::{MockLogger, MockProcessContext};
+        use tract::__ndarray_interop::TensorInterface;
+
+        // SSD300 fed a 1080p frame: scale = 300/1920 = 0.15625, so the scaled
+        // height is 1080 * 0.15625 = 168.75 — *not* an integer. ImageToTensor
+        // rounds to 169 and pads (300 - 169) / 2 = 65. Deriving the padding from
+        // the unrounded 168.75 instead gives 65.625, and that 0.625 target-pixel
+        // error becomes 0.625 / 0.15625 = 4 original pixels once divided back
+        // through the scale.
+        let scores = Tensor::from_slice::<f32>(&[1], &[0.9]).unwrap();
+        let boxes = Tensor::from_slice::<f32>(&[1, 4], &[0.4, 0.4, 0.6, 0.6]).unwrap();
+        let classes = Tensor::from_slice::<i64>(&[1], &[5]).unwrap();
+
+        let result = class_index_processor()
+            .filter(
+                &MockProcessContext::new(),
+                &MockLogger::new(),
+                vec![scores, boxes, classes],
+                Dimensions {
+                    width: 1920.0,
+                    height: 1080.0,
+                },
+                Dimensions {
+                    width: 300.0,
+                    height: 300.0,
+                },
+                ResizeMode::Letterbox,
+            )
+            .expect("filter should succeed");
+        let json = result.into_bytes().unwrap().unwrap();
+        let boxes: Vec<BoundingBox> = serde_json::from_slice(&json).unwrap();
+        let bbox = boxes.into_iter().next().expect("one box expected");
+
+        // x is unpadded (the width axis is the one that fills the canvas), so it
+        // round-trips exactly.
+        assert!((bbox.x_min - 0.4).abs() < 1e-5);
+        assert!((bbox.x_max - 0.6).abs() < 1e-5);
+
+        // y with the integer pad of 65: ((0.4 * 300) - 65) / 0.15625 / 1080.
+        // The float-pad variant would yield 0.32222 / 0.67778 instead — a 4px
+        // error, well outside this tolerance.
+        assert!((bbox.y_min - 352.0 / 1080.0).abs() < 1e-5);
+        assert!((bbox.y_max - 736.0 / 1080.0).abs() < 1e-5);
     }
 
     #[test]

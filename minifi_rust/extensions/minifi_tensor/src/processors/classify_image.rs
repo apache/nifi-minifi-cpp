@@ -57,7 +57,7 @@ impl FlowFileTransform for ClassifyImage {
         &self,
         context: &Context,
         input_stream: &'a mut dyn InputStream,
-        _logger: &LoggerImpl,
+        logger: &LoggerImpl,
     ) -> Result<TransformedFlowFile<'a>, ProcessError> {
         let tract_model_service = context.get_controller_service(&TRACT_MODEL_SERVICE)?;
         let img = load_as_image(input_stream).route_err_to_failure()?;
@@ -74,6 +74,7 @@ impl FlowFileTransform for ClassifyImage {
             .route_err_to_failure()?;
 
         // ClassifyOutput
-        self.classify_output.classify(context, output_tensors)
+        self.classify_output
+            .classify(context, logger, output_tensors)
     }
 }

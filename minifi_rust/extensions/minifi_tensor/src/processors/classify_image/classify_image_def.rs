@@ -55,7 +55,8 @@ impl ProcessorDefinition for ClassifyImage {
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
-    const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
+    const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] =
+        classify_output::CLASSIFY_OUTPUT_ATTRIBUTES;
     const RELATIONSHIPS: &'static [Relationship] = &[SUCCESS, FAILURE];
 
     const PROPERTIES: &'static [PropertyDefinition] = property_definitions![

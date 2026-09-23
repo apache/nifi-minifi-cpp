@@ -88,18 +88,19 @@ pub(crate) fn deserialize_tensors<Context: GetAttribute>(
             .parse::<usize>()?;
         let tensor_shape = parse_tensor_shape(context, i)?;
         let tensor_dtype = parse_tensor_dtype(context, i)?;
-        if cursor + tensor_len > flow_file_contents.len() {
-            return Err(MinifiError::custom(
-                "FlowFile contents are not in sync with tensor attributes",
-            ));
-        }
-        let tensor_data = &flow_file_contents[cursor..cursor + tensor_len];
+        let tensor_end = cursor
+            .checked_add(tensor_len)
+            .filter(|end| *end <= flow_file_contents.len())
+            .ok_or_else(|| {
+                MinifiError::custom("FlowFile contents are not in sync with tensor attributes")
+            })?;
+        let tensor_data = &flow_file_contents[cursor..tensor_end];
         result.push(Tensor::from_bytes(
             tensor_dtype,
             &tensor_shape,
             tensor_data,
         )?);
-        cursor += tensor_len;
+        cursor = tensor_end;
     }
 
     if cursor != flow_file_contents.len() {
@@ -205,6 +206,37 @@ mod tests {
         assert_matches!(
             deserialize_tensors(&context, &mut input_stream.clone()),
             Ok(_)
+        );
+    }
+
+    #[test]
+    fn oversized_tensor_len_attribute_errors_instead_of_panicking() {
+        // A `tensor.N.bytes` large enough to overflow `cursor + tensor_len` must
+        // still be rejected: the wrapped sum used to slip past the bounds check
+        // and panic on the slice (aborting the process, since panic = "abort").
+        let mut context = MockProcessContext::new();
+        let bytes: Vec<u8> = vec![0u8; 8];
+        let input_stream = Cursor::new(bytes);
+
+        // Two tensors so the second one is checked against a non-zero cursor —
+        // `0 + tensor_len` cannot overflow.
+        context.attributes.insert("tensors.len".into(), "2".into());
+        for (i, len) in [("0", "8"), ("1", &usize::MAX.to_string()[..])] {
+            context
+                .attributes
+                .insert(format!("tensor.{i}.bytes"), len.into());
+            context
+                .attributes
+                .insert(format!("tensor.{i}.shape"), "2".into());
+            context
+                .attributes
+                .insert(format!("tensor.{i}.dtype"), "F32".into());
+        }
+
+        assert_matches!(
+            deserialize_tensors(&context, &mut input_stream.clone()),
+            Err(MinifiError::CustomError(msg))
+                if msg == "FlowFile contents are not in sync with tensor attributes"
         );
     }
 }

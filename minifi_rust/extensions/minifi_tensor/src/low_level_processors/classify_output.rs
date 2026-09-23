@@ -15,17 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::utils::score_activation::ScoreActivation;
+use crate::utils::score_activation::{ScoreActivation, SoftmaxTerms};
 use crate::utils::tensor_helpers::{deserialize_tensors, tensor_as_f32, tensor_shape};
 use classify_output_def::SUCCESS;
 pub(crate) use classify_output_def::{
-    CONFIDENCE_THRESHOLD, LABEL_INDEX_OFFSET, LABELS_FILE_PATH, OUTPUT_ATTRIBUTE_NAME,
-    SCORE_ACTIVATION, SCORE_OUTPUT_INDEX, TOP_K,
+    CLASSIFY_OUTPUT_ATTRIBUTES, CONFIDENCE_THRESHOLD, LABEL_INDEX_OFFSET, LABELS_FILE_PATH,
+    OUTPUT_ATTRIBUTE_NAME, SCORE_ACTIVATION, SCORE_OUTPUT_INDEX, TOP_K,
 };
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     Content, FlowFileTransform, GetAttribute, GetId, GetProperty, InputStream, Logger, MinifiError,
-    ProcessError, RouteErrorExt, Schedule, TransformedFlowFile,
+    ProcessError, RouteErrorExt, Schedule, TransformedFlowFile, warn,
 };
 use serde::Serialize;
 use std::path::Path;
@@ -88,6 +88,13 @@ impl Schedule for ClassifyOutput {
             _ => Vec::new(),
         };
         let label_index_offset = context.get_property(&LABEL_INDEX_OFFSET)?;
+        if !labels.is_empty() && label_index_offset >= labels.len() {
+            return Err(MinifiError::validation(format!(
+                "Label index offset ({}) must be smaller than the number of labels ({})",
+                label_index_offset,
+                labels.len()
+            )));
+        }
 
         Ok(Self {
             top_k,
@@ -107,9 +114,10 @@ impl ClassifyOutput {
             .cloned()
     }
 
-    pub(crate) fn classify<'a, Context: GetProperty + GetAttribute + GetId>(
+    pub(crate) fn classify<'a, Context: GetProperty + GetAttribute + GetId, LoggerImpl: Logger>(
         &self,
         context: &Context,
+        logger: &LoggerImpl,
         tensors: Vec<Tensor>,
     ) -> Result<TransformedFlowFile<'a>, ProcessError> {
         let score_floats =
@@ -139,33 +147,29 @@ impl ClassifyOutput {
             .filter(|&(_, s)| s.is_finite())
             .collect();
 
-        let (max_logit, sum_exp) = match self.score_activation {
-            ScoreActivation::Softmax => {
-                let max = finite
-                    .iter()
-                    .map(|&(_, s)| s)
-                    .reduce(f32::max)
-                    .unwrap_or(f32::NEG_INFINITY);
-                let sum = finite.iter().map(|&(_, s)| (s - max).exp()).sum::<f32>();
-                (max, sum)
-            }
-            _ => (0.0, 1.0),
-        };
+        let softmax_terms = SoftmaxTerms::over(finite.iter().map(|&(_, s)| s));
 
         let predictions: Vec<Prediction> = top_k(finite, self.top_k)
             .into_iter()
             .filter_map(|(class_id, raw)| {
-                let confidence = match self.score_activation {
-                    ScoreActivation::Softmax => (raw - max_logit).exp() / sum_exp,
-                    ScoreActivation::Sigmoid => 1.0 / (1.0 + (-raw).exp()),
-                    ScoreActivation::None => raw,
-                };
+                let confidence = self.score_activation.confidence(raw, softmax_terms);
 
                 if confidence >= self.confidence_threshold {
+                    let class_name = self.label_for(class_id);
+                    if class_name.is_none() && !self.labels.is_empty() {
+                        warn!(
+                            logger,
+                            "No label for class id {} (offset {}, {} labels loaded); \
+                             the labels file does not match the model's classes",
+                            class_id,
+                            self.label_index_offset,
+                            self.labels.len()
+                        );
+                    }
                     Some(Prediction {
                         class_id,
                         confidence,
-                        class_name: self.label_for(class_id),
+                        class_name,
                     })
                 } else {
                     None
@@ -214,10 +218,10 @@ impl FlowFileTransform for ClassifyOutput {
         &self,
         context: &Context,
         input_stream: &'a mut dyn InputStream,
-        _logger: &LoggerImpl,
+        logger: &LoggerImpl,
     ) -> Result<TransformedFlowFile<'a>, ProcessError> {
         let tensors = deserialize_tensors(context, input_stream).route_err_to_failure()?;
-        self.classify(context, tensors)
+        self.classify(context, logger, tensors)
     }
 }
 
@@ -225,7 +229,7 @@ impl FlowFileTransform for ClassifyOutput {
 mod tests {
     use super::classify_output_def::FAILURE;
     use super::*;
-    use minifi_native::{MockLogger, MockProcessContext};
+    use minifi_native::{LogLevel, MockLogger, MockProcessContext};
     use std::io::Cursor;
 
     fn make_processor(top_k: usize, activation: ScoreActivation) -> ClassifyOutput {
@@ -355,6 +359,49 @@ mod tests {
             result.attribute("class.top1.name").unwrap(),
             "tench",
             "class id 0 with offset 1 should land on labels[1]"
+        );
+    }
+
+    #[test]
+    fn test_label_lookup_miss_warns_when_labels_are_configured() {
+        let mut processor = make_processor(1, ScoreActivation::None);
+        processor.labels = vec!["dummy".into(), "tench".into()];
+        processor.label_index_offset = 1;
+        let scores = vec![0.1f32, 0.2, 0.9]; // model class 2 wins
+        let context = context_with_scores(&scores);
+        let mut stream = Cursor::new(build_payload(&scores));
+        let logger = MockLogger::new();
+
+        let result = processor.transform(&context, &mut stream, &logger).unwrap();
+
+        assert!(
+            result.attribute("class.top1.name").is_none(),
+            "an out-of-range label index still yields no name"
+        );
+        let logs = logger.logs.lock().unwrap();
+        assert!(
+            logs.iter()
+                .any(|(level, msg)| *level == LogLevel::Warn && msg.contains("No label for class")),
+            "expected a warning about the labels/model mismatch, got: {logs:?}"
+        );
+    }
+
+    #[test]
+    fn test_label_lookup_stays_silent_without_a_labels_file() {
+        let processor = make_processor(1, ScoreActivation::None);
+        let scores = vec![0.1f32, 0.9, 0.5];
+        let context = context_with_scores(&scores);
+        let mut stream = Cursor::new(build_payload(&scores));
+        let logger = MockLogger::new();
+
+        processor.transform(&context, &mut stream, &logger).unwrap();
+
+        let logs = logger.logs.lock().unwrap();
+        assert!(
+            !logs
+                .iter()
+                .any(|(_, msg)| msg.contains("No label for class")),
+            "should not warn when no labels file is configured, got: {logs:?}"
         );
     }
 
