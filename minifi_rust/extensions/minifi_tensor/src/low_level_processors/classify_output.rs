@@ -47,7 +47,7 @@ fn load_labels(path: &Path) -> Result<Vec<String>, MinifiError> {
     })?;
     Ok(content
         .lines()
-        .map(|line| line.trim_end().to_string())
+        .map(|line| line.trim().to_string())
         .collect())
 }
 
