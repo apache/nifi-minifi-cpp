@@ -23,6 +23,7 @@ class KeyValueStateManager final : public core::StateManagerImpl {
   using StateManagerImpl::get;
   bool set(const core::StateManager::State& kvs) override;
   bool get(core::StateManager::State& kvs) override;
+  std::optional<core::StateManager::State> getEffectiveState() override;
   bool clear() override;
   bool persist() override;
 

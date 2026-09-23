@@ -16,7 +16,9 @@ EXPORTS
     minifi_process_context_get_property
     minifi_process_context_get_proxy_data_from_property
     minifi_process_context_get_ssl_data_from_property
+    minifi_process_context_get_state
     minifi_process_context_report_metrics
+    minifi_process_context_set_state
     minifi_process_context_set_trigger_when_empty
     minifi_process_session_create
     minifi_process_session_get

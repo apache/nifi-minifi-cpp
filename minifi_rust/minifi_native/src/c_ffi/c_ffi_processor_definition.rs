@@ -8,14 +8,14 @@ use std::ptr;
 use super::c_ffi_primitives::StaticStrAsMinifiCStr;
 use super::c_ffi_process_context::CffiProcessContext;
 use super::c_ffi_process_session::CffiProcessSession;
-use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
+use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger, StatePolicy};
 use crate::api::{ProcessorInputRequirement, RawProcessor, ThreadingModel};
 use crate::c_ffi::CffiLogger;
 use crate::c_ffi::c_ffi_output_attribute::COutputAttributes;
 use crate::c_ffi::c_ffi_property::CProperties;
 use crate::{
     ComponentIdentifier, LogLevel, MinifiError, MultiThreaded, OutputAttribute, Processor,
-    ProcessorDefinition, PropertyDefinition, Schedule, SingleThreaded,
+    ProcessorDefinition, PropertyDefinition, Schedule, SingleThreaded, SingleThreadedStateHooks,
 };
 use crate::{OnTriggerResult, Relationship};
 use minifi_native_sys::*;
@@ -66,9 +66,10 @@ where
     }
 }
 
-impl<T> DispatchOnTrigger<SingleThreaded> for T
+impl<T, S> DispatchOnTrigger<SingleThreaded<S>> for T
 where
-    T: SingleThreadedTrigger,
+    S: StatePolicy,
+    T: SingleThreadedTrigger + SingleThreadedStateHooks,
 {
     unsafe fn dispatch_on_trigger(
         processor_ptr: *mut c_void,
@@ -79,7 +80,13 @@ where
             let processor = &mut *(processor_ptr as *mut T);
             let mut context = CffiProcessContext::new(context_ptr);
             let mut session = CffiProcessSession::new(session_ptr);
-            let result = processor.trigger(&mut context, &mut session);
+            // State is written back inside the trigger's session so it commits atomically with it.
+            let result: Result<OnTriggerResult, MinifiError> = (|| {
+                processor.load_persisted_state(&context)?;
+                let trigger_result = processor.trigger(&mut context, &mut session)?;
+                processor.save_persisted_state(&context)?;
+                Ok(trigger_result)
+            })();
             process_error_to_status(&*processor, result)
         }
     }

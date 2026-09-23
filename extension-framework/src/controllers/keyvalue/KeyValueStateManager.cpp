@@ -51,6 +51,16 @@ bool KeyValueStateManager::get(core::StateManager::State& kvs) {
   return true;
 }
 
+std::optional<core::StateManager::State> KeyValueStateManager::getEffectiveState() {
+  if (change_type_ == ChangeType::SET) {
+    return state_to_set_;
+  }
+  if (change_type_ == ChangeType::CLEAR) {
+    return std::nullopt;
+  }
+  return state_;
+}
+
 bool KeyValueStateManager::clear() {
   if (!state_) {
     return false;

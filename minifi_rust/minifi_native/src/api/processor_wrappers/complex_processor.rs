@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
-use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
+use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger, StatePolicy};
 use crate::{
     ComponentIdentifier, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
     ProcessSession, Processor, ProcessorDefinition, Schedule, SingleThreaded,
@@ -36,9 +36,10 @@ pub trait Trigger {
 
 pub struct ComplexProcessorType {}
 
-impl<Implementation, L> SingleThreadedTrigger
-    for Processor<Implementation, ComplexProcessorType, SingleThreaded, L>
+impl<Implementation, S, L> SingleThreadedTrigger
+    for Processor<Implementation, ComplexProcessorType, SingleThreaded<S>, L>
 where
+    S: StatePolicy,
     Implementation: Schedule + MutTrigger + ComponentIdentifier + ProcessorDefinition,
     L: Logger,
 {

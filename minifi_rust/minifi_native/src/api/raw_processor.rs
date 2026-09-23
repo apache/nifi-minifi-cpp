@@ -4,6 +4,7 @@
 
 use crate::api::errors::MinifiError;
 use crate::{LogLevel, Logger, ProcessContext, ProcessSession};
+use std::marker::PhantomData;
 
 pub enum ProcessorInputRequirement {
     Required,
@@ -39,19 +40,38 @@ impl ThreadingModel for MultiThreaded {
     const IS_EXCLUSIVE: bool = false;
 }
 
+/// Whether the framework loads and saves the processor's `#[persisted]` fields around each trigger.
+pub trait StatePolicy: sealed::Sealed {}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct SingleThreaded;
-impl ThreadingModel for SingleThreaded {
+pub struct Stateless;
+impl StatePolicy for Stateless {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Stateful;
+impl StatePolicy for Stateful {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SingleThreaded<S: StatePolicy = Stateless>(PhantomData<S>);
+impl<S: StatePolicy> ThreadingModel for SingleThreaded<S> {
     const IS_EXCLUSIVE: bool = true;
 }
+
+/// A single-threaded processor whose `StateSchema` is persisted with each trigger's session.
+pub type SingleThreadedStateful = SingleThreaded<Stateful>;
+
+pub trait IsSingleThreaded: sealed::Sealed {}
+impl<S: StatePolicy> IsSingleThreaded for SingleThreaded<S> {}
 
 mod sealed {
     pub trait Sealed {}
     impl Sealed for super::MultiThreaded {}
-    impl Sealed for super::SingleThreaded {}
+    impl<S: super::StatePolicy> Sealed for super::SingleThreaded<S> {}
+    impl Sealed for super::Stateless {}
+    impl Sealed for super::Stateful {}
 }
 
-pub trait SingleThreadedTrigger: RawProcessor<Threading = SingleThreaded> {
+pub trait SingleThreadedTrigger: RawProcessor<Threading: IsSingleThreaded> {
     fn trigger<PC, PS>(
         &mut self,
         context: &mut PC,
