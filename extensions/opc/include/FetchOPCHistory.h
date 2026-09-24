@@ -94,19 +94,19 @@ class FetchOPCHistory final : public BaseOPCProcessor {
           .withDescription("Timestamp before which the events should be returned. If not specified entries are returned until the current time.")
           .build();
   EXTENSIONAPI static constexpr auto BatchSize =
-      core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+      core::PropertyDefinitionBuilder<>::createProperty("Batch size")
           .withDescription("Maximum number entries to read and return in a single batch. If set to zero or empty all available entries are returned.")
           .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
           .build();
   EXTENSIONAPI static constexpr auto HistoryReadType =
-      core::PropertyDefinitionBuilder<magic_enum::enum_count<opc::HistoryReadTypeOption>()>::createProperty("History Read Type")
+      core::PropertyDefinitionBuilder<magic_enum::enum_count<opc::HistoryReadTypeOption>()>::createProperty("History read type")
           .withDescription("Whether to fetch raw historical values or the audit trail of modifications to historical values")
           .isRequired(true)
           .withAllowedValues(magic_enum::enum_names<opc::HistoryReadTypeOption>())
           .withDefaultValue(magic_enum::enum_name<opc::HistoryReadTypeOption::Raw>())
           .build();
   EXTENSIONAPI static constexpr auto RecordSetWriter =
-      core::PropertyDefinitionBuilder<>::createProperty("Record Set Writer")
+      core::PropertyDefinitionBuilder<>::createProperty("Record set writer")
           .withDescription("Specifies the Controller Service to use for writing results to a FlowFile instead of using the default output format.")
           .withAllowedTypes<core::RecordSetWriter>()
           .build();
