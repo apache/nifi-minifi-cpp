@@ -182,6 +182,7 @@ impl ProcessorDefinition for ImageToTensor {
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
     const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[
         TENSORS_LEN_ATTR,
+        TENSOR_BYTES_ATTR,
         TENSOR_SHAPE_ATTR,
         TENSOR_DTYPE_ATTR,
         IMG_ORG_WIDTH_ATTR,
