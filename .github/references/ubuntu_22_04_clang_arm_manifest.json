@@ -6516,8 +6516,8 @@
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
                         },
-                        "Batch Size": {
-                            "name": "Batch Size",
+                        "Batch size": {
+                            "name": "Batch size",
                             "description": "Maximum number entries to read and return in a single batch. If set to zero or empty all available entries are returned.",
                             "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
                             "required": "false",
@@ -6540,8 +6540,8 @@
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
                         },
-                        "History Read Type": {
-                            "name": "History Read Type",
+                        "History read type": {
+                            "name": "History read type",
                             "description": "Whether to fetch raw historical values or the audit trail of modifications to historical values",
                             "validator": "VALID",
                             "required": "true",
@@ -6634,13 +6634,13 @@
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
                         },
-                        "Record Set Writer": {
+                        "Record set writer": {
                             "typeProvidedByValue": {
                                 "type": "org.apache.nifi.minifi.core.RecordSetWriter",
                                 "group": "org.apache.nifi.minifi",
                                 "artifact": "minifi-system"
                             },
-                            "name": "Record Set Writer",
+                            "name": "Record set writer",
                             "description": "Specifies the Controller Service to use for writing results to a FlowFile instead of using the default output format.",
                             "validator": "VALID",
                             "required": "false",

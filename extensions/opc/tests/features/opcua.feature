@@ -278,8 +278,8 @@ Feature: Putting and fetching data to OPC UA server
       | FetchOPCHistory   | Node ID type                | String                                            |
       | FetchOPCHistory   | Namespace index             | 1                                                 |
       | FetchOPCHistory   | OPC server endpoint         | opc.tcp://opcua-server-${scenario_id}:4840/       |
-      | FetchOPCHistory   | Batch Size                  | 3                                                 |
-      | FetchOPCHistory   | History Read Type           | Raw                                               |
+      | FetchOPCHistory   | Batch size                  | 3                                                 |
+      | FetchOPCHistory   | History read type           | Raw                                               |
 
     And in the "update-opc-ua-node" flow the "success" relationship of the GenerateFlowFile processor is connected to the PutOPCProcessor
     And in the "fetch-opc-ua-node-history" flow the "success" relationship of the FetchOPCHistory processor is connected to the PutFile
@@ -327,8 +327,8 @@ Feature: Putting and fetching data to OPC UA server
       | FetchOPCHistory   | Node ID type                | String                                            |
       | FetchOPCHistory   | Namespace index             | 1                                                 |
       | FetchOPCHistory   | OPC server endpoint         | opc.tcp://opcua-server-${scenario_id}:4840/       |
-      | FetchOPCHistory   | Batch Size                  | 3                                                 |
-      | FetchOPCHistory   | Record Set Writer           | JsonRecordSetWriter                               |
+      | FetchOPCHistory   | Batch size                  | 3                                                 |
+      | FetchOPCHistory   | Record set writer           | JsonRecordSetWriter                               |
 
     And in the "update-opc-ua-node" flow the "success" relationship of the GenerateFlowFile processor is connected to the PutOPCProcessor
     And in the "fetch-opc-ua-node-history" flow the "success" relationship of the FetchOPCHistory processor is connected to the PutFile
