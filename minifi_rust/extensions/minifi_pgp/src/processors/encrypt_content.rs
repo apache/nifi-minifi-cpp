@@ -113,11 +113,9 @@ impl Schedule for EncryptContentPGP {
         let symmetric_password = context.get_property(&SYMMETRIC_PASSPHRASE)?;
 
         let public_key_service = context.get_controller_service(&PUBLIC_KEY_SERVICE)?;
-        let public_key_search = context.get_raw_property(&PUBLIC_KEY_SEARCH)?;
 
-        if symmetric_password.is_none()
-            && (public_key_search.is_none() || public_key_service.is_none())
-        {
+        // Given API support we should check if PUBLIC_KEY_SEARCH is set (without EL)
+        if symmetric_password.is_none() && public_key_service.is_none() {
             return Err(MinifiError::custom(
                 "Either a password or Public Key Service with Public Key Search should be configured to encrypt files",
             ));
