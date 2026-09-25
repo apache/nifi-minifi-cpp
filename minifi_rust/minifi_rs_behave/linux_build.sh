@@ -81,10 +81,19 @@ TARGET_DIR="target/release"
 mkdir -p "$TARGET_DIR"
 
 # 3. Build using Docker
+# When running under GitHub Actions, persist the chef layer across runs
+CACHE_ARGS=()
+if [ -n "${ACTIONS_CACHE_URL}${ACTIONS_RESULTS_URL}" ]; then
+    echo "GitHub Actions cache detected — enabling type=gha buildx cache"
+    CACHE_ARGS+=(--cache-from "type=gha,scope=behave-$FLAVOR")
+    CACHE_ARGS+=(--cache-to   "type=gha,mode=max,scope=behave-$FLAVOR")
+fi
+
 docker buildx build \
   -f "$DOCKERFILE" \
   --target bin-export \
   --build-arg MINIFI_SDK_PATH="$DOCKER_SDK_ARG" \
+  "${CACHE_ARGS[@]}" \
   --output type=local,dest="$TARGET_DIR" \
   .
 

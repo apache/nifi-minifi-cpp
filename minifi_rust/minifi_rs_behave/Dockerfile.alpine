@@ -18,7 +18,7 @@ COPY target/.docker_sdk.zi[p] /app/target/
 
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
-RUN cargo build --release
+RUN cargo build --release --all-features
 
 # Export Stage
 FROM scratch AS bin-export
