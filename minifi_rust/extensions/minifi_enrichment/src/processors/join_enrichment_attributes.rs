@@ -1,12 +1,31 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 use std::time::{Duration, Instant};
 
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    FlowFileStore, GetProperty, Logger, MinifiError, MutTrigger, OnTriggerResult, ProcessContext,
-    ProcessSession, Schedule, warn,
+    FlowFileStore, Logger, MinifiError, MutTrigger, OnTriggerResult, ProcessContext,
+    ProcessSession, Schedule, ScheduleContext, warn,
 };
 
-use crate::processors::attributes::{FORK_ROLE_ATTR, GROUP_ID_ATTR, JOIN_ROLE_ATTR, Role};
+use crate::processors::attributes::{
+    FORK_ROLE_ATTR, GROUP_ID_ATTR, JOIN_ROLE_ATTR, JOINED_ROLE, Role,
+};
 use crate::processors::join_enrichment_attributes::join_enrichment_attributes_def::{
     BATCH_SIZE, INVALID, JOINED, ORIGINAL, TIMEOUT_PROP, TIMEOUT_REL,
 };
@@ -31,8 +50,8 @@ fn get_role<Session: ProcessSession>(
 }
 
 fn get_role_and_group_id<Session: ProcessSession>(
-    flow_file: &Session::FlowFile,
     session: &Session,
+    flow_file: &Session::FlowFile,
 ) -> Option<(Role, String)> {
     let role = get_role(session, flow_file)?;
     let group_id = session
@@ -56,7 +75,7 @@ fn join<Session: ProcessSession>(
         session.set_attribute(&mut joined_ff, key, value)?;
     }
 
-    session.set_attribute(&mut joined_ff, JOIN_ROLE_ATTR.name, "JOINED")?;
+    session.set_attribute(&mut joined_ff, JOIN_ROLE_ATTR.name, JOINED_ROLE)?;
 
     session.transfer(original_ff, ORIGINAL.name)?;
     session.transfer(enrichment_ff, ORIGINAL.name)?;
@@ -92,18 +111,24 @@ impl JoinEnrichmentAttributes {
 }
 
 impl Schedule for JoinEnrichmentAttributes {
-    fn schedule<Ctx: GetProperty, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>
     where
         Self: Sized,
     {
+        let timeout = context
+            .get_property(&TIMEOUT_PROP)?
+            .filter(|d| !d.is_zero());
+
+        if timeout.is_some() {
+            context.set_trigger_when_empty(true)?;
+        }
+
         Ok(Self {
             batch_size: context.get_property(&BATCH_SIZE)?.unwrap_or(usize::MAX),
-            timeout: context
-                .get_property(&TIMEOUT_PROP)?
-                .filter(|d| !d.is_zero()),
+            timeout,
             pending: FlowFileStore::new(),
         })
     }
@@ -125,7 +150,7 @@ impl JoinEnrichmentAttributes {
                 break;
             };
 
-            let Some((role, group_id)) = get_role_and_group_id(&flow_file, session) else {
+            let Some((role, group_id)) = get_role_and_group_id(session, &flow_file) else {
                 warn!(logger, "Missing required attribute");
                 session.transfer(flow_file, INVALID.name)?;
                 continue;
@@ -179,6 +204,25 @@ mod tests {
         let context = MockProcessContext::new();
         let processor = JoinEnrichmentAttributes::schedule(&context, &logger).unwrap();
         (processor, context, logger)
+    }
+
+    #[test]
+    fn a_configured_timeout_requests_triggering_on_an_empty_input() {
+        let logger = MockLogger::new();
+        let mut context = MockProcessContext::new();
+        context.properties.insert(TIMEOUT_PROP.name(), "60 s");
+
+        let processor = JoinEnrichmentAttributes::schedule(&context, &logger).unwrap();
+
+        assert!(context.trigger_when_empty.get());
+        assert_eq!(processor.timeout, Some(Duration::from_secs(60)));
+    }
+
+    #[test]
+    fn without_a_timeout_we_do_not_ask_to_be_triggered_on_an_empty_input() {
+        let (processor, context, _logger) = scheduled();
+        assert!(!context.trigger_when_empty.get());
+        assert_eq!(processor.timeout, None);
     }
 
     fn with_timeout(timeout: Duration) -> JoinEnrichmentAttributes {

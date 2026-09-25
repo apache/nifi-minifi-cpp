@@ -98,11 +98,17 @@ impl<K: Eq + Hash> FlowFileStore<K> {
     where
         S: ProcessSession,
     {
-        let stashed = *entry
-            .flow_file
-            .downcast::<S::StashedFlowFile>()
-            .expect("stashed FlowFile type is stable within a processor instance");
-        session.unstash(stashed)
+        // The entry is type-erased because a processor struct cannot name the session's
+        // `StashedFlowFile`: `Session` is a generic on `trigger`, not on the processor, and the same
+        // processor is driven by both the CFFI and mock sessions. Mixing session types on one store
+        // is a programming error, but it is reported rather than panicked on - a panic here would
+        // unwind across the C ABI boundary.
+        let Ok(stashed) = entry.flow_file.downcast::<S::StashedFlowFile>() else {
+            return Err(MinifiError::CustomError(
+                "stashed FlowFile was stored by a different session type".into(),
+            ));
+        };
+        session.unstash(*stashed)
     }
 
     pub fn contains(&self, key: &K) -> bool {

@@ -1,6 +1,23 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 mod fork_enrichment_def;
 
-use crate::processors::attributes::{FORK_ROLE_ATTR, GROUP_ID_ATTR};
+use crate::processors::attributes::{FORK_ROLE_ATTR, GROUP_ID_ATTR, Role};
 use crate::processors::fork_enrichment::fork_enrichment_def::{ENRICHMENT, ORIGINAL};
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
@@ -40,8 +57,12 @@ impl Trigger for ForkEnrichment {
             return Ok(OnTriggerResult::Yield);
         };
         let mut enrichment = session.clone_ff(&original)?;
-        session.set_attribute(&mut original, FORK_ROLE_ATTR.name, "ORIGINAL")?;
-        session.set_attribute(&mut enrichment, FORK_ROLE_ATTR.name, "ENRICHMENT")?;
+        session.set_attribute(&mut original, FORK_ROLE_ATTR.name, Role::Original.into())?;
+        session.set_attribute(
+            &mut enrichment,
+            FORK_ROLE_ATTR.name,
+            Role::Enrichment.into(),
+        )?;
 
         let group_id = Uuid::new_v4().to_string();
         session.set_attribute(&mut original, GROUP_ID_ATTR.name, &group_id)?;

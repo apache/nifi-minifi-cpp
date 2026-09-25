@@ -60,7 +60,7 @@ pub use api::attribute::{GetAttribute, OutputAttribute};
 pub use api::{
     DataSize, FlowFile, FlowFileStore, GetId, InputStream, NonBlankPath, OnTriggerResult,
     OutputStream, ProcessContext, ProcessSession, ProcessorInputRequirement, PropertyConstraints,
-    PropertyType, Relationship, StandardPropertyValidator,
+    PropertyType, Relationship, ScheduleContext, StandardPropertyValidator,
 };
 
 pub use minifi_native_macros as macros;

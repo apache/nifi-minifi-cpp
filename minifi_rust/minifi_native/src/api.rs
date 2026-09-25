@@ -35,7 +35,7 @@ pub(crate) mod relationship;
 pub use flow_file::{FlowFile, GetId};
 pub use flow_file_store::FlowFileStore;
 pub use logger::{LogLevel, Logger};
-pub use process_context::ProcessContext;
+pub use process_context::{ProcessContext, ScheduleContext};
 pub use process_session::{InputStream, OutputStream, ProcessSession};
 pub use raw_controller_service::RawControllerService;
 pub use raw_processor::{OnTriggerResult, ProcessorInputRequirement, RawProcessor, ThreadingModel};

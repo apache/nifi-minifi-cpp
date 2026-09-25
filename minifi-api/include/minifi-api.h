@@ -246,7 +246,7 @@ MINIFI_OWNED struct minifi_flow_file* minifi_process_session_get(struct minifi_p
 MINIFI_OWNED struct minifi_flow_file* minifi_process_session_create(struct minifi_process_session* session,
     MINIFI_NULLABLE struct minifi_flow_file* parent_flowfile);
 MINIFI_OWNED struct minifi_flow_file* minifi_process_session_clone(struct minifi_process_session* session,
-    MINIFI_NULLABLE struct minifi_flow_file* flow_file);
+    struct minifi_flow_file* flow_file);
 
 enum minifi_status minifi_process_session_penalize(struct minifi_process_session* session, struct minifi_flow_file* flowfile);
 enum minifi_status minifi_process_session_transfer(struct minifi_process_session* session, MINIFI_OWNED struct minifi_flow_file* flowfile,
