@@ -457,6 +457,15 @@ def set_processor_timer_driven(context: MinifiTestContext, processor_name: str, 
     processor.scheduling_period = scheduling_period
 
 
+@given('a {service_name} controller service is set up in the "{minifi_container_name}" flow')
+@given('an {service_name} controller service is set up in the "{minifi_container_name}" flow')
+def setup_controller_service_in_minifi_flow(context: MinifiTestContext, service_name: str, minifi_container_name: str):
+    controller_service = ControllerService(class_name=service_name, service_name=service_name)
+    context.get_or_create_minifi_container(minifi_container_name).flow_definition.controller_services.append(
+        controller_service
+    )
+
+
 @given("a {service_name} controller service is set up")
 @given("an {service_name} controller service is set up")
 def setup_controller_service(context: MinifiTestContext, service_name: str):
