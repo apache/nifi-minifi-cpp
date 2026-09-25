@@ -44,17 +44,13 @@ void FetchOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessS
   BaseOPCProcessor::onSchedule(context, factory);
 
   node_id_ = utils::parseProperty(context, NodeID);
+  id_type_ = utils::parseEnumProperty<opc::OPCNodeIDType>(context, NodeIDType);
+  namespace_idx_ = gsl::narrow<UA_UInt16>(utils::parseU64Property(context, NameSpaceIndex));
+  parseNode(context);
+
   max_depth_ = utils::parseU64Property(context, MaxDepth);
 
-  parseIdType(context, NodeIDType);
-
-  namespace_idx_ = gsl::narrow<int32_t>(utils::parseI64Property(context, NameSpaceIndex));
-
   lazy_mode_ = utils::parseEnumProperty<LazyModeOptions>(context, Lazy);
-
-  if (id_type_ == opc::OPCNodeIDType::Path) {
-    readPathReferenceTypes(context, node_id_);
-  }
 }
 
 void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
@@ -77,26 +73,17 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
   };
 
   if (id_type_ != opc::OPCNodeIDType::Path) {
-    const auto namespace_index = gsl::narrow_cast<UA_UInt16>(namespace_idx_);
-    opc::NodeId my_id;
-    if (id_type_ == opc::OPCNodeIDType::Int) {
-      my_id = opc::NodeId{UA_NODEID_NUMERIC(namespace_index, std::stoi(node_id_))};
-    } else if (id_type_ == opc::OPCNodeIDType::String) {
-      my_id = opc::NodeId{UA_NODEID_STRING_ALLOC(namespace_index, node_id_.c_str())};
-    } else {
-      logger_->log_error("Unhandled id type: '{}'. No flowfiles are generated.", magic_enum::enum_underlying(id_type_));
-      context.yield();
-      return;
-    }
-    connection_->traverse(my_id, found_cb, "", max_depth_);
+    connection_->traverse(node_, found_cb, "", max_depth_);
   } else {
-    if (translated_node_ids_.empty()) {
+    if (!path_node_id_resolved_) {
+      translated_node_ids_.clear();
       auto sc = connection_->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids_, namespace_idx_, path_reference_types_, logger_);
       if (sc != UA_STATUSCODE_GOOD) {
         logger_->log_error("Failed to translate {} to node id, no flow files will be generated ({})", node_id_.c_str(), UA_StatusCode_name(sc));
         context.yield();
         return;
       }
+      path_node_id_resolved_ = true;
     }
     for (auto& node_id : translated_node_ids_) {
       connection_->traverse(node_id, found_cb, node_id_, max_depth_);

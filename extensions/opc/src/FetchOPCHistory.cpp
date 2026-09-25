@@ -281,31 +281,9 @@ void FetchOPCHistory::onSchedule(core::ProcessContext& context, core::ProcessSes
   logger_->log_trace("FetchOPCHistory::onSchedule");
   BaseOPCProcessor::onSchedule(context, factory);
   node_id_ = utils::parseProperty(context, NodeID);
-  parseIdType(context, NodeIDType);
-  namespace_idx_ = gsl::narrow<int32_t>(utils::parseI64Property(context, NameSpaceIndex));
-
-  switch (id_type_) {
-    case opc::OPCNodeIDType::String:
-      node_ = opc::NodeId{UA_NODEID_STRING_ALLOC(namespace_idx_, node_id_.c_str())};
-      break;
-    case opc::OPCNodeIDType::Int:
-      node_ = opc::NodeId{UA_NODEID_NUMERIC(namespace_idx_, std::stoi(node_id_))};
-      break;
-    case opc::OPCNodeIDType::Guid: {
-      UA_Guid guid;
-      if (UA_Guid_parse(&guid, UA_STRING(const_cast<char*>(node_id_.c_str()))) != UA_STATUSCODE_GOOD) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("{} cannot be used as a GUID type node ID", node_id_));
-      }
-      node_ = opc::NodeId{UA_NODEID_GUID(namespace_idx_, guid)};
-      break;
-    }
-    case opc::OPCNodeIDType::Path:
-      readPathReferenceTypes(context, node_id_);
-      path_node_id_resolved_ = false;
-      break;
-    default:
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type_)));
-  }
+  id_type_ = utils::parseEnumProperty<opc::OPCNodeIDType>(context, NodeIDType);
+  namespace_idx_ = gsl::narrow<UA_UInt16>(utils::parseU64Property(context, NameSpaceIndex));
+  parseNode(context);
 
   history_type_ = utils::parseEnumProperty<opc::HistoryReadTypeOption>(context, HistoryReadType);
   start_timestamp_ = utils::parseOptionalProperty(context, StartTimestamp) | utils::andThen(utils::timeutils::parseRfc3339);
