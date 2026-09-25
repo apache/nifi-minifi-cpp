@@ -1,3 +1,20 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 use crate::utils::bounding_box::{BoundingBox, BoundingBoxes};
 use image::Rgb;
 use minifi_native::macros::ComponentIdentifier;
@@ -37,9 +54,9 @@ const LINE_THICKNESS: Property<u32> = Property::new(
 
 const LINE_COLOR: Property<LineColor> = Property::new(
     "Line color",
-    "Outline colour as '[R, G, B]' u8 channels (0-255).",
+    "Outline color as a hex string (e.g., '#ff00ff' or '#f0f')",
 )
-.with_default("[0, 255, 0]");
+.with_default("#00FF00");
 
 #[derive(Debug, ComponentIdentifier)]
 pub(crate) struct DrawBoundingBox {}
@@ -67,22 +84,24 @@ impl PropertyType for LineColor {
     type Output = Rgb<u8>;
 
     fn parse(s: &str) -> Result<Self::Output, MinifiError> {
-        let clean_str = s.trim().trim_matches(|c| c == '[' || c == ']');
-        let mut iter = clean_str.split(',');
-
-        let mut next_channel = || {
-            iter.next()
-                .ok_or_else(|| MinifiError::validation("expected R,G,B color channels"))?
-                .trim()
-                .parse::<u8>()
-                .map_err(MinifiError::from)
+        let Some(hex) = s.trim().strip_prefix('#') else {
+            return Err(MinifiError::validation("Line color must start with #"));
         };
 
-        Ok(Rgb::<u8>([
-            next_channel()?,
-            next_channel()?,
-            next_channel()?,
-        ]))
+        let (r, g, b) = match hex.len() {
+            6 => (
+                u8::from_str_radix(&hex[0..2], 16).map_err(MinifiError::from)?,
+                u8::from_str_radix(&hex[2..4], 16).map_err(MinifiError::from)?,
+                u8::from_str_radix(&hex[4..6], 16).map_err(MinifiError::from)?,
+            ),
+            3 => (
+                u8::from_str_radix(&hex[0..1], 16).map_err(MinifiError::from)? * 17,
+                u8::from_str_radix(&hex[1..2], 16).map_err(MinifiError::from)? * 17,
+                u8::from_str_radix(&hex[2..3], 16).map_err(MinifiError::from)? * 17,
+            ),
+            _ => return Err(MinifiError::validation("expected 3 or 6 digit hex color")),
+        };
+        Ok(Rgb::<u8>([r, g, b]))
     }
 }
 
@@ -144,8 +163,9 @@ impl ProcessorDefinition for DrawBoundingBox {
 
 #[cfg(test)]
 mod tests {
-    use crate::processors::draw_bounding_box::{LINE_COLOR, LINE_THICKNESS};
-    use minifi_native::{GetProperty, MockControllerServiceContext};
+    use crate::processors::draw_bounding_box::{LINE_COLOR, LINE_THICKNESS, LineColor};
+    use minifi_native::{GetProperty, MockControllerServiceContext, PropertyType};
+    use std::assert_matches;
 
     #[test]
     fn test_parsing_colors() {
@@ -155,6 +175,14 @@ mod tests {
             .expect("we should parse this");
         let green = image::Rgb([0, 255, 0]);
         assert_eq!(default_color, green);
+        assert_matches!(LineColor::parse("[0,255,0]"), Err(_));
+        assert_matches!(LineColor::parse("#00FG00"), Err(_));
+        assert_matches!(LineColor::parse("#FFFFFFF"), Err(_));
+        assert_matches!(LineColor::parse("FFFFFF"), Err(_));
+        assert_matches!(LineColor::parse("#FFFF"), Err(_));
+        assert_matches!(LineColor::parse("#0f0"), Ok(image::Rgb([0, 255, 0])));
+        assert_matches!(LineColor::parse("#101010"), Ok(image::Rgb([16, 16, 16])));
+        assert_matches!(LineColor::parse("#89A"), Ok(image::Rgb([0x88, 0x99, 0xAA])));
     }
 
     #[test]
