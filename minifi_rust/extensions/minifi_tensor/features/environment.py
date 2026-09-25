@@ -109,7 +109,7 @@ def before_all(context):
     deps_build_path = os.path.normpath(os.path.join(dir_path, "../../../target/release/deps/"))
     add_extension_to_minifi_container("minifi_tensor", [build_path, deps_build_path], context)
 
-    context.tensor_resource_dir = os.path.join(dir_path, "resources")
+    context.tensor_resource_dir = os.path.join(dir_path, "../../../target/test_resources")
     os.makedirs(context.tensor_resource_dir, exist_ok=True)
     for name, asset in REMOTE_ASSETS.items():
         asset.acquire(context.tensor_resource_dir, name)
