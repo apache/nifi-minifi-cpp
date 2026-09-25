@@ -25,7 +25,7 @@ use crate::utils::tensor_helpers::{deserialize_tensors, tensor_as_f32};
 use filter_bounding_boxes_def::SUCCESS;
 pub(crate) use filter_bounding_boxes_def::{
     BACKGROUND_CLASS_INDEX, BOX_FORMAT, BOX_OUTPUT_INDEX, CLASS_OUTPUT_INDEX, CONFIDENCE_THRESHOLD,
-    IOU_THRESHOLD, OUTPUT_ATTRIBUTE_NAME, SCORE_ACTIVATION, SCORE_OUTPUT_INDEX,
+    IOU_THRESHOLD, MIME_TYPE_ATTR, OUTPUT_ATTRIBUTE_NAME, SCORE_ACTIVATION, SCORE_OUTPUT_INDEX,
 };
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
@@ -167,7 +167,7 @@ impl FilterBoundingBoxes {
                 serde_json::to_string(&filtered_boxes).map_err(MinifiError::other)?,
             )
         } else {
-            transformed = transformed.with_attribute("mime.type", "application/json");
+            transformed = transformed.with_attribute(MIME_TYPE_ATTR.name, "application/json");
         }
         Ok(transformed)
     }
@@ -204,10 +204,9 @@ impl FilterBoundingBoxes {
         };
 
         if !box_floats.len().is_multiple_of(4) {
-            return Err(MinifiError::custom(
+            return Err(ProcessError::route_to_failure(
                 "Box tensor byte length is not a multiple of 16 (4 f32 per box)",
-            )
-            .into());
+            ));
         }
         let num_boxes = box_floats.len() / 4;
         if num_boxes == 0 {
@@ -243,14 +242,13 @@ impl FilterBoundingBoxes {
             Some(class_index) => {
                 let class_floats = tensor_as_f32(&tensors, class_index).route_err_to_failure()?;
                 if score_floats.len() != num_boxes || class_floats.len() != num_boxes {
-                    return Err(MinifiError::custom(format!(
+                    return Err(ProcessError::route_to_failure(format!(
                         "'Class output index' mode expects one score and one class id per box \
                          (num_boxes={}, scores={}, classes={})",
                         num_boxes,
                         score_floats.len(),
                         class_floats.len()
-                    ))
-                    .into());
+                    )));
                 }
                 trace!(
                     logger,
@@ -282,12 +280,11 @@ impl FilterBoundingBoxes {
             // Per-class score matrix: argmax over classes per box.
             None => {
                 if !score_floats.len().is_multiple_of(num_boxes) {
-                    return Err(MinifiError::custom(format!(
+                    return Err(ProcessError::route_to_failure(format!(
                         "Scores length ({}) not divisible by number of boxes ({})",
                         score_floats.len(),
                         num_boxes
-                    ))
-                    .into());
+                    )));
                 }
                 let num_classes = score_floats.len() / num_boxes;
                 trace!(
@@ -331,7 +328,7 @@ fn resize_mode_from_attributes<Context: GetAttribute>(context: &Context) -> Resi
         .ok()
         .flatten()
         .and_then(|raw| raw.parse::<ResizeMode>().ok())
-        .unwrap_or(ResizeMode::Letterbox)
+        .unwrap_or(ResizeMode::Stretch)
 }
 
 impl FlowFileTransform for FilterBoundingBoxes {

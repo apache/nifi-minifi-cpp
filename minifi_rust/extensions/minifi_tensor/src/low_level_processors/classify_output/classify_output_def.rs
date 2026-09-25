@@ -77,6 +77,12 @@ pub(crate) const LABEL_INDEX_OFFSET: Property<usize> = Property::new(
 )
 .with_default("0");
 
+pub(crate) const OUTPUT_ATTRIBUTE_NAME: Property<Option<String>> = Property::new(
+    "Output attribute name",
+    "Specify the attribute to use as output, if not provided, the content is overridden instead.",
+)
+.supports_expression_language();
+
 pub(super) const SUCCESS: Relationship = Relationship {
     name: "success",
     description: "Classification completed. The flow file content is a JSON array of the Top K \
@@ -89,45 +95,38 @@ pub(super) const FAILURE: Relationship = Relationship {
                   not be interpreted as f32 values.",
 };
 
-const MIME_TYPE_ATTR: OutputAttribute = OutputAttribute {
+pub(crate) const MIME_TYPE_ATTR: OutputAttribute = OutputAttribute {
     name: "mime.type",
     relationships: &["success"],
-    description: "Always 'application/json' — the output payload is a JSON array of prediction \
-                  objects with fields class_id, confidence, and optional class_name.",
+    description: "If the \"Output attribute name\" is None, then the content will be overridden with the JSON array of objects with fields class_id, confidence, and optional class_name, and the mime type will be set to 'application/json'.",
 };
 
-const CLASS_COUNT_ATTR: OutputAttribute = OutputAttribute {
+pub(crate) const CLASS_COUNT_ATTR: OutputAttribute = OutputAttribute {
     name: "class.count",
     relationships: &["success"],
     description: "Number of predictions retained after Top K selection and confidence filtering.",
 };
 
-const CLASS_TOP1_ID_ATTR: OutputAttribute = OutputAttribute {
+pub(crate) const CLASS_TOP1_ID_ATTR: OutputAttribute = OutputAttribute {
     name: "class.top1.id",
     relationships: &["success"],
     description: "Numeric class ID of the highest-confidence prediction, when at least one \
                   prediction cleared the confidence threshold.",
 };
 
-const CLASS_TOP1_CONFIDENCE_ATTR: OutputAttribute = OutputAttribute {
+pub(crate) const CLASS_TOP1_CONFIDENCE_ATTR: OutputAttribute = OutputAttribute {
     name: "class.top1.confidence",
     relationships: &["success"],
     description: "Confidence (post-activation) of the highest-confidence prediction, when at \
                   least one prediction cleared the confidence threshold.",
 };
 
-const CLASS_TOP1_NAME_ATTR: OutputAttribute = OutputAttribute {
+pub(crate) const CLASS_TOP1_NAME_ATTR: OutputAttribute = OutputAttribute {
     name: "class.top1.name",
     relationships: &["success"],
     description: "Label of the highest-confidence prediction. Only present when 'Labels file \
                   path' was configured and at least one prediction cleared the threshold.",
 };
-
-pub(crate) const OUTPUT_ATTRIBUTE_NAME: Property<Option<String>> = Property::new(
-    "Output attribute name",
-    "Specify the attribute to use as output, if not provided, the content is overridden instead.",
-)
-.supports_expression_language();
 
 pub(crate) const CLASSIFY_OUTPUT_ATTRIBUTES: &[OutputAttribute] = &[
     MIME_TYPE_ATTR,

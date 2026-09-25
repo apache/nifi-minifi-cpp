@@ -116,11 +116,10 @@ const OBJECT_COUNT_ATTR: OutputAttribute = OutputAttribute {
     description: "Number of bounding boxes retained after confidence filtering and NMS.",
 };
 
-const MIME_TYPE_ATTR: OutputAttribute = OutputAttribute {
+pub(crate) const MIME_TYPE_ATTR: OutputAttribute = OutputAttribute {
     name: "mime.type",
     relationships: &["success"],
-    description: "Always 'application/json' — the output payload is a JSON array of objects with \
-                  fields class_id, confidence, x_min, y_min, x_max, y_max.",
+    description: "If the \"Output attribute name\" is None, then the content will be overridden with the JSON array of objects with fields class_id, confidence, x_min, y_min, x_max, y_max, and the mime type will be set to 'application/json'.",
 };
 
 impl ProcessorDefinition for FilterBoundingBoxes {
