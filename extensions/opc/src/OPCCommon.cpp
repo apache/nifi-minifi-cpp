@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <functional>
 #include <array>
 
@@ -493,16 +494,23 @@ template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parent_nod
 template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name,
   std::string value, UA_NodeId *received_node_id);
 
-std::string variantToString(const UA_Variant& variant) {
+std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_encoding) {
   if (variant.type == nullptr || variant.data == nullptr) {
     throw OPCException(GENERAL_EXCEPTION, "Cannot convert an empty variant to string");
   }
   switch (variant.type->typeKind) {
     case UA_DATATYPEKIND_STRING:
-    case UA_DATATYPEKIND_LOCALIZEDTEXT:
-    case UA_DATATYPEKIND_BYTESTRING: {
+    case UA_DATATYPEKIND_LOCALIZEDTEXT: {
       const auto *value = static_cast<const UA_String *>(variant.data);
       return {reinterpret_cast<const char *>(value->data), value->length};
+    }
+    case UA_DATATYPEKIND_BYTESTRING: {
+      const auto* value = static_cast<const UA_ByteString *>(variant.data);
+      if (value->data == nullptr || value->length == 0) {
+        return {};
+      }
+      const std::string_view bytes{reinterpret_cast<const char *>(value->data), value->length};
+      return binary_encoding == BinaryEncoding::Raw ? std::string{bytes} : utils::string::to_base64(bytes);
     }
     case UA_DATATYPEKIND_BOOLEAN:
       return *static_cast<const UA_Boolean *>(variant.data) ? "True" : "False";
@@ -543,7 +551,7 @@ std::string nodeValue2String(const NodeData& nd) {
   if (nd.var_ == nullptr) {
     throw OPCException(GENERAL_EXCEPTION, "Node has no value to convert");
   }
-  return variantToString(*nd.var_);
+  return variantToString(*nd.var_, BinaryEncoding::Raw);
 }
 
 std::string OPCDateTime2String(UA_DateTime raw_date) {

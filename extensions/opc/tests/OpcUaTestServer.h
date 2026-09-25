@@ -45,6 +45,7 @@ struct HistoryModificationRecord {
   std::string username;
   UA_HistoryUpdateType update_type = UA_HISTORYUPDATETYPE_INSERT;
   UA_DateTime modification_time = 0;
+  std::optional<std::vector<uint8_t>> byte_string_value = std::nullopt;
 };
 
 class OpcUaTestServer {
@@ -280,8 +281,15 @@ class OpcUaTestServer {
   static UA_DataValue* makeDataValues(const std::vector<const HistoryModificationRecord*>& records) {
     auto* values = static_cast<UA_DataValue*>(UA_Array_new(records.size(), &UA_TYPES[UA_TYPES_DATAVALUE]));
     for (size_t i = 0; i < records.size(); ++i) {
-      UA_Int32 value = records[i]->value;
-      UA_Variant_setScalarCopy(&values[i].value, &value, &UA_TYPES[UA_TYPES_INT32]);
+      if (records[i]->byte_string_value) {
+        const auto& bytes = *records[i]->byte_string_value;
+        UA_ByteString value{bytes.size(),
+            const_cast<UA_Byte*>(bytes.data())};  // NOLINT(cppcoreguidelines-pro-type-const-cast) setScalarCopy only reads it
+        UA_Variant_setScalarCopy(&values[i].value, &value, &UA_TYPES[UA_TYPES_BYTESTRING]);
+      } else {
+        UA_Int32 value = records[i]->value;
+        UA_Variant_setScalarCopy(&values[i].value, &value, &UA_TYPES[UA_TYPES_INT32]);
+      }
       values[i].hasValue = true;
       values[i].hasSourceTimestamp = true;
       values[i].sourceTimestamp = records[i]->modification_time;
@@ -304,7 +312,8 @@ class OpcUaTestServer {
     auto node_id_str = nodeIdToString(node_to_read.nodeId);
     auto it = history_records_.find(node_id_str);
     auto node_id_it = node_ids_.find(node_id_str);
-    if (it == history_records_.end() || node_id_it == node_ids_.end() || node_to_read.nodeId.identifierType != node_id_it->second.get().identifierType) {
+    if (it == history_records_.end() || node_id_it == node_ids_.end() ||
+        node_to_read.nodeId.identifierType != node_id_it->second.get().identifierType) {
       result.statusCode = UA_STATUSCODE_BADNODEIDUNKNOWN;
       return std::nullopt;
     }
