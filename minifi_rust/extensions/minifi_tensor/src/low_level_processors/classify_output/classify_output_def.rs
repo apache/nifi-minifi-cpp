@@ -15,12 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use super::{ClassifyOutput, ScoreActivation};
+use super::{ClassifyOutput, LabelsProperty, ScoreActivation};
 use minifi_native::{
     OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property, PropertyDefinition,
     Relationship, property_definitions,
 };
-use std::path::PathBuf;
 
 pub(crate) const TOP_K: Property<usize> = Property::new(
     "Top K",
@@ -59,7 +58,7 @@ pub(crate) const CONFIDENCE_THRESHOLD: Property<f32> = Property::new(
 .with_default("0.0")
 .supports_expression_language();
 
-pub(crate) const LABELS_FILE_PATH: Property<Option<PathBuf>> = Property::new(
+pub(crate) const LABELS_FILE_PATH: Property<Option<LabelsProperty>> = Property::new(
     "Labels file path",
     "Optional path to a newline-separated labels file (line N = name of class N). \
                   Loaded once at service enable time. When set, each prediction in the output \
