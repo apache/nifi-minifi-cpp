@@ -78,7 +78,6 @@ pub(crate) struct ClassifyOutput {
     score_activation: ScoreActivation,
     confidence_threshold: f32,
     labels: Option<Vec<String>>,
-    label_index_offset: usize,
 }
 
 impl Schedule for ClassifyOutput {
@@ -97,17 +96,27 @@ impl Schedule for ClassifyOutput {
         let score_activation = context.get_property(&SCORE_ACTIVATION)?;
         let confidence_threshold = context.get_property(&CONFIDENCE_THRESHOLD)?;
 
-        let labels = context.get_property(&LABELS_FILE_PATH)?;
         let label_index_offset = context.get_property(&LABEL_INDEX_OFFSET)?;
-        if let Some(l) = &labels
-            && label_index_offset >= l.len()
-        {
-            return Err(MinifiError::validation(format!(
-                "Label index offset ({}) must be smaller than the number of labels ({})",
-                label_index_offset,
-                l.len()
-            )));
-        }
+        let labels = if let Some(mut labels) = context.get_property(&LABELS_FILE_PATH)? {
+            if let Some(dummy_indices) = label_index_offset {
+                if dummy_indices >= labels.len() {
+                    return Err(MinifiError::validation(format!(
+                        "Label index offset ({}) must be smaller than the number of labels ({})",
+                        dummy_indices,
+                        labels.len()
+                    )));
+                }
+                labels.drain(0..dummy_indices);
+            }
+            Some(labels)
+        } else {
+            if label_index_offset.is_some() {
+                return Err(MinifiError::validation(
+                    "Label index offset is set without valid labels, either unset label index offset or provide valid labels file",
+                ));
+            }
+            None
+        };
 
         Ok(Self {
             top_k,
@@ -115,19 +124,11 @@ impl Schedule for ClassifyOutput {
             score_activation,
             confidence_threshold,
             labels,
-            label_index_offset,
         })
     }
 }
 
 impl ClassifyOutput {
-    fn label_for(&self, class_id: usize) -> Option<String> {
-        self.labels.as_ref().and_then(|l| {
-            l.get(class_id.checked_add(self.label_index_offset)?)
-                .cloned()
-        })
-    }
-
     pub(crate) fn classify<'a, Context: GetProperty + GetAttribute + GetId, LoggerImpl: Logger>(
         &self,
         context: &Context,
@@ -170,16 +171,15 @@ impl ClassifyOutput {
                 let confidence = self.score_activation.confidence(raw, softmax_terms);
 
                 if confidence >= self.confidence_threshold {
-                    let class_name = self.label_for(class_id);
+                    let class_name = self.labels.as_ref().and_then(|l| l.get(class_id).cloned());
                     if class_name.is_none()
                         && let Some(l) = &self.labels
                     {
                         warn!(
                             logger,
-                            "No label for class id {} (offset {}, {} labels loaded); \
+                            "No label for class id {} ({} labels loaded); \
                              the labels file does not match the model's classes",
                             class_id,
-                            self.label_index_offset,
                             l.len()
                         );
                     }
@@ -248,6 +248,8 @@ mod tests {
     use super::*;
     use minifi_native::{LogLevel, MockLogger, MockProcessContext};
     use std::io::Cursor;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
 
     fn make_processor(top_k: usize, activation: ScoreActivation) -> ClassifyOutput {
         ClassifyOutput {
@@ -256,7 +258,6 @@ mod tests {
             score_activation: activation,
             confidence_threshold: 0.0,
             labels: None,
-            label_index_offset: 0,
         }
     }
 
@@ -420,35 +421,28 @@ mod tests {
     }
 
     #[test]
-    fn test_label_index_offset_shifts_lookup() {
-        // Mirrors the ImageNet slim labels layout: line 0 is a dummy entry, so
-        // model class 0 should resolve to labels[1] = "tench".
-        let mut processor = make_processor(1, ScoreActivation::None);
-        processor.labels = Some(vec![
-            "dummy".into(),
-            "tench".into(),
-            "goldfish".into(),
-            "great_white_shark".into(),
-        ]);
-        processor.label_index_offset = 1;
-        let scores = vec![0.9f32, 0.1, 0.0]; // model class 0 wins
-        let context = context_with_scores(&scores);
-        let mut stream = Cursor::new(build_payload(&scores));
-        let result = processor
-            .transform(&context, &mut stream, &MockLogger::new())
-            .unwrap();
-        assert_eq!(
-            result.attribute("class.top1.name").unwrap(),
-            "tench",
-            "class id 0 with offset 1 should land on labels[1]"
+    fn test_label_offset() {
+        let mut file = NamedTempFile::new().expect("Failed to create temp file");
+        writeln!(file, "dummy").unwrap();
+        writeln!(file, "tench").unwrap();
+        writeln!(file, "goldfish").unwrap();
+        writeln!(file, "great_white_shark").unwrap();
+        let mut mock_context = MockProcessContext::default();
+        mock_context.properties.insert(
+            LABELS_FILE_PATH.name().to_string(),
+            file.path().to_string_lossy(),
         );
+        mock_context
+            .properties
+            .insert(LABEL_INDEX_OFFSET.name().to_string(), "1");
+        let scheduled = ClassifyOutput::schedule(&mock_context, &MockLogger::new()).unwrap();
+        assert_eq!(3, scheduled.labels.unwrap().len());
     }
 
     #[test]
     fn test_label_lookup_miss_warns_when_labels_are_configured() {
         let mut processor = make_processor(1, ScoreActivation::None);
-        processor.labels = Some(vec!["dummy".into(), "tench".into()]);
-        processor.label_index_offset = 1;
+        processor.labels = Some(vec!["abc".into(), "tench".into()]);
         let scores = vec![0.1f32, 0.2, 0.9]; // model class 2 wins
         let context = context_with_scores(&scores);
         let mut stream = Cursor::new(build_payload(&scores));

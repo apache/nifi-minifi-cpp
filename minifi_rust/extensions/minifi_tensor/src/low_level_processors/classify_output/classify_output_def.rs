@@ -66,15 +66,14 @@ pub(crate) const LABELS_FILE_PATH: Property<Option<LabelsProperty>> = Property::
                   is populated. Leave empty to emit numeric class IDs only.",
 );
 
-pub(crate) const LABEL_INDEX_OFFSET: Property<usize> = Property::new(
+pub(crate) const LABEL_INDEX_OFFSET: Property<Option<usize>> = Property::new(
     "Label index offset",
     "Offset added to the model's class ID when looking up a name in the labels file. \
                   Defaults to 0 (labels file line N = class N). Set to 1 for label files that \
                   start with a dummy/background entry — e.g. the ONNX MobileNetV2 model emits \
                   1000 class scores while 'imagenet_slim_labels.txt' has 1001 lines (line 0 = \
                   'dummy'), so class ID 653 maps to line 654 = 'military uniform'.",
-)
-.with_default("0");
+);
 
 pub(crate) const OUTPUT_ATTRIBUTE_NAME: Property<Option<String>> = Property::new(
     "Output attribute name",

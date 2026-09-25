@@ -22,3 +22,4 @@ serde_json = "1.0.151"
 
 [dev-dependencies]
 minifi_native = { path = "../../minifi_native", features = ["test-utils"] }
+tempfile = "3.27.0"
