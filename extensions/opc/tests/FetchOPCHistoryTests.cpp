@@ -17,6 +17,7 @@
  */
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "OpcUaTestServer.h"
 #include "catch2/generators/catch_generators.hpp"
@@ -239,7 +240,7 @@ TEST_CASE_METHOD(FetchOPCHistoryTestController,
   const auto shared_time = OpcUaTestServer::makeDateTime(2023, 1, 1, 0, 0, 0, 0);
   server_.setHistory("INT3",
       {HistoryModificationRecord{.value = 10, .username = "user", .update_type = UA_HISTORYUPDATETYPE_INSERT, .modification_time = shared_time},
-       HistoryModificationRecord{.value = 20, .username = "user", .update_type = UA_HISTORYUPDATETYPE_INSERT, .modification_time = shared_time}});
+          HistoryModificationRecord{.value = 20, .username = "user", .update_type = UA_HISTORYUPDATETYPE_INSERT, .modification_time = shared_time}});
   server_.setHistoryPageSize(1);
   server_.start();
   setupProcessor("String", "INT3");
@@ -324,6 +325,42 @@ TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test RecordSetWriter with JSON 
 
   const auto results = controller_.trigger();
   verifyResults(results, expected_json_content);
+}
+
+TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test byte string value is written to the flow file content as raw bytes", "[fetchopchistory]") {
+  const std::vector<uint8_t> bytes{0x00, 0x0f, 0xa0, 0xff};
+  server_.setHistory("INT3",
+      {HistoryModificationRecord{.username = "byte_user",
+          .update_type = UA_HISTORYUPDATETYPE_INSERT,
+          .modification_time = OpcUaTestServer::makeDateTime(2023, 1, 1, 0, 0, 0, 0),
+          .byte_string_value = bytes}});
+  server_.start();
+  setupProcessor("String", "INT3");
+
+  const auto results = controller_.trigger();
+  REQUIRE(results.at(processors::FetchOPCHistory::Success).size() == 1);
+  checkFlowFile(results.at(processors::FetchOPCHistory::Success)[0],
+      std::string{reinterpret_cast<const char*>(bytes.data()), bytes.size()},
+      "INT3",
+      "2023-01-01T00:00:00.000Z");
+}
+
+TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test byte string value is base64 encoded in a record", "[fetchopchistory]") {
+  server_.setHistory("INT3",
+      {HistoryModificationRecord{.username = "byte_user",
+          .update_type = UA_HISTORYUPDATETYPE_INSERT,
+          .modification_time = OpcUaTestServer::makeDateTime(2023, 1, 1, 0, 0, 0, 0),
+          .byte_string_value = std::vector<uint8_t>{0x00, 0x0f, 0xa0, 0xff}}});
+  server_.start();
+  auto json_record_set_writer = controller_.plan->addController("JsonRecordSetWriter", "JsonRecordSetWriter");
+  REQUIRE(controller_.plan->setProperty(json_record_set_writer, "Output Grouping", "One Line Per Object"));
+  setupProcessor("String", "INT3");
+  REQUIRE(processor_->setProperty(processors::FetchOPCHistory::RecordSetWriter.name, "JsonRecordSetWriter"));
+
+  const auto results = controller_.trigger();
+  verifyResults(results,
+      R"({"Value":"AA+g/w==","Sourcetimestamp":"2023-01-01T00:00:00.000Z","NodeID":"INT3","Namespace index":")" +
+          std::to_string(server_.getNamespaceIndex()) + "\"}");
 }
 
 TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test multiple triggers with state kept in state manager", "[fetchopchistory]") {

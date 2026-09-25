@@ -82,7 +82,8 @@ std::string entryFingerprint(const HistoryEntry& entry, bool has_modification_in
 }
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
-std::optional<HistoryBatch> extractHistoryBatch(const UA_ExtensionObject* data, const std::shared_ptr<core::logging::Logger>& logger) {
+std::optional<HistoryBatch> extractHistoryBatch(const UA_ExtensionObject* data, opc::BinaryEncoding binary_encoding,
+    const std::shared_ptr<core::logging::Logger>& logger) {
   const UA_DataValue* data_values = nullptr;
   size_t data_value_size = 0;
   const UA_ModificationInfo* modification_infos = nullptr;
@@ -109,7 +110,7 @@ std::optional<HistoryBatch> extractHistoryBatch(const UA_ExtensionObject* data, 
   for (size_t i = 0; i < data_value_size; ++i) {
     HistoryEntry entry;
     try {
-      entry.value = opc::variantToString(data_values[i].value);
+      entry.value = opc::variantToString(data_values[i].value, binary_encoding);
     } catch (const opc::OPCException& ex) {
       logger->log_warn("Failed to convert value at index {} to string, skipping entry: {}", i, ex.what());
       continue;
@@ -222,7 +223,8 @@ UA_Boolean historyReadCallback(UA_Client* /*client*/, const UA_NodeId* /*node_id
     void* ctx) {
   auto* opc_history_context = static_cast<FetchOPCHistoryContext*>(ctx);
 
-  auto batch = extractHistoryBatch(data, opc_history_context->logger);
+  const auto binary_encoding = opc_history_context->record_set_writer ? opc::BinaryEncoding::Base64 : opc::BinaryEncoding::Raw;
+  auto batch = extractHistoryBatch(data, binary_encoding, opc_history_context->logger);
   if (batch && !batch->entries.empty()) {
     const std::optional<size_t> remaining = opc_history_context->batch_size != 0
         ? std::optional<size_t>(opc_history_context->batch_size - opc_history_context->entries_transferred)
