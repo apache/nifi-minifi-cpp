@@ -14,7 +14,7 @@
 # limitations under the License.
 
 @SUPPORTS_WINDOWS
-Feature: Face detection with UltraFace (SSD)
+Feature: Face detection with UltraFace Single Shot MultiBox Detector (SSD)
 
   # Based on https://github.com/sonos/tract/blob/main/examples/face_detection_yolov8onnx_example/src/main.rs
   Scenario: Grace Hopper image yields at least one face detection (ImageToTensor + InvokeTract + FilterBoundingBoxes)
