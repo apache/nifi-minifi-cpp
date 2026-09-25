@@ -61,7 +61,7 @@ pub(crate) const LETTERBOX_PAD_VALUE: Property<f32> = Property::new(
 
 pub(crate) const COLOR_FORMAT: Property<ColorFormat> = Property::new(
     "Color format",
-    "Colour space of the tensor fed to the model. RGB and BGR produce three-channel \
+    "Color space of the tensor fed to the model. RGB and BGR produce three-channel \
                   tensors (channel order determined by the format); Grayscale produces a \
                   single-channel luma tensor.",
 )
@@ -77,7 +77,7 @@ pub(crate) const TENSOR_SHAPE_FORMAT: Property<TensorShapeFormat> = Property::ne
 
 pub(crate) const MEAN: Property<PerChannelF32> = Property::new(
     "Mean",
-    "Mean subtracted from each pixel before dividing by 'Standard Deviation'. Accepts \
+    "Value subtracted from each pixel before dividing by 'Standard Deviation'. Accepts \
                   either a single value (broadcast to all channels) or three comma-separated \
                   values applied per channel in the order dictated by 'Color format'. Example: \
                   '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.",
@@ -175,8 +175,7 @@ impl ProcessorDefinition for ImageToTensor {
          tensor suitable for feeding into a downstream inference processor such as \
          InvokeTractModel. Supports RGB / BGR / Grayscale, CHW / HWC layouts, stretch or \
          letterbox resizing, and scalar or per-channel mean/std normalisation. The output payload \
-         is the raw little-endian f32 tensor; the 'tensors.len', 'tensor.{i}.shape' and 'tensor.{i}.dtype' attributes \
-         describe its layout.";
+         is a single raw little-endian f32 tensor; the 'tensor.0.shape' attribute describes its layout.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
