@@ -12781,7 +12781,7 @@
                     "propertyDescriptors": {
                         "Color format": {
                             "name": "Color format",
-                            "description": "Colour space of the tensor fed to the model. RGB and BGR produce three-channel tensors (channel order determined by the format); Grayscale produces a single-channel luma tensor.",
+                            "description": "Color space of the tensor fed to the model. RGB and BGR produce three-channel tensors (channel order determined by the format); Grayscale produces a single-channel luma tensor.",
                             "validator": "VALID",
                             "required": "true",
                             "sensitive": "false",
@@ -12797,8 +12797,8 @@
                                     "displayName": "BGR"
                                 },
                                 {
-                                    "value": "GRAYSCALE",
-                                    "displayName": "GRAYSCALE"
+                                    "value": "Grayscale",
+                                    "displayName": "Grayscale"
                                 }
                             ]
                         },
@@ -12815,10 +12815,9 @@
                             "name": "Label index offset",
                             "description": "Offset added to the model's class ID when looking up a name in the labels file. Defaults to 0 (labels file line N = class N). Set to 1 for label files that start with a dummy/background entry — e.g. the ONNX MobileNetV2 model emits 1000 class scores while 'imagenet_slim_labels.txt' has 1001 lines (line 0 = 'dummy'), so class ID 653 maps to line 654 = 'military uniform'.",
                             "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
-                            "required": "true",
+                            "required": "false",
                             "sensitive": "false",
-                            "expressionLanguageScope": "NONE",
-                            "defaultValue": "0"
+                            "expressionLanguageScope": "NONE"
                         },
                         "Labels file path": {
                             "name": "Labels file path",
@@ -12839,7 +12838,7 @@
                         },
                         "Mean": {
                             "name": "Mean",
-                            "description": "Mean subtracted from each pixel before dividing by 'Standard Deviation'. Accepts either a single value (broadcast to all channels) or three comma-separated values applied per channel in the order dictated by 'Color format'. Example: '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.",
+                            "description": "Value subtracted from each pixel before dividing by 'Standard Deviation'. Accepts either a single value (broadcast to all channels) or three comma-separated values applied per channel in the order dictated by 'Color format'. Example: '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.",
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",
@@ -13077,7 +13076,7 @@
                         },
                         "Color format": {
                             "name": "Color format",
-                            "description": "Colour space of the tensor fed to the model. RGB and BGR produce three-channel tensors (channel order determined by the format); Grayscale produces a single-channel luma tensor.",
+                            "description": "Color space of the tensor fed to the model. RGB and BGR produce three-channel tensors (channel order determined by the format); Grayscale produces a single-channel luma tensor.",
                             "validator": "VALID",
                             "required": "true",
                             "sensitive": "false",
@@ -13093,8 +13092,8 @@
                                     "displayName": "BGR"
                                 },
                                 {
-                                    "value": "GRAYSCALE",
-                                    "displayName": "GRAYSCALE"
+                                    "value": "Grayscale",
+                                    "displayName": "Grayscale"
                                 }
                             ]
                         },
@@ -13127,7 +13126,7 @@
                         },
                         "Mean": {
                             "name": "Mean",
-                            "description": "Mean subtracted from each pixel before dividing by 'Standard Deviation'. Accepts either a single value (broadcast to all channels) or three comma-separated values applied per channel in the order dictated by 'Color format'. Example: '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.",
+                            "description": "Value subtracted from each pixel before dividing by 'Standard Deviation'. Accepts either a single value (broadcast to all channels) or three comma-separated values applied per channel in the order dictated by 'Color format'. Example: '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.",
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",
@@ -13317,12 +13316,12 @@
                         },
                         "Line color": {
                             "name": "Line color",
-                            "description": "Outline colour as '[R, G, B]' u8 channels (0-255).",
+                            "description": "Outline color as a hex string (e.g., '#ff00ff' or '#f0f')",
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
-                            "defaultValue": "[0, 255, 0]"
+                            "defaultValue": "#00FF00"
                         },
                         "Line thickness": {
                             "name": "Line thickness",
