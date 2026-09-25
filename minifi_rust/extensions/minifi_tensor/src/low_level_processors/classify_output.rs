@@ -320,6 +320,71 @@ mod tests {
     }
 
     #[test]
+    fn test_sigmoid_activation_scores_classes_independently() {
+        // Sigmoid squashes every logit on its own, so the confidences are not a
+        // distribution: here they sum to ~1.5. A softmax regression would force
+        // that sum to exactly 1.0.
+        let processor = make_processor(3, ScoreActivation::Sigmoid);
+        let logits = vec![0.0f32, 2.0, -2.0];
+        let context = context_with_scores(&logits);
+        let mut stream = Cursor::new(build_payload(&logits));
+        let result = processor
+            .transform(&context, &mut stream, &MockLogger::new())
+            .expect("transform succeeds");
+
+        let json = result.into_bytes().unwrap().unwrap();
+        let predictions: Vec<serde_json::Value> = serde_json::from_slice(&json).unwrap();
+        assert_eq!(predictions.len(), 3);
+
+        let ids: Vec<u64> = predictions
+            .iter()
+            .map(|p| p["class_id"].as_u64().unwrap())
+            .collect();
+        assert_eq!(
+            ids,
+            vec![1, 0, 2],
+            "sigmoid is monotonic, so the ranking follows the raw logits"
+        );
+
+        let confidences: Vec<f32> = predictions
+            .iter()
+            .map(|p| p["confidence"].as_f64().unwrap() as f32)
+            .collect();
+        let sigmoid_of = |logit: f32| 1.0f32 / (1.0 + (-logit).exp());
+        assert_eq!(confidences[0], sigmoid_of(2.0));
+        assert_eq!(confidences[1], 0.5, "sigmoid(0.0) is exactly one half");
+        assert_eq!(confidences[2], sigmoid_of(-2.0));
+
+        let sum: f32 = confidences.iter().sum();
+        assert!(
+            sum > 1.4,
+            "per-class sigmoid must not normalise across classes, got {sum}"
+        );
+    }
+
+    #[test]
+    fn test_sigmoid_activation_threshold_is_inclusive_at_one_half() {
+        // The threshold is applied after top_k, so top_k = 3 admits all three
+        // candidates and only the filter decides. sigmoid(0.0) == 0.5 passes the
+        // `>=` comparison; the negative logit falls below it.
+        let mut processor = make_processor(3, ScoreActivation::Sigmoid);
+        processor.confidence_threshold = 0.5;
+        let logits = vec![2.0f32, -0.5, 0.0];
+        let context = context_with_scores(&logits);
+        let mut stream = Cursor::new(build_payload(&logits));
+        let result = processor
+            .transform(&context, &mut stream, &MockLogger::new())
+            .unwrap();
+
+        assert_eq!(
+            result.attribute("class.count").unwrap(),
+            "2",
+            "only the -0.5 logit should be filtered out"
+        );
+        assert_eq!(result.attribute("class.top1.id").unwrap(), "0");
+    }
+
+    #[test]
     fn test_transform_omits_class_name_when_labels_absent() {
         let processor = make_processor(1, ScoreActivation::None);
         let scores = vec![0.1f32, 0.9];
