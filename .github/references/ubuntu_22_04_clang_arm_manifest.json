@@ -12221,22 +12221,6 @@
             "controllerServices": [
                 {
                     "propertyDescriptors": {
-                        "Key": {
-                            "name": "Key",
-                            "description": "Secret Key encoded in ASCII Armor",
-                            "validator": "VALID",
-                            "required": "false",
-                            "sensitive": "true",
-                            "expressionLanguageScope": "NONE"
-                        },
-                        "Key File": {
-                            "name": "Key File",
-                            "description": "File path to PGP Secret Key encoded in binary or ASCII Armor",
-                            "validator": "VALID",
-                            "required": "false",
-                            "sensitive": "false",
-                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
-                        },
                         "Key Password": {
                             "name": "Key Password",
                             "description": "Password used for decrypting Private Keys. Multiple passwords may be supplied one per line, each of them is tried in turn",
@@ -12244,6 +12228,22 @@
                             "required": "false",
                             "sensitive": "true",
                             "expressionLanguageScope": "NONE"
+                        },
+                        "Keyring": {
+                            "name": "Keyring",
+                            "description": "Secret Key encoded in ASCII Armor",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Keyring File": {
+                            "name": "Keyring File",
+                            "description": "File path to PGP Secret Key encoded in binary or ASCII Armor",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
                         }
                     },
                     "typeDescription": "PGP Private Key Service provides Private Keys loaded from files or properties",
