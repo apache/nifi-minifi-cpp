@@ -91,9 +91,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name         | Default Value | Allowable Values | Description                                                                                                                                                |
 |--------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Key          |               |                  | Secret Key encoded in ASCII Armor<br/>**Sensitive Property: true**                                                                                         |
-| Key File     |               |                  | File path to PGP Secret Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true**                                                    |
 | Key Password |               |                  | Password used for decrypting Private Keys. Multiple passwords may be supplied one per line, each of them is tried in turn<br/>**Sensitive Property: true** |
+| Keyring      |               |                  | Secret Key encoded in ASCII Armor<br/>**Sensitive Property: true**                                                                                         |
+| Keyring File |               |                  | File path to PGP Secret Key encoded in binary or ASCII Armor<br/>**Supports Expression Language: true**                                                    |
 
 
 ## PGPPublicKeyService
