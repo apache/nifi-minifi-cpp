@@ -69,6 +69,11 @@ enum class HistoryReadTypeOption {
   Audit
 };
 
+enum class BinaryEncoding {
+  Raw,
+  Base64
+};
+
 // RAII owner for a UA_NodeId that calls UA_NodeId_clear to free node id allocation
 class NodeId {
  public:
@@ -189,7 +194,7 @@ struct NodeData {
 
 std::string nodeValue2String(const NodeData& nd);
 
-std::string variantToString(const UA_Variant& variant);
+std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_encoding);
 
 std::string OPCDateTime2String(UA_DateTime raw_date);
 
