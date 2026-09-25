@@ -79,13 +79,13 @@ mod service_def {
     };
 
     pub(super) const KEY_FILE: Property<Option<SecretKeyFile>> = Property::new(
-        "Key File",
+        "Keyring File",
         "File path to PGP Secret Key encoded in binary or ASCII Armor",
     )
     .supports_expression_language();
 
     pub(super) const KEY: Property<Option<SecretKey>> =
-        Property::new("Key", "Secret Key encoded in ASCII Armor").sensitive();
+        Property::new("Keyring", "Secret Key encoded in ASCII Armor").sensitive();
 
     pub(super) const KEY_PASSWORD: Property<Option<utils::Passwords>> = Property::new(
         "Key Password",
@@ -128,7 +128,7 @@ mod tests {
     fn single_armored_key_file() {
         let mut context = MockControllerServiceContext::new();
         context.properties.insert(
-            "Key File".to_string(),
+            "Keyring File".to_string(),
             get_test_key_path("alice_private.asc"),
         );
 
@@ -145,7 +145,7 @@ mod tests {
     fn single_binary_key_file() {
         let mut context = MockControllerServiceContext::new();
         context.properties.insert(
-            "Key File".to_string(),
+            "Keyring File".to_string(),
             get_test_key_path("alice_private.gpg"),
         );
 
@@ -165,7 +165,7 @@ mod tests {
     fn armored_keyring_key_file() {
         let mut context = MockControllerServiceContext::new();
         context.properties.insert(
-            "Key File".to_string(),
+            "Keyring File".to_string(),
             get_test_key_path("secret_keyring.asc"),
         );
 
@@ -182,7 +182,7 @@ mod tests {
     fn binary_keyring_key_file() {
         let mut context = MockControllerServiceContext::new();
         context.properties.insert(
-            "Key File".to_string(),
+            "Keyring File".to_string(),
             get_test_key_path("secret_keyring.gpg"),
         );
 
@@ -202,7 +202,9 @@ mod tests {
         let file_content = std::fs::read_to_string(get_test_key_path("secret_keyring.asc"))
             .expect("required for test");
 
-        context.properties.insert("Key".to_string(), file_content);
+        context
+            .properties
+            .insert("Keyring".to_string(), file_content);
 
         let service =
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable");
@@ -220,7 +222,9 @@ mod tests {
         let file_content = std::fs::read_to_string(get_test_key_path("alice_private.asc"))
             .expect("required for test");
 
-        context.properties.insert("Key".to_string(), file_content);
+        context
+            .properties
+            .insert("Keyring".to_string(), file_content);
 
         let service =
             PGPPrivateKeyService::enable(&context, &MockLogger::new()).expect("should enable");
@@ -236,7 +240,9 @@ mod tests {
         let file_content =
             std::fs::read_to_string(get_test_key_path("alice.asc")).expect("required for test");
 
-        context.properties.insert("Key".to_string(), file_content);
+        context
+            .properties
+            .insert("Keyring".to_string(), file_content);
 
         assert!(PGPPrivateKeyService::enable(&context, &MockLogger::new()).is_err());
     }

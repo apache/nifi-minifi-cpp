@@ -46,7 +46,7 @@ def step_encrypt_content_with_service(context: MinifiTestContext):
 def step_decrypt_content_for_alice(context: MinifiTestContext):
     private_key_service = ControllerService(class_name="PGPPrivateKeyService", service_name="alice_private_key")
     alice_private_key = (context.resource_dir / "test_keys" / "alice_private.asc").read_text()
-    private_key_service.add_property("Key", alice_private_key)
+    private_key_service.add_property("Keyring", alice_private_key)
     private_key_service.add_property("Key Password", "whiterabbit")
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(private_key_service)
 
@@ -59,7 +59,7 @@ def step_decrypt_content_for_alice(context: MinifiTestContext):
 def step_decrypt_content_for_bob(context: MinifiTestContext):
     private_key_service = ControllerService(class_name="PGPPrivateKeyService", service_name="bob_private_key")
     bob_private_key = (context.resource_dir / "test_keys" / "bob_private.asc").read_text()
-    private_key_service.add_property("Key", bob_private_key)
+    private_key_service.add_property("Keyring", bob_private_key)
     context.get_or_create_default_minifi_container().flow_definition.controller_services.append(private_key_service)
 
     processor = Processor("DecryptContentPGP", "DecryptBob")

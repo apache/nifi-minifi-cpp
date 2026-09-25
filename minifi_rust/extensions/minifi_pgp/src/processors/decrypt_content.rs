@@ -205,9 +205,10 @@ mod tests {
     impl PrivateKeyData {
         fn into_controller(self) -> PGPPrivateKeyService {
             let mut context = MockControllerServiceContext::new();
-            context
-                .properties
-                .insert("Key File", test_utils::get_test_key_path(self.key_filename));
+            context.properties.insert(
+                "Keyring File",
+                test_utils::get_test_key_path(self.key_filename),
+            );
 
             if let Some(passphrase) = self.passphrase {
                 context.properties.insert("Key Password", passphrase);

@@ -1,4 +1,4 @@
-Testing keys v3
+Testing keys v4
 ------------------------
 uid           [ultimate] Alice <alice@example.com>
 keyid         BCCE3FDFBA019D7E
@@ -49,7 +49,11 @@ The binary keyrings are concatenations of the individual dearmored keys:
   gpg --dearmor < spoofed_bob.asc > spoofed.bin
   cat keyring.bin spoofed.bin > ambiguous_keyring.gpg
 
-v3 note: v2 shipped two distinct Alice keys sharing the User ID
-"Alice <alice@example.com>", which made a "Alice" key search ambiguous. The
-stray key (keyid 1BB0EC4BF35325F6) was dropped; the remaining Alice key is the
-one the messages in test_messages/ were encrypted to.
+Passphrase protection
+------------------------
+Every passphrase-protected secret key here is deliberately protected with the
+lowest S2K iteration count gpg will emit (65536, its floor). Unlocking a key
+runs the full S2K hash chain, and gpg's own calibrated default of 58720256 means
+56 MiB of SHA-1 per protected packet. Dave has two protected packets and each
+candidate passphrase is tried against each, which made the decrypt_content tests
+take seconds apiece. Keep the low count when regenerating.
