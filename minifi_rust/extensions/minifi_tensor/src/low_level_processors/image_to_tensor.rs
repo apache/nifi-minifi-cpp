@@ -68,6 +68,7 @@ impl From<ResizeFilter> for image::imageops::FilterType {
 pub(crate) enum ColorFormat {
     Rgb,
     Bgr,
+    #[strum(serialize = "Grayscale")]
     Grayscale,
 }
 
