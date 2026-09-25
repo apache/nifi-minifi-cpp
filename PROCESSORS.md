@@ -19,6 +19,7 @@ limitations under the License.
 - [ApplyTemplate](#ApplyTemplate)
 - [AttributeRollingWindow](#AttributeRollingWindow)
 - [AttributesToJSON](#AttributesToJSON)
+- [ClassifyImage](#ClassifyImage)
 - [CollectKubernetesPodMetrics](#CollectKubernetesPodMetrics)
 - [CompressContent](#CompressContent)
 - [ConsumeJournald](#ConsumeJournald)
@@ -31,6 +32,8 @@ limitations under the License.
 - [DeleteAzureDataLakeStorage](#DeleteAzureDataLakeStorage)
 - [DeleteGCSObject](#DeleteGCSObject)
 - [DeleteS3Object](#DeleteS3Object)
+- [DetectObject](#DetectObject)
+- [DrawBoundingBox](#DrawBoundingBox)
 - [EvaluateJsonPath](#EvaluateJsonPath)
 - [ExecuteProcess](#ExecuteProcess)
 - [ExecuteScript](#ExecuteScript)
@@ -95,6 +98,7 @@ limitations under the License.
 - [RetryFlowFile](#RetryFlowFile)
 - [RouteOnAttribute](#RouteOnAttribute)
 - [RouteText](#RouteText)
+- [RunLlamaCppInference](#RunLlamaCppInference)
 - [SegmentContent](#SegmentContent)
 - [SplitContent](#SplitContent)
 - [SplitJson](#SplitJson)
@@ -212,6 +216,76 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                  |
 |---------|----------------------------------------------|
 | success | All FlowFiles received are routed to success |
+
+
+## ClassifyImage
+
+### Description
+
+Runs a full image-classification pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the score vector (score activation, Top-K selection, confidence filtering, optional label lookup) into predictions. Collapses the ImageToTensor -> InvokeTractModel -> ClassifyOutput chain into one node. The flow file content is left unchanged (the original image); the Top-K classifications are written as a JSON array to the configured output attribute.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                     | Default Value | Allowable Values                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+|--------------------------|---------------|-----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Target width**         |               |                                               | Width in pixels the decoded image is resized to before normalisation and inference.                                                                                                                                                                                                                                                                                                                                                                      |
+| **Target height**        |               |                                               | Height in pixels the decoded image is resized to before normalisation and inference.                                                                                                                                                                                                                                                                                                                                                                     |
+| **Resize filter**        | Bilinear      | Nearest<br/>Bilinear<br/>Bicubic<br/>Lanczos3 | Interpolation filter applied when resizing the decoded image. Nearest is fastest but blocky; Bilinear is a good default; Bicubic and Lanczos3 are higher-quality but slower.                                                                                                                                                                                                                                                                             |
+| **Resize mode**          | Stretch       | Stretch<br/>Letterbox                         | How the source image is fitted into the target dimensions. 'Stretch' scales each axis independently, distorting aspect ratio. 'Letterbox' preserves aspect ratio and pads the remaining border with 'Letterbox pad value' (applied in normalised output space).                                                                                                                                                                                          |
+| **Letterbox pad value**  | 0.0           |                                               | Value written for padding pixels when 'Resize mode' is 'Letterbox'. This is a normalised value (post mean/std), so 0.0 corresponds to a neutral input for most networks. Ignored when 'Resize mode' is 'Stretch'.                                                                                                                                                                                                                                        |
+| **Color format**         | RGB           | RGB<br/>BGR<br/>Grayscale                     | Color space of the tensor fed to the model. RGB and BGR produce three-channel tensors (channel order determined by the format); Grayscale produces a single-channel luma tensor.                                                                                                                                                                                                                                                                         |
+| **Tensor shape format**  | CHW           | CHW<br/>HWC                                   | Memory layout of the tensor fed to the model. CHW (channels-first) is typical for PyTorch/ONNX detectors. HWC (channels-last) matches TensorFlow/TFLite. Ignored for Grayscale (always effectively 1xHxW).                                                                                                                                                                                                                                               |
+| Mean                     | 0.0           |                                               | Value subtracted from each pixel before dividing by 'Standard Deviation'. Accepts either a single value (broadcast to all channels) or three comma-separated values applied per channel in the order dictated by 'Color format'. Example: '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.                                                                                                                                                    |
+| Standard Deviation       | 255.0         |                                               | Divisor applied after subtracting 'Mean'. Accepts a single value (broadcast) or three comma-separated values (per channel). Must be non-zero. Example: '255.0' to scale u8 pixels into [0.0, 1.0]; '0.229, 0.224, 0.225' for ImageNet.                                                                                                                                                                                                                   |
+| **Pixel divisor**        | 1.0           |                                               | Divisor applied to raw u8 pixel values before subtracting 'Mean' and dividing by 'Standard Deviation'. Defaults to 1.0 (mean/std interpreted in [0, 255] pixel space, e.g. UltraFace's mean=127, std=128). Set to 255 to bring pixels into [0.0, 1.0] first so ImageNet-style mean/std values like '0.485, 0.456, 0.406' / '0.229, 0.224, 0.225' can be used directly, matching the PyTorch / torchvision / ONNX MobileNet convention. Must be non-zero. |
+| **Tract model service**  |               |                                               | Reference to a TractModelService controller service. The referenced service owns the compiled model (ONNX or NNEF) that will be evaluated for each incoming flow file.                                                                                                                                                                                                                                                                                   |
+| **Top K**                | 5             |                                               | Number of highest-scoring classes to include in the output JSON, in descending order of confidence. Values above the total class count are clamped. Set to 1 for pure top-1 classification.                                                                                                                                                                                                                                                              |
+| **Score output index**   | 0             |                                               | Zero-based index of the model output tensor that holds classification scores. The processor slices the concatenated payload from InvokeTractModel according to the 'tensor.N.bytes' attributes. Almost always 0 for single-head classifiers.                                                                                                                                                                                                             |
+| **Score activation**     | Softmax       | Softmax<br/>Sigmoid<br/>None                  | Activation applied to the raw score vector before ranking. Softmax = mutually-exclusive classes (ImageNet-trained ResNet/MobileNet/EfficientNet raw logits). Sigmoid = independent classes (multi-label classifiers). None = the model already emits probabilities/scores; rank the raw values.                                                                                                                                                          |
+| **Confidence Threshold** | 0.0           |                                               | Minimum confidence a class must reach to be included in the output JSON. Applied AFTER activation, so the units match the chosen activation (0.0..=1.0 for Softmax/Sigmoid, model-native for None). Set to 0.0 to always emit exactly Top K predictions.<br/>**Supports Expression Language: true**                                                                                                                                                      |
+| Labels file path         |               |                                               | Optional path to a newline-separated labels file (line N = name of class N). Loaded once at service enable time. When set, each prediction in the output JSON gains a 'class_name' field and the 'class.top1.name' flow file attribute is populated. Leave empty to emit numeric class IDs only.                                                                                                                                                         |
+| Label index offset       |               |                                               | Offset added to the model's class ID when looking up a name in the labels file. Defaults to 0 (labels file line N = class N). Set to 1 for label files that start with a dummy/background entry — e.g. the ONNX MobileNetV2 model emits 1000 class scores while 'imagenet_slim_labels.txt' has 1001 lines (line 0 = 'dummy'), so class ID 653 maps to line 654 = 'military uniform'.                                                                   |
+| Output attribute name    |               |                                               | Specify the attribute to use as output, if not provided, the content is overridden instead.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                                                                                   |
+
+### Relationships
+
+| Name    | Description                                                                                                                                                                                         |
+|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| success | Inference and post-processing completed. The flow file content is the original, unchanged image; the classifications are written to the configured output attribute as a JSON array (may be empty). |
+| failure | The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as classification.                                      |
+
+### Output Attributes
+
+| Attribute             | Relationship | Description                                                                                                                                                                                                                |
+|-----------------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| mime.type             | success      | If the "Output attribute name" is None, then the content will be overridden with the JSON array of objects with fields class_id, confidence, and optional class_name, and the mime type will be set to 'application/json'. |
+| class.count           | success      | Number of predictions retained after Top K selection and confidence filtering.                                                                                                                                             |
+| class.top1.id         | success      | Numeric class ID of the highest-confidence prediction, when at least one prediction cleared the confidence threshold.                                                                                                      |
+| class.top1.confidence | success      | Confidence (post-activation) of the highest-confidence prediction, when at least one prediction cleared the confidence threshold.                                                                                          |
+| class.top1.name       | success      | Label of the highest-confidence prediction. Only present when 'Labels file path' was configured and at least one prediction cleared the threshold.                                                                         |
+
+
+## CollectKubernetesPodMetrics
+
+### Description
+
+A processor which collects pod metrics when MiNiFi is run inside Kubernetes.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                              | Default Value | Allowable Values | Description                                                |
+|-----------------------------------|---------------|------------------|------------------------------------------------------------|
+| **Kubernetes Controller Service** |               |                  | Controller service which provides Kubernetes functionality |
+
+### Relationships
+
+| Name    | Description                                    |
+|---------|------------------------------------------------|
+| success | All flow files produced are routed to Success. |
 
 
 ## CompressContent
@@ -592,6 +666,78 @@ In the list below, the names of required properties appear in bold. Any other pr
 |---------|----------------------------------------------|
 | success | FlowFiles are routed to success relationship |
 | failure | FlowFiles are routed to failure relationship |
+
+
+## DetectObject
+
+### Description
+
+Runs a full object-detection pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the model outputs (score activation, confidence filtering, box decoding, per-class non-maximum suppression) into bounding boxes. Collapses the ImageToTensor -> InvokeTractModel -> FilterBoundingBoxes chain into one node. The flow file content is left unchanged (the original image); the detected boxes are written as a JSON array to the configured output attribute so a downstream DrawBoundingBox can annotate the image.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                     | Default Value | Allowable Values                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|--------------------------|---------------|-----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Target width**         |               |                                               | Width in pixels the decoded image is resized to before normalisation and inference.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Target height**        |               |                                               | Height in pixels the decoded image is resized to before normalisation and inference.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Resize filter**        | Bilinear      | Nearest<br/>Bilinear<br/>Bicubic<br/>Lanczos3 | Interpolation filter applied when resizing the decoded image. Nearest is fastest but blocky; Bilinear is a good default; Bicubic and Lanczos3 are higher-quality but slower.                                                                                                                                                                                                                                                                                                                                                                 |
+| **Resize mode**          | Stretch       | Stretch<br/>Letterbox                         | How the source image is fitted into the target dimensions. 'Stretch' scales each axis independently, distorting aspect ratio. 'Letterbox' preserves aspect ratio and pads the remaining border with 'Letterbox pad value' (applied in normalised output space).                                                                                                                                                                                                                                                                              |
+| **Letterbox pad value**  | 0.0           |                                               | Value written for padding pixels when 'Resize mode' is 'Letterbox'. This is a normalised value (post mean/std), so 0.0 corresponds to a neutral input for most networks. Ignored when 'Resize mode' is 'Stretch'.                                                                                                                                                                                                                                                                                                                            |
+| **Color format**         | RGB           | RGB<br/>BGR<br/>Grayscale                     | Color space of the tensor fed to the model. RGB and BGR produce three-channel tensors (channel order determined by the format); Grayscale produces a single-channel luma tensor.                                                                                                                                                                                                                                                                                                                                                             |
+| **Tensor shape format**  | CHW           | CHW<br/>HWC                                   | Memory layout of the tensor fed to the model. CHW (channels-first) is typical for PyTorch/ONNX detectors. HWC (channels-last) matches TensorFlow/TFLite. Ignored for Grayscale (always effectively 1xHxW).                                                                                                                                                                                                                                                                                                                                   |
+| Mean                     | 0.0           |                                               | Value subtracted from each pixel before dividing by 'Standard Deviation'. Accepts either a single value (broadcast to all channels) or three comma-separated values applied per channel in the order dictated by 'Color format'. Example: '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.                                                                                                                                                                                                                                        |
+| Standard Deviation       | 255.0         |                                               | Divisor applied after subtracting 'Mean'. Accepts a single value (broadcast) or three comma-separated values (per channel). Must be non-zero. Example: '255.0' to scale u8 pixels into [0.0, 1.0]; '0.229, 0.224, 0.225' for ImageNet.                                                                                                                                                                                                                                                                                                       |
+| **Pixel divisor**        | 1.0           |                                               | Divisor applied to raw u8 pixel values before subtracting 'Mean' and dividing by 'Standard Deviation'. Defaults to 1.0 (mean/std interpreted in [0, 255] pixel space, e.g. UltraFace's mean=127, std=128). Set to 255 to bring pixels into [0.0, 1.0] first so ImageNet-style mean/std values like '0.485, 0.456, 0.406' / '0.229, 0.224, 0.225' can be used directly, matching the PyTorch / torchvision / ONNX MobileNet convention. Must be non-zero.                                                                                     |
+| **Tract model service**  |               |                                               | Reference to a TractModelService controller service. The referenced service owns the compiled model (ONNX or NNEF) that will be evaluated for each incoming flow file.                                                                                                                                                                                                                                                                                                                                                                       |
+| **Confidence Threshold** | 0.7           |                                               | Minimum per-box class probability (0.0 to 1.0) required to keep a bounding box after applying the chosen 'Score activation'. Boxes below the threshold are discarded before NMS.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                                                                                  |
+| **IoU Threshold**        | 0.45          |                                               | Intersection-over-union cutoff used during non-maximum suppression. Boxes of the same class whose IoU with a higher-confidence peer exceeds this value are suppressed. Typical values: 0.45 (SSD/YOLO default), 0.5, 0.3 for stricter deduplication.                                                                                                                                                                                                                                                                                         |
+| **Score output index**   | 0             |                                               | Zero-based index of the model output tensor that holds classification scores. The processor slices the concatenated payload from InvokeTractModel according to the 'tensor.N.bytes' attributes.                                                                                                                                                                                                                                                                                                                                              |
+| **Box output index**     | 1             |                                               | Zero-based index of the model output tensor that holds box coordinates. Must differ from 'Score output index'.                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Class output index       |               |                                               | Zero-based index of a model output tensor that holds one class id per box. Set this for detectors that emit boxes, per-box scores, and class ids as three separate parallel tensors, with NMS already folded into the graph (TensorFlow Object Detection API; YOLO / EfficientNMS 'end2end' exports). When set, 'Score output index' is read as one score per box (not a [boxes, classes] matrix) and no argmax is performed; the class id tensor may be integer- or float-typed. Leave empty for models that emit a per-class score matrix. |
+| **Box format**           | Xyxy          | Xyxy<br/>Yxyx<br/>Cxcywh                      | Layout of the four floats per box in the box output tensor. Xyxy = [x_min, y_min, x_max, y_max] (SSD, MobileNet-SSD, most PyTorch exports). Yxyx = [y_min, x_min, y_max, x_max] (TensorFlow Object Detection API). Cxcywh = [cx, cy, w, h] (YOLOv3/5/8 raw output).                                                                                                                                                                                                                                                                          |
+| **Score activation**     | Softmax       | Softmax<br/>Sigmoid<br/>None                  | Activation applied to raw per-class scores before selecting the winning class. Softmax = mutually-exclusive classes (SSD/MobileNet-SSD raw logits). Sigmoid = independent classes (YOLOv5/v8 style). None = the model already emits probabilities/scores; use raw argmax with the raw score as confidence.                                                                                                                                                                                                                                   |
+| Background class index   |               |                                               | Index of the 'background / no-object' class. Boxes whose winning class equals this index are dropped. In score-matrix mode this is only honoured when the score tensor has more than one class per box; in 'Class output index' mode it is matched against each box's class id.                                                                                                                                                                                                                                                              |
+| Output attribute name    |               |                                               | Specify the attribute to use as output, if not provided, the content is overridden instead.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                                                                                                                                                                       |
+
+### Relationships
+
+| Name    | Description                                                                                                                                                                                        |
+|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| success | Inference and post-processing completed. The flow file content is the original, unchanged image; the detected boxes are written to the configured output attribute as a JSON array (may be empty). |
+| failure | The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as scores + boxes.                                     |
+
+### Output Attributes
+
+| Attribute               | Relationship | Description                                                                                                                                                                                                                                    |
+|-------------------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| object.count            | success      | Number of bounding boxes retained after confidence filtering and NMS.                                                                                                                                                                          |
+| <Output attribute name> | success      | JSON array of the surviving bounding boxes (fields class_id, confidence, x_min, y_min, x_max, y_max; coordinates normalised to [0,1] against the original image). The attribute name is configurable via the 'Output attribute name' property. |
+
+
+## DrawBoundingBox
+
+### Description
+
+Decodes the image from the flow file content, draws each bounding box supplied via the 'Bounding boxes' property onto it, and re-encodes the annotated image as PNG. Pair with an upstream DetectObject / FilterBoundingBoxes to visualise detections.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name               | Default Value       | Allowable Values | Description                                                                                                                                                                                                                                                                                                 |
+|--------------------|---------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Bounding boxes     | ${enrichment.value} |                  | JSON array of bounding boxes to draw onto the image (fields class_id, confidence, x_min, y_min, x_max, y_max; coordinates normalised to [0,1] against the image). Typically the attribute produced by an upstream DetectObject or FilterBoundingBoxes processor.<br/>**Supports Expression Language: true** |
+| Line color         | #00FF00             |                  | Outline color as a hex string (e.g., '#ff00ff' or '#f0f')                                                                                                                                                                                                                                                   |
+| **Line thickness** | 5                   |                  | Thickness in pixels of the drawn box outline.                                                                                                                                                                                                                                                               |
+
+### Relationships
+
+| Name    | Description                                                |
+|---------|------------------------------------------------------------|
+| success | Flowfiles are routed here after drawing the bounding boxes |
+| failure | Invalid FlowFiles are routed here                          |
 
 
 ## EvaluateJsonPath
@@ -2946,6 +3092,50 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Attribute       | Relationship | Description                                                                                                                                              |
 |-----------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | RouteText.Group |              | The value captured by all capturing groups in the 'Grouping Regular Expression' property. If this property is not set, this attribute will not be added. |
+
+
+## RunLlamaCppInference
+
+### Description
+
+LlamaCpp processor to use llama.cpp library for running language model inference. The inference will be based on the System Prompt and the Prompt property values, together with the content of the incoming flow file. In the Prompt, the content of the incoming flow file can be referred to as 'the input data' or 'the flow file content'.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                             | Default Value                                                                                                                                                                                             | Allowable Values | Description                                                                                                             |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------|
+| **Model Path**                   |                                                                                                                                                                                                           |                  | The filesystem path of the model file in gguf format.                                                                   |
+| Output Attribute Name            |                                                                                                                                                                                                           |                  | Specify the attribute to use as output, if not provided, the content is overridden instead.                             |
+| MultiModal Model Path            |                                                                                                                                                                                                           |                  | The filesystem path of the multimodal model (visual, audio) file in gguf format.                                        |
+| Temperature                      | 0.8                                                                                                                                                                                                       |                  | The temperature to use for sampling.                                                                                    |
+| Top K                            | 40                                                                                                                                                                                                        |                  | Limit the next token selection to the K most probable tokens. Set <= 0 value to use vocab size.                         |
+| Top P                            | 0.9                                                                                                                                                                                                       |                  | Limit the next token selection to a subset of tokens with a cumulative probability above a threshold P. 1.0 = disabled. |
+| Min P                            |                                                                                                                                                                                                           |                  | Sets a minimum base probability threshold for token selection. 0.0 = disabled.                                          |
+| **Min Keep**                     | 0                                                                                                                                                                                                         |                  | If greater than 0, force samplers to return N possible tokens at minimum.                                               |
+| **Text Context Size**            | 4096                                                                                                                                                                                                      |                  | Size of the text context, use 0 to use size set in model.                                                               |
+| **Logical Maximum Batch Size**   | 2048                                                                                                                                                                                                      |                  | Logical maximum batch size that can be submitted to the llama.cpp decode function.                                      |
+| **Physical Maximum Batch Size**  | 512                                                                                                                                                                                                       |                  | Physical maximum batch size.                                                                                            |
+| **Max Number Of Sequences**      | 1                                                                                                                                                                                                         |                  | Maximum number of sequences (i.e. distinct states for recurrent models).                                                |
+| **Threads For Generation**       | 4                                                                                                                                                                                                         |                  | Number of threads to use for generation.                                                                                |
+| **Threads For Batch Processing** | 4                                                                                                                                                                                                         |                  | Number of threads to use for batch processing.                                                                          |
+| Prompt                           |                                                                                                                                                                                                           |                  | The user prompt for the inference.<br/>**Supports Expression Language: true**                                           |
+| System Prompt                    | You are a helpful assistant. You are given a question with some possible input data otherwise called flow file content. You are expected to generate a response based on the question and the input data. |                  | The system prompt for the inference.                                                                                    |
+
+### Relationships
+
+| Name    | Description                      |
+|---------|----------------------------------|
+| success | Generated results from the model |
+| failure | Generation failed                |
+
+### Output Attributes
+
+| Attribute                    | Relationship | Description                                    |
+|------------------------------|--------------|------------------------------------------------|
+| llamacpp.time.to.first.token | success      | Time to first token generated in milliseconds. |
+| llamacpp.tokens.per.second   | success      | Tokens generated per second.                   |
 
 
 ## TailEventLog
