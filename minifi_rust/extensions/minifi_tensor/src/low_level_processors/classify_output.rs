@@ -28,10 +28,10 @@ pub(crate) use classify_output_def::{
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     Content, FlowFileTransform, GetAttribute, GetId, GetProperty, InputStream, Logger, MinifiError,
-    ProcessError, RouteErrorExt, Schedule, TransformedFlowFile, warn,
+    ProcessError, PropertyConstraints, PropertySchema, PropertyType, RouteErrorExt, Schedule,
+    TransformedFlowFile, warn,
 };
 use serde::Serialize;
-use std::path::Path;
 use tract::Tensor;
 
 mod classify_output_def;
@@ -44,14 +44,25 @@ struct Prediction {
     class_name: Option<String>,
 }
 
-fn load_labels(path: &Path) -> Result<Vec<String>, MinifiError> {
-    let content = std::fs::read_to_string(path).map_err(|e| {
-        MinifiError::custom(format!("Failed to read labels file '{:?}': {}", path, e))
-    })?;
-    Ok(content
-        .lines()
-        .map(|line| line.trim().to_string())
-        .collect())
+pub(crate) struct LabelsProperty {}
+
+impl PropertySchema for LabelsProperty {
+    const CONSTRAINT: Option<PropertyConstraints> = None;
+    const IS_REQUIRED: bool = false;
+}
+
+impl PropertyType for LabelsProperty {
+    type Output = Vec<String>;
+
+    fn parse(s: &str) -> Result<Self::Output, MinifiError> {
+        let content = std::fs::read_to_string(s).map_err(|e| {
+            MinifiError::custom(format!("Failed to read labels file '{:?}': {}", s, e))
+        })?;
+        Ok(content
+            .lines()
+            .map(|line| line.trim().to_string())
+            .collect())
+    }
 }
 
 fn top_k(mut scored: Vec<(usize, f32)>, k: usize) -> Vec<(usize, f32)> {
@@ -66,7 +77,7 @@ pub(crate) struct ClassifyOutput {
     score_output_index: usize,
     score_activation: ScoreActivation,
     confidence_threshold: f32,
-    labels: Vec<String>,
+    labels: Option<Vec<String>>,
     label_index_offset: usize,
 }
 
@@ -86,16 +97,15 @@ impl Schedule for ClassifyOutput {
         let score_activation = context.get_property(&SCORE_ACTIVATION)?;
         let confidence_threshold = context.get_property(&CONFIDENCE_THRESHOLD)?;
 
-        let labels = match context.get_property(&LABELS_FILE_PATH)? {
-            Some(path) => load_labels(&path)?,
-            _ => Vec::new(),
-        };
+        let labels = context.get_property(&LABELS_FILE_PATH)?;
         let label_index_offset = context.get_property(&LABEL_INDEX_OFFSET)?;
-        if !labels.is_empty() && label_index_offset >= labels.len() {
+        if let Some(l) = &labels
+            && label_index_offset >= l.len()
+        {
             return Err(MinifiError::validation(format!(
                 "Label index offset ({}) must be smaller than the number of labels ({})",
                 label_index_offset,
-                labels.len()
+                l.len()
             )));
         }
 
@@ -112,9 +122,10 @@ impl Schedule for ClassifyOutput {
 
 impl ClassifyOutput {
     fn label_for(&self, class_id: usize) -> Option<String> {
-        self.labels
-            .get(class_id.checked_add(self.label_index_offset)?)
-            .cloned()
+        self.labels.as_ref().and_then(|l| {
+            l.get(class_id.checked_add(self.label_index_offset)?)
+                .cloned()
+        })
     }
 
     pub(crate) fn classify<'a, Context: GetProperty + GetAttribute + GetId, LoggerImpl: Logger>(
@@ -160,14 +171,16 @@ impl ClassifyOutput {
 
                 if confidence >= self.confidence_threshold {
                     let class_name = self.label_for(class_id);
-                    if class_name.is_none() && !self.labels.is_empty() {
+                    if class_name.is_none()
+                        && let Some(l) = &self.labels
+                    {
                         warn!(
                             logger,
                             "No label for class id {} (offset {}, {} labels loaded); \
                              the labels file does not match the model's classes",
                             class_id,
                             self.label_index_offset,
-                            self.labels.len()
+                            l.len()
                         );
                     }
                     Some(Prediction {
@@ -242,7 +255,7 @@ mod tests {
             score_output_index: 0,
             score_activation: activation,
             confidence_threshold: 0.0,
-            labels: Vec::new(),
+            labels: None,
             label_index_offset: 0,
         }
     }
@@ -325,11 +338,11 @@ mod tests {
     #[test]
     fn test_transform_looks_up_labels() {
         let mut processor = make_processor(1, ScoreActivation::None);
-        processor.labels = vec![
+        processor.labels = Some(vec![
             "tench".into(),
             "goldfish".into(),
             "great_white_shark".into(),
-        ];
+        ]);
         let scores = vec![0.1f32, 0.9, 0.5];
         let context = context_with_scores(&scores);
         let mut stream = Cursor::new(build_payload(&scores));
@@ -346,12 +359,12 @@ mod tests {
         // Mirrors the ImageNet slim labels layout: line 0 is a dummy entry, so
         // model class 0 should resolve to labels[1] = "tench".
         let mut processor = make_processor(1, ScoreActivation::None);
-        processor.labels = vec![
+        processor.labels = Some(vec![
             "dummy".into(),
             "tench".into(),
             "goldfish".into(),
             "great_white_shark".into(),
-        ];
+        ]);
         processor.label_index_offset = 1;
         let scores = vec![0.9f32, 0.1, 0.0]; // model class 0 wins
         let context = context_with_scores(&scores);
@@ -369,7 +382,7 @@ mod tests {
     #[test]
     fn test_label_lookup_miss_warns_when_labels_are_configured() {
         let mut processor = make_processor(1, ScoreActivation::None);
-        processor.labels = vec!["dummy".into(), "tench".into()];
+        processor.labels = Some(vec!["dummy".into(), "tench".into()]);
         processor.label_index_offset = 1;
         let scores = vec![0.1f32, 0.2, 0.9]; // model class 2 wins
         let context = context_with_scores(&scores);
