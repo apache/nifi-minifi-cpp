@@ -90,6 +90,16 @@ void add_value_to_variant(UA_Variant *variant, double value) {
   UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_DOUBLE]);
 }
 
+template<typename T>
+std::string printToString(UA_StatusCode (*print_func)(const T*, UA_String*), const T& data, std::string_view type_name) {
+  UA_String printed = UA_STRING_NULL;
+  if (print_func(&data, &printed) != UA_STATUSCODE_GOOD) {
+    throw OPCException(GENERAL_EXCEPTION, utils::string::join_pack("Failed to convert a ", type_name, " to string"));
+  }
+  const auto guard = gsl::finally([&printed]() { UA_String_clear(&printed); });
+  return {reinterpret_cast<const char*>(printed.data), printed.length};
+}
+
 core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
   switch (ualvl) {
     case UA_LOGLEVEL_TRACE:
@@ -514,9 +524,13 @@ std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_enc
   }
   switch (variant.type->typeKind) {
     case UA_DATATYPEKIND_STRING:
-    case UA_DATATYPEKIND_LOCALIZEDTEXT: {
-      const auto *value = static_cast<const UA_String *>(variant.data);
+    case UA_DATATYPEKIND_XMLELEMENT: {
+      const auto* value = static_cast<const UA_String *>(variant.data);
       return {reinterpret_cast<const char *>(value->data), value->length};
+    }
+    case UA_DATATYPEKIND_LOCALIZEDTEXT: {
+      const auto* value = static_cast<const UA_LocalizedText *>(variant.data);
+      return {reinterpret_cast<const char *>(value->text.data), value->text.length};
     }
     case UA_DATATYPEKIND_BYTESTRING: {
       const auto* value = static_cast<const UA_ByteString *>(variant.data);
@@ -556,6 +570,16 @@ std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_enc
       throw OPCException(GENERAL_EXCEPTION, "Double is non-standard on this system, OPC data cannot be extracted!");
     case UA_DATATYPEKIND_DATETIME:
       return opc::OPCDateTime2String(*static_cast<const UA_DateTime *>(variant.data));
+    case UA_DATATYPEKIND_NODEID:
+      return printToString(UA_NodeId_print, *static_cast<const UA_NodeId *>(variant.data), "node id");
+    case UA_DATATYPEKIND_EXPANDEDNODEID:
+      return printToString(UA_ExpandedNodeId_print, *static_cast<const UA_ExpandedNodeId *>(variant.data), "expanded node id");
+    case UA_DATATYPEKIND_GUID:
+      return printToString(UA_Guid_print, *static_cast<const UA_Guid *>(variant.data), "GUID");
+    case UA_DATATYPEKIND_QUALIFIEDNAME:
+      return printToString(UA_QualifiedName_print, *static_cast<const UA_QualifiedName *>(variant.data), "qualified name");
+    case UA_DATATYPEKIND_STATUSCODE:
+      return UA_StatusCode_name(*static_cast<const UA_StatusCode *>(variant.data));
     default:
       throw OPCException(GENERAL_EXCEPTION, "Data type is not supported: " + std::string(variant.type->typeName));
   }
