@@ -83,6 +83,9 @@ class ProcessSession : public virtual ReferenceContainer {
   // Penalize the flow
   virtual void penalize(const std::shared_ptr<core::FlowFile> &flow) = 0;
 
+  virtual StashedFlowFile stash(std::shared_ptr<core::FlowFile> flow_file) = 0;
+  virtual std::shared_ptr<core::FlowFile> unstash(StashedFlowFile stashed_flow_file) = 0;
+
   virtual bool outgoingConnectionsFull(const std::string& relationship) = 0;
 
   /**

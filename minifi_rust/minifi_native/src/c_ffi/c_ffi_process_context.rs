@@ -17,9 +17,9 @@
 
 use super::c_ffi_flow_file::CffiFlowFile;
 use super::c_ffi_primitives::StringView;
-use crate::api::ProcessContext;
 use crate::api::controller_service::ControllerService;
 use crate::api::property::PropertySchema;
+use crate::api::{ProcessContext, ScheduleContext};
 use crate::c_ffi::{CffiLogger, StaticStrAsMinifiCStr};
 use crate::{
     ComponentIdentifier, ControllerServiceApi, EnableControllerService, MinifiError, Property,
@@ -209,6 +209,22 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
             if err_code != minifi_status_MINIFI_STATUS_SUCCESS {
                 return Err(MinifiError::StatusError((
                     "report_metrics".into(),
+                    NonZeroU32::new_unchecked(err_code),
+                )));
+            }
+        }
+        Ok(())
+    }
+}
+
+impl ScheduleContext for CffiProcessContext<'_> {
+    fn set_trigger_when_empty(&self, trigger_when_empty: bool) -> Result<(), MinifiError> {
+        unsafe {
+            let err_code =
+                minifi_process_context_set_trigger_when_empty(self.ptr, trigger_when_empty);
+            if err_code != minifi_status_MINIFI_STATUS_SUCCESS {
+                return Err(MinifiError::StatusError((
+                    "set_trigger_when_empty".into(),
                     NonZeroU32::new_unchecked(err_code),
                 )));
             }

@@ -39,6 +39,10 @@ if (NOT ENABLE_TEST_PROCESSORS)
     set_target_properties(cargo-build_minifi_rs_playground PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
+if (NOT MINIFI_EXTENSION_ENRICHMENT)
+    set_target_properties(cargo-build_minifi_enrichment PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
+
 include(CTest)
 
 find_program(CARGO_NEXTEST_EXECUTABLE cargo-nextest)

@@ -33,6 +33,11 @@ api::core::FlowFile MockProcessSession::get() {
   return api::core::FlowFile{ff.release()};
 }
 
+api::core::FlowFile MockProcessSession::clone(const api::core::FlowFile& flow_file) {
+  return api::core::FlowFile{new minifi_flow_file(*flow_file.get())};
+}
+
+
 void MockProcessSession::penalize(api::core::FlowFile& ff) {
   ff->is_penalized = true;
 }
@@ -43,6 +48,15 @@ void MockProcessSession::transfer(api::core::FlowFile ff, const minifi::core::Re
 
 void MockProcessSession::remove(api::core::FlowFile ff) {
   removed_flow_files_.push_back(std::unique_ptr<minifi_flow_file>(ff.release()));
+}
+
+api::core::StashedFlowFile MockProcessSession::stash(api::core::FlowFile ff) {
+  return api::core::StashedFlowFile{new minifi_stashed_flow_file{std::unique_ptr<minifi_flow_file>(ff.release())}};
+}
+
+api::core::FlowFile MockProcessSession::unstash(api::core::StashedFlowFile stashed_flow_file) {
+  const std::unique_ptr<minifi_stashed_flow_file> owned{stashed_flow_file.release()};
+  return api::core::FlowFile{owned->flow_file.release()};
 }
 
 void MockProcessSession::write(api::core::FlowFile& ff, const io::OutputStreamCallback& callback) {

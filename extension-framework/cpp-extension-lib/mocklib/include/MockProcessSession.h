@@ -45,6 +45,10 @@ struct minifi_flow_file {
   std::string id;
 };
 
+struct minifi_stashed_flow_file {
+  std::unique_ptr<minifi_flow_file> flow_file;
+};
+
 namespace org::apache::nifi::minifi::mock {
 
 class MockProcessSession : public api::core::ProcessSession {
@@ -57,9 +61,12 @@ class MockProcessSession : public api::core::ProcessSession {
 
   api::core::FlowFile create(const api::core::FlowFile* parent) override;
   api::core::FlowFile get() override;
+  api::core::FlowFile clone(const api::core::FlowFile& flow_file) override;
   void penalize(api::core::FlowFile& ff) override;
   void transfer(api::core::FlowFile ff, const minifi::core::Relationship& relationship) override;
   void remove(api::core::FlowFile ff) override;
+  api::core::StashedFlowFile stash(api::core::FlowFile ff) override;
+  api::core::FlowFile unstash(api::core::StashedFlowFile stashed_flow_file) override;
   void write(api::core::FlowFile& ff, const io::OutputStreamCallback& callback) override;
   void read(api::core::FlowFile& ff, const io::InputStreamCallback& callback) override;
   void setAttribute(api::core::FlowFile& ff, std::string_view key, std::string value) override;

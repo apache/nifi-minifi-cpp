@@ -56,6 +56,10 @@ pub trait ProcessContext {
     fn report_metrics(&self, metrics: Vec<(String, f64)>) -> Result<(), MinifiError>;
 }
 
+pub trait ScheduleContext: GetProperty {
+    fn set_trigger_when_empty(&self, trigger_when_empty: bool) -> Result<(), MinifiError>;
+}
+
 impl<S> GetProperty for S
 where
     S: ProcessContext,
