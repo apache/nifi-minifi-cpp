@@ -15,12 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::low_level_processors::classify_output::classify_output_def::{
+    CLASS_COUNT_ATTR, CLASS_TOP1_CONFIDENCE_ATTR, CLASS_TOP1_ID_ATTR, CLASS_TOP1_NAME_ATTR,
+};
 use crate::utils::score_activation::{ScoreActivation, SoftmaxTerms};
 use crate::utils::tensor_helpers::{deserialize_tensors, tensor_as_f32, tensor_shape};
 use classify_output_def::SUCCESS;
 pub(crate) use classify_output_def::{
     CLASSIFY_OUTPUT_ATTRIBUTES, CONFIDENCE_THRESHOLD, LABEL_INDEX_OFFSET, LABELS_FILE_PATH,
-    OUTPUT_ATTRIBUTE_NAME, SCORE_ACTIVATION, SCORE_OUTPUT_INDEX, TOP_K,
+    MIME_TYPE_ATTR, OUTPUT_ATTRIBUTE_NAME, SCORE_ACTIVATION, SCORE_OUTPUT_INDEX, TOP_K,
 };
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
@@ -123,7 +126,9 @@ impl ClassifyOutput {
         let score_floats =
             tensor_as_f32(&tensors, self.score_output_index).route_err_to_failure()?;
         if score_floats.is_empty() {
-            return Err(MinifiError::custom("Score tensor is empty; nothing to classify").into());
+            return Err(ProcessError::route_to_failure(
+                "Score tensor is empty; nothing to classify",
+            ));
         }
 
         // A classifier head is a single score vector: shape [num_classes] or
@@ -133,11 +138,10 @@ impl ClassifyOutput {
         // (`ImageToTensor` emits batch=1 today; this just enforces the contract.)
         let shape = tensor_shape(&tensors, self.score_output_index).route_err_to_failure()?;
         if shape.iter().rev().skip(1).any(|&d| d != 1) {
-            return Err(MinifiError::custom(format!(
+            return Err(ProcessError::route_to_failure(format!(
                 "ClassifyOutput expects a single score vector (shape [num_classes] or \
                  [1, .., num_classes]); got {shape:?}. A batch dimension > 1 is not supported."
-            )))
-            .route_err_to_failure();
+            )));
         }
 
         let finite: Vec<(usize, f32)> = score_floats
@@ -194,15 +198,15 @@ impl ClassifyOutput {
         };
 
         let mut transformed = TransformedFlowFile::new(&SUCCESS, content)
-            .with_attribute("mime.type", "application/json")
-            .with_attribute("class.count", predictions.len().to_string());
+            .with_attribute(MIME_TYPE_ATTR.name, "application/json")
+            .with_attribute(CLASS_COUNT_ATTR.name, predictions.len().to_string());
 
         if let Some(top) = predictions.first() {
             transformed = transformed
-                .with_attribute("class.top1.id", top.class_id.to_string())
-                .with_attribute("class.top1.confidence", top.confidence.to_string());
+                .with_attribute(CLASS_TOP1_ID_ATTR.name, top.class_id.to_string())
+                .with_attribute(CLASS_TOP1_CONFIDENCE_ATTR.name, top.confidence.to_string());
             if let Some(name) = &top.class_name {
-                transformed = transformed.with_attribute("class.top1.name", name.clone());
+                transformed = transformed.with_attribute(CLASS_TOP1_NAME_ATTR.name, name.clone());
             }
         }
 
