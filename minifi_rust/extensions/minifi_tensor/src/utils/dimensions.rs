@@ -89,17 +89,17 @@ impl Dimensions {
     pub(crate) fn target_from_attributes<Context: GetAttribute>(
         context: &Context,
     ) -> Result<Dimensions, MinifiError> {
-        let orig_w = context
+        let target_w = context
             .get_required_attribute("image.target.width")?
             .parse::<f32>()?;
 
-        let orig_h = context
+        let target_h = context
             .get_required_attribute("image.target.height")?
             .parse::<f32>()?;
 
         Ok(Dimensions {
-            width: orig_w,
-            height: orig_h,
+            width: target_w,
+            height: target_h,
         })
     }
 }

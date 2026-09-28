@@ -72,13 +72,13 @@ impl BoundingBox {
         let box1_area = (box1.x_max - box1.x_min) * (box1.y_max - box1.y_min);
         let box2_area = (box2.x_max - box2.x_min) * (box2.y_max - box2.y_min);
 
-        let divisor = box1_area + box2_area - intersection_area;
+        let union_area = box1_area + box2_area - intersection_area;
 
-        if intersection_area == 0f32 || divisor == 0f32 {
+        if intersection_area == 0f32 || union_area == 0f32 {
             return 0f32;
         }
 
-        intersection_area / divisor
+        intersection_area / union_area
     }
 
     pub(crate) fn apply_non_maximum_suppression(
