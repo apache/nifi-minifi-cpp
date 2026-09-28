@@ -117,6 +117,10 @@ class OpcUaTestServer {
     addObject("Ambiguous", ambiguous_parent_node);
     addObject("Ambiguous", ambiguous_parent_node);
 
+    addEventSource("EventSource", opc::OPCNodeIDType::String, "EventSource");
+    addEventSource("IntEventSource", opc::OPCNodeIDType::Int, "4200");
+    addEventSource("GuidEventSource", opc::OPCNodeIDType::Guid, "aabbccdd-eeff-0a1b-2c3d-4e5f6a7b8c9d");
+
     setHistory("INT1",
         {HistoryModificationRecord{.value = 1,
             .username = "test_user",
@@ -213,6 +217,32 @@ class OpcUaTestServer {
     updateNodeValue(full_path, new_value);
   }
 
+  void triggerEvent(const std::string& message, UA_UInt16 severity, UA_UInt32 event_type = UA_NS0ID_BASEEVENTTYPE,
+      opc::OPCNodeIDType source_id_type = opc::OPCNodeIDType::String) {
+    raiseEvent(event_source_nodes_.at(source_id_type), message, severity, event_type, nullptr);
+  }
+
+  void triggerEventWithFields(const std::string& message, UA_UInt16 severity, const std::vector<std::pair<std::string, std::string>>& fields) {
+    std::vector<UA_KeyValuePair> pairs(fields.size());
+    std::vector<UA_String> values(fields.size());
+    for (size_t i = 0; i < fields.size(); ++i) {
+      pairs[i].key = UA_QUALIFIEDNAME(0, const_cast<char*>(fields[i].first.c_str()));
+      values[i] = UA_STRING(const_cast<char*>(fields[i].second.c_str()));
+      UA_Variant_setScalar(&pairs[i].value, &values[i], &UA_TYPES[UA_TYPES_STRING]);
+    }
+    UA_KeyValueMap field_map{pairs.size(), pairs.data()};
+    raiseEvent(event_source_nodes_.at(opc::OPCNodeIDType::String), message, severity, UA_NS0ID_BASEEVENTTYPE, &field_map);
+  }
+
+  void triggerEventWithUnconvertibleField(const std::string& message, UA_UInt16 severity, const std::string& field_name) {
+    UA_Range range{.low = 0.0, .high = 100.0};
+    UA_KeyValuePair pair;
+    pair.key = UA_QUALIFIEDNAME(0, const_cast<char*>(field_name.c_str()));
+    UA_Variant_setScalar(&pair.value, &range, &UA_TYPES[UA_TYPES_RANGE]);
+    UA_KeyValueMap field_map{1, &pair};
+    raiseEvent(event_source_nodes_.at(opc::OPCNodeIDType::String), message, severity, UA_NS0ID_BASEEVENTTYPE, &field_map);
+  }
+
   void updateNodeValue(const std::string& full_path, int32_t new_value) {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -228,6 +258,14 @@ class OpcUaTestServer {
   }
 
  private:
+  void raiseEvent(const UA_NodeId& source_node, const std::string& message, UA_UInt16 severity, UA_UInt32 event_type, const UA_KeyValueMap* fields) {
+    UA_LocalizedText message_text = UA_LOCALIZEDTEXT(const_cast<char*>("en-US"), const_cast<char*>(message.c_str()));
+    auto status = UA_Server_createEvent(server_, source_node, UA_NODEID_NUMERIC(0, event_type), severity, message_text, fields, nullptr, nullptr);
+    if (status != UA_STATUSCODE_GOOD) {
+      throw std::runtime_error("Failed to create event");
+    }
+  }
+
   static std::string nodeIdToString(const UA_NodeId& id) {
     if (id.identifierType == UA_NODEIDTYPE_STRING) {
       return std::string(reinterpret_cast<const char*>(id.identifier.string.data), id.identifier.string.length);
@@ -403,6 +441,40 @@ class OpcUaTestServer {
     return object_id;
   }
 
+  void addEventSource(const char* name, opc::OPCNodeIDType id_type, const std::string& node_id) {
+    auto requested_node_id = opc::buildNodeId(id_type, ns_index_, node_id);
+    if (!requested_node_id) {
+      throw std::runtime_error("Failed to build the node id of the event source: " + requested_node_id.error());
+    }
+    event_source_nodes_.emplace(id_type,
+        opc::NodeId{addEventSourceObject(name, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), *requested_node_id)});
+  }
+
+  UA_NodeId addEventSourceObject(const char* name, UA_NodeId parent, const UA_NodeId& requested_node_id) {
+    UA_ObjectAttributes attr = UA_ObjectAttributes_default;
+    attr.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", name);
+    attr.eventNotifier = UA_EVENTNOTIFIER_SUBSCRIBE_TO_EVENT;
+
+    UA_NodeId object_id;
+    auto status = UA_Server_addObjectNode(server_,
+        requested_node_id,
+        parent,
+        UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+        UA_QUALIFIEDNAME(ns_index_, const_cast<char*>(name)),
+        UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE),
+        attr,
+        nullptr,
+        &object_id);
+
+    UA_LocalizedText_clear(&attr.displayName);
+
+    if (status != UA_STATUSCODE_GOOD) {
+      throw std::runtime_error("Failed to add event source object node");
+    }
+
+    return object_id;
+  }
+
   UA_StatusCode addNode(UA_NodeId parent_node_id, UA_NodeId& target_node_id, opc::OPCNodeIDType type, const std::string& browse_name,
       const UA_VariableAttributes& attr) {
     UA_QualifiedName qname = UA_QUALIFIEDNAME(ns_index_, const_cast<char*>(browse_name.c_str()));
@@ -501,6 +573,7 @@ class OpcUaTestServer {
   mutable std::mutex server_logs_mutex_;
   std::vector<std::string> server_logs_;
   std::unordered_map<std::string, opc::NodeId> node_ids_;
+  std::unordered_map<opc::OPCNodeIDType, opc::NodeId> event_source_nodes_;
   std::mutex history_mutex_;
   std::unordered_map<std::string, std::vector<HistoryModificationRecord>> history_records_;
   size_t history_page_size_ = 0;

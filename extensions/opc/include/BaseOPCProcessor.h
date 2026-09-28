@@ -103,6 +103,7 @@ class BaseOPCProcessor : public core::ProcessorImpl {
   std::vector<char> key_buffer_;
   std::vector<std::vector<char>> trust_buffers_;
   std::vector<UA_UInt32> path_reference_types_;
+  std::optional<size_t> max_event_queue_size_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -40,7 +40,7 @@ struct NodeData {
 };
 
 void verifyCreatedNode(const NodeData& expected_node, SingleProcessorTestController& controller) {
-  auto client = minifi::opc::Client::createClient(controller.getLogger(), "", {}, {}, {});
+  auto client = minifi::opc::Client::createClient(controller.getLogger(), "", {}, {}, {}, {});
   REQUIRE(client->connect("opc.tcp://127.0.0.1:4840/") == UA_STATUSCODE_GOOD);
   std::vector<opc::NodeId> found_node_ids;
   std::vector<UA_UInt32> reference_types;
@@ -91,7 +91,7 @@ void verifyCreatedNode(const NodeData& expected_node, SingleProcessorTestControl
 }
 
 void verifyNodeValue(SingleProcessorTestController& controller, const opc::NodeId& target, uint16_t namespace_index, const std::string& browse_name, uint8_t expected_value) {
-  auto client = minifi::opc::Client::createClient(controller.getLogger(), "", {}, {}, {});
+  auto client = minifi::opc::Client::createClient(controller.getLogger(), "", {}, {}, {}, {});
   REQUIRE(client->connect("opc.tcp://127.0.0.1:4840/") == UA_STATUSCODE_GOOD);
 
   UA_ReferenceDescription ref_desc;

@@ -17,9 +17,14 @@
 
 #include "OPCCommon.h"
 
+#include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <iterator>
 #include <memory>
+#include <mutex>
+#include <utility>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -34,6 +39,7 @@
 
 #include "open62541/client_highlevel.h"
 #include "open62541/client_config_default.h"
+#include "open62541/client_subscriptions.h"
 
 extern "C" int mp_vsnprintf(char* s, size_t count, const char* format, va_list arg);
 
@@ -125,8 +131,9 @@ core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
 
 Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
-               const std::vector<std::vector<char>>& trust_buffers)
-    : use_encryption_(!cert_buffer.empty()) {
+               const std::vector<std::vector<char>>& trust_buffers, std::optional<size_t> max_event_queue_size)
+    : max_event_queue_size_(max_event_queue_size),
+      use_encryption_(!cert_buffer.empty()) {
   minifi_ua_logger_ = {logFunc, logger.get(), [](UA_Logger*){}};
 
   // Build the config with our logger pre-installed so that open62541 doesn't allocate a default stdout logger (as it would with UA_Client_new).
@@ -178,6 +185,7 @@ Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::
   }
 
   config.allowNonePolicyPassword = true;
+  config.subscriptionInactivityCallback = &Client::subscriptionInactivityCallback;
 
   if (!application_uri.empty()) {
     UA_String_clear(&config.clientDescription.applicationUri);
@@ -220,6 +228,8 @@ bool Client::isConnected() {
 }
 
 UA_StatusCode Client::connect(const std::string& url, const std::string& username, const std::string& password) {
+  markSubscriptionDead();
+
   if (username.empty()) {
     return UA_Client_connect(client_, url.c_str());
   } else {
@@ -480,9 +490,9 @@ UA_StatusCode Client::update_node(const UA_NodeId node_id, T value) {
 
 std::unique_ptr<Client> Client::createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                                              const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
-                                             const std::vector<std::vector<char>>& trust_buffers) {
+                                             const std::vector<std::vector<char>>& trust_buffers, std::optional<size_t> max_event_queue_size) {
   try {
-    return ClientPtr(new Client(logger, application_uri, cert_buffer, key_buffer, trust_buffers));
+    return ClientPtr(new Client(logger, application_uri, cert_buffer, key_buffer, trust_buffers, max_event_queue_size));
   } catch (const std::exception& exception) {
     logger->log_error("Failed to create client: {}", exception.what());
   }
@@ -654,6 +664,157 @@ std::expected<opc::NodeId, std::string> buildNodeId(opc::OPCNodeIDType id_type, 
     default:
       return std::unexpected{fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type))};
   }
+}
+
+std::string buildEventFilterExpression(const EventFilter& options) {
+  if (!options.filter_expression.empty()) {
+    return options.filter_expression;
+  }
+
+  // The browse paths of the select clauses are written with a leading '/', which is not required from the property. A field
+  // that is prefixed with the node id of an event type keeps its own prefix: such a path starts with the node id, not a '/'.
+  gsl_Expects(!options.select_fields.empty());
+  std::string expression = "SELECT ";
+  for (const auto& select_field : options.select_fields) {
+    const bool is_full_path = select_field.starts_with('/') || select_field.contains('=');
+    expression += is_full_path ? select_field : "/" + select_field;
+    expression += ", ";
+  }
+  expression.erase(expression.size() - 2);
+
+  std::vector<std::string> conditions;
+  if (!options.event_type_node_id.empty()) {
+    conditions.push_back("OFTYPE " + options.event_type_node_id);
+  }
+  if (options.minimum_severity) {
+    conditions.push_back("/Severity >= " + std::to_string(*options.minimum_severity));
+  }
+  if (!conditions.empty()) {
+    expression += " WHERE " + utils::string::join(" AND ", conditions);
+  }
+  return expression;
+}
+
+UA_StatusCode Client::subscribeToEvents(const UA_NodeId& node_id, const EventFilter& event_filter) {
+  if (subscription_) {
+    logger_->log_debug("Deleting the dead OPC UA event subscription {} before resubscribing", subscription_->id);
+    UA_Client_Subscriptions_deleteSingle(client_, subscription_->id);
+    subscription_.reset();
+  }
+
+  UA_CreateSubscriptionResponse response = UA_Client_Subscriptions_create(client_, UA_CreateSubscriptionRequest_default(), this,
+                                                                          &Client::subscriptionStatusChangeCallback, &Client::subscriptionDeleteCallback);
+  const auto response_guard = gsl::finally([&response]() { UA_CreateSubscriptionResponse_clear(&response); });
+  if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD) {
+    return response.responseHeader.serviceResult;
+  }
+  const auto subscription_id = response.subscriptionId;
+  auto subscription_id_guard = gsl::finally([this, &subscription_id]() {
+    if (!subscription_ || subscription_->id != subscription_id) {
+      UA_Client_Subscriptions_deleteSingle(client_, subscription_id);
+    }
+  });
+
+  UA_MonitoredItemCreateRequest item;
+  UA_MonitoredItemCreateRequest_init(&item);
+  const auto item_guard = gsl::finally([&item]() { UA_MonitoredItemCreateRequest_clear(&item); });
+  UA_NodeId_copy(&node_id, &item.itemToMonitor.nodeId);
+  item.itemToMonitor.attributeId = UA_ATTRIBUTEID_EVENTNOTIFIER;
+  item.monitoringMode = UA_MONITORINGMODE_REPORTING;
+
+  const std::string event_filter_str = buildEventFilterExpression(event_filter);
+  logger_->log_debug("Subscribing with the event filter '{}'", event_filter_str);
+
+  auto* filter = UA_EventFilter_new();
+  if (filter == nullptr) {
+    return UA_STATUSCODE_BADOUTOFMEMORY;
+  }
+  if (auto sc = UA_EventFilter_parse(filter, UA_STRING(const_cast<char*>(event_filter_str.c_str())), nullptr); sc != UA_STATUSCODE_GOOD) {
+    logger_->log_error("Failed to parse the event filter '{}': {}", event_filter_str, UA_StatusCode_name(sc));
+    UA_EventFilter_delete(filter);
+    return sc;
+  }
+  UA_ExtensionObject_setValue(&item.requestedParameters.filter, filter, &UA_TYPES[UA_TYPES_EVENTFILTER]);
+
+  UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createEvent(client_, subscription_id, UA_TIMESTAMPSTORETURN_BOTH, item,
+                                                                             this, eventNotificationCallback, nullptr);
+  const auto result_guard = gsl::finally([&result]() { UA_MonitoredItemCreateResult_clear(&result); });
+  if (result.statusCode != UA_STATUSCODE_GOOD) {
+    return result.statusCode;
+  }
+
+  subscription_ = EventSubscription{.id = subscription_id, .alive = true};
+  return UA_STATUSCODE_GOOD;
+}
+
+void Client::eventNotificationCallback(UA_Client* /*client*/, UA_UInt32 /*sub_id*/, void* /*sub_context*/, UA_UInt32 /*mon_id*/, void* mon_context,
+    const UA_KeyValueMap event_fields) {
+  auto* client = static_cast<Client*>(mon_context);
+
+  Event event;
+  for (size_t i = 0; i < event_fields.mapSize; ++i) {
+    const UA_KeyValuePair& field = event_fields.map[i];
+    std::string name{reinterpret_cast<const char*>(field.key.name.data), field.key.name.length};
+    if (name.starts_with('/')) {
+      name.erase(0, 1);
+    }
+    if (UA_Variant_isEmpty(&field.value)) {
+      continue;
+    }
+    try {
+      event.fields[name] = variantToString(field.value, BinaryEncoding::Base64);
+    } catch (const OPCException& ex) {
+      client->logger_->log_warn("Failed to convert event field '{}' to string, skipping field: {}", name, ex.what());
+    }
+  }
+  client->pushEvent(std::move(event));
+}
+
+void Client::subscriptionStatusChangeCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context, UA_StatusChangeNotification* notification) {
+  auto* client = static_cast<Client*>(sub_context);
+  client->logger_->log_warn("The OPC UA server reported the event subscription {} as {}, a new subscription will be created", sub_id,
+      UA_StatusCode_name(notification->status));
+  client->markSubscriptionDead();
+}
+
+void Client::subscriptionDeleteCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context) {
+  auto* client = static_cast<Client*>(sub_context);
+  client->logger_->log_debug("The OPC UA event subscription {} was deleted", sub_id);
+  // The subscription is already gone from the client, so there is nothing left to delete before resubscribing.
+  client->subscription_.reset();
+}
+
+void Client::subscriptionInactivityCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context) {
+  auto* client = static_cast<Client*>(sub_context);
+  client->logger_->log_warn("The OPC UA event subscription {} stopped delivering notifications, a new subscription will be created", sub_id);
+  client->markSubscriptionDead();
+}
+
+void Client::pushEvent(Event&& event) {
+  const std::lock_guard<std::mutex> lock(event_queue_mutex_);
+  event_queue_.push_back(std::move(event));
+  while (max_event_queue_size_ && event_queue_.size() > *max_event_queue_size_) {
+    event_queue_.pop_front();
+    ++dropped_event_count_;
+  }
+}
+
+UA_StatusCode Client::processSubscriptionNotifications(UA_UInt32 timeout_milliseconds) {
+  return UA_Client_run_iterate(client_, timeout_milliseconds);
+}
+
+std::vector<Event> Client::drainEvents() {
+  std::deque<Event> events;
+  {
+    const std::lock_guard<std::mutex> lock(event_queue_mutex_);
+    events.swap(event_queue_);
+  }
+  return {std::make_move_iterator(events.begin()), std::make_move_iterator(events.end())};
+}
+
+uint64_t Client::getDroppedEventCountSinceLastCall() {
+  const std::lock_guard<std::mutex> lock(event_queue_mutex_);
+  return std::exchange(dropped_event_count_, 0);
 }
 
 }  // namespace org::apache::nifi::minifi::opc
