@@ -45,6 +45,12 @@ endif()
 
 include(CTest)
 
+# Build the test binaries during the build
+add_custom_target(cargo_build_tests ALL
+        COMMAND cargo test --no-run
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Building Rust test binaries")
+
 add_test(
         NAME cargo_tests
         COMMAND cargo test
