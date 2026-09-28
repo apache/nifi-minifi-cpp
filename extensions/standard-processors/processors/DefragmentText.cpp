@@ -59,8 +59,10 @@ void DefragmentText::onSchedule(core::ProcessContext& context, core::ProcessSess
 void DefragmentText::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   auto flowFiles = flow_file_store_.getNewFlowFiles();
   for (auto& file : flowFiles) {
-    if (file)
+    if (file) {
+      session.add(file);
       processNextFragment(session, gsl::not_null(file));
+    }
   }
   {
     std::shared_ptr<core::FlowFile> original_flow_file = session.get();

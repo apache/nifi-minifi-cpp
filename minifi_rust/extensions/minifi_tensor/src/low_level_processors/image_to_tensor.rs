@@ -34,7 +34,7 @@ use image_to_tensor_def::{IMG_TRG_HEIGHT_ATTR, IMG_TRG_WIDTH_ATTR, TENSORS_LEN_A
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, Relationship, Schedule, TransformError, TransformedFlowFile,
+    MinifiError, Relationship, Schedule, ScheduleContext, TransformError, TransformedFlowFile,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 use tract::Tensor;
@@ -107,7 +107,7 @@ pub(crate) struct ImageToTensor {
 }
 
 impl Schedule for ImageToTensor {
-    fn schedule<Ctx: GetProperty + GetControllerService, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>

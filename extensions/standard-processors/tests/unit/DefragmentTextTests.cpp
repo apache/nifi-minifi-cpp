@@ -23,6 +23,7 @@
 #include "unit/ReadFromFlowFileTestProcessor.h"
 #include "UpdateAttribute.h"
 #include "DefragmentText.h"
+#include "FlowFileRecord.h"
 #include "TextFragmentUtils.h"
 #include "serialization/PayloadSerializer.h"
 #include "serialization/FlowFileSerializer.h"
@@ -424,4 +425,50 @@ TEST_CASE("DefragmentText with offset attributes", "[defragmenttextoffsetattribu
     CHECK(read_from_success_relationship.get().readFlowFileWithContent("%dog"));
     CHECK(read_from_success_relationship.get().readFlowFileWithContent("%cat,octopus"));
   }
+}
+
+TEST_CASE("DefragmentText routes a restored out-of-order fragment to failure", "[defragmenttextrestore]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+  auto input_1 = plan->addProcessor<FragmentGenerator>("input_1");
+  auto defrag_text_flow_files = plan->addProcessor<DefragmentText>("defrag_text_flow_files");
+  auto read_from_failure_relationship = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_failure_relationship");
+  auto read_from_success_relationship = plan->addProcessor<ReadFromFlowFileTestProcessor>("read_from_success_relationship");
+
+  plan->addConnection(input_1, FragmentGenerator::Success, defrag_text_flow_files);
+  plan->addConnection(defrag_text_flow_files, DefragmentText::Failure, read_from_failure_relationship);
+  plan->addConnection(defrag_text_flow_files, DefragmentText::Success, read_from_success_relationship);
+
+  read_from_failure_relationship.get().disableClearOnTrigger();
+  read_from_success_relationship.get().disableClearOnTrigger();
+  read_from_failure_relationship->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
+  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "%");
+  input_1.get().setBaseNameAttribute("input_1");
+  input_1.get().setPostNameAttribute("log");
+  input_1.get().setAbsolutePathAttribute("/tmp/input/input_1.log");
+
+  // First trigger: "foo" is flushed to success and "%bar" is left in the buffer, so the buffer
+  // is non-empty and expects the next fragment to start at offset 7.
+  input_1.get().setFragments({"foo%bar"});
+  testController.runSession(plan);
+  plan->reset();
+  REQUIRE(read_from_success_relationship.get().numberOfFlowFilesRead() == 1);
+
+  // A fragment recovered from the flow file repository after a restart is handed to the processor
+  // via restore(), so it never passed through a session. Its offset does not continue the buffered
+  // fragment, which sends it down the transfer-to-failure path in processNextFragment().
+  auto restored_fragment = std::make_shared<minifi::FlowFileRecordImpl>();
+  restored_fragment->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, "/tmp/input/input_1.log");
+  restored_fragment->addAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, "input_1");
+  restored_fragment->addAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, "log");
+  restored_fragment->addAttribute(textfragmentutils::OFFSET_ATTRIBUTE, "9999");
+  defrag_text_flow_files->restore(restored_fragment);
+
+  REQUIRE_NOTHROW(testController.runSession(plan));
+
+  // Both the flushed buffer and the out-of-order fragment end up on failure.
+  CHECK(read_from_failure_relationship.get().numberOfFlowFilesRead() == 2);
+  CHECK(read_from_failure_relationship.get().readFlowFileWithContent("%bar"));
+  CHECK(read_from_success_relationship.get().numberOfFlowFilesRead() == 1);
 }

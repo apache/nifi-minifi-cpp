@@ -79,6 +79,9 @@ class ProcessSessionImpl : public ReferenceContainerImpl, public virtual Process
 
   void remove(const std::shared_ptr<core::FlowFile> &flow) override;
 
+  StashedFlowFile stash(std::shared_ptr<core::FlowFile> flow_file) override;
+  std::shared_ptr<core::FlowFile> unstash(StashedFlowFile stashed_flow_file) override;
+
   std::shared_ptr<io::InputStream> getFlowFileContentStream(const core::FlowFile& flow_file) override;
 
   int64_t read(const std::shared_ptr<core::FlowFile>& flow_file, const io::InputStreamCallback& callback) override;
