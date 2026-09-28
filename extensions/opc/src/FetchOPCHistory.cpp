@@ -300,6 +300,7 @@ void FetchOPCHistory::onSchedule(core::ProcessContext& context, core::ProcessSes
       break;
     }
     case opc::OPCNodeIDType::Path:
+      path_reference_types_.clear();
       readPathReferenceTypes(context, node_id_);
       path_node_id_resolved_ = false;
       break;
@@ -308,8 +309,26 @@ void FetchOPCHistory::onSchedule(core::ProcessContext& context, core::ProcessSes
   }
 
   history_type_ = utils::parseEnumProperty<opc::HistoryReadTypeOption>(context, HistoryReadType);
-  start_timestamp_ = utils::parseOptionalProperty(context, StartTimestamp) | utils::andThen(utils::timeutils::parseRfc3339);
-  end_timestamp_ = utils::parseOptionalProperty(context, EndTimestamp) | utils::andThen(utils::timeutils::parseRfc3339);
+  auto start_timestamp_str = utils::parseOptionalProperty(context, StartTimestamp);
+  if (start_timestamp_str) {
+    start_timestamp_ = utils::timeutils::parseRfc3339(start_timestamp_str.value());
+    if (!start_timestamp_) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Invalid StartTimestamp: {}", start_timestamp_str.value()));
+    }
+  } else {
+    start_timestamp_ = std::nullopt;
+  }
+
+  auto end_timestamp_str = utils::parseOptionalProperty(context, EndTimestamp);
+  if (end_timestamp_str) {
+    end_timestamp_ = utils::timeutils::parseRfc3339(end_timestamp_str.value());
+    if (!end_timestamp_) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Invalid EndTimestamp: {}", end_timestamp_str.value()));
+    }
+  } else {
+    end_timestamp_ = std::nullopt;
+  }
+
   batch_size_ = utils::parseOptionalU64Property(context, BatchSize).value_or(0);
   const auto record_set_writer_name = context.getProperty(RecordSetWriter).value_or("");
   auto controller_service = context.getControllerService(record_set_writer_name, getUUID());
@@ -384,14 +403,13 @@ void FetchOPCHistory::onTrigger(core::ProcessContext& context, core::ProcessSess
       calculateEndTime(end_timestamp_),
       static_cast<void*>(&history_context));
 
+  if (!state_manager->set(state_map)) {
+    logger_->log_warn("Failed to persist FetchOPCHistory state, entries may be re-fetched on the next trigger");
+  }
+
   if (retval != UA_STATUSCODE_GOOD) {
     logger_->log_error("Failed to read OPC UA node history, status code: {}", UA_StatusCode_name(retval));
     context.yield();
-    return;
-  }
-
-  if (!state_manager->set(state_map)) {
-    logger_->log_warn("Failed to persist FetchOPCHistory state, entries may be re-fetched on the next trigger");
   }
 }
 

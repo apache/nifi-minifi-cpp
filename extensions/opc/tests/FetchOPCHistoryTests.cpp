@@ -115,6 +115,20 @@ TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test fetching history of node w
   checkModificationAttributes(flow_file, contains_modification_attributes, "integer_user", "Insert", "2001-01-01T22:22:00.000Z");
 }
 
+TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test invalid timestamps", "[fetchopchistory]") {
+  server_.start();
+  setupProcessor("String", "INT2");
+  SECTION("Invalid StartTimestamp") {
+    REQUIRE(processor_->setProperty(processors::FetchOPCHistory::StartTimestamp.name, "2025-10-01T00:00:00ZZ"));
+    REQUIRE_THROWS_WITH(controller_.trigger(), "Process Schedule Operation: Invalid StartTimestamp: 2025-10-01T00:00:00ZZ");
+  }
+
+  SECTION("Invalid EndTimestamp") {
+    REQUIRE(processor_->setProperty(processors::FetchOPCHistory::EndTimestamp.name, "22025-10-01T00:00:00Z"));
+    REQUIRE_THROWS_WITH(controller_.trigger(), "Process Schedule Operation: Invalid EndTimestamp: 22025-10-01T00:00:00Z");
+  }
+}
+
 TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test fetching history after a specific timestamp", "[fetchopchistory]") {
   server_.start();
   setupProcessor("String", "INT2");
