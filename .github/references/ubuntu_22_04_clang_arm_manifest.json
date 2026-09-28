@@ -6570,7 +6570,7 @@
                         "Namespace index": {
                             "name": "Namespace index",
                             "description": "The index of the namespace.",
-                            "validator": "INTEGER_VALIDATOR",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
                             "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
@@ -6746,7 +6746,7 @@
                         "Namespace index": {
                             "name": "Namespace index",
                             "description": "The index of the namespace.",
-                            "validator": "INTEGER_VALIDATOR",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
                             "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
@@ -6779,6 +6779,10 @@
                                 {
                                     "value": "String",
                                     "displayName": "String"
+                                },
+                                {
+                                    "value": "Guid",
+                                    "displayName": "Guid"
                                 }
                             ]
                         },
@@ -6903,17 +6907,17 @@
                         },
                         "Parent node ID": {
                             "name": "Parent node ID",
-                            "description": "Specifies the ID of the root node to traverse",
+                            "description": "Specifies the ID of the root node to traverse. Only required when a new node is created.",
                             "validator": "VALID",
-                            "required": "true",
+                            "required": "false",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
                         },
                         "Parent node ID type": {
                             "name": "Parent node ID type",
-                            "description": "Specifies the type of the provided node ID",
+                            "description": "Specifies the type of the provided node ID. Only required when a new node is created.",
                             "validator": "VALID",
-                            "required": "true",
+                            "required": "false",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "allowableValues": [
@@ -6928,14 +6932,18 @@
                                 {
                                     "value": "String",
                                     "displayName": "String"
+                                },
+                                {
+                                    "value": "Guid",
+                                    "displayName": "Guid"
                                 }
                             ]
                         },
                         "Parent node namespace index": {
                             "name": "Parent node namespace index",
-                            "description": "The index of the namespace of the parent node.",
-                            "validator": "INTEGER_VALIDATOR",
-                            "required": "true",
+                            "description": "The index of the namespace of the parent node. Only used when a new node is created.",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                            "required": "false",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "defaultValue": "0"
@@ -6966,7 +6974,7 @@
                         },
                         "Target node ID type": {
                             "name": "Target node ID type",
-                            "description": "ID type of target node. Allowed values are: Int, String.",
+                            "description": "ID type of target node. Allowed values are: Int, String, Guid.",
                             "validator": "VALID",
                             "required": "true",
                             "sensitive": "false",

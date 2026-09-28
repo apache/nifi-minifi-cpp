@@ -65,6 +65,54 @@ TEST_CASE("The binary encoding does not change the conversion of non-binary valu
 
     CHECK(opc::variantToString(variant, binary_encoding) == "-128");
   }
+
+  SECTION("LocalizedText") {
+    UA_LocalizedText value = UA_LOCALIZEDTEXT(const_cast<char*>("en-US"), const_cast<char*>("some message"));
+    UA_Variant variant;
+    UA_Variant_setScalar(&variant, &value, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
+
+    CHECK(opc::variantToString(variant, binary_encoding) == "some message");
+  }
+
+  SECTION("NodeId") {
+    UA_NodeId value = UA_NODEID_NUMERIC(1, 42);
+    UA_Variant variant;
+    UA_Variant_setScalar(&variant, &value, &UA_TYPES[UA_TYPES_NODEID]);
+
+    CHECK(opc::variantToString(variant, binary_encoding) == "ns=1;i=42");
+  }
+
+  SECTION("ExpandedNodeId") {
+    UA_ExpandedNodeId value = UA_EXPANDEDNODEID_NUMERIC(1, 42);
+    UA_Variant variant;
+    UA_Variant_setScalar(&variant, &value, &UA_TYPES[UA_TYPES_EXPANDEDNODEID]);
+
+    CHECK(opc::variantToString(variant, binary_encoding) == "ns=1;i=42");
+  }
+
+  SECTION("Guid") {
+    UA_Guid value = UA_GUID("72962B91-FA75-4AE6-8D28-B404DC7DAF63");
+    UA_Variant variant;
+    UA_Variant_setScalar(&variant, &value, &UA_TYPES[UA_TYPES_GUID]);
+
+    CHECK(opc::variantToString(variant, binary_encoding) == "72962b91-fa75-4ae6-8d28-b404dc7daf63");
+  }
+
+  SECTION("QualifiedName") {
+    UA_QualifiedName value = UA_QUALIFIEDNAME(1, const_cast<char*>("Colour"));
+    UA_Variant variant;
+    UA_Variant_setScalar(&variant, &value, &UA_TYPES[UA_TYPES_QUALIFIEDNAME]);
+
+    CHECK(opc::variantToString(variant, binary_encoding) == "1:Colour");
+  }
+
+  SECTION("StatusCode") {
+    UA_StatusCode value = UA_STATUSCODE_BADNODEIDUNKNOWN;
+    UA_Variant variant;
+    UA_Variant_setScalar(&variant, &value, &UA_TYPES[UA_TYPES_STATUSCODE]);
+
+    CHECK(opc::variantToString(variant, binary_encoding) == "BadNodeIdUnknown");
+  }
 }
 
 TEST_CASE("A byte string variant is converted according to the requested binary encoding", "[opccommon]") {
