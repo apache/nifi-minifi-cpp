@@ -19,6 +19,7 @@ extern crate self as minifi_native;
 mod api;
 pub mod c_ffi;
 pub mod mock;
+pub mod test_utils;
 
 pub use api::errors::{MinifiError, ProcessError, RouteError, RouteErrorExt};
 
@@ -69,6 +70,7 @@ pub use mock::{
     MockControllerServiceContext, MockFlowFile, MockLogger, MockProcessContext, MockProcessSession,
     StdLogger,
 };
+pub use test_utils as test;
 
 #[unsafe(no_mangle)]
 #[allow(non_upper_case_globals)]
