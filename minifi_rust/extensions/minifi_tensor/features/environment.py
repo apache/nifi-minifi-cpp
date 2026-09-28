@@ -19,6 +19,7 @@ import hashlib
 import os
 import shutil
 import ssl
+import tempfile
 import urllib.request
 
 import certifi
@@ -42,17 +43,16 @@ class RemoteAsset:
         if os.path.exists(dest) and self._verify(dest):
             return dest
         os.makedirs(cache_dir, exist_ok=True)
-        tmp = dest + ".part"
+        fd, tmp = tempfile.mkstemp(dir=cache_dir, prefix=filename + ".", suffix=".part")
         print(f"[minifi_tensor tests] fetching {filename} from {self.url}")
         try:
             with (
+                os.fdopen(fd, "wb") as out,
                 urllib.request.urlopen(self.url, context=_SSL_CONTEXT, timeout=_DOWNLOAD_TIMEOUT_S) as response,
-                open(tmp, "wb") as out,
             ):
                 shutil.copyfileobj(response, out)
         except OSError as e:
-            if os.path.exists(tmp):
-                os.remove(tmp)
+            os.remove(tmp)
             raise RuntimeError(f"failed to fetch {filename} from {self.url}: {e}") from e
         if not self._verify(tmp):
             actual = self._digest(tmp)
