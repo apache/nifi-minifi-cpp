@@ -15,9 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#[cfg(unix)]
 use minifi_native::{MinifiError, PropertyConstraints, PropertySchema, PropertyType};
-use std::path::Path;
-
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
@@ -48,14 +47,14 @@ pub(super) struct PutFileUnixPermissions {
 
 #[cfg(unix)]
 impl PutFileUnixPermissions {
-    pub(crate) fn set_directory_permissions(&self, path: &Path) -> std::io::Result<()> {
+    pub(crate) fn set_directory_permissions(&self, path: &std::path::Path) -> std::io::Result<()> {
         if let Some(permissions) = self.directory_permissions.clone() {
             return std::fs::set_permissions(path, permissions);
         }
         Ok(())
     }
 
-    pub(crate) fn set_file_permissions(&self, file: &Path) -> std::io::Result<()> {
+    pub(crate) fn set_file_permissions(&self, file: &std::path::Path) -> std::io::Result<()> {
         if let Some(permissions) = self.file_permissions.clone() {
             return std::fs::set_permissions(file, permissions);
         }
@@ -69,11 +68,11 @@ pub(crate) struct PutFileUnixPermissions {}
 
 #[cfg(windows)]
 impl PutFileUnixPermissions {
-    pub(crate) fn set_directory_permissions(&self, _path: &Path) -> std::io::Result<()> {
+    pub(crate) fn set_directory_permissions(&self, _path: &std::path::Path) -> std::io::Result<()> {
         Ok(())
     }
 
-    pub(crate) fn set_file_permissions(&self, _file: &Path) -> std::io::Result<()> {
+    pub(crate) fn set_file_permissions(&self, _file: &std::path::Path) -> std::io::Result<()> {
         Ok(())
     }
 }
