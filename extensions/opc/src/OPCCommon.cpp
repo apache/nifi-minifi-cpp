@@ -498,6 +498,9 @@ std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_enc
   if (variant.type == nullptr || variant.data == nullptr) {
     throw OPCException(GENERAL_EXCEPTION, "Cannot convert an empty variant to string");
   }
+  if (!UA_Variant_isScalar(&variant)) {
+    throw OPCException(GENERAL_EXCEPTION, "Cannot convert an array variant to string");
+  }
   switch (variant.type->typeKind) {
     case UA_DATATYPEKIND_STRING:
     case UA_DATATYPEKIND_LOCALIZEDTEXT: {
