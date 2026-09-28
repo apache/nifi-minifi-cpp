@@ -15,14 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::services::tract_model_service::service_definition::{MODEL_FILE_PATH, MODEL_FORMAT};
+use crate::services::tract_model_service::tract_model_service_def::{
+    MODEL_FILE_PATH, MODEL_FORMAT,
+};
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{EnableControllerService, GetProperty, Logger, MinifiError, trace};
 use std::path::Path;
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 use tract::prelude::*;
 
-mod service_definition;
+mod tract_model_service_def;
 
 #[derive(
     Debug, Clone, Copy, PartialEq, Display, EnumString, VariantNames, IntoStaticStr, PropertyType,
@@ -118,6 +120,7 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
     use std::str::FromStr;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_resolve_explicit_formats_bypass_detection() {
@@ -169,10 +172,8 @@ mod tests {
 
     #[test]
     fn test_resolve_auto_errors_on_unknown() {
-        assert!(
-            ModelFormat::Auto
-                .resolve(&PathBuf::from_str("/tmp/no-hint").unwrap())
-                .is_err()
-        );
+        let named_file = NamedTempFile::new().unwrap();
+
+        assert!(ModelFormat::Auto.resolve(named_file.path()).is_err());
     }
 }
