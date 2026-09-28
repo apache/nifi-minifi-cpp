@@ -105,7 +105,7 @@ pub(crate) struct ImageToTensor {
 }
 
 impl Schedule for ImageToTensor {
-    fn schedule<Ctx: GetProperty, L: Logger>(
+    fn schedule<Ctx: GetProperty + GetControllerService, L: Logger>(
         context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>
