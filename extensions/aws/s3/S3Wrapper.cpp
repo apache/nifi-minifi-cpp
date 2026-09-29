@@ -41,8 +41,8 @@ void HeadObjectResult::setFilePaths(const std::string& key) {
   filename = absolute_path.filename();
 }
 
-S3Wrapper::S3Wrapper(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing)
-    : request_sender_(std::make_unique<S3ClientRequestSender>(credentials, client_config, use_virtual_addressing)) {
+S3Wrapper::S3Wrapper(const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing)
+    : request_sender_(std::make_unique<S3ClientRequestSender>(credentials_provider, client_config, use_virtual_addressing)) {
 }
 
 S3Wrapper::S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender) : request_sender_(std::move(request_sender)) {

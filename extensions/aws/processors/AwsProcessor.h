@@ -20,7 +20,6 @@
 
 #include <array>
 #include <memory>
-#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -97,14 +96,15 @@ inline constexpr auto REGIONS = std::array{
 class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-special-member-functions)
  public:
   EXTENSIONAPI static constexpr auto AccessKey = core::PropertyDefinitionBuilder<>::createProperty("Access Key")
-      .withDescription("AWS account access key")
+      .withDescription("AWS account access key. DEPRECATED, please use AWS Credentials Provider service instead.")
       .build();
   EXTENSIONAPI static constexpr auto SecretKey = core::PropertyDefinitionBuilder<>::createProperty("Secret Key")
-      .withDescription("AWS account secret key")
+      .withDescription("AWS account secret key. DEPRECATED, please use AWS Credentials Provider service instead.")
       .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto CredentialsFile = core::PropertyDefinitionBuilder<>::createProperty("Credentials File")
-      .withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")
+      .withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey. "
+          "DEPRECATED, please use AWS Credentials Provider service instead.")
       .build();
   EXTENSIONAPI static constexpr auto AWSCredentialsProviderService = core::PropertyDefinitionBuilder<>::createProperty("AWS Credentials Provider service")
       .withDescription("The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.")
@@ -148,7 +148,8 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       .withAllowedTypes<minifi::controllers::ProxyConfigurationServiceInterface>()
       .build();
   EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
-      .withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
+      .withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc. "
+          "DEPRECATED, please use AWS Credentials Provider service instead.")
       .withValidator(core::StandardPropertyValidators::BOOLEAN_VALIDATOR)
       .withDefaultValue("false")
       .isRequired(true)
@@ -175,12 +176,12 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
-  std::optional<Aws::Auth::AWSCredentials> getAWSCredentialsFromControllerService(core::ProcessContext& context) const;
-  std::optional<Aws::Auth::AWSCredentials> getAWSCredentials(core::ProcessContext& context);
+  std::shared_ptr<Aws::Auth::AWSCredentialsProvider> getAWSCredentialsProviderFromControllerService(core::ProcessContext& context) const;
+  std::shared_ptr<Aws::Auth::AWSCredentialsProvider> getAWSCredentialsProvider(core::ProcessContext& context);
   minifi::controllers::ProxyConfiguration getProxy(core::ProcessContext& context);
 
   Aws::Client::ClientConfiguration client_config_;
-  Aws::Auth::AWSCredentials credentials_;
+  std::shared_ptr<Aws::Auth::AWSCredentialsProvider> credentials_provider_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

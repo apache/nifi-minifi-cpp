@@ -107,7 +107,13 @@ bool Environment::unsetEnvironmentVariable(const char* name) {
 
   Environment::accessEnvironment([&success, name](){
 #ifdef WIN32
-    success = SetEnvironmentVariableA(name, nullptr);
+  const bool crt_success = _putenv_s(name, "") == 0;
+  bool windows_success = SetEnvironmentVariableA(name, nullptr) != 0;
+  if (!windows_success && GetLastError() == ERROR_ENVVAR_NOT_FOUND) {
+    windows_success = true;
+  }
+
+  success = crt_success && windows_success;
 #else
     int ret = unsetenv(name);
     success = ret == 0;

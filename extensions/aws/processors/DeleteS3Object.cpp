@@ -34,7 +34,7 @@ void DeleteS3Object::initialize() {
 void DeleteS3Object::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   S3Processor::onSchedule(context, session_factory);
   if (!s3_wrapper_) {
-    s3_wrapper_ = s3_wrapper_factory_(credentials_, client_config_, true);
+    s3_wrapper_ = s3_wrapper_factory_(credentials_provider_, client_config_, true);
   }
 }
 

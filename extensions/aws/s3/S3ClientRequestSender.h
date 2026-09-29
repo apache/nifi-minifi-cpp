@@ -17,7 +17,7 @@
  */
 #pragma once
 
-#include <aws/core/auth/AWSCredentials.h>
+#include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/crt/io/Bootstrap.h>
 #include <aws/crt/io/EventLoopGroup.h>
 #include <aws/crt/io/HostResolver.h>
@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::aws::s3 {
 
 class S3ClientRequestSender : public S3RequestSender {
  public:
-  S3ClientRequestSender(const Aws::Auth::AWSCredentials& credentials,
+  S3ClientRequestSender(const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing = true);
   std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) override;

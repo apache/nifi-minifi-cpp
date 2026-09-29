@@ -40,7 +40,7 @@ void FetchS3Object::onSchedule(core::ProcessContext& context, core::ProcessSessi
   logger_->log_debug("FetchS3Object: RequesterPays [{}]", requester_pays_);
 
   if (!s3_wrapper_) {
-    s3_wrapper_ = s3_wrapper_factory_(credentials_, client_config_, true);
+    s3_wrapper_ = s3_wrapper_factory_(credentials_provider_, client_config_, true);
   }
 }
 

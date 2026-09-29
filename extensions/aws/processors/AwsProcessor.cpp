@@ -32,36 +32,35 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentialsFromControllerService(core::ProcessContext& context) const {
+std::shared_ptr<Aws::Auth::AWSCredentialsProvider> AwsProcessor::getAWSCredentialsProviderFromControllerService(core::ProcessContext& context) const {
   if (auto service = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID())) {
-    return service->getAWSCredentials();
+    return service->getAWSCredentialsProvider();
   }
   logger_->log_debug("AWS credentials service could not be found");
-  return std::nullopt;
+  return nullptr;
 }
 
-std::optional<Aws::Auth::AWSCredentials> AwsProcessor::getAWSCredentials(core::ProcessContext& context) {
-  auto service_cred = getAWSCredentialsFromControllerService(context);
-  if (service_cred) {
+std::shared_ptr<Aws::Auth::AWSCredentialsProvider> AwsProcessor::getAWSCredentialsProvider(core::ProcessContext& context) {
+  if (auto service_credentials_provider = getAWSCredentialsProviderFromControllerService(context)) {
     logger_->log_info("AWS Credentials successfully set from controller service");
-    return service_cred;
+    return service_credentials_provider;
   }
 
-  aws::AWSCredentialsProvider aws_credentials_provider;
+  aws::AWSCredentialsProviderSettings settings;
   if (const auto access_key = context.getProperty(AccessKey.name)) {
-    aws_credentials_provider.setAccessKey(*access_key);
+    settings.access_key = *access_key;
   }
   if (const auto secret_key = context.getProperty(SecretKey.name)) {
-    aws_credentials_provider.setSecretKey(*secret_key);
+    settings.secret_key = *secret_key;
   }
   if (const auto credentials_file = context.getProperty(CredentialsFile.name)) {
-    aws_credentials_provider.setCredentialsFile(*credentials_file);
+    settings.credentials_file = *credentials_file;
   }
-  if (const auto use_credentials = context.getProperty(UseDefaultCredentials.name) | minifi::utils::andThen(parsing::parseBool)) {
-    aws_credentials_provider.setUseDefaultCredentials(*use_credentials);
+  if (const auto use_default_credentials = context.getProperty(UseDefaultCredentials.name) | minifi::utils::andThen(parsing::parseBool); use_default_credentials && *use_default_credentials) {
+    settings.credential_configuration_strategy = CredentialConfigurationStrategyOption::DefaultCredentials;
   }
 
-  return aws_credentials_provider.getAWSCredentials();
+  return createAWSCredentialsProvider(settings, *logger_);
 }
 
 minifi::controllers::ProxyConfiguration AwsProcessor::getProxy(core::ProcessContext& context) {
@@ -111,12 +110,11 @@ void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
   // throw here if the credentials provider service is set to an invalid value
   std::ignore = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID());
 
-  auto credentials = getAWSCredentials(context);
-  if (!credentials) {
+  credentials_provider_ = getAWSCredentialsProvider(context);
+  if (!credentials_provider_) {
     logger_->log_error("AWS Credentials have not been set!");
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "AWS Credentials have not been set!");
   }
-  credentials_ = credentials.value();
 
   auto proxy = getProxy(context);
   if (proxy.proxy_type != minifi::controllers::ProxyType::DIRECT) {
