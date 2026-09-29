@@ -35,7 +35,10 @@ pub(crate) struct ClassifyImage {
 }
 
 impl Schedule for ClassifyImage {
-    fn schedule<Ctx: GetProperty, L: Logger>(context: &Ctx, logger: &L) -> Result<Self, MinifiError>
+    fn schedule<Ctx: GetProperty + GetControllerService, L: Logger>(
+        context: &Ctx,
+        logger: &L,
+    ) -> Result<Self, MinifiError>
     where
         Self: Sized,
     {

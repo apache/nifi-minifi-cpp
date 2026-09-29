@@ -38,7 +38,10 @@ pub(crate) struct DetectObject {
 }
 
 impl Schedule for DetectObject {
-    fn schedule<Ctx: GetProperty, L: Logger>(context: &Ctx, logger: &L) -> Result<Self, MinifiError>
+    fn schedule<Ctx: GetProperty + GetControllerService, L: Logger>(
+        context: &Ctx,
+        logger: &L,
+    ) -> Result<Self, MinifiError>
     where
         Self: Sized,
     {
