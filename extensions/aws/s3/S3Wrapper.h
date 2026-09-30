@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <expected>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -220,15 +221,16 @@ class S3Wrapper {
   S3Wrapper(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing = true);
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
-  std::optional<PutObjectResult> putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size);
-  std::optional<PutObjectResult> putObjectMultipart(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size, uint64_t multipart_size);
-  bool deleteObject(const DeleteObjectRequestParameters& params);
-  std::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::OutputStream& out_body);
-  std::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
-  std::optional<std::map<std::string, std::string>> getObjectTags(const GetObjectTagsParameters& params);
-  std::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
-  std::optional<std::vector<MultipartUpload>> listMultipartUploads(const ListMultipartUploadsRequestParameters& params);
-  bool abortMultipartUpload(const AbortMultipartUploadRequestParameters& params);
+  std::expected<PutObjectResult, S3Error> putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size);
+  std::expected<PutObjectResult, S3Error> putObjectMultipart(const PutObjectRequestParameters& put_object_params,
+    const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size, uint64_t multipart_size);
+  std::expected<void, S3Error> deleteObject(const DeleteObjectRequestParameters& params);
+  std::expected<GetObjectResult, S3Error> getObject(const GetObjectRequestParameters& get_object_params, io::OutputStream& out_body);
+  std::expected<std::vector<ListedObjectAttributes>, S3Error> listBucket(const ListRequestParameters& params);
+  std::expected<std::map<std::string, std::string>, S3Error> getObjectTags(const GetObjectTagsParameters& params);
+  std::expected<HeadObjectResult, S3Error> headObject(const HeadObjectRequestParameters& head_object_params);
+  std::expected<std::vector<MultipartUpload>, S3Error> listMultipartUploads(const ListMultipartUploadsRequestParameters& params);
+  std::expected<void, S3Error> abortMultipartUpload(const AbortMultipartUploadRequestParameters& params);
   void ageOffLocalS3MultipartUploadStates(std::chrono::milliseconds multipart_upload_max_age_threshold);
   void initializeMultipartUploadStateStorage(minifi::core::StateManager& state_manager);
 
@@ -301,14 +303,14 @@ class S3Wrapper {
   static int64_t writeFetchedBody(Aws::IOStream& source, int64_t data_size, io::OutputStream& output);
   static std::string getEncryptionString(Aws::S3Crt::Model::ServerSideEncryption encryption);
 
-  std::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
-  std::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
+  std::expected<std::vector<ListedObjectAttributes>, S3Error> listVersions(const ListRequestParameters& params);
+  std::expected<std::vector<ListedObjectAttributes>, S3Error> listObjects(const ListRequestParameters& params);
   void addListResults(const Aws::Vector<Aws::S3Crt::Model::ObjectVersion>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
   void addListResults(const Aws::Vector<Aws::S3Crt::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
   void addListMultipartUploadResults(const Aws::Vector<Aws::S3Crt::Model::MultipartUpload>& uploads, std::optional<std::chrono::milliseconds> age_off_limit,
     std::vector<MultipartUpload>& filtered_uploads);
-  std::optional<UploadPartsResult> uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, MultipartUploadState upload_state);
-  std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> completeMultipartUpload(const PutObjectRequestParameters& put_object_params, const UploadPartsResult& upload_parts_result);
+  std::expected<UploadPartsResult, S3Error> uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, MultipartUploadState upload_state);
+  std::expected<Aws::S3Crt::Model::CompleteMultipartUploadResult, S3Error> completeMultipartUpload(const PutObjectRequestParameters& put_object_params, const UploadPartsResult& upload_parts_result);
   bool multipartUploadExistsInS3(const PutObjectRequestParameters& put_object_params);
   std::optional<MultipartUploadState> getMultipartUploadState(const PutObjectRequestParameters& put_object_params);
 

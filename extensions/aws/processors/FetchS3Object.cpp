@@ -19,11 +19,12 @@
 #include "FetchS3Object.h"
 
 #include <memory>
+#include <expected>
 
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "utils/OptionalUtils.h"
+#include "utils/expected.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -91,7 +92,7 @@ void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessio
     return;
   }
 
-  std::optional<minifi::aws::s3::GetObjectResult> result;
+  std::expected<aws::s3::GetObjectResult, aws::s3::S3Error> result{std::unexpected{aws::s3::S3Error{}}};
   session.write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
     result = s3_wrapper_->getObject(*get_object_params, *stream);
     const auto ret = (result | minifi::utils::transform(&s3::GetObjectResult::write_size)).value_or(0);
@@ -119,6 +120,7 @@ void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessio
     session.transfer(flow_file, Success);
   } else {
     logger_->log_error("Failed to fetch S3 object {} from bucket {}", get_object_params->object_key, get_object_params->bucket);
+    setFailureFlowFileAttributes(session, *flow_file, result.error());
     session.transfer(flow_file, Failure);
   }
 }

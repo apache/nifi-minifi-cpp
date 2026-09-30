@@ -19,6 +19,8 @@
 #pragma once
 
 #include <stdlib.h>
+#include <chrono>
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -123,6 +125,18 @@ class S3TestsFixture {
       REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Username", "username"));
       REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Password", "password"));
     }
+  }
+
+  static void checkS3ErrorAttributes(const std::string& name, const std::string& message, bool is_retryable, int32_t http_code) {
+    using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.error.name value:" + name));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.error.message value:" + message));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.error.retryable value:" + std::string(is_retryable ? "true" : "false")));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.error.httpCode value:" + std::to_string(http_code)));
+  }
+
+  static void checkNoS3ErrorAttributes() {
+    CHECK_FALSE(LogTestController::getInstance().contains("key:s3.error.", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   }
 
   void checkProxySettings() {

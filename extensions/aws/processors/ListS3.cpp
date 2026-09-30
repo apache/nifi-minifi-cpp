@@ -91,7 +91,7 @@ void ListS3::writeObjectTags(
       session.putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
     }
   } else {
-    logger_->log_warn("Failed to get object tags for object {} in bucket {}", object_attributes.filename, params.bucket);
+    logger_->log_warn("Failed to get object tags for object {} in bucket {}, error: {}", object_attributes.filename, params.bucket, get_object_tags_result.error().message);
   }
 }
 
@@ -114,7 +114,7 @@ void ListS3::writeUserMetadata(
       session.putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
     }
   } else {
-    logger_->log_warn("Failed to get object metadata for object {} in bucket {}", params.object_key, params.bucket);
+    logger_->log_warn("Failed to get object metadata for object {} in bucket {}, error: {}", params.object_key, params.bucket, head_object_tags_result.error().message);
   }
 }
 
@@ -144,7 +144,7 @@ void ListS3::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
 
   auto aws_results = s3_wrapper_->listBucket(*list_request_params_);
   if (!aws_results) {
-    logger_->log_error("Failed to list S3 bucket {}", list_request_params_->bucket);
+    logger_->log_error("Failed to list S3 bucket {}, error: {}", list_request_params_->bucket, aws_results.error().message);
     context.yield();
     return;
   }

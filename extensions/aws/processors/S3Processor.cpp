@@ -24,6 +24,7 @@
 #include "AWSCredentialsService.h"
 #include "S3Wrapper.h"
 #include "minifi-cpp/core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "utils/HTTPUtils.h"
 #include "utils/StringUtils.h"
@@ -41,6 +42,13 @@ void S3Processor::onSchedule(core::ProcessContext& context, core::ProcessSession
   if (!context.hasNonEmptyProperty(Bucket.name)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
   }
+}
+
+void S3Processor::setFailureFlowFileAttributes(core::ProcessSession& session, core::FlowFile& flow_file, const s3::S3Error& s3_error) {
+  session.putAttribute(flow_file, S3_ERROR_NAME, s3_error.name);
+  session.putAttribute(flow_file, S3_ERROR_MESSAGE, s3_error.message);
+  session.putAttribute(flow_file, S3_ERROR_IS_RETRYABLE, s3_error.is_retryable ? "true" : "false");
+  session.putAttribute(flow_file, S3_ERROR_HTTP_CODE, std::to_string(s3_error.http_code));
 }
 
 }  // namespace org::apache::nifi::minifi::aws::processors

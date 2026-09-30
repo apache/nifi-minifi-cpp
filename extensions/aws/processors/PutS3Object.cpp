@@ -282,7 +282,7 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
     return;
   }
 
-  std::optional<minifi::aws::s3::PutObjectResult> result;
+  std::expected<aws::s3::PutObjectResult, aws::s3::S3Error> result{std::unexpected{aws::s3::S3Error{}}};
   session.read(flow_file, [this, &flow_file, &put_s3_request_params, &result](const std::shared_ptr<io::InputStream>& stream) -> io::IoResult {
     try {
       if (flow_file->getSize() <= multipart_threshold_) {
@@ -298,8 +298,9 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
       return io::IoResult::error();
     }
   });
-  if (!result.has_value()) {
+  if (!result) {
     logger_->log_error("Failed to upload S3 object to bucket '{}'", put_s3_request_params->bucket);
+    setFailureFlowFileAttributes(session, *flow_file, result.error());
     session.transfer(flow_file, Failure);
   } else {
     setAttributes(session, *flow_file, *put_s3_request_params, *result);
