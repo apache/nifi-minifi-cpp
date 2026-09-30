@@ -106,7 +106,7 @@ Feature: Face detection with UltraFace Single Shot MultiBox Detector (SSD)
     And the "Output attribute name" property of the DetectObject processor is set to "detected_objects"
 
     And a DrawBoundingBox processor with the "Bounding boxes" property set to "${detected_objects}"
-    And the "Line color" property of the DrawBoundingBox processor is set to "0, 255, 0"
+    And the "Line color" property of the DrawBoundingBox processor is set to "#0F0"
     And the "Line thickness" property of the DrawBoundingBox processor is set to "5"
 
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
@@ -127,5 +127,6 @@ Feature: Face detection with UltraFace Single Shot MultiBox Detector (SSD)
 
     Then the Minifi logs match the following regex: "key:object.count value:[1-9][0-9]*" in less than 60 seconds
     And the Minifi logs match the following regex: "key:detected_objects value:.*\"class_id\":1" in less than 1 seconds
-    And the Minifi logs match the following regex: "key:detected_objects value:.*\"confidence\":0\.[5-9][0-9]*" in less than 1 seconds
+    And the Minifi logs match the following regex: "key:detected_objects value:.*\"confidence\":0\.[5-9][0-9]*" in less than 1 second
+    And 1 file is placed in the "/tmp/output" directory in less than 20 seconds
     And the Minifi logs do not contain errors
