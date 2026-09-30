@@ -23,6 +23,7 @@ use crate::{
 };
 use minifi_native::StandardPropertyValidator::{F64Validator, I64Validator};
 use std::marker::PhantomData;
+use std::num::{NonZeroU32, NonZeroU64, NonZeroUsize};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -207,6 +208,18 @@ impl_from_str_property!(bool, Some(PropertyConstraints::Validator(BoolValidator)
 impl_from_str_property!(u64, Some(PropertyConstraints::Validator(U64Validator)));
 impl_from_str_property!(u32, Some(PropertyConstraints::Validator(U64Validator)));
 impl_from_str_property!(usize, Some(PropertyConstraints::Validator(U64Validator)));
+impl_from_str_property!(
+    NonZeroU32,
+    Some(PropertyConstraints::Validator(U64Validator))
+);
+impl_from_str_property!(
+    NonZeroU64,
+    Some(PropertyConstraints::Validator(U64Validator))
+);
+impl_from_str_property!(
+    NonZeroUsize,
+    Some(PropertyConstraints::Validator(U64Validator))
+);
 
 impl PropertyType for Duration {
     type Output = Duration;
