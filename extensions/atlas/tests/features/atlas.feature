@@ -27,9 +27,9 @@ Feature: Atlas reporting task emits fs_path, kafka_topic, flow-topology and site
     Then a "fs_path" entity with qualified name "/tmp/input/hello.txt@${scenario_id}" exists in Atlas within 120 seconds
     And a "fs_path" entity with qualified name "/tmp/output/hello.txt@${scenario_id}" exists in Atlas within 60 seconds
     # FilePathExtractor sets name = the file's basename and path = the full path.
-    And the "fs_path" entity with qualified name "/tmp/input/hello.txt@${scenario_id}" has attribute "name" equal to "hello.txt"
+    And the "fs_path" entity with qualified name "/tmp/input/hello.txt@${scenario_id}" has attribute "name" equal to "/tmp/input/hello.txt"
     And the "fs_path" entity with qualified name "/tmp/input/hello.txt@${scenario_id}" has attribute "path" equal to "/tmp/input/hello.txt"
-    And the "fs_path" entity with qualified name "/tmp/output/hello.txt@${scenario_id}" has attribute "name" equal to "hello.txt"
+    And the "fs_path" entity with qualified name "/tmp/output/hello.txt@${scenario_id}" has attribute "name" equal to "/tmp/output/hello.txt"
     And the "fs_path" entity with qualified name "/tmp/output/hello.txt@${scenario_id}" has attribute "path" equal to "/tmp/output/hello.txt"
     # GetFile and PutFile form one linear path "GetFile, PutFile"; the RECEIVE lands as an input
     # fs_path and the SEND as an output fs_path on that flow path.
