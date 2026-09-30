@@ -69,11 +69,11 @@ std::optional<SiteToSiteResponse> SiteToSiteClient::readResponse(const std::shar
   return response;
 }
 
-void SiteToSiteClient::handleTransactionError(const std::shared_ptr<Transaction>& transaction, core::ProcessContext& context, const std::exception& exception) {
+void SiteToSiteClient::handleTransactionError(const std::shared_ptr<Transaction>& transaction, YieldAction yield, const std::exception& exception) {
   if (transaction) {
     deleteTransaction(transaction->getUUID());
   }
-  context.yield();
+  yield.request();
   tearDown();
   logger_->log_warn("Caught Exception, type: {}, what: {}", typeid(exception).name(), exception.what());
 }
@@ -152,7 +152,7 @@ bool SiteToSiteClient::transferFlowFiles(core::ProcessContext& context, core::Pr
       auto end_time = std::chrono::steady_clock::now();
       std::string transit_uri = peer_->getURL() + "/" + flow->getUUIDStr();
       std::string details = "urn:nifi:" + flow->getUUIDStr() + "Remote Host=" + peer_->getHostName();
-      session.getProvenanceReporter()->send(*flow, transit_uri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), false);
+      session.getProvenanceReporter()->send(*flow, transit_uri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
       session.remove(flow);
 
       std::chrono::nanoseconds transfer_duration = std::chrono::high_resolution_clock::now() - transaction_started_at;
@@ -342,7 +342,7 @@ bool SiteToSiteClient::completeReceive(const std::shared_ptr<Transaction>& trans
   return true;
 }
 
-bool SiteToSiteClient::completeSend(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id, core::ProcessContext& context) {
+bool SiteToSiteClient::completeSend(const std::shared_ptr<Transaction>& transaction, const utils::Identifier& transaction_id, YieldAction yield) {
   auto response = readResponse(transaction);
   if (!response) {
     return false;
@@ -354,7 +354,7 @@ bool SiteToSiteClient::completeSend(const std::shared_ptr<Transaction>& transact
 
     if (response->code == ResponseCode::TRANSACTION_FINISHED_BUT_DESTINATION_FULL) {
       logger_->log_info("Site2Site transaction {} reported destination full, yielding", transaction_id.to_string());
-      context.yield();
+      yield.request();
     }
     return true;
   }
@@ -363,7 +363,7 @@ bool SiteToSiteClient::completeSend(const std::shared_ptr<Transaction>& transact
   return false;
 }
 
-bool SiteToSiteClient::complete(core::ProcessContext& context, const utils::Identifier& transaction_id) {
+bool SiteToSiteClient::complete(YieldAction yield, const utils::Identifier& transaction_id) {
   if (peer_state_ != PeerState::READY) {
     bootstrap();
   }
@@ -388,7 +388,7 @@ bool SiteToSiteClient::complete(core::ProcessContext& context, const utils::Iden
     return completeReceive(transaction, transaction_id);
   }
 
-  return completeSend(transaction, transaction_id, context);
+  return completeSend(transaction, transaction_id, yield);
 }
 
 bool SiteToSiteClient::initializeSend(const std::shared_ptr<Transaction>& transaction) {

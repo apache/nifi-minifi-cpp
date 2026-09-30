@@ -31,6 +31,7 @@
 #include "utils/Macro.h"
 #include "core/ProcessorFactoryImpl.h"
 #include "core/controller/ControllerServiceFactoryImpl.h"
+#include "core/reporting/ReportingTaskFactoryImpl.h"
 #include "core/ObjectFactory.h"
 #include "minifi-cpp/agent/agent_version.h"
 
@@ -71,6 +72,11 @@ class StaticClassType {
     } else if constexpr (Type == ResourceType::ControllerService) {
       for (const auto& construction_name : construction_names_) {
         auto factory = std::unique_ptr<controller::ControllerServiceFactory>(new controller::ControllerServiceFactoryImpl<Class>(module_name));
+        getClassLoader().registerClass(construction_name, std::move(factory));
+      }
+    } else if constexpr (Type == ResourceType::ReportingTask) {
+      for (const auto& construction_name : construction_names_) {
+        auto factory = std::unique_ptr<reporting::ReportingTaskFactory>(new reporting::ReportingTaskFactoryImpl<Class>(module_name));
         getClassLoader().registerClass(construction_name, std::move(factory));
       }
     } else {
