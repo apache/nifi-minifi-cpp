@@ -62,6 +62,9 @@ class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
       RemoteProcessGroupPort::idleTimeout});
 
   static constexpr bool SupportsDynamicProperties = false;
+  [[nodiscard]] bool supportsDynamicProperties() const override {
+    return SupportsDynamicProperties;
+  }
 
   static std::string getJsonReport(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records);
 

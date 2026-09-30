@@ -136,11 +136,13 @@ TEST_CASE("AtlasClient createOrUpdateEntities links same-batch references by tem
       .qualified_name = "path-uuid@my-cluster",
       .string_attributes = {{"name", "GetFile, PutFile"}},
       .ref_attributes = {{"nifiFlow", {"nifi_flow", "root-uuid@my-cluster"}}},
+      .ref_list_attributes = {},
   };
   AtlasEntity flow{
       .type_name = "nifi_flow",
       .qualified_name = "root-uuid@my-cluster",
       .string_attributes = {{"name", "MiNiFi Flow"}},
+      .ref_attributes = {},
       .ref_list_attributes = {
           {"flowPaths", {{"nifi_flow_path", "path-uuid@my-cluster"}}},              // in-batch peer
           {"queues", {{"nifi_queue", "external-queue@my-cluster"}}},                 // not in batch

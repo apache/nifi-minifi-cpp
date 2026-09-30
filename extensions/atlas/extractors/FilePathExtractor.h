@@ -58,7 +58,7 @@ class FilePathExtractor : public DatasetExtractor {
     if (path.empty()) return refs;
 
     Dataset ds{.system = "file", .identifier = std::string{path}, .host = std::string{"localhost"}, .attributes = {}};
-    ds.attributes["name"] = std::filesystem::path{path}.filename();
+    ds.attributes["name"] = std::filesystem::path{path}.string();
     ds.attributes["path"] = std::filesystem::path{path}.string();
     if (event.getEventType() == provenance::ProvenanceEventRecord::SEND) {
       refs.outputs.push_back(std::move(ds));

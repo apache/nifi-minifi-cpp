@@ -102,7 +102,7 @@ TEST_CASE("SiteToSitePort extractor: RemoteProcessGroupPort with URL", "[atlas][
   auto event = make(provenance::ProvenanceEventRecord::SEND, "RemoteProcessGroupPort", "https://remote-nifi.example.com/nifi-api/data-transfer/output-ports/some-port-id/transactions");
   const auto refs = dispatcher.dispatch(*event);
   REQUIRE(refs.outputs.size() == 1);
-  REQUIRE(refs.outputs[0].system == "site-to-site-port");
+  REQUIRE(refs.outputs[0].system == "site-to-site-input-port");
   REQUIRE(refs.outputs[0].host == "remote-nifi.example.com");
 }
 

@@ -35,7 +35,7 @@ class ReportingTask : public ProcessorApi {
 
   void restore(const std::shared_ptr<FlowFile>& file) override;
 
-  [[nodiscard]] bool supportsDynamicProperties() const override;
+  [[nodiscard]] virtual bool supportsDynamicProperties() const override;
 
   [[nodiscard]] bool supportsDynamicRelationships() const override;
 

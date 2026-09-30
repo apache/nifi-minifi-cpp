@@ -48,7 +48,8 @@ std::string atlasTypeFor(const Dataset& ds, ReportLineageToAtlas::S3ModelVersion
   if (ds.system == "jdbc") return "rdbms_instance";
   // The remote port's real kind, agreed on by both instances so their entities merge in Atlas:
   // a SEND targets a remote input port, a RECEIVE pulls from a remote output port.
-  if (ds.system == "site-to-site-input-port") return "nifi_input_port";
+  if (ds.system == "site-to-site-input-port")
+    return "nifi_input_port";
   if (ds.system == "site-to-site-output-port") return "nifi_output_port";
   return ds.system;
 }
@@ -110,15 +111,13 @@ void ReportLineageToAtlas::onSchedule(core::reporting::ReportingTaskContext& con
   // rely on the ProcessContext downcast (safe: every reporting task context IS a
   // ProcessContext at runtime — see ProcessContextImpl). If the cast fails (in a
   // test harness with a mock), we simply skip dynamic namespace rules.
-  if (auto* proc_ctx = dynamic_cast<core::ProcessContext*>(&context)) {
-    for (const auto& key : proc_ctx->getDynamicPropertyKeys()) {
-      static constexpr std::string_view prefix = "hostnamePattern.";
-      if (!key.starts_with(prefix)) continue;
-      const auto ns_name = key.substr(prefix.size());
-      if (ns_name.empty()) continue;
-      if (auto value = proc_ctx->getDynamicProperty(key); value) {
-        namespace_resolver_.addRuleFromWhitespaceList(ns_name, *value);
-      }
+  for (const auto& key : context.getDynamicPropertyKeys()) {
+    static constexpr std::string_view prefix = "hostnamePattern.";
+    if (!key.starts_with(prefix)) continue;
+    const auto ns_name = key.substr(prefix.size());
+    if (ns_name.empty()) continue;
+    if (auto value = context.getRawDynamicProperty(key); value) {
+      namespace_resolver_.addRuleFromWhitespaceList(ns_name, *value);
     }
   }
 
@@ -230,16 +229,16 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
     }
     const auto& path_qn = proc_it->second.flow_path_qualified_name;
     const auto convert = [&](const Dataset& ds) {
-      const auto type = atlasTypeFor(ds, s3_model_version_);
+      AtlasEntity entry;
+      entry.type_name = atlasTypeFor(ds, s3_model_version_);
+      entry.string_attributes = ds.attributes;
       std::string identifier = ds.identifier;
       if (ds.system == "file" && fs_path_level_ == FsPathLevel::DIRECTORY) {
         identifier = dirOf(identifier);
+        entry.string_attributes["name"] = identifier;
       }
       const auto ns = namespace_resolver_.resolve(ds.host.value_or(""));
-      AtlasEntity entry;
-      entry.type_name = type;
       entry.qualified_name = identifier + "@" + ns;
-      entry.string_attributes = ds.attributes;
       // Atlas' base "Asset" trait declares `name` as mandatory. Every dataset type we emit
       // (fs_path, kafka_topic, nifi_output_port, nifi_input_port, aws_s3_v2_*, hive_table)
       // inherits from Asset, so a missing name gets the whole bulk POST rejected with

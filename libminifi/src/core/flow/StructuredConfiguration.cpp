@@ -485,66 +485,58 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     auto group = createRemoteProcessGroup(name, uuid);
     group->setParent(parentGroup);
 
-    if (currRpgNode[schema_.rpg_yield_period]) {
-      auto yieldPeriod = currRpgNode[schema_.rpg_yield_period].getString().value();
-      logger_->log_debug("parseRemoteProcessGroup: yield period => [{}]", yieldPeriod);
+    if (auto yield_period = currRpgNode[schema_.rpg_yield_period].getString()) {
+      logger_->log_debug("parseRemoteProcessGroup: yield period => [{}]", yield_period.value());
 
-      auto yield_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(yieldPeriod);
+      auto yield_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(yield_period.value());
       if (yield_period_value.has_value() && group) {
         logger_->log_debug("parseRemoteProcessGroup: yieldPeriod => [{}]", yield_period_value);
         group->setYieldPeriodMsec(*yield_period_value);
       }
     }
 
-    if (currRpgNode[schema_.rpg_timeout]) {
-      auto timeout = currRpgNode[schema_.rpg_timeout].getString().value();
-      logger_->log_debug("parseRemoteProcessGroup: timeout => [{}]", timeout);
+    if (auto timeout = currRpgNode[schema_.rpg_timeout].getString()) {
+      logger_->log_debug("parseRemoteProcessGroup: timeout => [{}]", timeout.value());
 
-      auto timeout_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(timeout);
+      auto timeout_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(timeout.value());
       if (timeout_value.has_value() && group) {
         logger_->log_debug("parseRemoteProcessGroup: timeoutValue => [{}]", timeout_value);
         group->setTimeout(timeout_value->count());
       }
     }
 
-    if (currRpgNode[schema_.rpg_local_network_interface]) {
-      auto interface = currRpgNode[schema_.rpg_local_network_interface].getString().value();
-      logger_->log_debug("parseRemoteProcessGroup: local network interface => [{}]", interface);
-      group->setInterface(interface);
+    if (auto interface = currRpgNode[schema_.rpg_local_network_interface].getString()) {
+      logger_->log_debug("parseRemoteProcessGroup: local network interface => [{}]", interface.value());
+      group->setInterface(interface.value());
     }
 
-    if (currRpgNode[schema_.rpg_transport_protocol]) {
-      auto transport_protocol = currRpgNode[schema_.rpg_transport_protocol].getString().value();
-      logger_->log_debug("parseRemoteProcessGroup: transport protocol => [{}]", transport_protocol);
+    if (auto transport_protocol = currRpgNode[schema_.rpg_transport_protocol].getString()) {
+      logger_->log_debug("parseRemoteProcessGroup: transport protocol => [{}]", transport_protocol.value());
       if (transport_protocol == "HTTP") {
-        group->setTransportProtocol(transport_protocol);
-        if (currRpgNode[schema_.rpg_proxy_host]) {
-          auto http_proxy_host = currRpgNode[schema_.rpg_proxy_host].getString().value();
+        group->setTransportProtocol(transport_protocol.value());
+        if (auto http_proxy_host = currRpgNode[schema_.rpg_proxy_host].getString()) {
           logger_->log_debug("parseRemoteProcessGroup: proxy host => [{}]", http_proxy_host);
-          group->setHttpProxyHost(http_proxy_host);
-          if (currRpgNode[schema_.rpg_proxy_user]) {
-            auto http_proxy_username = currRpgNode[schema_.rpg_proxy_user].getString().value();
-            logger_->log_debug("parseRemoteProcessGroup: proxy user => [{}]", http_proxy_username);
-            group->setHttpProxyUserName(http_proxy_username);
+          group->setHttpProxyHost(http_proxy_host.value());
+          if (auto http_proxy_username = currRpgNode[schema_.rpg_proxy_user].getString()) {
+            logger_->log_debug("parseRemoteProcessGroup: proxy user => [{}]", http_proxy_username.value());
+            group->setHttpProxyUserName(http_proxy_username.value());
           }
-          if (currRpgNode[schema_.rpg_proxy_password]) {
-            auto http_proxy_password = currRpgNode[schema_.rpg_proxy_password].getString().value();
-            logger_->log_debug("parseRemoteProcessGroup: proxy password => [{}]", http_proxy_password);
-            group->setHttpProxyPassWord(http_proxy_password);
+          if (auto http_proxy_password = currRpgNode[schema_.rpg_proxy_password].getString()) {
+            logger_->log_debug("parseRemoteProcessGroup: proxy password => [{}]", http_proxy_password.value());
+            group->setHttpProxyPassWord(http_proxy_password.value());
           }
-          if (currRpgNode[schema_.rpg_proxy_port]) {
-            auto http_proxy_port = currRpgNode[schema_.rpg_proxy_port].getIntegerAsString().value();
-            if (auto port = parsing::parseIntegral<int>(http_proxy_port)) {
+          if (auto http_proxy_port = currRpgNode[schema_.rpg_proxy_port].getIntegerAsString()) {
+            if (auto port = parsing::parseIntegral<int>(http_proxy_port.value())) {
               logger_->log_debug("parseRemoteProcessGroup: proxy port => [{}]", *port);
               group->setHttpProxyPort(*port);
             }
           }
         }
       } else if (transport_protocol == "RAW") {
-        group->setTransportProtocol(transport_protocol);
+        group->setTransportProtocol(transport_protocol.value());
       } else {
         std::stringstream stream;
-        stream << "Invalid transport protocol " << transport_protocol;
+        stream << "Invalid transport protocol " << transport_protocol.value();
         throw minifi::Exception(ExceptionType::SITE2SITE_EXCEPTION, stream.str().c_str());
       }
     }
@@ -737,9 +729,8 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   parent->addProcessor(std::move(port_wrapper));
   processor.setScheduledState(core::RUNNING);
 
-  if (auto tasksNode = port_node[schema_.max_concurrent_tasks]) {
-    const std::string raw_max_concurrent_tasks = tasksNode.getIntegerAsString().value();
-    if (auto max_concurrent_tasks = parsing::parseIntegral<uint8_t>(raw_max_concurrent_tasks); max_concurrent_tasks) {
+  if (auto raw_max_concurrent_tasks = port_node[schema_.max_concurrent_tasks].getIntegerAsString()) {
+    if (auto max_concurrent_tasks = parsing::parseIntegral<uint8_t>(raw_max_concurrent_tasks.value()); max_concurrent_tasks) {
       logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", *max_concurrent_tasks);
       processor.setMaxConcurrentTasks(*max_concurrent_tasks);
     }

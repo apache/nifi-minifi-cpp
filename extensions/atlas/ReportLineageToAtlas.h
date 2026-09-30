@@ -112,7 +112,10 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
       ProvenanceBatchSize,
   });
 
-  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = true;
+  [[nodiscard]] bool supportsDynamicProperties() const override {
+    return SupportsDynamicProperties;
+  }
 
   void initialize() override;
   void onSchedule(core::reporting::ReportingTaskContext& context) override;

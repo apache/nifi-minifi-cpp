@@ -25,6 +25,8 @@ class ReportingTaskApi {
  public:
   virtual ~ReportingTaskApi() = default;
 
+  [[nodiscard]] virtual bool supportsDynamicProperties() const = 0;
+
   virtual void initialize(ReportingTaskDescriptor& descriptor) = 0;
   virtual void onSchedule(ReportingTaskContext&) = 0;
   virtual void onTrigger(ReportingTaskContext&) = 0;

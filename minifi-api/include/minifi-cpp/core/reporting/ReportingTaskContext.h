@@ -85,6 +85,12 @@ class ReportingTaskContext {
   virtual std::shared_ptr<provenance::ProvenanceRepository> getProvenanceRepository() = 0;
 
   [[nodiscard]]
+  virtual std::expected<std::string, std::error_code> getRawDynamicProperty(std::string_view name) const = 0;
+
+  [[nodiscard]]
+  virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
+
+  [[nodiscard]]
   virtual StateManager* getStateManager() = 0;
 
   [[nodiscard]]
