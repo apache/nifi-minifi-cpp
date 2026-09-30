@@ -16,6 +16,7 @@
 // under the License.
 
 use minifi_native::{GetAttribute, MinifiError};
+use std::num::NonZeroU32;
 
 /// The exact placement of an aspect-preserving resize inside a target canvas.
 ///
@@ -36,11 +37,30 @@ pub(crate) struct LetterboxGeometry {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Dimensions {
-    pub(crate) width: f32,
-    pub(crate) height: f32,
+    width: f32,
+    height: f32,
 }
 
 impl Dimensions {
+    pub(crate) fn from_u32s(width: NonZeroU32, height: NonZeroU32) -> Self {
+        Dimensions {
+            width: width.get() as f32,
+            height: height.get() as f32,
+        }
+    }
+    pub(crate) fn new(width: f32, height: f32) -> Result<Self, MinifiError> {
+        if width <= 0f32 || height <= 0f32 {
+            Err(MinifiError::custom("Only positive dimensions are allowed"))
+        } else {
+            Ok(Self { width, height })
+        }
+    }
+    pub(crate) fn width(&self) -> f32 {
+        self.width
+    }
+    pub(crate) fn height(&self) -> f32 {
+        self.height
+    }
     /// Fit `self` into `target` preserving aspect ratio, centring the result.
     ///
     /// Assumes both dimensions are non-zero; `ImageToTensor::schedule` rejects a
@@ -80,10 +100,7 @@ impl Dimensions {
             .get_required_attribute("image.original.height")?
             .parse::<f32>()?;
 
-        Ok(Dimensions {
-            width: orig_w,
-            height: orig_h,
-        })
+        Dimensions::new(orig_w, orig_h)
     }
 
     pub(crate) fn target_from_attributes<Context: GetAttribute>(
@@ -97,10 +114,7 @@ impl Dimensions {
             .get_required_attribute("image.target.height")?
             .parse::<f32>()?;
 
-        Ok(Dimensions {
-            width: target_w,
-            height: target_h,
-        })
+        Dimensions::new(target_w, target_h)
     }
 }
 

@@ -150,7 +150,7 @@ impl FlowFileTransform for DrawBoundingBox {
 
 impl ProcessorDefinition for DrawBoundingBox {
     const DESCRIPTION: &'static str = "Decodes the image from the flow file content, draws each bounding box supplied via the \
-         'Bounding boxes' property onto it, and re-encodes the annotated image as PNG. Pair with an \
+         'Bounding boxes' property onto it, and re-encodes the annotated imagewith the original image format. Pair with an \
          upstream DetectObject / FilterBoundingBoxes to visualise detections.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;

@@ -34,6 +34,7 @@ use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
     MinifiError, ProcessError, RouteErrorExt, Schedule, TransformedFlowFile,
 };
+use std::num::NonZeroU32;
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 use tract::Tensor;
 
@@ -92,8 +93,8 @@ pub(crate) enum ResizeMode {
 
 #[derive(ComponentIdentifier)]
 pub(crate) struct ImageToTensor {
-    target_width: u32,
-    target_height: u32,
+    target_width: NonZeroU32,
+    target_height: NonZeroU32,
     resize_filter: ResizeFilter,
     resize_mode: ResizeMode,
     color_format: ColorFormat,
@@ -114,11 +115,6 @@ impl Schedule for ImageToTensor {
     {
         let target_width = context.get_property(&TARGET_WIDTH)?;
         let target_height = context.get_property(&TARGET_HEIGHT)?;
-        if target_width == 0 || target_height == 0 {
-            return Err(MinifiError::validation(
-                "Target width and Target height must be greater than zero",
-            ));
-        }
         let resize_filter = context.get_property(&RESIZE_FILTER)?;
         let resize_mode = context.get_property(&RESIZE_MODE)?;
         let color_format = context.get_property(&COLOR_FORMAT)?;
@@ -158,14 +154,14 @@ struct MaskedRgbImage {
 
 impl ImageToTensor {
     fn total_pixels(&self) -> usize {
-        self.target_width as usize * self.target_height as usize
+        self.target_width.get() as usize * self.target_height.get() as usize
     }
 
     fn stretch_resize(&self, img: image::DynamicImage) -> MaskedRgbImage {
         let resized = img
             .resize_exact(
-                self.target_width,
-                self.target_height,
+                self.target_width.get(),
+                self.target_height.get(),
                 self.resize_filter.into(),
             )
             .to_rgb8();
@@ -186,8 +182,8 @@ impl ImageToTensor {
             .to_rgb8();
 
         let mut canvas = image::RgbImage::from_pixel(
-            self.target_width,
-            self.target_height,
+            self.target_width.get(),
+            self.target_height.get(),
             image::Rgb([0, 0, 0]),
         );
         image::imageops::overlay(&mut canvas, &scaled, pad_x as i64, pad_y as i64);
@@ -196,7 +192,7 @@ impl ImageToTensor {
         let mut mask = vec![false; self.total_pixels()];
         for y in pad_y..(new_h + pad_y) {
             for x in pad_x..(new_w + pad_x) {
-                mask[y as usize * self.target_width as usize + x as usize] = true;
+                mask[y as usize * self.target_width.get() as usize + x as usize] = true;
             }
         }
         MaskedRgbImage { img: canvas, mask }
@@ -286,20 +282,20 @@ impl ImageToTensor {
                 vec![
                     1,
                     1,
-                    self.target_height as usize,
-                    self.target_width as usize,
+                    self.target_height.get() as usize,
+                    self.target_width.get() as usize,
                 ]
             }
             (_, TensorShapeFormat::Chw) => vec![
                 1,
                 num_channels,
-                self.target_height as usize,
-                self.target_width as usize,
+                self.target_height.get() as usize,
+                self.target_width.get() as usize,
             ],
             (_, TensorShapeFormat::Hwc) => vec![
                 1,
-                self.target_height as usize,
-                self.target_width as usize,
+                self.target_height.get() as usize,
+                self.target_width.get() as usize,
                 num_channels,
             ],
         }
@@ -313,10 +309,7 @@ impl ImageToTensor {
             .join(",")
     }
     pub fn get_target_dim(&self) -> Dimensions {
-        Dimensions {
-            width: self.target_width as f32,
-            height: self.target_height as f32,
-        }
+        Dimensions::from_u32s(self.target_width, self.target_height)
     }
 
     pub fn get_resize_mode(&self) -> ResizeMode {
@@ -360,8 +353,8 @@ impl FlowFileTransform for ImageToTensor {
                 (&TENSOR_SHAPE_ATTR, self.get_shape_str()),
                 (&TENSOR_BYTES_ATTR, tensor_bytes_len.to_string()),
                 (&TENSOR_DTYPE_ATTR, MinifiDatumType::F32.to_string()),
-                (&IMG_ORG_HEIGHT_ATTR, orig_dim.height.to_string()),
-                (&IMG_ORG_WIDTH_ATTR, orig_dim.width.to_string()),
+                (&IMG_ORG_HEIGHT_ATTR, orig_dim.height().to_string()),
+                (&IMG_ORG_WIDTH_ATTR, orig_dim.width().to_string()),
                 (&IMG_TRG_HEIGHT_ATTR, self.target_height.to_string()),
                 (&IMG_TRG_WIDTH_ATTR, self.target_width.to_string()),
                 (&IMG_RESIZE_MODE_ATTR, self.resize_mode.to_string()),
@@ -393,8 +386,8 @@ mod tests {
 
     fn default_processor() -> ImageToTensor {
         ImageToTensor {
-            target_width: 2,
-            target_height: 2,
+            target_width: NonZeroU32::new(2).unwrap(),
+            target_height: NonZeroU32::new(2).unwrap(),
             resize_filter: ResizeFilter::Nearest,
             resize_mode: ResizeMode::Stretch,
             color_format: ColorFormat::Rgb,
@@ -521,8 +514,8 @@ mod tests {
     #[test]
     fn test_invalid_image_routes_to_failure() {
         let processor = ImageToTensor {
-            target_width: 224,
-            target_height: 224,
+            target_width: NonZeroU32::new(224).unwrap(),
+            target_height: NonZeroU32::new(224).unwrap(),
             resize_filter: ResizeFilter::Bilinear,
             ..default_processor()
         };
@@ -607,8 +600,8 @@ mod tests {
             .unwrap();
 
         let processor = ImageToTensor {
-            target_width: 4,
-            target_height: 4,
+            target_width: NonZeroU32::new(4).unwrap(),
+            target_height: NonZeroU32::new(4).unwrap(),
             resize_mode: ResizeMode::Letterbox,
             letterbox_pad_value: -1.0,
             ..default_processor()

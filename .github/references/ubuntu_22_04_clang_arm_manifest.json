@@ -13523,7 +13523,7 @@
                             "description": "Flowfiles are routed here after drawing the bounding boxes"
                         }
                     ],
-                    "typeDescription": "Decodes the image from the flow file content, draws each bounding box supplied via the 'Bounding boxes' property onto it, and re-encodes the annotated image as PNG. Pair with an upstream DetectObject / FilterBoundingBoxes to visualise detections.",
+                    "typeDescription": "Decodes the image from the flow file content, draws each bounding box supplied via the 'Bounding boxes' property onto it, and re-encodes the annotated imagewith the original image format. Pair with an upstream DetectObject / FilterBoundingBoxes to visualise detections.",
                     "supportsDynamicRelationships": "false",
                     "supportsDynamicProperties": "false",
                     "type": "minifi_tensor.processors.draw_bounding_box.DrawBoundingBox"

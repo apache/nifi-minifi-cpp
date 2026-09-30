@@ -168,7 +168,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Decodes the image from the flow file content, draws each bounding box supplied via the 'Bounding boxes' property onto it, and re-encodes the annotated image as PNG. Pair with an upstream DetectObject / FilterBoundingBoxes to visualise detections.
+Decodes the image from the flow file content, draws each bounding box supplied via the 'Bounding boxes' property onto it, and re-encodes the annotated imagewith the original image format. Pair with an upstream DetectObject / FilterBoundingBoxes to visualise detections.
 
 ### Properties
 

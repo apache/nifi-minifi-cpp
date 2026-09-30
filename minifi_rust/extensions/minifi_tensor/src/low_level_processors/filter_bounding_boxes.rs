@@ -131,6 +131,16 @@ impl Schedule for FilterBoundingBoxes {
         let background_class_index = context.get_property(&BACKGROUND_CLASS_INDEX)?;
         let class_output_index = context.get_property(&CLASS_OUTPUT_INDEX)?;
 
+        if score_output_index == box_output_index {
+            return Err(MinifiError::ValidationError(
+                format!(
+                    "{} must be different from {}",
+                    SCORE_OUTPUT_INDEX.name(),
+                    BOX_OUTPUT_INDEX.name()
+                )
+                .into(),
+            ));
+        }
         Ok(Self {
             confidence_threshold,
             iou_threshold,
@@ -196,8 +206,8 @@ impl FilterBoundingBoxes {
                 )
             }
             ResizeMode::Stretch => (
-                target_dim.width / orig_dim.width,
-                target_dim.height / orig_dim.height,
+                target_dim.width() / orig_dim.width(),
+                target_dim.height() / orig_dim.height(),
                 0.0,
                 0.0,
             ),
@@ -219,12 +229,14 @@ impl FilterBoundingBoxes {
         let make_box = |i: usize, class_id: usize, confidence: f32| -> BoundingBox {
             let (raw_x_min, raw_y_min, raw_x_max, raw_y_max) =
                 decode_box(&box_floats, i * 4, self.box_format);
-            let true_x_min = (((raw_x_min * target_dim.width) - pad_x) / scale_x) / orig_dim.width;
+            let true_x_min =
+                (((raw_x_min * target_dim.width()) - pad_x) / scale_x) / orig_dim.width();
             let true_y_min =
-                (((raw_y_min * target_dim.height) - pad_y) / scale_y) / orig_dim.height;
-            let true_x_max = (((raw_x_max * target_dim.width) - pad_x) / scale_x) / orig_dim.width;
+                (((raw_y_min * target_dim.height()) - pad_y) / scale_y) / orig_dim.height();
+            let true_x_max =
+                (((raw_x_max * target_dim.width()) - pad_x) / scale_x) / orig_dim.width();
             let true_y_max =
-                (((raw_y_max * target_dim.height) - pad_y) / scale_y) / orig_dim.height;
+                (((raw_y_max * target_dim.height()) - pad_y) / scale_y) / orig_dim.height();
             BoundingBox {
                 class_id,
                 confidence,
@@ -446,10 +458,7 @@ mod tests {
         let classes = Tensor::from_slice::<i64>(&[2], &[5, 3]).unwrap();
 
         let processor = class_index_processor();
-        let dim = Dimensions {
-            width: 100.0,
-            height: 100.0,
-        };
+        let dim = Dimensions::new(100.0, 100.0).unwrap();
         let result = processor
             .filter(
                 &MockProcessContext::new(),
@@ -484,14 +493,8 @@ mod tests {
                     &MockProcessContext::new(),
                     &MockLogger::new(),
                     vec![scores, boxes, classes],
-                    Dimensions {
-                        width: 200.0,
-                        height: 100.0,
-                    },
-                    Dimensions {
-                        width: 100.0,
-                        height: 100.0,
-                    },
+                    Dimensions::new(200.0, 100.0).unwrap(),
+                    Dimensions::new(100.0, 100.0).unwrap(),
                     mode,
                 )
                 .expect("filter should succeed");
@@ -535,14 +538,8 @@ mod tests {
                 &MockProcessContext::new(),
                 &MockLogger::new(),
                 vec![scores, boxes, classes],
-                Dimensions {
-                    width: 1920.0,
-                    height: 1080.0,
-                },
-                Dimensions {
-                    width: 300.0,
-                    height: 300.0,
-                },
+                Dimensions::new(1920.0, 1080.0).unwrap(),
+                Dimensions::new(300.0, 300.0).unwrap(),
                 ResizeMode::Letterbox,
             )
             .expect("filter should succeed");
@@ -573,10 +570,7 @@ mod tests {
             Tensor::from_slice::<f32>(&[2, 4], &[0.1, 0.1, 0.2, 0.2, 0.5, 0.5, 0.9, 0.9]).unwrap();
         let classes = Tensor::from_slice::<i64>(&[2], &[5, 3]).unwrap();
 
-        let dim = Dimensions {
-            width: 100.0,
-            height: 100.0,
-        };
+        let dim = Dimensions::new(100.0, 100.0).unwrap();
         let result = class_index_processor().filter(
             &MockProcessContext::new(),
             &MockLogger::new(),

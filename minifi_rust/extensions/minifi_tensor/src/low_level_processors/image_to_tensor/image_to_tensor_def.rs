@@ -21,14 +21,15 @@ use minifi_native::{
     OutputAttribute, ProcessorDefinition, ProcessorInputRequirement, Property, PropertyDefinition,
     Relationship, property_definitions,
 };
+use std::num::NonZeroU32;
 
-pub(crate) const TARGET_WIDTH: Property<u32> = Property::new(
+pub(crate) const TARGET_WIDTH: Property<NonZeroU32> = Property::new(
     "Target width",
     "Width in pixels the decoded image is resized to before normalisation and \
                   inference.",
 );
 
-pub(crate) const TARGET_HEIGHT: Property<u32> = Property::new(
+pub(crate) const TARGET_HEIGHT: Property<NonZeroU32> = Property::new(
     "Target height",
     "Height in pixels the decoded image is resized to before normalisation and \
                   inference.",
