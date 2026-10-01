@@ -60,8 +60,9 @@ class TestProcessor : public minifi::core::ProcessorImpl {
 };
 
 struct TestFlow{
-  TestFlow(const std::shared_ptr<core::Repository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<minifi::provenance::ProvenanceRepository>& prov_repo,
-        const std::function<std::unique_ptr<core::Processor>(utils::Identifier&)>& processorGenerator, const core::Relationship& relationshipToOutput)
+  TestFlow(const std::shared_ptr<core::Repository>& ff_repository, const std::shared_ptr<core::ContentRepository>& content_repo,
+        const std::shared_ptr<minifi::provenance::ProvenanceRepository>& prov_repo, const std::function<std::unique_ptr<core::Processor>(utils::Identifier&)>& processorGenerator,
+        const core::Relationship& relationshipToOutput)
       : ff_repository(ff_repository), content_repo(content_repo), prov_repo(prov_repo) {
     // setup processor
     auto processor = processorGenerator(mainProcUUID());

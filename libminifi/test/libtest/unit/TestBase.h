@@ -243,8 +243,9 @@ class TypedProcessorWrapper {
 
 class TestPlan {
  public:
-  explicit TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo, std::shared_ptr<minifi::provenance::ProvenanceRepository> prov_repo,
-                    std::shared_ptr<minifi::state::response::FlowVersion> flow_version, std::shared_ptr<minifi::Configure> configuration, const char* state_dir);
+  explicit TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo,
+                    std::shared_ptr<minifi::provenance::ProvenanceRepository> prov_repo, std::shared_ptr<minifi::state::response::FlowVersion> flow_version,
+                    std::shared_ptr<minifi::Configure> configuration, const char* state_dir);
 
   virtual ~TestPlan();
 

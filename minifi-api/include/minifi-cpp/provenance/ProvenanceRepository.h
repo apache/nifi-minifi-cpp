@@ -27,7 +27,7 @@ namespace org::apache::nifi::minifi::provenance {
 class ProvenanceRepository : public virtual core::Repository {
  public:
   class Cursor {
-  public:
+   public:
     [[nodiscard]]
     virtual std::string toString() const = 0;
     virtual ~Cursor() = default;

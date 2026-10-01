@@ -208,8 +208,9 @@ LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProper
   init(loggerProps);
 }
 
-TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo, std::shared_ptr<minifi::provenance::ProvenanceRepository> prov_repo,
-                   std::shared_ptr<minifi::state::response::FlowVersion> flow_version, std::shared_ptr<minifi::Configure> configuration, const char* state_dir)
+TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo,
+                   std::shared_ptr<minifi::provenance::ProvenanceRepository> prov_repo, std::shared_ptr<minifi::state::response::FlowVersion> flow_version,
+                   std::shared_ptr<minifi::Configure> configuration, const char* state_dir)
     : configuration_(std::move(configuration)),
       content_repo_(std::move(content_repo)),
       flow_repo_(std::move(flow_repo)),
