@@ -24,7 +24,7 @@ use classify_image_def::TRACT_MODEL_SERVICE;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, ProcessError, RouteErrorExt, Schedule, TransformedFlowFile,
+    MinifiError, Relationship, Schedule, TransformError, TransformedFlowFile,
 };
 use tract::Tensor;
 
@@ -52,6 +52,8 @@ impl Schedule for ClassifyImage {
 }
 
 impl FlowFileTransform for ClassifyImage {
+    const ERROR_RELATIONSHIP: &'static Relationship = &classify_image_def::FAILURE;
+
     fn transform<
         'a,
         Context: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -61,20 +63,15 @@ impl FlowFileTransform for ClassifyImage {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
         let tract_model_service = context.get_controller_service(&TRACT_MODEL_SERVICE)?;
-        let img = load_as_image(input_stream).route_err_to_failure()?;
+        let img = load_as_image(input_stream)?;
 
         // ImageToTensor
-        let input_tensor: Tensor = self
-            .image_to_tensor
-            .get_tensor(img)
-            .route_err_to_failure()?;
+        let input_tensor: Tensor = self.image_to_tensor.get_tensor(img)?;
 
         // InvokeTract
-        let output_tensors = tract_model_service
-            .run_inference(vec![input_tensor])
-            .route_err_to_failure()?;
+        let output_tensors = tract_model_service.run_inference(vec![input_tensor])?;
 
         // ClassifyOutput
         self.classify_output

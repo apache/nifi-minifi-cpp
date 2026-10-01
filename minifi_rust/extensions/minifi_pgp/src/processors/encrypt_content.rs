@@ -18,8 +18,8 @@
 use crate::controller_services::encryption_key::{EncryptionTarget, select_encryption_target};
 use minifi_native::{
     FlowFileStreamTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream,
-    Logger, MinifiError, OutputStream, ProcessError, RouteErrorExt, Schedule,
-    TransformStreamResult,
+    Logger, MinifiError, OutputStream, Relationship, Schedule, TransformError,
+    TransformStreamResult, route_to_err,
 };
 use pgp::composed::{ArmorOptions, MessageBuilder, SignedPublicKey};
 use pgp::types::{Password, StringToKey};
@@ -61,11 +61,9 @@ impl EncryptContentPGP {
         output_stream: &mut dyn OutputStream,
         pub_key: Option<&SignedPublicKey>,
         file_name: String,
-    ) -> Result<(), MinifiError> {
+    ) -> Result<(), TransformError> {
         if pub_key.is_none() && self.symmetric_password.is_none() {
-            return Err(MinifiError::custom(
-                "No password or public key to encrypt with",
-            ));
+            route_to_err!("No password or public key to encrypt with");
         }
 
         let mut builder = MessageBuilder::from_reader(file_name, input_stream).seipd_v1(
@@ -75,29 +73,29 @@ impl EncryptContentPGP {
 
         if let Some(pub_key) = pub_key {
             match select_encryption_target(pub_key)? {
-                EncryptionTarget::Primary(primary_key) => builder
-                    .encrypt_to_key(rand::thread_rng(), primary_key)
-                    .map_err(MinifiError::other)?,
-                EncryptionTarget::Subkey(subkey) => builder
-                    .encrypt_to_key(rand::thread_rng(), subkey)
-                    .map_err(MinifiError::other)?,
+                EncryptionTarget::Primary(primary_key) => {
+                    builder.encrypt_to_key(rand::thread_rng(), primary_key)?
+                }
+                EncryptionTarget::Subkey(subkey) => {
+                    builder.encrypt_to_key(rand::thread_rng(), subkey)?
+                }
             };
         }
 
         if let Some(password) = &self.symmetric_password {
-            builder
-                .encrypt_with_password(string_to_key(), password)
-                .map_err(MinifiError::other)?;
+            builder.encrypt_with_password(string_to_key(), password)?;
         }
 
         match self.file_encoding {
-            FileEncoding::Ascii => builder
-                .to_armored_writer(rand::thread_rng(), ArmorOptions::default(), output_stream)
-                .map_err(MinifiError::other),
-            FileEncoding::Binary => builder
-                .to_writer(rand::thread_rng(), output_stream)
-                .map_err(MinifiError::other),
-        }
+            FileEncoding::Ascii => builder.to_armored_writer(
+                rand::thread_rng(),
+                ArmorOptions::default(),
+                output_stream,
+            )?,
+            FileEncoding::Binary => builder.to_writer(rand::thread_rng(), output_stream)?,
+        };
+
+        Ok(())
     }
 }
 
@@ -143,6 +141,8 @@ impl EncryptContentPGP {
 }
 
 impl FlowFileStreamTransform for EncryptContentPGP {
+    const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
     fn transform<
         Ctx: GetProperty + GetControllerService + GetAttribute + GetId,
         LoggerImpl: Logger,
@@ -152,15 +152,14 @@ impl FlowFileStreamTransform for EncryptContentPGP {
         input_stream: &mut dyn InputStream,
         output_stream: &mut dyn OutputStream,
         _logger: &LoggerImpl,
-    ) -> Result<TransformStreamResult, ProcessError> {
+    ) -> Result<TransformStreamResult, TransformError> {
         let file_name = match context.get_attribute("filename")? {
             Some(file_name) => file_name,
             None => context.get_id()?,
         };
-        let public_key = Self::get_public_key(context).route_err_to_failure()?;
+        let public_key = Self::get_public_key(context)?;
 
-        self.encrypt_bytes(input_stream, output_stream, public_key, file_name)
-            .route_err_to_failure()?;
+        self.encrypt_bytes(input_stream, output_stream, public_key, file_name)?;
 
         Ok(TransformStreamResult::new(&SUCCESS)
             .with_attribute(FILE_ENCODING_ATTR.name, self.file_encoding.into_str()))
@@ -364,7 +363,7 @@ mod tests {
             EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
         let res = processor.transform(&context, &mut input_stream, &mut result, &MockLogger::new());
 
-        test::assert_routed_to(res, &FAILURE);
+        test::assert_stream_routed_to::<EncryptContentPGP>(res, &FAILURE);
     }
 
     #[test]
@@ -387,6 +386,6 @@ mod tests {
             EncryptContentPGP::schedule(&context, &MockLogger::new()).expect("should schedule");
         let res = processor.transform(&context, &mut input_stream, &mut result, &MockLogger::new());
 
-        test::assert_routed_to(res, &FAILURE);
+        test::assert_stream_routed_to::<EncryptContentPGP>(res, &FAILURE);
     }
 }
