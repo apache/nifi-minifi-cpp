@@ -26,7 +26,6 @@
 #include <utility>
 
 #include "minifi-cpp/core/Repository.h"
-#include "io/BufferStream.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "FlowController.h"
@@ -35,9 +34,6 @@
 namespace org::apache::nifi::minifi::provenance {
 
 constexpr auto MAX_COMPONENT_NAME_LENGTH = 1_KiB;
-
-std::shared_ptr<utils::IdGenerator> ProvenanceEventRecordImpl::id_generator_ = utils::IdGenerator::getIdGenerator();
-std::shared_ptr<core::logging::Logger> ProvenanceEventRecordImpl::logger_ = core::logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
 
 const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD",  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     "DROP", "EXPIRE", "FORK", "JOIN", "CLONE", "CONTENT_MODIFIED", "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
@@ -48,36 +44,6 @@ ProvenanceEventRecordImpl::ProvenanceEventRecordImpl(ProvenanceEventRecord::Prov
       event_time_(std::chrono::system_clock::now()),
       component_id_(component_id.to_string()),
       component_type_(std::move(component_type)) {
-}
-
-bool ProvenanceEventRecordImpl::loadFromRepository(const std::shared_ptr<core::Repository> &repo) {
-  std::string value;
-  bool ret = false;
-
-  if (nullptr == repo || uuid_.isNil()) {
-    logger_->log_error("Repo could not be assigned");
-    return false;
-  }
-  ret = repo->Get(getUUIDStr(), value);
-
-  if (!ret) {
-    logger_->log_error("NiFi Provenance Store event {} can not be found", getUUIDStr());
-    return false;
-  } else {
-    logger_->log_debug("NiFi Provenance Read event {}", getUUIDStr());
-  }
-
-  org::apache::nifi::minifi::io::BufferStream stream(value);
-
-  ret = deserialize(stream);
-
-  if (ret) {
-    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} success", getUUIDStr(), stream.size(), magic_enum::enum_name(event_type_));
-  } else {
-    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} fail", getUUIDStr(), stream.size(), magic_enum::enum_name(event_type_));
-  }
-
-  return ret;
 }
 
 bool ProvenanceEventRecordImpl::serialize(io::OutputStream& output_stream) {

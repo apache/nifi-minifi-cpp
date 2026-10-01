@@ -223,7 +223,6 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
 
   bool serialize(io::OutputStream& output_stream) override;
   bool deserialize(io::InputStream &input_stream) override;
-  bool loadFromRepository(const std::shared_ptr<core::Repository> &repo) override;
 
  protected:
   ProvenanceEventType event_type_;
@@ -254,10 +253,6 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
   std::string source_queue_identifier_;
   std::string relationship_;
   std::string alternate_identifier_uri_;
-
- private:
-  static std::shared_ptr<core::logging::Logger> logger_;
-  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 class ProvenanceReporterImpl : public virtual ProvenanceReporter {

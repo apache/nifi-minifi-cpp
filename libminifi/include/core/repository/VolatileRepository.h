@@ -106,8 +106,6 @@ class VolatileRepository : public core::ThreadedRepositoryImpl {
   std::atomic<uint32_t> current_index_;
   std::mutex purge_mutex_;
   std::vector<std::string> purge_list_;
-
- private:
   std::shared_ptr<logging::Logger> logger_;
 };
 

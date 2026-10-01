@@ -17,6 +17,7 @@
 
 #include "RocksDbProvenanceRepository.h"
 
+#include <optional>
 #include <string>
 
 #include "core/Resource.h"
@@ -25,21 +26,37 @@
 namespace org::apache::nifi::minifi::provenance {
 
 namespace {
+// Events are keyed by their ordinal, and the keys are iterated in bytewise order, so the
+// encoding must be fixed width, otherwise key order would not match ordinal order
+// (e.g. "10" < "2") and an iteration could skip events. 20 digits fit any uint64_t.
+std::string eventOrdinalToKey(uint64_t event_ordinal) {
+  return fmt::format("{:020}", event_ordinal);
+}
+
+// also accepts keys written before the fixed width encoding was introduced
+std::optional<uint64_t> keyToEventOrdinal(std::string_view key) {
+  if (auto event_ordinal = parsing::parseIntegral<uint64_t>(key)) {
+    return *event_ordinal;
+  }
+  return std::nullopt;
+}
+
 class EventCursor : public ProvenanceRepository::Cursor {
-public:
-  explicit EventCursor(std::string event_key): event_key_(std::move(event_key)) {}
+ public:
+  explicit EventCursor(uint64_t last_event_ordinal): last_event_ordinal_(last_event_ordinal) {}
   EventCursor(const EventCursor&) = default;
   EventCursor(EventCursor&&) = default;
   EventCursor& operator=(const EventCursor&) = default;
   EventCursor& operator=(EventCursor&&) = default;
 
+  // the ordinal of the last event observed, 0 if no event has been read yet
   [[nodiscard]]
   std::string toString() const override {
-    return event_key_;
+    return std::to_string(last_event_ordinal_);
   }
   ~EventCursor() override = default;
 
-  std::string event_key_;
+  uint64_t last_event_ordinal_;
 };
 }  // namespace
 
@@ -130,7 +147,14 @@ void RocksDbProvenanceRepository::destroy() {
 }
 
 std::unique_ptr<ProvenanceRepository::Cursor> RocksDbProvenanceRepository::cursorFromString(std::string_view cursor_str) {
-  return std::make_unique<EventCursor>(std::string{cursor_str});
+  if (cursor_str.empty()) {
+    return std::make_unique<EventCursor>(0);
+  }
+  if (auto last_event_ordinal = keyToEventOrdinal(cursor_str)) {
+    return std::make_unique<EventCursor>(*last_event_ordinal);
+  }
+  logger_->log_warn("Could not interpret provenance cursor '{}', reading from the first event", cursor_str);
+  return std::make_unique<EventCursor>(0);
 }
 
 std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, std::string> RocksDbProvenanceRepository::getEvents(size_t max_size, Cursor* cursor) {
@@ -149,18 +173,26 @@ std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, s
   rocksdb::ReadOptions options;
   options.verify_checksums = verify_checksums_in_rocksdb_reads_;
   std::unique_ptr<rocksdb::Iterator> it(opendb->NewIterator(options));
-  std::string last_event_key;
+  uint64_t last_event_ordinal = 0;
   if (event_cursor) {
-    last_event_key = event_cursor->event_key_;
-    it->Seek(event_cursor->event_key_);
-    if (it->Valid() && it->key() == event_cursor->event_key_) {
+    last_event_ordinal = event_cursor->last_event_ordinal_;
+    const auto last_event_key = eventOrdinalToKey(last_event_ordinal);
+    it->Seek(last_event_key);
+    if (it->Valid() && it->key() == last_event_key) {
       it->Next();
     }
   } else {
     it->SeekToFirst();
   }
   for (; it->Valid(); it->Next()) {
-    last_event_key = it->key().ToString();
+    // the ordinal is taken from the key, not from the event, so that an event that fails to
+    // deserialize does not stall the cursor
+    if (auto event_ordinal = keyToEventOrdinal(std::string_view{it->key().data(), it->key().size()})) {
+      last_event_ordinal = *event_ordinal;
+    } else {
+      logger_->log_warn("Skipping provenance entry with unexpected key '{}'", it->key().ToString());
+      continue;
+    }
     auto eventRead = ProvenanceEventRecord::create();
     const auto slice = it->value();
     io::BufferStream stream(std::as_bytes(std::span(slice.data(), slice.size())));
@@ -172,7 +204,7 @@ std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, s
     }
   }
   if (event_cursor) {
-    event_cursor->event_key_ = last_event_key;
+    event_cursor->last_event_ordinal_ = last_event_ordinal;
   }
   return records;
 }
@@ -195,7 +227,7 @@ std::expected<void, std::string> RocksDbProvenanceRepository::appendEvents(const
     }
   }
   for (auto& event : events) {
-    data.emplace_back(std::to_string(event->getEventOrdinal()), std::make_unique<io::BufferStream>());
+    data.emplace_back(eventOrdinalToKey(event->getEventOrdinal()), std::make_unique<io::BufferStream>());
     if (!event->serialize(*data.back().second)) {
       return std::unexpected{fmt::format("Failed to serialize provenance event '{}'", event->getUUIDStr())};
     }

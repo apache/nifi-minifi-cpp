@@ -18,6 +18,7 @@
 
 #include <array>
 #include <chrono>
+#include <memory>
 #include <random>
 #include <vector>
 
@@ -70,6 +71,15 @@ std::vector<std::byte> serializeEvent(minifi::provenance::ProvenanceEventRecord&
 template<typename T>
 void appendAll(std::vector<T>& sink, const std::vector<T>& source) {
   sink.insert(sink.end(), source.begin(), source.end());
+}
+
+std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> createEvents(size_t count) {
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
+  events.reserve(count);
+  for (size_t i = 0; i < count; ++i) {
+    events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+  }
+  return events;
 }
 
 TEST_CASE("Test size limit", "[sizeLimitTest]") {
@@ -138,10 +148,7 @@ TEST_CASE("Test query elements after cursor", "[iterationTest]") {
 
   REQUIRE(provdb.initialize(configuration));
 
-  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
-  for (size_t i = 0; i < 8; ++i) {
-    events.push_back(minifi::provenance::ProvenanceEventRecord::create());  // NOLINT(performance-inefficient-vector-operation)
-  }
+  auto events = createEvents(8);
 
   REQUIRE(provdb.appendEvents(events));
 
@@ -157,11 +164,8 @@ TEST_CASE("Test query elements after cursor", "[iterationTest]") {
   appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
   REQUIRE(queried_events.size() == 8);
 
-  std::string last_event_id;
-
   for (size_t i = 0; i < queried_events.size(); ++i) {
-    REQUIRE(last_event_id < std::string{queried_events.at(i)->getUUIDStr()});
-    last_event_id = queried_events.at(i)->getUUIDStr();
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 1);
     REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
   }
 }
@@ -178,10 +182,7 @@ TEST_CASE("Test loading cursor from string", "[cursorSerializationTest]") {
 
   REQUIRE(provdb.initialize(configuration));
 
-  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
-  for (size_t i = 0; i < 8; ++i) {
-    events.push_back(minifi::provenance::ProvenanceEventRecord::create());  // NOLINT(performance-inefficient-vector-operation)
-  }
+  auto events = createEvents(8);
 
   REQUIRE(provdb.appendEvents(events));
 
@@ -193,18 +194,95 @@ TEST_CASE("Test loading cursor from string", "[cursorSerializationTest]") {
   appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
   REQUIRE(queried_events.size() == 3);
 
+  // the cursor is persisted as the ordinal of the last event read
+  REQUIRE(cursor->toString() == "3");
+
   cursor = provdb.cursorFromString(cursor->toString());
   REQUIRE(cursor);
 
   appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
   REQUIRE(queried_events.size() == 6);
 
-  std::string last_event_id;
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 1);
+    REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
+}
+
+TEST_CASE("Test appendEvents assigns consecutive ordinals", "[eventOrdinalTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  auto first_batch = createEvents(5);
+  REQUIRE(provdb.appendEvents(first_batch));
+  for (size_t i = 0; i < first_batch.size(); ++i) {
+    REQUIRE(first_batch.at(i)->getEventOrdinal() == i + 1);
+  }
+
+  auto second_batch = createEvents(3);
+  REQUIRE(provdb.appendEvents(second_batch));
+  for (size_t i = 0; i < second_batch.size(); ++i) {
+    REQUIRE(second_batch.at(i)->getEventOrdinal() == first_batch.size() + i + 1);
+  }
+}
+
+TEST_CASE("Test querying events whose ordinals have different number of digits", "[eventOrdinalTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  auto events = createEvents(12);
+  REQUIRE(provdb.appendEvents(events));
+
+  auto queried_events = provdb.getEvents(12, nullptr).value();
+  REQUIRE(queried_events.size() == 12);
 
   for (size_t i = 0; i < queried_events.size(); ++i) {
-    REQUIRE(last_event_id < std::string{queried_events.at(i)->getUUIDStr()});
-    last_event_id = queried_events.at(i)->getUUIDStr();
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 1);
     REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
+}
+
+TEST_CASE("Test cursor observes events appended with more digits in their ordinal", "[eventOrdinalTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  REQUIRE(provdb.appendEvents(createEvents(9)));
+
+  auto cursor = provdb.cursorFromString("");
+  REQUIRE(cursor);
+  REQUIRE(provdb.getEvents(9, cursor.get()).value().size() == 9);
+  REQUIRE(cursor->toString() == "9");
+
+  REQUIRE(provdb.appendEvents(createEvents(3)));
+
+  auto queried_events = provdb.getEvents(9, cursor.get()).value();
+  REQUIRE(queried_events.size() == 3);
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 10);
   }
 }
 
@@ -220,10 +298,7 @@ TEST_CASE("Test opening existing database loads monotonic counter", "[eventUuidM
 
   REQUIRE(provdb->initialize(configuration));
 
-  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
-  for (size_t i = 0; i < 4; ++i) {
-    events.push_back(minifi::provenance::ProvenanceEventRecord::create());  // NOLINT(performance-inefficient-vector-operation)
-  }
+  auto events = createEvents(4);
 
   REQUIRE(provdb->appendEvents(events));
 
@@ -231,22 +306,21 @@ TEST_CASE("Test opening existing database loads monotonic counter", "[eventUuidM
 
   REQUIRE(provdb->initialize(configuration));
 
-  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> new_events;
-  for (size_t i = 0; i < 4; ++i) {
-    new_events.push_back(minifi::provenance::ProvenanceEventRecord::create());  // NOLINT(performance-inefficient-vector-operation)
-    events.push_back(new_events.back());  // NOLINT(performance-inefficient-vector-operation)
-  }
+  auto new_events = createEvents(4);
+  appendAll(events, new_events);
 
   REQUIRE(provdb->appendEvents(new_events));
+
+  // the counter continues where the previous instance left off
+  for (size_t i = 0; i < new_events.size(); ++i) {
+    REQUIRE(new_events.at(i)->getEventOrdinal() == i + 5);
+  }
 
   std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events = provdb->getEvents(8, nullptr).value();
   REQUIRE(queried_events.size() == 8);
 
-  std::string last_event_id;
-
   for (size_t i = 0; i < queried_events.size(); ++i) {
-    REQUIRE(last_event_id < std::string{queried_events.at(i)->getUUIDStr()});
-    last_event_id = queried_events.at(i)->getUUIDStr();
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 1);
     REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
   }
 }

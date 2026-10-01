@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "fmt/format.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "core/Processor.h"
 #include "core/ThreadedRepository.h"
@@ -119,8 +120,11 @@ class TestRepositoryBase : public T_BaseRepository, public org::apache::nifi::mi
   std::expected<void, std::string> appendEvents(const std::vector<std::shared_ptr<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>>& events) override {
     std::vector<std::pair<std::string, std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>>> data;
     data.reserve(events.size());
+    std::lock_guard guard{next_event_key_mtx_};
     for (auto& event : events) {
-      data.emplace_back(event->getUUIDStr(), std::make_unique<org::apache::nifi::minifi::io::BufferStream>());
+      event->setEventOrdinal(next_event_key_++);
+      // zero padded so that the keys of the underlying map are ordered by the event ordinal
+      data.emplace_back(fmt::format("{:020}", event->getEventOrdinal()), std::make_unique<org::apache::nifi::minifi::io::BufferStream>());
       event->serialize(*data.back().second);
     }
     if (!MultiPut(data)) {
@@ -137,6 +141,8 @@ class TestRepositoryBase : public T_BaseRepository, public org::apache::nifi::mi
  protected:
   mutable std::mutex repository_results_mutex_;
   std::map<std::string, std::string> repository_results_;
+  std::mutex next_event_key_mtx_;
+  uint64_t next_event_key_{1};
 };
 
 class TestRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::RepositoryImpl> {

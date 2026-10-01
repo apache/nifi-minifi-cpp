@@ -61,13 +61,12 @@ class VolatileProvenanceRepository : public VolatileRepository, public provenanc
     return {};
   }
 
-  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::string_view /*cursor_str*/) override {
-    return nullptr;
-  }
+  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::string_view cursor_str) override;
 
-  std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, std::string> getEvents(size_t /*max_size*/, Cursor* /*cursor*/) override {
-    return std::unexpected{"Querying events is not yet supported"};
-  }
+  // Returns the events following the cursor in ordinal order. As this repository can overwrite
+  // its oldest entries, a cursor guarantees that no event is returned twice, not that no event
+  // is missed.
+  std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, std::string> getEvents(size_t max_size, Cursor* cursor) override;
 
  private:
   void run() override {

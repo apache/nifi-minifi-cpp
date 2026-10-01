@@ -476,6 +476,8 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
         REQUIRE(recordsReport->size() == 1);
         REQUIRE(taskReport->getName() == std::string(minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
         REQUIRE(json_str.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
+        REQUIRE(recordsReport->at(0)->getEventOrdinal() == 1);
+        REQUIRE(json_str.find("\"eventOrdinal\": 1") != std::string::npos);
       };
 
   testController.runSession(plan, false, verifyReporter);
