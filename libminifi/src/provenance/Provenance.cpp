@@ -452,11 +452,15 @@ void ProvenanceReporterImpl::commit() {
   }
 
   if (repo_->isFull()) {
-    logger_->log_debug("Provenance Repository is full");
+    logger_->log_error("Provenance Repository is full");
     return;
   }
 
-  repo_->appendEvents(events_);
+  if (auto append_result = repo_->appendEvents(events_); !append_result) {
+    // do not let failed provenance repo stop all processing
+    logger_->log_error("Failed to append provenance events: {}", append_result);
+    return;
+  }
 }
 
 void ProvenanceReporterImpl::create(const core::FlowFile& flow_file, const std::string& detail) {
@@ -526,19 +530,14 @@ void ProvenanceReporterImpl::drop(const core::FlowFile& flow_file, const std::st
   }
 }
 
-void ProvenanceReporterImpl::send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) {
+void ProvenanceReporterImpl::send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) {
   auto event = allocate(ProvenanceEventRecord::SEND, flow_file);
 
   if (event) {
     event->setTransitUri(transitUri);
     event->setDetails(detail);
     event->setEventDuration(processingDuration);
-    if (!force) {
-      add(event);
-    } else {
-      if (!repo_->isFull())
-        repo_->appendEvents({event});
-    }
+    add(event);
   }
 }
 

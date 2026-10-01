@@ -140,7 +140,7 @@ TEST_CASE("Test query elements after cursor", "[iterationTest]") {
 
   std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
   for (size_t i = 0; i < 8; ++i) {
-    events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+    events.push_back(minifi::provenance::ProvenanceEventRecord::create());  // NOLINT(performance-inefficient-vector-operation)
   }
 
   REQUIRE(provdb.appendEvents(events));
@@ -180,7 +180,7 @@ TEST_CASE("Test loading cursor from string", "[cursorSerializationTest]") {
 
   std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
   for (size_t i = 0; i < 8; ++i) {
-    events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+    events.push_back(minifi::provenance::ProvenanceEventRecord::create());  // NOLINT(performance-inefficient-vector-operation)
   }
 
   REQUIRE(provdb.appendEvents(events));
@@ -222,7 +222,7 @@ TEST_CASE("Test opening existing database loads monotonic counter", "[eventUuidM
 
   std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
   for (size_t i = 0; i < 4; ++i) {
-    events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+    events.push_back(minifi::provenance::ProvenanceEventRecord::create());  // NOLINT(performance-inefficient-vector-operation)
   }
 
   REQUIRE(provdb->appendEvents(events));
@@ -233,8 +233,8 @@ TEST_CASE("Test opening existing database loads monotonic counter", "[eventUuidM
 
   std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> new_events;
   for (size_t i = 0; i < 4; ++i) {
-    new_events.push_back(minifi::provenance::ProvenanceEventRecord::create());
-    events.push_back(new_events.back());
+    new_events.push_back(minifi::provenance::ProvenanceEventRecord::create());  // NOLINT(performance-inefficient-vector-operation)
+    events.push_back(new_events.back());  // NOLINT(performance-inefficient-vector-operation)
   }
 
   REQUIRE(provdb->appendEvents(new_events));

@@ -28,6 +28,11 @@ namespace {
 class EventCursor : public ProvenanceRepository::Cursor {
 public:
   explicit EventCursor(std::string event_id): event_id_(std::move(event_id)) {}
+  EventCursor(const EventCursor&) = default;
+  EventCursor(EventCursor&&) = default;
+  EventCursor& operator=(const EventCursor&) = default;
+  EventCursor& operator=(EventCursor&&) = default;
+
   [[nodiscard]]
   std::string toString() const override {
     return event_id_;
