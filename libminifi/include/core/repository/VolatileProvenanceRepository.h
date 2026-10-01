@@ -43,17 +43,17 @@ class VolatileProvenanceRepository : public VolatileRepository, public provenanc
     if (!VolatileRepository::initialize(configure)) {
       return false;
     }
-    next_event_id_ = utils::IdGenerator::getIdGenerator()->generate();
+    next_event_key_ =  1;
     return true;
   }
 
   std::expected<void, std::string> appendEvents(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>& events) override {
     EntryStreams data;
     data.reserve(events.size());
-    std::lock_guard guard(next_event_id_mtx_);
+    std::lock_guard guard(next_event_key_mtx_);
     for (auto& event : events) {
-      event->setUUID(next_event_id_++);
-      data.emplace_back(event->getUUIDStr(), std::make_unique<io::BufferStream>());
+      event->setEventOrdinal(next_event_key_++);
+      data.emplace_back(std::to_string(event->getEventOrdinal()), std::make_unique<io::BufferStream>());
       event->serialize(*data.back().second);
     }
     MultiPut(data);
@@ -82,8 +82,8 @@ class VolatileProvenanceRepository : public VolatileRepository, public provenanc
   }
 
   std::thread thread_;
-  std::mutex next_event_id_mtx_;
-  utils::Identifier next_event_id_;
+  std::mutex next_event_key_mtx_;
+  uint64_t next_event_key_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

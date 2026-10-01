@@ -55,7 +55,7 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
 
   ~ProvenanceEventRecordImpl() override = default;
 
-  std::optional<uint64_t> getEventOrdinal() const override {
+  uint64_t getEventOrdinal() const override {
     return event_ordinal_;
   }
 
@@ -228,7 +228,7 @@ class ProvenanceEventRecordImpl : public core::SerializableComponentImpl, public
  protected:
   ProvenanceEventType event_type_;
   // the index of the event
-  std::optional<uint64_t> event_ordinal_;
+  uint64_t event_ordinal_{0};
   // Date at which the event was created
   std::chrono::system_clock::time_point event_time_{};
   // Date at which the flow file entered the flow

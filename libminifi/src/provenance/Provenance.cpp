@@ -240,6 +240,13 @@ bool ProvenanceEventRecordImpl::serialize(io::OutputStream& output_stream) {
     }
   }
 
+  {
+    const auto ret = output_stream.write(event_ordinal_);
+    if (ret != 8) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -440,6 +447,17 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
+    }
+  }
+
+  {
+    uint64_t event_ordinal = 0;
+    const auto ret = input_stream.read(event_ordinal);
+    if (ret != 8) {
+      // backwards compatibility to be able to deserialize older provenance events
+      event_ordinal_ = 0;
+    } else {
+      event_ordinal_ = event_ordinal;
     }
   }
 

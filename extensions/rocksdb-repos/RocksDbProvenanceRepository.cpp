@@ -27,7 +27,7 @@ namespace org::apache::nifi::minifi::provenance {
 namespace {
 class EventCursor : public ProvenanceRepository::Cursor {
 public:
-  explicit EventCursor(std::string event_id): event_id_(std::move(event_id)) {}
+  explicit EventCursor(std::string event_key): event_key_(std::move(event_key)) {}
   EventCursor(const EventCursor&) = default;
   EventCursor(EventCursor&&) = default;
   EventCursor& operator=(const EventCursor&) = default;
@@ -35,15 +35,15 @@ public:
 
   [[nodiscard]]
   std::string toString() const override {
-    return event_id_;
+    return event_key_;
   }
   ~EventCursor() override = default;
 
-  std::string event_id_;
+  std::string event_key_;
 };
 }  // namespace
 
-static const std::string_view NEXT_EVENT_UUID_KEY = "next_event_uuid";
+static const std::string_view NEXT_EVENT_KEY = "next_event_key";
 
 bool RocksDbProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &config) {
   if (!RocksDbRepository::initialize(config)) {
@@ -103,14 +103,14 @@ bool RocksDbProvenanceRepository::initialize(const std::shared_ptr<org::apache::
   if (auto open_state_db = internal_state_db_->open()) {
     rocksdb::ReadOptions options;
     options.verify_checksums = verify_checksums_in_rocksdb_reads_;
-    std::string next_event_uuid_str;
-    if (open_state_db->Get(options, NEXT_EVENT_UUID_KEY, &next_event_uuid_str).ok()) {
-      next_event_id_ = next_event_uuid_str;
+    std::string next_event_key_str;
+    if (open_state_db->Get(options, NEXT_EVENT_KEY, &next_event_key_str).ok()) {
+      next_event_key_ = std::stoull(next_event_key_str);
     } else {
-      logger_->log_debug("Could not find '{}', using newly generated event uuid", NEXT_EVENT_UUID_KEY);
-      next_event_id_ = utils::IdGenerator::getIdGenerator()->generate();
+      logger_->log_debug("Could not find '{}', resetting event key", NEXT_EVENT_KEY);
+      next_event_key_ = 1;
     }
-    logger_->log_trace("Using next event uuid: {}", next_event_id_.to_string());
+    logger_->log_trace("Using next event key: {}", next_event_key_);
   } else {
     logger_->log_error("Could not open internal state column in provenance repository {}", internal_state_db_uri);
     return false;
@@ -149,18 +149,18 @@ std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, s
   rocksdb::ReadOptions options;
   options.verify_checksums = verify_checksums_in_rocksdb_reads_;
   std::unique_ptr<rocksdb::Iterator> it(opendb->NewIterator(options));
-  std::string last_event_id;
+  std::string last_event_key;
   if (event_cursor) {
-    last_event_id = event_cursor->event_id_;
-    it->Seek(event_cursor->event_id_);
-    if (it->Valid() && it->key() == event_cursor->event_id_) {
+    last_event_key = event_cursor->event_key_;
+    it->Seek(event_cursor->event_key_);
+    if (it->Valid() && it->key() == event_cursor->event_key_) {
       it->Next();
     }
   } else {
     it->SeekToFirst();
   }
   for (; it->Valid(); it->Next()) {
-    last_event_id = it->key().ToString();
+    last_event_key = it->key().ToString();
     auto eventRead = ProvenanceEventRecord::create();
     const auto slice = it->value();
     io::BufferStream stream(std::as_bytes(std::span(slice.data(), slice.size())));
@@ -172,7 +172,7 @@ std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, s
     }
   }
   if (event_cursor) {
-    event_cursor->event_id_ = last_event_id;
+    event_cursor->event_key_ = last_event_key;
   }
   return records;
 }
@@ -180,22 +180,22 @@ std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, s
 std::expected<void, std::string> RocksDbProvenanceRepository::appendEvents(const std::vector<std::shared_ptr<ProvenanceEventRecord>>& events) {
   EntryStreams data;
   data.reserve(events.size());
-  std::lock_guard guard(next_event_id_mtx_);
+  std::lock_guard guard(next_event_key_mtx_);
   for (auto& event : events) {
-    event->setUUID(next_event_id_++);
+    event->setEventOrdinal(next_event_key_++);
   }
   {
     auto open_state_db = internal_state_db_->open();
     if (!open_state_db) {
       return std::unexpected{"Failed to open internal state column in provenance database"};
     }
-    auto operation = [this, &open_state_db]() { return open_state_db->Put(rocksdb::WriteOptions(), NEXT_EVENT_UUID_KEY, next_event_id_.to_string().view()); };
+    auto operation = [this, &open_state_db]() { return open_state_db->Put(rocksdb::WriteOptions(), NEXT_EVENT_KEY, std::to_string(next_event_key_)); };
     if (!ExecuteWithRetry(operation)) {
-      return std::unexpected{"Failed to update next provenance event id"};
+      return std::unexpected{"Failed to update next provenance event key"};
     }
   }
   for (auto& event : events) {
-    data.emplace_back(event->getUUIDStr(), std::make_unique<io::BufferStream>());
+    data.emplace_back(std::to_string(event->getEventOrdinal()), std::make_unique<io::BufferStream>());
     if (!event->serialize(*data.back().second)) {
       return std::unexpected{fmt::format("Failed to serialize provenance event '{}'", event->getUUIDStr())};
     }

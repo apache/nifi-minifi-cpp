@@ -148,7 +148,7 @@ class ProvenanceEventRecord : public virtual core::SerializableComponent {
 
   ~ProvenanceEventRecord() override = default;
 
-  virtual std::optional<uint64_t> getEventOrdinal() const = 0;
+  virtual uint64_t getEventOrdinal() const = 0;
   virtual void setEventOrdinal(uint64_t value) = 0;
   virtual utils::Identifier getEventId() const = 0;
   virtual void setEventId(const utils::Identifier &id) = 0;

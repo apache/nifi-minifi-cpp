@@ -135,9 +135,7 @@ std::string SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContex
 
     recordJson.AddMember("entityType", "org.apache.nifi.flowfile.FlowFile", alloc);
 
-    if (auto event_ordinal = record->getEventOrdinal()) {
-      recordJson.AddMember("eventOrdinal", event_ordinal.value(), alloc);
-    }
+    recordJson.AddMember("eventOrdinal", record->getEventOrdinal(), alloc);
 
     recordJson.AddMember("eventId", getStringValue(record->getEventId().to_string(), alloc), alloc);
     recordJson.AddMember("eventType", getStringValue(provenance::ProvenanceEventRecord::ProvenanceEventTypeStr[record->getEventType()], alloc), alloc);

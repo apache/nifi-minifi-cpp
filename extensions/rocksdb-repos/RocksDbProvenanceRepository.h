@@ -91,8 +91,8 @@ class RocksDbProvenanceRepository : public core::repository::RocksDbRepository, 
   void run() override {};
 
   std::unique_ptr<minifi::internal::RocksDatabase> internal_state_db_;
-  std::mutex next_event_id_mtx_;
-  utils::Identifier next_event_id_;
+  std::mutex next_event_key_mtx_;
+  uint64_t next_event_key_;
 };
 
 }  // namespace org::apache::nifi::minifi::provenance
