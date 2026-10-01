@@ -80,7 +80,7 @@ class RepositoryImpl : public core::CoreComponentImpl, public core::RepositoryMe
     return true;
   }
 
-  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& /*data*/) override {
+  bool MultiPut(const EntryStreams& /*data*/) override {
     return true;
   }
 
@@ -105,12 +105,6 @@ class RepositoryImpl : public core::CoreComponentImpl, public core::RepositoryMe
   bool Get(const std::string& /*key*/, std::string& /*value*/) override {
     return false;
   }
-
-  std::vector<std::shared_ptr<core::SerializableComponent>> getElements(size_t /*max_size*/) override {
-    return {};
-  }
-
-  bool storeElement(const std::shared_ptr<core::SerializableComponent>& element) override;
 
   void loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) override {
   }
