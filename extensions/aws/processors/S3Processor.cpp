@@ -45,10 +45,10 @@ void S3Processor::onSchedule(core::ProcessContext& context, core::ProcessSession
 }
 
 void S3Processor::setFailureFlowFileAttributes(core::ProcessSession& session, core::FlowFile& flow_file, const s3::S3Error& s3_error) {
-  session.putAttribute(flow_file, S3_ERROR_NAME, s3_error.name);
+  session.putAttribute(flow_file, S3_EXCEPTION, s3_error.name);
   session.putAttribute(flow_file, S3_ERROR_MESSAGE, s3_error.message);
-  session.putAttribute(flow_file, S3_ERROR_IS_RETRYABLE, s3_error.is_retryable ? "true" : "false");
-  session.putAttribute(flow_file, S3_ERROR_HTTP_CODE, std::to_string(s3_error.http_code));
+  session.putAttribute(flow_file, S3_ERROR_RETRYABLE, s3_error.is_retryable ? "true" : "false");
+  session.putAttribute(flow_file, S3_STATUS_CODE, std::to_string(s3_error.http_code));
 }
 
 }  // namespace org::apache::nifi::minifi::aws::processors

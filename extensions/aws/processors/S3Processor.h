@@ -39,10 +39,10 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-constexpr std::string_view S3_ERROR_NAME = "s3.error.name";
-constexpr std::string_view S3_ERROR_MESSAGE = "s3.error.message";
-constexpr std::string_view S3_ERROR_IS_RETRYABLE = "s3.error.retryable";
-constexpr std::string_view S3_ERROR_HTTP_CODE = "s3.error.httpCode";
+constexpr std::string_view S3_EXCEPTION = "s3.exception";
+constexpr std::string_view S3_ERROR_MESSAGE = "s3.errorMessage";
+constexpr std::string_view S3_ERROR_RETRYABLE = "s3.errorRetryable";
+constexpr std::string_view S3_STATUS_CODE = "s3.statusCode";
 
 class S3Processor : public AwsProcessor {
  public:

@@ -595,12 +595,12 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute             | Relationship | Description                                                                 |
-|-----------------------|--------------|-----------------------------------------------------------------------------|
-| s3.error.name         | failure      | Error name of the S3 request failure                                        |
-| s3.error.message      | failure      | Error message of the S3 request failure                                     |
-| s3.error.retryable    | failure      | Is the S3 request error retryable                                           |
-| s3.error.httpCode     | failure      | HTTP code of the S3 request failure. -1 indicates no HTTP request was made. |
+| Attribute         | Relationship | Description                                                                 |
+|-------------------|--------------|-----------------------------------------------------------------------------|
+| s3.exception      | failure      | Exception name of the S3 request failure                                    |
+| s3.errorMessage   | failure      | Error message of the S3 request failure                                     |
+| s3.errorRetryable | failure      | Is the S3 request error retryable                                           |
+| s3.statusCode     | failure      | HTTP code of the S3 request failure. -1 indicates no HTTP request was made. |
 
 
 ## EvaluateJsonPath
@@ -981,12 +981,17 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute             | Relationship | Description                                                                 |
-|-----------------------|--------------|-----------------------------------------------------------------------------|
-| s3.error.name         | failure      | Error name of the S3 request failure                                        |
-| s3.error.message      | failure      | Error message of the S3 request failure                                     |
-| s3.error.retryable    | failure      | Is the S3 request error retryable                                           |
-| s3.error.httpCode     | failure      | HTTP code of the S3 request failure. -1 indicates no HTTP request was made. |
+| Attribute               | Relationship | Description                                                                 |
+|-------------------------|--------------|-----------------------------------------------------------------------------|
+| s3.etag                 | success      | The ETag that can be used to see if the file has changed                    |
+| s3.expirationTime       | success      | The expiration time of the S3 object                                        |
+| s3.expirationTimeRuleId | success      | The ID of the rule that dictates this object's expiration time              |
+| s3.sseAlgorithm         | success      | The server side encryption algorithm of the object                          |
+| s3.version              | success      | The version of the S3 Object that was put to S3                             |
+| s3.exception            | failure      | Exception name of the S3 request failure                                    |
+| s3.errorMessage         | failure      | Error message of the S3 request failure                                     |
+| s3.errorRetryable       | failure      | Is the S3 request error retryable                                           |
+| s3.statusCode           | failure      | HTTP code of the S3 request failure. -1 indicates no HTTP request was made. |
 
 
 ## FetchSFTP
@@ -1655,6 +1660,20 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                  |
 |---------|----------------------------------------------|
 | success | FlowFiles are routed to success relationship |
+
+### Output Attributes
+
+| Attribute            | Relationship | Description                                                                                                                                                              |
+|----------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| s3.bucket            | success      | The name of the S3 bucket                                                                                                                                                |
+| s3.etag              | success      | The ETag that can be used to see if the file has changed                                                                                                                 |
+| s3.isLatest          | success      | A boolean indicating if this is the latest version of the object                                                                                                         |
+| s3.lastModified      | success      | The last modified time of the S3 object                                                                                                                                  |
+| s3.length            | success      | The size of the object in bytes                                                                                                                                          |
+| s3.storeClass        | success      | The storage class of the object                                                                                                                                          |
+| s3.version           | success      | The version of the object, if applicable                                                                                                                                 |
+| s3.tag.___           | success      | If 'Write Object Tags' is set to 'True', the tags associated to the S3 object that is being listed will be written as part of the FlowFile attributes                    |
+| s3.user.metadata.___ | success      | If 'Write User Metadata' is set to 'True', the user defined metadata associated to the S3 object that is being listed will be written as part of the FlowFile attributes |
 
 
 ## ListSFTP
@@ -2553,12 +2572,19 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute             | Relationship | Description                                                                 |
-|-----------------------|--------------|-----------------------------------------------------------------------------|
-| s3.error.name         | failure      | Error name of the S3 request failure                                        |
-| s3.error.message      | failure      | Error message of the S3 request failure                                     |
-| s3.error.retryable    | failure      | Is the S3 request error retryable                                           |
-| s3.error.httpCode     | failure      | HTTP code of the S3 request failure. -1 indicates no HTTP request was made. |
+| Attribute         | Relationship | Description                                                                 |
+|-------------------|--------------|-----------------------------------------------------------------------------|
+| s3.bucket         | success      | The S3 bucket where the Object was put in S3                                |
+| s3.contenttype    | success      | The S3 content type of the S3 Object that put in S3                         |
+| s3.usermetadata   | success      | A human-readable form of the User Metadata of the S3 object, if any was set |
+| s3.version        | success      | The version of the S3 Object that was put to S3                             |
+| s3.etag           | success      | The ETag of the S3 Object                                                   |
+| s3.expiration     | success      | The expiration date of the S3 Object                                        |
+| s3.sseAlgorithm   | success      | The server side encryption algorithm of the object                          |
+| s3.exception      | failure      | Exception name of the S3 request failure                                    |
+| s3.errorMessage   | failure      | Error message of the S3 request failure                                     |
+| s3.errorRetryable | failure      | Is the S3 request error retryable                                           |
+| s3.statusCode     | failure      | HTTP code of the S3 request failure. -1 indicates no HTTP request was made. |
 
 
 ## PutSFTP

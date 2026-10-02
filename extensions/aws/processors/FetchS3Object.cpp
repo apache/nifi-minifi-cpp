@@ -112,11 +112,11 @@ void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessio
     session.putAttribute(*flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, result->absolute_path.generic_string());
     session.putAttribute(*flow_file, core::SpecialFlowAttribute::FILENAME, result->filename.generic_string());
     putAttributeIfNotEmpty(core::SpecialFlowAttribute::MIME_TYPE, result->mime_type);
-    putAttributeIfNotEmpty("s3.etag", result->etag);
-    putAttributeIfNotEmpty("s3.expirationTime", result->expiration.expiration_time);
-    putAttributeIfNotEmpty("s3.expirationTimeRuleId", result->expiration.expiration_time_rule_id);
-    putAttributeIfNotEmpty("s3.sseAlgorithm", result->ssealgorithm);
-    putAttributeIfNotEmpty("s3.version", result->version);
+    putAttributeIfNotEmpty(S3Etag.name, result->etag);
+    putAttributeIfNotEmpty(S3ExpirationTime.name, result->expiration.expiration_time);
+    putAttributeIfNotEmpty(S3ExpirationTimeRuleId.name, result->expiration.expiration_time_rule_id);
+    putAttributeIfNotEmpty(S3SseAlgorithm.name, result->ssealgorithm);
+    putAttributeIfNotEmpty(S3Version.name, result->version);
     session.transfer(flow_file, Success);
   } else {
     logger_->log_error("Failed to fetch S3 object {} from bucket {}", get_object_params->object_key, get_object_params->bucket);

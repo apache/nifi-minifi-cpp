@@ -190,24 +190,24 @@ void PutS3Object::setAttributes(
     core::FlowFile& flow_file,
     const aws::s3::PutObjectRequestParameters &put_s3_request_params,
     const minifi::aws::s3::PutObjectResult &put_object_result) const {
-  session.putAttribute(flow_file, "s3.bucket", put_s3_request_params.bucket);
-  session.putAttribute(flow_file, "s3.key", put_s3_request_params.object_key);
-  session.putAttribute(flow_file, "s3.contenttype", put_s3_request_params.content_type);
+  session.putAttribute(flow_file, S3Bucket.name, put_s3_request_params.bucket);
+  session.putAttribute(flow_file, S3Key.name, put_s3_request_params.object_key);
+  session.putAttribute(flow_file, S3ContentType.name, put_s3_request_params.content_type);
 
   if (!user_metadata_.empty()) {
-    session.putAttribute(flow_file, "s3.usermetadata", user_metadata_);
+    session.putAttribute(flow_file, S3UserMetadata.name, user_metadata_);
   }
   if (!put_object_result.version.empty()) {
-    session.putAttribute(flow_file, "s3.version", put_object_result.version);
+    session.putAttribute(flow_file, S3Version.name, put_object_result.version);
   }
   if (!put_object_result.etag.empty()) {
-    session.putAttribute(flow_file, "s3.etag", put_object_result.etag);
+    session.putAttribute(flow_file, S3Etag.name, put_object_result.etag);
   }
   if (!put_object_result.expiration.empty()) {
-    session.putAttribute(flow_file, "s3.expiration", put_object_result.expiration);
+    session.putAttribute(flow_file, S3Expiration.name, put_object_result.expiration);
   }
   if (!put_object_result.ssealgorithm.empty()) {
-    session.putAttribute(flow_file, "s3.sseAlgorithm", put_object_result.ssealgorithm);
+    session.putAttribute(flow_file, S3SseAlgorithm.name, put_object_result.ssealgorithm);
   }
 }
 

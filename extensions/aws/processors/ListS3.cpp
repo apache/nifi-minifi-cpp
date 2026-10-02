@@ -122,15 +122,15 @@ void ListS3::createNewFlowFile(
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes) {
   auto flow_file = session.create();
-  session.putAttribute(*flow_file, "s3.bucket", list_request_params_->bucket);
+  session.putAttribute(*flow_file, S3Bucket.name, list_request_params_->bucket);
   session.putAttribute(*flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
-  session.putAttribute(*flow_file, "s3.etag", object_attributes.etag);
-  session.putAttribute(*flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
-  session.putAttribute(*flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
-  session.putAttribute(*flow_file, "s3.length", std::to_string(object_attributes.length));
-  session.putAttribute(*flow_file, "s3.storeClass", object_attributes.store_class);
+  session.putAttribute(*flow_file, S3Etag.name, object_attributes.etag);
+  session.putAttribute(*flow_file, S3IsLatest.name, object_attributes.is_latest ? "true" : "false");
+  session.putAttribute(*flow_file, S3LastModified.name, std::to_string(object_attributes.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
+  session.putAttribute(*flow_file, S3Length.name, std::to_string(object_attributes.length));
+  session.putAttribute(*flow_file, S3StoreClass.name, object_attributes.store_class);
   if (!object_attributes.version.empty()) {
-    session.putAttribute(*flow_file, "s3.version", object_attributes.version);
+    session.putAttribute(*flow_file, S3Version.name, object_attributes.version);
   }
   writeObjectTags(object_attributes, session, *flow_file);
   writeUserMetadata(object_attributes, session, *flow_file);

@@ -129,14 +129,17 @@ class S3TestsFixture {
 
   static void checkS3ErrorAttributes(const std::string& name, const std::string& message, bool is_retryable, int32_t http_code) {
     using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
-    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.error.name value:" + name));
-    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.error.message value:" + message));
-    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.error.retryable value:" + std::string(is_retryable ? "true" : "false")));
-    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.error.httpCode value:" + std::to_string(http_code)));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:" + std::string(minifi::aws::processors::S3_EXCEPTION) + " value:" + name));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:" + std::string(minifi::aws::processors::S3_ERROR_MESSAGE) + " value:" + message));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:" + std::string(minifi::aws::processors::S3_ERROR_RETRYABLE) + " value:" + std::string(is_retryable ? "true" : "false")));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:" + std::string(minifi::aws::processors::S3_STATUS_CODE) + " value:" + std::to_string(http_code)));
   }
 
   static void checkNoS3ErrorAttributes() {
-    CHECK_FALSE(LogTestController::getInstance().contains("key:s3.error.", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    CHECK_FALSE(LogTestController::getInstance().contains("key:" + std::string(minifi::aws::processors::S3_EXCEPTION), std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    CHECK_FALSE(LogTestController::getInstance().contains("key:" + std::string(minifi::aws::processors::S3_ERROR_MESSAGE), std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    CHECK_FALSE(LogTestController::getInstance().contains("key:" + std::string(minifi::aws::processors::S3_ERROR_RETRYABLE), std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    CHECK_FALSE(LogTestController::getInstance().contains("key:" + std::string(minifi::aws::processors::S3_STATUS_CODE), std::chrono::seconds(0), std::chrono::milliseconds(0)));
   }
 
   void checkProxySettings() {
