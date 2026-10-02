@@ -90,6 +90,18 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
   CHECK(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
 }
 
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "The default value of Use Default Credentials does not select the default credential chain", "[awsCredentials]") {
+  // Use Default Credentials is a required property with a "false" default, so it is always set: it must not override
+  // the credentials configured on the processor
+  const minifi::test::utils::ScopedEnvironmentVariable access_key_env{"AWS_ACCESS_KEY_ID", "env_key"};
+  const minifi::test::utils::ScopedEnvironmentVariable secret_key_env{"AWS_SECRET_ACCESS_KEY", "env_secret"};
+  setRequiredProperties();
+
+  test_controller.runSession(plan);
+  CHECK(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
+  CHECK(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
+}
+
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[awsS3Config]") {
   SECTION("Test credentials not set") {
   }

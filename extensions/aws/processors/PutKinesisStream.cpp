@@ -186,7 +186,7 @@ void PutKinesisStream::onTrigger(core::ProcessContext& context, core::ProcessSes
 }
 
 std::unique_ptr<Aws::Kinesis::KinesisClient> PutKinesisStream::getClient() {
-  return std::make_unique<Aws::Kinesis::KinesisClient>(credentials_, client_config_);
+  return std::make_unique<Aws::Kinesis::KinesisClient>(credentials_provider_, client_config_);
 }
 
 REGISTER_RESOURCE(PutKinesisStream, Processor);

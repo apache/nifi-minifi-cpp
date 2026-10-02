@@ -31,7 +31,7 @@ void AzureStorageCredentialsService::initialize() {
 
 void AzureStorageCredentialsService::onEnable() {
   auto credential_configuration_strategy_str = getProperty(CredentialConfigurationStrategy.name).value_or(std::string{magic_enum::enum_name(CredentialConfigurationStrategyOption::FromProperties)});
-  if (auto credential_configuration_strategy = magic_enum::enum_cast<CredentialConfigurationStrategyOption>(credential_configuration_strategy_str)) {
+  if (auto credential_configuration_strategy = magic_enum::enum_cast<CredentialConfigurationStrategyOption>(credential_configuration_strategy_str, magic_enum::case_insensitive)) {
     credentials_.setCredentialConfigurationStrategy(*credential_configuration_strategy);
   } else {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Invalid Credential Configuration Strategy: " + credential_configuration_strategy_str);

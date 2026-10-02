@@ -17,6 +17,7 @@
  */
 
 #include <cstdint>
+#include <cstdlib>
 #include <random>
 #include <string>
 #include <thread>
@@ -87,6 +88,16 @@ TEST_CASE("unsetenv existing", "[unsetenv]") {
   REQUIRE(utils::Environment::getEnvironmentVariable("UNSETENV2"));
   REQUIRE(true == utils::Environment::unsetEnvironmentVariable("UNSETENV2"));
   REQUIRE(!utils::Environment::getEnvironmentVariable("UNSETENV2"));
+}
+
+TEST_CASE("setenv and unsetenv are visible to getenv", "[setenv][unsetenv]") {
+  REQUIRE(true == utils::Environment::setEnvironmentVariable("GETENVSYNC", "test"));
+  const char* const value = std::getenv("GETENVSYNC");
+  REQUIRE(value != nullptr);
+  CHECK(std::string{value} == "test");
+
+  REQUIRE(true == utils::Environment::unsetEnvironmentVariable("GETENVSYNC"));
+  CHECK(std::getenv("GETENVSYNC") == nullptr);
 }
 
 TEST_CASE("multithreaded environment manipulation", "[getenv][setenv][unsetenv]") {

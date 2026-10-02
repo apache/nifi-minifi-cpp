@@ -21,6 +21,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -28,6 +29,7 @@
 
 #include "core/state/Value.h"
 #include "utils/file/FileUtils.h"
+#include "utils/Environment.h"
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 #include "TestBase.h"
@@ -68,6 +70,41 @@ std::string getFileContent(const std::filesystem::path& file_name);
 
 void makeFileOrDirectoryNotWritable(const std::filesystem::path& file_name);
 void makeFileOrDirectoryWritable(const std::filesystem::path& file_name);
+
+/**
+ * Sets an environment variable for the lifetime of the object, and restores its previous value (or unsets it, if it was
+ * not set before) on destruction. Pass std::nullopt as the value to make sure the variable is not set in the scope.
+ * Environment variables are process-global, so tests that rely on them need to clean up after themselves.
+ */
+class ScopedEnvironmentVariable {
+ public:
+  ScopedEnvironmentVariable(std::string name, const std::optional<std::string>& value)
+      : name_(std::move(name)),
+        original_value_(minifi::utils::Environment::getEnvironmentVariable(name_.c_str())) {
+    setVariable(value);
+  }
+
+  ScopedEnvironmentVariable(const ScopedEnvironmentVariable&) = delete;
+  ScopedEnvironmentVariable(ScopedEnvironmentVariable&&) = delete;
+  ScopedEnvironmentVariable& operator=(const ScopedEnvironmentVariable&) = delete;
+  ScopedEnvironmentVariable& operator=(ScopedEnvironmentVariable&&) = delete;
+
+  ~ScopedEnvironmentVariable() {
+    setVariable(original_value_);
+  }
+
+ private:
+  void setVariable(const std::optional<std::string>& value) const {
+    if (value) {
+      minifi::utils::Environment::setEnvironmentVariable(name_.c_str(), value->c_str());
+    } else {
+      minifi::utils::Environment::unsetEnvironmentVariable(name_.c_str());
+    }
+  }
+
+  std::string name_;
+  std::optional<std::string> original_value_;
+};
 
 inline minifi::utils::Identifier generateUUID() {
   // TODO(hunyadi): Will make the Id generator manage lifetime using a unique_ptr and return a raw ptr on access
