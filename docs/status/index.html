@@ -479,7 +479,7 @@
     try {
       const r = await fetch(
         `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/actions/workflows/${file}`,
-        { headers: getHeaders() }
+        { headers: getHeaders(), cache: 'no-cache' }
       );
       if (!r.ok) return null;
       const data = await r.json();
@@ -494,7 +494,7 @@
       try {
         const r = await fetch(
           `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${file}/runs?per_page=10&branch=${CONFIG.branch}`,
-          { headers: getHeaders() }
+          { headers: getHeaders(), cache: 'no-cache' }
         );
         if (!r.ok) {
           const e = await r.json().catch(() => ({}));
@@ -503,14 +503,15 @@
           continue;
         }
         const data = await r.json();
-        const runs = data.workflow_runs || [];
+        // The API documents no ordering guarantee for workflow runs, so sort newest-first ourselves.
+        const runs = (data.workflow_runs || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         if (runs.length === 0) {
           const name = await fetchWorkflowName(file);
           results.push({ file, name, error: 'No runs found' });
           continue;
         }
         const latest = runs[0];
-        const name = await fetchWorkflowName(file) || latest.name;
+        const name = latest.name;
         results.push({
           file,
           name,
@@ -549,6 +550,12 @@
     return `${Math.floor(diff / 86400)}d ago`;
   }
 
+  const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+  function esc(value) {
+    return String(value).replace(/[&<>"']/g, c => HTML_ESCAPES[c]);
+  }
+
   function renderCard(wf, idx) {
     const s = effectiveStatus(wf);
     const bars = (wf.history || []).slice(0, 10).map(h => {
@@ -559,13 +566,13 @@
       <div class="workflow-card" style="animation-delay:${idx * 0.06}s">
         <div class="status-dot ${s}"></div>
         <div class="workflow-info">
-          <div class="workflow-name">${wf.name || wf.file}</div>
+          <div class="workflow-name">${esc(wf.name || wf.file)}</div>
           <div class="workflow-sub">
-            <span>${wf.file}</span>
-            ${wf.head_branch  ? `<span>branch: ${wf.head_branch}</span>` : ''}
-            ${wf.run_number   ? `<a href="${wf.html_url}" target="_blank">run #${wf.run_number}</a>` : ''}
+            <span>${esc(wf.file)}</span>
+            ${wf.head_branch  ? `<span>branch: ${esc(wf.head_branch)}</span>` : ''}
+            ${wf.run_number   ? `<a href="${esc(wf.html_url)}" target="_blank">run #${wf.run_number}</a>` : ''}
             ${wf.updated_at   ? `<span>${timeAgo(wf.updated_at)}</span>` : ''}
-            ${wf.error        ? `<span class="err">⚠ ${wf.error}</span>` : ''}
+            ${wf.error        ? `<span class="err">⚠ ${esc(wf.error)}</span>` : ''}
           </div>
         </div>
         <div class="history-bars">${bars}</div>
