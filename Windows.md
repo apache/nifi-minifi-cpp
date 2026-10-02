@@ -93,6 +93,9 @@ After the build directory it will take optional parameters modifying the CMake c
 | /NO_ENCRYPT_CONFIG   | Disables build of encrypt-config binary                                             |
 | /SCCACHE             | Uses sccache build caching                                                          |
 | /BUSTACHE            | Enables Bustache templating support                                                 |
+| /RUST                | Enables the build of rust based extensions.                                         |
+| /NO_PGP              | Disables the PGP rust extension.                                                    |
+| /NO_TENSOR           | Disables the Tensor rust extension.                                                 |
 | /NO_OPC              | Disables OPC extension                                                              |
 | /NO_OPS              | Disables OPS extension                                                              |
 | /LOKI                | Enables Grafana Loki extension                                                      |
