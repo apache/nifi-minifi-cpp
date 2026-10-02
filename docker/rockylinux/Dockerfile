@@ -43,8 +43,8 @@ COPY . ${MINIFI_BASE_DIR}
 
 # Install the system dependencies needed for a build
 # ccache is in EPEL
-RUN dnf -y install epel-release && dnf -y install gcc-toolset-14 gcc-toolset-14-libatomic-devel sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake rpmdevtools && \
-    if echo "$MINIFI_OPTIONS" | grep -q "MINIFI_RUST=ON"; then dnf -y install rust cargo clang; fi && \
+RUN dnf -y install epel-release && dnf -y install gcc-toolset-14 gcc-toolset-14-libatomic-devel sudo git which make libarchive ccache ca-certificates perl patch bison flex libtool cmake rpmdevtools expat curl && \
+    if echo "$MINIFI_OPTIONS" | grep -q "MINIFI_RUST=ON"; then dnf install -y clang && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | CARGO_HOME=${MINIFI_BASE_DIR}/.cargo RUSTUP_HOME=${MINIFI_BASE_DIR}/.rustup sh -s -- -y --no-modify-path; fi && \
     if [ "${DOCKER_USE_CONAN}" == "ON" ]; then dnf -y install python3.11; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_ALL=ON\|ENABLE_PYTHON_SCRIPTING=ON\|ENABLE_OPC=ON"; then dnf -y --enablerepo=devel install python3.11-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_ALL=ON\|ENABLE_SFTP=ON" && [ "${DOCKER_SKIP_TESTS}" == "OFF" ]; then dnf -y install java-1.8.0-openjdk maven; fi
@@ -79,6 +79,10 @@ RUN cd $MINIFI_BASE_DIR && \
     source /opt/rh/gcc-toolset-14/enable && \
     export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \
     export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
+    if echo "$MINIFI_OPTIONS" | grep -q "MINIFI_RUST=ON"; then \
+        export CARGO_HOME=${MINIFI_BASE_DIR}/.cargo RUSTUP_HOME=${MINIFI_BASE_DIR}/.rustup && \
+        export PATH=${CARGO_HOME}/bin${PATH:+:${PATH}}; \
+    fi && \
     if [ "${DOCKER_USE_CONAN}" == "ON" ]; then CONAN_TOOLCHAIN="-DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake"; fi && \
     cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${CONAN_TOOLCHAIN:-} ${MINIFI_OPTIONS} -DPython_EXECUTABLE=/usr/bin/python3.11 -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" ${DOCKER_MAKE_TARGET} && \
