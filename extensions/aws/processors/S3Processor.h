@@ -39,6 +39,11 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
+constexpr std::string_view S3_EXCEPTION = "s3.exception";
+constexpr std::string_view S3_ERROR_MESSAGE = "s3.errorMessage";
+constexpr std::string_view S3_ERROR_RETRYABLE = "s3.errorRetryable";
+constexpr std::string_view S3_STATUS_CODE = "s3.statusCode";
+
 class S3Processor : public AwsProcessor {
  public:
   EXTENSIONAPI static constexpr auto Bucket = core::PropertyDefinitionBuilder<>::createProperty("Bucket")
@@ -64,6 +69,8 @@ class S3Processor : public AwsProcessor {
     [](const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing) {
       return std::make_unique<aws::s3::S3Wrapper>(credentials, client_config, use_virtual_addressing);
     };
+
+  static void setFailureFlowFileAttributes(core::ProcessSession& session, core::FlowFile& flow_file, const s3::S3Error& s3_error);
   std::unique_ptr<aws::s3::S3Wrapper> s3_wrapper_;
 };
 

@@ -18,7 +18,7 @@
 #pragma once
 
 #include <memory>
-#include <optional>
+#include <expected>
 #include <string>
 
 #include "aws/core/auth/AWSCredentials.h"
@@ -46,26 +46,33 @@
 #include "aws/s3-crt/model/ListMultipartUploadsRequest.h"
 #include "aws/s3-crt/model/ListMultipartUploadsResult.h"
 #include "aws/s3-crt/model/AbortMultipartUploadRequest.h"
-#include "aws/s3-crt/model/AbortMultipartUploadResult.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
+struct S3Error {
+  std::string name;
+  std::string message;
+  bool is_retryable = false;
+  int32_t http_code = -1;  // Default value REQUEST_NOT_MADE in AWS SDK
+};
+
 class S3RequestSender {
  public:
-  virtual std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) = 0;
-  virtual bool sendDeleteObjectRequest(const Aws::S3Crt::Model::DeleteObjectRequest& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3Crt::Model::GetObjectRequest& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3Crt::Model::ListObjectsV2Request& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3Crt::Model::ListObjectVersionsRequest& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(const Aws::S3Crt::Model::GetObjectTaggingRequest& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::HeadObjectResult> sendHeadObjectRequest(const Aws::S3Crt::Model::HeadObjectRequest& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(const Aws::S3Crt::Model::CreateMultipartUploadRequest& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::UploadPartResult> sendUploadPartRequest(const Aws::S3Crt::Model::UploadPartRequest& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request) = 0;
-  virtual std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(const Aws::S3Crt::Model::ListMultipartUploadsRequest& request) = 0;
-  virtual bool sendAbortMultipartUploadRequest(const Aws::S3Crt::Model::AbortMultipartUploadRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::PutObjectResult, S3Error> sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<void, S3Error> sendDeleteObjectRequest(const Aws::S3Crt::Model::DeleteObjectRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::GetObjectResult, S3Error> sendGetObjectRequest(const Aws::S3Crt::Model::GetObjectRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::ListObjectsV2Result, S3Error> sendListObjectsRequest(const Aws::S3Crt::Model::ListObjectsV2Request& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::ListObjectVersionsResult, S3Error> sendListVersionsRequest(const Aws::S3Crt::Model::ListObjectVersionsRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::GetObjectTaggingResult, S3Error> sendGetObjectTaggingRequest(const Aws::S3Crt::Model::GetObjectTaggingRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::HeadObjectResult, S3Error> sendHeadObjectRequest(const Aws::S3Crt::Model::HeadObjectRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::CreateMultipartUploadResult, S3Error> sendCreateMultipartUploadRequest(const Aws::S3Crt::Model::CreateMultipartUploadRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::UploadPartResult, S3Error> sendUploadPartRequest(const Aws::S3Crt::Model::UploadPartRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::CompleteMultipartUploadResult, S3Error> sendCompleteMultipartUploadRequest(
+      const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<Aws::S3Crt::Model::ListMultipartUploadsResult, S3Error> sendListMultipartUploadsRequest(const Aws::S3Crt::Model::ListMultipartUploadsRequest& request) = 0;
+  [[nodiscard]] virtual std::expected<void, S3Error> sendAbortMultipartUploadRequest(const Aws::S3Crt::Model::AbortMultipartUploadRequest& request) = 0;
   virtual ~S3RequestSender() = default;
 
  protected:

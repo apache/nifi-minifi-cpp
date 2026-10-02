@@ -101,6 +101,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case with default val
   REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
   REQUIRE(!mock_s3_request_sender_ptr->delete_object_request.VersionIdHasBeenSet());
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Successfully deleted S3 object"));
+  checkNoS3ErrorAttributes();
 }
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test version setting", "[awsS3DeleteWithVersion]") {
@@ -139,6 +140,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteF
   REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetKey() == INPUT_FILENAME);
   REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetVersionId() == "v1");
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to delete S3 object"));
+  checkS3ErrorAttributes("DELETE_ERROR", "Error while deleting S3 object", false, -1);
 }
 
 }  // namespace

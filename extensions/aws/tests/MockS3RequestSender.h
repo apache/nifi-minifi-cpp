@@ -106,8 +106,11 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     use_virtual_addressing_ = use_virtual_addressing;
   }
 
-  std::optional<Aws::S3Crt::Model::PutObjectResult> sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::PutObjectResult, minifi::aws::s3::S3Error> sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) override {
     put_object_request = request;
+    if (!put_object_result_) {
+      return std::unexpected{minifi::aws::s3::S3Error{.name = "PUT_ERROR", .message = "Error while putting S3 object", .is_retryable = true, .http_code = 500}};
+    }
 
     Aws::S3Crt::Model::PutObjectResult put_s3_result;
     if (!return_empty_result_) {
@@ -119,13 +122,19 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return put_s3_result;
   }
 
-  bool sendDeleteObjectRequest(const Aws::S3Crt::Model::DeleteObjectRequest& request) override {
+  [[nodiscard]] std::expected<void, minifi::aws::s3::S3Error> sendDeleteObjectRequest(const Aws::S3Crt::Model::DeleteObjectRequest& request) override {
     delete_object_request = request;
-    return delete_object_result_;
+    if (delete_object_result_) {
+      return {};
+    }
+    return std::unexpected{minifi::aws::s3::S3Error{.name = "DELETE_ERROR", .message = "Error while deleting S3 object", .is_retryable = false, .http_code = -1}};
   }
 
-  std::optional<Aws::S3Crt::Model::GetObjectResult> sendGetObjectRequest(const Aws::S3Crt::Model::GetObjectRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::GetObjectResult, minifi::aws::s3::S3Error> sendGetObjectRequest(const Aws::S3Crt::Model::GetObjectRequest& request) override {
     get_object_request = request;
+    if (!get_object_result_) {
+      return std::unexpected{minifi::aws::s3::S3Error{.name = "NoSuchKey", .message = "The specified key does not exist", .is_retryable = false, .http_code = 404}};
+    }
 
     Aws::S3Crt::Model::GetObjectResult get_s3_result;
     if (!return_empty_result_) {
@@ -138,10 +147,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       get_s3_result.SetContentLength(S3_CONTENT.size());
       get_s3_result.SetMetadata(S3_OBJECT_USER_METADATA);
     }
-    return std::make_optional(std::move(get_s3_result));
+    return get_s3_result;
   }
 
-  std::optional<Aws::S3Crt::Model::ListObjectsV2Result> sendListObjectsRequest(const Aws::S3Crt::Model::ListObjectsV2Request& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::ListObjectsV2Result, minifi::aws::s3::S3Error> sendListObjectsRequest(const Aws::S3Crt::Model::ListObjectsV2Request& request) override {
     list_object_request = request;
 
     Aws::S3Crt::Model::ListObjectsV2Result list_object_result;
@@ -167,7 +176,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return list_object_result;
   }
 
-  std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> sendListVersionsRequest(const Aws::S3Crt::Model::ListObjectVersionsRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::ListObjectVersionsResult, minifi::aws::s3::S3Error> sendListVersionsRequest(const Aws::S3Crt::Model::ListObjectVersionsRequest& request) override {
     list_version_request = request;
 
     Aws::S3Crt::Model::ListObjectVersionsResult list_version_result;
@@ -194,7 +203,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return list_version_result;
   }
 
-  std::optional<Aws::S3Crt::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(const Aws::S3Crt::Model::GetObjectTaggingRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::GetObjectTaggingResult, minifi::aws::s3::S3Error> sendGetObjectTaggingRequest(const Aws::S3Crt::Model::GetObjectTaggingRequest& request) override {
     get_object_tagging_request = request;
     Aws::S3Crt::Model::GetObjectTaggingResult result;
     for (const auto& tag_pair : S3_OBJECT_TAGS) {
@@ -206,7 +215,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return result;
   }
 
-  std::optional<Aws::S3Crt::Model::HeadObjectResult> sendHeadObjectRequest(const Aws::S3Crt::Model::HeadObjectRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::HeadObjectResult, minifi::aws::s3::S3Error> sendHeadObjectRequest(const Aws::S3Crt::Model::HeadObjectRequest& request) override {
     head_object_request = request;
 
     Aws::S3Crt::Model::HeadObjectResult head_s3_result;
@@ -219,20 +228,21 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       head_s3_result.SetContentLength(S3_CONTENT.size());
       head_s3_result.SetMetadata(S3_OBJECT_USER_METADATA);
     }
-    return std::make_optional(std::move(head_s3_result));
+    return head_s3_result;
   }
 
-  std::optional<Aws::S3Crt::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(const Aws::S3Crt::Model::CreateMultipartUploadRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::CreateMultipartUploadResult, minifi::aws::s3::S3Error> sendCreateMultipartUploadRequest(
+      const Aws::S3Crt::Model::CreateMultipartUploadRequest& request) override {
     create_multipart_upload_request = request;
     Aws::S3Crt::Model::CreateMultipartUploadResult result;
     result.SetUploadId(S3_UPLOAD_ID);
-    return std::make_optional(std::move(result));
+    return result;
   }
 
-  std::optional<Aws::S3Crt::Model::UploadPartResult> sendUploadPartRequest(const Aws::S3Crt::Model::UploadPartRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::UploadPartResult, minifi::aws::s3::S3Error> sendUploadPartRequest(const Aws::S3Crt::Model::UploadPartRequest& request) override {
     if (etag_counter_ == fail_on_part_) {
       fail_on_part_ = 0;
-      return std::nullopt;
+      return std::unexpected{minifi::aws::s3::S3Error{.name = "UPLOAD_ERROR", .message = "Error while upload S3 object part", .is_retryable = false, .http_code = -1}};
     }
     // Consume the body like the real SDK, allowing the next part to start at the correct position
     if (auto body = request.GetBody()) {
@@ -242,10 +252,11 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     Aws::S3Crt::Model::UploadPartResult result;
     result.SetETag("etag" + std::to_string(etag_counter_));
     ++etag_counter_;
-    return std::make_optional(std::move(result));
+    return result;
   }
 
-  std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::CompleteMultipartUploadResult, minifi::aws::s3::S3Error> sendCompleteMultipartUploadRequest(
+      const Aws::S3Crt::Model::CompleteMultipartUploadRequest& request) override {
     complete_multipart_upload_request = request;
     Aws::S3Crt::Model::CompleteMultipartUploadResult result;
     if (!return_empty_result_) {
@@ -254,10 +265,11 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       result.SetExpiration(S3_EXPIRATION);
       result.SetServerSideEncryption(S3_SSEALGORITHM);
     }
-    return std::make_optional(std::move(result));
+    return result;
   }
 
-  std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(const Aws::S3Crt::Model::ListMultipartUploadsRequest& request) override {
+  [[nodiscard]] std::expected<Aws::S3Crt::Model::ListMultipartUploadsResult, minifi::aws::s3::S3Error> sendListMultipartUploadsRequest(
+      const Aws::S3Crt::Model::ListMultipartUploadsRequest& request) override {
     list_multipart_upload_request = request;
     Aws::S3Crt::Model::ListMultipartUploadsResult result;
     Aws::Vector<Aws::S3Crt::Model::MultipartUpload> uploads;
@@ -273,13 +285,12 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     upload2.SetInitiated(Aws::Utils::DateTime("1980-05-31T15:55:55Z", Aws::Utils::DateFormat::AutoDetect));
     uploads.push_back(upload2);
     result.SetUploads(uploads);
-    return std::make_optional(std::move(result));
+    return result;
   }
 
-  bool sendAbortMultipartUploadRequest(const Aws::S3Crt::Model::AbortMultipartUploadRequest& request) override {
+  [[nodiscard]] std::expected<void, minifi::aws::s3::S3Error> sendAbortMultipartUploadRequest(const Aws::S3Crt::Model::AbortMultipartUploadRequest& request) override {
     abort_multipart_upload_requests.push_back(request);
-    Aws::S3Crt::Model::AbortMultipartUploadResult result;
-    return true;
+    return {};
   }
 
   Aws::Auth::AWSCredentials getCredentials() const {
@@ -316,6 +327,14 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     delete_object_result_ = delete_object_result;
   }
 
+  void setPutObjectResult(bool put_object_result) {
+    put_object_result_ = put_object_result;
+  }
+
+  void setGetObjectResult(bool get_object_result) {
+    get_object_result_ = get_object_result;
+  }
+
   std::vector<Aws::S3Crt::Model::ObjectVersion> getListedVersion() const {
     return listed_versions_;
   }
@@ -349,6 +368,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::vector<Aws::S3Crt::Model::ObjectVersion> listed_versions_;
   std::vector<Aws::S3Crt::Model::Object> listed_objects_;
   bool delete_object_result_ = true;
+  bool put_object_result_ = true;
+  bool get_object_result_ = true;
   bool return_empty_result_ = false;
   bool is_listing_truncated_ = false;
   Aws::Auth::AWSCredentials credentials_;
