@@ -43,6 +43,10 @@ if (NOT MINIFI_EXTENSION_PGP)
     set_target_properties(cargo-build_minifi_pgp PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
+if (NOT MINIFI_EXTENSION_TENSOR)
+    set_target_properties(cargo-build_minifi_tensor PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
+
 include(CTest)
 
 # Build the test binaries during the build

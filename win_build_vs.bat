@@ -45,6 +45,9 @@ set enable_gcp=ON
 set enable_elastic=ON
 set enable_grafana_loki=OFF
 set enable_couchbase=OFF
+set enable_rust=OFF
+set enable_pgp=ON
+set enable_tensor=ON
 set test_custom_wel_provider=OFF
 set generator="Visual Studio 17 2022"
 set cpack=OFF
@@ -84,6 +87,9 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NO_PYTHON_SCRIPTING] set enable_python_scripting=OFF
     if [%%~x] EQU [/LOKI]             set enable_grafana_loki=ON
     if [%%~x] EQU [/COUCHBASE]        set enable_couchbase=ON
+    if [%%~x] EQU [/RUST]             set enable_rust=ON
+    if [%%~x] EQU [/NO_PGP]           set enable_pgp=OFF
+    if [%%~x] EQU [/NO_TENSOR]        set enable_tensor=OFF
     if [%%~x] EQU [/32]               set build_platform=Win32
     if [%%~x] EQU [/D]                set cmake_build_type=RelWithDebInfo
     if [%%~x] EQU [/DD]               set cmake_build_type=Debug
@@ -114,6 +120,7 @@ cmake -G %generator% %build_platform_cmd% -DMINIFI_INCLUDE_VC_REDIST_MERGE_MODUL
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% -DENABLE_SMB=%enable_smb% ^
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPS=%enable_ops% ^
         -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% -DENABLE_COUCHBASE=%enable_couchbase% ^
+        -DMINIFI_RUST=%enable_rust% -DMINIFI_EXTENSION_PGP=%enable_pgp% -DMINIFI_EXTENSION_TENSOR=%enable_tensor% ^
         -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% -DMINIFI_INCLUDE_VC_REDIST_DLLS=%vc_redist% ^
         -DMINIFI_PERFORMANCE_TESTS=%performance_tests% ^
         %strict_gsl_checks% -DMINIFI_INCLUDE_UCRT_DLLS=%ucrt% %sccache_arg% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
