@@ -129,9 +129,14 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
     if not package_manager.run_cmd(conan_remote_add_cmd):
         print("Adding the nifi-conan remote failed")
         return False
+
+    civetweb_conf = (
+        " -c \"civetweb/*:tools.build:defines=['SOCKET_TIMEOUT_QUANTUM=200']\""
+        " -c \"civetweb/*:tools.info.package_id:confs=['tools.build:defines']\""
+    )
     build_cmd = (
         f'conan install "{minifi_options.source_dir}" --output-folder="{minifi_options.build_dir}" --build=missing {conan_options} '
-        f"--settings=build_type={minifi_options.build_type.value}{generator_setting}{compiler_settings}"
+        f"--settings=build_type={minifi_options.build_type.value}{generator_setting}{compiler_settings}{civetweb_conf}"
     )
     if platform.system() == "Linux":
         # Conan's prebuilt m4 binary fails autom4te's version probe in some Linux build containers (e.g. RockyLinux 8), so always build m4 from source on Linux.
