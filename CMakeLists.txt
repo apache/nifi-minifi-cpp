@@ -347,9 +347,10 @@ else()
         list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Werror)
     endif()
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
+        # False positive in GCC 14: jsoncons/utility/bigint.hpp:299:13: error: '<anonymous>' may be used uninitialized
+        # Issue in GCC 15 and above https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118634
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
             list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Wno-maybe-uninitialized)
-            # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=118634
         endif()
     endif()
 endif()
