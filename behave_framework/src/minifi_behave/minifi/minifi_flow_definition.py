@@ -57,6 +57,7 @@ class MinifiFlowDefinition(FlowDefinition):
             "Connections": [],
             "Controller Services": [c.to_yaml_dict() for c in self.controller_services],
             "Remote Processing Groups": [rpg.to_yaml_dict() for rpg in self.remote_process_groups],
+            'Reporting Tasks': [rt.to_yaml_dict() for rt in self.reporting_tasks],
             "Parameter Context Name": parameter_context_name,
         }
 
