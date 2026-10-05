@@ -37,47 +37,47 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
   explicit ReportLineageToAtlas(core::reporting::ReportingTaskMetadata metadata)
       : ReportingTaskBase{std::move(metadata)} {}
 
-  MINIFIAPI static constexpr const char* Description = "Report flow data set level lineage to Apache Atlas.";
+  EXTENSIONAPI static constexpr const char* Description = "Report flow data set level lineage to Apache Atlas.";
 
-  MINIFIAPI static constexpr auto AtlasUrls =
+  EXTENSIONAPI static constexpr auto AtlasUrls =
       core::PropertyDefinitionBuilder<>::createProperty("Atlas URLs")
           .withDescription("Comma-separated list of Atlas REST endpoints, e.g. http://atlas:21000")
           .isRequired(true)
           .build();
 
-  MINIFIAPI static constexpr auto AtlasUsername =
+  EXTENSIONAPI static constexpr auto AtlasUsername =
       core::PropertyDefinitionBuilder<>::createProperty("Atlas Username")
           .withDescription("Username for Atlas HTTP Basic authentication.")
           .isRequired(false)
           .build();
 
-  MINIFIAPI static constexpr auto AtlasPassword =
+  EXTENSIONAPI static constexpr auto AtlasPassword =
       core::PropertyDefinitionBuilder<>::createProperty("Atlas Password")
           .withDescription("Password for Atlas HTTP Basic authentication.")
           .isSensitive(true)
           .isRequired(false)
           .build();
 
-  MINIFIAPI static constexpr auto SSLContext =
+  EXTENSIONAPI static constexpr auto SSLContext =
       core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
           .withDescription("Controller service used for HTTPS Atlas endpoints.")
           .isRequired(false)
           .build();
 
-  MINIFIAPI static constexpr auto NiFiUrl =
+  EXTENSIONAPI static constexpr auto NiFiUrl =
       core::PropertyDefinitionBuilder<>::createProperty("NiFi URL for Atlas")
           .withDescription("How this MiNiFi agent identifies itself to Atlas (used as nifi_flow.url).")
           .isRequired(true)
           .build();
 
-  MINIFIAPI static constexpr auto DefaultNamespace =
+  EXTENSIONAPI static constexpr auto DefaultNamespace =
       core::PropertyDefinitionBuilder<>::createProperty("Default Metadata Namespace")
           .withDescription("Atlas metadata namespace used when no hostnamePattern.* rule matches. "
                            "This is the '@cluster' suffix in every qualifiedName.")
           .isRequired(true)
           .build();
 
-  MINIFIAPI static constexpr auto AwsS3ModelVersion =
+  EXTENSIONAPI static constexpr auto AwsS3ModelVersion =
       core::PropertyDefinitionBuilder<2>::createProperty("AWS S3 Model Version")
           .withDescription("Which Atlas S3 entity model to emit. v2 uses aws_s3_v2_directory; v1 uses aws_s3_pseudo_dir.")
           .isRequired(true)
@@ -85,7 +85,7 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
           .withAllowedValues({"v1", "v2"})
           .build();
 
-  MINIFIAPI static constexpr auto FilesystemPathLevel =
+  EXTENSIONAPI static constexpr auto FilesystemPathLevel =
       core::PropertyDefinitionBuilder<2>::createProperty("Filesystem Path Level")
           .withDescription("Whether to emit one fs_path entity per file, or per containing directory.")
           .isRequired(true)
@@ -93,14 +93,14 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
           .withAllowedValues({"FILE", "DIRECTORY"})
           .build();
 
-  MINIFIAPI static constexpr auto ProvenanceBatchSize =
+  EXTENSIONAPI static constexpr auto ProvenanceBatchSize =
       core::PropertyDefinitionBuilder<>::createProperty("Provenance Batch Size")
           .withDescription("Maximum number of provenance events to consume per trigger.")
           .isRequired(true)
           .withDefaultValue("1000")
           .build();
 
-  MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
+  EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       AtlasUrls,
       AtlasUsername,
       AtlasPassword,
@@ -112,7 +112,7 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
       ProvenanceBatchSize,
   });
 
-  MINIFIAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   [[nodiscard]] bool supportsDynamicProperties() const override {
     return SupportsDynamicProperties;
   }
