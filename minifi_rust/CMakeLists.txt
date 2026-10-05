@@ -46,7 +46,7 @@ else()
 endif()
 
 if (MINIFI_EXTENSION_TENSOR)
-    register_rust_extension(minifi_tensor "TENSOR EXTENSION" MINIFI_EXTENSION_TENSOR "This enables tract based tensor processors")
+    register_rust_extension(minifi_tensor "TENSOR EXTENSION" MINIFI_EXTENSION_TENSOR "This enables sonos/tract based tensor processors")
 else()
     set_target_properties(cargo-build_minifi_tensor PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
