@@ -50,8 +50,15 @@ class LogPublisherTestFixture {
 
   ~LogPublisherTestFixture() {
     publisher_.reset();  // explicit because LogTestController should outlive the thread in publisher_
-    minifi::utils::file::delete_dir(provenance_repo_->getDirectory());
-    minifi::utils::file::delete_dir(flow_file_repo_->getDirectory());
+    const auto provenance_repo_directory = provenance_repo_->getDirectory();
+    const auto flow_file_repo_directory = flow_file_repo_->getDirectory();
+    // the repositories have to be closed before their directories are removed, as the files of an
+    // open database cannot be deleted on every platform
+    response_node_loader_.reset();
+    provenance_repo_.reset();
+    flow_file_repo_.reset();
+    minifi::utils::file::delete_dir(provenance_repo_directory);
+    minifi::utils::file::delete_dir(flow_file_repo_directory);
     LogTestController::getInstance().reset();
   }
 

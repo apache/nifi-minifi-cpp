@@ -18,8 +18,10 @@
 
 #include <array>
 #include <chrono>
+#include <filesystem>
 #include <memory>
 #include <random>
+#include <string>
 #include <vector>
 
 #include "RocksDbProvenanceRepository.h"
@@ -284,6 +286,41 @@ TEST_CASE("Test cursor observes events appended with more digits in their ordina
   for (size_t i = 0; i < queried_events.size(); ++i) {
     REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 10);
   }
+}
+
+TEST_CASE("Test opening a database whose options mention the internal state column but does not have it", "[eventOrdinalTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  {
+    minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+    REQUIRE(provdb.initialize(configuration));
+    REQUIRE(provdb.appendEvents(createEvents(1)));
+  }
+
+  // Leave the directory in the state an interrupted deletion produces: the persisted options still
+  // list the internal state column, while the database itself is gone. The column is created on
+  // demand, so this must not stop the repository from opening.
+  bool options_file_kept = false;
+  for (const auto& entry : std::filesystem::directory_iterator{temp_dir}) {
+    const auto filename = entry.path().filename().string();
+    if (filename.starts_with("CURRENT") || filename.starts_with("MANIFEST") || filename.ends_with(".log")) {
+      std::filesystem::remove(entry.path());
+    } else if (filename.starts_with("OPTIONS")) {
+      options_file_kept = true;
+    }
+  }
+  // the scenario is only reproduced as long as the persisted options are the ones left behind
+  REQUIRE(options_file_kept);
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+  REQUIRE(provdb.initialize(configuration));
+  REQUIRE(provdb.getRocksDbStats());
+  REQUIRE(provdb.appendEvents(createEvents(1)));
 }
 
 TEST_CASE("Test opening existing database loads monotonic counter", "[eventUuidMonotonicTest]") {
