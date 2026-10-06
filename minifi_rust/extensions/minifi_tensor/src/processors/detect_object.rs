@@ -101,7 +101,6 @@ mod tests {
         PIXEL_DIVISOR, TARGET_HEIGHT, TARGET_WIDTH,
     };
     use minifi_native::{MockLogger, MockProcessContext};
-    use std::io::Cursor;
 
     #[test]
     fn test_missing_controller_service_errors() {
@@ -109,13 +108,9 @@ mod tests {
         context.properties.insert(TARGET_HEIGHT.name(), "100");
         context.properties.insert(TARGET_WIDTH.name(), "100");
         context.properties.insert(PIXEL_DIVISOR.name(), "1.0");
-        let processor =
-            DetectObject::schedule(&context, &MockLogger::new()).expect("Expected to schedule");
-        let mut input_stream = Cursor::new(vec![]);
-
-        let result = processor.transform(&context, &mut input_stream, &MockLogger::new());
+        let processor = DetectObject::schedule(&context, &MockLogger::new());
         assert!(
-            result.is_err(),
+            processor.is_err(),
             "Should error when TractModelService is missing"
         );
     }
