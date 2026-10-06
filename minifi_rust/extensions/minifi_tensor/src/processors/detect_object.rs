@@ -47,6 +47,7 @@ impl Schedule for DetectObject {
     {
         let image_to_tensor = ImageToTensor::schedule(context, logger)?;
         let filter_bounding_boxes = FilterBoundingBoxes::schedule(context, logger)?;
+        let _tract_model_service = context.get_controller_service(&TRACT_MODEL_SERVICE)?;
         Ok(Self {
             image_to_tensor,
             filter_bounding_boxes,

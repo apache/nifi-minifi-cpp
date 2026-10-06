@@ -126,3 +126,22 @@ Feature: Image classification with MobileNetV2
     And the Minifi logs contain the following message: "key:mime.type value:application/json" in less than 1 seconds
     And at least one file in "/tmp/output" content match the following regex: "\"class_name\":\"(military uniform|bulletproof vest|suit|Windsor tie)\"" in less than 30 seconds
     And the Minifi logs do not contain errors
+
+  Scenario: ClassifyImage shouldn't schedule with invalid TractModelService
+    Given a TractModelService controller service named "MobileNet" is set up and the "Model File Path" property set to "/tmp/models/invalid.onnx"
+
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And the "Keep Source File" property of the GetFile processor is set to "false"
+
+    And a ClassifyImage processor with the "Target width" property set to "224"
+    And the "Target height" property of the ClassifyImage processor is set to "224"
+    And the "Tract model service" property of the ClassifyImage processor is set to "MobileNet"
+
+    And the "success" relationship of the GetFile processor is connected to the ClassifyImage
+    And ClassifyImage's failure relationship is auto-terminated
+    And ClassifyImage's success relationship is auto-terminated
+
+    When the MiNiFi instance starts up
+
+    Then the Minifi logs contain the following message: "(ClassifyImage): Process Schedule Operation: Error while scheduling processor" in less than 3 seconds
+    And the Minifi logs contain the following message: "[error] Error during schedule: minifi_process_context_get_controller_service_from_property::<"minifi_tensor::services::tract_model_service::TractModelService">("Tract model service"), validation failed" in less than 3 seconds

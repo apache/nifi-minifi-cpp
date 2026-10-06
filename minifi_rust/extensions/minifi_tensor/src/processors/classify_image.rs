@@ -44,6 +44,7 @@ impl Schedule for ClassifyImage {
     {
         let image_to_tensor = ImageToTensor::schedule(context, logger)?;
         let classify_output = ClassifyOutput::schedule(context, logger)?;
+        let _tract_model_service = context.get_controller_service(&TRACT_MODEL_SERVICE)?;
         Ok(Self {
             image_to_tensor,
             classify_output,
