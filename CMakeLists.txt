@@ -392,6 +392,8 @@ foreach(extension-dir ${extension-directories})
     endif()
 endforeach()
 
+add_subdirectory(minifi_rust)
+
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 add_subdirectory(minifi_main)
 
@@ -772,6 +774,7 @@ set(EXTENSIONS_ENABLED_BY_DEFAULT (
     minifi-sql
     minifi-standard-processors
     minifi-wel
+    minifi_pgp
 ))
 foreach(extension ${selected_extensions})
     get_component_name(${extension} component-name)
@@ -860,5 +863,3 @@ if (MINIFI_ADVANCED_CODE_COVERAGE)
 endif()
 
 add_subdirectory(packaging)
-
-add_subdirectory(minifi_rust)

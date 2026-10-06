@@ -39,11 +39,15 @@ if (NOT ENABLE_TEST_PROCESSORS)
     set_target_properties(cargo-build_minifi_rs_playground PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
-if (NOT MINIFI_EXTENSION_PGP)
+if (MINIFI_EXTENSION_PGP)
+    register_rust_extension(minifi_pgp "PGP EXTENSION" MINIFI_EXTENSION_PGP "This enables EncryptContentPGP and DecryptContentPGP")
+else()
     set_target_properties(cargo-build_minifi_pgp PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
-if (NOT MINIFI_EXTENSION_TENSOR)
+if (MINIFI_EXTENSION_TENSOR)
+    register_rust_extension(minifi_tensor "TENSOR EXTENSION" MINIFI_EXTENSION_TENSOR "This enables sonos/tract based tensor processors")
+else()
     set_target_properties(cargo-build_minifi_tensor PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
