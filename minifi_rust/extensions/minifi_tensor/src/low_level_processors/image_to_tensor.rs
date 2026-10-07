@@ -16,7 +16,9 @@
 // under the License.
 pub(crate) mod image_to_tensor_def;
 
-use crate::low_level_processors::image_to_tensor::image_to_tensor_def::TENSOR_BYTES_ATTR;
+use crate::low_level_processors::image_to_tensor::image_to_tensor_def::{
+    FAILURE, TENSOR_BYTES_ATTR,
+};
 use crate::utils::dimensions::{Dimensions, LetterboxGeometry};
 use crate::utils::per_channel_f32::PerChannelF32;
 use crate::utils::tensor_helpers::{MinifiDatumType, load_as_image};
@@ -32,7 +34,7 @@ use image_to_tensor_def::{IMG_TRG_HEIGHT_ATTR, IMG_TRG_WIDTH_ATTR, TENSORS_LEN_A
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, ProcessError, RouteErrorExt, Schedule, TransformedFlowFile,
+    MinifiError, Relationship, Schedule, TransformError, TransformedFlowFile,
 };
 use std::num::NonZeroU32;
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
@@ -316,7 +318,7 @@ impl ImageToTensor {
         self.resize_mode
     }
 
-    pub fn get_tensor(&self, img: image::DynamicImage) -> Result<Tensor, MinifiError> {
+    pub fn get_tensor(&self, img: image::DynamicImage) -> Result<Tensor, TransformError> {
         let f32_data: Vec<f32> = self
             .tensor_bytes(img)
             .as_chunks::<4>()
@@ -325,12 +327,14 @@ impl ImageToTensor {
             .map(|c| f32::from_le_bytes(*c))
             .collect();
         let shape = self.get_shape();
-        let array = ndarray::Array::from_shape_vec(shape, f32_data).map_err(MinifiError::other)?;
+        let array = ndarray::Array::from_shape_vec(shape, f32_data)?;
         Ok(array.tract()?)
     }
 }
 
 impl FlowFileTransform for ImageToTensor {
+    const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
     fn transform<
         'a,
         Context: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -340,8 +344,8 @@ impl FlowFileTransform for ImageToTensor {
         _context: &Context,
         input_stream: &'a mut dyn InputStream,
         _logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
-        let img = load_as_image(input_stream).route_err_to_failure()?;
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
+        let img = load_as_image(input_stream)?;
         let orig_dim = Dimensions::from_image(&img);
 
         let tensor_bytes = self.tensor_bytes(img);
@@ -368,7 +372,7 @@ mod tests {
     use super::image_to_tensor_def::{FAILURE, SUCCESS};
     use super::*;
     use image::{ImageFormat, RgbImage};
-    use minifi_native::{MockLogger, MockProcessContext};
+    use minifi_native::{MockLogger, MockProcessContext, test};
     use std::io::Cursor;
 
     fn create_test_image_bytes() -> Vec<u8> {
@@ -525,16 +529,8 @@ mod tests {
         let invalid_bytes = vec![0x00, 0x01, 0x02, 0x03, 0x04];
         let mut input_stream = Cursor::new(invalid_bytes);
 
-        let err = processor
-            .transform(&context, &mut input_stream, &MockLogger::new())
-            .expect_err("Invalid image should route to FAILURE via a Route error");
-
-        match err {
-            ProcessError::Route(route) => {
-                assert_eq!(route.relationship, FAILURE.name)
-            }
-            other => panic!("expected route to failure, got {other:?}"),
-        }
+        let res = processor.transform(&context, &mut input_stream, &MockLogger::new());
+        test::assert_routed_to::<ImageToTensor>(res, &FAILURE);
     }
 
     #[test]

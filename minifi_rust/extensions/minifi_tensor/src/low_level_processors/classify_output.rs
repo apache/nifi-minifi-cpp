@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::low_level_processors::classify_output::classify_output_def::{
-    CLASS_COUNT_ATTR, CLASS_TOP1_CONFIDENCE_ATTR, CLASS_TOP1_ID_ATTR, CLASS_TOP1_NAME_ATTR,
+    CLASS_COUNT_ATTR, CLASS_TOP1_CONFIDENCE_ATTR, CLASS_TOP1_ID_ATTR, CLASS_TOP1_NAME_ATTR, FAILURE,
 };
 use crate::utils::score_activation::{ScoreActivation, SoftmaxTerms};
 use crate::utils::tensor_helpers::{deserialize_tensors, tensor_as_f32, tensor_shape};
@@ -28,8 +28,8 @@ pub(crate) use classify_output_def::{
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
     Content, FlowFileTransform, GetAttribute, GetId, GetProperty, InputStream, Logger, MinifiError,
-    ProcessError, PropertyConstraints, PropertySchema, PropertyType, RouteErrorExt, Schedule,
-    TransformedFlowFile, warn,
+    PropertyConstraints, PropertySchema, PropertyType, Relationship, Schedule, TransformError,
+    TransformedFlowFile, route_to_err, warn,
 };
 use serde::Serialize;
 use tract::Tensor;
@@ -134,13 +134,10 @@ impl ClassifyOutput {
         context: &Context,
         logger: &LoggerImpl,
         tensors: Vec<Tensor>,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
-        let score_floats =
-            tensor_as_f32(&tensors, self.score_output_index).route_err_to_failure()?;
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
+        let score_floats = tensor_as_f32(&tensors, self.score_output_index)?;
         if score_floats.is_empty() {
-            return Err(ProcessError::route_to_failure(
-                "Score tensor is empty; nothing to classify",
-            ));
+            route_to_err!("Score tensor is empty; nothing to classify");
         }
 
         // A classifier head is a single score vector: shape [num_classes] or
@@ -148,12 +145,12 @@ impl ClassifyOutput {
         // leading axis > 1 (a real batch) would silently mix rows and yield
         // class ids past num_classes. Reject it rather than produce garbage.
         // (`ImageToTensor` emits batch=1 today; this just enforces the contract.)
-        let shape = tensor_shape(&tensors, self.score_output_index).route_err_to_failure()?;
+        let shape = tensor_shape(&tensors, self.score_output_index)?;
         if shape.iter().rev().skip(1).any(|&d| d != 1) {
-            return Err(ProcessError::route_to_failure(format!(
+            route_to_err!(
                 "ClassifyOutput expects a single score vector (shape [num_classes] or \
                  [1, .., num_classes]); got {shape:?}. A batch dimension > 1 is not supported."
-            )));
+            );
         }
 
         let finite: Vec<(usize, f32)> = score_floats
@@ -196,17 +193,12 @@ impl ClassifyOutput {
 
         let (content, extra_attribute) = match context.get_property(&OUTPUT_ATTRIBUTE_NAME)? {
             None => (
-                Some(Content::Buffer(
-                    serde_json::to_vec(&predictions).route_err_to_failure()?,
-                )),
+                Some(Content::Buffer(serde_json::to_vec(&predictions)?)),
                 None,
             ),
             Some(output_attr) => (
                 None,
-                Some((
-                    output_attr,
-                    serde_json::to_string(&predictions).route_err_to_failure()?,
-                )),
+                Some((output_attr, serde_json::to_string(&predictions)?)),
             ),
         };
 
@@ -231,13 +223,15 @@ impl ClassifyOutput {
 }
 
 impl FlowFileTransform for ClassifyOutput {
+    const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
     fn transform<'a, Context: GetProperty + GetAttribute + GetId, LoggerImpl: Logger>(
         &self,
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
-        let tensors = deserialize_tensors(context, input_stream).route_err_to_failure()?;
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
+        let tensors = deserialize_tensors(context, input_stream)?;
         self.classify(context, logger, tensors)
     }
 }
@@ -246,7 +240,7 @@ impl FlowFileTransform for ClassifyOutput {
 mod tests {
     use super::classify_output_def::FAILURE;
     use super::*;
-    use minifi_native::{LogLevel, MockLogger, MockProcessContext};
+    use minifi_native::{LogLevel, MockLogger, MockProcessContext, test};
     use std::io::Cursor;
     use std::io::Write;
     use tempfile::NamedTempFile;
@@ -525,13 +519,8 @@ mod tests {
             .attributes
             .insert("tensor.0.shape".into(), "2,3".into());
         let mut stream = Cursor::new(build_payload(&scores));
-        let err = processor
-            .transform(&context, &mut stream, &MockLogger::new())
-            .expect_err("batched scores should be rejected");
-        match err {
-            ProcessError::Route(route) => assert_eq!(route.relationship, FAILURE.name),
-            other => panic!("expected route to failure, got {other:?}"),
-        }
+        let res = processor.transform(&context, &mut stream, &MockLogger::new());
+        test::assert_routed_to::<ClassifyOutput>(res, &FAILURE);
     }
 
     #[test]
@@ -539,14 +528,7 @@ mod tests {
         let processor = make_processor(1, ScoreActivation::Softmax);
         let context = MockProcessContext::new(); // no tensor.0.bytes
         let mut stream = Cursor::new(vec![0u8; 4]);
-        let err = processor
-            .transform(&context, &mut stream, &MockLogger::new())
-            .expect_err("missing attribute should route to failure via a Route error");
-        match err {
-            ProcessError::Route(route) => {
-                assert_eq!(route.relationship, FAILURE.name)
-            }
-            other => panic!("expected route to failure, got {other:?}"),
-        }
+        let res = processor.transform(&context, &mut stream, &MockLogger::new());
+        test::assert_routed_to::<ClassifyOutput>(res, &FAILURE);
     }
 }
