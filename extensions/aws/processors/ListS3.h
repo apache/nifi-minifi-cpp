@@ -87,6 +87,28 @@ class ListS3 : public S3Processor {  // NOLINT(cppcoreguidelines-special-member-
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
+  EXTENSIONAPI static constexpr auto S3Bucket = core::OutputAttributeDefinition<>{"s3.bucket", {Success}, "The name of the S3 bucket"};
+  EXTENSIONAPI static constexpr auto S3Etag = core::OutputAttributeDefinition<>{
+      "s3.etag", {Success}, "The ETag that can be used to see if the file has changed"};
+  EXTENSIONAPI static constexpr auto S3IsLatest = core::OutputAttributeDefinition<>{
+      "s3.isLatest", {Success}, "A boolean indicating if this is the latest version of the object"};
+  EXTENSIONAPI static constexpr auto S3LastModified = core::OutputAttributeDefinition<>{
+      "s3.lastModified", {Success}, "The last modified time of the S3 object"};
+  EXTENSIONAPI static constexpr auto S3Length = core::OutputAttributeDefinition<>{"s3.length", {Success}, "The size of the object in bytes"};
+  EXTENSIONAPI static constexpr auto S3StoreClass = core::OutputAttributeDefinition<>{"s3.storeClass", {Success}, "The storage class of the object"};
+  EXTENSIONAPI static constexpr auto S3Version = core::OutputAttributeDefinition<>{
+      "s3.version", {Success}, "The version of the object, if applicable"};
+  EXTENSIONAPI static constexpr auto S3Tag = core::OutputAttributeDefinition<>{"s3.tag.___",
+      {Success},
+      "If 'Write Object Tags' is set to 'True', the tags associated to the S3 object that is being listed will be written as part of the FlowFile "
+      "attributes"};
+  EXTENSIONAPI static constexpr auto S3UserMetadata = core::OutputAttributeDefinition<>{"s3.user.metadata.___",
+      {Success},
+      "If 'Write User Metadata' is set to 'True', the user defined metadata associated to the S3 object that is being listed will be written as part "
+      "of the FlowFile attributes"};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::to_array<core::OutputAttributeReference>(
+      {S3Bucket, S3Etag, S3IsLatest, S3LastModified, S3Length, S3StoreClass, S3Version, S3Tag, S3UserMetadata});
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
