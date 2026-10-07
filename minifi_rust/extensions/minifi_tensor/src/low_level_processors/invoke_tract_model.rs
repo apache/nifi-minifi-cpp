@@ -33,13 +33,14 @@ mod invoke_tract_model_def;
 pub(crate) struct InvokeTractModel {}
 
 impl Schedule for InvokeTractModel {
-    fn schedule<Ctx: GetProperty, L: Logger>(
-        _context: &Ctx,
+    fn schedule<Ctx: GetProperty + GetControllerService, L: Logger>(
+        context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>
     where
         Self: Sized,
     {
+        let _tract_model_service = context.get_controller_service(&TRACT_MODEL_SERVICE)?;
         Ok(Self {})
     }
 }
