@@ -105,6 +105,37 @@ TEST_CASE("Test creating a new node with path node id", "[putopcprocessor]") {
   verifyCreatedNode(expected_node, controller);
 }
 
+TEST_CASE("Test updating a node previously created by the processor", "[putopcprocessor]") {
+  OpcUaTestServer server;
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
+  auto put_opc_processor = controller.getProcessor();
+
+  NodeData expected_node{42, server.getNamespaceIndex(), 9999, "everything", "Simulator/Default/Device1", {}};
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, expected_node.path));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(expected_node.namespace_index)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Int"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, std::to_string(expected_node.node_id)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(expected_node.namespace_index)));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, expected_node.browse_name));
+
+  // The first flow file creates the node.
+  const auto create_results = controller.trigger(std::to_string(expected_node.data));
+  REQUIRE(create_results.at(processors::PutOPCProcessor::Failure).empty());
+  REQUIRE(create_results.at(processors::PutOPCProcessor::Success).size() == 1);
+  verifyCreatedNode(expected_node, controller);
+
+  // A second flow file to the same target node must update it, not fail.
+  expected_node.data = 43;
+  const auto update_results = controller.trigger(std::to_string(expected_node.data));
+  REQUIRE(update_results.at(processors::PutOPCProcessor::Failure).empty());
+  REQUIRE(update_results.at(processors::PutOPCProcessor::Success).size() == 1);
+  verifyCreatedNode(expected_node, controller);
+}
+
 TEST_CASE("Test fetching using custom reference type id path", "[putopcprocessor]") {
   OpcUaTestServer server;
   server.start();

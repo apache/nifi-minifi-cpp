@@ -430,6 +430,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 template<typename T>
 UA_StatusCode Client::add_node(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name, T value, UA_NodeId *received_node_id) {
   UA_VariableAttributes attr = UA_VariableAttributes_default;
+  attr.accessLevel |= UA_ACCESSLEVELMASK_WRITE;
   add_value_to_variant(&attr.value, value);
   char local[6] = "en-US";  // NOLINT(cppcoreguidelines-avoid-c-arrays)
   attr.displayName = UA_LOCALIZEDTEXT(local, const_cast<char*>(browse_name.data()));
