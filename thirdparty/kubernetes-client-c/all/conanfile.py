@@ -48,7 +48,7 @@ class kubernetesRecipe(ConanFile):
 
     def requirements(self):
         self.requires("libcurl/8.20.0", transitive_headers=True)
-        self.requires("openssl/3.6.2")
+        self.requires("openssl/3.6.5")
         self.requires("libwebsockets/4.3.2", transitive_headers=True)
         self.requires("libyaml/0.2.5")
 

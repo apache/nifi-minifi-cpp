@@ -96,7 +96,7 @@ class GoogleCloudCppConan(ConanFile):
         self.requires("nlohmann_json/3.12.0")
         self.requires("crc32c/1.1.2")
         self.requires("libcurl/8.20.0")
-        self.requires("openssl/3.6.2")
+        self.requires("openssl/3.6.5")
         self.requires("zlib/1.3.2")
         if self.options.with_mocks:
             self.requires("gtest/1.17.0", transitive_headers=True)
