@@ -148,6 +148,8 @@ class ProvenanceEventRecord : public virtual core::SerializableComponent {
 
   ~ProvenanceEventRecord() override = default;
 
+  virtual uint64_t getEventOrdinal() const = 0;
+  virtual void setEventOrdinal(uint64_t value) = 0;
   virtual utils::Identifier getEventId() const = 0;
   virtual void setEventId(const utils::Identifier &id) = 0;
   virtual std::map<std::string, std::string> getAttributes() const = 0;
@@ -183,7 +185,6 @@ class ProvenanceEventRecord : public virtual core::SerializableComponent {
   virtual std::string getSourceQueueIdentifier() const = 0;
   virtual void setSourceQueueIdentifier(const std::string& identifier) = 0;
   virtual void fromFlowFile(const core::FlowFile& flow_file) = 0;
-  virtual bool loadFromRepository(const std::shared_ptr<core::Repository> &repo) = 0;
 
   static std::shared_ptr<ProvenanceEventRecord> create();
 };
@@ -192,9 +193,8 @@ class ProvenanceReporter {
  public:
   virtual ~ProvenanceReporter() = default;
 
-  virtual std::set<std::shared_ptr<ProvenanceEventRecord>> getEvents() const = 0;
+  virtual std::vector<std::shared_ptr<ProvenanceEventRecord>> getEvents() const = 0;
   virtual void add(const std::shared_ptr<ProvenanceEventRecord> &event) = 0;
-  virtual void remove(const std::shared_ptr<ProvenanceEventRecord> &event) = 0;
   virtual void clear() = 0;
 
   virtual void commit() = 0;
@@ -205,7 +205,7 @@ class ProvenanceReporter {
   virtual void clone(const core::FlowFile& parent, const core::FlowFile& child) = 0;
   virtual void expire(const core::FlowFile& flow_file, const std::string& detail) = 0;
   virtual void drop(const core::FlowFile& flow_file, const std::string& reason) = 0;
-  virtual void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) = 0;
+  virtual void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) = 0;
   virtual void fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) = 0;
   virtual void receive(const core::FlowFile& flow_file, const std::string& transitUri,
     const std::string& sourceSystemFlowFileIdentifier, const std::string& detail, std::chrono::milliseconds processingDuration) = 0;

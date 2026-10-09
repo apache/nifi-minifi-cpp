@@ -28,7 +28,7 @@
 #include "core/RepositoryFactory.h"
 #include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
-#include "ProvenanceRepository.h"
+#include "RocksDbProvenanceRepository.h"
 #include "properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "unit/TestBase.h"
@@ -280,7 +280,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
-  std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
+  auto prov_repo = std::make_shared<TestThreadedRepository>();
   auto ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
   ff_repository->initialize(config);
@@ -549,8 +549,8 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
     expected_rocksdb_stats = true;
   }
 
-  SECTION("ProvenanceRepository") {
-    repository = std::make_shared<minifi::provenance::ProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  SECTION("RocksDbProvenanceRepository") {
+    repository = std::make_shared<minifi::provenance::RocksDbProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
     expected_rocksdb_stats = true;
   }
 
@@ -707,8 +707,8 @@ TEST_CASE("Flow file repositories can be stopped", "[TestRepoIsRunning]") {
     repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
   }
 
-  SECTION("ProvenanceRepository") {
-    repository = std::make_shared<minifi::provenance::ProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  SECTION("RocksDbProvenanceRepository") {
+    repository = std::make_shared<minifi::provenance::RocksDbProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
   }
 
   SECTION("VolatileProvenanceRepository") {
