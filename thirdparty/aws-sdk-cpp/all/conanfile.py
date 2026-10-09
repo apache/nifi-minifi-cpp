@@ -495,7 +495,7 @@ class AwsSdkCppConan(ConanFile):
         cmake_layout(self, src_folder="src")
 
     def requirements(self):
-        self.requires("openssl/3.6.2", transitive_headers=True)
+        self.requires("openssl/3.6.5", transitive_headers=True)
         if self.settings.os != "Windows":
             # Used transitively in core/http/curl/CurlHandleContainer.h public header
             self.requires("libcurl/8.20.0", transitive_headers=True)

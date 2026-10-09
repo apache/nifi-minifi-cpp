@@ -69,7 +69,7 @@ class AzureSDKForCppConan(ConanFile):
             self.options.rm_safe("fPIC")
 
     def requirements(self):
-        self.requires("openssl/3.6.2")
+        self.requires("openssl/3.6.5")
         self.requires("libxml2/2.15.3")
 
         if self.settings.os == "Windows":

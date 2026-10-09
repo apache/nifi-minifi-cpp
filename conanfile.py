@@ -164,7 +164,7 @@ class MiNiFiCppMain(ConanFile):
         self.requires("asio/1.38.0", force=True)
         self.requires("lz4/1.10.0", force=True)
         self.requires("libcurl/8.20.0", force=True)
-        self.requires("openssl/3.6.2", force=True)
+        self.requires("openssl/3.6.5", force=True)
         self.requires("openssl-fips/3.1.2@minifi/develop")
         self.requires("zlib/1.3.2", force=True)
         self.requires("nlohmann_json/3.12.0", force=True)
