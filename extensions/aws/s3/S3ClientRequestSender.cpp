@@ -19,11 +19,13 @@
 
 #include <aws/s3-crt/S3CrtClient.h>
 #include <mutex>
+#include <utility>
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
-S3ClientRequestSender::S3ClientRequestSender(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing)
-    : s3_client_(credentials, [&]() {
+S3ClientRequestSender::S3ClientRequestSender(const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider, const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing)
+    : s3_client_(credentials_provider, [&]() {
           Aws::S3Crt::ClientConfiguration config(client_config);
           config.useVirtualAddressing = use_virtual_addressing;
           return config;

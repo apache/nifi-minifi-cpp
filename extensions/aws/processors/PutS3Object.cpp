@@ -100,7 +100,7 @@ void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSession
   fillUserMetadata(context);
 
   if (!s3_wrapper_) {
-    s3_wrapper_ = s3_wrapper_factory_(credentials_, client_config_, use_virtual_addressing);
+    s3_wrapper_ = s3_wrapper_factory_(credentials_provider_, client_config_, use_virtual_addressing);
   }
 }
 

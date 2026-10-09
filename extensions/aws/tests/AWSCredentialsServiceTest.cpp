@@ -16,91 +16,161 @@
  * limitations under the License.
  */
 
-#include <cstdlib>
 #include <memory>
+#include <optional>
+#include <string>
 
 #include "unit/TestBase.h"
-#include "unit/Catch.h"
-#include "controllerservices/AWSCredentialsService.h"
 #include "unit/TestUtils.h"
+#include "unit/Catch.h"
+#include "catch2/generators/catch_generators.hpp"
+#include "controllerservices/AWSCredentialsService.h"
 #include "core/controller/ControllerServiceNode.h"
+#include "core/controller/StandardControllerServiceNode.h"
 
-class AWSCredentialsServiceTestAccessor {
+namespace {
+
+using AWSCredentialsService = minifi::aws::controllers::AWSCredentialsService;
+using minifi::test::utils::ScopedEnvironmentVariable;
+
+class AWSCredentialsServiceTestFixture {
  public:
-  AWSCredentialsServiceTestAccessor() {
-    // Disable retrieving AWS metadata for tests
-    #ifdef WIN32
-    _putenv_s("AWS_EC2_METADATA_DISABLED", "true");
-    #else
-    setenv("AWS_EC2_METADATA_DISABLED", "true", 1);
-    #endif
-
+  AWSCredentialsServiceTestFixture() {
+    LogTestController::getInstance().setWarn<minifi::core::controller::StandardControllerServiceNode>();
     plan = test_controller.createPlan();
     aws_credentials_service = plan->addController("AWSCredentialsService", "AWSCredentialsService");
   }
 
-  FIELD_ACCESSOR(aws_credentials_);
+  AWSCredentialsServiceTestFixture(const AWSCredentialsServiceTestFixture&) = delete;
+  AWSCredentialsServiceTestFixture(AWSCredentialsServiceTestFixture&&) = delete;
+  AWSCredentialsServiceTestFixture& operator=(const AWSCredentialsServiceTestFixture&) = delete;
+  AWSCredentialsServiceTestFixture& operator=(AWSCredentialsServiceTestFixture&&) = delete;
+
+  ~AWSCredentialsServiceTestFixture() {
+    LogTestController::getInstance().reset();
+  }
 
  protected:
+  std::shared_ptr<AWSCredentialsService> getCredentialsServiceImplementation() {
+    auto implementation = aws_credentials_service->getControllerServiceImplementation<AWSCredentialsService>();
+    REQUIRE(implementation != nullptr);
+    return implementation;
+  }
+
+  static bool logContains(const std::string& message) {
+    return LogTestController::getInstance().contains(message, std::chrono::milliseconds{0});
+  }
+
   TestController test_controller;
+  // The default credential chain reads these, so the tests have to be isolated from the environment of the host.
+  ScopedEnvironmentVariable access_key_env{"AWS_ACCESS_KEY_ID", std::nullopt};
+  ScopedEnvironmentVariable secret_key_env{"AWS_SECRET_ACCESS_KEY", std::nullopt};
   std::shared_ptr<TestPlan> plan;
   std::shared_ptr<core::controller::ControllerServiceNode> aws_credentials_service;
 };
 
-namespace {
+TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test credentials provider created from properties", "[credentialsProvider]") {
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::AccessKey, "key");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::SecretKey, "secret");
+  REQUIRE(aws_credentials_service->enable());
+  const auto aws_credentials_impl = getCredentialsServiceImplementation();
 
-void setEnvironmentCredentials(const std::string& key, const std::string& secret_key) {
-  #ifdef WIN32
-  _putenv_s("AWS_ACCESS_KEY_ID", key.c_str());
-  _putenv_s("AWS_SECRET_ACCESS_KEY", secret_key.c_str());
-  #else
-  setenv("AWS_ACCESS_KEY_ID", key.c_str(), 1);
-  setenv("AWS_SECRET_ACCESS_KEY", secret_key.c_str(), 1);
-  #endif
+  auto credentials_provider = aws_credentials_impl->getAWSCredentialsProvider();
+  REQUIRE(credentials_provider != nullptr);
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "key");
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSSecretKey() == "secret");
+
+  // The same provider is handed out on every call, and it keeps resolving the configured credentials
+  CHECK(aws_credentials_impl->getAWSCredentialsProvider() == credentials_provider);
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "key");
 }
 
-TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test expired credentials are refreshed", "[credentialRefresh]") {
-  plan->setProperty(aws_credentials_service, minifi::aws::controllers::AWSCredentialsService::AccessKey, "key");
-  plan->setProperty(aws_credentials_service, minifi::aws::controllers::AWSCredentialsService::SecretKey, "secret");
-  aws_credentials_service->enable();
-  assert(aws_credentials_service->getControllerServiceImplementation() != nullptr);
-  auto aws_credentials_impl = aws_credentials_service->getControllerServiceImplementation<minifi::aws::controllers::AWSCredentialsService>();
+TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test credentials from default credential chain are always refreshed", "[credentialsProvider]") {
+  const ScopedEnvironmentVariable access_key{"AWS_ACCESS_KEY_ID", "key"};
+  const ScopedEnvironmentVariable secret_key{"AWS_SECRET_ACCESS_KEY", "secret"};
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::UseDefaultCredentials, "true");
+  REQUIRE(aws_credentials_service->enable());
 
-  // Check intial credentials
-  REQUIRE(aws_credentials_impl->getAWSCredentials());
-  REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSAccessKeyId() == "key");
-  REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSSecretKey() == "secret");
-  REQUIRE_FALSE(aws_credentials_impl->getAWSCredentials()->IsExpired());
-
-  // Expire credentials
-  get_aws_credentials_(*aws_credentials_impl)->SetExpiration(Aws::Utils::DateTime(0.0));
-  REQUIRE(get_aws_credentials_(*aws_credentials_impl)->IsExpired());
-
-  // Check for credential refresh
-  REQUIRE_FALSE(aws_credentials_impl->getAWSCredentials()->IsExpired());
-}
-
-TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test credentials from default credential chain are always refreshed", "[credentialRefresh]") {
-  setEnvironmentCredentials("key", "secret");
-  plan->setProperty(aws_credentials_service, minifi::aws::controllers::AWSCredentialsService::UseDefaultCredentials, "true");
-  aws_credentials_service->enable();
-  assert(aws_credentials_service->getControllerServiceImplementation() != nullptr);
-  auto aws_credentials_impl = aws_credentials_service->getControllerServiceImplementation<minifi::aws::controllers::AWSCredentialsService>();
-
-  // Check intial credentials
-  REQUIRE(aws_credentials_impl->getAWSCredentials());
-  REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSAccessKeyId() == "key");
-  REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSSecretKey() == "secret");
-  REQUIRE_FALSE(aws_credentials_impl->getAWSCredentials()->IsExpired());
+  auto credentials_provider = getCredentialsServiceImplementation()->getAWSCredentialsProvider();
+  REQUIRE(credentials_provider != nullptr);
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "key");
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSSecretKey() == "secret");
 
   // Set new credentials
-  setEnvironmentCredentials("key2", "secret2");
+  const ScopedEnvironmentVariable new_access_key{"AWS_ACCESS_KEY_ID", "key2"};
+  const ScopedEnvironmentVariable new_secret_key{"AWS_SECRET_ACCESS_KEY", "secret2"};
 
-  // Check for credential refresh
-  REQUIRE(aws_credentials_impl->getAWSCredentials());
-  REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSAccessKeyId() == "key2");
-  REQUIRE(aws_credentials_impl->getAWSCredentials()->GetAWSSecretKey() == "secret2");
-  REQUIRE_FALSE(aws_credentials_impl->getAWSCredentials()->IsExpired());
+  // The provider picks up the new credentials without being rebuilt
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "key2");
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSSecretKey() == "secret2");
+}
+
+TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test a failed credentials provider creation is not cached", "[credentialsProvider]") {
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::CredentialConfigurationStrategy, "Environment Variables");
+  REQUIRE(aws_credentials_service->enable());
+  const auto aws_credentials_impl = getCredentialsServiceImplementation();
+  REQUIRE(aws_credentials_impl->getAWSCredentialsProvider() == nullptr);
+
+  const ScopedEnvironmentVariable access_key{"AWS_ACCESS_KEY_ID", "env_key"};
+  const ScopedEnvironmentVariable secret_key{"AWS_SECRET_ACCESS_KEY", "env_secret"};
+
+  auto credentials_provider = aws_credentials_impl->getAWSCredentialsProvider();
+  REQUIRE(credentials_provider != nullptr);
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "env_key");
+}
+
+TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test credential settings are not carried over to the next enable", "[credentialsProvider]") {
+  const ScopedEnvironmentVariable access_key{"AWS_ACCESS_KEY_ID", "envkey"};
+  const ScopedEnvironmentVariable secret_key{"AWS_SECRET_ACCESS_KEY", "envsecret"};
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::UseDefaultCredentials, "true");
+  REQUIRE(aws_credentials_service->enable());
+  const auto aws_credentials_impl = getCredentialsServiceImplementation();
+  REQUIRE(aws_credentials_impl->getAWSCredentialsProvider()->GetAWSCredentials().GetAWSAccessKeyId() == "envkey");
+
+  aws_credentials_service->disable();
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::UseDefaultCredentials, "false");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::AccessKey, "key");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::SecretKey, "secret");
+  REQUIRE(aws_credentials_service->enable());
+
+  auto credentials_provider = aws_credentials_impl->getAWSCredentialsProvider();
+  REQUIRE(credentials_provider != nullptr);
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "key");
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSSecretKey() == "secret");
+}
+
+TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test Credential Configuration Strategy values are case insensitive", "[credentialsProvider]") {
+  const auto strategy = GENERATE(as<std::string>{}, "From Properties", "from properties", "FROM PROPERTIES", "fRoM pRoPeRtIeS");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::CredentialConfigurationStrategy, strategy);
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::AccessKey, "key");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::SecretKey, "secret");
+  REQUIRE(aws_credentials_service->enable());
+
+  auto credentials_provider = getCredentialsServiceImplementation()->getAWSCredentialsProvider();
+  REQUIRE(credentials_provider != nullptr);
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "key");
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSSecretKey() == "secret");
+}
+
+TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test the service cannot be enabled when both Use Default Credentials and Credential Configuration Strategy are set", "[credentialsProvider]") {
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::UseDefaultCredentials, "true");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::CredentialConfigurationStrategy, "From Properties");
+  CHECK(!aws_credentials_service->enable());
+  CHECK(logContains("Both Credential Configuration Strategy and Use Default Credentials properties are set!"));
+}
+
+TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test the default value of Use Default Credentials is not treated as a strategy", "[credentialsProvider]") {
+  const ScopedEnvironmentVariable access_key{"AWS_ACCESS_KEY_ID", "env_key"};
+  const ScopedEnvironmentVariable secret_key{"AWS_SECRET_ACCESS_KEY", "env_secret"};
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::CredentialConfigurationStrategy, "From Properties");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::AccessKey, "key");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::SecretKey, "secret");
+  REQUIRE(aws_credentials_service->enable());
+
+  auto credentials_provider = getCredentialsServiceImplementation()->getAWSCredentialsProvider();
+  REQUIRE(credentials_provider != nullptr);
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "key");
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSSecretKey() == "secret");
 }
 
 }  // namespace

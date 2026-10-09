@@ -69,7 +69,7 @@ void ListS3::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   logger_->log_debug("ListS3: RequesterPays [{}]", requester_pays_);
 
   if (!s3_wrapper_) {
-    s3_wrapper_ = s3_wrapper_factory_(credentials_, client_config_, true);
+    s3_wrapper_ = s3_wrapper_factory_(credentials_provider_, client_config_, true);
   }
 }
 

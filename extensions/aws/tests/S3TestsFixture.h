@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <string>
 
@@ -35,7 +36,6 @@
 #include "utils/file/FileUtils.h"
 #include "MockS3RequestSender.h"
 #include "unit/TestUtils.h"
-#include "AWSCredentialsProvider.h"
 #include "s3/MultipartUploadStateStorage.h"
 #include "s3/S3Wrapper.h"
 
@@ -58,7 +58,7 @@ class S3TestsFixture {
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<T>();
-    LogTestController::getInstance().setDebug<minifi::aws::AWSCredentialsProvider>();
+    LogTestController::getInstance().setDebug<minifi::aws::controllers::AWSCredentialsService>();
     LogTestController::getInstance().setDebug<minifi::aws::s3::MultipartUploadStateStorage>();
     LogTestController::getInstance().setDebug<minifi::aws::s3::S3Wrapper>();
 
@@ -86,13 +86,8 @@ class S3TestsFixture {
 
   template<typename Component>
   void setUseDefaultCredentialsChain(const Component &component) {
-    #ifdef WIN32
-    _putenv_s("AWS_ACCESS_KEY_ID", "key");
-    _putenv_s("AWS_SECRET_ACCESS_KEY", "secret");
-    #else
-    setenv("AWS_ACCESS_KEY_ID", "key", 1);
-    setenv("AWS_SECRET_ACCESS_KEY", "secret", 1);
-    #endif
+    access_key_env_.emplace("AWS_ACCESS_KEY_ID", "key");
+    secret_key_env_.emplace("AWS_SECRET_ACCESS_KEY", "secret");
     plan->setProperty(component, "Use Default Credentials", "true");
   }
 
@@ -139,6 +134,9 @@ class S3TestsFixture {
 
  protected:
   TestController test_controller;
+  // The environment variables the default credential chain reads are process-global, so they are only set for the lifetime of the test
+  std::optional<minifi::test::utils::ScopedEnvironmentVariable> access_key_env_;
+  std::optional<minifi::test::utils::ScopedEnvironmentVariable> secret_key_env_;
   std::shared_ptr<TestPlan> plan;
   std::unique_ptr<MockS3RequestSender> mock_s3_request_sender;
   MockS3RequestSender* mock_s3_request_sender_ptr;
@@ -162,8 +160,8 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
     auto uuid = utils::IdGenerator::getIdGenerator()->generate();
     auto impl = std::unique_ptr<T>(  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
       new T(core::ProcessorMetadata{.uuid = uuid, .name = "S3Processor", .logger = core::logging::LoggerFactory<T>::getLogger(uuid)},
-        [this](const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing) {
-          this->mock_s3_request_sender->setCredentials(credentials);
+        [this](const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing) {
+          this->mock_s3_request_sender->setCredentialsProvider(credentials_provider);
           this->mock_s3_request_sender->setClientConfig(client_config);
           this->mock_s3_request_sender->setUseVirtualAddressing(use_virtual_addressing);
           return std::make_unique<minifi::aws::s3::S3Wrapper>(std::move(this->mock_s3_request_sender));
@@ -220,8 +218,8 @@ class FlowProducerS3TestsFixture : public S3TestsFixture<T> {
     this->mock_s3_request_sender_ptr = this->mock_s3_request_sender.get();
     auto impl = std::unique_ptr<T>(  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
       new T(core::ProcessorMetadata{.uuid = uuid, .name = "S3Processor", .logger = core::logging::LoggerFactory<T>::getLogger(uuid)},
-        [this](const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing) {
-          this->mock_s3_request_sender->setCredentials(credentials);
+        [this](const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing) {
+          this->mock_s3_request_sender->setCredentialsProvider(credentials_provider);
           this->mock_s3_request_sender->setClientConfig(client_config);
           this->mock_s3_request_sender->setUseVirtualAddressing(use_virtual_addressing);
           return std::make_unique<minifi::aws::s3::S3Wrapper>(std::move(this->mock_s3_request_sender));
