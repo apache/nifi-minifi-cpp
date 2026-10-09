@@ -61,9 +61,14 @@ Feature: Putting and fetching data to OPC UA server
     | Double       | 123.321 |
     | Boolean      | False   |
 
+  # The target node does not exist on the server, so the first flow file creates it and the second
+  # one - dropped into the input directory only after the first value has been read back - takes the
+  # update path. Sequencing the two writes through separate steps is what makes this deterministic:
+  # if both files were present at startup, GetFile's listing order would decide which value lands
+  # last and the final assertion would be a coin flip.
   Scenario Outline: Update and fetch data from an OPC UA node
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "update-opc-ua-node" flow
-    And a directory at "/tmp/input" has a file with the content "<Value>" in the "update-opc-ua-node" flow
+    And a directory at "/tmp/input" has a file with the content "<Initial Value>" in the "update-opc-ua-node" flow
     And a PutOPCProcessor processor in the "update-opc-ua-node" flow
     And PutOPCProcessor is EVENT_DRIVEN in the "update-opc-ua-node" flow
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
@@ -79,7 +84,7 @@ Feature: Putting and fetching data to OPC UA server
       | PutOPCProcessor   | Target node namespace index | 1                                                 |
       | PutOPCProcessor   | Value type                  | <Value Type>                                      |
       | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server-${scenario_id}:4840/       |
-      | PutOPCProcessor   | Target node browse name     | testnodename                                      |
+      | PutOPCProcessor   | Target node browse name     | updatetestnode                                    |
     And these processor properties are set in the "fetch-opc-ua-node" flow
       | processor name    | property name               | property value                                    |
       | FetchOPCProcessor | Node ID                     | <Node ID>                                         |
@@ -94,17 +99,22 @@ Feature: Putting and fetching data to OPC UA server
     And an OPC UA server is set up
 
     When all instances start up
-    Then in the "fetch-opc-ua-node" container at least one file with the content "<Value>" is placed in the "/tmp/output" directory in less than 60 seconds
+    # The node did not exist, so this first value proves the node was created.
+    Then in the "fetch-opc-ua-node" container at least one file with the content "<Initial Value>" is placed in the "/tmp/output" directory in less than 60 seconds
 
-  # Node ids starting from 51000 are pre-defined demo node ids in the test server application (server_ctt) of the open62541 docker image. There is one nodeid defined
-  # for each type supported by OPC UA. These demo nodes can be used for testing purposes. "the.answer" is also a pre-defined string id for the same testing purposes.
-  Examples: Topic names and formats to test
-    | Node ID Type | Node ID     | Value Type   | Value       |
-    | Int          | 51034       | String       | minifi-test |
-    | Int          | 51001       | Boolean      | True        |
-    | String       | the.answer  | Int32        | 54          |
-    | Int          | 51019       | UInt32       | 123         |
-    | Int          | 51031       | Double       | 66.6        |
+    # Only now, with the node known to exist, write a second value to the same node. Reading this
+    # one back is only possible if PutOPCProcessor can update a node it created itself.
+    When a file with the content "<Updated Value>" is placed in "/tmp/input" in the "update-opc-ua-node" flow
+    Then in the "fetch-opc-ua-node" container at least one file with the content "<Updated Value>" is placed in the "/tmp/output" directory in less than 60 seconds
+    And the logs of the "update-opc-ua-node" container do not contain the following message: "Failed to update node" after 1 second
+
+  Examples: Node id types and value types to test
+    | Node ID Type | Node ID     | Value Type   | Initial Value | Updated Value |
+    | Int          | 9001        | String       | minifi-test   | minifi-update |
+    | Int          | 9002        | Boolean      | False         | True          |
+    | String       | updatetest  | Int32        | 54            | 55            |
+    | Int          | 9003        | UInt32       | 123           | 456           |
+    | Int          | 9004        | Double       | 66.6          | 77.7          |
 
   Scenario: Create and fetch data from an OPC UA node through secure connection
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "create-opc-ua-node" flow
