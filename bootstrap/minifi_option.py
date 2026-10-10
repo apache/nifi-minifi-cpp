@@ -63,6 +63,8 @@ class MinifiOptions:
             self.use_ninja.value = cache_values["USE_NINJA"].value
         if "USE_CONAN" in cache_values:
             self.use_conan.value = cache_values["USE_CONAN"].value
+        if "CMAKE_BUILD_TYPE" in cache_values:
+            self.build_type.value = cache_values["CMAKE_BUILD_TYPE"].value
         minifi_prefixed_extension_options = ["MINIFI_RUST", "MINIFI_LMDB"]
         self.bool_options = {
             name: cache_value

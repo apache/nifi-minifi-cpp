@@ -18,14 +18,14 @@ env:
   CONAN_PASSWORD_NIFI_CONAN: ${{ secrets.CONAN_ACCESS_TOKEN }}
   DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_KAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
-    -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DENABLE_LLAMACPP=ON -DMINIFI_LMDB=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON -DMINIFI_RUST=OFF \
-    -DDOCKER_USE_CONAN=ON -DDOCKER_NIFI_CONAN_USER=${{ secrets.CONAN_USERNAME }} -DDOCKER_NIFI_CONAN_PASSWORD=${{ secrets.CONAN_ACCESS_TOKEN }}
+    -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DENABLE_COUCHBASE=ON -DENABLE_LLAMACPP=ON -DMINIFI_LMDB=ON -DDOCKER_BUILD_ONLY=ON -DMINIFI_PERFORMANCE_TESTS=ON -DMINIFI_RUST=ON \
+    -DENABLE_BUSTACHE=ON -DENABLE_SFTP=ON -DENABLE_EXECUTE_PROCESS=ON -DDOCKER_USE_CONAN=ON -DDOCKER_NIFI_CONAN_USER=${{ secrets.CONAN_USERNAME }} -DDOCKER_NIFI_CONAN_PASSWORD=${{ secrets.CONAN_ACCESS_TOKEN }}
 jobs:
   macos_xcode:
     name: "macOS 26 aarch64"
     if: >-
-      github.event_name != 'push' || 
-      github.repository != 'apache/nifi-minifi-cpp' || 
+      github.event_name != 'push' ||
+      github.repository != 'apache/nifi-minifi-cpp' ||
       github.ref == 'refs/heads/main'
     runs-on: macos-26
     timeout-minutes: 240
@@ -140,8 +140,8 @@ jobs:
   windows_VS2022:
     name: "Windows Server 2025 x86_64"
     if: >-
-      github.event_name != 'push' || 
-      github.repository != 'apache/nifi-minifi-cpp' || 
+      github.event_name != 'push' ||
+      github.repository != 'apache/nifi-minifi-cpp' ||
       github.ref == 'refs/heads/main'
     runs-on: windows-2025
     timeout-minutes: 300
@@ -264,8 +264,8 @@ jobs:
   ubuntu_22_04_clang_arm:
     name: "Ubuntu 22.04 clang aarch64"
     if: >-
-      github.event_name != 'push' || 
-      github.repository != 'apache/nifi-minifi-cpp' || 
+      github.event_name != 'push' ||
+      github.repository != 'apache/nifi-minifi-cpp' ||
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 240
@@ -376,26 +376,6 @@ jobs:
           ulimit -c unlimited
           ctest --timeout 300 -j$(nproc) --output-on-failure -LE performance
         working-directory: build
-      - name: Check manifest
-        id: check_manifest
-        working-directory: build
-        run: |
-          sed -i 's|nifi\.extension\.path=\.\./extensions/\*|nifi.extension.path=./*|' conf/minifi.properties
-          ./bin/minifi --manifest | diff -u ../.github/references/ubuntu_22_04_clang_arm_manifest.json - > manifest.patch || {
-            echo "::error::Manifest mismatch! Download the artifact to apply the patch."
-            cat manifest.patch
-            exit 1
-          }
-
-      - name: Upload patch file
-        if: failure() && steps.check_manifest.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: update-manifest.patch
-          path: build/manifest.patch
-          if-no-files-found: ignore
-          retention-days: 5
-
       - name: performance-test
         id: performance-test
         run: ctest -j1 --verbose -L performance
@@ -439,8 +419,8 @@ jobs:
   rocky:
     name: "Rocky (docker) x86_64"
     if: >-
-      github.event_name != 'push' || 
-      github.repository != 'apache/nifi-minifi-cpp' || 
+      github.event_name != 'push' ||
+      github.repository != 'apache/nifi-minifi-cpp' ||
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 180
@@ -513,8 +493,8 @@ jobs:
   docker_build:
     name: "Docker build for integration tests (x86_64)"
     if: >-
-      github.event_name != 'push' || 
-      github.repository != 'apache/nifi-minifi-cpp' || 
+      github.event_name != 'push' ||
+      github.repository != 'apache/nifi-minifi-cpp' ||
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
     timeout-minutes: 180
@@ -662,11 +642,44 @@ jobs:
         with:
           name: minifi_rs_behave
           path: minifi_rust/minifi_rs_behave/output
+  check_manifest:
+    name: "Check manifest"
+    needs: docker_build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - id: checkout
+        uses: actions/checkout@v6
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: minifi_docker
+          path: build
+      - name: Load Docker image
+        run: |
+          docker load --input ./build/minifi_docker.tar | awk '{print $NF}' | xargs -I {} docker tag {} apacheminificpp:manifest
+      - name: Check manifest
+        id: check_manifest
+        run: |
+          docker run --rm apacheminificpp:manifest ./bin/minifi --manifest > .github/references/docker_manifest.json
+          git diff --exit-code -- .github/references/docker_manifest.json > manifest.patch || {
+            echo "::error::Manifest mismatch! Download the artifact to apply the patch."
+            cat manifest.patch
+            exit 1
+          }
+      - name: Upload patch file
+        if: failure() && steps.check_manifest.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: update-manifest.patch
+          path: manifest.patch
+          if-no-files-found: ignore
+          retention-days: 5
   linters:
     name: "C++ lint + Shellcheck + Ruff + Cargo fmt check + Clippy check"
     if: >-
-      github.event_name != 'push' || 
-      github.repository != 'apache/nifi-minifi-cpp' || 
+      github.event_name != 'push' ||
+      github.repository != 'apache/nifi-minifi-cpp' ||
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
