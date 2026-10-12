@@ -71,6 +71,7 @@ Feature: Putting and fetching data to OPC UA server
     And a directory at "/tmp/input" has a file with the content "<Initial Value>" in the "update-opc-ua-node" flow
     And a PutOPCProcessor processor in the "update-opc-ua-node" flow
     And PutOPCProcessor is EVENT_DRIVEN in the "update-opc-ua-node" flow
+    And PutOPCProcessor's success relationship is auto-terminated in the "update-opc-ua-node" flow
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
     And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
