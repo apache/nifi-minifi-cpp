@@ -167,7 +167,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     return batch_duration_;
   }
 
-  bool useProtocol(std::function<bool(sitetosite::SiteToSiteClient& client)> callback);
+  bool useProtocol(const std::function<bool(sitetosite::SiteToSiteClient& client)>& callback);
 
  protected:
   std::optional<std::pair<std::string, uint16_t>> refreshRemoteSiteToSiteInfo();

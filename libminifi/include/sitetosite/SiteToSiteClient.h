@@ -75,7 +75,7 @@ class SiteToSiteClient {
   class YieldAction {
    public:
     template<Yieldable T>
-    YieldAction(T& impl)
+    YieldAction(T& impl)  // NOLINT(runtime/explicit): erasure wrapper, converts implicitly by design
       : self_(std::addressof(impl)),
         method_{[] (void* self) {
           return static_cast<std::remove_reference_t<T>*>(self)->yield();
