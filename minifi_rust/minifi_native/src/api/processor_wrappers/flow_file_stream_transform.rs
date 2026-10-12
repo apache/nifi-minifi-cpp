@@ -9,7 +9,7 @@ use crate::{FlowFileAttribute, impl_with_attributes};
 use crate::{
     GetAttribute, GetControllerService, GetProperty, InputStream, LogLevel, Logger, MinifiError,
     MultiThreaded, OnTriggerResult, OutputStream, ProcessContext, ProcessSession, Processor,
-    Relationship, Schedule, SingleThreaded, TransformError,
+    ProcessorDefinition, Relationship, Schedule, SingleThreaded, TransformError,
 };
 use minifi_native::GetId;
 
@@ -59,10 +59,19 @@ impl TransformStreamResult {
 
 impl_with_attributes!(TransformStreamResult);
 
-pub trait FlowFileStreamTransform {
+pub trait FlowFileStreamTransform: ProcessorDefinition {
     /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
-    /// are routed to.
+    /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
+    ///
+    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// [`crate::TransformErrorExt::rollback_err`].
     const ERROR_RELATIONSHIP: &'static Relationship;
+
+    /// Forced by the processor wrapper's trigger; implementors should not override it.
+    const ERROR_RELATIONSHIP_DECLARED: () = assert!(
+        crate::api::relationship::is_declared(Self::RELATIONSHIPS, Self::ERROR_RELATIONSHIP),
+        "ERROR_RELATIONSHIP must also be listed in this processor's RELATIONSHIPS"
+    );
 
     fn transform<
         Ctx: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -76,10 +85,19 @@ pub trait FlowFileStreamTransform {
     ) -> Result<TransformStreamResult, TransformError>;
 }
 
-pub trait MutFlowFileStreamTransform {
+pub trait MutFlowFileStreamTransform: ProcessorDefinition {
     /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
-    /// are routed to.
+    /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
+    ///
+    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// [`crate::TransformErrorExt::rollback_err`].
     const ERROR_RELATIONSHIP: &'static Relationship;
+
+    /// Forced by the processor wrapper's trigger; implementors should not override it.
+    const ERROR_RELATIONSHIP_DECLARED: () = assert!(
+        crate::api::relationship::is_declared(Self::RELATIONSHIPS, Self::ERROR_RELATIONSHIP),
+        "ERROR_RELATIONSHIP must also be listed in this processor's RELATIONSHIPS"
+    );
 
     fn transform<Ctx: GetProperty + GetControllerService + GetAttribute, LoggerImpl: Logger>(
         &mut self,
@@ -163,6 +181,8 @@ where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
+        // Const defaults are lazy; this forces the check.
+        let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref scheduled_impl) = self.scheduled_impl {
             handle_stream_transform(
                 context,
@@ -192,6 +212,8 @@ where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
+        // Const defaults are lazy; this forces the check.
+        let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
             handle_stream_transform(
                 context,
@@ -210,7 +232,10 @@ where
 mod tests {
     use super::*;
     use crate::api::RawProcessor;
-    use crate::{MockFlowFile, MockLogger, MockProcessContext, MockProcessSession};
+    use crate::{
+        MockFlowFile, MockLogger, MockProcessContext, MockProcessSession, OutputAttribute,
+        ProcessorInputRequirement, PropertyDefinition,
+    };
 
     const TEST_RELATIONSHIP: Relationship = Relationship {
         name: "test",
@@ -227,6 +252,15 @@ mod tests {
         fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
             Ok(PartialWriteThenError)
         }
+    }
+    impl ProcessorDefinition for PartialWriteThenError {
+        const DESCRIPTION: &'static str = "test stream transform";
+        const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
+        const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
+        const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
+        const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
+        const RELATIONSHIPS: &'static [Relationship] = &[TEST_RELATIONSHIP, FAILURE];
+        const PROPERTIES: &'static [PropertyDefinition] = &[];
     }
     impl FlowFileStreamTransform for PartialWriteThenError {
         const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;

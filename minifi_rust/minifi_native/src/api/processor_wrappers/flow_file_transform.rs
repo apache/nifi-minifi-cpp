@@ -10,7 +10,8 @@ use crate::api::property::{GetControllerService, GetProperty};
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
     GetAttribute, LogLevel, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
-    ProcessSession, Relationship, Schedule, SingleThreaded, TransformError, impl_with_attributes,
+    ProcessSession, ProcessorDefinition, Relationship, Schedule, SingleThreaded, TransformError,
+    impl_with_attributes,
 };
 
 use minifi_native::{InputStream, trace};
@@ -87,10 +88,19 @@ impl<'a> TransformedFlowFile<'a> {
 
 impl_with_attributes!(TransformedFlowFile<'a>);
 
-pub trait FlowFileTransform {
+pub trait FlowFileTransform: ProcessorDefinition {
     /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
-    /// are routed to.
+    /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
+    ///
+    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// [`crate::TransformErrorExt::rollback_err`].
     const ERROR_RELATIONSHIP: &'static Relationship;
+
+    /// Forced by the processor wrapper's trigger; implementors should not override it.
+    const ERROR_RELATIONSHIP_DECLARED: () = assert!(
+        crate::api::relationship::is_declared(Self::RELATIONSHIPS, Self::ERROR_RELATIONSHIP),
+        "ERROR_RELATIONSHIP must also be listed in this processor's RELATIONSHIPS"
+    );
 
     fn transform<
         'a,
@@ -104,10 +114,19 @@ pub trait FlowFileTransform {
     ) -> Result<TransformedFlowFile<'a>, TransformError>;
 }
 
-pub trait MutFlowFileTransform {
+pub trait MutFlowFileTransform: ProcessorDefinition {
     /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
-    /// are routed to.
+    /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
+    ///
+    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// [`crate::TransformErrorExt::rollback_err`].
     const ERROR_RELATIONSHIP: &'static Relationship;
+
+    /// Forced by the processor wrapper's trigger; implementors should not override it.
+    const ERROR_RELATIONSHIP_DECLARED: () = assert!(
+        crate::api::relationship::is_declared(Self::RELATIONSHIPS, Self::ERROR_RELATIONSHIP),
+        "ERROR_RELATIONSHIP must also be listed in this processor's RELATIONSHIPS"
+    );
 
     fn transform<
         'a,
@@ -198,6 +217,8 @@ where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
+        // Const defaults are lazy; this forces the check.
+        let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref scheduled_impl) = self.scheduled_impl {
             handle_transform(
                 context,
@@ -227,6 +248,8 @@ where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
+        // Const defaults are lazy; this forces the check.
+        let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
             handle_transform(
                 context,
@@ -248,7 +271,8 @@ mod tests {
     use crate::api::raw_processor::MultiThreadedTrigger;
     use crate::{
         GetControllerService, GetId, MockFlowFile, MockLogger, MockProcessContext,
-        MockProcessSession, TransformError,
+        MockProcessSession, OutputAttribute, ProcessorInputRequirement, PropertyDefinition,
+        TransformError,
     };
 
     const FAILURE: Relationship = Relationship {
@@ -261,6 +285,15 @@ mod tests {
         fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
             Ok(RouteToFailure)
         }
+    }
+    impl ProcessorDefinition for RouteToFailure {
+        const DESCRIPTION: &'static str = "test transform";
+        const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
+        const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
+        const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
+        const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
+        const RELATIONSHIPS: &'static [Relationship] = &[FAILURE];
+        const PROPERTIES: &'static [PropertyDefinition] = &[];
     }
     impl FlowFileTransform for RouteToFailure {
         const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
@@ -290,6 +323,15 @@ mod tests {
         fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
             Ok(RollbackTransform)
         }
+    }
+    impl ProcessorDefinition for RollbackTransform {
+        const DESCRIPTION: &'static str = "test transform";
+        const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
+        const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
+        const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
+        const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
+        const RELATIONSHIPS: &'static [Relationship] = &[FAILURE];
+        const PROPERTIES: &'static [PropertyDefinition] = &[];
     }
     impl FlowFileTransform for RollbackTransform {
         const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
