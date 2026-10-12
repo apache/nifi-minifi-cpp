@@ -15,13 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::GetControllerService;
 use crate::api::{RawProcessor, ThreadingModel};
-use crate::{GetProperty, LogLevel, Logger, MinifiError, ProcessContext};
+use crate::{LogLevel, Logger, MinifiError, ProcessContext, ScheduleContext};
 use std::marker::PhantomData;
 
 pub trait Schedule {
-    fn schedule<Ctx: GetProperty + GetControllerService, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         context: &Ctx,
         logger: &L,
     ) -> Result<Self, MinifiError>
@@ -65,7 +64,10 @@ where
         self.logger.log(log_level, args);
     }
 
-    fn schedule<P: ProcessContext>(&mut self, context: &P) -> Result<(), MinifiError> {
+    fn schedule<P: ProcessContext + ScheduleContext>(
+        &mut self,
+        context: &P,
+    ) -> Result<(), MinifiError> {
         self.scheduled_impl = Some(Impl::schedule(context, &self.logger)?);
         Ok(())
     }

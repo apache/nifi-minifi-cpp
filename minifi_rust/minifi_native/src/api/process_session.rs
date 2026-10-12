@@ -31,10 +31,23 @@ pub enum IoState {
 pub trait ProcessSession {
     type FlowFile: FlowFile;
 
+    /// A handle to a flow file stashed with the session, storable across triggers.
+    ///
+    /// Produced by [`stash`](Self::stash) and consumed by [`unstash`](Self::unstash).
+    /// Unlike [`Self::FlowFile`] (which is bound to the session), this type is
+    /// `'static` so it can be held between `onTrigger` invocations - see
+    /// [`FlowFileStore`](crate::FlowFileStore).
+    type StashedFlowFile: 'static + Send;
+
     fn create(&mut self) -> Result<Self::FlowFile, MinifiError>;
     fn get(&mut self) -> Option<Self::FlowFile>;
+    fn clone_ff(&mut self, flow_file: &Self::FlowFile) -> Result<Self::FlowFile, MinifiError>;
     fn transfer(&self, flow_file: Self::FlowFile, relationship: &str) -> Result<(), MinifiError>;
     fn remove(&mut self, flow_file: Self::FlowFile) -> Result<(), MinifiError>;
+
+    fn stash(&mut self, flow_file: Self::FlowFile) -> Result<Self::StashedFlowFile, MinifiError>;
+
+    fn unstash(&mut self, stashed: Self::StashedFlowFile) -> Result<Self::FlowFile, MinifiError>;
 
     fn set_attribute(
         &self,
@@ -66,4 +79,15 @@ pub trait ProcessSession {
         F: FnOnce(&mut dyn InputStream) -> Result<R, MinifiError>;
 
     fn get_flow_file_id(&self, flow_file: &Self::FlowFile) -> Result<String, MinifiError>;
+
+    fn get_required_attribute(
+        &self,
+        flow_file: &Self::FlowFile,
+        attr_key: &str,
+    ) -> Result<String, MinifiError> {
+        self.get_attribute(flow_file, attr_key)
+            .ok_or(MinifiError::MissingRequiredAttribute(
+                attr_key.to_owned().into(),
+            ))
+    }
 }

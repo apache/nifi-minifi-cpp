@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::api::FlowFile;
-use minifi_native_sys::minifi_flow_file;
+use minifi_native_sys::{minifi_flow_file, minifi_stashed_flow_file};
 
 pub struct CffiFlowFile<'a> {
     ptr: *mut minifi_flow_file,
@@ -37,3 +37,33 @@ impl CffiFlowFile<'_> {
 }
 
 impl FlowFile for CffiFlowFile<'_> {}
+
+/// A handle to a flow file that has been stashed with a session and can be kept
+/// across `onTrigger` invocations (see [`ProcessSession::stash`]).
+///
+/// Unlike [`CffiFlowFile`] it carries no session lifetime, so it is `'static`.
+/// The stashed flow file itself is owned by the processor/session on the minifi
+/// side; this is only a token used to [`unstash`](crate::ProcessSession::unstash)
+/// it again. There is deliberately no explicit free: a token dropped without
+/// being unstashed simply leaves the stashed flow file in the processor, which
+/// minifi reclaims when the processor is torn down.
+///
+/// [`ProcessSession::stash`]: crate::ProcessSession::stash
+pub struct CffiStashedFlowFile {
+    ptr: *mut minifi_stashed_flow_file,
+}
+
+// SAFETY: the handle is only ever touched from the single processor instance
+// that stashed it; the stashed flow file lives on the minifi side, not behind
+// this pointer.
+unsafe impl Send for CffiStashedFlowFile {}
+
+impl CffiStashedFlowFile {
+    pub(crate) fn new(ptr: *mut minifi_stashed_flow_file) -> Self {
+        Self { ptr }
+    }
+
+    pub(crate) fn get_ptr(&self) -> *mut minifi_stashed_flow_file {
+        self.ptr
+    }
+}

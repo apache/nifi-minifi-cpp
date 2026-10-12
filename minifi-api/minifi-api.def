@@ -14,6 +14,7 @@ EXPORTS
     minifi_process_context_get_ssl_data_from_property
     minifi_process_context_report_metrics
     minifi_process_context_set_trigger_when_empty
+    minifi_process_session_clone
     minifi_process_session_create
     minifi_process_session_get
     minifi_process_session_get_flow_file_attribute
@@ -24,7 +25,9 @@ EXPORTS
     minifi_process_session_read
     minifi_process_session_remove
     minifi_process_session_set_flow_file_attribute
+    minifi_process_session_stash
     minifi_process_session_transfer
+    minifi_process_session_unstash
     minifi_process_session_write
     minifi_register_controller_service
     minifi_register_extension

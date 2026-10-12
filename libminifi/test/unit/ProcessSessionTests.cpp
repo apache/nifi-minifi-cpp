@@ -166,3 +166,35 @@ TEST_CASE("Stable C API does not leak the flow file handle", "[minifi-api][flowf
   // FlowFile alive and this assertion fails.
   REQUIRE(weak_flow_file.expired());
 }
+
+TEST_CASE("Stable C API: stash keeps a flow file across a commit and unstash brings it back", "[minifi-api][flowfilehandle]") {
+  Fixture fixture;
+  auto& process_session = fixture.processSession();
+  auto* c_session = minifi::utils::toC(&process_session);
+
+  auto created = process_session.create();
+  process_session.transfer(created, Success);
+  process_session.commit();
+
+  std::weak_ptr<minifi::core::FlowFile> weak_flow_file = created;
+  created.reset();
+
+  auto* handle = minifi_process_session_get(c_session);
+  REQUIRE(handle != nullptr);
+
+  // Stash detaches the flow file from the session; the returned stashed handle keeps it alive
+  // across the commit (it is neither routed nor deleted).
+  minifi_stashed_flow_file* stashed = nullptr;
+  REQUIRE(minifi_process_session_stash(c_session, handle, &stashed) == MINIFI_STATUS_SUCCESS);
+  REQUIRE(stashed != nullptr);
+  REQUIRE_NOTHROW(process_session.commit());
+  REQUIRE_FALSE(weak_flow_file.expired());
+
+  // Unstash hands it back as a MINIFI_OWNED handle; removing it and committing frees it for good.
+  minifi_flow_file* unstashed = nullptr;
+  REQUIRE(minifi_process_session_unstash(c_session, stashed, &unstashed) == MINIFI_STATUS_SUCCESS);
+  REQUIRE(unstashed != nullptr);
+  REQUIRE(minifi_process_session_remove(c_session, unstashed) == MINIFI_STATUS_SUCCESS);
+  process_session.commit();
+  REQUIRE(weak_flow_file.expired());
+}

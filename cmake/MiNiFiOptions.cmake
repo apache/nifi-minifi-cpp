@@ -122,6 +122,7 @@ add_minifi_option(ENABLE_OPC "Instructs the build system to enable the OPC exten
 add_minifi_option(MINIFI_RUST "Enables the build of rust based extensions." OFF)
 add_minifi_dependent_option(MINIFI_EXTENSION_PGP "Enables the PGP rust extension." ON "MINIFI_RUST" OFF)
 add_minifi_dependent_option(MINIFI_EXTENSION_TENSOR "Enables the Tensor rust extension." ON "MINIFI_RUST" OFF)
+add_minifi_dependent_option(MINIFI_EXTENSION_ENRICHMENT "Enables the build of enrichment extension" ON "MINIFI_RUST" OFF)
 add_minifi_option(MINIFI_LMDB "Enables the LMDB extension." OFF)
 
 set_minifi_cache_variable(CUSTOM_MALLOC OFF "Overwrite malloc implementation.")

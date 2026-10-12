@@ -20,9 +20,9 @@ use crate::controller_services::animal_controller_apis::{
 };
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, OutputAttribute, ProcessContext,
-    ProcessSession, ProcessorDefinition, ProcessorInputRequirement, Property, PropertyDefinition,
-    Relationship, Schedule, Trigger, critical, info, property_definitions,
+    Logger, MinifiError, OnTriggerResult, OutputAttribute, ProcessContext, ProcessSession,
+    ProcessorDefinition, ProcessorInputRequirement, Property, PropertyDefinition, Relationship,
+    Schedule, ScheduleContext, Trigger, critical, info, property_definitions,
 };
 
 pub(crate) const CAN_FLY_SERVICE: Property<dyn CanFlyControllerApi> =
@@ -35,7 +35,7 @@ pub(crate) const NUMBER_OF_LEGS: Property<dyn NumberOfLegsControllerApi> =
 pub(crate) struct ZooProcessorRs {}
 
 impl Schedule for ZooProcessorRs {
-    fn schedule<Ctx: GetProperty, L: Logger>(
+    fn schedule<Ctx: ScheduleContext, L: Logger>(
         _context: &Ctx,
         _logger: &L,
     ) -> Result<Self, MinifiError>

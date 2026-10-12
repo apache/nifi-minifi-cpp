@@ -39,4 +39,10 @@ struct EnsureMovedFromDeleter {
 
 using FlowFile = std::unique_ptr<minifi_flow_file, EnsureMovedFromDeleter>;
 
+struct NoopStashedFlowFileDeleter {
+  void operator()(minifi_stashed_flow_file*) const noexcept {}
+};
+
+using StashedFlowFile = std::unique_ptr<minifi_stashed_flow_file, NoopStashedFlowFileDeleter>;
+
 }  // namespace org::apache::nifi::minifi::api::core
