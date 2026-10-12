@@ -29,6 +29,7 @@
 #include "minifi-cpp/core/StateStorage.h"
 #include "minifi-cpp/core/VariableRegistry.h"
 #include "minifi-cpp/core/controller/ControllerServiceHandle.h"
+#include "minifi-cpp/provenance/ProvenanceRepository.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -79,7 +80,7 @@ class ProcessContext : public virtual core::VariableRegistry, public virtual uti
   virtual bool isRunning() const = 0;
   virtual bool isAutoTerminated(Relationship relationship) const = 0;
   virtual uint8_t getMaxConcurrentTasks() const = 0;
-  virtual std::shared_ptr<core::Repository> getProvenanceRepository() = 0;
+  virtual std::shared_ptr<provenance::ProvenanceRepository> getProvenanceRepository() = 0;
   virtual std::shared_ptr<core::ContentRepository> getContentRepository() const = 0;
   virtual std::shared_ptr<core::Repository> getFlowFileRepository() const = 0;
 
