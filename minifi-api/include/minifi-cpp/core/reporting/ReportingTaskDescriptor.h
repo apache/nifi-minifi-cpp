@@ -23,7 +23,7 @@
 namespace org::apache::nifi::minifi::core::reporting {
 
 class ReportingTaskDescriptor {
-public:
+ public:
   virtual ~ReportingTaskDescriptor() = default;
 
   virtual void setSupportedProperties(std::span<const PropertyReference> properties) = 0;

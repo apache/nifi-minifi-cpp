@@ -166,7 +166,7 @@ class ControllerServiceFactoryWrapper : public ObjectFactoryImpl {
 };
 
 class ReportingTaskFactoryWrapper : public ObjectFactoryImpl {
-public:
+ public:
   explicit ReportingTaskFactoryWrapper(std::unique_ptr<reporting::ReportingTaskFactory> factory)
     : ObjectFactoryImpl(factory->getModuleName()),
       factory_(std::move(factory)) {}
@@ -198,7 +198,7 @@ public:
     return factory_->getClassName();
   }
 
-private:
+ private:
   std::unique_ptr<reporting::ReportingTaskFactory> factory_;
 };
 

@@ -27,8 +27,8 @@
 namespace org::apache::nifi::minifi::core::reporting {
 
 class ReportingTask : public ProcessorApi {
-public:
-  ReportingTask(std::unique_ptr<ReportingTaskApi> impl);
+ public:
+  explicit ReportingTask(std::unique_ptr<ReportingTaskApi> impl);
   ~ReportingTask() override = default;
 
   bool isWorkAvailable() override;
