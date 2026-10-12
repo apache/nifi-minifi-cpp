@@ -56,7 +56,9 @@ RUN apk --no-cache add gcc \
   python3 \
   py3-pip \
   m4 \
-  pkgconf
+  pkgconf \
+  curl \
+  clang-dev
 
 ENV USER=minificpp
 ENV MINIFI_BASE_DIR=/opt/minifi
@@ -70,13 +72,23 @@ COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
 
 USER ${USER}
 
+# Unlike Alpine's patched rust, the rustup musl toolchain links statically by default. Corrosion always passes --target, so the
+# -crt-static rustflags from minifi_rust/.cargo/config.toml don't reach build scripts, and bindgen's build script can't dlopen libclang.
+# The rustc wrapper applies the flag to every rustc invocation, including build scripts.
+RUN if echo "$MINIFI_OPTIONS" | grep -q "MINIFI_RUST=ON"; then \
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+        CARGO_HOME=${MINIFI_BASE_DIR}/.cargo RUSTUP_HOME=${MINIFI_BASE_DIR}/.rustup sh -s -- -y --no-modify-path --profile minimal && \
+      printf '#!/bin/sh\nexec "$@" -C target-feature=-crt-static\n' > ${MINIFI_BASE_DIR}/.cargo/bin/rustc-no-crt-static && \
+      chmod +x ${MINIFI_BASE_DIR}/.cargo/bin/rustc-no-crt-static; \
+    fi
+
 RUN --mount=type=secret,id=nifi_conan_password,mode=0444 if [ "${DOCKER_USE_CONAN}" == "ON" ]; then \
       set -e; \
       cd ${MINIFI_BASE_DIR}/bootstrap && \
       python3 -m venv venv && \
       source venv/bin/activate && \
       pip install -r requirements.txt && \
-      python3 main.py --skip-compiler-install --run-conan-install --minifi-options="${MINIFI_OPTIONS}" && \
+      python3 main.py --skip-compiler-install --run-conan-install --minifi-options="${MINIFI_OPTIONS} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" && \
       if [ -n "${DOCKER_NIFI_CONAN_USER}" ] && [ -f /run/secrets/nifi_conan_password ]; then \
         conan remote login nifi-conan ${DOCKER_NIFI_CONAN_USER} -p "$(cat /run/secrets/nifi_conan_password)" || true; \
         conan upload "*" -r nifi-conan --confirm || true; \
@@ -87,6 +99,11 @@ RUN mkdir -p ${MINIFI_BASE_DIR}/build
 WORKDIR ${MINIFI_BASE_DIR}/build
 RUN export PATH=/usr/lib64/ccache/bin${PATH:+:${PATH}} && \
     export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
+    if echo "$MINIFI_OPTIONS" | grep -q "MINIFI_RUST=ON"; then \
+        export CARGO_HOME=${MINIFI_BASE_DIR}/.cargo RUSTUP_HOME=${MINIFI_BASE_DIR}/.rustup && \
+        export PATH=${CARGO_HOME}/bin${PATH:+:${PATH}} && \
+        export RUSTC_WRAPPER=${CARGO_HOME}/bin/rustc-no-crt-static; \
+    fi && \
     if [ "${DOCKER_USE_CONAN}" == "ON" ]; then CONAN_TOOLCHAIN="-DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake"; fi && \
     cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${CONAN_TOOLCHAIN:-} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" package && \

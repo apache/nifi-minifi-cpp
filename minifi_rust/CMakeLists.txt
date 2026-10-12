@@ -37,6 +37,8 @@ corrosion_import_crate(MANIFEST_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml)
 
 if (NOT ENABLE_TEST_PROCESSORS)
     set_target_properties(cargo-build_minifi_rs_playground PROPERTIES EXCLUDE_FROM_ALL TRUE)
+elseif (CI_BUILD)
+    register_rust_extension(minifi_rs_playground "RUST PLAYGROUND EXTENSION" ENABLE_TEST_PROCESSORS "This enables rust processors purely for testing purposes")
 endif()
 
 if (MINIFI_EXTENSION_PGP)
