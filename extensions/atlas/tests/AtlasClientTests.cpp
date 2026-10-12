@@ -18,6 +18,8 @@
 #include "AtlasClient.h"
 #include "MockAtlas.h"
 
+#include <string_view>
+
 #include "rapidjson/document.h"
 #include "unit/Catch.h"
 
@@ -100,16 +102,16 @@ TEST_CASE("AtlasClient createOrUpdateEntities serializes strings, refs, and ref 
   REQUIRE(body["entities"].IsArray());
   REQUIRE(body["entities"].Size() == 1);
   const auto& e = body["entities"][0];
-  REQUIRE(std::string{e["typeName"].GetString()} == "nifi_flow_path");
-  REQUIRE(std::string{e["attributes"]["qualifiedName"].GetString()} == "abcd-1234@my-cluster");
-  REQUIRE(std::string{e["attributes"]["name"].GetString()} == "ConsumeKafka, PutS3Object");
-  REQUIRE(std::string{e["attributes"]["url"].GetString()} == "http://minifi/flow/abcd-1234");
-  REQUIRE(std::string{e["attributes"]["nifiFlow"]["typeName"].GetString()} == "nifi_flow");
-  REQUIRE(std::string{e["attributes"]["nifiFlow"]["uniqueAttributes"]["qualifiedName"].GetString()} == "root-uuid@my-cluster");
+  REQUIRE(std::string_view(e["typeName"].GetString()) == "nifi_flow_path");
+  REQUIRE(std::string_view(e["attributes"]["qualifiedName"].GetString()) == "abcd-1234@my-cluster");
+  REQUIRE(std::string_view(e["attributes"]["name"].GetString()) == "ConsumeKafka, PutS3Object");
+  REQUIRE(std::string_view(e["attributes"]["url"].GetString()) == "http://minifi/flow/abcd-1234");
+  REQUIRE(std::string_view(e["attributes"]["nifiFlow"]["typeName"].GetString()) == "nifi_flow");
+  REQUIRE(std::string_view(e["attributes"]["nifiFlow"]["uniqueAttributes"]["qualifiedName"].GetString()) == "root-uuid@my-cluster");
   REQUIRE(e["attributes"]["inputs"].Size() == 1);
-  REQUIRE(std::string{e["attributes"]["inputs"][0]["typeName"].GetString()} == "kafka_topic");
-  REQUIRE(std::string{e["attributes"]["inputs"][0]["uniqueAttributes"]["qualifiedName"].GetString()} == "orders@my-cluster");
-  REQUIRE(std::string{e["attributes"]["outputs"][0]["typeName"].GetString()} == "aws_s3_v2_directory");
+  REQUIRE(std::string_view(e["attributes"]["inputs"][0]["typeName"].GetString()) == "kafka_topic");
+  REQUIRE(std::string_view(e["attributes"]["inputs"][0]["uniqueAttributes"]["qualifiedName"].GetString()) == "orders@my-cluster");
+  REQUIRE(std::string_view(e["attributes"]["outputs"][0]["typeName"].GetString()) == "aws_s3_v2_directory");
   // Atlas requires a temporary negative guid on new entities; the client mints one per entity.
   REQUIRE(std::string{e["guid"].GetString()}.starts_with("-"));
 }
@@ -158,15 +160,15 @@ TEST_CASE("AtlasClient createOrUpdateEntities links same-batch references by tem
   REQUIRE(body["entities"].Size() == 2);
   const auto& flow_e = body["entities"][0];
   const auto& path_e = body["entities"][1];
-  REQUIRE(std::string{flow_e["typeName"].GetString()} == "nifi_flow");
-  REQUIRE(std::string{path_e["typeName"].GetString()} == "nifi_flow_path");
+  REQUIRE(std::string_view(flow_e["typeName"].GetString()) == "nifi_flow");
+  REQUIRE(std::string_view(path_e["typeName"].GetString()) == "nifi_flow_path");
   const std::string path_temp_guid = path_e["guid"].GetString();
   REQUIRE(path_temp_guid.starts_with("-"));
 
   // The in-batch flowPaths reference must use the peer's temp guid — not uniqueAttributes.
   const auto& flow_paths_ref = flow_e["attributes"]["flowPaths"][0];
   REQUIRE(flow_paths_ref.HasMember("guid"));
-  REQUIRE(std::string{flow_paths_ref["guid"].GetString()} == path_temp_guid);
+  REQUIRE(std::string_view(flow_paths_ref["guid"].GetString()) == path_temp_guid);
   REQUIRE_FALSE(flow_paths_ref.HasMember("uniqueAttributes"));
   REQUIRE_FALSE(flow_paths_ref.HasMember("typeName"));
 
@@ -174,14 +176,14 @@ TEST_CASE("AtlasClient createOrUpdateEntities links same-batch references by tem
   // resolves it against already-persisted state (or creates it implicitly).
   const auto& queue_ref = flow_e["attributes"]["queues"][0];
   REQUIRE_FALSE(queue_ref.HasMember("guid"));
-  REQUIRE(std::string{queue_ref["typeName"].GetString()} == "nifi_queue");
-  REQUIRE(std::string{queue_ref["uniqueAttributes"]["qualifiedName"].GetString()} == "external-queue@my-cluster");
+  REQUIRE(std::string_view(queue_ref["typeName"].GetString()) == "nifi_queue");
+  REQUIRE(std::string_view(queue_ref["uniqueAttributes"]["qualifiedName"].GetString()) == "external-queue@my-cluster");
 
   // The single-Reference ref_attribute on the path (nifiFlow) points at an
   // in-batch peer (the flow entity); it should also collapse to { "guid" }.
   const auto& nifi_flow_ref = path_e["attributes"]["nifiFlow"];
   REQUIRE(nifi_flow_ref.HasMember("guid"));
-  REQUIRE(std::string{nifi_flow_ref["guid"].GetString()} == flow_e["guid"].GetString());
+  REQUIRE(std::string_view(nifi_flow_ref["guid"].GetString()) == flow_e["guid"].GetString());
   REQUIRE_FALSE(nifi_flow_ref.HasMember("uniqueAttributes"));
 }
 

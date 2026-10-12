@@ -61,8 +61,8 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   // not participants in the path walk itself.
   std::unordered_map<std::string, std::vector<std::string>> successors;    // proc_uuid -> [downstream proc_uuid]
   std::unordered_map<std::string, std::vector<std::string>> predecessors;  // proc_uuid -> [upstream proc_uuid]
-  std::unordered_map<std::string, std::vector<std::string>> proc_upstream_input_ports;    // proc_uuid <- upstream input port
-  std::unordered_map<std::string, std::vector<std::string>> proc_downstream_output_ports; // proc_uuid -> downstream output port
+  std::unordered_map<std::string, std::vector<std::string>> proc_upstream_input_ports;     // proc_uuid <- upstream input port
+  std::unordered_map<std::string, std::vector<std::string>> proc_downstream_output_ports;  // proc_uuid -> downstream output port
 
   for (const auto& conn : topology.connections) {
     const auto src = std::string{conn.source_uuid.to_string().view()};
@@ -210,13 +210,15 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     path_inputs[dst_path_it->second.flow_path_qualified_name].emplace(kNifiQueue, queue_qn);
   }
 
+  const auto flow_url_str = std::string{flow_url};
+
   // Emit nifi_flow.
   AtlasEntity flow;
   flow.type_name = kNifiFlow;
   flow.qualified_name = qualifiedName(topology.root_group_uuid.to_string().view(), ns);
   flow.string_attributes["name"] = topology.root_group_name.empty() ? "MiNiFi Flow" : topology.root_group_name;
   if (!flow_url.empty()) {
-    flow.string_attributes.emplace("url", std::string{flow_url});
+    flow.string_attributes.emplace("url", flow_url_str);
   }
 
   std::unordered_set<AtlasEntity::Reference> flow_paths_refs;
@@ -275,10 +277,10 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     // we mirror that. flow_url is passed in unconditionally by ReportLineageToAtlas, so we don't
     // guard on emptiness here - a blank URL still satisfies Atlas' mandatory-attribute check.
     if (!bp.processor_uuids.empty()) {
-      path_entity.string_attributes["url"] = std::string{flow_url} + "?processGroupId=" +
+      path_entity.string_attributes["url"] = flow_url_str + "?processGroupId=" +
           root_group_uuid_str + "&componentIds=" + bp.processor_uuids.front();
     } else {
-      path_entity.string_attributes["url"] = std::string{flow_url};
+      path_entity.string_attributes["url"] = flow_url_str;
     }
     if (auto it = path_inputs.find(bp.qualified_name); it != path_inputs.end()) {
       path_entity.ref_list_attributes.emplace("inputs", std::move(it->second));
