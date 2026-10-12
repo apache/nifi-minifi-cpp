@@ -87,7 +87,7 @@ gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> RemoteProcessGroupP
   return sitetosite::createClient(config);
 }
 
-bool RemoteProcessGroupPort::useProtocol(std::function<bool(sitetosite::SiteToSiteClient& client)> callback) {
+bool RemoteProcessGroupPort::useProtocol(const std::function<bool(sitetosite::SiteToSiteClient& client)>& callback) {
   auto protocol = getNextProtocol();
   if (!protocol) {
     return false;

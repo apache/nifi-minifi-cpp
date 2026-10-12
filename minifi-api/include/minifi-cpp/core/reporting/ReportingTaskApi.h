@@ -22,7 +22,7 @@ class ReportingTaskContext;
 class ReportingTaskDescriptor;
 
 class ReportingTaskApi {
-public:
+ public:
   virtual ~ReportingTaskApi() = default;
 
   virtual void initialize(ReportingTaskDescriptor& descriptor) = 0;
