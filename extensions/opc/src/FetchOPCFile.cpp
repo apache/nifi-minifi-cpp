@@ -4,13 +4,10 @@
 
 #include "FetchOPCFile.h"
 
-#include <algorithm>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "core/Resource.h"
 #include "minifi-cpp/core/ProcessContext.h"
@@ -20,9 +17,6 @@
 namespace org::apache::nifi::minifi::processors {
 
 namespace {
-// Used when neither the file node nor the server specifies a MaxByteStringLength
-constexpr UA_UInt32 DEFAULT_CHUNK_SIZE = 32 * 1024;
-
 constexpr const char* NODE_ID_STATE_KEY = "node_id";
 constexpr const char* SIZE_STATE_KEY = "size";
 constexpr const char* LAST_MODIFIED_TIME_STATE_KEY = "last_modified_time";
@@ -72,14 +66,12 @@ bool FetchOPCFile::resolveFile(const opc::NodeId& resolved_node) {
     invalidateFile();
     return false;
   }
-  const auto chunk_size = gsl::narrow<UA_Int32>(std::min<UA_UInt32>(remote_file->maxByteStringLength().value_or(DEFAULT_CHUNK_SIZE),
-      static_cast<UA_UInt32>(std::numeric_limits<UA_Int32>::max())));
   std::optional<opc::NodeId> size_node_id;
   std::optional<opc::NodeId> last_modified_time_node_id;
   if (lazy_mode_ == FetchOPCFileLazyModeOptions::On) {
     // Size is a mandatory, LastModifiedTime is an optional property of FileType nodes (OPC UA Part 20, 4.2.1)
-    size_node_id = connection_->findChild(resolved_node, "Size", 0, UA_NS0ID_HASPROPERTY) | utils::toOptional();
-    last_modified_time_node_id = connection_->findChild(resolved_node, "LastModifiedTime", 0, UA_NS0ID_HASPROPERTY) | utils::toOptional();
+    size_node_id = connection_->findChildByQualifiedName(resolved_node, "Size", 0, UA_NS0ID_HASPROPERTY) | utils::toOptional();
+    last_modified_time_node_id = connection_->findChildByQualifiedName(resolved_node, "LastModifiedTime", 0, UA_NS0ID_HASPROPERTY) | utils::toOptional();
     if (!last_modified_time_node_id && size_node_id) {
       logger_->log_warn("File node '{}' has no LastModifiedTime property, lazy mode can only detect the changes of its Size", node_id_);
     } else if (!last_modified_time_node_id) {
@@ -92,7 +84,6 @@ bool FetchOPCFile::resolveFile(const opc::NodeId& resolved_node) {
   }
   cached_file_.emplace(CachedFile{
       .remote_file = std::move(*remote_file),
-      .chunk_size = chunk_size,
       .browse_name = std::move(browse_name),
       .size_node_id = std::move(size_node_id),
       .last_modified_time_node_id = std::move(last_modified_time_node_id)});
@@ -118,13 +109,13 @@ std::optional<core::StateManager::State> FetchOPCFile::readFileState() {
   return state;
 }
 
-bool FetchOPCFile::writeOPCFileToFlowFile(opc::RemoteFile& remote_file, opc::RemoteFileHandle file_handle, UA_Int32 chunk_size, core::ProcessSession& session,
+bool FetchOPCFile::writeOPCFileToFlowFile(opc::RemoteFile& remote_file, opc::RemoteFileHandle file_handle, core::ProcessSession& session,
     const std::shared_ptr<core::FlowFile>& flow_file) {
   UA_StatusCode read_status = UA_STATUSCODE_GOOD;
   session.write(flow_file, [&](const std::shared_ptr<io::OutputStream>& output_stream) -> io::IoResult {
     size_t total_size = 0;
     while (true) {
-      auto chunk = remote_file.read(file_handle, chunk_size);
+      auto chunk = remote_file.read(file_handle, remote_file.chunkSize());
       if (!chunk) {
         read_status = chunk.error();
         return io::IoResult::cancelled();
@@ -162,13 +153,14 @@ void FetchOPCFile::onTrigger(core::ProcessContext& context, core::ProcessSession
     return;
   }
 
-  auto* resolved_node = resolveNodeId();
+  const auto resolved_node = resolveNodeId();
   if (!resolved_node) {
+    logger_->log_error("Failed to resolve the file node: {}", resolved_node.error());
     context.yield();
     return;
   }
 
-  if (!resolveFile(*resolved_node)) {
+  if (!resolveFile(**resolved_node)) {
     context.yield();
     return;
   }
@@ -198,13 +190,13 @@ void FetchOPCFile::onTrigger(core::ProcessContext& context, core::ProcessSession
   }
 
   auto flow_file = session.create();
-  if (!writeOPCFileToFlowFile(cached_file_->remote_file, std::move(*handle), cached_file_->chunk_size, session, flow_file)) {
+  if (!writeOPCFileToFlowFile(cached_file_->remote_file, std::move(*handle), session, flow_file)) {
     invalidateFile();
     context.yield();
     return;
   }
 
-  for (const auto& [key, value] : opc::nodeIdAttributes(*resolved_node)) {
+  for (const auto& [key, value] : opc::nodeIdAttributes(**resolved_node)) {
     flow_file->setAttribute(key, value);
   }
   if (cached_file_->browse_name) {

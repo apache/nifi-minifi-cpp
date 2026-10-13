@@ -333,8 +333,9 @@ void FetchOPCHistory::onTrigger(core::ProcessContext& context, core::ProcessSess
     return;
   }
 
-  const auto* node = resolveNodeId();
+  const auto node = resolveNodeId();
   if (!node) {
+    logger_->log_error("Failed to resolve the node to fetch history from: {}", node.error());
     context.yield();
     return;
   }
@@ -350,7 +351,7 @@ void FetchOPCHistory::onTrigger(core::ProcessContext& context, core::ProcessSess
       history_context{session, record_set_writer_, state_map, entries_transferred, batch_size_, node_id_, namespace_idx_, fetched_state, logger_};
 
   auto retval = connection_->readHistory(history_type_,
-      *node,
+      **node,
       &historyReadCallback,
       static_cast<void*>(&history_context),
       calculateStartTime(fetched_state, start_timestamp_),

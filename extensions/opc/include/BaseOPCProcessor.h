@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <expected>
 #include <string>
 #include <memory>
 #include <optional>
@@ -61,11 +62,25 @@ class BaseOPCProcessor : public core::ProcessorImpl {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
 
  protected:
+  struct TargetNodeProperties {
+    core::PropertyReference id_type;
+    core::PropertyReference id;
+    core::PropertyReference namespace_index;
+    core::PropertyReference path_reference_types;
+  };
+
+  struct TargetNode {
+    opc::NodeId node_id;
+    bool exists = false;
+  };
+
   virtual bool reconnect();
   void readPathReferenceTypes(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property, const std::string& node_id);
   void parseNode(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property);
-  const std::vector<opc::NodeId>* resolvePathNodeIds();
-  const opc::NodeId* resolveNodeId();
+  std::expected<const std::vector<opc::NodeId>*, std::string> resolvePathNodeIds();
+  std::expected<const opc::NodeId*, std::string> resolveNodeId();
+  std::expected<TargetNode, std::string> resolveTargetNode(core::ProcessContext& context, const core::FlowFile& flow_file,
+      const TargetNodeProperties& properties) const;
 
   std::string node_id_;
   UA_UInt16 namespace_idx_ = 0;
@@ -89,6 +104,13 @@ class BaseOPCProcessor : public core::ProcessorImpl {
   std::vector<char> key_buffer_;
   std::vector<std::vector<char>> trust_buffers_;
   std::vector<UA_UInt32> path_reference_types_;
+
+ private:
+  std::expected<opc::NodeId, std::string> resolveSingleNodePath(const std::string& path, UA_UInt16 namespace_idx,
+      const std::vector<UA_UInt32>& reference_types) const;
+  std::expected<std::vector<opc::NodeId>, std::string> translatePath(const std::string& path, UA_UInt16 namespace_idx,
+      const std::vector<UA_UInt32>& reference_types) const;
+  static std::expected<void, std::string> requireSingleNode(const std::string& path, const std::vector<opc::NodeId>& node_ids);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

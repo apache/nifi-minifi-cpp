@@ -60,13 +60,13 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
   if (id_type_ != opc::OPCNodeIDType::Path) {
     connection_->traverse(node_, found_cb, "", max_depth_);
   } else {
-    const auto* node_ids = resolvePathNodeIds();
+    const auto node_ids = resolvePathNodeIds();
     if (!node_ids) {
-      logger_->log_error("No flow files will be generated as path '{}' could not be translated to node ids", node_id_);
+      logger_->log_error("No flow files will be generated as {}", node_ids.error());
       context.yield();
       return;
     }
-    for (const auto& node_id : *node_ids) {
+    for (const auto& node_id : **node_ids) {
       connection_->traverse(node_id, found_cb, node_id_, max_depth_);
     }
   }

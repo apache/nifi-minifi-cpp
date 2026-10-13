@@ -99,7 +99,6 @@ class FetchOPCFile final : public BaseOPCProcessor {
  private:
   struct CachedFile {
     opc::RemoteFile remote_file;
-    UA_Int32 chunk_size;
     std::optional<std::string> browse_name;
     std::optional<opc::NodeId> size_node_id;
     std::optional<opc::NodeId> last_modified_time_node_id;
@@ -108,7 +107,7 @@ class FetchOPCFile final : public BaseOPCProcessor {
   bool resolveFile(const opc::NodeId& resolved_node);
   void invalidateFile();
   std::optional<core::StateManager::State> readFileState();
-  bool writeOPCFileToFlowFile(opc::RemoteFile& remote_file, opc::RemoteFileHandle file_handle, UA_Int32 chunk_size, core::ProcessSession& session,
+  bool writeOPCFileToFlowFile(opc::RemoteFile& remote_file, opc::RemoteFileHandle file_handle, core::ProcessSession& session,
     const std::shared_ptr<core::FlowFile>& flow_file);
 
   std::optional<CachedFile> cached_file_;
