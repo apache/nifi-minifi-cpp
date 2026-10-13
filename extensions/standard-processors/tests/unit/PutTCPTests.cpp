@@ -29,6 +29,7 @@
 #include "utils/net/AsioCoro.h"
 #include "utils/expected.h"
 #include "unit/TestUtils.h"
+#include "asio/experimental/awaitable_operators.hpp"
 #include "fmt/chrono.h"
 
 using namespace std::literals::chrono_literals;
