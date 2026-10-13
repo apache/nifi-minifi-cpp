@@ -29,6 +29,7 @@
 #include <vector>
 #include <memory>
 #include <expected>
+#include <span>
 #include <string_view>
 #include <utility>
 #include <optional>
@@ -116,6 +117,36 @@ class NodeId {
   UA_NodeId id_ = UA_NODEID_NULL;
 };
 
+class MethodOutput {
+ public:
+  MethodOutput() = default;
+  MethodOutput(const MethodOutput&) = delete;
+  MethodOutput& operator=(const MethodOutput&) = delete;
+  MethodOutput(MethodOutput&& other) noexcept : values_(std::exchange(other.values_, nullptr)), size_(std::exchange(other.size_, 0)) {
+  }
+  MethodOutput& operator=(MethodOutput&& other) noexcept {
+    if (this != &other) {
+      UA_Array_delete(values_, size_, &UA_TYPES[UA_TYPES_VARIANT]);
+      values_ = std::exchange(other.values_, nullptr);
+      size_ = std::exchange(other.size_, 0);
+    }
+    return *this;
+  }
+  ~MethodOutput() noexcept {
+    UA_Array_delete(values_, size_, &UA_TYPES[UA_TYPES_VARIANT]);
+  }
+
+  [[nodiscard]] std::span<const UA_Variant> values() const noexcept {
+    return {values_, size_};
+  }
+
+ private:
+  UA_Variant* values_ = nullptr;
+  size_t size_ = 0;
+
+  friend class Client;
+};
+
 struct Event {
   std::unordered_map<std::string, std::string> fields;
 };
@@ -161,6 +192,13 @@ class Client {
   std::vector<Event> drainEvents();
   uint64_t getDroppedEventCountSinceLastCall();
 
+  std::expected<NodeId, UA_StatusCode> findChild(const UA_NodeId& parent_node_id, std::string_view browse_name, UA_UInt16 browse_name_namespace_index, UA_UInt32 ref_type_id);
+  std::expected<MethodOutput, UA_StatusCode> callMethod(const UA_NodeId& object_id, const UA_NodeId& method_id, std::span<const UA_Variant> inputs);
+  std::expected<std::string, UA_StatusCode> readBrowseName(const UA_NodeId& node_id);
+  std::expected<UA_UInt32, UA_StatusCode> readUInt32Value(const UA_NodeId& node_id);
+  std::expected<UA_UInt64, UA_StatusCode> readUInt64Value(const UA_NodeId& node_id);
+  std::expected<UA_DateTime, UA_StatusCode> readDateTimeValue(const UA_NodeId& node_id);
+
   static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                                               const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
                                               const std::vector<std::vector<char>>& trust_buffers, std::optional<size_t> max_event_queue_size);
@@ -183,6 +221,9 @@ class Client {
   }
 
   void pushEvent(Event&& event);
+
+  template<typename T>
+  std::expected<T, UA_StatusCode> readScalarValue(const UA_NodeId& node_id, const UA_DataType& type);
 
   struct EventSubscription {
     UA_UInt32 id = 0;
@@ -240,6 +281,8 @@ struct NodeData {
 };
 
 std::string nodeValue2String(const NodeData& nd);
+
+std::map<std::string, std::string> nodeIdAttributes(const UA_NodeId& node_id);
 
 std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_encoding);
 

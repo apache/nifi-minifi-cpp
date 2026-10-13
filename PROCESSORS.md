@@ -47,6 +47,7 @@ limitations under the License.
 - [FetchGCSObject](#FetchGCSObject)
 - [FetchModbusTcp](#FetchModbusTcp)
 - [FetchOPCEvents](#FetchOPCEvents)
+- [FetchOPCFile](#FetchOPCFile)
 - [FetchOPCHistory](#FetchOPCHistory)
 - [FetchOPCProcessor](#FetchOPCProcessor)
 - [FetchS3Object](#FetchS3Object)
@@ -1127,6 +1128,47 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                          |
 |---------|--------------------------------------|
 | success | Successfully retrieved OPC-UA events |
+
+
+## FetchOPCFile
+
+### Description
+
+Fetches the content of an OPC UA FileType node using its Open, Read and Close methods.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                            | Default Value | Allowable Values                 | Description                                                                                                                                                                                                                                                                                                        |
+|---------------------------------|---------------|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **OPC server endpoint**         |               |                                  | Specifies the address, port and relative path of an OPC endpoint                                                                                                                                                                                                                                                   |
+| Application URI                 |               |                                  | Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.                                                                                                                     |
+| Username                        |               |                                  | Username to log in with.                                                                                                                                                                                                                                                                                           |
+| Password                        |               |                                  | Password to log in with.<br/>**Sensitive Property: true**                                                                                                                                                                                                                                                          |
+| Certificate path                |               |                                  | Path to the DER-encoded cert file                                                                                                                                                                                                                                                                                  |
+| Key path                        |               |                                  | Path to the DER-encoded key file                                                                                                                                                                                                                                                                                   |
+| Trusted server certificate path |               |                                  | Comma separated list of paths to the DER-encoded trusted server certificates                                                                                                                                                                                                                                       |
+| Path reference types            |               |                                  | Specify the reference types between nodes in the path if Path Node ID type is used. If not provided, all reference types are assumed to be Organizes. The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype. |
+| **Node ID type**                |               | Path<br/>Int<br/>String<br/>Guid | Specifies the type of the provided node ID                                                                                                                                                                                                                                                                         |
+| **Node ID**                     |               |                                  | Specifies the ID of the file node to fetch. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.                                                                                                                                                                           |
+| **Namespace index**             | 0             |                                  | The index of the namespace.                                                                                                                                                                                                                                                                                        |
+| **Lazy mode**                   | Off           | On<br/>Off                       | If set to 'On', the file is only fetched if its LastModifiedTime or Size property has changed since the last fetch. If the file node has no LastModifiedTime property, only the changes of its Size are detected.                                                                                                  |
+
+### Relationships
+
+| Name    | Description                              |
+|---------|------------------------------------------|
+| success | Successfully fetched OPC UA file content |
+
+### Output Attributes
+
+| Attribute       | Relationship | Description                       |
+|-----------------|--------------|-----------------------------------|
+| NodeID          | success      | ID of the file node.              |
+| NodeID type     | success      | Type of the node ID.              |
+| Namespace index | success      | Namespace index of the file node. |
+| Browsename      | success      | The browse name of the file node. |
 
 
 ## FetchOPCHistory

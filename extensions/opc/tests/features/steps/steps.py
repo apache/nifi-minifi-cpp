@@ -21,6 +21,7 @@ import tempfile
 
 import humanfriendly
 from behave import given, step, then
+from containers.opc_ua_file_server_container import OPCUAFileServerContainer
 from containers.opc_ua_server_container import OPCUAServerContainer
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
@@ -53,6 +54,22 @@ def setup_opcua_server_with_historical_data(context: MinifiTestContext):
     context.containers["opcua-server-historical"] = OPCUAServerContainer(
         context, command=["/opt/open62541/examples/tutorial_server_historicaldata"]
     )
+
+
+def _get_or_create_opcua_file_server(context: MinifiTestContext) -> OPCUAFileServerContainer:
+    if "opcua-file-server" not in context.containers:
+        context.containers["opcua-file-server"] = OPCUAFileServerContainer(context)
+    return context.containers["opcua-file-server"]
+
+
+@step("an OPC UA file server is set up")
+def setup_opcua_file_server(context: MinifiTestContext):
+    _get_or_create_opcua_file_server(context)
+
+
+@step('the OPC UA file server has a file "{name}" with the content "{content}"')
+def add_file_to_opcua_file_server(context: MinifiTestContext, name: str, content: str):
+    _get_or_create_opcua_file_server(context).add_server_file(name, content)
 
 
 @then('the OPC UA server logs contain the following message: "{log_message}" in less than {duration}')

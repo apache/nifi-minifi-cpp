@@ -240,38 +240,44 @@ UA_StatusCode Client::connect(const std::string& url, const std::string& usernam
   }
 }
 
+std::map<std::string, std::string> nodeIdAttributes(const UA_NodeId& node_id) {
+  std::map<std::string, std::string> attributes;
+  if (node_id.identifierType == UA_NODEIDTYPE_STRING) {
+    std::string nodeidstr(reinterpret_cast<const char*>(node_id.identifier.string.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
+                          node_id.identifier.string.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    attributes["NodeID"] = nodeidstr;
+    attributes["NodeID type"] = "string";
+  } else if (node_id.identifierType == UA_NODEIDTYPE_BYTESTRING) {
+    std::string nodeidstr(reinterpret_cast<const char*>(node_id.identifier.byteString.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
+      node_id.identifier.byteString.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    attributes["NodeID"] = nodeidstr;
+    attributes["NodeID type"] = "bytestring";
+  } else if (node_id.identifierType == UA_NODEIDTYPE_NUMERIC) {
+    attributes["NodeID"] = std::to_string(node_id.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    attributes["NodeID type"] = "numeric";
+  } else if (node_id.identifierType == UA_NODEIDTYPE_GUID) {
+    const auto& guid = node_id.identifier.guid;  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    std::array<char, 37> guid_str_array{};
+    auto res = snprintf(guid_str_array.data(), guid_str_array.size(), "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+                        guid.data1, guid.data2, guid.data3, guid.data4[0], guid.data4[1], guid.data4[2],
+                        guid.data4[3], guid.data4[4], guid.data4[5], guid.data4[6], guid.data4[7]);
+    if (res < 0) {
+      attributes["NodeID"] = "";
+    } else {
+      attributes["NodeID"] = std::string(guid_str_array.data());
+    }
+    attributes["NodeID type"] = "guid";
+  }
+  attributes["Namespace index"] = std::to_string(node_id.namespaceIndex);
+  return attributes;
+}
+
 NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::string& base_path) {
   if (ref->nodeClass == UA_NODECLASS_VARIABLE) {
     opc::NodeData nodedata;
     std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
 
-    if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
-      std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.string.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
-                            ref->nodeId.nodeId.identifier.string.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["NodeID"] = nodeidstr;
-      nodedata.attributes["NodeID type"] = "string";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_BYTESTRING) {
-      std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.byteString.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
-        ref->nodeId.nodeId.identifier.byteString.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["NodeID"] = nodeidstr;
-      nodedata.attributes["NodeID type"] = "bytestring";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC) {
-      nodedata.attributes["NodeID"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["NodeID type"] = "numeric";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_GUID) {
-      const auto& guid = ref->nodeId.nodeId.identifier.guid;  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      std::array<char, 37> guid_str_array{};
-      auto res = snprintf(guid_str_array.data(), guid_str_array.size(), "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-                          guid.data1, guid.data2, guid.data3, guid.data4[0], guid.data4[1], guid.data4[2],
-                          guid.data4[3], guid.data4[4], guid.data4[5], guid.data4[6], guid.data4[7]);
-      if (res < 0) {
-        nodedata.attributes["NodeID"] = "";
-      } else {
-        nodedata.attributes["NodeID"] = std::string(guid_str_array.data());
-      }
-      nodedata.attributes["NodeID type"] = "guid";
-    }
-    nodedata.attributes["Namespace index"] = std::to_string(ref->nodeId.nodeId.namespaceIndex);
+    nodedata.attributes = nodeIdAttributes(ref->nodeId.nodeId);
     nodedata.attributes["Browsename"] = browsename;
 
     auto splitted_base_path = utils::string::splitAndTrimRemovingEmpty(base_path, "/");
@@ -462,6 +468,90 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
     logger->log_warn("No node id found for path {}", path.c_str());
     return UA_STATUSCODE_BADNODATAAVAILABLE;
   }
+}
+
+std::expected<NodeId, UA_StatusCode> Client::findChild(const UA_NodeId& parent_node_id, std::string_view browse_name,
+    UA_UInt16 browse_name_namespace_index, UA_UInt32 ref_type_id) {
+  std::string name(browse_name);
+  UA_RelativePathElement element;
+  UA_RelativePathElement_init(&element);
+  element.referenceTypeId = UA_NODEID_NUMERIC(0, ref_type_id);
+  element.includeSubtypes = true;
+  element.targetName = UA_QUALIFIEDNAME(browse_name_namespace_index, name.data());
+
+  UA_BrowsePath browse_path;
+  UA_BrowsePath_init(&browse_path);
+  browse_path.startingNode = parent_node_id;
+  browse_path.relativePath.elements = &element;
+  browse_path.relativePath.elementsSize = 1;
+
+  UA_TranslateBrowsePathsToNodeIdsRequest request;
+  UA_TranslateBrowsePathsToNodeIdsRequest_init(&request);
+  request.browsePaths = &browse_path;
+  request.browsePathsSize = 1;
+
+  UA_TranslateBrowsePathsToNodeIdsResponse response = UA_Client_Service_translateBrowsePathsToNodeIds(client_, request);
+  const auto guard = gsl::finally([&response]() { UA_TranslateBrowsePathsToNodeIdsResponse_clear(&response); });
+
+  if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD) {
+    return std::unexpected{response.responseHeader.serviceResult};
+  }
+  if (response.resultsSize != 1) {
+    return std::unexpected{UA_STATUSCODE_BADUNEXPECTEDERROR};
+  }
+  if (response.results[0].statusCode != UA_STATUSCODE_GOOD) {
+    return std::unexpected{response.results[0].statusCode};
+  }
+  if (response.results[0].targetsSize < 1) {
+    return std::unexpected{UA_STATUSCODE_BADNOMATCH};
+  }
+  return NodeId::copyOf(response.results[0].targets[0].targetId.nodeId);
+}
+
+std::expected<MethodOutput, UA_StatusCode> Client::callMethod(const UA_NodeId& object_id, const UA_NodeId& method_id,
+    std::span<const UA_Variant> inputs) {
+  MethodOutput output;
+  const auto sc = UA_Client_call(client_, object_id, method_id, inputs.size(), inputs.data(), &output.size_, &output.values_);
+  if (sc != UA_STATUSCODE_GOOD) {
+    return std::unexpected{sc};
+  }
+  return output;
+}
+
+std::expected<std::string, UA_StatusCode> Client::readBrowseName(const UA_NodeId& node_id) {
+  UA_QualifiedName browse_name;
+  UA_QualifiedName_init(&browse_name);
+  const auto guard = gsl::finally([&browse_name]() { UA_QualifiedName_clear(&browse_name); });
+  if (const auto sc = UA_Client_readBrowseNameAttribute(client_, node_id, &browse_name); sc != UA_STATUSCODE_GOOD) {
+    return std::unexpected{sc};
+  }
+  return std::string(reinterpret_cast<const char*>(browse_name.name.data), browse_name.name.length);
+}
+
+template<typename T>
+std::expected<T, UA_StatusCode> Client::readScalarValue(const UA_NodeId& node_id, const UA_DataType& type) {
+  UA_Variant value;
+  UA_Variant_init(&value);
+  const auto guard = gsl::finally([&value]() { UA_Variant_clear(&value); });
+  if (const auto sc = UA_Client_readValueAttribute(client_, node_id, &value); sc != UA_STATUSCODE_GOOD) {
+    return std::unexpected{sc};
+  }
+  if (!UA_Variant_hasScalarType(&value, &type)) {
+    return std::unexpected{UA_STATUSCODE_BADTYPEMISMATCH};
+  }
+  return *static_cast<const T*>(value.data);
+}
+
+std::expected<UA_UInt32, UA_StatusCode> Client::readUInt32Value(const UA_NodeId& node_id) {
+  return readScalarValue<UA_UInt32>(node_id, UA_TYPES[UA_TYPES_UINT32]);
+}
+
+std::expected<UA_UInt64, UA_StatusCode> Client::readUInt64Value(const UA_NodeId& node_id) {
+  return readScalarValue<UA_UInt64>(node_id, UA_TYPES[UA_TYPES_UINT64]);
+}
+
+std::expected<UA_DateTime, UA_StatusCode> Client::readDateTimeValue(const UA_NodeId& node_id) {
+  return readScalarValue<UA_DateTime>(node_id, UA_TYPES[UA_TYPES_DATETIME]);
 }
 
 template<typename T>
