@@ -31,6 +31,7 @@ def before_all(context):
 
 def before_scenario(context, scenario):
     common_before_scenario(context, scenario)
+    context.override_default_ca_cert_files = False
 
 
 def after_scenario(context, scenario):
