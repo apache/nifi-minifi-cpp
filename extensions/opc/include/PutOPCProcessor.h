@@ -128,9 +128,6 @@ class PutOPCProcessor final : public BaseOPCProcessor {
   void initialize() override;
 
  private:
-  std::expected<std::pair<bool, opc::NodeId>, std::string> configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const;
-  std::expected<std::pair<bool, opc::NodeId>, std::string> resolveTargetNodePath(core::ProcessContext& context, core::FlowFile& flow_file,
-      const std::string& target_path, UA_UInt16 namespace_idx) const;
   void updateNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
   void createNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
 

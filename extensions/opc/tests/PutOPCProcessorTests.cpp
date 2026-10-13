@@ -255,7 +255,7 @@ TEST_CASE("Test namespace cannot be empty", "[putopcprocessor]") {
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
   auto flow_file = results.at(processors::PutOPCProcessor::Failure)[0];
   CHECK(controller.plan->getContent(flow_file) == "42");
-  REQUIRE(LogTestController::getInstance().contains("had no target namespace index specified, routing to failure"));
+  REQUIRE(LogTestController::getInstance().contains("invalid target node namespace index '', routing to failure"));
 }
 
 TEST_CASE("Test valid namespace being required", "[putopcprocessor]") {
@@ -278,7 +278,7 @@ TEST_CASE("Test valid namespace being required", "[putopcprocessor]") {
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
   auto flow_file = results.at(processors::PutOPCProcessor::Failure)[0];
   CHECK(controller.plan->getContent(flow_file) == "42");
-  REQUIRE(LogTestController::getInstance().contains("has invalid namespace index (invalid_index), routing to failure"));
+  REQUIRE(LogTestController::getInstance().contains("invalid target node namespace index 'invalid_index', routing to failure"));
 }
 
 TEST_CASE("Test username and password should both be provided", "[putopcprocessor]") {
@@ -386,7 +386,7 @@ TEST_CASE("Test invalid parent node id path", "[putopcprocessor]") {
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).empty());
-  REQUIRE(LogTestController::getInstance().contains("Failed to translate path 'Simulator/Default/Device1/INT99' to a node id: BadNoDataAvailable"));
+  REQUIRE(LogTestController::getInstance().contains("Failed to resolve the parent node: path 'Simulator/Default/Device1/INT99' could not be translated to a node id: BadNoDataAvailable"));
 }
 
 TEST_CASE("Test missing target node id", "[putopcprocessor]") {
@@ -409,7 +409,7 @@ TEST_CASE("Test missing target node id", "[putopcprocessor]") {
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
   auto flow_file = results.at(processors::PutOPCProcessor::Failure)[0];
   CHECK(controller.plan->getContent(flow_file) == "42");
-  REQUIRE(LogTestController::getInstance().contains("had target node ID type specified (Int) without ID, routing to failure"));
+  REQUIRE(LogTestController::getInstance().contains("target node ID is empty, routing to failure"));
 }
 
 TEST_CASE("Test invalid target node id", "[putopcprocessor]") {
@@ -432,7 +432,7 @@ TEST_CASE("Test invalid target node id", "[putopcprocessor]") {
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
   auto flow_file = results.at(processors::PutOPCProcessor::Failure)[0];
   CHECK(controller.plan->getContent(flow_file) == "42");
-  REQUIRE(LogTestController::getInstance().contains("invalid_int cannot be used as an int type node ID. Routing to failure!"));
+  REQUIRE(LogTestController::getInstance().contains("invalid_int cannot be used as an int type node ID, routing to failure"));
 }
 
 TEST_CASE("Test missing target node type", "[putopcprocessor]") {
@@ -455,7 +455,7 @@ TEST_CASE("Test missing target node type", "[putopcprocessor]") {
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
   auto flow_file = results.at(processors::PutOPCProcessor::Failure)[0];
   CHECK(controller.plan->getContent(flow_file) == "42");
-  REQUIRE(LogTestController::getInstance().contains("has invalid target node id type 'invalid', routing to failure!"));
+  REQUIRE(LogTestController::getInstance().contains("invalid target node ID type 'invalid', routing to failure"));
 }
 
 TEST_CASE("Test value type mismatch", "[putopcprocessor]") {
@@ -670,7 +670,7 @@ TEST_CASE("Test multiple nodes are returned for path", "[putopcprocessor]") {
   const auto results = controller.trigger(std::to_string(expected_node.data));
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).empty());
-  REQUIRE(LogTestController::getInstance().contains("exactly one target node is required for put"));
+  REQUIRE(LogTestController::getInstance().contains("Failed to resolve the parent node: path 'Simulator/Default/AmbiguousParent/Ambiguous' resolved to 2 node ids, exactly one is required"));
 }
 
 TEST_CASE("Test updating an existing node using path target node id", "[putopcprocessor]") {
@@ -734,7 +734,7 @@ TEST_CASE("Test path target node id resolving to multiple nodes", "[putopcproces
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
-  REQUIRE(LogTestController::getInstance().contains("resolved to 2 nodes; exactly one target node is required"));
+  REQUIRE(LogTestController::getInstance().contains("target node path 'Simulator/Default/AmbiguousParent/Ambiguous' resolved to 2 node ids, exactly one is required"));
 }
 
 TEST_CASE("Test invalid target node path reference types", "[putopcprocessor]") {
@@ -784,7 +784,7 @@ TEST_CASE("Test empty target node path", "[putopcprocessor]") {
   const auto results = controller.trigger("42");
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
-  REQUIRE(LogTestController::getInstance().contains("has invalid target node path '/'"));
+  REQUIRE(LogTestController::getInstance().contains("invalid target node path '/'"));
 }
 
 }  // namespace org::apache::nifi::minifi::test

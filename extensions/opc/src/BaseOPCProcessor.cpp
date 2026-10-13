@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "OPCCommon.h"
 #include "BaseOPCProcessor.h"
@@ -25,6 +26,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -141,6 +143,76 @@ void BaseOPCProcessor::parseNode(core::ProcessContext& context, const core::Prop
     default:
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type_)));
   }
+}
+
+std::expected<void, std::string> BaseOPCProcessor::resolvePathNode() {
+  if (id_type_ != opc::OPCNodeIDType::Path || path_node_id_resolved_) {
+    return {};
+  }
+  auto node = resolveSingleNodePath(node_id_, namespace_idx_, path_reference_types_);
+  if (!node) {
+    return std::unexpected{node.error()};
+  }
+  node_ = std::move(*node);
+  path_node_id_resolved_ = true;
+  return {};
+}
+
+std::expected<BaseOPCProcessor::TargetNode, std::string> BaseOPCProcessor::resolveTargetNode(core::ProcessContext& context,
+    const core::FlowFile& flow_file, const TargetNodeProperties& properties) const {
+  const auto namespace_idx_str = context.getProperty(properties.namespace_index, &flow_file).value_or("");
+  UA_UInt16 namespace_idx = 0;
+  try {
+    namespace_idx = gsl::narrow<UA_UInt16>(std::stoul(namespace_idx_str));
+  } catch (const std::exception&) {
+    return std::unexpected{fmt::format("invalid target node namespace index '{}'", namespace_idx_str)};
+  }
+
+  const auto id_type_str = context.getProperty(properties.id_type, &flow_file).value_or("");
+  const auto id_type = magic_enum::enum_cast<opc::OPCNodeIDType>(id_type_str);
+  if (!id_type) {
+    return std::unexpected{fmt::format("invalid target node ID type '{}'", id_type_str)};
+  }
+
+  const auto id = context.getProperty(properties.id, &flow_file).value_or("");
+  if (id.empty()) {
+    return std::unexpected{"target node ID is empty"};
+  }
+
+  // A path is resolved by browsing existing nodes, so it cannot point to a node that is yet to be created
+  if (*id_type == opc::OPCNodeIDType::Path) {
+    if (utils::string::splitAndTrimRemovingEmpty(id, "/").empty()) {
+      return std::unexpected{fmt::format("invalid target node path '{}'", id)};
+    }
+    auto reference_types = opc::parsePathReferenceTypes(context.getProperty(properties.path_reference_types, &flow_file).value_or(""), id);
+    if (!reference_types) {
+      return std::unexpected{fmt::format("invalid target node path reference types: {}", reference_types.error())};
+    }
+    auto node = resolveSingleNodePath(id, namespace_idx, *reference_types);
+    if (!node) {
+      return std::unexpected{fmt::format("target node {}; Path target node ID type can only be used to update existing nodes", node.error())};
+    }
+    return TargetNode{.node_id = std::move(*node), .exists = true};
+  }
+
+  auto node = opc::buildNodeId(*id_type, namespace_idx, id);
+  if (!node) {
+    return std::unexpected{node.error()};
+  }
+  const bool exists = connection_->exists(*node);
+  return TargetNode{.node_id = std::move(*node), .exists = exists};
+}
+
+std::expected<opc::NodeId, std::string> BaseOPCProcessor::resolveSingleNodePath(const std::string& path, UA_UInt16 namespace_idx,
+    const std::vector<UA_UInt32>& reference_types) const {
+  std::vector<opc::NodeId> translated_node_ids;
+  if (auto sc = connection_->translateBrowsePathsToNodeIdsRequest(path, translated_node_ids, namespace_idx, reference_types, logger_); sc != UA_STATUSCODE_GOOD) {
+    return std::unexpected{fmt::format("path '{}' could not be translated to a node id: {}", path, UA_StatusCode_name(sc))};
+  }
+  if (translated_node_ids.size() != 1) {
+    return std::unexpected{fmt::format("path '{}' resolved to {} node ids, exactly one is required", path, translated_node_ids.size())};
+  }
+  return std::move(translated_node_ids[0]);
 }
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -504,7 +504,7 @@ TEST_CASE_METHOD(FetchOPCFileTestFixture, "Path is resolved once and again after
   server_.start();
   REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&]() {
     CHECK(controller_.trigger().at(processors::FetchOPCFile::Success).empty());
-    return LogTestController::getInstance().contains("Path 'Files/path_file.txt' resolved to 2 node ids; exactly one file node is required for fetch");
+    return LogTestController::getInstance().contains("Failed to resolve the file node: path 'Files/path_file.txt' resolved to 2 node ids, exactly one is required");
   }, 100ms));
 }
 
