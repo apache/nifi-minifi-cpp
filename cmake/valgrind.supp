@@ -49,6 +49,7 @@
    ...
    fun:pthread_create*
    ...
+   fun:*LogCompressorSink*
 }
 
 # Every extension which uses protobuf calls AddDescriptorsImpl at static-init time,
