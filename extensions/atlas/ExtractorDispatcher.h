@@ -24,10 +24,8 @@
 namespace org::apache::nifi::minifi::extensions::atlas {
 
 // ExtractorDispatcher routes a provenance event to the first extractor that
-// matches by componentType regex, transit-URI regex, or event type — in that
-// order. First hit wins, matching NiFi's SimpleFlowPathLineage dispatch. Owns
-// its extractors by unique_ptr so the reporting task can keep a single instance
-// alive across trigger cycles.
+// matches by componentType regex, transit-URI regex.
+// First hit wins, matching NiFi's SimpleFlowPathLineage dispatch.
 class ExtractorDispatcher {
  public:
   // Constructs a dispatcher with the built-in extractor set.

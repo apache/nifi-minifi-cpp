@@ -23,7 +23,6 @@ endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-# Extractors are included directly by ExtractorDispatcher.cpp; do not compile them separately.
 file(GLOB SOURCES "*.cpp")
 
 add_minifi_library(minifi-atlas SHARED ${SOURCES})

@@ -26,6 +26,8 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+#include "utils/StringUtils.h"
+
 namespace org::apache::nifi::minifi::extensions::atlas {
 
 namespace {
@@ -35,18 +37,12 @@ namespace {
 std::string urlEncode(std::string_view input) {
   std::string result;
   result.reserve(input.size());
-  const auto is_unreserved = [](char c) {
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
-        || c == '-' || c == '_' || c == '.' || c == '~';
-  };
-  static constexpr char kHex[] = "0123456789ABCDEF";
-  for (unsigned char c : input) {
-    if (is_unreserved(static_cast<char>(c))) {
-      result.push_back(static_cast<char>(c));
+  for (char ch : input) {
+    if (std::isalnum(static_cast<unsigned char>(ch)) || ch == '-' || ch == '_' || ch == '.' || ch == '~') {
+      result += ch;
     } else {
-      result.push_back('%');
-      result.push_back(kHex[c >> 4]);
-      result.push_back(kHex[c & 0x0F]);
+      result += '%';
+      result += utils::string::to_hex({&ch, 1}, true);
     }
   }
   return result;
@@ -64,18 +60,6 @@ rapidjson::Value stringValue(std::string_view s, rapidjson::Document::AllocatorT
   return rapidjson::Value{s.data(), gsl::narrow<rapidjson::SizeType>(s.size()), alloc};
 }
 
-// Batch-key for cross-referencing: pairing type + qualifiedName with a NUL byte
-// as separator so entities that happen to share a qualifiedName across types
-// stay distinct. Atlas's uniqueness key is the (typeName, qualifiedName) pair.
-std::string batchKey(std::string_view type_name, std::string_view qualified_name) {
-  std::string key;
-  key.reserve(type_name.size() + 1 + qualified_name.size());
-  key.append(type_name);
-  key.push_back('\0');
-  key.append(qualified_name);
-  return key;
-}
-
 // Emits one reference as a rapidjson object. If the referenced (typeName, qualifiedName)
 // is another entity in the same bulk POST, we emit { "guid": "<peer temp guid>" }: Atlas
 // resolves this against the temp guid of the peer within the batch, letting the whole
@@ -83,18 +67,17 @@ std::string batchKey(std::string_view type_name, std::string_view qualified_name
 // which points at an entity Atlas already knows (or will create implicitly).
 rapidjson::Value serializeReferenceObject(
     const AtlasEntity::Reference& ref,
-    const std::unordered_map<std::string, std::string>& batch_guid_by_key,
+    const std::unordered_map<AtlasEntity::Reference, std::string>& batch_guid_by_key,
     rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value ref_obj{rapidjson::kObjectType};
-  if (const auto it = batch_guid_by_key.find(batchKey(ref.type_name, ref.qualified_name));
-      it != batch_guid_by_key.end()) {
+  if (const auto it = batch_guid_by_key.find({ref.type_name, ref.qualified_name}); it != batch_guid_by_key.end()) {
     ref_obj.AddMember("guid", stringValue(it->second, alloc), alloc);
     return ref_obj;
   }
   ref_obj.AddMember("typeName", stringValue(ref.type_name, alloc), alloc);
-  rapidjson::Value unique{rapidjson::kObjectType};
-  unique.AddMember("qualifiedName", stringValue(ref.qualified_name, alloc), alloc);
-  ref_obj.AddMember("uniqueAttributes", unique, alloc);
+  rapidjson::Value unique_attrs{rapidjson::kObjectType};
+  unique_attrs.AddMember("qualifiedName", stringValue(ref.qualified_name, alloc), alloc);
+  ref_obj.AddMember("uniqueAttributes", unique_attrs, alloc);
   return ref_obj;
 }
 
@@ -107,7 +90,7 @@ rapidjson::Value serializeReferenceObject(
 rapidjson::Value serializeEntity(
     const AtlasEntity& entity,
     std::string_view entity_guid,
-    const std::unordered_map<std::string, std::string>& batch_guid_by_key,
+    const std::unordered_map<AtlasEntity::Reference, std::string>& batch_guid_by_key,
     rapidjson::Document::AllocatorType& alloc) {
   rapidjson::Value obj{rapidjson::kObjectType};
   obj.AddMember("typeName", stringValue(entity.type_name, alloc), alloc);
@@ -135,7 +118,7 @@ rapidjson::Value serializeEntity(
 
 std::string responseBodyAsString(http::HTTPClient& client) {
   const auto& body = client.getResponseBody();
-  return std::string(body.data(), body.size());
+  return {body.data(), body.size()};
 }
 
 }  // namespace
@@ -188,12 +171,12 @@ std::expected<void, std::string> AtlasClient::createOrUpdateEntities(const std::
   // not-yet-persisted peers within a single bulk POST.
   std::vector<std::string> entity_guids;
   entity_guids.reserve(entities.size());
-  std::unordered_map<std::string, std::string> batch_guid_by_key;
+  std::unordered_map<AtlasEntity::Reference, std::string> batch_guid_by_key;
   batch_guid_by_key.reserve(entities.size());
   for (std::size_t i = 0; i < entities.size(); ++i) {
     entity_guids.push_back(std::to_string(-static_cast<int64_t>(i + 1)));
     batch_guid_by_key.emplace(
-        batchKey(entities[i].type_name, entities[i].qualified_name),
+        AtlasEntity::Reference{entities[i].type_name, entities[i].qualified_name},
         entity_guids.back());
   }
 
@@ -222,50 +205,6 @@ std::expected<void, std::string> AtlasClient::createOrUpdateEntities(const std::
   std::ostringstream msg;
   msg << "Atlas entity bulk POST returned HTTP " << code << ": " << responseBodyAsString(client);
   return std::unexpected{msg.str()};
-}
-
-std::expected<std::optional<AtlasEntityHandle>, std::string> AtlasClient::getEntityByUniqueAttribute(
-    const std::string& type_name, const std::string& qualified_name) {
-  http::HTTPClient client;
-  const auto path = "/api/atlas/v2/entity/uniqueAttribute/type/" + urlEncode(type_name)
-      + "?attr:qualifiedName=" + urlEncode(qualified_name);
-  prepareClient(client, http::HttpRequestMethod::Get, path);
-  if (!client.submit()) {
-    return std::unexpected{"Atlas entity lookup failed: transport error"};
-  }
-  const auto code = client.getResponseCode();
-  if (code == 404) {
-    return std::optional<AtlasEntityHandle>{};
-  }
-  if (code != 200) {
-    std::ostringstream msg;
-    msg << "Atlas entity lookup returned HTTP " << code << ": " << responseBodyAsString(client);
-    return std::unexpected{msg.str()};
-  }
-
-  const auto body = responseBodyAsString(client);
-  rapidjson::Document response;
-  if (response.Parse(body.c_str()).HasParseError() || !response.IsObject()) {
-    return std::unexpected{"Atlas entity lookup returned non-JSON body"};
-  }
-  const auto entity_it = response.FindMember("entity");
-  if (entity_it == response.MemberEnd() || !entity_it->value.IsObject()) {
-    return std::unexpected{"Atlas entity lookup response missing 'entity' object"};
-  }
-  const auto& entity = entity_it->value;
-  AtlasEntityHandle handle;
-  if (auto it = entity.FindMember("guid"); it != entity.MemberEnd() && it->value.IsString()) {
-    handle.guid = it->value.GetString();
-  }
-  if (auto it = entity.FindMember("typeName"); it != entity.MemberEnd() && it->value.IsString()) {
-    handle.type_name = it->value.GetString();
-  }
-  if (auto it = entity.FindMember("attributes"); it != entity.MemberEnd() && it->value.IsObject()) {
-    if (auto qn = it->value.FindMember("qualifiedName"); qn != it->value.MemberEnd() && qn->value.IsString()) {
-      handle.qualified_name = qn->value.GetString();
-    }
-  }
-  return std::optional<AtlasEntityHandle>{std::move(handle)};
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::atlas

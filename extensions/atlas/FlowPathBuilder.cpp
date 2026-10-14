@@ -50,11 +50,15 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   std::unordered_map<std::string, const Topology::Processor*> proc_by_uuid;
   proc_by_uuid.reserve(topology.processors.size());
   for (const auto& p : topology.processors) {
-    proc_by_uuid.emplace(p.uuid.to_string().view(), &p);
+    proc_by_uuid.emplace(p.uuid.to_string(), &p);
   }
   std::unordered_set<std::string> port_uuids;
-  for (const auto& p : topology.input_ports) port_uuids.insert(std::string{p.uuid.to_string().view()});
-  for (const auto& p : topology.output_ports) port_uuids.insert(std::string{p.uuid.to_string().view()});
+  for (const auto& p : topology.input_ports) {
+    port_uuids.insert(p.uuid.to_string());
+  }
+  for (const auto& p : topology.output_ports) {
+    port_uuids.insert(p.uuid.to_string());
+  }
 
   // Adjacency: only consider connections where both endpoints are processors (skip
   // funnels or unknown endpoints). Ports become DataSet-typed refs on adjacent paths,
@@ -80,7 +84,7 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     } else if (src_is_proc && dst_is_port) {
       proc_downstream_output_ports[src].push_back(dst);
     }
-    // src↔port and port↔port edges are ignored — the topology model doesn't have them
+    // src <-> port and port <-> port edges are ignored — the topology model doesn't have them
     // for a root group, but we accept them silently.
   }
 

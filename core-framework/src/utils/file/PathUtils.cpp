@@ -87,7 +87,7 @@ space_info space(const path path) {
 std::string pathToUri(const std::filesystem::path& path) {
   std::string percent_encoded_path;
   for (char ch : std::filesystem::absolute(path).generic_string()) {
-    if (std::isalnum(ch) || ch == '-' || ch == '_' || ch == '.' || ch == '~' || ch == '/' || ch == ':') {
+    if (std::isalnum(static_cast<unsigned char>(ch)) || ch == '-' || ch == '_' || ch == '.' || ch == '~' || ch == '/' || ch == ':') {
       percent_encoded_path += ch;
     } else {
       percent_encoded_path += '%';

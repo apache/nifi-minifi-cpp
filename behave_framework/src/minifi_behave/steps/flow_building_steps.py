@@ -662,11 +662,6 @@ def nifi_receive_from_reporting_task(context: MinifiTestContext, nifi_port_name:
     context.containers["nifi"].flow_definition.add_input_port(port_id, nifi_port_name)
 
 
-# --- Generic reporting-task steps -----------------------------------------------------------------
-# These mirror the processor equivalents at lines ~113 (property) and ~214 (scheduling period);
-# they exist so any extension (Atlas, S2S, future reporting tasks) can build up an RT declaratively.
-
-
 @given("a ReportLineageToAtlas reporting task with the name \"{name}\"")
 def add_report_lineage_to_atlas_reporting_task(context: MinifiTestContext, name: str):
     flow_definition = context.get_or_create_default_minifi_container().flow_definition

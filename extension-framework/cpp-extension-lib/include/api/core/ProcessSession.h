@@ -55,11 +55,7 @@ class ProcessSession {
   [[nodiscard]] virtual std::string getFlowFileId(const FlowFile& ff) const = 0;
   [[nodiscard]] virtual uint64_t getFlowFileSize(const FlowFile& ff) const = 0;
 
-  /// Emit a SEND provenance event for `ff`. `transit_uri` identifies where the payload was sent
-  /// (e.g. "kafka://broker:9092/topic"); `detail` is a free-form human-readable description.
   virtual void provenanceSend(FlowFile& ff, std::string_view transit_uri, std::string_view detail) = 0;
-  /// Emit a RECEIVE provenance event for `ff`. `source_system_flow_file_identifier` is the upstream
-  /// system's identifier for the message (may be empty).
   virtual void provenanceReceive(FlowFile& ff, std::string_view transit_uri,
       std::string_view source_system_flow_file_identifier, std::string_view detail) = 0;
 

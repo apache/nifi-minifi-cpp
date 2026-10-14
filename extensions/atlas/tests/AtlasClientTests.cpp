@@ -201,32 +201,4 @@ TEST_CASE("AtlasClient sends Basic auth header when credentials are provided", "
   REQUIRE(requests[0].authorization->starts_with("Basic "));
 }
 
-TEST_CASE("AtlasClient getEntityByUniqueAttribute returns a handle on 200", "[atlas][client]") {
-  MockAtlas mock{"38906"};
-  mock.lookup().setResponse(200, R"({"entity":{"guid":"deadbeef","typeName":"kafka_topic","attributes":{"qualifiedName":"orders@my-cluster"}}})");
-  AtlasClient client{configFor(mock)};
-
-  const auto result = client.getEntityByUniqueAttribute("kafka_topic", "orders@my-cluster");
-  REQUIRE(result.has_value());
-  REQUIRE(result->has_value());
-  REQUIRE((*result)->guid == "deadbeef");
-  REQUIRE((*result)->type_name == "kafka_topic");
-  REQUIRE((*result)->qualified_name == "orders@my-cluster");
-
-  const auto requests = mock.lookup().requests();
-  REQUIRE(requests.size() == 1);
-  REQUIRE(requests[0].method == "GET");
-  REQUIRE(requests[0].uri.find("attr:qualifiedName=orders%40my-cluster") != std::string::npos);
-}
-
-TEST_CASE("AtlasClient getEntityByUniqueAttribute returns nullopt on 404", "[atlas][client]") {
-  MockAtlas mock{"38907"};
-  mock.lookup().setResponse(404, R"({"errorCode":"ATLAS-404-00-005"})", "Not Found");
-  AtlasClient client{configFor(mock)};
-
-  const auto result = client.getEntityByUniqueAttribute("kafka_topic", "orders@my-cluster");
-  REQUIRE(result.has_value());
-  REQUIRE_FALSE(result->has_value());
-}
-
 }  // namespace org::apache::nifi::minifi::extensions::atlas::test

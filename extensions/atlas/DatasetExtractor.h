@@ -56,7 +56,6 @@ struct DatasetReferences {
 // declaring one or more of:
 //   - a regex on componentType (most specific)
 //   - a regex on transitUri
-//   - an exact eventType match
 // The dispatcher probes those three fields in that order and calls the first
 // extractor that matches. First-hit-wins mirrors NiFi's SimpleFlowPathLineage.
 class DatasetExtractor {
@@ -64,7 +63,6 @@ class DatasetExtractor {
   virtual ~DatasetExtractor() = default;
   [[nodiscard]] virtual std::optional<std::regex> componentTypePattern() const { return std::nullopt; }
   [[nodiscard]] virtual std::optional<std::regex> transitUriPattern() const { return std::nullopt; }
-  [[nodiscard]] virtual std::optional<provenance::ProvenanceEventRecord::ProvenanceEventType> eventType() const { return std::nullopt; }
   [[nodiscard]] virtual DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const = 0;
 };
 

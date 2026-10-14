@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::extensions::atlas::extractors {
 class KafkaTopicExtractor : public DatasetExtractor {
  public:
   std::optional<std::regex> componentTypePattern() const override {
-    static const std::regex pattern{"^(Consume|Publish)Kafka.*$"};
+    static const std::regex pattern{"^(ConsumeKafka|PublishKafka)$"};
     return pattern;
   }
 
@@ -76,7 +76,7 @@ class KafkaTopicExtractor : public DatasetExtractor {
     Dataset ds{.system = "kafka", .identifier = topic, .host = host.empty() ? std::nullopt : std::optional{host},
         .attributes = std::move(ds_attrs)};
     const auto component_type = event.getComponentType();
-    if (component_type.starts_with("Consume")) {
+    if (component_type == "ConsumeKafka") {
       refs.inputs.push_back(std::move(ds));
     } else {
       refs.outputs.push_back(std::move(ds));

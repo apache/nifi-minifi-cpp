@@ -18,31 +18,9 @@
 
 #include <cctype>
 #include <utility>
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::atlas {
-
-namespace {
-
-std::vector<std::string> splitOnWhitespace(std::string_view input) {
-  std::vector<std::string> parts;
-  std::string current;
-  for (char c : input) {
-    if (std::isspace(static_cast<unsigned char>(c))) {
-      if (!current.empty()) {
-        parts.push_back(std::move(current));
-        current.clear();
-      }
-    } else {
-      current.push_back(c);
-    }
-  }
-  if (!current.empty()) {
-    parts.push_back(std::move(current));
-  }
-  return parts;
-}
-
-}  // namespace
 
 void NamespaceResolver::addRule(std::string namespace_name, std::vector<std::regex> patterns) {
   if (patterns.empty() || namespace_name.empty()) {
@@ -53,7 +31,7 @@ void NamespaceResolver::addRule(std::string namespace_name, std::vector<std::reg
 
 void NamespaceResolver::addRuleFromWhitespaceList(std::string namespace_name, std::string_view whitespace_separated_regexes) {
   std::vector<std::regex> patterns;
-  for (const auto& raw : splitOnWhitespace(whitespace_separated_regexes)) {
+  for (const auto& raw : utils::string::splitAndTrimRemovingEmpty(whitespace_separated_regexes, " ")) {
     // A malformed regex would throw at construction; that is a configuration bug and
     // should surface at onSchedule time when the caller iterates dynamic properties.
     patterns.emplace_back(raw);

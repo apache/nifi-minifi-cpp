@@ -49,13 +49,6 @@ struct AtlasEntity {
   std::unordered_map<std::string, std::unordered_set<Reference>> ref_list_attributes;
 };
 
-// Minimal typed handle to an Atlas entity fetched via getEntityByUniqueAttribute.
-struct AtlasEntityHandle {
-  std::string guid;
-  std::string type_name;
-  std::string qualified_name;
-};
-
 // AtlasClient is a thin wrapper around http::HTTPClient targeting Atlas REST v2.
 // One instance per onTrigger call — mirrors the Java task's fresh-client policy so
 // authenticator state is never reused across triggers.
@@ -82,11 +75,6 @@ class AtlasClient {
   // Creates or updates a batch of entities via POST /api/atlas/v2/entity/bulk.
   // Atlas performs upsert semantics keyed by (typeName, qualifiedName).
   std::expected<void, std::string> createOrUpdateEntities(const std::vector<AtlasEntity>& entities);
-
-  // Looks up an entity by its typed unique attribute (qualifiedName). Returns a
-  // handle if the entity exists, std::nullopt if Atlas returns 404, error otherwise.
-  std::expected<std::optional<AtlasEntityHandle>, std::string> getEntityByUniqueAttribute(
-      const std::string& type_name, const std::string& qualified_name);
 
  private:
   // Chooses the primary base URL (first in the list); multi-URL fallback is

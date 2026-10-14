@@ -22,27 +22,21 @@
 
 namespace org::apache::nifi::minifi::extensions::atlas {
 
-using extractors::KafkaTopicExtractor;
-using extractors::FilePathExtractor;
-using extractors::SiteToSitePortExtractor;
-
 ExtractorDispatcher::ExtractorDispatcher() {
   // Registration order sets tie-break priority; we register the more specific
   // (componentType-matched) extractors first, then the URI-matched ones. Order
   // matters only when both a componentType and a URI regex would fire — but the
   // dispatch walks by-componentType FIRST regardless.
-  extractors_.push_back(std::make_unique<KafkaTopicExtractor>());
-  extractors_.push_back(std::make_unique<SiteToSitePortExtractor>());
-  extractors_.push_back(std::make_unique<FilePathExtractor>());
+  extractors_.push_back(std::make_unique<extractors::KafkaTopicExtractor>());
+  extractors_.push_back(std::make_unique<extractors::SiteToSitePortExtractor>());
+  extractors_.push_back(std::make_unique<extractors::FilePathExtractor>());
 }
 
 DatasetReferences ExtractorDispatcher::dispatch(const provenance::ProvenanceEventRecord& event) const {
   const auto component_type = event.getComponentType();
-  const auto transit_uri = event.getTransitUri();
-  const auto event_type = event.getEventType();
 
-  // Pass 1: componentType regex. Most specific — a Kafka processor's provenance
-  // event should never fall through to a generic URI matcher.
+  // Pass 1: componentType regex. Most specific, e.g. a Kafka processor's provenance
+  // event shouldn't fall through to a generic URI matcher.
   for (const auto& extractor : extractors_) {
     if (const auto pattern = extractor->componentTypePattern()) {
       if (std::regex_match(component_type, *pattern)) {
@@ -50,24 +44,14 @@ DatasetReferences ExtractorDispatcher::dispatch(const provenance::ProvenanceEven
       }
     }
   }
-  // Pass 2: transit URI regex — for events whose componentType we don't recognize
+  // Pass 2: transit URI regex, for events whose componentType we don't recognize
   // but whose URI scheme identifies the external system (e.g. s3://, file:/).
-  if (!transit_uri.empty()) {
+  if (const auto transit_uri = event.getTransitUri(); !transit_uri.empty()) {
     for (const auto& extractor : extractors_) {
       if (const auto pattern = extractor->transitUriPattern()) {
         if (std::regex_match(transit_uri, *pattern)) {
           return extractor->extract(event);
         }
-      }
-    }
-  }
-  // Pass 3: event type. Last-resort catch-all for events with a transit URI but
-  // no scheme we recognize. Reserved for a future generic RemoteInvocation
-  // extractor.
-  for (const auto& extractor : extractors_) {
-    if (const auto et = extractor->eventType()) {
-      if (*et == event_type) {
-        return extractor->extract(event);
       }
     }
   }

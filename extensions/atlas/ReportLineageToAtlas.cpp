@@ -54,10 +54,6 @@ std::string atlasTypeFor(const Dataset& ds, ReportLineageToAtlas::S3ModelVersion
   return ds.system;
 }
 
-std::vector<std::string> splitCsv(std::string_view input) {
-  return utils::string::splitAndTrimRemovingEmpty(input, ",");
-}
-
 // Reduces a filesystem path to its containing directory, i.e. strips the last
 // component. Applied only when Filesystem Path Level = DIRECTORY.
 std::string dirOf(std::string_view path) {
@@ -74,8 +70,8 @@ void ReportLineageToAtlas::initialize() {
 
 void ReportLineageToAtlas::onSchedule(core::reporting::ReportingTaskContext& context) {
   atlas_base_urls_.clear();
-  if (auto v = context.getProperty(AtlasUrls); v && !v->empty()) {
-    atlas_base_urls_ = splitCsv(*v);
+  if (auto atlas_urls = context.getProperty(AtlasUrls); atlas_urls && !atlas_urls->empty()) {
+    atlas_base_urls_ = utils::string::splitAndTrimRemovingEmpty(*atlas_urls, ",");
   }
   if (atlas_base_urls_.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Atlas URLs property is required");
