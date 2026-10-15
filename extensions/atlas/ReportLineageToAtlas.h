@@ -68,7 +68,7 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
 
   EXTENSIONAPI static constexpr auto NiFiUrl =
       core::PropertyDefinitionBuilder<>::createProperty("NiFi URL for Atlas")
-          .withDescription("How this MiNiFi agent identifies itself to Atlas (used as nifi_flow.url).")
+          .withDescription("How this MiNiFi agent identifies itself to Atlas (used as minifi_flow.url).")
           .isRequired(true)
           .build();
 
@@ -132,6 +132,10 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
   static AtlasEntity datasetToEntity(const Dataset& dataset, FsPathLevel fs_path_level, S3ModelVersion s3_model_version,
       const NamespaceResolver& namespace_resolver);
 
+  // True for the datasets that describe a port belonging to a *remote* NiFi, which that
+  // NiFi also writes. Those are the only entities we share ownership of.
+  static bool isRemoteNiFiPort(std::string_view system);
+
  private:
   // Populated in onSchedule from properties.
   std::vector<std::string> atlas_base_urls_;
@@ -153,6 +157,14 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
   // needed on every trigger to attribute provenance events to a flow path.
   std::optional<core::reporting::FlowTopology> published_topology_;
   std::optional<FlowPathBuilder::Result> published_flow_result_;
+
+  // Names NiFi has given to remote ports, keyed by qualifiedName, so we echo them back
+  // instead of overwriting them. Only populated once a name we did not write shows up, so
+  // a port we created still gets re-checked until its owner names it.
+  std::unordered_map<std::string, std::string> remote_port_names_;
+
+  // Resolves the name to send for a remote port entity: NiFi's, if it has set one.
+  std::string resolveRemotePortName(AtlasClient& atlas, const AtlasEntity& entity, const std::string& fallback);
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::atlas

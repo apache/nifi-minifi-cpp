@@ -30,8 +30,8 @@
 #include "FlowController.h"
 #include "core/state/ProcessorController.h"
 #include "core/ProcessGroup.h"
+#include "core/reporting/ReportingTask.h"
 #include "Connection.h"
-#include "Port.h"
 #include "core/Core.h"
 #include "SchedulingAgent.h"
 #include "core/controller/ForwardingControllerServiceProvider.h"
@@ -474,25 +474,27 @@ core::reporting::FlowTopology FlowController::getFlowTopology() const {
   topology.root_group_uuid = root->getUUID();
   topology.root_group_name = root->getName();
 
-  // Flatten processors from every nested process group into one list. Ports live
-  // inside processors_ too (Port inherits Processor) — split them into
-  // input_ports / output_ports based on PortType, keep the rest as processors.
+  // Flatten processors from every nested process group into one list.
+  //
+  // Ports are reported as ordinary processors. They are process-group boundary nodes, and
+  // at runtime a Port is a ForwardingNode — the same pass-through as a Funnel, which is
+  // already reported this way. MiNiFi has no site-to-site server, so unlike NiFi's ports
+  // these are never an external interface; singling them out would only break an
+  // otherwise continuous path in two.
   std::vector<core::Processor*> processors;
   root->getAllProcessors(processors);
   for (auto* proc : processors) {
     if (!proc) {
       continue;
     }
-    if (auto* port = dynamic_cast<Port*>(proc)) {
-      core::reporting::FlowTopology::Port entry{.uuid = port->getUUID(), .name = port->getName(), .is_input = port->getPortType() == PortType::INPUT};
-      if (entry.is_input) {
-        topology.input_ports.push_back(std::move(entry));
-      } else {
-        topology.output_ports.push_back(std::move(entry));
-      }
-    } else {
-      topology.processors.push_back({.uuid = proc->getUUID(), .name = proc->getName(), .type = proc->getProcessorType()});
+    // Reporting tasks are wrapped in a core::Processor and added to the root group like
+    // any other (StructuredConfiguration::parseReportingTasks), but they are not part of
+    // the dataflow: they have no connections and consume no flow files. Reporting them as
+    // processors would describe the observer as part of what it observes.
+    if (dynamic_cast<core::reporting::ReportingTask*>(&proc->getImpl())) {
+      continue;
     }
+    topology.processors.push_back({.uuid = proc->getUUID(), .name = proc->getName(), .type = proc->getProcessorType()});
   }
 
   // ProcessGroup::getConnections registers every Connection twice (by UUID and by name);
@@ -522,8 +524,6 @@ core::reporting::FlowTopology FlowController::getFlowTopology() const {
   // whether the flow actually changed.
   const auto by_uuid = [](const auto& lhs, const auto& rhs) { return lhs.uuid < rhs.uuid; };
   std::ranges::sort(topology.processors, by_uuid);
-  std::ranges::sort(topology.input_ports, by_uuid);
-  std::ranges::sort(topology.output_ports, by_uuid);
   std::ranges::sort(topology.connections, by_uuid);
   for (auto& conn : topology.connections) {
     std::ranges::sort(conn.relationships);

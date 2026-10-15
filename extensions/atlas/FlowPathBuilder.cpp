@@ -32,12 +32,16 @@ std::string qualifiedName(std::string_view id, std::string_view namespace_name) 
   return std::string{id} + "@" + std::string{namespace_name};
 }
 
-// Enumerates NiFi Atlas entity type names in one place so callers don't repeat strings.
-constexpr const char* kNifiFlow = "nifi_flow";
-constexpr const char* kNifiFlowPath = "nifi_flow_path";
-constexpr const char* kNifiQueue = "nifi_queue";
-constexpr const char* kNifiInputPort = "nifi_input_port";
-constexpr const char* kNifiOutputPort = "nifi_output_port";
+// The agent's own flow is described with minifi_* types: nothing else writes these
+// entities, so we own them outright and they are not confusable with a NiFi instance's.
+// The remote ports on the far side of a site-to-site transfer are the exception — those
+// keep NiFi's type names so the entities merge with the receiving NiFi's, and they are
+// produced by the extractors (see atlasTypeFor), not here.
+constexpr const char* kMiNiFiFlow = "minifi_flow";
+constexpr const char* kMiNiFiFlowPath = "minifi_flow_path";
+constexpr const char* kMiNiFiQueue = "minifi_queue";
+// Back-reference attribute declared by minifi_component.
+constexpr const char* kMiNiFiFlowAttr = "minifiFlow";
 
 }  // namespace
 
@@ -45,47 +49,29 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   Result result;
   const auto ns = std::string{namespace_name};
 
-  // Index processors by UUID for O(1) lookup during the graph walk. Ports live in
-  // their own tables so the path walk treats them as DataSets rather than nodes.
+  // Index processors by UUID for O(1) lookup during the graph walk. Process-group ports
+  // arrive in `processors` like any other node, so they take part in the walk and a path
+  // running through one stays a single continuous path.
   std::unordered_map<std::string, const Topology::Processor*> proc_by_uuid;
   proc_by_uuid.reserve(topology.processors.size());
   for (const auto& p : topology.processors) {
     proc_by_uuid.emplace(p.uuid.to_string(), &p);
   }
-  std::unordered_set<std::string> port_uuids;
-  for (const auto& p : topology.input_ports) {
-    port_uuids.insert(p.uuid.to_string());
-  }
-  for (const auto& p : topology.output_ports) {
-    port_uuids.insert(p.uuid.to_string());
-  }
 
-  // Adjacency: only consider connections where both endpoints are processors (skip
-  // funnels or unknown endpoints). Ports become DataSet-typed refs on adjacent paths,
-  // not participants in the path walk itself.
+  // Adjacency: only consider connections where both endpoints are known processors, so an
+  // endpoint we have no node for (e.g. a funnel, or something added since the snapshot)
+  // is skipped rather than producing a dangling edge.
   std::unordered_map<std::string, std::vector<std::string>> successors;    // proc_uuid -> [downstream proc_uuid]
   std::unordered_map<std::string, std::vector<std::string>> predecessors;  // proc_uuid -> [upstream proc_uuid]
-  std::unordered_map<std::string, std::vector<std::string>> proc_upstream_input_ports;     // proc_uuid <- upstream input port
-  std::unordered_map<std::string, std::vector<std::string>> proc_downstream_output_ports;  // proc_uuid -> downstream output port
 
   for (const auto& conn : topology.connections) {
     const auto src = std::string{conn.source_uuid.to_string().view()};
     const auto dst = std::string{conn.destination_uuid.to_string().view()};
-    const bool src_is_proc = proc_by_uuid.contains(src);
-    const bool dst_is_proc = proc_by_uuid.contains(dst);
-    const bool src_is_port = port_uuids.contains(src);
-    const bool dst_is_port = port_uuids.contains(dst);
-
-    if (src_is_proc && dst_is_proc) {
-      successors[src].push_back(dst);
-      predecessors[dst].push_back(src);
-    } else if (src_is_port && dst_is_proc) {
-      proc_upstream_input_ports[dst].push_back(src);
-    } else if (src_is_proc && dst_is_port) {
-      proc_downstream_output_ports[src].push_back(dst);
+    if (!proc_by_uuid.contains(src) || !proc_by_uuid.contains(dst)) {
+      continue;
     }
-    // src <-> port and port <-> port edges are ignored — the topology model doesn't have them
-    // for a root group, but we accept them silently.
+    successors[src].push_back(dst);
+    predecessors[dst].push_back(src);
   }
 
   // A processor is a "path head" if:
@@ -174,22 +160,6 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   std::unordered_map<std::string, std::unordered_set<AtlasEntity::Reference>> path_inputs;   // path qname -> refs
   std::unordered_map<std::string, std::unordered_set<AtlasEntity::Reference>> path_outputs;
 
-  // Ports become inputs/outputs directly on the paths whose processors they connect to.
-  for (const auto& [proc_uuid, port_uuids_upstream] : proc_upstream_input_ports) {
-    const auto path_it = result.processor_to_path.find(proc_uuid);
-    if (path_it == result.processor_to_path.end()) continue;
-    for (const auto& port_uuid : port_uuids_upstream) {
-      path_inputs[path_it->second.flow_path_qualified_name].emplace(kNifiInputPort, qualifiedName(port_uuid, ns));
-    }
-  }
-  for (const auto& [proc_uuid, port_uuids_downstream] : proc_downstream_output_ports) {
-    const auto path_it = result.processor_to_path.find(proc_uuid);
-    if (path_it == result.processor_to_path.end()) continue;
-    for (const auto& port_uuid : port_uuids_downstream) {
-      path_outputs[path_it->second.flow_path_qualified_name].emplace(kNifiOutputPort, qualifiedName(port_uuid, ns));
-    }
-  }
-
   std::vector<AtlasEntity> queue_entities;
   std::unordered_set<std::string> queue_qnames;
   for (const auto& conn : topology.connections) {
@@ -201,24 +171,24 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     if (src_path_it == result.processor_to_path.end() || dst_path_it == result.processor_to_path.end()) continue;
     if (src_path_it->second.flow_path_qualified_name == dst_path_it->second.flow_path_qualified_name) continue;
 
-    // Cross-path edge: emit a nifi_queue keyed by the downstream processor UUID.
+    // Cross-path edge: emit a minifi_queue keyed by the downstream processor UUID.
     const auto queue_qn = qualifiedName(dst, ns);
     if (queue_qnames.insert(queue_qn).second) {
       AtlasEntity q;
-      q.type_name = kNifiQueue;
+      q.type_name = kMiNiFiQueue;
       q.qualified_name = queue_qn;
       q.string_attributes["name"] = "queue to " + std::string{conn.name.empty() ? proc_by_uuid.at(dst)->name : conn.name};
       queue_entities.push_back(std::move(q));
     }
-    path_outputs[src_path_it->second.flow_path_qualified_name].emplace(kNifiQueue, queue_qn);
-    path_inputs[dst_path_it->second.flow_path_qualified_name].emplace(kNifiQueue, queue_qn);
+    path_outputs[src_path_it->second.flow_path_qualified_name].emplace(kMiNiFiQueue, queue_qn);
+    path_inputs[dst_path_it->second.flow_path_qualified_name].emplace(kMiNiFiQueue, queue_qn);
   }
 
   const auto flow_url_str = std::string{flow_url};
 
-  // Emit nifi_flow.
+  // Emit minifi_flow.
   AtlasEntity flow;
-  flow.type_name = kNifiFlow;
+  flow.type_name = kMiNiFiFlow;
   flow.qualified_name = qualifiedName(topology.root_group_uuid.to_string().view(), ns);
   flow.string_attributes["name"] = topology.root_group_name.empty() ? "MiNiFi Flow" : topology.root_group_name;
   if (!flow_url.empty()) {
@@ -228,7 +198,7 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   std::unordered_set<AtlasEntity::Reference> flow_paths_refs;
   flow_paths_refs.reserve(paths.size());
   for (const auto& bp : paths) {
-    flow_paths_refs.emplace(kNifiFlowPath, bp.qualified_name);
+    flow_paths_refs.emplace(kMiNiFiFlowPath, bp.qualified_name);
   }
   if (!flow_paths_refs.empty()) {
     flow.ref_list_attributes.emplace("flowPaths", std::move(flow_paths_refs));
@@ -237,36 +207,20 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     std::unordered_set<AtlasEntity::Reference> queue_refs;
     queue_refs.reserve(queue_entities.size());
     for (const auto& q : queue_entities) {
-      queue_refs.emplace(kNifiQueue, q.qualified_name);
+      queue_refs.emplace(kMiNiFiQueue, q.qualified_name);
     }
     flow.ref_list_attributes.emplace("queues", std::move(queue_refs));
   }
-  if (!topology.input_ports.empty()) {
-    std::unordered_set<AtlasEntity::Reference> port_refs;
-    port_refs.reserve(topology.input_ports.size());
-    for (const auto& p : topology.input_ports) {
-      port_refs.emplace(kNifiInputPort, qualifiedName(p.uuid.to_string().view(), ns));
-    }
-    flow.ref_list_attributes.emplace("inputPorts", std::move(port_refs));
-  }
-  if (!topology.output_ports.empty()) {
-    std::unordered_set<AtlasEntity::Reference> port_refs;
-    port_refs.reserve(topology.output_ports.size());
-    for (const auto& p : topology.output_ports) {
-      port_refs.emplace(kNifiOutputPort, qualifiedName(p.uuid.to_string().view(), ns));
-    }
-    flow.ref_list_attributes.emplace("outputPorts", std::move(port_refs));
-  }
   result.entities.push_back(std::move(flow));
 
-  // Emit nifi_flow_path entities, each with a comma-joined display name and any
-  // inputs/outputs collected above. The nifiFlow back-reference lets Atlas render
+  // Emit minifi_flow_path entities, each with a comma-joined display name and any
+  // inputs/outputs collected above. The minifiFlow back-reference lets Atlas render
   // path ownership.
   const auto root_group_uuid_str = std::string{topology.root_group_uuid.to_string().view()};
-  AtlasEntity::Reference flow_ref{kNifiFlow, qualifiedName(root_group_uuid_str, ns)};
+  AtlasEntity::Reference flow_ref{kMiNiFiFlow, qualifiedName(root_group_uuid_str, ns)};
   for (auto& bp : paths) {
     AtlasEntity path_entity;
-    path_entity.type_name = kNifiFlowPath;
+    path_entity.type_name = kMiNiFiFlowPath;
     path_entity.qualified_name = bp.qualified_name;
     std::string name;
     for (const auto& proc_uuid : bp.processor_uuids) {
@@ -275,8 +229,8 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
       name += proc->name;
     }
     path_entity.string_attributes["name"] = std::move(name);
-    path_entity.ref_attributes.emplace("nifiFlow", flow_ref);
-    // Atlas rejects the bulk POST with a 404 if nifi_flow_path.url is missing (the type
+    path_entity.ref_attributes.emplace(kMiNiFiFlowAttr, flow_ref);
+    // Atlas rejects the bulk POST with a 404 if minifi_flow_path.url is missing (the type
     // declares it mandatory). NiFi's shape is `<flow_url>?processGroupId=<root>&componentIds=<head>`;
     // we mirror that. flow_url is passed in unconditionally by ReportLineageToAtlas, so we don't
     // guard on emptiness here - a blank URL still satisfies Atlas' mandatory-attribute check.
@@ -297,26 +251,8 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
 
   // Emit queue entities.
   for (auto& q : queue_entities) {
-    q.ref_attributes.emplace("nifiFlow", flow_ref);
+    q.ref_attributes.emplace(kMiNiFiFlowAttr, flow_ref);
     result.entities.push_back(std::move(q));
-  }
-
-  // Emit port entities.
-  for (const auto& p : topology.input_ports) {
-    AtlasEntity e;
-    e.type_name = kNifiInputPort;
-    e.qualified_name = qualifiedName(p.uuid.to_string().view(), ns);
-    e.string_attributes["name"] = p.name;
-    e.ref_attributes.emplace("nifiFlow", flow_ref);
-    result.entities.push_back(std::move(e));
-  }
-  for (const auto& p : topology.output_ports) {
-    AtlasEntity e;
-    e.type_name = kNifiOutputPort;
-    e.qualified_name = qualifiedName(p.uuid.to_string().view(), ns);
-    e.string_attributes["name"] = p.name;
-    e.ref_attributes.emplace("nifiFlow", flow_ref);
-    result.entities.push_back(std::move(e));
   }
 
   return result;

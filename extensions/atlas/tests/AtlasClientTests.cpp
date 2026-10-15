@@ -18,7 +18,10 @@
 #include "AtlasClient.h"
 #include "MockAtlas.h"
 
+#include <algorithm>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "rapidjson/document.h"
 #include "unit/Catch.h"
@@ -39,43 +42,111 @@ AtlasClient::Config configFor(MockAtlas& mock) {
 
 }  // namespace
 
-TEST_CASE("AtlasClient registerNiFiTypeDefs POSTs the type bundle", "[atlas][client]") {
-  MockAtlas mock{"38900"};
+namespace {
+
+// Collects the "name" of each entityDef in a typedefs POST body.
+std::vector<std::string> postedTypeNames(const std::string& body) {
+  rapidjson::Document doc;
+  REQUIRE_FALSE(doc.Parse(body.c_str()).HasParseError());
+  REQUIRE(doc.IsObject());
+  REQUIRE(doc.HasMember("entityDefs"));
+  REQUIRE(doc["entityDefs"].IsArray());
+  std::vector<std::string> names;
+  for (const auto& entity_def : doc["entityDefs"].GetArray()) {
+    names.emplace_back(entity_def["name"].GetString());
+  }
+  std::ranges::sort(names);
+  return names;
+}
+
+}  // namespace
+
+TEST_CASE("AtlasClient registers both bundles when Atlas has no types", "[atlas][client]") {
+  MockAtlas mock{"38900"};  // typeLookup defaults to 404 = everything absent
   AtlasClient client{configFor(mock)};
 
-  const auto result = client.registerNiFiTypeDefs();
-  REQUIRE(result.has_value());
+  REQUIRE(client.registerTypeDefs().has_value());
+
+  // One lookup per type in both bundles, before anything is POSTed.
+  REQUIRE(mock.typeLookup().requests().size() == 11);  // 4 minifi_* + 7 nifi_*
+  for (const auto& request : mock.typeLookup().requests()) {
+    REQUIRE(request.method == "GET");
+  }
 
   const auto requests = mock.types().requests();
-  REQUIRE(requests.size() == 1);
+  REQUIRE(requests.size() == 2);  // the bundles are registered independently
   REQUIRE(requests[0].method == "POST");
   REQUIRE(requests[0].uri == "/api/atlas/v2/types/typedefs");
 
-  rapidjson::Document body;
-  REQUIRE_FALSE(body.Parse(requests[0].body.c_str()).HasParseError());
-  REQUIRE(body.IsObject());
-  REQUIRE(body.HasMember("entityDefs"));
-  REQUIRE(body["entityDefs"].IsArray());
-  REQUIRE(body["entityDefs"].Size() == 6);  // nifi_component + nifi_flow + nifi_flow_path + nifi_queue + input_port + output_port
+  REQUIRE(postedTypeNames(requests[0].body) ==
+      std::vector<std::string>{"minifi_component", "minifi_flow", "minifi_flow_path", "minifi_queue"});
+  // The nifi_* mirror must be complete: NiFi decides create-vs-update for its whole
+  // batch at once, so a PUT naming any type we failed to create fails the entire call.
+  REQUIRE(postedTypeNames(requests[1].body) ==
+      std::vector<std::string>{"nifi_component", "nifi_data", "nifi_flow", "nifi_flow_path", "nifi_input_port", "nifi_output_port", "nifi_queue"});
 }
 
-TEST_CASE("AtlasClient treats HTTP 409 (types already exist) as success", "[atlas][client]") {
+TEST_CASE("AtlasClient POSTs nothing when every type already exists", "[atlas][client]") {
   MockAtlas mock{"38901"};
-  mock.types().setResponse(409, R"({"errorCode":"ATLAS-409-00-00A","errorMessage":"types exist"})", "Conflict");
+  mock.typeLookup().setResponse(200, R"({"category":"ENTITY","name":"nifi_input_port"})");
   AtlasClient client{configFor(mock)};
 
-  REQUIRE(client.registerNiFiTypeDefs().has_value());
+  REQUIRE(client.registerTypeDefs().has_value());
+
+  // Existing definitions are left exactly as they are — NiFi owns the nifi_* ones, and
+  // overwriting them would make us the owner of a schema NiFi depends on.
+  REQUIRE(mock.types().requests().empty());
+}
+
+TEST_CASE("AtlasClient POSTs only the types that are missing", "[atlas][client]") {
+  MockAtlas mock{"38903"};
+  AtlasClient client{configFor(mock)};
+  // Everything absent except minifi_queue, which the lookup handler reports as present
+  // only for that one name.
+  mock.typeLookup().setResponseFor("/api/atlas/v2/types/typedef/name/minifi_queue", 200, R"({"name":"minifi_queue"})");
+
+  REQUIRE(client.registerTypeDefs().has_value());
+
+  const auto requests = mock.types().requests();
+  REQUIRE(requests.size() == 2);
+  REQUIRE(postedTypeNames(requests[0].body) ==
+      std::vector<std::string>{"minifi_component", "minifi_flow", "minifi_flow_path"});
+}
+
+TEST_CASE("AtlasClient surfaces a typedef conflict instead of assuming success", "[atlas][client]") {
+  MockAtlas mock{"38902"};
+  mock.types().setResponse(409, R"({"errorCode":"ATLAS-409-00-001","errorMessage":"Given type nifi_component already exists"})", "Conflict");
+  AtlasClient client{configFor(mock)};
+
+  // A 409 means another writer won a race. Atlas' typedef POST is all-or-nothing, so the
+  // rest of the batch was not created; reporting an error makes the caller retry rather
+  // than latch a half-registered schema and fail every later publish.
+  const auto result = client.registerTypeDefs();
+  REQUIRE_FALSE(result.has_value());
+  REQUIRE(result.error().find("HTTP 409") != std::string::npos);
 }
 
 TEST_CASE("AtlasClient surfaces non-success HTTP as a diagnostic", "[atlas][client]") {
-  MockAtlas mock{"38902"};
+  MockAtlas mock{"38904"};
   mock.types().setResponse(500, R"({"errorMessage":"boom"})", "Internal Server Error");
   AtlasClient client{configFor(mock)};
 
-  const auto result = client.registerNiFiTypeDefs();
+  const auto result = client.registerTypeDefs();
   REQUIRE_FALSE(result.has_value());
   REQUIRE(result.error().find("HTTP 500") != std::string::npos);
   REQUIRE(result.error().find("boom") != std::string::npos);
+}
+
+TEST_CASE("AtlasClient treats a failed type lookup as an error, not as absent", "[atlas][client]") {
+  MockAtlas mock{"38905"};
+  mock.typeLookup().setResponse(503, R"({"errorMessage":"unavailable"})", "Service Unavailable");
+  AtlasClient client{configFor(mock)};
+
+  // Mistaking a broken connection for "type absent" would make us POST over definitions
+  // that already exist.
+  const auto result = client.registerTypeDefs();
+  REQUIRE_FALSE(result.has_value());
+  REQUIRE(mock.types().requests().empty());
 }
 
 TEST_CASE("AtlasClient createOrUpdateEntities serializes strings, refs, and ref lists", "[atlas][client]") {
@@ -187,16 +258,69 @@ TEST_CASE("AtlasClient createOrUpdateEntities links same-batch references by tem
   REQUIRE_FALSE(nifi_flow_ref.HasMember("uniqueAttributes"));
 }
 
+TEST_CASE("AtlasClient reads an existing entity's name", "[atlas][client]") {
+  MockAtlas mock{"38907"};
+  mock.lookup().setResponse(200, R"({"entity":{"typeName":"nifi_input_port","attributes":{"qualifiedName":"p@ns1","name":"From MiNiFi Agents"}}})");
+  AtlasClient client{configFor(mock)};
+
+  const auto name = client.getEntityName("nifi_input_port", "p@ns1");
+  REQUIRE(name.has_value());
+  REQUIRE(*name == "From MiNiFi Agents");
+
+  // The qualifiedName travels as a query value and must be escaped, not pasted in raw.
+  const auto requests = mock.lookup().requests();
+  REQUIRE(requests.size() == 1);
+  REQUIRE(requests[0].method == "GET");
+  REQUIRE(requests[0].uri.find("/api/atlas/v2/entity/uniqueAttribute/type/nifi_input_port") != std::string::npos);
+  REQUIRE(requests[0].uri.find("p%40ns1") != std::string::npos);
+}
+
+TEST_CASE("AtlasClient reports a missing entity as nullopt, not an error", "[atlas][client]") {
+  MockAtlas mock{"38908"};
+  mock.lookup().setResponse(404, R"({"errorCode":"ATLAS-404-00-00A"})", "Not Found");
+  AtlasClient client{configFor(mock)};
+
+  const auto name = client.getEntityName("nifi_input_port", "absent@ns1");
+  REQUIRE(name.has_value());
+  REQUIRE_FALSE(name->has_value());
+}
+
+TEST_CASE("AtlasClient reports a nameless entity as nullopt", "[atlas][client]") {
+  MockAtlas mock{"38909"};
+  mock.lookup().setResponse(200, R"({"entity":{"typeName":"nifi_input_port","attributes":{"qualifiedName":"p@ns1"}}})");
+  AtlasClient client{configFor(mock)};
+
+  const auto name = client.getEntityName("nifi_input_port", "p@ns1");
+  REQUIRE(name.has_value());
+  REQUIRE_FALSE(name->has_value());
+}
+
+TEST_CASE("AtlasClient surfaces a failed entity lookup", "[atlas][client]") {
+  MockAtlas mock{"38910"};
+  mock.lookup().setResponse(503, R"({"errorMessage":"unavailable"})", "Service Unavailable");
+  AtlasClient client{configFor(mock)};
+
+  const auto name = client.getEntityName("nifi_input_port", "p@ns1");
+  REQUIRE_FALSE(name.has_value());
+  REQUIRE(name.error().find("HTTP 503") != std::string::npos);
+}
+
 TEST_CASE("AtlasClient sends Basic auth header when credentials are provided", "[atlas][client]") {
-  MockAtlas mock{"38905"};
+  MockAtlas mock{"38906"};
   auto cfg = configFor(mock);
   cfg.username = "admin";
   cfg.password = "admin123";
   AtlasClient client{std::move(cfg)};
 
-  REQUIRE(client.registerNiFiTypeDefs().has_value());
+  REQUIRE(client.registerTypeDefs().has_value());
+  // Both the type lookups and the bundle POSTs must be authenticated.
+  const auto lookups = mock.typeLookup().requests();
+  REQUIRE_FALSE(lookups.empty());
+  REQUIRE(lookups[0].authorization.has_value());
+  REQUIRE(lookups[0].authorization->starts_with("Basic "));
+
   const auto requests = mock.types().requests();
-  REQUIRE(requests.size() == 1);
+  REQUIRE(requests.size() == 2);
   REQUIRE(requests[0].authorization.has_value());
   REQUIRE(requests[0].authorization->starts_with("Basic "));
 }

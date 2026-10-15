@@ -19,7 +19,11 @@
 #include <expected>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "http/HTTPClient.h"
@@ -29,7 +33,7 @@
 namespace org::apache::nifi::minifi::extensions::atlas {
 
 // AtlasEntity is the JSON-shaped payload passed to Atlas's bulk-entity endpoint.
-// One instance corresponds to one Atlas entity (nifi_flow, nifi_flow_path, kafka_topic,
+// One instance corresponds to one Atlas entity (minifi_flow, minifi_flow_path, kafka_topic,
 // etc.). type_name is the Atlas type; qualified_name is the entity's Atlas-wide unique
 // key; attributes carries the remaining typed fields. References to other entities
 // (e.g. "inputs": [{typeName, uniqueAttributes.qualifiedName}]) are represented via
@@ -67,14 +71,31 @@ class AtlasClient {
 
   explicit AtlasClient(Config config);
 
-  // Registers the six NiFi typedefs (nifi_component, nifi_flow, nifi_flow_path,
-  // nifi_queue, nifi_input_port, nifi_output_port). Idempotent on the Atlas side —
-  // if the types already exist Atlas returns 409, which this method treats as success.
-  std::expected<void, std::string> registerNiFiTypeDefs();
+  // Ensures both typedef bundles (minifi_* and the nifi_* mirror) are present.
+  //
+  // Diffs against Atlas first and POSTs only the types that are missing, rather than
+  // POSTing a whole bundle and treating the resulting 409 as success. That old approach
+  // was wrong in a way that failed silently and permanently: Atlas' typedef POST is
+  // all-or-nothing, so a 409 proves only that *at least one* type pre-existed while the
+  // rest were never created — after which every entity publish fails with
+  // "Type ENTITY ... does not exist".
+  //
+  // Existing types are left untouched, never updated. For nifi_* that matters: NiFi owns
+  // those definitions, and overwriting them would make us the owner of a schema NiFi
+  // depends on.
+  std::expected<void, std::string> registerTypeDefs();
 
   // Creates or updates a batch of entities via POST /api/atlas/v2/entity/bulk.
   // Atlas performs upsert semantics keyed by (typeName, qualifiedName).
   std::expected<void, std::string> createOrUpdateEntities(const std::vector<AtlasEntity>& entities);
+
+  // Reads the Asset.name of an existing entity. nullopt means the entity is not there (or
+  // carries no name); unexpected means the lookup itself failed.
+  //
+  // Needed because Atlas requires Asset.name on update as well as create, so every writer
+  // of a shared entity has to send a name and the last one wins. Reading the current value
+  // first lets us hand it straight back instead of overwriting it.
+  std::expected<std::optional<std::string>, std::string> getEntityName(std::string_view type_name, std::string_view qualified_name);
 
  private:
   // Chooses the primary base URL (first in the list); multi-URL fallback is
@@ -83,6 +104,15 @@ class AtlasClient {
 
   // Configures a per-request HTTPClient with base URL, auth, and content type set.
   void prepareClient(http::HTTPClient& client, http::HttpRequestMethod method, const std::string& path);
+
+  // True/false if the entity typedef is present; unexpected on transport failure, so a
+  // broken connection is not mistaken for "absent" (which would make us POST over it).
+  std::expected<bool, std::string> typeDefExists(std::string_view type_name);
+
+  // Registers whichever of bundle_type_names are absent, as a single bundle filtered out
+  // of payload. Posting the missing set together lets Atlas resolve forward references
+  // between them; dependencies on already-present types resolve against Atlas.
+  std::expected<void, std::string> registerMissingTypeDefs(std::string_view payload, std::span<const std::string_view> bundle_type_names);
 
   Config config_;
 };

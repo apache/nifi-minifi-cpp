@@ -16,29 +16,85 @@
  */
 #pragma once
 
+#include <array>
 #include <string_view>
 
-// This file holds the typedef bundle payload we POST to /api/atlas/v2/types/typedefs
-// on first onTrigger. The type hierarchy mirrors NiFi's Atlas bundle:
+// Typedef bundles POSTed to /api/atlas/v2/types/typedefs. There are two, and they are
+// registered independently — Atlas' typedef POST is all-or-nothing, so a conflict in one
+// bundle must not be able to block the other.
 //
-//   Referenceable
-//   ├── Asset
-//   │   ├── nifi_component         (mixin — carries nifiFlow ref)
-//   │   ├── DataSet
-//   │   │   ├── nifi_queue         (Asset + nifi_component)
-//   │   │   ├── nifi_input_port
-//   │   │   ├── nifi_output_port
-//   │   │   └── nifi_flow          (Asset only — has flowPaths, queues, ports)
-//   │   └── Process
-//   │       └── nifi_flow_path     (Process + nifi_component — inputs[], outputs[])
+// 1. minifi_* — the agent's own flow. We are the only writer, so we own these outright:
 //
-// Kept as a compile-time string constant (no template substitution) so the payload
-// is trivially auditable and byte-identical across builds. RapidJSON will parse it
-// again if we ever need to introspect it, but for the typedef upload we can hand
-// Atlas the raw text.
+//      Referenceable
+//      └── Asset
+//          ├── minifi_component      (mixin — declares minifiFlow)
+//          ├── DataSet
+//          │   └── minifi_queue
+//          ├── minifi_flow           (flowPaths, queues)
+//          └── Process
+//              └── minifi_flow_path  (inputs[]/outputs[] inherited from Process)
+//
+// 2. nifi_* — a faithful mirror of NiFi's own bundle (NiFiTypes.java). We emit only
+//    nifi_input_port / nifi_output_port, for the remote ports on the far side of a
+//    site-to-site transfer: Atlas identifies entities by (typeName, qualifiedName), so
+//    using NiFi's type name is what makes our lineage merge with the receiving NiFi's
+//    instead of forming a disconnected subgraph.
+//
+//    All seven are mirrored even though we emit two, and the definitions must stay
+//    byte-faithful to NiFiTypes.java. Both reasons are about not breaking NiFi:
+//      - NiFi's registerNiFiTypeDefs() decides create-vs-update once for the whole
+//        batch. With update=true it PUTs all seven, and a PUT naming any type that does
+//        not exist fails the entire call (404), so a partial mirror breaks NiFi outright.
+//      - Atlas silently drops attributes a type does not declare. If our definition is
+//        the one that landed and it is narrower than NiFi's, NiFi's own entities lose
+//        those attributes with no error anywhere.
+//    Keep this in sync with the NiFi version named below when upgrading.
 namespace org::apache::nifi::minifi::extensions::atlas {
 
-// serviceType is a free-form grouping displayed in Atlas UI navigation.
+// MiNiFi's own types. serviceType groups them in the Atlas UI navigation.
+constexpr std::string_view kMiNiFiTypeDefsPayload = R"({
+  "entityDefs": [
+    {
+      "name": "minifi_component",
+      "superTypes": [],
+      "typeVersion": "1.0",
+      "serviceType": "minifi",
+      "attributeDefs": [
+        {"name": "minifiFlow", "typeName": "minifi_flow", "isOptional": true, "cardinality": "SINGLE", "isUnique": false, "isIndexable": false}
+      ]
+    },
+    {
+      "name": "minifi_flow",
+      "superTypes": ["Referenceable", "Asset"],
+      "typeVersion": "1.0",
+      "serviceType": "minifi",
+      "attributeDefs": [
+        {"name": "url", "typeName": "string", "isOptional": true, "cardinality": "SINGLE", "isUnique": false, "isIndexable": false},
+        {"name": "flowPaths", "typeName": "array<minifi_flow_path>", "isOptional": true, "cardinality": "SET", "isUnique": false, "isIndexable": false},
+        {"name": "queues", "typeName": "array<minifi_queue>", "isOptional": true, "cardinality": "SET", "isUnique": false, "isIndexable": false}
+      ]
+    },
+    {
+      "name": "minifi_flow_path",
+      "superTypes": ["Process", "minifi_component"],
+      "typeVersion": "1.0",
+      "serviceType": "minifi",
+      "attributeDefs": [
+        {"name": "url", "typeName": "string", "isOptional": true, "cardinality": "SINGLE", "isUnique": false, "isIndexable": false}
+      ]
+    },
+    {
+      "name": "minifi_queue",
+      "superTypes": ["DataSet", "minifi_component"],
+      "typeVersion": "1.0",
+      "serviceType": "minifi",
+      "attributeDefs": []
+    }
+  ]
+})";
+
+// Mirror of NiFi's bundle, from nifi-atlas-reporting-task NiFiTypes.java (NiFi 1.28.0).
+// Do not "improve" these definitions — they must match what NiFi registers.
 constexpr std::string_view kNiFiTypeDefsPayload = R"({
   "entityDefs": [
     {
@@ -46,19 +102,21 @@ constexpr std::string_view kNiFiTypeDefsPayload = R"({
       "superTypes": [],
       "typeVersion": "1.0",
       "serviceType": "nifi",
-      "attributeDefs": []
+      "attributeDefs": [
+        {"name": "nifiFlow", "typeName": "nifi_flow", "isOptional": true, "cardinality": "SINGLE", "isUnique": false, "isIndexable": false}
+      ]
     },
     {
       "name": "nifi_flow",
-      "superTypes": ["Asset"],
+      "superTypes": ["Referenceable", "Asset"],
       "typeVersion": "1.0",
       "serviceType": "nifi",
       "attributeDefs": [
-        {"name": "url", "typeName": "string", "isOptional": true, "cardinality": "SINGLE"},
-        {"name": "flowPaths", "typeName": "array<nifi_flow_path>", "isOptional": true, "cardinality": "SET"},
-        {"name": "queues", "typeName": "array<nifi_queue>", "isOptional": true, "cardinality": "SET"},
-        {"name": "inputPorts", "typeName": "array<nifi_input_port>", "isOptional": true, "cardinality": "SET"},
-        {"name": "outputPorts", "typeName": "array<nifi_output_port>", "isOptional": true, "cardinality": "SET"}
+        {"name": "url", "typeName": "string", "isOptional": true, "cardinality": "SINGLE", "isUnique": false, "isIndexable": false},
+        {"name": "flowPaths", "typeName": "array<nifi_flow_path>", "isOptional": true, "cardinality": "SET", "isUnique": false, "isIndexable": false},
+        {"name": "queues", "typeName": "array<nifi_queue>", "isOptional": true, "cardinality": "SET", "isUnique": false, "isIndexable": false},
+        {"name": "inputPorts", "typeName": "array<nifi_input_port>", "isOptional": true, "cardinality": "SET", "isUnique": false, "isIndexable": false},
+        {"name": "outputPorts", "typeName": "array<nifi_output_port>", "isOptional": true, "cardinality": "SET", "isUnique": false, "isIndexable": false}
       ]
     },
     {
@@ -67,8 +125,15 @@ constexpr std::string_view kNiFiTypeDefsPayload = R"({
       "typeVersion": "1.0",
       "serviceType": "nifi",
       "attributeDefs": [
-        {"name": "url", "typeName": "string", "isOptional": true, "cardinality": "SINGLE"}
+        {"name": "url", "typeName": "string", "isOptional": true, "cardinality": "SINGLE", "isUnique": false, "isIndexable": false}
       ]
+    },
+    {
+      "name": "nifi_data",
+      "superTypes": ["DataSet", "nifi_component"],
+      "typeVersion": "1.0",
+      "serviceType": "nifi",
+      "attributeDefs": []
     },
     {
       "name": "nifi_queue",
@@ -93,5 +158,14 @@ constexpr std::string_view kNiFiTypeDefsPayload = R"({
     }
   ]
 })";
+
+// Type names in each bundle, in dependency order (supertypes before subtypes) so a
+// partial registration still yields a usable subset. Used to diff against Atlas and
+// POST only what is missing.
+constexpr std::array<std::string_view, 4> kMiNiFiTypeNames{
+    "minifi_component", "minifi_flow", "minifi_flow_path", "minifi_queue"};
+
+constexpr std::array<std::string_view, 7> kNiFiTypeNames{
+    "nifi_component", "nifi_flow", "nifi_flow_path", "nifi_data", "nifi_queue", "nifi_input_port", "nifi_output_port"};
 
 }  // namespace org::apache::nifi::minifi::extensions::atlas

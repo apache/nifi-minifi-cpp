@@ -64,13 +64,13 @@ TEST_CASE("FlowPathBuilder: linear flow becomes one flow_path", "[atlas][paths]"
 
   const auto result = FlowPathBuilder::build(topo, "my-cluster", "http://minifi/flow");
 
-  REQUIRE(countByType(result.entities, "nifi_flow") == 1);
-  REQUIRE(countByType(result.entities, "nifi_flow_path") == 1);
-  REQUIRE(countByType(result.entities, "nifi_queue") == 0);
+  REQUIRE(countByType(result.entities, "minifi_flow") == 1);
+  REQUIRE(countByType(result.entities, "minifi_flow_path") == 1);
+  REQUIRE(countByType(result.entities, "minifi_queue") == 0);
 
   const auto* path = findEntity(result.entities, "11111111-1111-1111-1111-111111111111@my-cluster");
   REQUIRE(path != nullptr);
-  REQUIRE(path->type_name == "nifi_flow_path");
+  REQUIRE(path->type_name == "minifi_flow_path");
   REQUIRE(path->string_attributes.at("name") == "ConsumeKafka, UpdateAttribute, PutS3Object");
 
   // All three processors are assigned to the same path.
@@ -100,9 +100,9 @@ TEST_CASE("FlowPathBuilder: fork produces 3 paths joined by a queue", "[atlas][p
 
   const auto result = FlowPathBuilder::build(topo, "my-cluster", "http://minifi/flow");
 
-  REQUIRE(countByType(result.entities, "nifi_flow_path") == 3);
+  REQUIRE(countByType(result.entities, "minifi_flow_path") == 3);
   // Two cross-path edges but both point at different downstream procs → two queues.
-  REQUIRE(countByType(result.entities, "nifi_queue") == 2);
+  REQUIRE(countByType(result.entities, "minifi_queue") == 2);
 
   const auto* upstream_path = findEntity(result.entities, "11111111-1111-1111-1111-111111111111@my-cluster");
   REQUIRE(upstream_path != nullptr);
@@ -124,7 +124,7 @@ TEST_CASE("FlowPathBuilder: fork produces 3 paths joined by a queue", "[atlas][p
   for (const auto& [key, refs] : upstream_path->ref_list_attributes) {
     if (key == "outputs") {
       for (const auto& r : refs) {
-        if (r.type_name == "nifi_queue") ++queue_outputs;
+        if (r.type_name == "minifi_queue") ++queue_outputs;
       }
     }
   }
@@ -148,8 +148,8 @@ TEST_CASE("FlowPathBuilder: join produces a queue between the two upstream paths
 
   const auto result = FlowPathBuilder::build(topo, "my-cluster", "http://minifi/flow");
 
-  REQUIRE(countByType(result.entities, "nifi_flow_path") == 3);  // GetFileA, GetFileB, MergeContent
-  REQUIRE(countByType(result.entities, "nifi_queue") == 1);      // queue at MergeContent
+  REQUIRE(countByType(result.entities, "minifi_flow_path") == 3);  // GetFileA, GetFileB, MergeContent
+  REQUIRE(countByType(result.entities, "minifi_queue") == 1);      // queue at MergeContent
 
   const auto* merge = findEntity(result.entities, "33333333-3333-3333-3333-333333333333@my-cluster");
   REQUIRE(merge != nullptr);
@@ -157,50 +157,49 @@ TEST_CASE("FlowPathBuilder: join produces a queue between the two upstream paths
   for (const auto& [key, refs] : merge->ref_list_attributes) {
     if (key == "inputs") {
       for (const auto& r : refs) {
-        if (r.type_name == "nifi_queue" && r.qualified_name == "33333333-3333-3333-3333-333333333333@my-cluster") has_queue_input = true;
+        if (r.type_name == "minifi_queue" && r.qualified_name == "33333333-3333-3333-3333-333333333333@my-cluster") has_queue_input = true;
       }
     }
   }
   REQUIRE(has_queue_input);
 }
 
-TEST_CASE("FlowPathBuilder: root ports become inputs/outputs on adjacent paths", "[atlas][paths]") {
+TEST_CASE("FlowPathBuilder: a path running through a port stays one continuous path", "[atlas][paths]") {
+  // Process-group ports arrive as ordinary processors (a Port is a ForwardingNode at
+  // runtime, like a Funnel). They must not split the path or become datasets of their
+  // own: the data did not come "from a port", it came from whatever is upstream of it.
   Topology topo;
   topo.root_group_uuid = id("00000000-0000-0000-0000-000000000001");
   topo.root_group_name = "Ported Flow";
-  topo.processors = {{id("11111111-1111-1111-1111-111111111111"), "InProcessor", "SomeProcessor"}};
-  topo.input_ports = {{id("55555555-5555-5555-5555-555555555555"), "In", true}};
-  topo.output_ports = {{id("66666666-6666-6666-6666-666666666666"), "Out", false}};
+  topo.processors = {
+      {id("11111111-1111-1111-1111-111111111111"), "In", "Port"},
+      {id("22222222-2222-2222-2222-222222222222"), "Middle", "SomeProcessor"},
+      {id("66666666-6666-6666-6666-666666666666"), "Out", "Port"},
+  };
   topo.connections = {
-      {id("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa01"), "c-in", topo.input_ports[0].uuid, topo.processors[0].uuid, {"success"}},
-      {id("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa02"), "c-out", topo.processors[0].uuid, topo.output_ports[0].uuid, {"success"}},
+      {id("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa01"), "c-in", topo.processors[0].uuid, topo.processors[1].uuid, {"success"}},
+      {id("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa02"), "c-out", topo.processors[1].uuid, topo.processors[2].uuid, {"success"}},
   };
 
   const auto result = FlowPathBuilder::build(topo, "my-cluster", "http://minifi/flow");
 
-  REQUIRE(countByType(result.entities, "nifi_input_port") == 1);
-  REQUIRE(countByType(result.entities, "nifi_output_port") == 1);
-  REQUIRE(countByType(result.entities, "nifi_flow_path") == 1);
+  // One path spanning all three nodes, and no port-flavoured dataset entities.
+  REQUIRE(countByType(result.entities, "minifi_flow_path") == 1);
+  REQUIRE(countByType(result.entities, "minifi_queue") == 0);
+  REQUIRE(countByType(result.entities, "minifi_input_port") == 0);
+  REQUIRE(countByType(result.entities, "minifi_output_port") == 0);
 
   const auto* path = findEntity(result.entities, "11111111-1111-1111-1111-111111111111@my-cluster");
   REQUIRE(path != nullptr);
+  REQUIRE(path->string_attributes.at("name") == "In, Middle, Out");
 
-  bool has_input_port = false;
-  bool has_output_port = false;
-  for (const auto& [key, refs] : path->ref_list_attributes) {
-    if (key == "inputs") {
-      for (const auto& r : refs) {
-        if (r.type_name == "nifi_input_port" && r.qualified_name == "55555555-5555-5555-5555-555555555555@my-cluster") has_input_port = true;
-      }
-    }
-    if (key == "outputs") {
-      for (const auto& r : refs) {
-        if (r.type_name == "nifi_output_port" && r.qualified_name == "66666666-6666-6666-6666-666666666666@my-cluster") has_output_port = true;
-      }
-    }
+  // Every node, ports included, is attributed to that single path.
+  REQUIRE(result.processor_to_path.size() == 3);
+  for (const auto& processor : topo.processors) {
+    const auto it = result.processor_to_path.find(std::string{processor.uuid.to_string().view()});
+    REQUIRE(it != result.processor_to_path.end());
+    REQUIRE(it->second.flow_path_qualified_name == path->qualified_name);
   }
-  REQUIRE(has_input_port);
-  REQUIRE(has_output_port);
 }
 
 TEST_CASE("FlowPathBuilder: isolated processor becomes its own path", "[atlas][paths]") {
@@ -209,7 +208,7 @@ TEST_CASE("FlowPathBuilder: isolated processor becomes its own path", "[atlas][p
   topo.processors = {{id("11111111-1111-1111-1111-111111111111"), "Standalone", "GetFile"}};
 
   const auto result = FlowPathBuilder::build(topo, "my-cluster", "http://minifi/flow");
-  REQUIRE(countByType(result.entities, "nifi_flow_path") == 1);
+  REQUIRE(countByType(result.entities, "minifi_flow_path") == 1);
   REQUIRE(result.processor_to_path.size() == 1);
 }
 

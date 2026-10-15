@@ -109,6 +109,31 @@ AtlasEntity ReportLineageToAtlas::datasetToEntity(const Dataset& dataset, FsPath
   return entry;
 }
 
+bool ReportLineageToAtlas::isRemoteNiFiPort(std::string_view system) {
+  return system == "site-to-site-input-port" || system == "site-to-site-output-port";
+}
+
+std::string ReportLineageToAtlas::resolveRemotePortName(AtlasClient& atlas, const AtlasEntity& entity, const std::string& fallback) {
+  if (const auto cached = remote_port_names_.find(entity.qualified_name); cached != remote_port_names_.end()) {
+    return cached->second;
+  }
+  auto existing = atlas.getEntityName(entity.type_name, entity.qualified_name);
+  if (!existing) {
+    // Couldn't tell — send the fallback rather than skip the entity, and don't cache, so
+    // the next trigger tries again.
+    logger_->log_debug("Could not read the current name of '{}': {}", entity.qualified_name, existing.error());
+    return fallback;
+  }
+  // No name yet, or the only name there is the one we put there: the owner hasn't named
+  // this port, so keep the fallback and keep checking. Caching here would freeze our
+  // placeholder in place and overwrite NiFi's name once it finally sets one.
+  if (!*existing || (*existing)->empty() || **existing == fallback) {
+    return fallback;
+  }
+  logger_->log_debug("Preserving existing name '{}' for remote port '{}'", **existing, entity.qualified_name);
+  return remote_port_names_.emplace(entity.qualified_name, **existing).first->second;
+}
+
 void ReportLineageToAtlas::onSchedule(core::reporting::ReportingTaskContext& context) {
   atlas_base_urls_.clear();
   if (auto atlas_urls = context.getProperty(AtlasUrls); atlas_urls && !atlas_urls->empty()) {
@@ -200,10 +225,12 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
       .logger = logger_,
   }};
 
-  // 2. Register the six NiFi typedefs on the first successful trigger. If Atlas
-  //    is unreachable we back off and try again next trigger.
+  // 2. Ensure both typedef bundles exist, on the first successful trigger. The flag is
+  //    set only on success: latching it after a partial registration would leave the
+  //    schema incomplete with no further attempt to repair it, and every later publish
+  //    would fail with "Type ENTITY ... does not exist".
   if (!type_defs_registered_) {
-    if (auto res = atlas.registerNiFiTypeDefs(); !res) {
+    if (auto res = atlas.registerTypeDefs(); !res) {
       logger_->log_error("Failed to register Atlas typedefs: {}", res.error());
       context.yield();
       return;
@@ -293,6 +320,12 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
     const auto& path_qn = proc_it->second.flow_path_qualified_name;
     const auto convert = [&](const Dataset& dataset) {
       auto entry = datasetToEntity(dataset, fs_path_level_, s3_model_version_, namespace_resolver_);
+      // A remote port belongs to the NiFi on the other end, which describes it too. Atlas
+      // demands Asset.name on update as well as create, so we cannot simply leave it out;
+      // instead hand back the name that NiFi has already set, when it has set one.
+      if (isRemoteNiFiPort(dataset.system)) {
+        entry.string_attributes["name"] = resolveRemotePortName(atlas, entry, entry.string_attributes["name"]);
+      }
       external_entities[entry.qualified_name] = entry;
       return AtlasEntity::Reference{entry.type_name, entry.qualified_name};
     };
@@ -304,7 +337,7 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
     }
   }
 
-  // 5. Build partial-update entities: one nifi_flow_path per path that saw new
+  // 5. Build partial-update entities: one minifi_flow_path per path that saw new
   //    events, with the accumulated (deduped) inputs/outputs. Atlas upserts by
   //    qualifiedName, so this merges into whatever's already there.
   std::unordered_map<std::string, AtlasEntity> updates;

@@ -16,9 +16,12 @@
  */
 #include "AtlasClient.h"
 
+#include <span>
 #include <sstream>
+#include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "AtlasTypeDefs.h"
@@ -124,22 +127,137 @@ void AtlasClient::prepareClient(http::HTTPClient& client, http::HttpRequestMetho
   }
 }
 
-std::expected<void, std::string> AtlasClient::registerNiFiTypeDefs() {
+std::expected<bool, std::string> AtlasClient::typeDefExists(std::string_view type_name) {
+  http::HTTPClient client;
+  prepareClient(client, http::HttpRequestMethod::Get, "/api/atlas/v2/types/typedef/name/" + std::string{type_name});
+  if (!client.submit()) {
+    std::ostringstream msg;
+    msg << "Atlas typedef lookup for '" << type_name << "' failed: transport error";
+    return std::unexpected{msg.str()};
+  }
+  const auto code = client.getResponseCode();
+  if (code == 200) {
+    return true;
+  }
+  if (code == 404) {
+    return false;
+  }
+  std::ostringstream msg;
+  msg << "Atlas typedef lookup for '" << type_name << "' returned HTTP " << code << ": " << responseBodyAsString(client);
+  return std::unexpected{msg.str()};
+}
+
+std::expected<void, std::string> AtlasClient::registerMissingTypeDefs(std::string_view payload, std::span<const std::string_view> bundle_type_names) {
+  std::unordered_set<std::string_view> missing;
+  for (const auto& type_name : bundle_type_names) {
+    auto exists = typeDefExists(type_name);
+    if (!exists) {
+      return std::unexpected{exists.error()};
+    }
+    if (!*exists) {
+      missing.insert(type_name);
+    }
+  }
+  if (missing.empty()) {
+    return {};
+  }
+
+  rapidjson::Document doc;
+  if (doc.Parse(payload.data(), payload.size()).HasParseError() || !doc.IsObject() || !doc.HasMember("entityDefs") || !doc["entityDefs"].IsArray()) {
+    return std::unexpected{"Atlas typedef payload is not valid JSON with an entityDefs array"};
+  }
+
+  // Keep only the missing definitions. The retained set plus what Atlas already has
+  // covers every dependency, so forward references within the bundle still resolve.
+  rapidjson::Document filtered{rapidjson::kObjectType};
+  auto& alloc = filtered.GetAllocator();
+  rapidjson::Value entity_defs{rapidjson::kArrayType};
+  for (const auto& entity_def : doc["entityDefs"].GetArray()) {
+    if (!entity_def.IsObject() || !entity_def.HasMember("name") || !entity_def["name"].IsString()) {
+      return std::unexpected{"Atlas typedef payload has an entityDef without a string name"};
+    }
+    if (missing.contains(std::string_view{entity_def["name"].GetString(), entity_def["name"].GetStringLength()})) {
+      entity_defs.PushBack(rapidjson::Value{}.CopyFrom(entity_def, alloc), alloc);
+    }
+  }
+  filtered.AddMember("entityDefs", std::move(entity_defs), alloc);
+
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
+  filtered.Accept(writer);
+
   http::HTTPClient client;
   prepareClient(client, http::HttpRequestMethod::Post, "/api/atlas/v2/types/typedefs");
-  client.setPostFields(std::string{kNiFiTypeDefsPayload});
+  client.setPostFields(std::string{buffer.GetString(), buffer.GetSize()});
   if (!client.submit()) {
     return std::unexpected{"Atlas typedef POST failed: transport error"};
   }
   const auto code = client.getResponseCode();
-  // 200/204: created. 409: types already exist (Atlas rejects duplicate definitions),
-  // which we treat as success — types being present is exactly the goal.
-  if (code == 200 || code == 204 || code == 409) {
+  if (code == 200 || code == 204) {
     return {};
   }
+  // A 409 here means someone created one of these between our lookup and our POST.
+  // Report it so the caller retries: the POST is all-or-nothing, so the rest of the
+  // missing types were not created and treating this as success would leave the schema
+  // incomplete with no further attempt to repair it.
   std::ostringstream msg;
   msg << "Atlas typedef POST returned HTTP " << code << ": " << responseBodyAsString(client);
   return std::unexpected{msg.str()};
+}
+
+std::expected<std::optional<std::string>, std::string> AtlasClient::getEntityName(std::string_view type_name, std::string_view qualified_name) {
+  http::HTTPClient client;
+  // escape() only needs the curl handle, which exists from construction, so it is usable
+  // before the request is configured. The qualifiedName travels as a query value and can
+  // contain '@' and whatever the namespace carries.
+  const auto path = "/api/atlas/v2/entity/uniqueAttribute/type/" + std::string{type_name} +
+      "?attr:qualifiedName=" + client.escape(std::string{qualified_name});
+  prepareClient(client, http::HttpRequestMethod::Get, path);
+  if (!client.submit()) {
+    std::ostringstream msg;
+    msg << "Atlas entity lookup for '" << qualified_name << "' failed: transport error";
+    return std::unexpected{msg.str()};
+  }
+  const auto code = client.getResponseCode();
+  if (code == 404) {
+    return std::nullopt;
+  }
+  if (code != 200) {
+    std::ostringstream msg;
+    msg << "Atlas entity lookup for '" << qualified_name << "' returned HTTP " << code << ": " << responseBodyAsString(client);
+    return std::unexpected{msg.str()};
+  }
+  const auto body = responseBodyAsString(client);
+  rapidjson::Document doc;
+  if (doc.Parse(body.c_str()).HasParseError() || !doc.IsObject()) {
+    std::ostringstream msg;
+    msg << "Atlas entity lookup for '" << qualified_name << "' returned unparseable JSON";
+    return std::unexpected{msg.str()};
+  }
+  if (!doc.HasMember("entity") || !doc["entity"].IsObject()) {
+    return std::nullopt;
+  }
+  const auto& entity = doc["entity"];
+  if (!entity.HasMember("attributes") || !entity["attributes"].IsObject()) {
+    return std::nullopt;
+  }
+  const auto& attributes = entity["attributes"];
+  if (!attributes.HasMember("name") || !attributes["name"].IsString()) {
+    return std::nullopt;
+  }
+  return std::string{attributes["name"].GetString(), attributes["name"].GetStringLength()};
+}
+
+std::expected<void, std::string> AtlasClient::registerTypeDefs() {
+  // Registered as two independent calls: a conflict or failure in one bundle must not
+  // prevent the other from being created.
+  if (auto result = registerMissingTypeDefs(kMiNiFiTypeDefsPayload, kMiNiFiTypeNames); !result) {
+    return std::unexpected{"minifi typedefs: " + result.error()};
+  }
+  if (auto result = registerMissingTypeDefs(kNiFiTypeDefsPayload, kNiFiTypeNames); !result) {
+    return std::unexpected{"nifi typedefs: " + result.error()};
+  }
+  return {};
 }
 
 std::expected<void, std::string> AtlasClient::createOrUpdateEntities(const std::vector<AtlasEntity>& entities) {

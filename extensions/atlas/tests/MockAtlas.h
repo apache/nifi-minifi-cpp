@@ -20,6 +20,7 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -75,6 +76,13 @@ class RecordingHandler : public CivetHandler {
     body_ = std::move(body);
   }
 
+  // Overrides the response for one exact request URI, leaving every other URI on the
+  // default. Lets a test say "only this type exists" without a bespoke handler.
+  void setResponseFor(std::string uri, int status_code, std::string body, std::string status_text = "OK") {
+    std::lock_guard lock{mutex_};
+    per_uri_.insert_or_assign(std::move(uri), Response{status_code, std::move(status_text), std::move(body)});
+  }
+
   std::vector<CapturedRequest> requests() const {
     std::lock_guard lock{mutex_};
     return requests_;
@@ -98,8 +106,13 @@ class RecordingHandler : public CivetHandler {
     }
     {
       std::lock_guard lock{mutex_};
+      const auto uri = req.uri;
       requests_.push_back(std::move(req));
-      writeResponse(conn, status_code_, status_text_, body_);
+      if (const auto it = per_uri_.find(uri); it != per_uri_.end()) {
+        writeResponse(conn, it->second.status_code, it->second.status_text, it->second.body);
+      } else {
+        writeResponse(conn, status_code_, status_text_, body_);
+      }
     }
     return true;
   }
@@ -108,10 +121,17 @@ class RecordingHandler : public CivetHandler {
   bool handlePut(CivetServer* s, mg_connection* conn) override { return handleAny(s, conn, "PUT"); }
   bool handleGet(CivetServer* s, mg_connection* conn) override { return handleAny(s, conn, "GET"); }
 
+  struct Response {
+    int status_code;
+    std::string status_text;
+    std::string body;
+  };
+
   mutable std::mutex mutex_;
   int status_code_ = 200;
   std::string status_text_ = "OK";
   std::string body_;
+  std::unordered_map<std::string, Response> per_uri_;
   std::vector<CapturedRequest> requests_;
 };
 
@@ -120,6 +140,10 @@ class MockAtlas {
   explicit MockAtlas(std::string port) : port_(std::move(port)) {
     std::vector<std::string> options{"listening_ports", port_};
     server_ = std::make_unique<CivetServer>(options, &callbacks_, &logger_);
+    // Registered before the shorter "/types/typedefs" prefix so per-name lookups are not
+    // swallowed by it. Defaults to 404 = type absent, which is the from-clean case.
+    type_lookup_handler_.setResponse(404, R"({"errorCode":"ATLAS-404-00-001"})", "Not Found");
+    server_->addHandler("/api/atlas/v2/types/typedef/name", type_lookup_handler_);
     server_->addHandler("/api/atlas/v2/types/typedefs", types_handler_);
     server_->addHandler("/api/atlas/v2/entity/bulk", entities_handler_);
     server_->addHandler("/api/atlas/v2/entity/uniqueAttribute", lookup_handler_);
@@ -127,6 +151,7 @@ class MockAtlas {
 
   const std::string& port() const { return port_; }
   RecordingHandler& types() { return types_handler_; }
+  RecordingHandler& typeLookup() { return type_lookup_handler_; }
   RecordingHandler& entities() { return entities_handler_; }
   RecordingHandler& lookup() { return lookup_handler_; }
 
@@ -136,6 +161,7 @@ class MockAtlas {
   CivetCallbacks callbacks_{};
   std::unique_ptr<CivetServer> server_;
   RecordingHandler types_handler_;
+  RecordingHandler type_lookup_handler_;
   RecordingHandler entities_handler_;
   RecordingHandler lookup_handler_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MockAtlas>::getLogger();
