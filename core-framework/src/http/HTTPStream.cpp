@@ -62,8 +62,9 @@ size_t HttpStream::read(std::span<std::byte> buf) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!read_started_) {
       auto read_callback = std::make_unique<HTTPReadByteOutputCallback>(66560, true);
-      http_client_read_future_ = std::async(std::launch::async, submit_read_client, http_client_, read_callback.get());
+      auto* callback = read_callback.get();
       http_client_->setReadCallback(std::move(read_callback));
+      http_client_read_future_ = std::async(std::launch::async, submit_read_client, http_client_, callback);
       read_started_ = true;
     }
     return gsl::not_null(getByteOutputReadCallback())->readFully(reinterpret_cast<char*>(buf.data()), buf.size());

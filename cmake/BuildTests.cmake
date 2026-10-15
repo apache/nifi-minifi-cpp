@@ -20,6 +20,22 @@ if (MINIFI_ADVANCED_ASAN_BUILD)
     endfunction()
 endif()
 
+if (MINIFI_ADVANCED_TSAN_BUILD)
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/tsan_logs")
+
+    # - route each test's ThreadSanitizer output to <build>/tsan_logs/<test-name>.<pid>
+    # - apply the suppressions in cmake/tsan.supp
+    # - print_suppressions=0 keeps a fully-suppressed (otherwise clean) run from writing a log at all
+    function(add_test)
+        _add_test(${ARGV})
+        cmake_parse_arguments(MINIFI_TEST "" "NAME" "COMMAND" ${ARGV})
+        if (MINIFI_TEST_NAME)
+            set_property(TEST "${MINIFI_TEST_NAME}" APPEND PROPERTY
+                    ENVIRONMENT "TSAN_OPTIONS=log_path=${CMAKE_BINARY_DIR}/tsan_logs/${MINIFI_TEST_NAME}:suppressions=${CMAKE_SOURCE_DIR}/cmake/tsan.supp:print_suppressions=0")
+        endif()
+    endfunction()
+endif()
+
 ### test functions
 MACRO(GETSOURCEFILES result curdir)
     FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)

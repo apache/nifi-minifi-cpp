@@ -445,7 +445,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
     for (auto i = 0; i < 100; ++i) {
       CHECK(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint).has_value());
     }
-    CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
+    CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 3s, 50ms));
   }
 
   SECTION("TCP") {
@@ -466,7 +466,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
     for (auto i = 0; i < 100; ++i) {
       CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, endpoint, "\n"), MatchesSuccess());
     }
-    CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
+    CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 3s, 50ms));
   }
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);

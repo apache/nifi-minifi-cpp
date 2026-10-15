@@ -151,12 +151,11 @@ class MockElastic {
  private:
   CivetLibrary lib_;
   std::string port_;
-  std::unique_ptr<CivetServer> server_;
-  std::unique_ptr<BulkElasticHandler> bulk_handler_;
-  std::unique_ptr<MockElasticAuthHandler> auth_handler_;
-
   CivetCallbacks callbacks_;
   std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<MockElastic>::getLogger();
+  std::unique_ptr<BulkElasticHandler> bulk_handler_;
+  std::unique_ptr<MockElasticAuthHandler> auth_handler_;
+  std::unique_ptr<CivetServer> server_;  // must be declared after the handlers
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::elasticsearch::test
