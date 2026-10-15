@@ -39,27 +39,40 @@ namespace {
 // Maps the extractor's neutral system name to the Atlas entity type this
 // reporting task chose to represent it with. Configurable systems (S3, filesystem)
 // consult the reporting task's properties before mapping.
-std::string atlasTypeFor(const Dataset& ds, ReportLineageToAtlas::S3ModelVersion s3_version) {
-  if (ds.system == "kafka") return "kafka_topic";
-  if (ds.system == "s3") {
+std::string atlasTypeFor(const Dataset& dataset, ReportLineageToAtlas::S3ModelVersion s3_version) {
+  if (dataset.system == "kafka") {
+    return "kafka_topic";
+  }
+  if (dataset.system == "s3") {
     return s3_version == ReportLineageToAtlas::S3ModelVersion::V1 ? "aws_s3_pseudo_dir" : "aws_s3_v2_directory";
   }
-  if (ds.system == "file") return "fs_path";
-  if (ds.system == "http") return "http_endpoint";
-  if (ds.system == "jdbc") return "rdbms_instance";
+  if (dataset.system == "file") {
+    return "fs_path";
+  }
+  if (dataset.system == "http") {
+    return "http_endpoint";
+  }
+  if (dataset.system == "jdbc") {
+    return "rdbms_instance";
+  }
   // The remote port's real kind, agreed on by both instances so their entities merge in Atlas:
   // a SEND targets a remote input port, a RECEIVE pulls from a remote output port.
-  if (ds.system == "site-to-site-input-port")
+  if (dataset.system == "site-to-site-input-port") {
     return "nifi_input_port";
-  if (ds.system == "site-to-site-output-port") return "nifi_output_port";
-  return ds.system;
+  }
+  if (dataset.system == "site-to-site-output-port") {
+    return "nifi_output_port";
+  }
+  return dataset.system;
 }
 
 // Reduces a filesystem path to its containing directory, i.e. strips the last
 // component. Applied only when Filesystem Path Level = DIRECTORY.
 std::string dirOf(std::string_view path) {
   const auto last_slash = path.rfind('/');
-  if (last_slash == std::string::npos) return std::string{path};
+  if (last_slash == std::string::npos) {
+    return std::string{path};
+  }
   return std::string{path.substr(0, last_slash + 1)};
 }
 
@@ -83,8 +96,8 @@ AtlasEntity ReportLineageToAtlas::datasetToEntity(const Dataset& dataset, FsPath
     entry.string_attributes["name"] = identifier;
     entry.string_attributes["path"] = identifier;
   }
-  const auto ns = namespace_resolver.resolve(dataset.host.value_or(""));
-  entry.qualified_name = identifier + "@" + ns;
+  const auto namespace_name = namespace_resolver.resolve(dataset.host.value_or(""));
+  entry.qualified_name = identifier + "@" + namespace_name;
   // Atlas' base "Asset" trait declares `name` as mandatory. Every dataset type we emit
   // (fs_path, kafka_topic, nifi_output_port, nifi_input_port, aws_s3_v2_*, hive_table)
   // inherits from Asset, so a missing name gets the whole bulk POST rejected with
@@ -106,39 +119,49 @@ void ReportLineageToAtlas::onSchedule(core::reporting::ReportingTaskContext& con
   }
 
   atlas_username_ = std::nullopt;
-  if (auto v = context.getProperty(AtlasUsername); v && !v->empty()) atlas_username_ = *v;
+  if (auto username = context.getProperty(AtlasUsername); username && !username->empty()) {
+    atlas_username_ = *username;
+  }
   atlas_password_ = std::nullopt;
-  if (auto v = context.getProperty(AtlasPassword); v && !v->empty()) atlas_password_ = *v;
+  if (auto password = context.getProperty(AtlasPassword); password && !password->empty()) {
+    atlas_password_ = *password;
+  }
 
   ssl_context_service_ = nullptr;
-  if (auto v = context.getProperty(SSLContext); v && !v->empty()) {
-    auto svc = context.getControllerService(*v, uuid_);
-    if (!svc) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "SSL Context Service '" + *v + "' not found");
+  if (auto service_name = context.getProperty(SSLContext); service_name && !service_name->empty()) {
+    auto service = context.getControllerService(*service_name, uuid_);
+    if (!service) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "SSL Context Service '" + *service_name + "' not found");
     }
-    ssl_context_service_ = std::dynamic_pointer_cast<controllers::SSLContextServiceInterface>(svc);
+    ssl_context_service_ = std::dynamic_pointer_cast<controllers::SSLContextServiceInterface>(service);
     if (!ssl_context_service_) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "SSL Context Service '" + *v + "' is not an SSLContextServiceInterface");
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "SSL Context Service '" + *service_name + "' is not an SSLContextServiceInterface");
     }
   }
 
-  if (auto v = context.getProperty(NiFiUrl); v) nifi_url_ = *v;
+  if (auto nifi_url = context.getProperty(NiFiUrl); nifi_url) {
+    nifi_url_ = *nifi_url;
+  }
 
   namespace_resolver_ = NamespaceResolver{};
-  if (auto v = context.getProperty(DefaultNamespace); v && !v->empty()) {
-    namespace_resolver_.setDefaultNamespace(*v);
+  if (auto default_namespace = context.getProperty(DefaultNamespace); default_namespace && !default_namespace->empty()) {
+    namespace_resolver_.setDefaultNamespace(*default_namespace);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Default Metadata Namespace property is required");
   }
   // Dynamic properties: hostnamePattern.<ns> = <regex1> <regex2> ...
   for (const auto& key : context.getDynamicPropertyKeys()) {
     static constexpr std::string_view prefix = "hostnamePattern.";
-    if (!key.starts_with(prefix)) continue;
-    const auto ns_name = key.substr(prefix.size());
-    if (ns_name.empty()) continue;
+    if (!key.starts_with(prefix)) {
+      continue;
+    }
+    const auto namespace_name = key.substr(prefix.size());
+    if (namespace_name.empty()) {
+      continue;
+    }
     if (auto value = context.getRawDynamicProperty(key); value) {
       try {
-        namespace_resolver_.addRuleFromWhitespaceList(ns_name, *value);
+        namespace_resolver_.addRuleFromWhitespaceList(namespace_name, *value);
       } catch (const std::regex_error& err) {
         // std::regex_error is a std::logic_error, not a minifi Exception, so without this
         // it escapes onSchedule as a bare "Unexpected end of regex" with no hint as to
@@ -148,14 +171,14 @@ void ReportLineageToAtlas::onSchedule(core::reporting::ReportingTaskContext& con
     }
   }
 
-  if (auto v = context.getProperty(AwsS3ModelVersion); v) {
-    s3_model_version_ = (*v == "v1") ? S3ModelVersion::V1 : S3ModelVersion::V2;
+  if (auto s3_version = context.getProperty(AwsS3ModelVersion); s3_version) {
+    s3_model_version_ = (*s3_version == "v1") ? S3ModelVersion::V1 : S3ModelVersion::V2;
   }
-  if (auto v = context.getProperty(FilesystemPathLevel); v) {
-    fs_path_level_ = (*v == "FILE") ? FsPathLevel::FILE : FsPathLevel::DIRECTORY;
+  if (auto path_level = context.getProperty(FilesystemPathLevel); path_level) {
+    fs_path_level_ = (*path_level == "FILE") ? FsPathLevel::FILE : FsPathLevel::DIRECTORY;
   }
-  if (auto v = context.getProperty(ProvenanceBatchSize); v) {
-    if (const auto parsed = parsing::parseIntegral<std::size_t>(*v)) {
+  if (auto batch_size = context.getProperty(ProvenanceBatchSize); batch_size) {
+    if (const auto parsed = parsing::parseIntegral<std::size_t>(*batch_size)) {
       provenance_batch_size_ = *parsed;
     }
   }
@@ -255,22 +278,30 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
   std::unordered_map<std::string, std::unordered_set<AtlasEntity::Reference>> path_inputs;
   std::unordered_map<std::string, std::unordered_set<AtlasEntity::Reference>> path_outputs;
   for (const auto& event : events) {
-    if (!event) continue;
+    if (!event) {
+      continue;
+    }
     const auto refs = extractor_dispatcher_.dispatch(*event);
-    if (refs.empty()) continue;
+    if (refs.empty()) {
+      continue;
+    }
     const auto proc_it = flow_result.processor_to_path.find(event->getComponentId());
     if (proc_it == flow_result.processor_to_path.end()) {
       // Event from a processor no longer in the flow (deleted since last trigger?). Skip.
       continue;
     }
     const auto& path_qn = proc_it->second.flow_path_qualified_name;
-    const auto convert = [&](const Dataset& ds) {
-      auto entry = datasetToEntity(ds, fs_path_level_, s3_model_version_, namespace_resolver_);
+    const auto convert = [&](const Dataset& dataset) {
+      auto entry = datasetToEntity(dataset, fs_path_level_, s3_model_version_, namespace_resolver_);
       external_entities[entry.qualified_name] = entry;
       return AtlasEntity::Reference{entry.type_name, entry.qualified_name};
     };
-    for (const auto& in : refs.inputs) path_inputs[path_qn].insert(convert(in));
-    for (const auto& out : refs.outputs) path_outputs[path_qn].insert(convert(out));
+    for (const auto& input : refs.inputs) {
+      path_inputs[path_qn].insert(convert(input));
+    }
+    for (const auto& output : refs.outputs) {
+      path_outputs[path_qn].insert(convert(output));
+    }
   }
 
   // 5. Build partial-update entities: one nifi_flow_path per path that saw new
@@ -278,8 +309,10 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
   //    qualifiedName, so this merges into whatever's already there.
   std::unordered_map<std::string, AtlasEntity> updates;
   const auto touch_path = [&](const std::string& path_qn) -> AtlasEntity& {
-    auto it = std::find_if(flow_result.entities.cbegin(), flow_result.entities.cend(), [&] (const AtlasEntity& e) {return e.qualified_name == path_qn;});
-    return updates.insert({path_qn, *it}).first->second;
+    auto entity_it = std::ranges::find_if(flow_result.entities, [&](const AtlasEntity& entity) {
+      return entity.qualified_name == path_qn;
+    });
+    return updates.insert({path_qn, *entity_it}).first->second;
   };
 
   for (auto& [path_qn, refs] : path_inputs) {
@@ -292,8 +325,12 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
   // Send external entities first, then path partial updates.
   std::vector<AtlasEntity> to_publish;
   to_publish.reserve(external_entities.size() + updates.size());
-  for (auto& [_, e] : external_entities) to_publish.push_back(std::move(e));
-  for (auto& [_, e] : updates) to_publish.push_back(std::move(e));
+  for (auto& [_, entity] : external_entities) {
+    to_publish.push_back(std::move(entity));
+  }
+  for (auto& [_, entity] : updates) {
+    to_publish.push_back(std::move(entity));
+  }
 
   if (!to_publish.empty()) {
     if (auto res = atlas.createOrUpdateEntities(to_publish); !res) {
