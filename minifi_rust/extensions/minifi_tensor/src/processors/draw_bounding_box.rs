@@ -76,7 +76,7 @@ struct LineColor {}
 
 impl PropertySchema for LineColor {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for LineColor {

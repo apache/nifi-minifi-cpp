@@ -42,7 +42,7 @@ impl PerChannelF32 {
 
 impl PropertySchema for PerChannelF32 {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for PerChannelF32 {

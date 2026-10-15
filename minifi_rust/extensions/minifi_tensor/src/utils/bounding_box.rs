@@ -134,7 +134,7 @@ pub(crate) struct BoundingBoxes {}
 
 impl PropertySchema for BoundingBoxes {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for BoundingBoxes {

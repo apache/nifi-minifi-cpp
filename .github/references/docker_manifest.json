@@ -13018,7 +13018,7 @@
                             "name": "Mean",
                             "description": "Value subtracted from each pixel before dividing by 'Standard Deviation'. Accepts either a single value (broadcast to all channels) or three comma-separated values applied per channel in the order dictated by 'Color format'. Example: '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.",
                             "validator": "VALID",
-                            "required": "false",
+                            "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "defaultValue": "0.0"
@@ -13122,7 +13122,7 @@
                             "name": "Standard Deviation",
                             "description": "Divisor applied after subtracting 'Mean'. Accepts a single value (broadcast) or three comma-separated values (per channel). Must be non-zero. Example: '255.0' to scale u8 pixels into [0.0, 1.0]; '0.229, 0.224, 0.225' for ImageNet.",
                             "validator": "VALID",
-                            "required": "false",
+                            "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "defaultValue": "255.0"
@@ -13194,10 +13194,10 @@
                         },
                         {
                             "name": "success",
-                            "description": "Inference and post-processing completed. The flow file content is the original, unchanged image; the classifications are written to the configured output attribute as a JSON array (may be empty)."
+                            "description": "Inference and post-processing completed. The classifications are written as a JSON array (may be empty) to the attribute named by 'Output attribute name', leaving the flow file content as the original image; if that property is empty, they replace the flow file content instead."
                         }
                     ],
-                    "typeDescription": "Runs a full image-classification pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the score vector (score activation, Top-K selection, confidence filtering, optional label lookup) into predictions. Collapses the ImageToTensor -> InvokeTractModel -> ClassifyOutput chain into one node. The flow file content is left unchanged (the original image); the Top-K classifications are written as a JSON array to the configured output attribute.",
+                    "typeDescription": "Runs a full image-classification pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the score vector (score activation, Top-K selection, confidence filtering, optional label lookup) into predictions. Collapses the ImageToTensor -> InvokeTractModel -> ClassifyOutput chain into one node. The Top-K classifications are emitted as a JSON array: when 'Output attribute name' is set they are written into that attribute and the flow file content is left unchanged (the original image); when it is left empty they replace the flow file content instead.",
                     "supportsDynamicRelationships": "false",
                     "supportsDynamicProperties": "false",
                     "type": "minifi_tensor.processors.classify_image.ClassifyImage"
@@ -13306,7 +13306,7 @@
                             "name": "Mean",
                             "description": "Value subtracted from each pixel before dividing by 'Standard Deviation'. Accepts either a single value (broadcast to all channels) or three comma-separated values applied per channel in the order dictated by 'Color format'. Example: '0.485, 0.456, 0.406' for ImageNet-style RGB normalisation.",
                             "validator": "VALID",
-                            "required": "false",
+                            "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "defaultValue": "0.0"
@@ -13410,7 +13410,7 @@
                             "name": "Standard Deviation",
                             "description": "Divisor applied after subtracting 'Mean'. Accepts a single value (broadcast) or three comma-separated values (per channel). Must be non-zero. Example: '255.0' to scale u8 pixels into [0.0, 1.0]; '0.229, 0.224, 0.225' for ImageNet.",
                             "validator": "VALID",
-                            "required": "false",
+                            "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "defaultValue": "255.0"
@@ -13473,10 +13473,10 @@
                         },
                         {
                             "name": "success",
-                            "description": "Inference and post-processing completed. The flow file content is the original, unchanged image; the detected boxes are written to the configured output attribute as a JSON array (may be empty)."
+                            "description": "Inference and post-processing completed. The detected boxes are written as a JSON array (may be empty) to the attribute named by 'Output attribute name', leaving the flow file content as the original image; if that property is empty, they replace the flow file content instead."
                         }
                     ],
-                    "typeDescription": "Runs a full object-detection pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the model outputs (score activation, confidence filtering, box decoding, per-class non-maximum suppression) into bounding boxes. Collapses the ImageToTensor -> InvokeTractModel -> FilterBoundingBoxes chain into one node. The flow file content is left unchanged (the original image); the detected boxes are written as a JSON array to the configured output attribute so a downstream DrawBoundingBox can annotate the image.",
+                    "typeDescription": "Runs a full object-detection pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the model outputs (score activation, confidence filtering, box decoding, per-class non-maximum suppression) into bounding boxes. Collapses the ImageToTensor -> InvokeTractModel -> FilterBoundingBoxes chain into one node. The detected boxes are emitted as a JSON array: when 'Output attribute name'is set they are written to that attribute and the flow file content is left unchanged (the original image), so a downstream DrawBoundingBox can annotate it; when it is left empty they replace the flow file content instead.",
                     "supportsDynamicRelationships": "false",
                     "supportsDynamicProperties": "false",
                     "type": "minifi_tensor.processors.detect_object.DetectObject"
@@ -13487,16 +13487,15 @@
                             "name": "Bounding boxes",
                             "description": "JSON array of bounding boxes to draw onto the image (fields class_id, confidence, x_min, y_min, x_max, y_max; coordinates normalised to [0,1] against the image). Typically the attribute produced by an upstream DetectObject or FilterBoundingBoxes processor.",
                             "validator": "VALID",
-                            "required": "false",
+                            "required": "true",
                             "sensitive": "false",
-                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
-                            "defaultValue": "${enrichment.value}"
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
                         },
                         "Line color": {
                             "name": "Line color",
                             "description": "Outline color as a hex string (e.g., '#ff00ff' or '#f0f')",
                             "validator": "VALID",
-                            "required": "false",
+                            "required": "true",
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE",
                             "defaultValue": "#00FF00"

@@ -48,7 +48,7 @@ pub(crate) struct LabelsProperty {}
 
 impl PropertySchema for LabelsProperty {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for LabelsProperty {
