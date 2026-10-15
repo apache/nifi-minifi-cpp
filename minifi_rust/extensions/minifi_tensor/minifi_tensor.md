@@ -33,7 +33,7 @@ limitations under the License.
 
 ### Description
 
-Runs a full image-classification pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the score vector (score activation, Top-K selection, confidence filtering, optional label lookup) into predictions. Collapses the ImageToTensor -> InvokeTractModel -> ClassifyOutput chain into one node. The flow file content is left unchanged (the original image); the Top-K classifications are written as a JSON array to the configured output attribute.
+Runs a full image-classification pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the score vector (score activation, Top-K selection, confidence filtering, optional label lookup) into predictions. Collapses the ImageToTensor -> InvokeTractModel -> ClassifyOutput chain into one node. The Top-K classifications are emitted as a JSON array: when 'Output attribute name' is set they are written into that attribute and the flow file content is left unchanged (the original image); when it is left empty they replace the flow file content instead.
 
 ### Properties
 
@@ -62,10 +62,10 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description                                                                                                                                                                                         |
-|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| failure | The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as classification.                                      |
-| success | Inference and post-processing completed. The flow file content is the original, unchanged image; the classifications are written to the configured output attribute as a JSON array (may be empty). |
+| Name    | Description                                                                                                                                                                                                                                                                            |
+|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| failure | The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as classification.                                                                                                                         |
+| success | Inference and post-processing completed. The classifications are written as a JSON array (may be empty) to the attribute named by 'Output attribute name', leaving the flow file content as the original image; if that property is empty, they replace the flow file content instead. |
 
 ### Output Attributes
 
@@ -120,7 +120,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Runs a full object-detection pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the model outputs (score activation, confidence filtering, box decoding, per-class non-maximum suppression) into bounding boxes. Collapses the ImageToTensor -> InvokeTractModel -> FilterBoundingBoxes chain into one node. The flow file content is left unchanged (the original image); the detected boxes are written as a JSON array to the configured output attribute so a downstream DrawBoundingBox can annotate the image.
+Runs a full object-detection pass in a single processor: decodes the image from the flow file content, resizes and normalises it into an input tensor, runs one inference against the compiled model owned by the referenced TractModelService, and post-processes the model outputs (score activation, confidence filtering, box decoding, per-class non-maximum suppression) into bounding boxes. Collapses the ImageToTensor -> InvokeTractModel -> FilterBoundingBoxes chain into one node. The detected boxes are emitted as a JSON array: when 'Output attribute name'is set they are written to that attribute and the flow file content is left unchanged (the original image), so a downstream DrawBoundingBox can annotate it; when it is left empty they replace the flow file content instead.
 
 ### Properties
 
@@ -151,10 +151,10 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description                                                                                                                                                                                        |
-|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| failure | The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as scores + boxes.                                     |
-| success | Inference and post-processing completed. The flow file content is the original, unchanged image; the detected boxes are written to the configured output attribute as a JSON array (may be empty). |
+| Name    | Description                                                                                                                                                                                                                                                                           |
+|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| failure | The image could not be decoded, the input tensor could not be built, the model failed to run, or the model outputs could not be interpreted as scores + boxes.                                                                                                                        |
+| success | Inference and post-processing completed. The detected boxes are written as a JSON array (may be empty) to the attribute named by 'Output attribute name', leaving the flow file content as the original image; if that property is empty, they replace the flow file content instead. |
 
 ### Output Attributes
 
@@ -174,11 +174,11 @@ Decodes the image from the flow file content, draws each bounding box supplied v
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name               | Default Value       | Allowable Values | Description                                                                                                                                                                                                                                                                                                 |
-|--------------------|---------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Bounding boxes     | ${enrichment.value} |                  | JSON array of bounding boxes to draw onto the image (fields class_id, confidence, x_min, y_min, x_max, y_max; coordinates normalised to [0,1] against the image). Typically the attribute produced by an upstream DetectObject or FilterBoundingBoxes processor.<br/>**Supports Expression Language: true** |
-| Line color         | #00FF00             |                  | Outline color as a hex string (e.g., '#ff00ff' or '#f0f')                                                                                                                                                                                                                                                   |
-| **Line thickness** | 5                   |                  | Thickness in pixels of the drawn box outline.                                                                                                                                                                                                                                                               |
+| Name               | Default Value | Allowable Values | Description                                                                                                                                                                                                                                                                                                 |
+|--------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Bounding boxes     |               |                  | JSON array of bounding boxes to draw onto the image (fields class_id, confidence, x_min, y_min, x_max, y_max; coordinates normalised to [0,1] against the image). Typically the attribute produced by an upstream DetectObject or FilterBoundingBoxes processor.<br/>**Supports Expression Language: true** |
+| Line color         | #00FF00       |                  | Outline color as a hex string (e.g., '#ff00ff' or '#f0f')                                                                                                                                                                                                                                                   |
+| **Line thickness** | 5             |                  | Thickness in pixels of the drawn box outline.                                                                                                                                                                                                                                                               |
 
 ### Relationships
 
