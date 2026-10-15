@@ -23,6 +23,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 #include "utils/expected.h"
@@ -104,6 +105,34 @@ class filesystem_error : public std::system_error {
 space_info space(path);
 space_info space(path, std::error_code&) noexcept;
 
-std::string pathToUri(const std::filesystem::path& path);
+/**
+ * The grammar used to interpret a path string. POSIX and Windows paths are not merely spelled
+ * differently: the same string denotes a different path under each, so "//host/share" is a UNC
+ * path on Windows but an ordinary absolute path on POSIX, and a backslash is a separator on
+ * Windows but an ordinary filename character on POSIX.
+ */
+enum class PathFlavor { Posix, Windows };
+
+#ifdef WIN32
+constexpr PathFlavor native_path_flavor = PathFlavor::Windows;
+#else
+constexpr PathFlavor native_path_flavor = PathFlavor::Posix;
+#endif
+
+/**
+ * Converts an absolute, already-generic (forward-slash separated) path to a file: URI.
+ *
+ * Kept separate from pathToUri so that every platform-specific rule lives in one flavor-parametric
+ * function that can be unit tested on any host: a std::filesystem::path only ever carries the
+ * grammar of the platform it was compiled for, so Windows rules would otherwise go unexercised on
+ * POSIX CI and vice versa.
+ */
+std::expected<std::string, std::string> genericPathToUri(std::string_view generic_path, PathFlavor flavor);
+
+/**
+ * Converts a native path to a file: URI, resolving relative paths against the current working
+ * directory. Does not throw.
+ */
+std::expected<std::string, std::string> pathToUri(const std::filesystem::path& path);
 
 }  // namespace org::apache::nifi::minifi::utils::file
