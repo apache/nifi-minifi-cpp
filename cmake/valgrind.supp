@@ -40,7 +40,7 @@
 # the pointer is still reachable at exit and valgrind flags it "possibly
 # lost". Not a real leak.
 {
-   pthread_create_tls_dtv_any_thread
+   pthread_create_tls_dtv_LogCompressorSink
    Memcheck:Leak
    match-leak-kinds: possible
    fun:calloc
