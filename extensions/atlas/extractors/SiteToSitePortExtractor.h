@@ -45,9 +45,9 @@ class SiteToSitePortExtractor : public DatasetExtractor {
   // NiFi's SiteToSiteAttributes.S2S_PORT_ID; set by SiteToSiteClient on the SEND/RECEIVE event.
   static constexpr std::string_view S2S_PORT_ID_ATTRIBUTE = "s2s.port.id";
 
-  std::optional<std::regex> componentTypePattern() const override {
+  std::optional<std::reference_wrapper<const std::regex>> componentTypePattern() const override {
     static const std::regex pattern{"^RemoteProcessGroupPort$"};
-    return pattern;
+    return std::cref(pattern);
   }
 
   DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const override {

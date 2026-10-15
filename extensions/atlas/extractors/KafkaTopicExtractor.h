@@ -27,15 +27,16 @@
 
 namespace org::apache::nifi::minifi::extensions::atlas::extractors {
 
-// Kafka: matched by componentType (^(Consume|Publish)Kafka.*$). We prefer the
+// Kafka: matched by componentType (^(ConsumeKafka|PublishKafka)$ — the exact type
+// names the kafka extension registers; MiNiFi has no version-suffixed variants). We prefer the
 // kafka.topic attribute set by MiNiFi's Kafka processors, and fall back to
 // parsing kafka://broker[:port]/<topic> from the transit URI. The host (broker)
 // is retained so NamespaceResolver can map it to a cluster namespace.
 class KafkaTopicExtractor : public DatasetExtractor {
  public:
-  std::optional<std::regex> componentTypePattern() const override {
+  std::optional<std::reference_wrapper<const std::regex>> componentTypePattern() const override {
     static const std::regex pattern{"^(ConsumeKafka|PublishKafka)$"};
-    return pattern;
+    return std::cref(pattern);
   }
 
   DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const override {

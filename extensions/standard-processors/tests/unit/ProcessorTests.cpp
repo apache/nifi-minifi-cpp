@@ -222,9 +222,8 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   records = reporter->getEvents();
 
-  for (const auto& provEventRecord : records) {
-    REQUIRE(provEventRecord->getComponentType() == processor->getName());
-  }
+  // The hidden file is ignored, so nothing is ingested and no provenance event is emitted.
+  REQUIRE(records.empty());
   session->commit();
   std::shared_ptr<core::FlowFile> ffr = session->get();
 

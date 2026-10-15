@@ -39,7 +39,7 @@ DatasetReferences ExtractorDispatcher::dispatch(const provenance::ProvenanceEven
   // event shouldn't fall through to a generic URI matcher.
   for (const auto& extractor : extractors_) {
     if (const auto pattern = extractor->componentTypePattern()) {
-      if (std::regex_match(component_type, *pattern)) {
+      if (std::regex_match(component_type, pattern->get())) {
         return extractor->extract(event);
       }
     }
@@ -49,7 +49,7 @@ DatasetReferences ExtractorDispatcher::dispatch(const provenance::ProvenanceEven
   if (const auto transit_uri = event.getTransitUri(); !transit_uri.empty()) {
     for (const auto& extractor : extractors_) {
       if (const auto pattern = extractor->transitUriPattern()) {
-        if (std::regex_match(transit_uri, *pattern)) {
+        if (std::regex_match(transit_uri, pattern->get())) {
           return extractor->extract(event);
         }
       }

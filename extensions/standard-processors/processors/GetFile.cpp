@@ -106,7 +106,10 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem
 
   try {
     session.write(flow_file, utils::FileReaderCallback{file_path, buffer_size_});
-    session.getProvenanceReporter()->receive(*flow_file, utils::file::pathToUri(file_path), getUUIDStr(), "Read file", 0ms);
+    // No source-system identifier: that parameter is the *upstream* system's flow file id,
+    // and a file on local disk has none. Passing our own UUID would surface as a constant
+    // `remoteIdentifier` on every event.
+    session.getProvenanceReporter()->receive(*flow_file, utils::file::pathToUri(file_path), "", "Read file", 0ms);
     session.transfer(flow_file, Success);
     if (!request_.keepSourceFile) {
       std::error_code remove_error;

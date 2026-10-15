@@ -17,6 +17,7 @@
 #include "ReportLineageToAtlas.h"
 
 #include <algorithm>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -68,6 +69,33 @@ void ReportLineageToAtlas::initialize() {
   setSupportedProperties(Properties);
 }
 
+AtlasEntity ReportLineageToAtlas::datasetToEntity(const Dataset& dataset, FsPathLevel fs_path_level, S3ModelVersion s3_model_version,
+    const NamespaceResolver& namespace_resolver) {
+  AtlasEntity entry;
+  entry.type_name = atlasTypeFor(dataset, s3_model_version);
+  entry.string_attributes = dataset.attributes;
+  std::string identifier = dataset.identifier;
+  if (dataset.system == "file" && fs_path_level == FsPathLevel::DIRECTORY) {
+    identifier = dirOf(identifier);
+    // The entity now describes the directory, not the file, so `path` has to follow
+    // `name`. Leaving it as the file path would make the directory entity's `path`
+    // whichever file happened to be seen last, since Atlas upserts by qualifiedName.
+    entry.string_attributes["name"] = identifier;
+    entry.string_attributes["path"] = identifier;
+  }
+  const auto ns = namespace_resolver.resolve(dataset.host.value_or(""));
+  entry.qualified_name = identifier + "@" + ns;
+  // Atlas' base "Asset" trait declares `name` as mandatory. Every dataset type we emit
+  // (fs_path, kafka_topic, nifi_output_port, nifi_input_port, aws_s3_v2_*, hive_table)
+  // inherits from Asset, so a missing name gets the whole bulk POST rejected with
+  // "mandatory attribute value missing in type Asset". Use the identifier as a
+  // sensible default when the extractor didn't already supply a `name`.
+  if (!entry.string_attributes.contains("name")) {
+    entry.string_attributes["name"] = identifier;
+  }
+  return entry;
+}
+
 void ReportLineageToAtlas::onSchedule(core::reporting::ReportingTaskContext& context) {
   atlas_base_urls_.clear();
   if (auto atlas_urls = context.getProperty(AtlasUrls); atlas_urls && !atlas_urls->empty()) {
@@ -103,17 +131,20 @@ void ReportLineageToAtlas::onSchedule(core::reporting::ReportingTaskContext& con
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Default Metadata Namespace property is required");
   }
   // Dynamic properties: hostnamePattern.<ns> = <regex1> <regex2> ...
-  // ReportingTaskContext doesn't expose a dynamic-property enumeration API, so we
-  // rely on the ProcessContext downcast (safe: every reporting task context IS a
-  // ProcessContext at runtime — see ProcessContextImpl). If the cast fails (in a
-  // test harness with a mock), we simply skip dynamic namespace rules.
   for (const auto& key : context.getDynamicPropertyKeys()) {
     static constexpr std::string_view prefix = "hostnamePattern.";
     if (!key.starts_with(prefix)) continue;
     const auto ns_name = key.substr(prefix.size());
     if (ns_name.empty()) continue;
     if (auto value = context.getRawDynamicProperty(key); value) {
-      namespace_resolver_.addRuleFromWhitespaceList(ns_name, *value);
+      try {
+        namespace_resolver_.addRuleFromWhitespaceList(ns_name, *value);
+      } catch (const std::regex_error& err) {
+        // std::regex_error is a std::logic_error, not a minifi Exception, so without this
+        // it escapes onSchedule as a bare "Unexpected end of regex" with no hint as to
+        // which property is malformed.
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid regex in dynamic property '" + key + "': " + err.what());
+      }
     }
   }
 
@@ -157,16 +188,25 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
     type_defs_registered_ = true;
   }
 
-  // 3. Snapshot the flow topology and translate it into Atlas entities.
-  const auto topology = context.getFlowTopology();
-  const auto flow_result = FlowPathBuilder::build(topology, namespace_resolver_.defaultNamespace(), nifi_url_);
-
-  if (auto res = atlas.createOrUpdateEntities(flow_result.entities); !res) {
-    logger_->log_error("Failed to publish flow topology to Atlas: {}", res.error());
-    context.yield();
-    return;
+  // 3. Snapshot the flow topology and translate it into Atlas entities. The flow rarely
+  //    changes, so skip both the translation and the (blocking) publish while it matches
+  //    what we last published successfully. The caches are updated only on success, so a
+  //    failed publish is retried on the next trigger.
+  auto topology = context.getFlowTopology();
+  if (!published_topology_ || *published_topology_ != topology) {
+    auto flow_result = FlowPathBuilder::build(topology, namespace_resolver_.defaultNamespace(), nifi_url_);
+    if (auto res = atlas.createOrUpdateEntities(flow_result.entities); !res) {
+      logger_->log_error("Failed to publish flow topology to Atlas: {}", res.error());
+      context.yield();
+      return;
+    }
+    logger_->log_debug("Published flow topology to Atlas: {} entities", flow_result.entities.size());
+    published_flow_result_ = std::move(flow_result);
+    published_topology_ = std::move(topology);
+  } else {
+    logger_->log_debug("Flow topology unchanged since last publish; skipping republish");
   }
-  logger_->log_debug("Published flow topology to Atlas: {} entities", flow_result.entities.size());
+  const auto& flow_result = *published_flow_result_;
 
   // 4. Consume provenance events, dispatch each through the extractors, and
   //    accumulate inputs/outputs per owning flow_path. Persist the cursor so
@@ -225,24 +265,7 @@ void ReportLineageToAtlas::onTrigger(core::reporting::ReportingTaskContext& cont
     }
     const auto& path_qn = proc_it->second.flow_path_qualified_name;
     const auto convert = [&](const Dataset& ds) {
-      AtlasEntity entry;
-      entry.type_name = atlasTypeFor(ds, s3_model_version_);
-      entry.string_attributes = ds.attributes;
-      std::string identifier = ds.identifier;
-      if (ds.system == "file" && fs_path_level_ == FsPathLevel::DIRECTORY) {
-        identifier = dirOf(identifier);
-        entry.string_attributes["name"] = identifier;
-      }
-      const auto ns = namespace_resolver_.resolve(ds.host.value_or(""));
-      entry.qualified_name = identifier + "@" + ns;
-      // Atlas' base "Asset" trait declares `name` as mandatory. Every dataset type we emit
-      // (fs_path, kafka_topic, nifi_output_port, nifi_input_port, aws_s3_v2_*, hive_table)
-      // inherits from Asset, so a missing name gets the whole bulk POST rejected with
-      // "mandatory attribute value missing in type Asset". Use the identifier as a
-      // sensible default when the extractor didn't already supply a `name`.
-      if (!entry.string_attributes.contains("name")) {
-        entry.string_attributes["name"] = identifier;
-      }
+      auto entry = datasetToEntity(ds, fs_path_level_, s3_model_version_, namespace_resolver_);
       external_entities[entry.qualified_name] = entry;
       return AtlasEntity::Reference{entry.type_name, entry.qualified_name};
     };

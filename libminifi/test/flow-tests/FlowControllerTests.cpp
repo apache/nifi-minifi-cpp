@@ -288,6 +288,35 @@ TEST_CASE("FlowController::getFlowTopology exposes processors and connections", 
   REQUIRE(conn.relationships.front() == "success");
 }
 
+TEST_CASE("FlowController::getFlowTopology is stable across calls", "[FlowTopology]") {
+  TestControllerWithFlow testController(yamlConfig);
+
+  // Reporting tasks compare successive snapshots to decide whether the flow actually
+  // changed, so two snapshots of an unchanged flow must be equal. getAllProcessors and
+  // getConnections give no order guarantee; getFlowTopology sorts to compensate.
+  const auto first = testController.controller_->getFlowTopology();
+  const auto second = testController.controller_->getFlowTopology();
+  REQUIRE(first == second);
+
+  // ...and a genuine difference must be detected. Sanity-check that operator== is not
+  // trivially true by perturbing each vector-valued member in turn.
+  auto changed_processor = first;
+  changed_processor.processors.at(0).name += "-renamed";
+  REQUIRE(first != changed_processor);
+
+  auto changed_connection = first;
+  changed_connection.connections.at(0).relationships.emplace_back("failure");
+  REQUIRE(first != changed_connection);
+
+  auto removed_processor = first;
+  removed_processor.processors.pop_back();
+  REQUIRE(first != removed_processor);
+
+  auto added_port = first;
+  added_port.input_ports.push_back({.uuid = minifi::utils::IdGenerator::getIdGenerator()->generate(), .name = "in", .is_input = true});
+  REQUIRE(first != added_port);
+}
+
 TEST_CASE("FlowController destructor releases resources", "[TestFlow5]") {
   TestControllerWithFlow controller(R"(
 Flow Controller:

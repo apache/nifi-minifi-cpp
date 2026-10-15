@@ -19,6 +19,7 @@
  */
 #include <vector>
 #include <map>
+#include <algorithm>
 #include <chrono>
 #include <future>
 #include <thread>
@@ -513,6 +514,19 @@ core::reporting::FlowTopology FlowController::getFlowTopology() const {
       entry.relationships.push_back(rel.getName());
     }
     topology.connections.push_back(std::move(entry));
+  }
+
+  // getAllProcessors / getConnections give no order guarantee, and the order can differ
+  // between two snapshots of an unchanged flow. Sort so FlowTopology::operator== reflects
+  // the flow's structure rather than iteration order — callers rely on equality to decide
+  // whether the flow actually changed.
+  const auto by_uuid = [](const auto& lhs, const auto& rhs) { return lhs.uuid < rhs.uuid; };
+  std::ranges::sort(topology.processors, by_uuid);
+  std::ranges::sort(topology.input_ports, by_uuid);
+  std::ranges::sort(topology.output_ports, by_uuid);
+  std::ranges::sort(topology.connections, by_uuid);
+  for (auto& conn : topology.connections) {
+    std::ranges::sort(conn.relationships);
   }
   return topology;
 }

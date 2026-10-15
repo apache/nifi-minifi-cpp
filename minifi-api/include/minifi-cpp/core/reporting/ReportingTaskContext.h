@@ -34,16 +34,23 @@ namespace org::apache::nifi::minifi::core::reporting {
 // they can describe the flow's topology to external systems (lineage/metadata catalogs,
 // monitoring back-ends, etc.). Nested process groups are flattened; only the root
 // group's ports are included. Endpoints on Connection are UUIDs of processors or ports.
+// Equality lets a reporting task detect that the flow is unchanged and skip
+// re-publishing it. The vectors are emitted in a deterministic order (sorted by
+// uuid) so two snapshots of the same flow always compare equal.
 struct FlowTopology {
   struct Processor {
     utils::Identifier uuid;
     std::string name;
     std::string type;   // short class name (e.g. "PutS3Object"), matches how the flow config references it
+
+    bool operator==(const Processor&) const = default;
   };
   struct Port {
     utils::Identifier uuid;
     std::string name;
     bool is_input;  // false => output port
+
+    bool operator==(const Port&) const = default;
   };
   struct Connection {
     utils::Identifier uuid;
@@ -51,6 +58,8 @@ struct FlowTopology {
     utils::Identifier source_uuid;
     utils::Identifier destination_uuid;
     std::vector<std::string> relationships;
+
+    bool operator==(const Connection&) const = default;
   };
 
   utils::Identifier root_group_uuid;
@@ -59,6 +68,8 @@ struct FlowTopology {
   std::vector<Port> input_ports;
   std::vector<Port> output_ports;
   std::vector<Connection> connections;
+
+  bool operator==(const FlowTopology&) const = default;
 };
 
 class ReportingTaskContext {

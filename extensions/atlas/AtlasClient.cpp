@@ -32,22 +32,6 @@ namespace org::apache::nifi::minifi::extensions::atlas {
 
 namespace {
 
-// URL-encode a qualifiedName so it can travel as a query parameter to
-// GET /api/atlas/v2/entity/uniqueAttribute/type/<T>?attr:qualifiedName=<x>@<ns>
-std::string urlEncode(std::string_view input) {
-  std::string result;
-  result.reserve(input.size());
-  for (char ch : input) {
-    if (std::isalnum(static_cast<unsigned char>(ch)) || ch == '-' || ch == '_' || ch == '.' || ch == '~') {
-      result += ch;
-    } else {
-      result += '%';
-      result += utils::string::to_hex({&ch, 1}, true);
-    }
-  }
-  return result;
-}
-
 // Strip a trailing slash from a base URL, if any, so we can concatenate paths cleanly.
 std::string normalizeBaseUrl(std::string base) {
   while (!base.empty() && base.back() == '/') {

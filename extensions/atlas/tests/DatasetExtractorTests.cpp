@@ -68,7 +68,7 @@ TEST_CASE("Kafka extractor: PublishKafka SEND → output kafka_topic", "[atlas][
 
 TEST_CASE("Kafka extractor: kafka.topic attribute takes precedence over transit URI parsing", "[atlas][extractor][kafka]") {
   ExtractorDispatcher dispatcher;
-  TestProvenanceEvent event{provenance::ProvenanceEventRecord::RECEIVE, "ConsumeKafka_2_6"};
+  TestProvenanceEvent event{provenance::ProvenanceEventRecord::RECEIVE, "ConsumeKafka"};
   event.setTransitUri("kafka://old-broker:9092/wrong-topic-in-uri");
   event.addAttribute("kafka.topic", "orders");
 

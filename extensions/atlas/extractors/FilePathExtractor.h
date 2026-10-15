@@ -33,9 +33,9 @@ namespace org::apache::nifi::minifi::extensions::atlas::extractors {
 // directory at serialize time if configured to.
 class FilePathExtractor : public DatasetExtractor {
  public:
-  std::optional<std::regex> transitUriPattern() const override {
+  std::optional<std::reference_wrapper<const std::regex>> transitUriPattern() const override {
     static const std::regex pattern{"^file:/.*"};
-    return pattern;
+    return std::cref(pattern);
   }
 
   DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const override {

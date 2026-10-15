@@ -19,9 +19,11 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "ExtractorDispatcher.h"
+#include "FlowPathBuilder.h"
 #include "NamespaceResolver.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/reporting/ReportingTaskBase.h"
@@ -124,6 +126,12 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
   enum class S3ModelVersion { V1, V2 };
   enum class FsPathLevel { FILE, DIRECTORY };
 
+  // Converts one extracted Dataset into the Atlas entity representing it, applying the
+  // path-level and S3-model-version policies and resolving the namespace. Static and
+  // public so the policy can be unit-tested without driving a whole onTrigger.
+  static AtlasEntity datasetToEntity(const Dataset& dataset, FsPathLevel fs_path_level, S3ModelVersion s3_model_version,
+      const NamespaceResolver& namespace_resolver);
+
  private:
   // Populated in onSchedule from properties.
   std::vector<std::string> atlas_base_urls_;
@@ -139,6 +147,12 @@ class ReportLineageToAtlas : public core::reporting::ReportingTaskBase {
   // Persistent across triggers.
   ExtractorDispatcher extractor_dispatcher_;
   bool type_defs_registered_ = false;
+  // The topology we last successfully published, and the entities we derived from it.
+  // Both are set only after a successful publish, so a failed one is retried next
+  // trigger. The Result is kept (not just the topology) because processor_to_path is
+  // needed on every trigger to attribute provenance events to a flow path.
+  std::optional<core::reporting::FlowTopology> published_topology_;
+  std::optional<FlowPathBuilder::Result> published_flow_result_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::atlas

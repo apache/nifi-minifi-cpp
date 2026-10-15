@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <regex>
 #include <string>
@@ -61,8 +62,11 @@ struct DatasetReferences {
 class DatasetExtractor {
  public:
   virtual ~DatasetExtractor() = default;
-  [[nodiscard]] virtual std::optional<std::regex> componentTypePattern() const { return std::nullopt; }
-  [[nodiscard]] virtual std::optional<std::regex> transitUriPattern() const { return std::nullopt; }
+  // Returned by reference: implementations hand back a function-local static, and the
+  // dispatcher probes every extractor for every provenance event — returning by value
+  // would copy-construct a std::regex (locale and all) on each probe.
+  [[nodiscard]] virtual std::optional<std::reference_wrapper<const std::regex>> componentTypePattern() const { return std::nullopt; }
+  [[nodiscard]] virtual std::optional<std::reference_wrapper<const std::regex>> transitUriPattern() const { return std::nullopt; }
   [[nodiscard]] virtual DatasetReferences extract(const provenance::ProvenanceEventRecord& event) const = 0;
 };
 

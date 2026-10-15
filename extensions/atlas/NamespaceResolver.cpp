@@ -32,8 +32,9 @@ void NamespaceResolver::addRule(std::string namespace_name, std::vector<std::reg
 void NamespaceResolver::addRuleFromWhitespaceList(std::string namespace_name, std::string_view whitespace_separated_regexes) {
   std::vector<std::regex> patterns;
   for (const auto& raw : utils::string::splitAndTrimRemovingEmpty(whitespace_separated_regexes, " ")) {
-    // A malformed regex would throw at construction; that is a configuration bug and
-    // should surface at onSchedule time when the caller iterates dynamic properties.
+    // A malformed regex throws std::regex_error at construction. That is a configuration
+    // bug, and ReportLineageToAtlas::onSchedule catches it to report which dynamic
+    // property is at fault before failing the schedule.
     patterns.emplace_back(raw);
   }
   addRule(std::move(namespace_name), std::move(patterns));
