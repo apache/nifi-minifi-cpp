@@ -62,6 +62,7 @@ add_minifi_option(AWS_ENABLE_UNITY_BUILD "If enabled, AWS SDK libraries will be 
     and recompiled in every iterative build instance. Turn off to avoid recompilation." ON)
 
 add_minifi_dependent_option(MINIFI_ADVANCED_ASAN_BUILD "Uses AddressSanitizer to instrument the code" OFF "NOT WIN32" OFF)
+add_minifi_dependent_option(MINIFI_ADVANCED_TSAN_BUILD "Uses ThreadSanitizer to instrument the code" OFF "NOT WIN32" OFF)
 add_minifi_dependent_option(MINIFI_ADVANCED_CODE_COVERAGE "Use coverage build options and enable coverage build target" OFF "NOT WIN32" OFF)
 add_minifi_option(MINIFI_ADVANCED_LINK_TIME_OPTIMIZATION "Use link time optimization" OFF)
 

@@ -6,8 +6,9 @@ include(FetchContent)
 
 FetchContent_Declare(
         Catch2
-        URL      https://github.com/catchorg/Catch2/archive/refs/tags/v3.15.0.tar.gz
-        URL_HASH SHA256=9650c55e497759cc39b977e45524bc8acb15256061c112080916ab6cb0b1ea66
+        URL      https://github.com/catchorg/Catch2/archive/refs/tags/v3.16.1.tar.gz
+        URL_HASH SHA256=d16bd1b8b2364918bd472cb216394acb93bde6784890df0d91bccfb3f28d777d
         SYSTEM
 )
+set(CATCH_CONFIG_THREAD_SAFE_ASSERTIONS ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(Catch2)

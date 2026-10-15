@@ -7,6 +7,8 @@
 #include <memory>
 #include <set>
 #include <iostream>
+#include <ranges>
+#include <string_view>
 
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
@@ -139,10 +141,9 @@ class ListenHTTPTestsFixture {
     url = protocol + "://localhost:" + portstr + "/contentListener/" + endpoint;
   }
 
-  void check_content_type(minifi::http::HTTPClient& client) {
+  void check_content_type(minifi::http::HTTPClient& client, std::string_view expected_content_type) {
     if (endpoint == "test") {
-      const auto content_type = update_attribute->getDynamicProperty("mime.type").value_or("application/octet-stream");
-      REQUIRE(content_type == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-type")));
+      REQUIRE(expected_content_type == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-type")));
       REQUIRE("19" == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-length")));
     } else {
       REQUIRE("0" == minifi::utils::string::trim(client.getResponseHeaderMap().at("Content-length")));
@@ -163,7 +164,7 @@ class ListenHTTPTestsFixture {
     }
   }
 
-  void check_response(const bool success, const HttpResponseExpectations& expect, minifi::http::HTTPClient& client) {
+  void check_response(const bool success, const HttpResponseExpectations& expect, minifi::http::HTTPClient& client, std::string_view expected_content_type) {
     if (!expect.should_succeed) {
       REQUIRE(!success);
       REQUIRE(expect.response_code == client.getResponseCode());
@@ -176,7 +177,7 @@ class ListenHTTPTestsFixture {
       return;
     }
 
-    check_content_type(client);
+    check_content_type(client, expected_content_type);
     check_response_body(client);
   }
 
@@ -190,29 +191,45 @@ class ListenHTTPTestsFixture {
     TypedProcessorWrapper<minifi::processors::ListenHTTP> proc = &plan->getCurrentContext()->getProcessor();
     REQUIRE(proc);
 
-    std::vector<std::thread> client_threads;
+    struct ClientResult {
+      std::unique_ptr<minifi::http::HTTPClient> client;
+      bool success = false;
+      std::atomic<bool> thread_done = false;
+    };
+    std::vector<ClientResult> client_results(response_expectations.size());
 
-    for (auto& expect : response_expectations) {
+    std::vector<std::thread> client_threads;
+    client_threads.reserve(response_expectations.size());
+
+    for (auto& client_result : client_results) {
       size_t prev_req_count = ListenHTTPTestAccessor::call_pendingRequestCount(proc.get());
-      auto thread_done_flag = std::make_shared<std::atomic_bool>(false);
-      client_threads.emplace_back([&, thread_done_flag] {
+      client_threads.emplace_back([&, &client_result = client_result] {
         auto client = client_to_use ? std::move(client_to_use) : initialize_client();
-        std::cout << "Submitting request" << std::endl;
-        check_response(client->submit(), expect, *client);
-        thread_done_flag->store(true);
+        client_result.success = client->submit();
+        client_result.client = std::move(client);
+        client_result.thread_done.store(true);
       });
-      while (!thread_done_flag->load() && ListenHTTPTestAccessor::call_pendingRequestCount(proc.get()) != prev_req_count + 1) {
+      while (!client_result.thread_done.load() && ListenHTTPTestAccessor::call_pendingRequestCount(proc.get()) != prev_req_count + 1) {
         std::this_thread::sleep_for(1ms);
       }
     }
 
     plan->runCurrentProcessor();  // ListenHTTP
     plan->runNextProcessor();  // LogAttribute
+
+    // save expected_content_type before shutting down the processor
+    const std::string expected_content_type = update_attribute->getDynamicProperty("mime.type").value_or("application/octet-stream");
+
     // shutdown processors so pending requests are correctly discarded
     plan.reset();
 
     for (auto& thread : client_threads) {
       thread.join();
+    }
+
+    for (const auto& [client_result, response_expectation] : std::views::zip(client_results, response_expectations)) {
+      REQUIRE(client_result.client);
+      check_response(client_result.success, response_expectation, *client_result.client, expected_content_type);
     }
 
     if (expected_committed_requests > 0 && (method == HttpRequestMethod::Get || method == HttpRequestMethod::Post)) {

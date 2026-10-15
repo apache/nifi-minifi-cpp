@@ -33,7 +33,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
   if (configure_->get(Configure::nifi_administrative_yield_duration, yield_value_str)) {
     if (const auto yield_value = parsing::parseDuration(yield_value_str)) {
       admin_yield_duration_ = *yield_value;
-      logger_->log_debug("nifi_administrative_yield_duration: [{}]", admin_yield_duration_);
+      logger_->log_debug("nifi_administrative_yield_duration: [{}]", *yield_value);
     }
   }
 
@@ -41,7 +41,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
   if (configure_->get(Configure::nifi_bored_yield_duration, yield_value_str)) {
     if (const auto yield_value = parsing::parseDuration(yield_value_str)) {
       bored_yield_duration_ = *yield_value;
-      logger_->log_debug("nifi_bored_yield_duration: [{}]", bored_yield_duration_);
+      logger_->log_debug("nifi_bored_yield_duration: [{}]", *yield_value);
     }
   }
 

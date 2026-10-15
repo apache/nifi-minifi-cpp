@@ -27,6 +27,8 @@ jobs:
     steps:
       - id: checkout
         uses: actions/checkout@v6
+      - id: free_disk_space
+        uses: ./.github/actions/free-disk-space
       - name: cache restore
         uses: actions/cache/restore@v5
         with:
@@ -45,7 +47,7 @@ jobs:
         run: |
           python3 -m venv venv && source venv/bin/activate \
             && pip install -r requirements.txt \
-            && python main.py --noninteractive --minifi-options="${CMAKE_FLAGS}"
+            && python main.py --noninteractive --skip-compiler-install --minifi-options="${CMAKE_FLAGS}" --cmake-options="-DSTRICT_GSL_CHECKS=AUDIT"
         working-directory: bootstrap
       - name: cache save
         uses: actions/cache/save@v5
@@ -87,6 +89,8 @@ jobs:
     steps:
       - id: checkout
         uses: actions/checkout@v6
+      - id: free_disk_space
+        uses: ./.github/actions/free-disk-space
       - name: cache restore
         uses: actions/cache/restore@v5
         with:
@@ -105,7 +109,7 @@ jobs:
         run: |
           python3 -m venv venv && source venv/bin/activate \
             && pip install -r requirements.txt \
-            && python main.py --noninteractive --minifi-options="${CMAKE_FLAGS} -DMINIFI_ADVANCED_ASAN_BUILD=ON" --cmake-options="-DSTRICT_GSL_CHECKS=AUDIT"
+            && python main.py --noninteractive --skip-compiler-install --minifi-options="${CMAKE_FLAGS} -DMINIFI_ADVANCED_ASAN_BUILD=ON" --cmake-options="-DSTRICT_GSL_CHECKS=AUDIT"
         working-directory: bootstrap
       - name: cache save
         uses: actions/cache/save@v5
@@ -126,4 +130,57 @@ jobs:
         with:
           name: asan-logs
           path: build/asan_logs/*
+          if-no-files-found: ignore
+  thread-sanitizer:
+    name: "ThreadSanitizer"
+    runs-on: ubuntu-26.04
+    timeout-minutes: 300
+    steps:
+      - id: checkout
+        uses: actions/checkout@v6
+      - id: free_disk_space
+        uses: ./.github/actions/free-disk-space
+      - name: cache restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ubuntu-26.04-tsan-ccache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            ubuntu-26.04-tsan-ccache-${{github.ref}}-
+            ubuntu-26.04-tsan-ccache-refs/heads/main-
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y ccache libfl-dev python3 python3-venv clang-20 libc++-20-dev libc++abi-20-dev
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
+      - name: build
+        run: |
+          export CC=clang-20
+          export CXX=clang++-20
+          export CXXFLAGS="-stdlib=libc++"
+          export LDFLAGS="-stdlib=libc++"
+          python3 -m venv venv && source venv/bin/activate \
+            && pip install -r requirements.txt \
+            && python main.py --noninteractive --skip-compiler-install --minifi-options="${CMAKE_FLAGS} -DMINIFI_ADVANCED_TSAN_BUILD=ON" --cmake-options="-DSTRICT_GSL_CHECKS=AUDIT"
+        working-directory: bootstrap
+      - name: cache save
+        uses: actions/cache/save@v5
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ubuntu-26.04-tsan-ccache-${{github.ref}}-${{github.sha}}
+      - name: test
+        id: test
+        run: |
+          # Set core file size limit to unlimited
+          ulimit -c unlimited
+          ctest -j$(nproc) --output-on-failure
+        working-directory: build
+      - name: upload TSan output
+        if: ${{ failure() && steps.test.conclusion == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: tsan-logs
+          path: build/tsan_logs/*
           if-no-files-found: ignore

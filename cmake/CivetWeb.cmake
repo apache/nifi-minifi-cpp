@@ -21,9 +21,11 @@ if(MINIFI_ADVANCED_ASAN_BUILD)
     set(CIVETWEB_THREAD_STACK_SIZE 1048576 CACHE STRING "" FORCE)
 endif()
 
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/civetweb/openssl3.patch")
+set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/civetweb/openssl3.patch")
+set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/civetweb/stop-flag-assign-atomic-load.patch")
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
 
 FetchContent_Declare(civetweb
     URL      https://github.com/civetweb/civetweb/archive/refs/tags/v1.16.tar.gz
@@ -38,6 +40,13 @@ target_link_libraries(civetweb-c-library OpenSSL::SSL OpenSSL::Crypto)
 target_link_libraries(civetweb-cpp PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
 target_compile_definitions(civetweb-c-library PRIVATE SOCKET_TIMEOUT_QUANTUM=200)
+if (NOT WIN32)
+    # use localtime_r/gmtime_r instead of the non-thread-safe localtime/gmtime
+    target_compile_definitions(civetweb-c-library PRIVATE REENTRANT_TIME)
+    # access the stop flag atomically instead of as a plain volatile int, which is a data race between mg_stop() and the civetweb threads;
+    # not on Windows, because stop-flag-assign-atomic-load.patch uses the GCC/Clang builtin __atomic_load_n
+    target_compile_definitions(civetweb-c-library PRIVATE STOP_FLAG_NEEDS_LOCK)
+endif()
 
 if (NOT TARGET civetweb::c-library)
     add_library(civetweb::c-library ALIAS civetweb-c-library)

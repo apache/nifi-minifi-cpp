@@ -90,8 +90,8 @@ class MockGrafanaLokiREST {
   std::string port_;
   CivetCallbacks callbacks_;
   std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<MockGrafanaLokiREST>::getLogger();
-  CivetServer server_;
   GrafanaLokiHandler loki_handler_;
+  CivetServer server_;  // must be declared after the handler
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::grafana::loki::test

@@ -13,10 +13,23 @@
 #include "PublishKafka.h"
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers.hpp"
+#include "utils/Sanitizers.h"
 
 namespace org::apache::nifi::minifi::processors::test {
 
+namespace {
+// librdkafka uses C11 threads (thrd_create), which TSan does not intercept yet, and this causes a SEGV;
+// remove these SKIPs after https://github.com/llvm/llvm-project/issues/199585 is fixed
+constexpr std::string_view TSanSkipReason = "librdkafka uses C11 threads, which ThreadSanitizer does not support";
+}  // namespace
+
+TEST_CASE("Dummy test", "[PublishKafka]") {
+  // Catch2 doesn't allow all tests in a file to be SKIPped
+}
+
 TEST_CASE("Batch Size cannot be larger than Queue Max Message", "[PublishKafka]") {
+  if constexpr (utils::ThreadSanitizerEnabled) { SKIP(TSanSkipReason); }
+
   auto publish_kafka = PublishKafka(mock::getMockMetadata());
   auto context = mock::MockProcessContext{};
   context.properties_.emplace(PublishKafka::ClientName.name, "test_client");
@@ -29,6 +42,8 @@ TEST_CASE("Batch Size cannot be larger than Queue Max Message", "[PublishKafka]"
 }
 
 TEST_CASE("Trigger without valid broker", "[PublishKafka]") {
+  if constexpr (utils::ThreadSanitizerEnabled) { SKIP(TSanSkipReason); }
+
   const auto logger = std::make_shared<mock::MockLogger>();
   auto publish_kafka = PublishKafka(mock::metadataWithLogger(logger));
   auto context = mock::MockProcessContext{};
@@ -54,6 +69,8 @@ bool hasDebugLog(const mock::MockLogger& logger, std::string_view message) {
 }  // namespace
 
 TEST_CASE("Security properties are used for SSL connection when no SSL Context Service is set", "[PublishKafka]") {
+  if constexpr (utils::ThreadSanitizerEnabled) { SKIP(TSanSkipReason); }
+
   const auto logger = std::make_shared<mock::MockLogger>();
   auto publish_kafka = PublishKafka(mock::metadataWithLogger(logger));
   auto context = mock::MockProcessContext{};
@@ -69,6 +86,8 @@ TEST_CASE("Security properties are used for SSL connection when no SSL Context S
 }
 
 TEST_CASE("System CA certificate locations are probed when no CA certificate is set for SSL connection", "[PublishKafka]") {
+  if constexpr (utils::ThreadSanitizerEnabled) { SKIP(TSanSkipReason); }
+
   const auto logger = std::make_shared<mock::MockLogger>();
   auto publish_kafka = PublishKafka(mock::metadataWithLogger(logger));
   auto context = mock::MockProcessContext{};

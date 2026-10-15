@@ -194,9 +194,9 @@ class MockSplunkHEC {
  private:
   CivetLibrary lib_;
   std::string port_;
-  std::unique_ptr<CivetServer> server_;
-  std::vector<std::unique_ptr<MockSplunkHandler>> handlers_;
   CivetCallbacks callbacks_;
   std::function<void(const struct mg_request_info *request_info)> assertions_ = [](const struct mg_request_info*) {};
   std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<MockSplunkHEC>::getLogger();
+  std::vector<std::unique_ptr<MockSplunkHandler>> handlers_;
+  std::unique_ptr<CivetServer> server_;  // must be declared after the handlers
 };
