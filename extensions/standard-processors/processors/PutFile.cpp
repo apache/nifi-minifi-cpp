@@ -146,7 +146,11 @@ void PutFile::putFile(core::ProcessSession& session,
 #endif
 
   if (success) {
-    session.getProvenanceReporter()->send(*flow_file, utils::file::pathToUri(dest_file), "Write file", 0ms);
+    const auto transit_uri = utils::file::pathToUri(dest_file);
+    if (!transit_uri) {
+      logger_->log_warn("Failed to convert path '{}' to URI: {}", dest_file, transit_uri.error());
+    }
+    session.getProvenanceReporter()->send(*flow_file, transit_uri.value_or(""), "Write file", 0ms);
   }
   session.transfer(flow_file, success ? Success : Failure);
 }
