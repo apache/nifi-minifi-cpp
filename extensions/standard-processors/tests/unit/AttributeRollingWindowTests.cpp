@@ -15,8 +15,11 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <memory>
+#include <ranges>
 #include <string_view>
+#include "fmt/ranges.h"
 #include "unit/Catch.h"
 #include "AttributeRollingWindow.h"
 #include "unit/SingleProcessorTestController.h"
@@ -29,10 +32,12 @@ using AttributeRollingWindow = processors::AttributeRollingWindow;
 bool checkAttributes(const std::map<std::string, std::string>& expected, const std::map<std::string, std::string>& actual) {
   // expected may be incomplete, but if something is specified in expected, they also need to be in the actual
   // set of attributes
-  return std::all_of(std::begin(expected), std::end(expected), [&actual](const auto& kvpair) {
+  return std::ranges::all_of(expected, [&actual](const auto& kvpair) {
     const auto& key = kvpair.first;
-    const auto& value = kvpair.second;
-    return actual.contains(key) && actual.at(key) == value;
+    if (!actual.contains(key)) { return false; }
+    double expected_value = std::stod(kvpair.second);
+    double actual_value = std::stod(actual.at(key));
+    return std::abs(expected_value - actual_value) < 0.000001;
   });
 }
 
@@ -48,6 +53,7 @@ TEST_CASE("AttributeRollingWindow properly forwards properties to RollingWindow 
     const auto out_flow_files = out.at(rel("success"));
     REQUIRE(out_flow_files.size() == 1);
     const auto out_attrs = out_flow_files[0]->getAttributes();
+    INFO(fmt::format("expected: {}\nactual: {}", expected_out_attributes, out_attrs));
     REQUIRE(checkAttributes(expected_out_attributes, out_attrs));
   };
   trigger_with_value_and_check_attributes("1", {

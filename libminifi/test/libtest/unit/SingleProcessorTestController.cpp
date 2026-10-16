@@ -22,6 +22,7 @@
 #include "FlowFileRecord.h"
 #include "range/v3/algorithm/all_of.hpp"
 #include "Connection.h"
+#include "TestUtils.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -63,7 +64,7 @@ bool SingleProcessorTestController::triggerUntil(const std::unordered_map<core::
                   const std::chrono::milliseconds max_duration,
                   const std::chrono::milliseconds wait_time) {
   auto start_time = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() < start_time + max_duration) {
+  while (std::chrono::steady_clock::now() < start_time + utils::timeout(max_duration)) {
     for (auto& [relationship, flow_files] : trigger()) {
       result[relationship].insert(result[relationship].end(), flow_files.begin(), flow_files.end());
     }

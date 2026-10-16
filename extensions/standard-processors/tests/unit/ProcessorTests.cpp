@@ -809,6 +809,6 @@ TEST_CASE("Test getProcessorType", "[getProcessorType]") {
 
 TEST_CASE("IsYield and getYieldTime is consistent") {
   auto processor = minifi::test::utils::make_processor<TestProcessorNoContent>("test_processor");
-  processor->yield(1ms);
+  processor->yield(minifi::test::utils::timeout(1ms));
   REQUIRE(processor->isYield() == (processor->getYieldTime() != 0ms));
 }

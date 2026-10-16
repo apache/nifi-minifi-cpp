@@ -45,6 +45,8 @@
    match-leak-kinds: possible
    fun:calloc
    ...
+   fun:_dl_allocate_tls
+   ...
    fun:pthread_create*
    ...
    fun:*LogCompressorSink*
@@ -88,6 +90,24 @@
    fun:*AddDescriptorsImpl*
    ...
    fun:__libc_start_main*
+   ...
+}
+
+# glibc lazily allocates a module's Thread-Local-Storage block (a DTV entry) the first time a
+# thread touches a thread_local in a dynamically-loaded library (e.g. the Lua script extension):
+# __tls_get_addr -> tls_get_addr_tail -> allocate_and_init -> allocate_dtv_entry. The block is
+# owned by the dynamic linker's DTV and freed by the OS at exit; valgrind only holds an interior
+# pointer, so it is flagged "possibly lost". Sibling path to possibly_lost_tls_dtv_growth (which
+# matches DTV *resize* instead). Never a real leak.
+{
+   possibly_lost_tls_dtv_entry_allocation
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   ...
+   fun:allocate_dtv_entry
+   ...
+   fun:__tls_get_addr
    ...
 }
 
@@ -181,5 +201,29 @@
    fun:_Znwm
    ...
    fun:*CollectionScope*
+   ...
+}
+
+# Suppress a "Conditional jump or move depends on uninitialised value(s)" error
+# in zlib: this is intentional optimization, with the comment "prev[n] is garbage
+# but its value will never be used" at deflate.c:204.
+{
+   zlib_slide_hash_uninitialised_prev
+   Memcheck:Cond
+   fun:slide_hash
+   fun:fill_window
+   ...
+}
+
+# "Conditional jump or move depends on uninitialised value(s)" inside the libstdc++
+# std::from_chars<int> that is inlined into Cron's fromChars<>/parse<year>
+# (utils/Cron.cpp). The input std::string is fully initialised and fromChars value-
+# initialises its output; this is a known valgrind imprecision on optimized integer
+# parsing, not a real defect.
+{
+   cron_parse_year_fromchars_uninitialised
+   Memcheck:Cond
+   fun:*parse*year*
+   fun:*Cron*
    ...
 }
