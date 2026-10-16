@@ -48,7 +48,7 @@ pub(crate) struct LabelsProperty {}
 
 impl PropertySchema for LabelsProperty {
     const CONSTRAINT: Option<PropertyConstraints> = None;
-    const IS_REQUIRED: bool = false;
+    const IS_REQUIRED: bool = true;
 }
 
 impl PropertyType for LabelsProperty {
@@ -199,7 +199,10 @@ impl ClassifyOutput {
                 Some(Content::Buffer(
                     serde_json::to_vec(&predictions).route_err_to_failure()?,
                 )),
-                None,
+                Some((
+                    MIME_TYPE_ATTR.name.to_string(),
+                    "application/json".to_string(),
+                )),
             ),
             Some(output_attr) => (
                 None,
@@ -211,7 +214,6 @@ impl ClassifyOutput {
         };
 
         let mut transformed = TransformedFlowFile::new(&SUCCESS, content)
-            .with_attribute(MIME_TYPE_ATTR.name, "application/json")
             .with_attribute(CLASS_COUNT_ATTR.name, predictions.len().to_string());
 
         if let Some(top) = predictions.first() {
@@ -416,8 +418,27 @@ mod tests {
             .transform(&context, &mut stream, &MockLogger::new())
             .unwrap();
         assert_eq!(result.attribute("class.top1.name").unwrap(), "goldfish");
+        assert_eq!(
+            result.attribute(MIME_TYPE_ATTR.name).unwrap(),
+            "application/json"
+        );
         let json = String::from_utf8(result.into_bytes().unwrap().unwrap()).unwrap();
         assert!(json.contains("\"class_name\":\"goldfish\""));
+    }
+
+    #[test]
+    fn test_output_attr_name() {
+        let processor = make_processor(1, ScoreActivation::None);
+        let scores = vec![0.1f32, 0.9, 0.5];
+        let mut context = context_with_scores(&scores);
+        context
+            .properties
+            .insert(OUTPUT_ATTRIBUTE_NAME.name().to_string(), "something");
+        let mut stream = Cursor::new(build_payload(&scores));
+        let result = processor
+            .transform(&context, &mut stream, &MockLogger::new())
+            .unwrap();
+        assert!(result.attribute(MIME_TYPE_ATTR.name).is_none());
     }
 
     #[test]

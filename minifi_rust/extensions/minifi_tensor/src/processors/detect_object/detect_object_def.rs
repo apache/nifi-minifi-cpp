@@ -32,9 +32,10 @@ pub(crate) const TRACT_MODEL_SERVICE: Property<TractModelService> = Property::ne
 
 pub(super) const SUCCESS: Relationship = Relationship {
     name: "success",
-    description: "Inference and post-processing completed. The flow file content is the original, \
-                  unchanged image; the detected boxes are written to the configured output \
-                  attribute as a JSON array (may be empty).",
+    description: "Inference and post-processing completed. The detected boxes are written as a \
+                  JSON array (may be empty) to the attribute named by 'Output attribute name', \
+                  leaving the flow file content as the original image; if that property is empty, \
+                  they replace the flow file content instead.",
 };
 
 pub(super) const FAILURE: Relationship = Relationship {
@@ -64,9 +65,12 @@ impl ProcessorDefinition for DetectObject {
          the compiled model owned by the referenced TractModelService, and post-processes the \
          model outputs (score activation, confidence filtering, box decoding, per-class \
          non-maximum suppression) into bounding boxes. Collapses the ImageToTensor -> \
-         InvokeTractModel -> FilterBoundingBoxes chain into one node. The flow file content is \
-         left unchanged (the original image); the detected boxes are written as a JSON array to \
-         the configured output attribute so a downstream DrawBoundingBox can annotate the image.";
+         InvokeTractModel -> FilterBoundingBoxes chain into one node. \
+         The detected boxes are emitted as a JSON array: when 'Output attribute name'\
+         is set they are written to that attribute and the \
+         flow file content is left unchanged (the original image), so a downstream \
+         DrawBoundingBox can annotate it; when it is left empty they replace the flow file \
+         content instead.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;

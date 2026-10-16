@@ -32,9 +32,10 @@ pub(crate) const TRACT_MODEL_SERVICE: Property<TractModelService> = Property::ne
 
 pub(super) const SUCCESS: Relationship = Relationship {
     name: "success",
-    description: "Inference and post-processing completed. The flow file content is the original, \
-                  unchanged image; the classifications are written to the configured output \
-                  attribute as a JSON array (may be empty).",
+    description: "Inference and post-processing completed. The classifications are written as a \
+                  JSON array (may be empty) to the attribute named by 'Output attribute name', \
+                  leaving the flow file content as the original image; if that property is empty, \
+                  they replace the flow file content instead.",
 };
 
 pub(super) const FAILURE: Relationship = Relationship {
@@ -49,9 +50,10 @@ impl ProcessorDefinition for ClassifyImage {
          against the compiled model owned by the referenced TractModelService, and post-processes \
          the score vector (score activation, Top-K selection, confidence filtering, optional label \
          lookup) into predictions. Collapses the ImageToTensor -> InvokeTractModel -> \
-         ClassifyOutput chain into one node. The flow file content is left unchanged (the original \
-         image); the Top-K classifications are written as a JSON array to the configured output \
-         attribute.";
+         ClassifyOutput chain into one node. The Top-K classifications are emitted as a JSON \
+         array: when 'Output attribute name' is set they are written into that attribute and \
+         the flow file content is left unchanged (the original image); when it is left empty they replace \
+         the flow file content instead.";
     const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
     const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
     const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
