@@ -46,7 +46,7 @@ void FetchOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessS
   node_id_ = utils::parseProperty(context, NodeID);
   id_type_ = utils::parseEnumProperty<opc::OPCNodeIDType>(context, NodeIDType);
   namespace_idx_ = gsl::narrow<UA_UInt16>(utils::parseU64Property(context, NameSpaceIndex));
-  parseNode(context);
+  parseNode(context, PathReferenceTypes);
 
   max_depth_ = utils::parseU64Property(context, MaxDepth);
 

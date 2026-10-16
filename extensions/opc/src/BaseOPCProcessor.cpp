@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "OPCCommon.h"
 #include "BaseOPCProcessor.h"
@@ -112,26 +113,15 @@ bool BaseOPCProcessor::reconnect() {
   return true;
 }
 
-void BaseOPCProcessor::readPathReferenceTypes(core::ProcessContext& context, const std::string& node_id) {
-  path_reference_types_.clear();
-  const auto value = context.getProperty(PathReferenceTypes).value_or("");
-  if (value.empty()) {
-    return;
+void BaseOPCProcessor::readPathReferenceTypes(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property, const std::string& node_id) {
+  auto path_reference_types = opc::parsePathReferenceTypes(context.getProperty(path_reference_types_property).value_or(""), node_id);
+  if (!path_reference_types) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, path_reference_types.error());
   }
-  auto path_reference_types = utils::string::splitAndTrimRemovingEmpty(value, "/");
-  if (path_reference_types.size() + 1 != utils::string::splitAndTrimRemovingEmpty(node_id, "/").size()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Path reference types must be provided for each node pair in the path!");
-  }
-  for (const auto& reference_type : path_reference_types) {
-    if (auto ua_ref_type = opc::mapOpcReferenceType(reference_type)) {
-      path_reference_types_.push_back(*ua_ref_type);
-    } else {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Unsupported reference type set in 'Path reference types' property: '{}'.", reference_type));
-    }
-  }
+  path_reference_types_ = std::move(*path_reference_types);
 }
 
-void BaseOPCProcessor::parseNode(core::ProcessContext& context) {
+void BaseOPCProcessor::parseNode(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property) {
   switch (id_type_) {
     case opc::OPCNodeIDType::String:
     case opc::OPCNodeIDType::Int:
@@ -145,7 +135,7 @@ void BaseOPCProcessor::parseNode(core::ProcessContext& context) {
     }
     case opc::OPCNodeIDType::Path:
       path_reference_types_.clear();
-      readPathReferenceTypes(context, node_id_);
+      readPathReferenceTypes(context, path_reference_types_property, node_id_);
       path_node_id_resolved_ = false;
       break;
     default:
