@@ -673,4 +673,118 @@ TEST_CASE("Test multiple nodes are returned for path", "[putopcprocessor]") {
   REQUIRE(LogTestController::getInstance().contains("exactly one target node is required for put"));
 }
 
+TEST_CASE("Test updating an existing node using path target node id", "[putopcprocessor]") {
+  OpcUaTestServer server;
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
+  auto put_opc_processor = controller.getProcessor();
+
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "${id_type}"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "Simulator/Default/Device2/666"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodePathReferenceTypes.name, "${reference_types}"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  const auto results = controller.trigger("77", {{"id_type", "Path"}, {"reference_types", "Organizes/Organizes/HasComponent"}});
+  REQUIRE(results.at(processors::PutOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::PutOPCProcessor::Success).size() == 1);
+  auto flow_file = results.at(processors::PutOPCProcessor::Success)[0];
+  CHECK(controller.plan->getContent(flow_file) == "77");
+  verifyNodeValue(controller, opc::NodeId{UA_NODEID_NUMERIC(server.getNamespaceIndex(), 666)}, server.getNamespaceIndex(), "666", 77);
+}
+
+TEST_CASE("Test path target node id cannot be used to create a new node", "[putopcprocessor]") {
+  LogTestController::getInstance().setError<processors::PutOPCProcessor>();
+  OpcUaTestServer server;
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
+  auto put_opc_processor = controller.getProcessor();
+
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNodeID.name, "Simulator/Default/Device1"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ParentNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "Simulator/Default/Device1/NoSuchNode"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodePathReferenceTypes.name, "Organizes/Organizes/HasComponent"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeBrowseName.name, "NoSuchNode"));
+
+  const auto results = controller.trigger("42");
+  REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
+  REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
+  REQUIRE(LogTestController::getInstance().contains("Path target node ID type can only be used to update existing nodes"));
+}
+
+TEST_CASE("Test path target node id resolving to multiple nodes", "[putopcprocessor]") {
+  LogTestController::getInstance().setError<processors::PutOPCProcessor>();
+  OpcUaTestServer server;
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
+  auto put_opc_processor = controller.getProcessor();
+
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "Simulator/Default/AmbiguousParent/Ambiguous"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  const auto results = controller.trigger("42");
+  REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
+  REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
+  REQUIRE(LogTestController::getInstance().contains("resolved to 2 nodes; exactly one target node is required"));
+}
+
+TEST_CASE("Test invalid target node path reference types", "[putopcprocessor]") {
+  LogTestController::getInstance().setError<processors::PutOPCProcessor>();
+  OpcUaTestServer server;
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
+  auto put_opc_processor = controller.getProcessor();
+
+  std::string reference_types;
+  std::string expected_error;
+  SECTION("Reference type count does not match the path") {
+    reference_types = "Organizes/HasComponent";
+    expected_error = "Path reference types must be provided for each node pair in the path!";
+  }
+  SECTION("Unsupported reference type") {
+    reference_types = "Organizes/Organizes/InvalidReference";
+    expected_error = "Unsupported path reference type: 'InvalidReference'.";
+  }
+
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "Simulator/Default/Device2/666"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodePathReferenceTypes.name, reference_types));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  const auto results = controller.trigger("42");
+  REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
+  REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
+  REQUIRE(LogTestController::getInstance().contains(expected_error));
+}
+
+TEST_CASE("Test empty target node path", "[putopcprocessor]") {
+  LogTestController::getInstance().setError<processors::PutOPCProcessor>();
+  OpcUaTestServer server;
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::PutOPCProcessor>("PutOPCProcessor")};
+  auto put_opc_processor = controller.getProcessor();
+
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4840/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::ValueType.name, "Int32"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeIDType.name, "Path"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeID.name, "/"));
+  REQUIRE(put_opc_processor->setProperty(processors::PutOPCProcessor::TargetNodeNameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  const auto results = controller.trigger("42");
+  REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
+  REQUIRE(results.at(processors::PutOPCProcessor::Failure).size() == 1);
+  REQUIRE(LogTestController::getInstance().contains("has invalid target node path '/'"));
+}
+
 }  // namespace org::apache::nifi::minifi::test

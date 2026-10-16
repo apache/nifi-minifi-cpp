@@ -283,7 +283,7 @@ void FetchOPCHistory::onSchedule(core::ProcessContext& context, core::ProcessSes
   node_id_ = utils::parseProperty(context, NodeID);
   id_type_ = utils::parseEnumProperty<opc::OPCNodeIDType>(context, NodeIDType);
   namespace_idx_ = gsl::narrow<UA_UInt16>(utils::parseU64Property(context, NameSpaceIndex));
-  parseNode(context);
+  parseNode(context, PathReferenceTypes);
 
   history_type_ = utils::parseEnumProperty<opc::HistoryReadTypeOption>(context, HistoryReadType);
   auto start_timestamp_str = utils::parseOptionalProperty(context, StartTimestamp);

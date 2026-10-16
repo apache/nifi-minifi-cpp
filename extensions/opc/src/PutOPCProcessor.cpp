@@ -19,6 +19,8 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "OPCCommon.h"
 #include "core/ProcessSession.h"
@@ -44,7 +46,7 @@ void PutOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSes
     node_id_ = *parent_node_id;
     id_type_ = utils::parseEnumProperty<opc::OPCNodeIDType>(context, ParentNodeIDType);
     namespace_idx_ = gsl::narrow<UA_UInt16>(utils::parseOptionalU64Property(context, ParentNameSpaceIndex).value_or(0));
-    parseNode(context);
+    parseNode(context, PathReferenceTypes);
     parent_node_defined_ = true;
   }
 
@@ -77,7 +79,7 @@ std::expected<std::pair<bool, opc::NodeId>, std::string> PutOPCProcessor::config
   }
 
   auto target_id_type = magic_enum::enum_cast<opc::OPCNodeIDType>(target_id_type_str);
-  if (!target_id_type || *target_id_type == opc::OPCNodeIDType::Path) {
+  if (!target_id_type) {
     return std::unexpected{fmt::format("Flowfile {} has invalid target node id type '{}', routing to failure!", flow_file.getUUIDStr(), target_id_type_str)};
   }
 
@@ -85,6 +87,10 @@ std::expected<std::pair<bool, opc::NodeId>, std::string> PutOPCProcessor::config
   if (target_id.empty()) {
     return std::unexpected{
         fmt::format("Flowfile {} had target node ID type specified ({}) without ID, routing to failure!", flow_file.getUUIDStr(), target_id_type_str)};
+  }
+
+  if (*target_id_type == opc::OPCNodeIDType::Path) {
+    return resolveTargetNodePath(context, flow_file, target_id, namespace_idx);
   }
 
   opc::NodeId target_node;
@@ -95,6 +101,31 @@ std::expected<std::pair<bool, opc::NodeId>, std::string> PutOPCProcessor::config
   }
   const bool target_node_exists = connection_->exists(target_node);
   return std::make_pair(target_node_exists, std::move(target_node));
+}
+
+std::expected<std::pair<bool, opc::NodeId>, std::string> PutOPCProcessor::resolveTargetNodePath(core::ProcessContext& context, core::FlowFile& flow_file,
+    const std::string& target_path, UA_UInt16 namespace_idx) const {
+  if (utils::string::splitAndTrimRemovingEmpty(target_path, "/").empty()) {
+    return std::unexpected{fmt::format("Flowfile {} has invalid target node path '{}', routing to failure!", flow_file.getUUIDStr(), target_path)};
+  }
+
+  auto reference_types = opc::parsePathReferenceTypes(context.getProperty(TargetNodePathReferenceTypes, &flow_file).value_or(""), target_path);
+  if (!reference_types) {
+    return std::unexpected{fmt::format("Flowfile {}: {} Routing to failure!", flow_file.getUUIDStr(), reference_types.error())};
+  }
+
+  std::vector<opc::NodeId> translated_node_ids;
+  if (connection_->translateBrowsePathsToNodeIdsRequest(target_path, translated_node_ids, namespace_idx, *reference_types, logger_) != UA_STATUSCODE_GOOD) {
+    return std::unexpected{fmt::format("Flowfile {}: target node path '{}' could not be resolved; Path target node ID type can only be used to update existing nodes. Routing to failure!",
+        flow_file.getUUIDStr(), target_path)};
+  }
+  if (translated_node_ids.size() != 1) {
+    return std::unexpected{fmt::format("Flowfile {}: target node path '{}' resolved to {} nodes; exactly one target node is required. Routing to failure!",
+        flow_file.getUUIDStr(), target_path, translated_node_ids.size())};
+  }
+
+  // A path can only be resolved to an existing node, so it is always updated
+  return std::make_pair(true, std::move(translated_node_ids[0]));
 }
 
 void PutOPCProcessor::updateNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessSession& session,

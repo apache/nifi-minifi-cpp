@@ -58,8 +58,14 @@ class PutOPCProcessor final : public BaseOPCProcessor {
       .withAllowedValues(magic_enum::enum_names<opc::OPCNodeDataType>())
       .isRequired(true)
       .build();
+  EXTENSIONAPI static constexpr auto PathReferenceTypes = core::PropertyDefinitionBuilder<>::createProperty("Path reference types")
+      .withDescription("Specify the reference types between nodes in the parent node path if Parent node ID type is Path. If not provided, all reference types are assumed to be Organizes. "
+                       "The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype. "
+                       "Subtypes of the specified reference types are also matched.")
+      .build();
   EXTENSIONAPI static constexpr auto TargetNodeIDType = core::PropertyDefinitionBuilder<>::createProperty("Target node ID type")
-      .withDescription("ID type of target node. Allowed values are: Int, String, Guid.")
+      .withDescription("ID type of target node. Allowed values are: Int, String, Guid, Path. Path can only be used to update an existing node: "
+                       "if the path does not resolve to exactly one existing node, the flow file is routed to failure.")
       .supportsExpressionLanguage(true)
       .isRequired(true)
       .build();
@@ -67,6 +73,12 @@ class PutOPCProcessor final : public BaseOPCProcessor {
       .withDescription("ID of target node.")
       .supportsExpressionLanguage(true)
       .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto TargetNodePathReferenceTypes = core::PropertyDefinitionBuilder<>::createProperty("Target node path reference types")
+      .withDescription("Specify the reference types between nodes in the target node path if Target node ID type is Path. If not provided, all reference types are assumed to be Organizes. "
+                       "The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype. "
+                       "Subtypes of the specified reference types are also matched.")
+      .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto TargetNodeBrowseName = core::PropertyDefinitionBuilder<>::createProperty("Target node browse name")
       .withDescription("Browse name of target node. Only used when new node is created.")
@@ -84,12 +96,14 @@ class PutOPCProcessor final : public BaseOPCProcessor {
       .withDefaultValue("HasComponent")
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::to_array<core::PropertyReference>({
+      PathReferenceTypes,
       ParentNodeIDType,
       ParentNodeID,
       ParentNameSpaceIndex,
       ValueType,
       TargetNodeIDType,
       TargetNodeID,
+      TargetNodePathReferenceTypes,
       TargetNodeBrowseName,
       TargetNodeNameSpaceIndex,
       CreateNodeReferenceType
@@ -115,6 +129,8 @@ class PutOPCProcessor final : public BaseOPCProcessor {
 
  private:
   std::expected<std::pair<bool, opc::NodeId>, std::string> configureTargetNode(core::ProcessContext& context, core::FlowFile& flow_file) const;
+  std::expected<std::pair<bool, opc::NodeId>, std::string> resolveTargetNodePath(core::ProcessContext& context, core::FlowFile& flow_file,
+      const std::string& target_path, UA_UInt16 namespace_idx) const;
   void updateNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
   void createNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file) const;
 

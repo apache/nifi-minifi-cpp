@@ -101,7 +101,13 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
       .withAllowedValues(magic_enum::enum_names<LazyModeOptions>())
       .withDefaultValue(magic_enum::enum_name(LazyModeOptions::Off))
       .build();
+  EXTENSIONAPI static constexpr auto PathReferenceTypes = core::PropertyDefinitionBuilder<>::createProperty("Path reference types")
+      .withDescription("Specify the reference types between nodes in the path if Path Node ID type is used. If not provided, all reference types are assumed to be Organizes. "
+                       "The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype. "
+                       "Subtypes of the specified reference types are also matched.")
+      .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::to_array<core::PropertyReference>({
+      PathReferenceTypes,
       NodeIDType,
       NodeID,
       NameSpaceIndex,

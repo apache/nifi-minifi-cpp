@@ -629,6 +629,25 @@ std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type) {
   return std::nullopt;
 }
 
+std::expected<std::vector<UA_UInt32>, std::string> parsePathReferenceTypes(const std::string& reference_types, const std::string& path) {
+  std::vector<UA_UInt32> result;
+  if (reference_types.empty()) {
+    return result;
+  }
+  auto reference_type_names = utils::string::splitAndTrimRemovingEmpty(reference_types, "/");
+  if (reference_type_names.size() + 1 != utils::string::splitAndTrimRemovingEmpty(path, "/").size()) {
+    return std::unexpected{"Path reference types must be provided for each node pair in the path!"};
+  }
+  for (const auto& reference_type : reference_type_names) {
+    if (auto ua_ref_type = mapOpcReferenceType(reference_type)) {
+      result.push_back(*ua_ref_type);
+    } else {
+      return std::unexpected{fmt::format("Unsupported path reference type: '{}'.", reference_type)};
+    }
+  }
+  return result;
+}
+
 UA_StatusCode Client::readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, UA_DateTime start_time, UA_DateTime end_time,
     void* callback_context) {
   if (history_type == HistoryReadTypeOption::Audit) {

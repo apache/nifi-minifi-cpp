@@ -57,6 +57,7 @@ thirdparty/**/*.o
 thirdparty/**/*.a
 libminifi/test/**/*.a
 libminifi/src/agent/agent_version.cpp
+minifi_rust/target
 
 **/assemblies
 **/CMakeCache.txt

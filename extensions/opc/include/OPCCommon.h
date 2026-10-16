@@ -200,6 +200,8 @@ void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const ch
 
 std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type);
 
+std::expected<std::vector<UA_UInt32>, std::string> parsePathReferenceTypes(const std::string& reference_types, const std::string& path);
+
 std::expected<opc::NodeId, std::string> buildNodeId(opc::OPCNodeIDType id_type, UA_UInt16 namespace_idx, const std::string& node_id);
 
 }  // namespace org::apache::nifi::minifi::opc
