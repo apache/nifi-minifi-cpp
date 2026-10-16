@@ -283,8 +283,14 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       if (var->type->typeName) {
         nodedata.attributes["type.name"] = std::string(var->type->typeName);
       }
+      if (UA_Variant_isScalar(var)) {
+        if (var->type->pointerFree) {
+          nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
+        } else if (var->type->typeKind == UA_DATATYPEKIND_STRING || var->type->typeKind == UA_DATATYPEKIND_BYTESTRING || var->type->typeKind == UA_DATATYPEKIND_XMLELEMENT) {
+          nodedata.attributes["data.size"] = std::to_string(static_cast<const UA_String*>(var->data)->length);
+        }
+      }
       if (var->type->memSize) {
-        nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
         nodedata.data = std::vector<uint8_t>(var->type->memSize);
         memcpy(nodedata.data.data(), var->data, var->type->memSize);
       }
