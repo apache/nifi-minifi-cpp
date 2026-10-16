@@ -25,8 +25,8 @@ use crate::processors::kamikaze_processor::properties::{
 };
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessError,
-    ProcessSession, Schedule, Trigger,
+    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
+    Trigger,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
@@ -81,7 +81,7 @@ impl Trigger for KamikazeProcessorRs {
         context: &mut PC,
         _session: &mut PS,
         _logger: &L,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -89,7 +89,7 @@ impl Trigger for KamikazeProcessorRs {
     {
         match self.trigger_behaviour {
             KamikazeBehaviour::ReturnErr => {
-                Err(MinifiError::custom("it was designed to fail in trigger").into())
+                Err(MinifiError::custom("it was designed to fail in trigger"))
             }
             KamikazeBehaviour::ReturnOk => Ok(OnTriggerResult::Ok),
             KamikazeBehaviour::Panic => {
