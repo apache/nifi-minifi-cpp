@@ -257,7 +257,6 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     } else {
       nodedata.attributes["full.path"] = base_path + "/" + browsename;
     }
-    nodedata.data_type_id = static_cast<UA_DataTypeKind>(UA_DATATYPEKINDS);
     UA_Variant* var = UA_Variant_new();
     if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != nullptr && var->data != nullptr) {
       // Because the timestamps are eliminated in readValueAttribute for simplification
@@ -278,7 +277,6 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       nodedata.attributes["source.timestamp"] = source_timestamp;
       UA_ReadResponse_clear(&response);
 
-      nodedata.data_type_id = static_cast<UA_DataTypeKind>(var->type->typeKind);
       nodedata.addVariant(var);
       if (var->type->typeName) {
         nodedata.attributes["type.name"] = std::string(var->type->typeName);
@@ -289,10 +287,6 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
         } else if (var->type->typeKind == UA_DATATYPEKIND_STRING || var->type->typeKind == UA_DATATYPEKIND_BYTESTRING || var->type->typeKind == UA_DATATYPEKIND_XMLELEMENT) {
           nodedata.attributes["data.size"] = std::to_string(static_cast<const UA_String*>(var->data)->length);
         }
-      }
-      if (var->type->memSize) {
-        nodedata.data = std::vector<uint8_t>(var->type->memSize);
-        memcpy(nodedata.data.data(), var->data, var->type->memSize);
       }
       return nodedata;
     }
