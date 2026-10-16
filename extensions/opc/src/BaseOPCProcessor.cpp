@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "OPCCommon.h"
 #include "BaseOPCProcessor.h"
@@ -105,37 +106,40 @@ bool BaseOPCProcessor::reconnect() {
     return false;
   }
   logger_->log_debug("Successfully connected.");
+
+  // A new or re-established connection may be to a restarted server that can reassign node ids,
+  // so if path is used to identify node id, the cached node id should be invalidated
+  path_node_id_resolved_ = false;
   return true;
 }
 
-void BaseOPCProcessor::readPathReferenceTypes(core::ProcessContext& context, const std::string& node_id) {
-  const auto value = context.getProperty(PathReferenceTypes).value_or("");
-  if (value.empty()) {
-    return;
+void BaseOPCProcessor::readPathReferenceTypes(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property, const std::string& node_id) {
+  auto path_reference_types = opc::parsePathReferenceTypes(context.getProperty(path_reference_types_property).value_or(""), node_id);
+  if (!path_reference_types) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, path_reference_types.error());
   }
-  auto path_reference_types = utils::string::splitAndTrimRemovingEmpty(value, "/");
-  if (path_reference_types.size() + 1 != utils::string::splitAndTrimRemovingEmpty(node_id, "/").size()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Path reference types must be provided for each node pair in the path!");
-  }
-  for (const auto& reference_type : path_reference_types) {
-    if (auto ua_ref_type = opc::mapOpcReferenceType(reference_type)) {
-      path_reference_types_.push_back(*ua_ref_type);
-    } else {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Unsupported reference type set in 'Path reference types' property: '{}'.", reference_type));
-    }
-  }
+  path_reference_types_ = std::move(*path_reference_types);
 }
 
-void BaseOPCProcessor::parseIdType(core::ProcessContext& context, const core::PropertyReference& prop) {
-  id_type_ = utils::parseEnumProperty<opc::OPCNodeIDType>(context, prop);
-
-  if (id_type_ == opc::OPCNodeIDType::Int) {
-    try {
-      static_cast<void>(std::stoi(node_id_));
-    } catch(const std::exception&) {
-      auto error_msg = utils::string::join_pack(node_id_, " cannot be used as an int type node ID");
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
+void BaseOPCProcessor::parseNode(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property) {
+  switch (id_type_) {
+    case opc::OPCNodeIDType::String:
+    case opc::OPCNodeIDType::Int:
+    case opc::OPCNodeIDType::Guid: {
+      if (auto result = opc::buildNodeId(id_type_, namespace_idx_, node_id_)) {
+        node_ = std::move(*result);
+      } else {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, result.error());
+      }
+      break;
     }
+    case opc::OPCNodeIDType::Path:
+      path_reference_types_.clear();
+      readPathReferenceTypes(context, path_reference_types_property, node_id_);
+      path_node_id_resolved_ = false;
+      break;
+    default:
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type_)));
   }
 }
 
