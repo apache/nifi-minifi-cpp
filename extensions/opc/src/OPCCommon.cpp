@@ -397,6 +397,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   browse_path.relativePath.elementsSize = tokens.size();
 
   std::vector<UA_UInt32> ids;
+  // OPC UA Part 5 8.2.4: only Organizes references are used to relate Objects to the Objects folder
   ids.push_back(UA_NS0ID_ORGANIZES);
   for (size_t i = 0; i < tokens.size() - 1; ++i) {
     if (!path_reference_types.empty()) {
@@ -409,6 +410,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   for (size_t i = 0; i < tokens.size(); ++i) {
     UA_RelativePathElement *elem = &browse_path.relativePath.elements[i];
     elem->referenceTypeId = UA_NODEID_NUMERIC(0, ids[i]);
+    elem->includeSubtypes = true;
     elem->targetName = UA_QUALIFIEDNAME_ALLOC(namespace_index, tokens[i].c_str());
   }
 

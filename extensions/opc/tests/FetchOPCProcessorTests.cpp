@@ -98,6 +98,28 @@ TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocess
   CHECK(controller.plan->getContent(flow_file) == "4");
 }
 
+TEST_CASE("Test path reference types also match their subtypes", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  auto parent_node = server.addObject("OrderedParent", UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER));
+  server.addIntVariable("ORDERED1", opc::OPCNodeIDType::String, parent_node, 5, UA_NS0ID_HASORDEREDCOMPONENT);
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "Path"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, "OrderedParent/ORDERED1"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::PathReferenceTypes.name, "HasComponent"));
+
+  const auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
+  auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
+  CHECK(flow_file->getAttribute("Browsename") == "ORDERED1");
+  CHECK(flow_file->getAttribute("Full path") == "OrderedParent/ORDERED1");
+  CHECK(controller.plan->getContent(flow_file) == "5");
+}
+
 TEST_CASE("Test fetching using string node id", "[fetchopcprocessor]") {
   OpcUaTestServer server(4841);
   server.start();

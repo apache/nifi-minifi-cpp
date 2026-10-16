@@ -379,6 +379,7 @@ class OpcUaTestServer {
     response->responseHeader.serviceResult = UA_STATUSCODE_GOOD;
   }
 
+ public:
   UA_NodeId addObject(const char* name, UA_NodeId parent, UA_NodeId requested_node_id = UA_NODEID_NULL) {
     UA_NodeId object_id;
     UA_ObjectAttributes attr = UA_ObjectAttributes_default;
@@ -404,7 +405,7 @@ class OpcUaTestServer {
   }
 
   UA_StatusCode addNode(UA_NodeId parent_node_id, UA_NodeId& target_node_id, opc::OPCNodeIDType type, const std::string& browse_name,
-      const UA_VariableAttributes& attr) {
+      const UA_VariableAttributes& attr, UA_UInt32 reference_type = UA_NS0ID_HASCOMPONENT) {
     UA_QualifiedName qname = UA_QUALIFIEDNAME(ns_index_, const_cast<char*>(browse_name.c_str()));
     opc::NodeId node_id;
 
@@ -425,7 +426,7 @@ class OpcUaTestServer {
     return UA_Server_addVariableNode(server_,
         node_id,
         parent_node_id,
-        UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+        UA_NODEID_NUMERIC(0, reference_type),
         qname,
         UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE),
         attr,
@@ -433,7 +434,7 @@ class OpcUaTestServer {
         &target_node_id);
   }
 
-  UA_NodeId addIntVariable(const std::string& name, opc::OPCNodeIDType type, UA_NodeId parent, UA_Int32 value) {
+  UA_NodeId addIntVariable(const std::string& name, opc::OPCNodeIDType type, UA_NodeId parent, UA_Int32 value, UA_UInt32 reference_type = UA_NS0ID_HASCOMPONENT) {
     UA_VariableAttributes attr = UA_VariableAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", name.c_str());
     attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE | UA_ACCESSLEVELMASK_HISTORYREAD;
@@ -441,7 +442,7 @@ class OpcUaTestServer {
     UA_Variant_setScalar(&attr.value, &value, &UA_TYPES[UA_TYPES_INT32]);
 
     UA_NodeId node_id;
-    auto status = addNode(parent, node_id, type, name, attr);
+    auto status = addNode(parent, node_id, type, name, attr, reference_type);
 
     if (status != UA_STATUSCODE_GOOD) {
       UA_LocalizedText_clear(&attr.displayName);
@@ -453,6 +454,7 @@ class OpcUaTestServer {
     return node_ids_[name].get();
   }
 
+ private:
   void addStringVariable(const char* name, const char* node_id_str, UA_NodeId parent, UA_Int32 value) {
     UA_VariableAttributes attr = UA_VariableAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", name);
