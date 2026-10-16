@@ -129,6 +129,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:testBucket"));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:" + INPUT_FILENAME));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/octet-stream"));
+  checkNoS3ErrorAttributes();
   checkPutObjectResults();
   CHECK(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/octet-stream");
   CHECK(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3Crt::Model::StorageClass::STANDARD);
@@ -322,6 +323,7 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
     mock_s3_request_sender_ptr->failOnPartOnce(3);
     test_controller.runSession(plan);
     CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to upload part 3 of 4"));
+    checkS3ErrorAttributes("UPLOAD_ERROR", "Error while upload S3 object part", false, -1);
     plan->reset();
     LogTestController::getInstance().clear();
     test_controller.runSession(plan);
@@ -381,6 +383,21 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
     CHECK(parts[i].GetPartNumber() == static_cast<int>(i + 1));
     CHECK(parts[i].GetETag() == "etag" + std::to_string(i + 1));
   }
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single upload failure case", "[awsS3PutFailure]") {
+  auto log_failure = plan->addProcessor(
+    "LogAttribute",
+    "LogFailure",
+    core::Relationship("failure", "d"));
+  plan->addConnection(s3_processor, core::Relationship("failure", "d"), log_failure);
+  log_failure->setAutoTerminatedRelationships(std::array{core::Relationship("success", "d")});
+  setRequiredProperties();
+  mock_s3_request_sender_ptr->setPutObjectResult(false);
+  test_controller.runSession(plan, true);
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to upload S3 object to bucket 'testBucket'"));
+  checkS3ErrorAttributes("PUT_ERROR", "Error while putting S3 object", true, 500);
+  checkEmptyPutObjectResults();
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test ageoff functionality aborting obselete multipart uploads", "[awsS3MultipartUpload]") {

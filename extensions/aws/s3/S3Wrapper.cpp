@@ -32,6 +32,8 @@
 #include "aws/core/utils/HashingUtils.h"
 #include "range/v3/algorithm/any_of.hpp"
 #include "utils/GeneralUtils.h"
+#include "utils/expected.h"
+#include "fmt/format.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -69,7 +71,7 @@ std::string S3Wrapper::getEncryptionString(Aws::S3Crt::Model::ServerSideEncrypti
   return "";
 }
 
-std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size) {
+std::expected<PutObjectResult, S3Error> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size) {
   auto request = createPutObjectRequest<Aws::S3Crt::Model::PutObjectRequest>(put_object_params);
   auto aws_stream = std::make_shared<MinifiToAwsInputStream>(stream, flow_size);
   request.SetBody(aws_stream);
@@ -77,13 +79,13 @@ std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParame
 
   auto aws_result = request_sender_->sendPutObjectRequest(request);
   if (!aws_result) {
-    return std::nullopt;
+    return std::unexpected{aws_result.error()};
   }
 
   return createPutObjectResult(*aws_result);
 }
 
-std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
+std::expected<S3Wrapper::UploadPartsResult, S3Error> S3Wrapper::uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
     MultipartUploadState upload_state) {
   gsl_Expects(multipart_upload_storage_);
   stream->seek(upload_state.uploaded_size);
@@ -92,8 +94,9 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
   result.part_etags = upload_state.uploaded_etags;
   const auto flow_size = upload_state.full_size - upload_state.uploaded_size;
   if (upload_state.part_size == 0) {
-    logger_->log_error("Invalid upload part size 0 was set for S3 object with key '{}' in bucket '{}'", put_object_params.object_key, put_object_params.bucket);
-    return std::nullopt;
+    std::string message = fmt::format("Invalid upload part size 0 was set for S3 object with key '{}' in bucket '{}'", put_object_params.object_key, put_object_params.bucket);
+    logger_->log_error("{}", message);
+    return std::unexpected{S3Error{.name = "INVALID_UPLOAD_PART_SIZE", .message = message, .is_retryable = false, .http_code = -1}};
   }
   const size_t part_count = minifi::utils::intdiv_ceil(flow_size, upload_state.part_size);
   size_t total_read = 0;
@@ -121,7 +124,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
     auto upload_part_result = request_sender_->sendUploadPartRequest(upload_part_request);
     if (!upload_part_result) {
       logger_->log_error("Failed to upload part {} of {} of S3 object with key '{}'", part_number, last_part, put_object_params.object_key);
-      return std::nullopt;
+      return std::unexpected{upload_part_result.error()};
     }
     total_read += next_read_size;
     result.part_etags.push_back(upload_part_result->GetETag());
@@ -136,7 +139,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
   return result;
 }
 
-std::optional<Aws::S3Crt::Model::CompleteMultipartUploadResult> S3Wrapper::completeMultipartUpload(const PutObjectRequestParameters& put_object_params,
+std::expected<Aws::S3Crt::Model::CompleteMultipartUploadResult, S3Error> S3Wrapper::completeMultipartUpload(const PutObjectRequestParameters& put_object_params,
     const S3Wrapper::UploadPartsResult& upload_parts_result) {
   auto complete_multipart_upload_request = Aws::S3Crt::Model::CompleteMultipartUploadRequest{}
     .WithBucket(put_object_params.bucket)
@@ -181,7 +184,7 @@ std::optional<MultipartUploadState> S3Wrapper::getMultipartUploadState(const Put
   return upload_state;
 }
 
-std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
+std::expected<PutObjectResult, S3Error> S3Wrapper::putObjectMultipart(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
     uint64_t flow_size, uint64_t multipart_size) {
   gsl_Expects(multipart_upload_storage_);
   if (auto upload_state = getMultipartUploadState(put_object_params)) {
@@ -200,7 +203,7 @@ std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequ
   }
 }
 
-bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
+std::expected<void, S3Error> S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
   auto request = Aws::S3Crt::Model::DeleteObjectRequest{}
     .WithBucket(params.bucket)
     .WithKey(params.object_key);
@@ -228,14 +231,17 @@ int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_si
   return gsl::narrow<int64_t>(write_size);
 }
 
-std::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::OutputStream& out_body) {
+std::expected<GetObjectResult, S3Error> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::OutputStream& out_body) {
   auto request = createFetchObjectRequest<Aws::S3Crt::Model::GetObjectRequest>(get_object_params);
   auto aws_result = request_sender_->sendGetObjectRequest(request);
   if (!aws_result) {
-    return std::nullopt;
+    return std::unexpected{aws_result.error()};
   }
   auto result = fillFetchObjectResult<Aws::S3Crt::Model::GetObjectResult, GetObjectResult>(get_object_params, *aws_result);
   result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
+  if (result.write_size < 0) {
+    return std::unexpected{S3Error{.name = "WRITE_ERROR", .message = "Error while writing fetched S3 object body", .is_retryable = false, .http_code = -1}};
+  }
   return result;
 }
 
@@ -286,14 +292,14 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3Crt::Model::Object>& con
   }
 }
 
-std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVersions(const ListRequestParameters& params) {
+std::expected<std::vector<ListedObjectAttributes>, S3Error> S3Wrapper::listVersions(const ListRequestParameters& params) {
   auto request = createListRequest<Aws::S3Crt::Model::ListObjectVersionsRequest>(params);
   std::vector<ListedObjectAttributes> attribute_list;
-  std::optional<Aws::S3Crt::Model::ListObjectVersionsResult> aws_result;
+  std::expected<Aws::S3Crt::Model::ListObjectVersionsResult, S3Error> aws_result;
   do {
     aws_result = request_sender_->sendListVersionsRequest(request);
     if (!aws_result) {
-      return std::nullopt;
+      return std::unexpected{aws_result.error()};
     }
     const auto& versions = aws_result->GetVersions();
     logger_->log_debug("AWS S3 List operation returned {} versions. This result is{} truncated.", versions.size(), aws_result->GetIsTruncated() ? "" : " not");
@@ -307,14 +313,14 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVersions(const
   return attribute_list;
 }
 
-std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObjects(const ListRequestParameters& params) {
+std::expected<std::vector<ListedObjectAttributes>, S3Error> S3Wrapper::listObjects(const ListRequestParameters& params) {
   auto request = createListRequest<Aws::S3Crt::Model::ListObjectsV2Request>(params);
   std::vector<ListedObjectAttributes> attribute_list;
-  std::optional<Aws::S3Crt::Model::ListObjectsV2Result> aws_result;
+  std::expected<Aws::S3Crt::Model::ListObjectsV2Result, S3Error> aws_result;
   do {
     aws_result = request_sender_->sendListObjectsRequest(request);
     if (!aws_result) {
-      return std::nullopt;
+      return std::unexpected{aws_result.error()};
     }
     const auto& objects = aws_result->GetContents();
     logger_->log_debug("AWS S3 List operation returned {} objects. This result is{} truncated.", objects.size(), aws_result->GetIsTruncated() ? "" : " not");
@@ -327,7 +333,7 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObjects(const 
   return attribute_list;
 }
 
-std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listBucket(const ListRequestParameters& params) {
+std::expected<std::vector<ListedObjectAttributes>, S3Error> S3Wrapper::listBucket(const ListRequestParameters& params) {
   last_bucket_list_timestamp_ = gsl::narrow<uint64_t>(Aws::Utils::DateTime::CurrentTimeMillis());
   if (params.use_versions) {
     return listVersions(params);
@@ -335,7 +341,7 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listBucket(const L
   return listObjects(params);
 }
 
-std::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const GetObjectTagsParameters& params) {
+std::expected<std::map<std::string, std::string>, S3Error> S3Wrapper::getObjectTags(const GetObjectTagsParameters& params) {
   auto request = Aws::S3Crt::Model::GetObjectTaggingRequest{}
     .WithBucket(params.bucket)
     .WithKey(params.object_key);
@@ -344,7 +350,7 @@ std::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const
   }
   auto aws_result = request_sender_->sendGetObjectTaggingRequest(request);
   if (!aws_result) {
-    return std::nullopt;
+    return std::unexpected{aws_result.error()};
   }
   std::map<std::string, std::string> tags;
   for (const auto& tag : aws_result->GetTagSet()) {
@@ -353,11 +359,11 @@ std::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const
   return tags;
 }
 
-std::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObjectRequestParameters& head_object_params) {
+std::expected<HeadObjectResult, S3Error> S3Wrapper::headObject(const HeadObjectRequestParameters& head_object_params) {
   auto request = createFetchObjectRequest<Aws::S3Crt::Model::HeadObjectRequest>(head_object_params);
   auto aws_result = request_sender_->sendHeadObjectRequest(request);
   if (!aws_result) {
-    return std::nullopt;
+    return std::unexpected{aws_result.error()};
   }
   return fillFetchObjectResult<Aws::S3Crt::Model::HeadObjectResult, HeadObjectResult>(head_object_params, aws_result.value());
 }
@@ -417,15 +423,15 @@ void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3Crt::Mode
   }
 }
 
-std::optional<std::vector<MultipartUpload>> S3Wrapper::listMultipartUploads(const ListMultipartUploadsRequestParameters& params) {
+std::expected<std::vector<MultipartUpload>, S3Error> S3Wrapper::listMultipartUploads(const ListMultipartUploadsRequestParameters& params) {
   std::vector<MultipartUpload> result;
-  std::optional<Aws::S3Crt::Model::ListMultipartUploadsResult> aws_result;
+  std::expected<Aws::S3Crt::Model::ListMultipartUploadsResult, S3Error> aws_result;
   Aws::S3Crt::Model::ListMultipartUploadsRequest request;
   request.SetBucket(params.bucket);
   do {
     aws_result = request_sender_->sendListMultipartUploadsRequest(request);
     if (!aws_result) {
-      return std::nullopt;
+      return std::unexpected{aws_result.error()};
     }
     const auto& uploads = aws_result->GetUploads();
     logger_->log_debug("AWS S3 List operation returned {} multipart uploads. This result is{} truncated.", uploads.size(), aws_result->GetIsTruncated() ? "" : " not");
@@ -438,7 +444,7 @@ std::optional<std::vector<MultipartUpload>> S3Wrapper::listMultipartUploads(cons
   return result;
 }
 
-bool S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters& params) {
+std::expected<void, S3Error> S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters& params) {
   auto request = Aws::S3Crt::Model::AbortMultipartUploadRequest{}
     .WithBucket(params.bucket)
     .WithKey(params.key)

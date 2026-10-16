@@ -19,11 +19,12 @@
 #include "FetchS3Object.h"
 
 #include <memory>
+#include <expected>
 
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "utils/OptionalUtils.h"
+#include "utils/expected.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -91,7 +92,7 @@ void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessio
     return;
   }
 
-  std::optional<minifi::aws::s3::GetObjectResult> result;
+  std::expected<aws::s3::GetObjectResult, aws::s3::S3Error> result{std::unexpected{aws::s3::S3Error{}}};
   session.write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::OutputStream>& stream) -> io::IoResult {
     result = s3_wrapper_->getObject(*get_object_params, *stream);
     const auto ret = (result | minifi::utils::transform(&s3::GetObjectResult::write_size)).value_or(0);
@@ -111,14 +112,15 @@ void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessio
     session.putAttribute(*flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, result->absolute_path.generic_string());
     session.putAttribute(*flow_file, core::SpecialFlowAttribute::FILENAME, result->filename.generic_string());
     putAttributeIfNotEmpty(core::SpecialFlowAttribute::MIME_TYPE, result->mime_type);
-    putAttributeIfNotEmpty("s3.etag", result->etag);
-    putAttributeIfNotEmpty("s3.expirationTime", result->expiration.expiration_time);
-    putAttributeIfNotEmpty("s3.expirationTimeRuleId", result->expiration.expiration_time_rule_id);
-    putAttributeIfNotEmpty("s3.sseAlgorithm", result->ssealgorithm);
-    putAttributeIfNotEmpty("s3.version", result->version);
+    putAttributeIfNotEmpty(S3Etag.name, result->etag);
+    putAttributeIfNotEmpty(S3ExpirationTime.name, result->expiration.expiration_time);
+    putAttributeIfNotEmpty(S3ExpirationTimeRuleId.name, result->expiration.expiration_time_rule_id);
+    putAttributeIfNotEmpty(S3SseAlgorithm.name, result->ssealgorithm);
+    putAttributeIfNotEmpty(S3Version.name, result->version);
     session.transfer(flow_file, Success);
   } else {
     logger_->log_error("Failed to fetch S3 object {} from bucket {}", get_object_params->object_key, get_object_params->bucket);
+    setFailureFlowFileAttributes(session, *flow_file, result.error());
     session.transfer(flow_file, Failure);
   }
 }

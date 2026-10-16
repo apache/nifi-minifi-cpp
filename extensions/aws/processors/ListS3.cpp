@@ -91,7 +91,7 @@ void ListS3::writeObjectTags(
       session.putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
     }
   } else {
-    logger_->log_warn("Failed to get object tags for object {} in bucket {}", object_attributes.filename, params.bucket);
+    logger_->log_warn("Failed to get object tags for object {} in bucket {}, error: {}", object_attributes.filename, params.bucket, get_object_tags_result.error().message);
   }
 }
 
@@ -114,7 +114,7 @@ void ListS3::writeUserMetadata(
       session.putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
     }
   } else {
-    logger_->log_warn("Failed to get object metadata for object {} in bucket {}", params.object_key, params.bucket);
+    logger_->log_warn("Failed to get object metadata for object {} in bucket {}, error: {}", params.object_key, params.bucket, head_object_tags_result.error().message);
   }
 }
 
@@ -122,15 +122,15 @@ void ListS3::createNewFlowFile(
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes) {
   auto flow_file = session.create();
-  session.putAttribute(*flow_file, "s3.bucket", list_request_params_->bucket);
+  session.putAttribute(*flow_file, S3Bucket.name, list_request_params_->bucket);
   session.putAttribute(*flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
-  session.putAttribute(*flow_file, "s3.etag", object_attributes.etag);
-  session.putAttribute(*flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
-  session.putAttribute(*flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
-  session.putAttribute(*flow_file, "s3.length", std::to_string(object_attributes.length));
-  session.putAttribute(*flow_file, "s3.storeClass", object_attributes.store_class);
+  session.putAttribute(*flow_file, S3Etag.name, object_attributes.etag);
+  session.putAttribute(*flow_file, S3IsLatest.name, object_attributes.is_latest ? "true" : "false");
+  session.putAttribute(*flow_file, S3LastModified.name, std::to_string(object_attributes.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
+  session.putAttribute(*flow_file, S3Length.name, std::to_string(object_attributes.length));
+  session.putAttribute(*flow_file, S3StoreClass.name, object_attributes.store_class);
   if (!object_attributes.version.empty()) {
-    session.putAttribute(*flow_file, "s3.version", object_attributes.version);
+    session.putAttribute(*flow_file, S3Version.name, object_attributes.version);
   }
   writeObjectTags(object_attributes, session, *flow_file);
   writeUserMetadata(object_attributes, session, *flow_file);
@@ -144,7 +144,7 @@ void ListS3::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
 
   auto aws_results = s3_wrapper_->listBucket(*list_request_params_);
   if (!aws_results) {
-    logger_->log_error("Failed to list S3 bucket {}", list_request_params_->bucket);
+    logger_->log_error("Failed to list S3 bucket {}, error: {}", list_request_params_->bucket, aws_results.error().message);
     context.yield();
     return;
   }

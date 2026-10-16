@@ -173,6 +173,41 @@ class PutS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special-me
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles are routed to failure relationship"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
+  EXTENSIONAPI static constexpr auto S3Bucket = core::OutputAttributeDefinition<>{
+      "s3.bucket", {Success}, "The S3 bucket where the Object was put in S3"};
+  EXTENSIONAPI static constexpr auto S3Key = core::OutputAttributeDefinition<>{
+      "s3.key", {Success}, "The S3 key within where the Object was put in S3"};
+  EXTENSIONAPI static constexpr auto S3ContentType = core::OutputAttributeDefinition<>{
+      "s3.contenttype", {Success}, "The S3 content type of the S3 Object that put in S3"};
+  EXTENSIONAPI static constexpr auto S3UserMetadata = core::OutputAttributeDefinition<>{
+      "s3.usermetadata", {Success}, "A human-readable form of the User Metadata of the S3 object, if any was set"};
+  EXTENSIONAPI static constexpr auto S3Version = core::OutputAttributeDefinition<>{
+      "s3.version", {Success}, "The version of the S3 Object that was put to S3"};
+  EXTENSIONAPI static constexpr auto S3Etag = core::OutputAttributeDefinition<>{"s3.etag", {Success}, "The ETag of the S3 Object"};
+  EXTENSIONAPI static constexpr auto S3Expiration = core::OutputAttributeDefinition<>{
+      "s3.expiration", {Success}, "The expiration date of the S3 Object"};
+  EXTENSIONAPI static constexpr auto S3SseAlgorithm = core::OutputAttributeDefinition<>{
+      "s3.sseAlgorithm", {Success}, "The server side encryption algorithm of the object"};
+  EXTENSIONAPI static constexpr auto S3Exception = core::OutputAttributeDefinition<>{
+      S3_EXCEPTION, {Failure}, "Exception name of the S3 request failure"};
+  EXTENSIONAPI static constexpr auto S3ErrorMessage = core::OutputAttributeDefinition<>{
+      S3_ERROR_MESSAGE, {Failure}, "Error message of the S3 request failure"};
+  EXTENSIONAPI static constexpr auto S3ErrorRetryable = core::OutputAttributeDefinition<>{
+      S3_ERROR_RETRYABLE, {Failure}, "Is the S3 request error retryable"};
+  EXTENSIONAPI static constexpr auto S3StatusCode = core::OutputAttributeDefinition<>{
+      S3_STATUS_CODE, {Failure}, "HTTP code of the S3 request failure. -1 indicates no HTTP request was made."};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::to_array<core::OutputAttributeReference>({S3Bucket,
+      S3ContentType,
+      S3UserMetadata,
+      S3Version,
+      S3Etag,
+      S3Expiration,
+      S3SseAlgorithm,
+      S3Exception,
+      S3ErrorMessage,
+      S3ErrorRetryable,
+      S3StatusCode});
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
