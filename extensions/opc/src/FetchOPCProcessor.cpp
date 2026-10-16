@@ -194,16 +194,14 @@ void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opc_node, core::Pr
   for (const auto& attr : opc_node.attributes) {
     flow_file->setAttribute(attr.first, attr.second);
   }
-  if (!opc_node.data.empty()) {
-    try {
-      session.writeBuffer(flow_file, opc::nodeValue2String(opc_node));
-    } catch (const std::exception& e) {
-      std::string browsename;
-      flow_file->getAttribute("Browsename", browsename);
-      logger_->log_info("Failed to extract data of OPC node {}: {}", browsename, e.what());
-      session.transfer(flow_file, Failure);
-      return;
-    }
+  try {
+    session.writeBuffer(flow_file, opc::nodeValue2String(opc_node));
+  } catch (const std::exception& e) {
+    std::string browsename;
+    flow_file->getAttribute("Browsename", browsename);
+    logger_->log_info("Failed to extract data of OPC node {}: {}", browsename, e.what());
+    session.transfer(flow_file, Failure);
+    return;
   }
   session.transfer(flow_file, Success);
 }

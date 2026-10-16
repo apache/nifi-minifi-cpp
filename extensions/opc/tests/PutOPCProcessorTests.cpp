@@ -87,7 +87,7 @@ void verifyCreatedNode(const NodeData& expected_node, SingleProcessorTestControl
   ref_desc.nodeClass = UA_NODECLASS_VARIABLE;
   ref_desc.typeDefinition.nodeId = UA_NODEID_NUMERIC(0, UA_NODEIDTYPE_NUMERIC);
   auto data = client->getNodeData(&ref_desc, expected_node.path);
-  CHECK(data.data[0] == expected_node.data);
+  CHECK(opc::nodeValue2String(data) == std::to_string(expected_node.data));
 }
 
 void verifyNodeValue(SingleProcessorTestController& controller, const opc::NodeId& target, uint16_t namespace_index, const std::string& browse_name, uint8_t expected_value) {
@@ -107,7 +107,7 @@ void verifyNodeValue(SingleProcessorTestController& controller, const opc::NodeI
   ref_desc.nodeClass = UA_NODECLASS_VARIABLE;
   ref_desc.typeDefinition.nodeId = UA_NODEID_NUMERIC(0, UA_NODEIDTYPE_NUMERIC);
   auto data = client->getNodeData(&ref_desc, "");
-  CHECK(data.data[0] == expected_value);
+  CHECK(opc::nodeValue2String(data) == std::to_string(expected_value));
 }
 
 TEST_CASE("Test creating a new node with path node id", "[putopcprocessor]") {

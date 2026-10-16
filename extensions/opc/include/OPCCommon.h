@@ -156,8 +156,6 @@ class Client {
 using ClientPtr = std::unique_ptr<Client>;
 
 struct NodeData {
-  std::vector<uint8_t> data;
-  UA_DataTypeKind data_type_id;
   std::map<std::string, std::string> attributes;
 
   virtual ~NodeData() {
@@ -170,8 +168,7 @@ struct NodeData {
   NodeData& operator= (const NodeData &) = delete;
   NodeData& operator= (NodeData &&) = delete;
 
-  NodeData(NodeData&& rhs) : data(rhs.data), attributes(rhs.attributes) {
-    data_type_id = rhs.data_type_id;
+  NodeData(NodeData&& rhs) : attributes(std::move(rhs.attributes)) {
     this->var_ = rhs.var_;
     rhs.var_ = nullptr;
   }
