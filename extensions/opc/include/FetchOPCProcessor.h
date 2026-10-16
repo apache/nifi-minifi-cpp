@@ -122,7 +122,8 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto SourcetimestampAttr = core::OutputAttributeDefinition<>{"Sourcetimestamp", { Success },
     "The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'."};
   EXTENSIONAPI static constexpr auto TypenameAttr = core::OutputAttributeDefinition<>{"Typename", { Success }, "The type name of the node data."};
-  EXTENSIONAPI static constexpr auto DatasizeAttr = core::OutputAttributeDefinition<>{"Datasize", { Success }, "The size of the node data."};
+  EXTENSIONAPI static constexpr auto DatasizeAttr = core::OutputAttributeDefinition<>{"Datasize", { Success },
+      "The size of the node data in bytes. For String, ByteString and XmlElement types it is the length of the value. Not set for other variable-length types."};
 
   EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 8> {NodeIDAttr,
     NamespaceIndexAttr, NodeIDTypeAttr, BrowsenameAttr, FullPathAttr, SourcetimestampAttr, TypenameAttr, DatasizeAttr};

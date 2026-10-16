@@ -1172,16 +1172,16 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute       | Relationship | Description                                                                             |
-|-----------------|--------------|-----------------------------------------------------------------------------------------|
-| NodeID          | success      | ID of the node.                                                                         |
-| Namespace index | success      | Namespace index of the node.                                                            |
-| NodeID type     | success      | Type of the node ID.                                                                    |
-| Browsename      | success      | The browse name of the node.                                                            |
-| Full path       | success      | The full path of the node.                                                              |
-| Sourcetimestamp | success      | The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'. |
-| Typename        | success      | The type name of the node data.                                                         |
-| Datasize        | success      | The size of the node data.                                                              |
+| Attribute       | Relationship | Description                                                                                                                                             |
+|-----------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| NodeID          | success      | ID of the node.                                                                                                                                         |
+| Namespace index | success      | Namespace index of the node.                                                                                                                            |
+| NodeID type     | success      | Type of the node ID.                                                                                                                                    |
+| Browsename      | success      | The browse name of the node.                                                                                                                            |
+| Full path       | success      | The full path of the node.                                                                                                                              |
+| Sourcetimestamp | success      | The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'.                                                                 |
+| Typename        | success      | The type name of the node data.                                                                                                                         |
+| Datasize        | success      | The size of the node data in bytes. For String, ByteString and XmlElement types it is the length of the value. Not set for other variable-length types. |
 
 
 ## FetchS3Object

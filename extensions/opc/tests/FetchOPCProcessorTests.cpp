@@ -145,6 +145,42 @@ TEST_CASE("Test fetching using string node id", "[fetchopcprocessor]") {
   CHECK(controller.plan->getContent(flow_file) == "42");
 }
 
+TEST_CASE("Test Datasize attribute of variable-length values", "[fetchopcprocessor]") {
+  OpcUaTestServer server(4841);
+  UA_VariableAttributes attr = UA_VariableAttributes_default;
+  std::string node_id_str;
+  std::optional<std::string> expected_datasize;
+  UA_String string_value = UA_STRING_STATIC("hello world");
+  UA_LocalizedText localized_text_value{UA_STRING_STATIC("en-US"), UA_STRING_STATIC("hello world")};
+  SECTION("String") {
+    UA_Variant_setScalar(&attr.value, &string_value, &UA_TYPES[UA_TYPES_STRING]);
+    node_id_str = "StringValue";
+    expected_datasize = "11";
+  }
+  SECTION("LocalizedText") {
+    UA_Variant_setScalar(&attr.value, &localized_text_value, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
+    node_id_str = "LocalizedTextValue";
+    expected_datasize = std::nullopt;
+  }
+  UA_NodeId node_id;
+  REQUIRE(server.addNode(UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), node_id, opc::OPCNodeIDType::String, node_id_str, attr) == UA_STATUSCODE_GOOD);
+  UA_NodeId_clear(&node_id);
+  server.start();
+  SingleProcessorTestController controller{minifi::test::utils::make_processor<processors::FetchOPCProcessor>("FetchOPCProcessor")};
+  auto fetch_opc_processor = controller.getProcessor();
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::OPCServerEndPoint.name, "opc.tcp://127.0.0.1:4841/"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeIDType.name, "String"));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NodeID.name, node_id_str));
+  REQUIRE(fetch_opc_processor->setProperty(processors::FetchOPCProcessor::NameSpaceIndex.name, std::to_string(server.getNamespaceIndex())));
+
+  const auto results = controller.trigger();
+  REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
+  REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
+  auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
+  CHECK(flow_file->getAttribute("Datasize") == expected_datasize);
+  CHECK(controller.plan->getContent(flow_file) == "hello world");
+}
+
 TEST_CASE("Test fetching using int node id", "[fetchopcprocessor]") {
   OpcUaTestServer server(4841);
   server.start();
