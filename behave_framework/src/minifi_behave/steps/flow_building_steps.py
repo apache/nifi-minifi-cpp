@@ -51,7 +51,8 @@ def transient_flow_with_logondestructionprocessor(context: MinifiTestContext):
 
 
 @given(
-    'an {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"')
+    'an {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"'
+)
 @given(
     'a {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"'
 )
