@@ -111,6 +111,11 @@ class OpcUaTestServer {
     addStringVariable("StringNode", "the.answer.node", UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), 42);
     addIntVariable("666", opc::OPCNodeIDType::Int, device2_node, 256);
     addIntVariable("72962b91-fa75-4ae6-8d28-b404dc7daf63", opc::OPCNodeIDType::Guid, device2_node, 7);
+    addObject("GuidObject", device2_node, UA_NODEID_GUID(ns_index_, UA_GUID("aabbccdd-1122-3344-5566-778899aabbcc")));
+
+    UA_NodeId ambiguous_parent_node = addObject("AmbiguousParent", default_node);
+    addObject("Ambiguous", ambiguous_parent_node);
+    addObject("Ambiguous", ambiguous_parent_node);
 
     setHistory("INT1",
         {HistoryModificationRecord{.value = 1,
@@ -229,9 +234,9 @@ class OpcUaTestServer {
     } else if (id.identifierType == UA_NODEIDTYPE_NUMERIC) {
       return std::to_string(id.identifier.numeric);
     } else if (id.identifierType == UA_NODEIDTYPE_GUID) {
-      char guid_str[37];
-      snprintf(guid_str,
-          sizeof(guid_str),
+      std::array<char, 37> guid_str;
+      snprintf(guid_str.data(),
+          guid_str.size(),
           "%08x-%04x-%04x-%04x-%012" PRIx64,
           id.identifier.guid.data1,
           id.identifier.guid.data2,
@@ -240,7 +245,7 @@ class OpcUaTestServer {
           (gsl::narrow<uint64_t>(id.identifier.guid.data4[2]) << 40) | (gsl::narrow<uint64_t>(id.identifier.guid.data4[3]) << 32) |
               (gsl::narrow<uint64_t>(id.identifier.guid.data4[4]) << 24) | (gsl::narrow<uint64_t>(id.identifier.guid.data4[5]) << 16) |
               (gsl::narrow<uint64_t>(id.identifier.guid.data4[6]) << 8) | gsl::narrow<uint64_t>(id.identifier.guid.data4[7]));
-      return std::string(guid_str);
+      return std::string(guid_str.data());
     }
     return {};
   }
@@ -374,13 +379,14 @@ class OpcUaTestServer {
     response->responseHeader.serviceResult = UA_STATUSCODE_GOOD;
   }
 
-  UA_NodeId addObject(const char* name, UA_NodeId parent) {
+ public:
+  UA_NodeId addObject(const char* name, UA_NodeId parent, UA_NodeId requested_node_id = UA_NODEID_NULL) {
     UA_NodeId object_id;
     UA_ObjectAttributes attr = UA_ObjectAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", name);
 
     auto status = UA_Server_addObjectNode(server_,
-        UA_NODEID_NULL,
+        requested_node_id,
         parent,
         UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
         UA_QUALIFIEDNAME(ns_index_, const_cast<char*>(name)),
@@ -399,13 +405,13 @@ class OpcUaTestServer {
   }
 
   UA_StatusCode addNode(UA_NodeId parent_node_id, UA_NodeId& target_node_id, opc::OPCNodeIDType type, const std::string& browse_name,
-      const UA_VariableAttributes& attr) {
+      const UA_VariableAttributes& attr, UA_UInt32 reference_type = UA_NS0ID_HASCOMPONENT) {
     UA_QualifiedName qname = UA_QUALIFIEDNAME(ns_index_, const_cast<char*>(browse_name.c_str()));
     opc::NodeId node_id;
 
     switch (type) {
       case opc::OPCNodeIDType::Int:
-        node_id = opc::NodeId{UA_NODEID_NUMERIC(ns_index_, std::stoi(browse_name))};
+        node_id = opc::NodeId{UA_NODEID_NUMERIC(ns_index_, gsl::narrow<UA_UInt32>(std::stoul(browse_name)))};
         break;
       case opc::OPCNodeIDType::String:
         node_id = opc::NodeId{UA_NODEID_STRING_ALLOC(ns_index_, browse_name.c_str())};
@@ -420,7 +426,7 @@ class OpcUaTestServer {
     return UA_Server_addVariableNode(server_,
         node_id,
         parent_node_id,
-        UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+        UA_NODEID_NUMERIC(0, reference_type),
         qname,
         UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE),
         attr,
@@ -428,7 +434,7 @@ class OpcUaTestServer {
         &target_node_id);
   }
 
-  UA_NodeId addIntVariable(const std::string& name, opc::OPCNodeIDType type, UA_NodeId parent, UA_Int32 value) {
+  UA_NodeId addIntVariable(const std::string& name, opc::OPCNodeIDType type, UA_NodeId parent, UA_Int32 value, UA_UInt32 reference_type = UA_NS0ID_HASCOMPONENT) {
     UA_VariableAttributes attr = UA_VariableAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", name.c_str());
     attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE | UA_ACCESSLEVELMASK_HISTORYREAD;
@@ -436,7 +442,7 @@ class OpcUaTestServer {
     UA_Variant_setScalar(&attr.value, &value, &UA_TYPES[UA_TYPES_INT32]);
 
     UA_NodeId node_id;
-    auto status = addNode(parent, node_id, type, name, attr);
+    auto status = addNode(parent, node_id, type, name, attr, reference_type);
 
     if (status != UA_STATUSCODE_GOOD) {
       UA_LocalizedText_clear(&attr.displayName);
@@ -448,6 +454,7 @@ class OpcUaTestServer {
     return node_ids_[name].get();
   }
 
+ private:
   void addStringVariable(const char* name, const char* node_id_str, UA_NodeId parent, UA_Int32 value) {
     UA_VariableAttributes attr = UA_VariableAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT_ALLOC("en-US", name);
