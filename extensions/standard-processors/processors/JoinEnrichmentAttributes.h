@@ -25,6 +25,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -32,8 +33,9 @@
 #include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
-#include "utils/Enum.h"
-#include "utils/RegexUtils.h"
+#include "utils/EnrichmentUtils.h"
+#include "utils/Id.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::standard {
 
@@ -86,7 +88,7 @@ class JoinEnrichmentAttributes : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto Invalid = core::RelationshipDefinition{"invalid",
       "Any FlowFiles without the requisite attributes will be routed here"};
   EXTENSIONAPI static constexpr auto Joined = core::RelationshipDefinition{"joined",
-      "The resultant FlowFile with Records joined together from both the original and enrichment FlowFiles will be routed to this relationship"};
+      "The resultant FlowFile with attributes joined together from both the original and enrichment FlowFiles will be routed to this relationship"};
   EXTENSIONAPI static constexpr auto Original = core::RelationshipDefinition{"original",
       "Both of the incoming FlowFiles ('original' and 'enrichment') will be routed to this Relationship. I.e., this is the 'original' version of "
       "both of these FlowFiles."};
@@ -127,13 +129,9 @@ class JoinEnrichmentAttributes : public core::ProcessorImpl {
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
 
  private:
-  enum class EnrichmentRole {
-    ORIGINAL,
-    ENRICHMENT,
-  };
-
   void handleFlowFile(std::shared_ptr<core::FlowFile> flow_file, core::ProcessSession& session, std::chrono::steady_clock::time_point current_time);
-  void join(const std::shared_ptr<core::FlowFile>& original, const std::shared_ptr<core::FlowFile>& enrichment, core::ProcessSession& session) const;
+  void join(const std::shared_ptr<core::FlowFile>& original, const std::shared_ptr<core::FlowFile>& enrichment, core::ProcessSession& session);
+  void addToSessionIfNeeded(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session);
 
   core::FlowFileStore flow_file_store_;
   // We need to track current session's FlowFiles (we cant add those)

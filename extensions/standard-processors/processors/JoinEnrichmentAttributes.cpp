@@ -16,9 +16,12 @@
  */
 #include "JoinEnrichmentAttributes.h"
 
+#include <string>
+#include <utility>
+
 #include "core/Resource.h"
+#include "magic_enum/magic_enum.hpp"
 #include "minifi-cpp/core/ProcessSession.h"
-#include "utils/AttributeErrors.h"
 #include "utils/EnrichmentUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 
@@ -33,8 +36,10 @@ void JoinEnrichmentAttributes::initialize() {
 
 void JoinEnrichmentAttributes::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   using namespace std::literals::chrono_literals;
+  time_out_tracker_.reset();
   if (const auto timeout = utils::parseOptionalDurationProperty(context, TimeoutProperty); timeout && *timeout > 0ms) {
     time_out_tracker_.emplace(*timeout);
+    context.setTriggerWhenEmpty(true);
   }
   max_batch_size_ = utils::parseOptionalU64Property(context, MaxBatchSize);
   if (max_batch_size_ && *max_batch_size_ == 0) {
@@ -43,27 +48,23 @@ void JoinEnrichmentAttributes::onSchedule(core::ProcessContext& context, core::P
   ProcessorImpl::onSchedule(context, session_factory);
 }
 
-namespace {
-bool checkRequiredAttributes(const core::FlowFile& flow_file) {
-  return flow_file.getAttribute(ENRICHMENT_ROLE).has_value() && flow_file.getAttribute(ENRICHMENT_GROUP_ID).has_value();
+void JoinEnrichmentAttributes::addToSessionIfNeeded(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
+  if (session_flow_files_.insert(flow_file->getUUID()).second) {
+    session.add(flow_file);
+  }
 }
-}  // namespace
 
 void JoinEnrichmentAttributes::join(const std::shared_ptr<core::FlowFile>& original, const std::shared_ptr<core::FlowFile>& enrichment,
-    core::ProcessSession& session) const {
+    core::ProcessSession& session) {
   const auto cloned = session.clone(*original);
   for (const auto& [k, v] : enrichment->getAttributes()) {
     if (k != ENRICHMENT_ROLE) {
       cloned->setAttribute(k, v);
     }
   }
-  cloned->setAttribute(ENRICHMENT_ROLE, "JOINED");
-  if (!std::ranges::contains(session_flow_files_, original->getUUID())) {
-    session.add(original);
-  }
-  if (!std::ranges::contains(session_flow_files_, enrichment->getUUID())) {
-    session.add(enrichment);
-  }
+  cloned->setAttribute(ENRICHMENT_ROLE, std::string{JOINED_ROLE});
+  addToSessionIfNeeded(original, session);
+  addToSessionIfNeeded(enrichment, session);
   session.transfer(original, Original);
   session.transfer(enrichment, Original);
   session.transfer(cloned, Joined);
@@ -71,32 +72,32 @@ void JoinEnrichmentAttributes::join(const std::shared_ptr<core::FlowFile>& origi
 
 void JoinEnrichmentAttributes::handleFlowFile(std::shared_ptr<core::FlowFile> flow_file, core::ProcessSession& session,
     const std::chrono::steady_clock::time_point current_time) {
-  if (!checkRequiredAttributes(*flow_file)) {
-    logger_->log_warn("{} is missing enrichment.group.id and/or enrichment.role, routing it to Invalid", flow_file->getId());
+  addToSessionIfNeeded(flow_file, session);
+  const auto role_attribute = flow_file->getAttribute(ENRICHMENT_ROLE);
+  const auto group_id_attribute = flow_file->getAttribute(ENRICHMENT_GROUP_ID);
+  if (!role_attribute || !group_id_attribute) {
+    logger_->log_warn("{} is missing {} and/or {}, routing it to Invalid", flow_file->getId(), ENRICHMENT_GROUP_ID, ENRICHMENT_ROLE);
     session.transfer(flow_file, Invalid);
     return;
   }
 
-  const auto role = flow_file->getAttribute(ENRICHMENT_ROLE) | utils::toExpected(make_error_code(core::AttributeErrorCode::MissingAttribute)) |
-      utils::andThen(parsing::parseEnum<EnrichmentRole>);
+  const auto role = parsing::parseEnum<EnrichmentRole>(*role_attribute);
   if (!role) {
-    logger_->log_warn("{} has invalid role due to {}", flow_file->getId(), role.error());
+    logger_->log_warn("{} has invalid {} due to {}", flow_file->getId(), ENRICHMENT_ROLE, role.error());
     session.transfer(flow_file, Invalid);
     return;
   }
 
-  std::string group_id = *(flow_file->getAttribute(ENRICHMENT_GROUP_ID));
+  std::string group_id = *group_id_attribute;
 
   auto& my_map = role == EnrichmentRole::ENRICHMENT ? enrichments_ : originals_;
   auto& pair_map = role == EnrichmentRole::ENRICHMENT ? originals_ : enrichments_;
 
   if (const auto previous_node = my_map.extract(group_id)) {
     logger_->log_warn("Encountered duplicate {} for {}, routing both to Invalid", magic_enum::enum_name(*role), group_id);
+    addToSessionIfNeeded(previous_node.mapped(), session);
     session.transfer(flow_file, Invalid);
     session.transfer(previous_node.mapped(), Invalid);
-    if (!std::ranges::contains(session_flow_files_, previous_node.mapped()->getUUID())) {
-      session.add(previous_node.mapped());
-    }
     return;
   }
 
@@ -116,6 +117,7 @@ void JoinEnrichmentAttributes::handleFlowFile(std::shared_ptr<core::FlowFile> fl
 }
 
 void JoinEnrichmentAttributes::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  session_flow_files_.clear();
   const auto current_time = std::chrono::steady_clock::now();
   for (auto flow_file : flow_file_store_.getNewFlowFiles()) {
     handleFlowFile(std::move(flow_file), session, current_time);
@@ -133,10 +135,7 @@ void JoinEnrichmentAttributes::onTrigger(core::ProcessContext&, core::ProcessSes
     for (auto timed_out_group : time_out_tracker_->getTimedOutFlowFiles(current_time)) {
       const auto removeFromMap = [&](StoredFlowFileMap& map) {
         if (auto timed_out_node = map.extract(timed_out_group)) {
-          // Fresh FlowFiles shouldn't time out (we only use a single time_point per session)
-          gsl_AssertAudit(!std::ranges::contains(session_flow_files_, timed_out_node.mapped()->getUUID()));
-
-          session.add(timed_out_node.mapped());
+          addToSessionIfNeeded(timed_out_node.mapped(), session);
           session.transfer(timed_out_node.mapped(), TimeoutRelationship);
         }
       };
@@ -144,8 +143,6 @@ void JoinEnrichmentAttributes::onTrigger(core::ProcessContext&, core::ProcessSes
       removeFromMap(enrichments_);
     }
   }
-
-  session_flow_files_.clear();
 }
 
 void JoinEnrichmentAttributes::restore(const std::shared_ptr<core::FlowFile>& flowFile) {

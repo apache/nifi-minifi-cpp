@@ -10007,7 +10007,7 @@
                         },
                         {
                             "name": "joined",
-                            "description": "The resultant FlowFile with Records joined together from both the original and enrichment FlowFiles will be routed to this relationship"
+                            "description": "The resultant FlowFile with attributes joined together from both the original and enrichment FlowFiles will be routed to this relationship"
                         },
                         {
                             "name": "original",

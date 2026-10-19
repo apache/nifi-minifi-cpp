@@ -19,5 +19,16 @@
 
 #include <string_view>
 
+namespace org::apache::nifi::minifi::standard {
+
 constexpr std::string_view ENRICHMENT_ROLE = "enrichment.role";
 constexpr std::string_view ENRICHMENT_GROUP_ID = "enrichment.group.id";
+
+enum class EnrichmentRole {
+  ORIGINAL,
+  ENRICHMENT,
+};
+
+constexpr std::string_view JOINED_ROLE = "JOINED";
+
+}  // namespace org::apache::nifi::minifi::standard

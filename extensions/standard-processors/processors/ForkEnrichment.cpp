@@ -17,7 +17,10 @@
 
 #include "ForkEnrichment.h"
 
+#include <string>
+
 #include "core/Resource.h"
+#include "magic_enum/magic_enum.hpp"
 #include "minifi-cpp/core/ProcessSession.h"
 #include "utils/ProcessorConfigUtils.h"
 
@@ -42,8 +45,8 @@ void ForkEnrichment::onTrigger(core::ProcessContext&, core::ProcessSession& sess
   while (const auto original = session.get()) {
     const auto enrichment = session.clone(*original);
 
-    original->setAttribute(ENRICHMENT_ROLE, "ORIGINAL");
-    enrichment->setAttribute(ENRICHMENT_ROLE, "ENRICHMENT");
+    original->setAttribute(ENRICHMENT_ROLE, std::string{magic_enum::enum_name(EnrichmentRole::ORIGINAL)});
+    enrichment->setAttribute(ENRICHMENT_ROLE, std::string{magic_enum::enum_name(EnrichmentRole::ENRICHMENT)});
 
     const std::string group_id = utils::IdGenerator::getIdGenerator()->generate().to_string();
     original->setAttribute(ENRICHMENT_GROUP_ID, group_id);

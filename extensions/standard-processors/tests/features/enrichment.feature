@@ -22,6 +22,9 @@ Feature: ForkEnrichment and JoinEnrichmentAttributes
     And the "Data Format" property of the GenerateFlowFile processor is set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
 
+    And an UpdateAttribute processor with the name "SetOriginalAttributes" and the "kept_prop" property set to "original_value"
+    And the "overwritten_prop" property of the SetOriginalAttributes processor is set to "original_value"
+
     And a ForkEnrichment processor
     And a JoinEnrichmentAttributes processor
 
@@ -29,19 +32,23 @@ Feature: ForkEnrichment and JoinEnrichmentAttributes
     And the "Replacement Strategy" property of the ReplaceText processor is set to "Always Replace"
     And the "Replacement Value" property of the ReplaceText processor is set to "replaced_content"
 
-    And an UpdateAttribute processor with the "extra_prop" property set to "foo"
+    And an UpdateAttribute processor with the name "EnrichAttributes" and the "extra_prop" property set to "foo"
+    And the "overwritten_prop" property of the EnrichAttributes processor is set to "enriched_value"
 
     And a LogAttribute processor with the "Log Payload" property set to "true"
 
-    And the "success" relationship of the GenerateFlowFile processor is connected to the ForkEnrichment
+    And the "success" relationship of the GenerateFlowFile processor is connected to the SetOriginalAttributes
+    And the "success" relationship of the SetOriginalAttributes processor is connected to the ForkEnrichment
     And the "original" relationship of the ForkEnrichment processor is connected to the JoinEnrichmentAttributes
     And the "enrichment" relationship of the ForkEnrichment processor is connected to the ReplaceText
-    And the "success" relationship of the ReplaceText processor is connected to the UpdateAttribute
-    And the "success" relationship of the UpdateAttribute processor is connected to the JoinEnrichmentAttributes
+    And the "success" relationship of the ReplaceText processor is connected to the EnrichAttributes
+    And the "success" relationship of the EnrichAttributes processor is connected to the JoinEnrichmentAttributes
     And the "joined" relationship of the JoinEnrichmentAttributes processor is connected to the LogAttribute
     And JoinEnrichmentAttributes's original relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "key:enrichment.role value:JOINED" in less than 10 seconds
     And the Minifi logs contain the following message: "key:extra_prop value:foo" in less than 1 second
+    And the Minifi logs contain the following message: "key:kept_prop value:original_value" in less than 1 second
+    And the Minifi logs contain the following message: "key:overwritten_prop value:enriched_value" in less than 1 second
     And the Minifi logs contain the following message: "original_content" in less than 1 second

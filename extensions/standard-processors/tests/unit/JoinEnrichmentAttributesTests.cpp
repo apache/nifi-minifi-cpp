@@ -18,6 +18,7 @@
 
 #include <thread>
 
+#include "FlowFileRecord.h"
 #include "JoinEnrichmentAttributes.h"
 #include "unit/Catch.h"
 #include "unit/ProcessorUtils.h"
@@ -112,13 +113,61 @@ TEST_CASE("JoinEnrichmentAttributes test timeout") {
   // First trigger no output (it holds the original waiting for its pair)
   CHECK(std::ranges::all_of(first_trigger, [](const auto& res) -> bool { return res.second.empty(); }));
 
-  std::this_thread::sleep_for(1ms);
+  std::this_thread::sleep_for(10ms);
   const auto second_trigger = test_controller.trigger(minifi::test::InputFlowFileData{.content = "second",
       .attributes = {{std::string{ENRICHMENT_GROUP_ID}, "bar"}, {std::string{ENRICHMENT_ROLE}, "ENRICHMENT"}, {"second_attr", "2"}}});
   CHECK(second_trigger.at(JoinEnrichmentAttributes::Original).empty());
   CHECK(second_trigger.at(JoinEnrichmentAttributes::Invalid).empty());
   CHECK(second_trigger.at(JoinEnrichmentAttributes::TimeoutRelationship).size() == 1);
   REQUIRE(second_trigger.at(JoinEnrichmentAttributes::Joined).empty());
+}
+
+TEST_CASE("JoinEnrichmentAttributes times out without further input") {
+  minifi::test::SingleProcessorTestController
+      test_controller(minifi::test::utils::make_processor<JoinEnrichmentAttributes>("JoinEnrichmentAttributes"));
+  const auto proc = test_controller.getProcessor();
+  CHECK(test_controller.plan->setProperty(proc, JoinEnrichmentAttributes::TimeoutProperty.name, "1 ms"));
+
+  const auto first_trigger = test_controller.trigger(minifi::test::InputFlowFileData{.content = "first",
+      .attributes = {{std::string{ENRICHMENT_GROUP_ID}, "foo"}, {std::string{ENRICHMENT_ROLE}, "ORIGINAL"}}});
+  CHECK(std::ranges::all_of(first_trigger, [](const auto& res) -> bool { return res.second.empty(); }));
+  // the scheduler only triggers us again without input if the processor asked for it
+  CHECK(proc->getTriggerWhenEmpty());
+
+  std::this_thread::sleep_for(10ms);
+  const auto second_trigger = test_controller.trigger();
+  CHECK(second_trigger.at(JoinEnrichmentAttributes::TimeoutRelationship).size() == 1);
+  CHECK(second_trigger.at(JoinEnrichmentAttributes::Joined).empty());
+}
+
+TEST_CASE("JoinEnrichmentAttributes restored FlowFile without the enrichment attributes is routed to Invalid") {
+  minifi::test::SingleProcessorTestController
+      test_controller(minifi::test::utils::make_processor<JoinEnrichmentAttributes>("JoinEnrichmentAttributes"));
+  test_controller.getProcessor()->restore(std::make_shared<minifi::FlowFileRecordImpl>());
+
+  const auto trigger_result = test_controller.trigger();
+  CHECK(trigger_result.at(JoinEnrichmentAttributes::Invalid).size() == 1);
+}
+
+TEST_CASE("JoinEnrichmentAttributes joins a restored FlowFile with its pair") {
+  minifi::test::SingleProcessorTestController
+      test_controller(minifi::test::utils::make_processor<JoinEnrichmentAttributes>("JoinEnrichmentAttributes"));
+  const auto restored_original = std::make_shared<minifi::FlowFileRecordImpl>();
+  restored_original->setAttribute(ENRICHMENT_GROUP_ID, "foo");
+  restored_original->setAttribute(ENRICHMENT_ROLE, "ORIGINAL");
+  restored_original->setAttribute("first_attr", "1");
+  test_controller.getProcessor()->restore(restored_original);
+
+  const auto trigger_result = test_controller.trigger(minifi::test::InputFlowFileData{.content = "second",
+      .attributes = {{std::string{ENRICHMENT_GROUP_ID}, "foo"}, {std::string{ENRICHMENT_ROLE}, "ENRICHMENT"}, {"second_attr", "2"}}});
+  CHECK(trigger_result.at(JoinEnrichmentAttributes::Invalid).empty());
+  CHECK(trigger_result.at(JoinEnrichmentAttributes::Original).size() == 2);
+  REQUIRE(trigger_result.at(JoinEnrichmentAttributes::Joined).size() == 1);
+
+  const auto joined_attrs = trigger_result.at(JoinEnrichmentAttributes::Joined).at(0)->getAttributes();
+  CHECK(joined_attrs.at(std::string{ENRICHMENT_ROLE}) == "JOINED");
+  CHECK(joined_attrs.at("first_attr") == "1");
+  CHECK(joined_attrs.at("second_attr") == "2");
 }
 
 TEST_CASE("JoinEnrichmentAttributes no max batch size") {

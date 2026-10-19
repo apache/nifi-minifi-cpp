@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include <string>
+#include <array>
+#include <cstdint>
+#include <optional>
 
 #include "core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "utils/EnrichmentUtils.h"
-#include "utils/Enum.h"
-#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::standard {
 
@@ -56,13 +56,14 @@ class ForkEnrichment : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
-  EXTENSIONAPI static constexpr auto EnrichmentRole = core::OutputAttributeDefinition<2>{
+  EXTENSIONAPI static constexpr auto EnrichmentRoleOutputAttribute = core::OutputAttributeDefinition<2>{
       ENRICHMENT_ROLE, {Enrichment, Original}, "The role to use for enrichment. This will either be ORIGINAL or ENRICHMENT."};
-  EXTENSIONAPI static constexpr auto EnrichmentGroupId = core::OutputAttributeDefinition<2>{ENRICHMENT_GROUP_ID,
+  EXTENSIONAPI static constexpr auto EnrichmentGroupIdOutputAttribute = core::OutputAttributeDefinition<2>{ENRICHMENT_GROUP_ID,
       {Enrichment, Original},
       "The Group ID to use in order to correlate the 'original' FlowFile with the 'enrichment' FlowFile."};
 
-  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 2>{EnrichmentRole, EnrichmentGroupId};
+  EXTENSIONAPI static constexpr auto OutputAttributes =
+      std::array<core::OutputAttributeReference, 2>{EnrichmentRoleOutputAttribute, EnrichmentGroupIdOutputAttribute};
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 

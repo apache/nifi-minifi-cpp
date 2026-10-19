@@ -17,7 +17,9 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 #include <utility>
 
@@ -32,7 +34,7 @@ class FlowFileStore {
       return {};
     }
     std::lock_guard<std::mutex> guard(flow_file_mutex_);
-    return std::move(incoming_files_);
+    return std::exchange(incoming_files_, {});
   }
 
   void put(const std::shared_ptr<FlowFile>& flowFile)  {

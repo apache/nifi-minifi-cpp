@@ -37,11 +37,11 @@ TEST_CASE("Fork Enrichment processor works") {
   CHECK(original_content == enrichment_content);
   CHECK(original_content == "test_content");
 
-  CHECK(original_results.at(0)->getAttribute(ForkEnrichment::EnrichmentRole.name) == "ORIGINAL");
-  CHECK(enrichment_results.at(0)->getAttribute(ForkEnrichment::EnrichmentRole.name) == "ENRICHMENT");
+  CHECK(original_results.at(0)->getAttribute(ForkEnrichment::EnrichmentRoleOutputAttribute.name) == "ORIGINAL");
+  CHECK(enrichment_results.at(0)->getAttribute(ForkEnrichment::EnrichmentRoleOutputAttribute.name) == "ENRICHMENT");
 
-  CHECK(original_results.at(0)->getAttribute(ForkEnrichment::EnrichmentGroupId.name) ==
-      enrichment_results.at(0)->getAttribute(ForkEnrichment::EnrichmentGroupId.name));
+  CHECK(original_results.at(0)->getAttribute(ForkEnrichment::EnrichmentGroupIdOutputAttribute.name) ==
+      enrichment_results.at(0)->getAttribute(ForkEnrichment::EnrichmentGroupIdOutputAttribute.name));
 }
 
 TEST_CASE("ForkEnrichment no max batch size") {
