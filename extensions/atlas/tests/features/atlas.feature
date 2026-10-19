@@ -9,7 +9,7 @@ Feature: Atlas reporting task emits fs_path, kafka_topic, flow-topology and site
 
   Scenario: GetFile to PutFile produces fs_path entities with FILE-level qualified names
     # Mirrors extensions/atlas/tests/features/baseline/nifi/file-mode/ - a GetFile -> PutFile
-    # flow produces one fs_path per input and one per output, plus a nifi_flow_path connecting
+    # flow produces one fs_path per input and one per output, plus a minifi_flow_path connecting
     # them. Both processors already call session.getProvenanceReporter()->receive/send() today,
     # so no processor-side changes are required for this scenario.
     Given an Atlas server is available
@@ -33,10 +33,10 @@ Feature: Atlas reporting task emits fs_path, kafka_topic, flow-topology and site
     And the "fs_path" entity with qualified name "/tmp/output/hello.txt@${scenario_id}" has attribute "path" equal to "/tmp/output/hello.txt"
     # GetFile and PutFile form one linear path "GetFile, PutFile"; the RECEIVE lands as an input
     # fs_path and the SEND as an output fs_path on that flow path.
-    And the "nifi_flow_path" entity named "GetFile, PutFile" has an input of type "fs_path" with qualified name "/tmp/input/hello.txt@${scenario_id}" within 60 seconds
-    And the "nifi_flow_path" entity named "GetFile, PutFile" has an output of type "fs_path" with qualified name "/tmp/output/hello.txt@${scenario_id}" within 60 seconds
+    And the "minifi_flow_path" entity named "GetFile, PutFile" has an input of type "fs_path" with qualified name "/tmp/input/hello.txt@${scenario_id}" within 60 seconds
+    And the "minifi_flow_path" entity named "GetFile, PutFile" has an output of type "fs_path" with qualified name "/tmp/output/hello.txt@${scenario_id}" within 60 seconds
 
-  Scenario: A linear flow produces a nifi_flow and a nifi_flow_path
+  Scenario: A linear flow produces a minifi_flow and a minifi_flow_path
     # Topology entities are derived from the flow graph itself (not from provenance), so the
     # reporting task publishes them on its first cycle regardless of whether any data has moved.
     # Their qualifiedNames embed component UUIDs a scenario can't predict, so we match on the
@@ -54,11 +54,11 @@ Feature: Atlas reporting task emits fs_path, kafka_topic, flow-topology and site
     And the scheduling period of the "atlas-rt" reporting task is set to "10 sec"
     When all instances start up
     # The root group name is fixed to "MiNiFi Flow" by the test framework.
-    Then a "nifi_flow" entity with attribute "name" equal to "MiNiFi Flow" exists in Atlas within 120 seconds
+    Then a "minifi_flow" entity with attribute "name" equal to "MiNiFi Flow" exists in Atlas within 120 seconds
     # GetFile -> PutFile collapses into a single linear path named after both processors.
-    And a "nifi_flow_path" entity with attribute "name" equal to "GetFile, PutFile" exists in Atlas within 60 seconds
+    And a "minifi_flow_path" entity with attribute "name" equal to "GetFile, PutFile" exists in Atlas within 60 seconds
 
-  Scenario: A fan-out flow produces nifi_queue entities between the paths
+  Scenario: A fan-out flow produces minifi_queue entities between the paths
     Given an Atlas server is available
     # A non-zero payload keeps GenerateFlowFile producing flow files; the topology is reported
     # regardless, but this keeps the flow live like the other scenarios.
@@ -77,11 +77,11 @@ Feature: Atlas reporting task emits fs_path, kafka_topic, flow-topology and site
     And the scheduling period of the "atlas-rt" reporting task is set to "10 sec"
     When all instances start up
     # The fan-out splits into three single-processor paths; each cross-path connection becomes a
-    # nifi_queue named "queue to <connection name>". The test framework names connections
+    # minifi_queue named "queue to <connection name>". The test framework names connections
     # "<source>/<relationship>/<target>" (see MinifiFlowDefinition.to_yaml), so the two edges out
     # of GenerateFlowFile yield the queue names below.
-    Then a "nifi_queue" entity with attribute "name" equal to "queue to GenerateFlowFile/success/PutFileA" exists in Atlas within 120 seconds
-    And a "nifi_queue" entity with attribute "name" equal to "queue to GenerateFlowFile/success/PutFileB" exists in Atlas within 60 seconds
+    Then a "minifi_queue" entity with attribute "name" equal to "queue to GenerateFlowFile/success/PutFileA" exists in Atlas within 120 seconds
+    And a "minifi_queue" entity with attribute "name" equal to "queue to GenerateFlowFile/success/PutFileB" exists in Atlas within 60 seconds
 
   @ENABLE_KAFKA
   Scenario: PublishKafka sends to a topic and Atlas gets a kafka_topic output entity
@@ -116,7 +116,7 @@ Feature: Atlas reporting task emits fs_path, kafka_topic, flow-topology and site
     And the "kafka_topic" entity with qualified name "atlas-publish-topic@${scenario_id}" has attribute "topic" equal to "atlas-publish-topic"
     And the "kafka_topic" entity with qualified name "atlas-publish-topic@${scenario_id}" has attribute "name" equal to "atlas-publish-topic"
     # Publish is a SEND, so the topic lands as an output on the "GenerateFlowFile, PublishKafka" path.
-    And the "nifi_flow_path" entity named "GenerateFlowFile, PublishKafka" has an output of type "kafka_topic" with qualified name "atlas-publish-topic@${scenario_id}" within 60 seconds
+    And the "minifi_flow_path" entity named "GenerateFlowFile, PublishKafka" has an output of type "kafka_topic" with qualified name "atlas-publish-topic@${scenario_id}" within 60 seconds
 
   @ENABLE_KAFKA
   Scenario: ConsumeKafka receives from a topic and Atlas gets a kafka_topic input entity
@@ -145,7 +145,7 @@ Feature: Atlas reporting task emits fs_path, kafka_topic, flow-topology and site
     And the "kafka_topic" entity with qualified name "atlas-consume-topic@${scenario_id}" has attribute "topic" equal to "atlas-consume-topic"
     And the "kafka_topic" entity with qualified name "atlas-consume-topic@${scenario_id}" has attribute "name" equal to "atlas-consume-topic"
     # Consume is a RECEIVE, so the topic lands as an input on the "ConsumeKafka, PutFile" path.
-    And the "nifi_flow_path" entity named "ConsumeKafka, PutFile" has an input of type "kafka_topic" with qualified name "atlas-consume-topic@${scenario_id}" within 60 seconds
+    And the "minifi_flow_path" entity named "ConsumeKafka, PutFile" has an input of type "kafka_topic" with qualified name "atlas-consume-topic@${scenario_id}" within 60 seconds
 
   Scenario: MiNiFi's RPG-driven Site-to-Site produces a correlatable nifi_input_port
     # Mirrors extensions/atlas/tests/features/baseline/nifi/file-mode-with-s2s/. A MiNiFi-side

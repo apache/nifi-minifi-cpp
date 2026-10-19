@@ -210,29 +210,23 @@ std::expected<std::optional<std::string>, std::string> AtlasClient::getEntityNam
   // escape() only needs the curl handle, which exists from construction, so it is usable
   // before the request is configured. The qualifiedName travels as a query value and can
   // contain '@' and whatever the namespace carries.
-  const auto path = "/api/atlas/v2/entity/uniqueAttribute/type/" + std::string{type_name} +
-      "?attr:qualifiedName=" + client.escape(std::string{qualified_name});
+  const auto path = utils::string::join_pack("/api/atlas/v2/entity/uniqueAttribute/type/", type_name,
+      "?attr:qualifiedName=", client.escape(std::string{qualified_name}));
   prepareClient(client, http::HttpRequestMethod::Get, path);
   if (!client.submit()) {
-    std::ostringstream msg;
-    msg << "Atlas entity lookup for '" << qualified_name << "' failed: transport error";
-    return std::unexpected{msg.str()};
+    return std::unexpected{fmt::format("Atlas entity lookup for '{}' failed: transport error", qualified_name)};
   }
   const auto code = client.getResponseCode();
   if (code == 404) {
     return std::nullopt;
   }
   if (code != 200) {
-    std::ostringstream msg;
-    msg << "Atlas entity lookup for '" << qualified_name << "' returned HTTP " << code << ": " << responseBodyAsString(client);
-    return std::unexpected{msg.str()};
+    return std::unexpected{fmt::format("Atlas entity lookup for '{}' returned HTTP {}: {}", qualified_name, code, responseBodyAsString(client))};
   }
   const auto body = responseBodyAsString(client);
   rapidjson::Document doc;
   if (doc.Parse(body.c_str()).HasParseError() || !doc.IsObject()) {
-    std::ostringstream msg;
-    msg << "Atlas entity lookup for '" << qualified_name << "' returned unparseable JSON";
-    return std::unexpected{msg.str()};
+    return std::unexpected{fmt::format("Atlas entity lookup for '{}' returned unparseable JSON", qualified_name)};
   }
   if (!doc.HasMember("entity") || !doc["entity"].IsObject()) {
     return std::nullopt;
@@ -304,9 +298,7 @@ std::expected<void, std::string> AtlasClient::createOrUpdateEntities(const std::
   if (code == 200 || code == 204) {
     return {};
   }
-  std::ostringstream msg;
-  msg << "Atlas entity bulk POST returned HTTP " << code << ": " << responseBodyAsString(client);
-  return std::unexpected{msg.str()};
+  return std::unexpected{fmt::format("Atlas entity bulk POST returned HTTP {}: {}", code, responseBodyAsString(client))};
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::atlas
