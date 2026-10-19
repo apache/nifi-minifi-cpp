@@ -278,6 +278,24 @@ class AtomicEntry {
     return true;
   }
 
+  /**
+   * Calls @visitor with the key and the buffer of the contained value, without consuming it.
+   * The visitor is called while this entry is locked, so it should not block.
+   * @return false if this entry is empty
+   */
+  template<typename Visitor>
+  bool visitValue(Visitor&& visitor) {
+    try_lock();
+    if (!has_value_) {
+      try_unlock();
+      return false;
+    }
+    const T& key = value_.getKey();
+    std::forward<Visitor>(visitor)(key, value_.getBuffer());
+    try_unlock();
+    return true;
+  }
+
   void decrementOwnership() {
     try_lock();
     if (!has_value_) {

@@ -36,6 +36,8 @@ namespace org::apache::nifi::minifi::core {
 
 class Repository : public virtual core::CoreComponent, public virtual core::RepositoryMetricsSource {
  public:
+  using EntryStreams = std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>;
+
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
   virtual bool start() = 0;
   virtual bool stop() = 0;
@@ -43,7 +45,7 @@ class Repository : public virtual core::CoreComponent, public virtual core::Repo
   virtual void flush() = 0;
 
   virtual bool Put(const std::string& /*key*/, const uint8_t* /*buf*/, size_t /*bufLen*/) = 0;
-  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& /*data*/) = 0;
+  virtual bool MultiPut(const EntryStreams& /*data*/) = 0;
   virtual bool Delete(const std::string& /*key*/) = 0;
   virtual bool Delete(const std::shared_ptr<core::CoreComponent>& item) = 0;
   virtual bool Delete(std::vector<std::shared_ptr<core::SerializableComponent>> &storedValues) = 0;
@@ -53,10 +55,6 @@ class Repository : public virtual core::CoreComponent, public virtual core::Repo
   virtual void setContainers(std::map<std::string, core::Connectable*> containers) = 0;
 
   virtual bool Get(const std::string& /*key*/, std::string& /*value*/) = 0;
-
-  virtual std::vector<std::shared_ptr<core::SerializableComponent>> getElements(size_t max_size) = 0;
-
-  virtual bool storeElement(const std::shared_ptr<core::SerializableComponent>& element) = 0;
 
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) = 0;
 

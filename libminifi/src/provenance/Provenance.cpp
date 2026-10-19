@@ -26,7 +26,6 @@
 #include <utility>
 
 #include "minifi-cpp/core/Repository.h"
-#include "io/BufferStream.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "FlowController.h"
@@ -35,9 +34,6 @@
 namespace org::apache::nifi::minifi::provenance {
 
 constexpr auto MAX_COMPONENT_NAME_LENGTH = 1_KiB;
-
-std::shared_ptr<utils::IdGenerator> ProvenanceEventRecordImpl::id_generator_ = utils::IdGenerator::getIdGenerator();
-std::shared_ptr<core::logging::Logger> ProvenanceEventRecordImpl::logger_ = core::logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
 
 const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD",  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     "DROP", "EXPIRE", "FORK", "JOIN", "CLONE", "CONTENT_MODIFIED", "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
@@ -48,36 +44,6 @@ ProvenanceEventRecordImpl::ProvenanceEventRecordImpl(ProvenanceEventRecord::Prov
       event_time_(std::chrono::system_clock::now()),
       component_id_(component_id.to_string()),
       component_type_(std::move(component_type)) {
-}
-
-bool ProvenanceEventRecordImpl::loadFromRepository(const std::shared_ptr<core::Repository> &repo) {
-  std::string value;
-  bool ret = false;
-
-  if (nullptr == repo || uuid_.isNil()) {
-    logger_->log_error("Repo could not be assigned");
-    return false;
-  }
-  ret = repo->Get(getUUIDStr(), value);
-
-  if (!ret) {
-    logger_->log_error("NiFi Provenance Store event {} can not be found", getUUIDStr());
-    return false;
-  } else {
-    logger_->log_debug("NiFi Provenance Read event {}", getUUIDStr());
-  }
-
-  org::apache::nifi::minifi::io::BufferStream stream(value);
-
-  ret = deserialize(stream);
-
-  if (ret) {
-    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} success", getUUIDStr(), stream.size(), magic_enum::enum_name(event_type_));
-  } else {
-    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} fail", getUUIDStr(), stream.size(), magic_enum::enum_name(event_type_));
-  }
-
-  return ret;
 }
 
 bool ProvenanceEventRecordImpl::serialize(io::OutputStream& output_stream) {
@@ -237,6 +203,13 @@ bool ProvenanceEventRecordImpl::serialize(io::OutputStream& output_stream) {
       if (ret == 0 || io::isError(ret)) {
         return false;
       }
+    }
+  }
+
+  {
+    const auto ret = output_stream.write(event_ordinal_);
+    if (ret != 8) {
+      return false;
     }
   }
 
@@ -443,6 +416,17 @@ bool ProvenanceEventRecordImpl::deserialize(io::InputStream &input_stream) {
     }
   }
 
+  {
+    uint64_t event_ordinal = 0;
+    const auto ret = input_stream.read(event_ordinal);
+    if (ret != 8) {
+      // backwards compatibility to be able to deserialize older provenance events
+      event_ordinal_ = 0;
+    } else {
+      event_ordinal_ = event_ordinal;
+    }
+  }
+
   return true;
 }
 
@@ -452,19 +436,15 @@ void ProvenanceReporterImpl::commit() {
   }
 
   if (repo_->isFull()) {
-    logger_->log_debug("Provenance Repository is full");
+    logger_->log_error("Provenance Repository is full");
     return;
   }
 
-  std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
-
-  for (auto& event : events_) {
-    auto stramptr = std::make_unique<io::BufferStream>();
-    event->serialize(*stramptr);
-
-    flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));
+  if (auto append_result = repo_->appendEvents(events_); !append_result) {
+    // do not let failed provenance repo stop all processing
+    logger_->log_error("Failed to append provenance events: {}", append_result);
+    return;
   }
-  repo_->MultiPut(flowData);
 }
 
 void ProvenanceReporterImpl::create(const core::FlowFile& flow_file, const std::string& detail) {
@@ -534,19 +514,14 @@ void ProvenanceReporterImpl::drop(const core::FlowFile& flow_file, const std::st
   }
 }
 
-void ProvenanceReporterImpl::send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) {
+void ProvenanceReporterImpl::send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) {
   auto event = allocate(ProvenanceEventRecord::SEND, flow_file);
 
   if (event) {
     event->setTransitUri(transitUri);
     event->setDetails(detail);
     event->setEventDuration(processingDuration);
-    if (!force) {
-      add(event);
-    } else {
-      if (!repo_->isFull())
-        repo_->storeElement(event);
-    }
+    add(event);
   }
 }
 

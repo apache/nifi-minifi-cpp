@@ -21,10 +21,11 @@
 #include <string_view>
 
 #include "VolatileRepository.h"
+#include "minifi-cpp/provenance/ProvenanceRepository.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
-class VolatileProvenanceRepository : public VolatileRepository {
+class VolatileProvenanceRepository : public VolatileRepository, public provenance::ProvenanceRepository {
  public:
   explicit VolatileProvenanceRepository(std::string_view repo_name = "",
                                         std::string /*dir*/ = REPOSITORY_DIRECTORY,
@@ -37,6 +38,35 @@ class VolatileProvenanceRepository : public VolatileRepository {
   ~VolatileProvenanceRepository() override {
     stop();
   }
+
+  bool initialize(const std::shared_ptr<Configure> &configure) override {
+    if (!VolatileRepository::initialize(configure)) {
+      return false;
+    }
+    next_event_key_ =  1;
+    return true;
+  }
+
+  std::expected<void, std::string> appendEvents(const std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>& events) override {
+    EntryStreams data;
+    data.reserve(events.size());
+    std::lock_guard guard(next_event_key_mtx_);
+    for (auto& event : events) {
+      event->setEventOrdinal(next_event_key_++);
+      data.emplace_back(std::to_string(event->getEventOrdinal()), std::make_unique<io::BufferStream>());
+      event->serialize(*data.back().second);
+    }
+    MultiPut(data);
+
+    return {};
+  }
+
+  std::unique_ptr<ProvenanceRepository::Cursor> cursorFromString(std::string_view cursor_str) override;
+
+  // Returns the events following the cursor in ordinal order. As this repository can overwrite
+  // its oldest entries, a cursor guarantees that no event is returned twice, not that no event
+  // is missed.
+  std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, std::string> getEvents(size_t max_size, Cursor* cursor) override;
 
  private:
   void run() override {
@@ -51,6 +81,8 @@ class VolatileProvenanceRepository : public VolatileRepository {
   }
 
   std::thread thread_;
+  std::mutex next_event_key_mtx_;
+  uint64_t next_event_key_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

@@ -18,10 +18,13 @@
 
 #include <array>
 #include <chrono>
+#include <filesystem>
+#include <memory>
 #include <random>
+#include <string>
 #include <vector>
 
-#include "ProvenanceRepository.h"
+#include "RocksDbProvenanceRepository.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 
@@ -61,13 +64,33 @@ void verifyMaxKeyCount(const minifi::provenance::ProvenanceRepository& repo, uin
   REQUIRE(k < keyCount);
 }
 
+std::vector<std::byte> serializeEvent(minifi::provenance::ProvenanceEventRecord& event) {
+  minifi::io::BufferStream stream;
+  event.serialize(stream);
+  return stream.moveBuffer();
+}
+
+template<typename T>
+void appendAll(std::vector<T>& sink, const std::vector<T>& source) {
+  sink.insert(sink.end(), source.begin(), source.end());
+}
+
+std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> createEvents(size_t count) {
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> events;
+  events.reserve(count);
+  for (size_t i = 0; i < count; ++i) {
+    events.push_back(minifi::provenance::ProvenanceEventRecord::create());
+  }
+  return events;
+}
+
 TEST_CASE("Test size limit", "[sizeLimitTest]") {
   TestController testController;
   auto temp_dir = testController.createTempDirectory();
   REQUIRE(!temp_dir.empty());
 
   // 60 sec, 100 KB - going to exceed the size limit
-  minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1min, TEST_PROVENANCE_STORAGE_SIZE, 1s);
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1min, TEST_PROVENANCE_STORAGE_SIZE, 1s);
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
@@ -87,7 +110,7 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
   REQUIRE(!temp_dir.empty());
 
   // 1 sec, 100 MB - going to exceed TTL
-  minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
@@ -113,4 +136,228 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
   provisionRepo(provdb, keyCount /2, 102400);
 
   verifyMaxKeyCount(provdb, 400);
+}
+
+TEST_CASE("Test query elements after cursor", "[iterationTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  auto events = createEvents(8);
+
+  REQUIRE(provdb.appendEvents(events));
+
+  auto cursor = provdb.cursorFromString("");
+  REQUIRE(cursor);
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events;
+
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 3);
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 6);
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 8);
+
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 1);
+    REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
+}
+
+TEST_CASE("Test loading cursor from string", "[cursorSerializationTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  auto events = createEvents(8);
+
+  REQUIRE(provdb.appendEvents(events));
+
+  auto cursor = provdb.cursorFromString("");
+  REQUIRE(cursor);
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events;
+
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 3);
+
+  // the cursor is persisted as the ordinal of the last event read
+  REQUIRE(cursor->toString() == "3");
+
+  cursor = provdb.cursorFromString(cursor->toString());
+  REQUIRE(cursor);
+
+  appendAll(queried_events, provdb.getEvents(3, cursor.get()).value());
+  REQUIRE(queried_events.size() == 6);
+
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 1);
+    REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
+}
+
+TEST_CASE("Test appendEvents assigns consecutive ordinals", "[eventOrdinalTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  auto first_batch = createEvents(5);
+  REQUIRE(provdb.appendEvents(first_batch));
+  for (size_t i = 0; i < first_batch.size(); ++i) {
+    REQUIRE(first_batch.at(i)->getEventOrdinal() == i + 1);
+  }
+
+  auto second_batch = createEvents(3);
+  REQUIRE(provdb.appendEvents(second_batch));
+  for (size_t i = 0; i < second_batch.size(); ++i) {
+    REQUIRE(second_batch.at(i)->getEventOrdinal() == first_batch.size() + i + 1);
+  }
+}
+
+TEST_CASE("Test querying events whose ordinals have different number of digits", "[eventOrdinalTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  auto events = createEvents(12);
+  REQUIRE(provdb.appendEvents(events));
+
+  auto queried_events = provdb.getEvents(12, nullptr).value();
+  REQUIRE(queried_events.size() == 12);
+
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 1);
+    REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
+}
+
+TEST_CASE("Test cursor observes events appended with more digits in their ordinal", "[eventOrdinalTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb.initialize(configuration));
+
+  REQUIRE(provdb.appendEvents(createEvents(9)));
+
+  auto cursor = provdb.cursorFromString("");
+  REQUIRE(cursor);
+  REQUIRE(provdb.getEvents(9, cursor.get()).value().size() == 9);
+  REQUIRE(cursor->toString() == "9");
+
+  REQUIRE(provdb.appendEvents(createEvents(3)));
+
+  auto queried_events = provdb.getEvents(9, cursor.get()).value();
+  REQUIRE(queried_events.size() == 3);
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 10);
+  }
+}
+
+TEST_CASE("Test opening a database whose options mention the internal state column but does not have it", "[eventOrdinalTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  {
+    minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+    REQUIRE(provdb.initialize(configuration));
+    REQUIRE(provdb.appendEvents(createEvents(1)));
+  }
+
+  // Leave the directory in the state an interrupted deletion produces: the persisted options still
+  // list the internal state column, while the database itself is gone. The column is created on
+  // demand, so this must not stop the repository from opening.
+  bool options_file_kept = false;
+  for (const auto& entry : std::filesystem::directory_iterator{temp_dir}) {
+    const auto filename = entry.path().filename().string();
+    if (filename.starts_with("CURRENT") || filename.starts_with("MANIFEST") || filename.ends_with(".log")) {
+      std::filesystem::remove(entry.path());
+    } else if (filename.starts_with("OPTIONS")) {
+      options_file_kept = true;
+    }
+  }
+  // the scenario is only reproduced as long as the persisted options are the ones left behind
+  REQUIRE(options_file_kept);
+
+  minifi::provenance::RocksDbProvenanceRepository provdb("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+  REQUIRE(provdb.initialize(configuration));
+  REQUIRE(provdb.getRocksDbStats());
+  REQUIRE(provdb.appendEvents(createEvents(1)));
+}
+
+TEST_CASE("Test opening existing database loads monotonic counter", "[eventUuidMonotonicTest]") {
+  TestController testController;
+  auto temp_dir = testController.createTempDirectory();
+  REQUIRE(!temp_dir.empty());
+
+  auto provdb = std::make_unique<minifi::provenance::RocksDbProvenanceRepository>("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::ConfigureImpl>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir.string());
+
+  REQUIRE(provdb->initialize(configuration));
+
+  auto events = createEvents(4);
+
+  REQUIRE(provdb->appendEvents(events));
+
+  provdb = std::make_unique<minifi::provenance::RocksDbProvenanceRepository>("TestProvRepo", temp_dir.string(), 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
+
+  REQUIRE(provdb->initialize(configuration));
+
+  auto new_events = createEvents(4);
+  appendAll(events, new_events);
+
+  REQUIRE(provdb->appendEvents(new_events));
+
+  // the counter continues where the previous instance left off
+  for (size_t i = 0; i < new_events.size(); ++i) {
+    REQUIRE(new_events.at(i)->getEventOrdinal() == i + 5);
+  }
+
+  std::vector<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> queried_events = provdb->getEvents(8, nullptr).value();
+  REQUIRE(queried_events.size() == 8);
+
+  for (size_t i = 0; i < queried_events.size(); ++i) {
+    REQUIRE(queried_events.at(i)->getEventOrdinal() == i + 1);
+    REQUIRE(serializeEvent(*events.at(i)) == serializeEvent(*queried_events.at(i)));
+  }
 }
