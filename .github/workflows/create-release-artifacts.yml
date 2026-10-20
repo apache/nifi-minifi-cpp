@@ -69,8 +69,9 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v6
       - name: Set up Python
-        run: choco -y install python & refreshenv
-        shell: cmd
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       - name: Install sqliteodbc driver
         run: |
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
