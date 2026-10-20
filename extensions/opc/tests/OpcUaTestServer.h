@@ -56,7 +56,8 @@ struct HistoryModificationRecord {
 enum class FileMethod {
   Open,
   Close,
-  Read
+  Read,
+  Write
 };
 
 enum class MalformedResponse {
@@ -274,19 +275,21 @@ class OpcUaTestServer {
   }
 
   opc::NodeId addFile(const std::string& name, UA_NodeId requested_node_id, UA_NodeId parent, const std::string& content,
-      std::optional<UA_UInt32> max_byte_string_length = std::nullopt) {
+      std::optional<UA_UInt32> max_byte_string_length = std::nullopt, bool writable = true, std::optional<UA_UInt16> browse_name_namespace_index = std::nullopt) {
     TestFile* file = nullptr;
     {
       std::lock_guard<std::mutex> lock(files_mutex_);
       file = &files_[name];
       file->content = content;
+      file->writable = writable;
     }
 
     UA_ObjectAttributes attr = UA_ObjectAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(const_cast<char*>("en-US"), const_cast<char*>(name.c_str()));
     UA_NodeId file_node_id;
     auto status = UA_Server_addObjectNode(server_, requested_node_id, parent, UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
-        UA_QUALIFIEDNAME(ns_index_, const_cast<char*>(name.c_str())), UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE), attr, file, &file_node_id);
+        UA_QUALIFIEDNAME(browse_name_namespace_index.value_or(ns_index_), const_cast<char*>(name.c_str())), UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE), attr, file,
+        &file_node_id);
     if (status != UA_STATUSCODE_GOOD) {
       throw std::runtime_error("Failed to add file node");
     }
@@ -300,8 +303,7 @@ class OpcUaTestServer {
     method_node_ids[FileMethod::Open] = addMethod(file_node_id, "Open", &OpcUaTestServer::fileOpenCallback, mode_arguments, handle_arguments);
     method_node_ids[FileMethod::Close] = addMethod(file_node_id, "Close", &OpcUaTestServer::fileCloseCallback, handle_arguments, {});
     method_node_ids[FileMethod::Read] = addMethod(file_node_id, "Read", &OpcUaTestServer::fileReadCallback, read_arguments, data_arguments);
-    // Write is a mandatory method of FileType nodes, but the test files are read-only, so it is not implemented
-    addMethod(file_node_id, "Write", nullptr, write_arguments, {});
+    method_node_ids[FileMethod::Write] = addMethod(file_node_id, "Write", &OpcUaTestServer::fileWriteCallback, write_arguments, {});
 
     UA_UInt64 size = content.size();
     auto size_node_id = addProperty(file_node_id, "Size", &size, UA_TYPES[UA_TYPES_UINT64]);
@@ -327,6 +329,10 @@ class OpcUaTestServer {
     if (status != UA_STATUSCODE_GOOD) {
       throw std::runtime_error("Failed to add file directory node");
     }
+
+    std::array<UA_Argument, 2> create_file_arguments{makeArgument("FileName", UA_TYPES_STRING), makeArgument("RequestFileOpen", UA_TYPES_BOOLEAN)};
+    std::array<UA_Argument, 2> create_file_outputs{makeArgument("FileNodeId", UA_TYPES_NODEID), makeArgument("FileHandle", UA_TYPES_UINT32)};
+    addMethod(directory_node_id, "CreateFile", &OpcUaTestServer::createFileCallback, create_file_arguments, create_file_outputs);
     return opc::NodeId{directory_node_id};
   }
 
@@ -341,6 +347,15 @@ class OpcUaTestServer {
     }
     std::lock_guard<std::mutex> lock(files_mutex_);
     files_.erase(name);
+  }
+
+  std::optional<std::string> getFileContent(const std::string& name) {
+    std::lock_guard<std::mutex> lock(files_mutex_);
+    auto it = files_.find(name);
+    if (it == files_.end()) {
+      return std::nullopt;
+    }
+    return it->second.content;
   }
 
   size_t getOpenFileHandleCount(const std::string& name) {
@@ -394,6 +409,19 @@ class OpcUaTestServer {
     }
     std::lock_guard<std::mutex> lock(files_mutex_);
     files_.at(name).method_node_ids[method] = std::move(new_method_node_id);
+  }
+
+  // Makes the CreateFile method of every directory fail with the given status without creating the file
+  void setCreateFileFailure(UA_StatusCode status) {
+    std::lock_guard<std::mutex> lock(files_mutex_);
+    create_file_failure_ = status;
+  }
+
+  // Makes the CreateFile method of every directory return the node id of the created file with the wrong type
+  void setCreateFileMalformedResponse(MalformedResponse response) {
+    gsl_Expects(response == MalformedResponse::WrongOutputType);
+    std::lock_guard<std::mutex> lock(files_mutex_);
+    create_file_malformed_response_ = response;
   }
 
   // Signals the end of the file with an empty variant instead of an empty ByteString, as some servers do
@@ -474,6 +502,11 @@ class OpcUaTestServer {
     }
   }
 
+  // References exceeding the limit are returned on further pages of a Browse request, which have to be requested with BrowseNext
+  void setMaxReferencesPerNode(UA_UInt32 value) {
+    UA_Server_getConfig(server_)->maxReferencesPerNode = value;
+  }
+
  private:
   struct TestFile {
     struct OpenHandle {
@@ -499,6 +532,7 @@ class OpcUaTestServer {
     std::optional<opc::NodeId> size_node_id;
     std::optional<opc::NodeId> max_byte_string_length_node_id;
     std::optional<opc::NodeId> last_modified_time_node_id;
+    bool writable = true;
 
     UA_StatusCode injectedFailure(FileMethod method) {
       auto it = failures.find(method);
@@ -583,7 +617,8 @@ class OpcUaTestServer {
     if (auto status = file->injectedFailure(FileMethod::Open); status != UA_STATUSCODE_GOOD) {
       return status;
     }
-    if (mode & opc::FILE_MODE_WRITE) {
+
+    if ((mode & opc::FILE_MODE_WRITE) && !file->writable) {
       return UA_STATUSCODE_BADNOTWRITABLE;
     }
     // No handle is registered for a malformed response, as the client cannot use it to close the file
@@ -600,8 +635,12 @@ class OpcUaTestServer {
       }
       return UA_STATUSCODE_GOOD;
     }
+
+    if (mode & opc::FILE_MODE_ERASE_EXISTING) {
+      file->content.clear();
+    }
     UA_UInt32 handle = self->next_file_handle_++;
-    file->handles[handle] = TestFile::OpenHandle{.mode = mode, .position = 0};
+    file->handles[handle] = TestFile::OpenHandle{.mode = mode, .position = (mode & opc::FILE_MODE_APPEND) ? file->content.size() : 0};
     file->last_open_mode = mode;
     return UA_Variant_setScalarCopy(&output[0], &handle, &UA_TYPES[UA_TYPES_UINT32]);
   }
@@ -654,6 +693,57 @@ class OpcUaTestServer {
       }
     }
     return UA_STATUSCODE_GOOD;
+  }
+
+  static UA_StatusCode fileWriteCallback(UA_Server* /*server*/, const UA_NodeId* /*session_id*/, void* /*session_context*/, const UA_NodeId* /*method_id*/,
+      void* method_context, const UA_NodeId* /*object_id*/, void* object_context, size_t /*input_size*/, const UA_Variant* input, size_t /*output_size*/,
+      UA_Variant* /*output*/) {
+    auto* self = static_cast<OpcUaTestServer*>(method_context);
+    auto* file = static_cast<TestFile*>(object_context);
+    const auto handle = *static_cast<const UA_UInt32*>(input[0].data);
+    const auto* data = static_cast<const UA_ByteString*>(input[1].data);
+    std::lock_guard<std::mutex> lock(self->files_mutex_);
+    if (auto status = file->injectedFailure(FileMethod::Write); status != UA_STATUSCODE_GOOD) {
+      return status;
+    }
+    auto it = file->handles.find(handle);
+    if (it == file->handles.end() || !(it->second.mode & opc::FILE_MODE_WRITE)) {
+      return UA_STATUSCODE_BADINVALIDSTATE;
+    }
+    file->max_chunk_size = std::max(file->max_chunk_size, data->length);
+    auto& position = it->second.position;
+    file->content.replace(position, data->length, reinterpret_cast<const char*>(data->data), data->length);
+    position += data->length;
+    return UA_STATUSCODE_GOOD;
+  }
+
+  static UA_StatusCode createFileCallback(UA_Server* /*server*/, const UA_NodeId* /*session_id*/, void* /*session_context*/, const UA_NodeId* /*method_id*/,
+      void* method_context, const UA_NodeId* object_id, void* /*object_context*/, size_t /*input_size*/, const UA_Variant* input, size_t /*output_size*/,
+      UA_Variant* output) {
+    auto* self = static_cast<OpcUaTestServer*>(method_context);
+    const auto* ua_file_name = static_cast<const UA_String*>(input[0].data);
+    const std::string file_name(reinterpret_cast<const char*>(ua_file_name->data), ua_file_name->length);
+    std::optional<MalformedResponse> malformed_response;
+    {
+      std::lock_guard<std::mutex> lock(self->files_mutex_);
+      if (self->create_file_failure_) {
+        return *self->create_file_failure_;
+      }
+      if (self->files_.contains(file_name)) {
+        return UA_STATUSCODE_BADBROWSENAMEDUPLICATED;
+      }
+      malformed_response = self->create_file_malformed_response_;
+    }
+    const auto file_node_id = self->addFile(file_name, UA_NODEID_NUMERIC(self->ns_index_, 0), *object_id, "");
+    UA_UInt32 file_handle = 0;
+    if (malformed_response == MalformedResponse::WrongOutputType) {
+      return UA_Variant_setScalarCopy(&output[0], &file_handle, &UA_TYPES[UA_TYPES_UINT32]);
+    }
+    auto status = UA_Variant_setScalarCopy(&output[0], &file_node_id.get(), &UA_TYPES[UA_TYPES_NODEID]);
+    if (status != UA_STATUSCODE_GOOD) {
+      return status;
+    }
+    return UA_Variant_setScalarCopy(&output[1], &file_handle, &UA_TYPES[UA_TYPES_UINT32]);
   }
 
   void raiseEvent(const UA_NodeId& source_node, const std::string& message, UA_UInt16 severity, UA_UInt32 event_type, const UA_KeyValueMap* fields) {
@@ -980,6 +1070,8 @@ class OpcUaTestServer {
   std::mutex files_mutex_;
   std::map<std::string, TestFile> files_;  // node based container, the addresses are used as node contexts
   UA_UInt32 next_file_handle_ = 1;
+  std::optional<UA_StatusCode> create_file_failure_;
+  std::optional<MalformedResponse> create_file_malformed_response_;
 };
 
 }  // namespace org::apache::nifi::minifi::test

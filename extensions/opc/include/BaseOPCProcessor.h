@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <expected>
 #include <string>
 #include <memory>
 #include <utility>
@@ -73,9 +74,26 @@ class BaseOPCProcessor : public core::ProcessorImpl {
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
 
  protected:
+  struct TargetNodeProperties {
+    core::PropertyReference id_type;
+    core::PropertyReference id;
+    core::PropertyReference namespace_index;
+    core::PropertyReference path_reference_types;
+  };
+
+  struct TargetNode {
+    opc::NodeId node_id;
+    bool exists = false;
+  };
+
   virtual bool reconnect();
   void readPathReferenceTypes(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property, const std::string& node_id);
   void parseNode(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property);
+  /** Resolves the node_id_ path to node_ if the Path node ID type is used. The resolved node is kept until the next reconnect. */
+  std::expected<void, std::string> resolvePathNode();
+  /** Resolves the target node of a flow file given by the properties. A path can only be resolved to an existing node. */
+  std::expected<TargetNode, std::string> resolveTargetNode(core::ProcessContext& context, const core::FlowFile& flow_file,
+      const TargetNodeProperties& properties) const;
 
   std::string node_id_;
   UA_UInt16 namespace_idx_ = 0;
@@ -99,6 +117,10 @@ class BaseOPCProcessor : public core::ProcessorImpl {
   std::vector<std::vector<char>> trust_buffers_;
   std::vector<UA_UInt32> path_reference_types_;
   std::optional<size_t> max_event_queue_size_;
+
+ private:
+  std::expected<opc::NodeId, std::string> resolveSingleNodePath(const std::string& path, UA_UInt16 namespace_idx,
+      const std::vector<UA_UInt32>& reference_types) const;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -24,6 +24,7 @@
 #include <iterator>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <utility>
 #include <vector>
 #include <string>
@@ -122,6 +123,30 @@ core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
     default:
       return core::logging::critical;
   }
+}
+
+template<typename BrowseResponse>
+UA_StatusCode singleBrowseResultStatus(const BrowseResponse& response) {
+  if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD) {
+    return response.responseHeader.serviceResult;
+  }
+  if (response.resultsSize != 1) {
+    return UA_STATUSCODE_BADUNEXPECTEDERROR;
+  }
+  return response.results[0].statusCode;
+}
+
+// Searches a page of browse results for a reference with the given browse name, and takes over the continuation point of the page
+std::optional<NodeId> findReferenceByBrowseName(UA_BrowseResult& result, std::string_view browse_name, UA_ByteString& continuation_point) {
+  UA_ByteString_clear(&continuation_point);
+  std::swap(continuation_point, result.continuationPoint);
+  for (size_t i = 0; i < result.referencesSize; ++i) {
+    const auto& ref = result.references[i];
+    if (std::string_view(reinterpret_cast<const char*>(ref.browseName.name.data), ref.browseName.name.length) == browse_name) {
+      return NodeId::copyOf(ref.nodeId.nodeId);
+    }
+  }
+  return std::nullopt;
 }
 }  // namespace
 
@@ -470,7 +495,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   }
 }
 
-std::expected<NodeId, UA_StatusCode> Client::findChild(const UA_NodeId& parent_node_id, std::string_view browse_name,
+std::expected<NodeId, UA_StatusCode> Client::findChildByQualifiedName(const UA_NodeId& parent_node_id, std::string_view browse_name,
     UA_UInt16 browse_name_namespace_index, UA_UInt32 ref_type_id) {
   std::string name(browse_name);
   UA_RelativePathElement element;
@@ -506,6 +531,62 @@ std::expected<NodeId, UA_StatusCode> Client::findChild(const UA_NodeId& parent_n
     return std::unexpected{UA_STATUSCODE_BADNOMATCH};
   }
   return NodeId::copyOf(response.results[0].targets[0].targetId.nodeId);
+}
+
+std::expected<NodeId, UA_StatusCode> Client::findObjectChildByName(const UA_NodeId& parent_node_id, std::string_view browse_name,
+    UA_UInt32 ref_type_id) {
+  UA_BrowseRequest browse_request;
+  UA_BrowseRequest_init(&browse_request);
+  browse_request.nodesToBrowse = UA_BrowseDescription_new();
+  browse_request.nodesToBrowseSize = 1;
+  UA_NodeId_copy(&parent_node_id, &browse_request.nodesToBrowse[0].nodeId);
+  browse_request.nodesToBrowse[0].referenceTypeId = UA_NODEID_NUMERIC(0, ref_type_id);
+  browse_request.nodesToBrowse[0].includeSubtypes = true;
+  browse_request.nodesToBrowse[0].browseDirection = UA_BROWSEDIRECTION_FORWARD;
+  browse_request.nodesToBrowse[0].nodeClassMask = UA_NODECLASS_OBJECT;
+  browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_BROWSENAME;
+
+  UA_BrowseResponse browse_response = UA_Client_Service_browse(client_, browse_request);
+  const auto guard = gsl::finally([&browse_request, &browse_response]() {
+    UA_BrowseRequest_clear(&browse_request);
+    UA_BrowseResponse_clear(&browse_response);
+  });
+
+  if (const auto status = singleBrowseResultStatus(browse_response); status != UA_STATUSCODE_GOOD) {
+    return std::unexpected{status};
+  }
+
+  // The server may limit the number of references returned at once, the rest is requested with BrowseNext (OPC UA Part 4, 5.8.3)
+  UA_ByteString continuation_point = UA_BYTESTRING_NULL;
+  const auto continuation_point_guard = gsl::finally([&continuation_point]() { UA_ByteString_clear(&continuation_point); });
+  auto browse_next = [this, &continuation_point](bool release_continuation_point) {
+    UA_BrowseNextRequest request;
+    UA_BrowseNextRequest_init(&request);
+    request.releaseContinuationPoints = release_continuation_point;
+    request.continuationPoints = &continuation_point;  // the request is not cleared, so it does not take ownership
+    request.continuationPointsSize = 1;
+    return UA_Client_Service_browseNext(client_, request);
+  };
+
+  auto child = findReferenceByBrowseName(browse_response.results[0], browse_name, continuation_point);
+  while (!child && continuation_point.length > 0) {
+    UA_BrowseNextResponse next_response = browse_next(false);
+    const auto next_response_guard = gsl::finally([&next_response]() { UA_BrowseNextResponse_clear(&next_response); });
+    if (const auto status = singleBrowseResultStatus(next_response); status != UA_STATUSCODE_GOOD) {
+      return std::unexpected{status};
+    }
+    child = findReferenceByBrowseName(next_response.results[0], browse_name, continuation_point);
+  }
+  if (!child) {
+    return std::unexpected{UA_STATUSCODE_BADNOMATCH};
+  }
+
+  // Servers only hold a limited number of continuation points per session, so the remaining pages are released if the child was found earlier
+  if (continuation_point.length > 0) {
+    UA_BrowseNextResponse release_response = browse_next(true);
+    UA_BrowseNextResponse_clear(&release_response);
+  }
+  return std::move(*child);
 }
 
 std::expected<MethodOutput, UA_StatusCode> Client::callMethod(const UA_NodeId& object_id, const UA_NodeId& method_id,

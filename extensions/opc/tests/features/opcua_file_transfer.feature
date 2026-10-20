@@ -14,10 +14,10 @@
 # limitations under the License.
 
 @ENABLE_OPC
-Feature: Transferring files from an OPC UA server
-  In order to read files exposed by an OPC UA server
+Feature: Transferring files from and to an OPC UA server
+  In order to read and write files exposed by an OPC UA server
   As a user of MiNiFi
-  I need to have FetchOPCFile processor
+  I need to have FetchOPCFile and PutOPCFile processors
 
   Scenario Outline: Fetch an existing file from an OPC UA server
     Given the OPC UA file server has a file "hello.txt" with the content "Hello OPC UA files"
@@ -41,3 +41,64 @@ Feature: Transferring files from an OPC UA server
     | Node ID Type | Node ID         |
     | String       | hello.txt       |
     | Path         | Files/hello.txt |
+
+  Scenario: Create a new file in a directory of an OPC UA server
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "created by minifi"
+    And a PutOPCFile processor
+    And PutOPCFile is EVENT_DRIVEN
+    And PutOPCFile's success relationship is auto-terminated
+    And PutOPCFile's failure relationship is auto-terminated
+    And these processor properties are set
+      | processor name | property name               | property value                                   |
+      | PutOPCFile     | OPC server endpoint         | opc.tcp://opcua-file-server-${scenario_id}:4840/ |
+      | PutOPCFile     | Parent node ID type         | String                                           |
+      | PutOPCFile     | Parent node ID              | Files                                            |
+      | PutOPCFile     | Parent node namespace index | 1                                                |
+      | PutOPCFile     | Target node browse name     | created.txt                                      |
+    And the "success" relationship of the GetFile processor is connected to the PutOPCFile
+    And an OPC UA file server is set up
+
+    When all instances start up
+    Then the OPC UA file server has a file "created.txt" with the content "created by minifi" in less than 60 seconds
+
+  Scenario: Overwrite an existing file on an OPC UA server
+    Given the OPC UA file server has a file "existing.txt" with the content "old content"
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "new content"
+    And a PutOPCFile processor
+    And PutOPCFile is EVENT_DRIVEN
+    And PutOPCFile's success relationship is auto-terminated
+    And PutOPCFile's failure relationship is auto-terminated
+    And these processor properties are set
+      | processor name | property name               | property value                                   |
+      | PutOPCFile     | OPC server endpoint         | opc.tcp://opcua-file-server-${scenario_id}:4840/ |
+      | PutOPCFile     | Target node ID type         | String                                           |
+      | PutOPCFile     | Target node ID              | existing.txt                                     |
+      | PutOPCFile     | Target node namespace index | 1                                                |
+    And the "success" relationship of the GetFile processor is connected to the PutOPCFile
+    And an OPC UA file server is set up
+
+    When all instances start up
+    Then the OPC UA file server has a file "existing.txt" with the content "new content" in less than 60 seconds
+
+  Scenario: Append to an existing file on an OPC UA server
+    Given the OPC UA file server has a file "append.txt" with the content "first,"
+    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a directory at "/tmp/input" has a file with the content "second"
+    And a PutOPCFile processor
+    And PutOPCFile is EVENT_DRIVEN
+    And PutOPCFile's success relationship is auto-terminated
+    And PutOPCFile's failure relationship is auto-terminated
+    And these processor properties are set
+      | processor name | property name               | property value                                   |
+      | PutOPCFile     | OPC server endpoint         | opc.tcp://opcua-file-server-${scenario_id}:4840/ |
+      | PutOPCFile     | Target node ID type         | String                                           |
+      | PutOPCFile     | Target node ID              | append.txt                                       |
+      | PutOPCFile     | Target node namespace index | 1                                                |
+      | PutOPCFile     | Write mode                  | Append                                           |
+    And the "success" relationship of the GetFile processor is connected to the PutOPCFile
+    And an OPC UA file server is set up
+
+    When all instances start up
+    Then the OPC UA file server has a file "append.txt" with the content "first,second" in less than 60 seconds

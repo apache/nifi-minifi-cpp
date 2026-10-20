@@ -89,6 +89,7 @@ limitations under the License.
 - [PutFile](#PutFile)
 - [PutGCSObject](#PutGCSObject)
 - [PutKinesisStream](#PutKinesisStream)
+- [PutOPCFile](#PutOPCFile)
 - [PutOPCProcessor](#PutOPCProcessor)
 - [PutS3Object](#PutS3Object)
 - [PutSFTP](#PutSFTP)
@@ -2776,6 +2777,53 @@ In the list below, the names of required properties appear in bold. Any other pr
 | aws.kinesis.error.code      | failure      | Error code for the message when posting to AWS Kinesis      |
 | aws.kinesis.sequence.number | success      | Sequence number for the message when posting to AWS Kinesis |
 | aws.kinesis.shard.id        | success      | Shard id of the message posted to AWS Kinesis               |
+
+
+## PutOPCFile
+
+### Description
+
+Writes the content of the flowfile to an OPC UA FileType node using its Open, Write and Close methods. If the target file node exists it is updated. Otherwise the file is looked up by its browse name in the parent FileDirectoryType node, and created there using the CreateFile method if it does not exist. The node ID of a created file is assigned by the server.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                             | Default Value | Allowable Values                 | Description                                                                                                                                                                                                                                                                                                                                                                 |
+|----------------------------------|---------------|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **OPC server endpoint**          |               |                                  | Specifies the address, port and relative path of an OPC endpoint                                                                                                                                                                                                                                                                                                            |
+| Application URI                  |               |                                  | Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.                                                                                                                                                                              |
+| Username                         |               |                                  | Username to log in with.                                                                                                                                                                                                                                                                                                                                                    |
+| Password                         |               |                                  | Password to log in with.<br/>**Sensitive Property: true**                                                                                                                                                                                                                                                                                                                   |
+| Certificate path                 |               |                                  | Path to the DER-encoded cert file                                                                                                                                                                                                                                                                                                                                           |
+| Key path                         |               |                                  | Path to the DER-encoded key file                                                                                                                                                                                                                                                                                                                                            |
+| Trusted server certificate path  |               |                                  | Comma separated list of paths to the DER-encoded trusted server certificates                                                                                                                                                                                                                                                                                                |
+| Path reference types             |               |                                  | Specify the reference types between nodes in the path if Path Node ID type is used. If not provided, all reference types are assumed to be Organizes. The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype.                                                          |
+| Target node ID type              |               |                                  | ID type of the target file node. Allowed values are: Path, Int, String, Guid. Required if Target node ID is set.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                 |
+| Target node ID                   |               |                                  | ID of an existing target file node to update. If the node does not exist, the file is looked up or created in the parent node using the target node browse name, except for the Path Node ID Type, where the node must exist. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.<br/>**Supports Expression Language: true**       |
+| Target node namespace index      | 0             |                                  | The index of the namespace of the target file node. In case of a Path Node ID Type, it is used for every node in the path.<br/>**Supports Expression Language: true**                                                                                                                                                                                                       |
+| Target node path reference types |               |                                  | Specify the reference types between nodes in the target path if Path Target node ID type is used. If not provided, all reference types are assumed to be Organizes. The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype.<br/>**Supports Expression Language: true** |
+| Target node browse name          |               |                                  | Browse name of the target file node in the parent node. Used to look up the file in the parent node, and to create it there if it does not exist. Required if the target file node is not found by its node ID.<br/>**Supports Expression Language: true**                                                                                                                  |
+| Parent node ID type              |               | Path<br/>Int<br/>String<br/>Guid | Specifies the type of the provided parent node ID.                                                                                                                                                                                                                                                                                                                          |
+| Parent node ID                   |               |                                  | ID of the FileDirectoryType node containing the target file. Required if the target file node is not found by its node ID. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.                                                                                                                                                     |
+| Parent node namespace index      | 0             |                                  | The index of the namespace of the parent node.                                                                                                                                                                                                                                                                                                                              |
+| **Write mode**                   | Overwrite     | Overwrite<br/>Append             | Overwrite replaces the existing content of the file, Append adds the flowfile content to the end of the file.                                                                                                                                                                                                                                                               |
+
+### Relationships
+
+| Name    | Description                      |
+|---------|----------------------------------|
+| success | Successfully written OPC UA file |
+| failure | Failed to write OPC UA file      |
+
+### Output Attributes
+
+| Attribute       | Relationship | Description                                   |
+|-----------------|--------------|-----------------------------------------------|
+| NodeID          | success      | ID of the written file node.                  |
+| NodeID type     | success      | Type of the node ID of the written file node. |
+| Namespace index | success      | Namespace index of the written file node.     |
+| Browsename      | success      | The browse name of the written file node.     |
 
 
 ## PutOPCProcessor

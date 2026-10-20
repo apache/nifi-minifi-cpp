@@ -46,6 +46,9 @@ class OPCUAFileServerContainer(LinuxContainer):
     def add_server_file(self, name: str, content: str):
         self.data_dir.add_file(name, content)
 
+    def file_has_content(self, name: str, content: str) -> bool:
+        return self.path_with_content_exists(f"{OPCUAFileServerContainer.DATA_DIR}/{name}", content)
+
     def deploy(self, context: MinifiTestContext | None) -> bool:
         super().deploy(context)
         finished_str = "New DiscoveryUrl added: opc.tcp://"

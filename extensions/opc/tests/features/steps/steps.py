@@ -72,6 +72,17 @@ def add_file_to_opcua_file_server(context: MinifiTestContext, name: str, content
     _get_or_create_opcua_file_server(context).add_server_file(name, content)
 
 
+@then('the OPC UA file server has a file "{name}" with the content "{content}" in less than {duration}')
+def verify_opcua_file_server_file_content(context: MinifiTestContext, name: str, content: str, duration: str):
+    opcua_file_server = _get_or_create_opcua_file_server(context)
+    assert wait_for_condition(
+        condition=lambda: opcua_file_server.file_has_content(name, content),
+        timeout_seconds=humanfriendly.parse_timespan(duration),
+        bail_condition=lambda: opcua_file_server.exited,
+        context=context,
+    )
+
+
 @then('the OPC UA server logs contain the following message: "{log_message}" in less than {duration}')
 def verify_opcua_server_logs_contain_message(context, log_message, duration):
     timeout_seconds = humanfriendly.parse_timespan(duration)

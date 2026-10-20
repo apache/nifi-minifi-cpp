@@ -18,7 +18,6 @@
 
 #include <cstddef>
 #include <expected>
-#include <optional>
 #include <span>
 #include <string_view>
 #include <utility>
@@ -56,14 +55,16 @@ class RemoteFile {
 
   std::expected<RemoteFileHandle, UA_StatusCode> open(UA_Byte mode);
   std::expected<FileChunk, UA_StatusCode> read(const RemoteFileHandle& handle, UA_Int32 length);
+  std::expected<void, UA_StatusCode> write(const RemoteFileHandle& handle, std::span<const std::byte> data);
 
   [[nodiscard]] const NodeId& nodeId() const noexcept {
     return file_node_id_;
   }
 
-  // The MaxByteStringLength property of the file, or the ServerCapabilities MaxByteStringLength if the file does not specify one (OPC UA Part 20, 4.2.1)
-  [[nodiscard]] std::optional<UA_UInt32> maxByteStringLength() const noexcept {
-    return max_byte_string_length_;
+  // The maximum number of bytes transferred by a single Read or Write call: the MaxByteStringLength property of the file, or the
+  // ServerCapabilities MaxByteStringLength if the file does not specify one (OPC UA Part 20, 4.2.1), or 32 KB if neither is set
+  [[nodiscard]] UA_Int32 chunkSize() const noexcept {
+    return chunk_size_;
   }
 
  private:
@@ -79,7 +80,7 @@ class RemoteFile {
   NodeId close_method_id_;
   NodeId read_method_id_;
   NodeId write_method_id_;
-  std::optional<UA_UInt32> max_byte_string_length_;
+  UA_Int32 chunk_size_ = 0;
 };
 
 class RemoteFileHandle {
@@ -114,5 +115,7 @@ class RemoteFileHandle {
   UA_UInt32 handle_;
   bool open_ = true;
 };
+
+std::expected<NodeId, UA_StatusCode> createFileInDirectory(Client& client, const UA_NodeId& directory_node_id, std::string_view file_name);
 
 }  // namespace org::apache::nifi::minifi::opc

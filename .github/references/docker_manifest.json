@@ -7192,6 +7192,193 @@
                             "sensitive": "false",
                             "expressionLanguageScope": "NONE"
                         },
+                        "Key path": {
+                            "name": "Key path",
+                            "description": "Path to the DER-encoded key file",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "OPC server endpoint": {
+                            "name": "OPC server endpoint",
+                            "description": "Specifies the address, port and relative path of an OPC endpoint",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Parent node ID": {
+                            "name": "Parent node ID",
+                            "description": "ID of the FileDirectoryType node containing the target file. Required if the target file node is not found by its node ID. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Parent node ID type": {
+                            "name": "Parent node ID type",
+                            "description": "Specifies the type of the provided parent node ID.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "allowableValues": [
+                                {
+                                    "value": "Path",
+                                    "displayName": "Path"
+                                },
+                                {
+                                    "value": "Int",
+                                    "displayName": "Int"
+                                },
+                                {
+                                    "value": "String",
+                                    "displayName": "String"
+                                },
+                                {
+                                    "value": "Guid",
+                                    "displayName": "Guid"
+                                }
+                            ]
+                        },
+                        "Parent node namespace index": {
+                            "name": "Parent node namespace index",
+                            "description": "The index of the namespace of the parent node.",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "0"
+                        },
+                        "Password": {
+                            "name": "Password",
+                            "description": "Password to log in with.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Path reference types": {
+                            "name": "Path reference types",
+                            "description": "Specify the reference types between nodes in the parent node path if Parent node ID type is Path. If not provided, all reference types are assumed to be Organizes. The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype. Subtypes of the specified reference types are also matched.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Target node ID": {
+                            "name": "Target node ID",
+                            "description": "ID of an existing target file node to update. If the node does not exist, the file is looked up or created in the parent node using the target node browse name, except for the Path Node ID Type, where the node must exist. In case of a Path Node ID Type, the path should be provided in the format of 'path/to/node'.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                        },
+                        "Target node ID type": {
+                            "name": "Target node ID type",
+                            "description": "ID type of the target file node. Allowed values are: Path, Int, String, Guid. Required if Target node ID is set.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                        },
+                        "Target node browse name": {
+                            "name": "Target node browse name",
+                            "description": "Browse name of the target file node in the parent node. Used to look up the file in the parent node, and to create it there if it does not exist. Required if the target file node is not found by its node ID.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                        },
+                        "Target node namespace index": {
+                            "name": "Target node namespace index",
+                            "description": "The index of the namespace of the target file node. In case of a Path Node ID Type, it is used for every node in the path.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES",
+                            "defaultValue": "0"
+                        },
+                        "Target node path reference types": {
+                            "name": "Target node path reference types",
+                            "description": "Specify the reference types between nodes in the target path if Path Target node ID type is used. If not provided, all reference types are assumed to be Organizes. The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "FLOWFILE_ATTRIBUTES"
+                        },
+                        "Trusted server certificate path": {
+                            "name": "Trusted server certificate path",
+                            "description": "Comma separated list of paths to the DER-encoded trusted server certificates",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Username": {
+                            "name": "Username",
+                            "description": "Username to log in with.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Write mode": {
+                            "name": "Write mode",
+                            "description": "Overwrite replaces the existing content of the file, Append adds the flowfile content to the end of the file.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "Overwrite",
+                            "allowableValues": [
+                                {
+                                    "value": "Overwrite",
+                                    "displayName": "Overwrite"
+                                },
+                                {
+                                    "value": "Append",
+                                    "displayName": "Append"
+                                }
+                            ]
+                        }
+                    },
+                    "inputRequirement": "INPUT_REQUIRED",
+                    "isSingleThreaded": "true",
+                    "supportedRelationships": [
+                        {
+                            "name": "failure",
+                            "description": "Failed to write OPC UA file"
+                        },
+                        {
+                            "name": "success",
+                            "description": "Successfully written OPC UA file"
+                        }
+                    ],
+                    "typeDescription": "Writes the content of the flowfile to an OPC UA FileType node using its Open, Write and Close methods. If the target file node exists it is updated. Otherwise the file is looked up by its browse name in the parent FileDirectoryType node, and created there using the CreateFile method if it does not exist. The node ID of a created file is assigned by the server.",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "org.apache.nifi.minifi.processors.PutOPCFile"
+                },
+                {
+                    "propertyDescriptors": {
+                        "Application URI": {
+                            "name": "Application URI",
+                            "description": "Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Certificate path": {
+                            "name": "Certificate path",
+                            "description": "Path to the DER-encoded cert file",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
                         "Create node reference type": {
                             "name": "Create node reference type",
                             "description": "Reference type used when a new node is created.",

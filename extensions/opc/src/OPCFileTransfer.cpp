@@ -16,7 +16,10 @@
  */
 #include "OPCFileTransfer.h"
 
+#include <algorithm>
 #include <array>
+#include <limits>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -24,8 +27,10 @@ namespace org::apache::nifi::minifi::opc {
 
 namespace {
 
+constexpr UA_UInt32 DEFAULT_CHUNK_SIZE = 32 * 1024;
+
 std::optional<UA_UInt32> readMaxByteStringLength(Client& client, const UA_NodeId& file_node_id) {
-  if (auto property_node_id = client.findChild(file_node_id, "MaxByteStringLength", 0, UA_NS0ID_HASPROPERTY)) {
+  if (auto property_node_id = client.findChildByQualifiedName(file_node_id, "MaxByteStringLength", 0, UA_NS0ID_HASPROPERTY)) {
     if (auto value = client.readUInt32Value(*property_node_id); value && *value > 0) {
       return *value;
     }
@@ -46,13 +51,15 @@ std::expected<RemoteFile, UA_StatusCode> RemoteFile::create(Client& client, Node
       {"Read", &file.read_method_id_},
       {"Write", &file.write_method_id_}}};
   for (const auto& [name, method_id] : methods) {
-    auto result = client.findChild(file.file_node_id_, name, 0, UA_NS0ID_HASCOMPONENT);
+    auto result = client.findChildByQualifiedName(file.file_node_id_, name, 0, UA_NS0ID_HASCOMPONENT);
     if (!result) {
       return std::unexpected{result.error()};
     }
     *method_id = std::move(*result);
   }
-  file.max_byte_string_length_ = readMaxByteStringLength(client, file.file_node_id_);
+  // The Length argument of the Read method is an Int32
+  file.chunk_size_ = gsl::narrow<UA_Int32>(std::min<UA_UInt32>(readMaxByteStringLength(client, file.file_node_id_).value_or(DEFAULT_CHUNK_SIZE),
+      static_cast<UA_UInt32>(std::numeric_limits<UA_Int32>::max())));
   return file;
 }
 
@@ -109,6 +116,45 @@ std::expected<FileChunk, UA_StatusCode> RemoteFile::read(const RemoteFileHandle&
     return {};
   }
   return FileChunk(std::move(*output), std::as_bytes(std::span(byte_string->data, byte_string->length)));
+}
+
+std::expected<void, UA_StatusCode> RemoteFile::write(const RemoteFileHandle& handle, std::span<const std::byte> data) {
+  UA_ByteString byte_string {.length = data.size(), .data = const_cast<UA_Byte*>(reinterpret_cast<const UA_Byte*>(data.data()))};
+  std::array<UA_Variant, 2> inputs{};
+  auto& [handle_input, data_input] = inputs;
+  UA_UInt32 handle_value = handle.get();
+  UA_Variant_setScalar(&handle_input, &handle_value, &UA_TYPES[UA_TYPES_UINT32]);
+  UA_Variant_setScalar(&data_input, &byte_string, &UA_TYPES[UA_TYPES_BYTESTRING]);
+  auto output = client_->callMethod(file_node_id_, write_method_id_, inputs);
+  return output ? std::expected<void, UA_StatusCode>{} : std::unexpected{output.error()};
+}
+
+std::expected<NodeId, UA_StatusCode> createFileInDirectory(Client& client, const UA_NodeId& directory_node_id, std::string_view file_name) {
+  auto method_id = client.findChildByQualifiedName(directory_node_id, "CreateFile", 0, UA_NS0ID_HASCOMPONENT);
+  if (!method_id) {
+    return std::unexpected{method_id.error()};
+  }
+
+  std::string name(file_name);
+  UA_String ua_file_name = UA_STRING(name.data());
+  UA_Boolean request_file_open = false;
+  std::array<UA_Variant, 2> inputs{};
+  auto& [file_name_input, request_file_open_input] = inputs;
+  UA_Variant_setScalar(&file_name_input, &ua_file_name, &UA_TYPES[UA_TYPES_STRING]);
+  UA_Variant_setScalar(&request_file_open_input, &request_file_open, &UA_TYPES[UA_TYPES_BOOLEAN]);
+  auto output = client.callMethod(directory_node_id, *method_id, inputs);
+  if (!output) {
+    return std::unexpected{output.error()};
+  }
+  const auto values = output->values();
+  if (values.empty()) {
+    return std::unexpected{UA_STATUSCODE_BADTYPEMISMATCH};
+  }
+  const UA_Variant& file_node_id = values.front();
+  if (!UA_Variant_hasScalarType(&file_node_id, &UA_TYPES[UA_TYPES_NODEID])) {
+    return std::unexpected{UA_STATUSCODE_BADTYPEMISMATCH};
+  }
+  return NodeId::copyOf(*static_cast<const UA_NodeId*>(file_node_id.data));
 }
 
 }  // namespace org::apache::nifi::minifi::opc

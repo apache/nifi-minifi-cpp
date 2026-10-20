@@ -20,7 +20,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "OPCCommon.h"
 #include "core/ProcessSession.h"
@@ -58,74 +57,6 @@ void PutOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSes
   } else {
     logger_->log_error("Invalid reference type: {}", value);
   }
-}
-
-std::expected<std::pair<bool, opc::NodeId>, std::string> PutOPCProcessor::configureTargetNode(core::ProcessContext& context,
-    core::FlowFile& flow_file) const {
-  const auto namespace_idx_str = context.getProperty(TargetNodeNameSpaceIndex, &flow_file).value_or("");
-  if (namespace_idx_str.empty()) {
-    return std::unexpected{fmt::format("Flowfile {} had no target namespace index specified, routing to failure!", flow_file.getUUIDStr())};
-  }
-  UA_UInt16 namespace_idx = 0;
-  try {
-    namespace_idx = gsl::narrow<UA_UInt16>(std::stoul(namespace_idx_str));
-  } catch (const std::exception&) {
-    return std::unexpected{fmt::format("Flowfile {} has invalid namespace index ({}), routing to failure!", flow_file.getUUIDStr(), namespace_idx_str)};
-  }
-
-  const auto target_id_type_str = context.getProperty(TargetNodeIDType, &flow_file).value_or("");
-  if (target_id_type_str.empty()) {
-    return std::unexpected{fmt::format("Flowfile {} has invalid target node id type, routing to failure!", flow_file.getUUIDStr())};
-  }
-
-  auto target_id_type = magic_enum::enum_cast<opc::OPCNodeIDType>(target_id_type_str);
-  if (!target_id_type) {
-    return std::unexpected{fmt::format("Flowfile {} has invalid target node id type '{}', routing to failure!", flow_file.getUUIDStr(), target_id_type_str)};
-  }
-
-  const auto target_id = context.getProperty(TargetNodeID, &flow_file).value_or("");
-  if (target_id.empty()) {
-    return std::unexpected{
-        fmt::format("Flowfile {} had target node ID type specified ({}) without ID, routing to failure!", flow_file.getUUIDStr(), target_id_type_str)};
-  }
-
-  if (*target_id_type == opc::OPCNodeIDType::Path) {
-    return resolveTargetNodePath(context, flow_file, target_id, namespace_idx);
-  }
-
-  opc::NodeId target_node;
-  if (auto result = opc::buildNodeId(*target_id_type, namespace_idx, target_id)) {
-    target_node = std::move(*result);
-  } else {
-    return std::unexpected{fmt::format("Flowfile {}: {}. Routing to failure!", flow_file.getUUIDStr(), result.error())};
-  }
-  const bool target_node_exists = connection_->exists(target_node);
-  return std::make_pair(target_node_exists, std::move(target_node));
-}
-
-std::expected<std::pair<bool, opc::NodeId>, std::string> PutOPCProcessor::resolveTargetNodePath(core::ProcessContext& context, core::FlowFile& flow_file,
-    const std::string& target_path, UA_UInt16 namespace_idx) const {
-  if (utils::string::splitAndTrimRemovingEmpty(target_path, "/").empty()) {
-    return std::unexpected{fmt::format("Flowfile {} has invalid target node path '{}', routing to failure!", flow_file.getUUIDStr(), target_path)};
-  }
-
-  auto reference_types = opc::parsePathReferenceTypes(context.getProperty(TargetNodePathReferenceTypes, &flow_file).value_or(""), target_path);
-  if (!reference_types) {
-    return std::unexpected{fmt::format("Flowfile {}: {} Routing to failure!", flow_file.getUUIDStr(), reference_types.error())};
-  }
-
-  std::vector<opc::NodeId> translated_node_ids;
-  if (connection_->translateBrowsePathsToNodeIdsRequest(target_path, translated_node_ids, namespace_idx, *reference_types, logger_) != UA_STATUSCODE_GOOD) {
-    return std::unexpected{fmt::format("Flowfile {}: target node path '{}' could not be resolved; Path target node ID type can only be used to update existing nodes. Routing to failure!",
-        flow_file.getUUIDStr(), target_path)};
-  }
-  if (translated_node_ids.size() != 1) {
-    return std::unexpected{fmt::format("Flowfile {}: target node path '{}' resolved to {} nodes; exactly one target node is required. Routing to failure!",
-        flow_file.getUUIDStr(), target_path, translated_node_ids.size())};
-  }
-
-  // A path can only be resolved to an existing node, so it is always updated
-  return std::make_pair(true, std::move(translated_node_ids[0]));
 }
 
 void PutOPCProcessor::updateNode(const UA_NodeId& target_node, const std::string& contentstr, core::ProcessSession& session,
@@ -277,21 +208,12 @@ void PutOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSess
     return;
   }
 
-  if (parent_node_defined_ && id_type_ == opc::OPCNodeIDType::Path && !path_node_id_resolved_) {
-    std::vector<opc::NodeId> translated_node_ids;
-    auto sc = connection_->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids, namespace_idx_, path_reference_types_, logger_);
-    if (sc != UA_STATUSCODE_GOOD) {
-      logger_->log_error("Failed to translate path '{}' to a node id: {}", node_id_, UA_StatusCode_name(sc));
+  if (parent_node_defined_) {
+    if (auto resolved = resolvePathNode(); !resolved) {
+      logger_->log_error("Failed to resolve the parent node: {}", resolved.error());
       context.yield();
       return;
     }
-    if (translated_node_ids.size() != 1) {
-      logger_->log_error("Path '{}' resolved to {} node ids; exactly one target node is required for put", node_id_, translated_node_ids.size());
-      context.yield();
-      return;
-    }
-    node_ = std::move(translated_node_ids[0]);
-    path_node_id_resolved_ = true;
   }
 
   auto flow_file = session.get();
@@ -299,19 +221,18 @@ void PutOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSess
     return;
   }
 
-  auto target_node_result = configureTargetNode(context, *flow_file);
-  if (!target_node_result.has_value()) {
-    logger_->log_error("{}", target_node_result.error());
+  const auto target_node = resolveTargetNode(context, *flow_file, {TargetNodeIDType, TargetNodeID, TargetNodeNameSpaceIndex, TargetNodePathReferenceTypes});
+  if (!target_node) {
+    logger_->log_error("Flowfile {}: {}, routing to failure", flow_file->getUUIDStr(), target_node.error());
     session.transfer(flow_file, Failure);
     return;
   }
 
-  const auto& [target_node_exists, target_node] = target_node_result.value();
   const auto contentstr = to_string(session.readBuffer(flow_file));
-  if (target_node_exists) {
-    updateNode(target_node, contentstr, session, flow_file);
+  if (target_node->exists) {
+    updateNode(target_node->node_id, contentstr, session, flow_file);
   } else if (parent_node_defined_) {
-    createNode(target_node, contentstr, context, session, flow_file);
+    createNode(target_node->node_id, contentstr, context, session, flow_file);
   } else {
     logger_->log_error("Target node does not exist and no parent node is defined to create it under; routing to failure");
     session.transfer(flow_file, Failure);

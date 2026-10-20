@@ -19,16 +19,19 @@
  * OPC UA test server exposing the files of a directory through the FileType and FileDirectoryType object types.
  *
  * The "Files" FileDirectoryType node (ns=1;s=Files) contains a FileType node (ns=1;s=<file name>) for every regular file
- * found in the directory at startup. The files are read-only.
- * The FileType methods only define an interface, so their behavior is implemented here.
+ * found in the directory at startup. Files created with the CreateFile method get a node id assigned by the server.
+ * The FileType and FileDirectoryType methods only define an interface, so their behavior is implemented here.
  */
 
 #include <open62541/server.h>
 #include <open62541/server_config_default.h>
+#include <unistd.h>
 
 #include <array>
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <expected>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -49,10 +52,12 @@ constexpr std::size_t MAX_OPEN_HANDLES = 16;
 // Open mode bits of the FileType Open method (OPC UA Part 20, 4.2.2)
 constexpr UA_Byte FILE_MODE_READ = 0x01;
 constexpr UA_Byte FILE_MODE_WRITE = 0x02;
+constexpr UA_Byte FILE_MODE_ERASE_EXISTING = 0x04;
+constexpr UA_Byte FILE_MODE_APPEND = 0x08;
 
 struct OpenHandle {
   UA_Byte mode;
-  std::ifstream file;
+  std::fstream file;
 };
 
 struct FileContext {
@@ -92,17 +97,30 @@ OpenHandle* findHandle(FileContext& context, UA_UInt32 handle_id) {
 }
 
 UA_StatusCode openHandle(FileContext& context, UA_Byte mode, UA_UInt32& handle_id) {
-  if (mode & FILE_MODE_WRITE) {
-    return UA_STATUSCODE_BADNOTWRITABLE;
-  }
-  if (!(mode & FILE_MODE_READ)) {
+  if (!(mode & (FILE_MODE_READ | FILE_MODE_WRITE))) {
     return UA_STATUSCODE_BADINVALIDARGUMENT;
+  }
+  std::ios::openmode open_mode = std::ios::binary;
+  if (mode & FILE_MODE_READ) {
+    open_mode |= std::ios::in;
+  }
+  if (mode & FILE_MODE_WRITE) {
+    if (access(context.path.c_str(), W_OK) != 0) {
+      return UA_STATUSCODE_BADNOTWRITABLE;
+    }
+    if (mode & FILE_MODE_ERASE_EXISTING) {
+      open_mode |= std::ios::out | std::ios::trunc;
+    } else if (mode & FILE_MODE_APPEND) {
+      open_mode |= std::ios::app;
+    } else {
+      open_mode |= std::ios::in | std::ios::out;
+    }
   }
   if (context.handles.size() >= MAX_OPEN_HANDLES) {
     return UA_STATUSCODE_BADTOOMANYOPERATIONS;
   }
 
-  std::ifstream file(context.path, std::ios::binary);
+  std::fstream file(context.path, open_mode);
   if (!file) {
     return UA_STATUSCODE_BADINTERNALERROR;
   }
@@ -158,6 +176,19 @@ UA_StatusCode readMethod(FileContext& context, std::span<const UA_Variant> input
   return UA_Variant_setScalarCopy(&output[0], &data, &UA_TYPES[UA_TYPES_BYTESTRING]);
 }
 
+UA_StatusCode writeMethod(FileContext& context, std::span<const UA_Variant> input, UA_Variant*) {
+  OpenHandle* handle = findHandle(context, scalarInput<UA_UInt32>(input[0]));
+  const auto data = scalarInput<UA_ByteString>(input[1]);
+  if (!handle || !(handle->mode & FILE_MODE_WRITE)) {
+    return UA_STATUSCODE_BADINVALIDSTATE;
+  }
+  if (data.length > 0 && !handle->file.write(reinterpret_cast<const char*>(data.data), static_cast<std::streamsize>(data.length))) {
+    return UA_STATUSCODE_BADINTERNALERROR;
+  }
+  logInfo("Wrote {} bytes to {}", data.length, context.path.string());
+  return UA_STATUSCODE_GOOD;
+}
+
 UA_StatusCode getPositionMethod(FileContext& context, std::span<const UA_Variant> input, UA_Variant* output) {
   OpenHandle* handle = findHandle(context, scalarInput<UA_UInt32>(input[0]));
   if (!handle) {
@@ -197,27 +228,69 @@ UA_StatusCode fileMethodCallback(UA_Server*, const UA_NodeId*, void*, const UA_N
   return Method(*context, std::span(input, input_size), output);
 }
 
-UA_StatusCode addFileNode(UA_Server* server, const std::filesystem::path& path) {
+/** Adds a FileType node for the file to the Files node. The server assigns the node id if the requested node id is numeric 0. */
+std::expected<FileContext*, UA_StatusCode> addFileNode(UA_Server* server, const std::filesystem::path& path, const UA_NodeId& requested_node_id,
+    UA_NodeId* file_node_id = nullptr) {
   auto context = std::make_unique<FileContext>(path);
   const std::string name = path.filename().string();
 
   UA_ObjectAttributes attr = UA_ObjectAttributes_default;
   attr.displayName = UA_LOCALIZEDTEXT(mutableChars("en-US"), mutableChars(name.c_str()));
   const UA_StatusCode status = UA_Server_addObjectNode(server,
-      UA_NODEID_STRING(1, mutableChars(name.c_str())),
+      requested_node_id,
       FILES_NODE_ID,
       UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
       UA_QUALIFIEDNAME(1, mutableChars(name.c_str())),
       UA_NODEID_NUMERIC(0, UA_NS0ID_FILETYPE),
       attr,
       context.get(),
-      nullptr);
+      file_node_id);
   if (status != UA_STATUSCODE_GOOD) {
-    return status;
+    return std::unexpected{status};
   }
   logInfo("Added file node for {}", path.string());
-  file_contexts.push_back(std::move(context));
-  return UA_STATUSCODE_GOOD;
+  return file_contexts.emplace_back(std::move(context)).get();
+}
+
+/** Implements the CreateFile method of FileDirectoryType, the object context being the path of the directory of the called node */
+UA_StatusCode createFileMethod(UA_Server* server, const UA_NodeId*, void*, const UA_NodeId*, void*, const UA_NodeId*, void* object_context, size_t,
+    const UA_Variant* input, size_t, UA_Variant* output) {
+  const auto* directory = static_cast<const std::filesystem::path*>(object_context);
+  if (!directory) {
+    return UA_STATUSCODE_BADNOTFOUND;
+  }
+  const auto ua_name = scalarInput<UA_String>(input[0]);
+  const auto request_file_open = scalarInput<UA_Boolean>(input[1]);
+  const std::string name(reinterpret_cast<const char*>(ua_name.data), ua_name.length);
+  if (name.empty() || name.size() >= NAME_MAX || name.contains('/') || name == "." || name == "..") {
+    return UA_STATUSCODE_BADINVALIDARGUMENT;
+  }
+
+  const std::filesystem::path path = *directory / name;
+  std::error_code error;
+  if (std::filesystem::exists(path, error)) {
+    return UA_STATUSCODE_BADBROWSENAMEDUPLICATED;
+  }
+  if (!std::ofstream(path, std::ios::binary)) {
+    return UA_STATUSCODE_BADINTERNALERROR;
+  }
+
+  UA_NodeId file_node_id = UA_NODEID_NULL;
+  const auto context = addFileNode(server, path, UA_NODEID_NUMERIC(1, 0), &file_node_id);
+  if (!context) {
+    return context.error();
+  }
+  UA_UInt32 handle_id = 0;
+  UA_StatusCode status = request_file_open ? openHandle(**context, FILE_MODE_READ | FILE_MODE_WRITE, handle_id) : UA_STATUSCODE_GOOD;
+  if (status == UA_STATUSCODE_GOOD) {
+    status = UA_Variant_setScalarCopy(&output[0], &file_node_id, &UA_TYPES[UA_TYPES_NODEID]);
+  }
+  if (status == UA_STATUSCODE_GOOD) {
+    status = UA_Variant_setScalarCopy(&output[1], &handle_id, &UA_TYPES[UA_TYPES_UINT32]);
+  }
+  UA_NodeId_clear(&file_node_id);
+  logInfo("CreateFile {}: {}", path.string(), UA_StatusCode_name(status));
+  return status;
 }
 
 UA_StatusCode addExistingFiles(UA_Server* server, const std::filesystem::path& data_dir) {
@@ -232,8 +305,9 @@ UA_StatusCode addExistingFiles(UA_Server* server, const std::filesystem::path& d
     if (!entry.is_regular_file(stat_error)) {
       continue;
     }
-    if (const UA_StatusCode status = addFileNode(server, entry.path()); status != UA_STATUSCODE_GOOD) {
-      return status;
+    const std::string name = entry.path().filename().string();
+    if (const auto context = addFileNode(server, entry.path(), UA_NODEID_STRING(1, mutableChars(name.c_str()))); !context) {
+      return context.error();
     }
   }
   return UA_STATUSCODE_GOOD;
@@ -249,19 +323,21 @@ UA_StatusCode setupAddressSpace(UA_Server* server, const std::filesystem::path& 
       UA_QUALIFIEDNAME(1, mutableChars("Files")),
       UA_NODEID_NUMERIC(0, UA_NS0ID_FILEDIRECTORYTYPE),
       attr,
-      nullptr,
+      const_cast<std::filesystem::path*>(&data_dir),
       nullptr);
   if (status != UA_STATUSCODE_GOOD) {
     return status;
   }
 
   // Instances reference the methods of their type definition, so the callbacks are set on the methods of the types
-  constexpr std::array<std::pair<UA_UInt32, UA_MethodCallback>, 5> methods{{
+  constexpr std::array<std::pair<UA_UInt32, UA_MethodCallback>, 7> methods{{
       {UA_NS0ID_FILETYPE_OPEN, fileMethodCallback<openMethod>},
       {UA_NS0ID_FILETYPE_CLOSE, fileMethodCallback<closeMethod>},
       {UA_NS0ID_FILETYPE_READ, fileMethodCallback<readMethod>},
+      {UA_NS0ID_FILETYPE_WRITE, fileMethodCallback<writeMethod>},
       {UA_NS0ID_FILETYPE_GETPOSITION, fileMethodCallback<getPositionMethod>},
       {UA_NS0ID_FILETYPE_SETPOSITION, fileMethodCallback<setPositionMethod>},
+      {UA_NS0ID_FILEDIRECTORYTYPE_CREATEFILE, createFileMethod},
   }};
   for (const auto& [method_id, callback] : methods) {
     status = UA_Server_setMethodNodeCallback(server, UA_NODEID_NUMERIC(0, method_id), callback);
@@ -281,10 +357,12 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  // Declared before the server, because it is the context of the Files node
+  const std::filesystem::path data_dir(argv[1]);
   const std::unique_ptr<UA_Server, decltype(&UA_Server_delete)> server(UA_Server_new(), &UA_Server_delete);
   logger = UA_Server_getConfig(server.get())->logging;
 
-  UA_StatusCode status = setupAddressSpace(server.get(), argv[1]);
+  UA_StatusCode status = setupAddressSpace(server.get(), data_dir);
   if (status == UA_STATUSCODE_GOOD) {
     status = UA_Server_runUntilInterrupt(server.get());
   } else {
