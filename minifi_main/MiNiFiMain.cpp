@@ -290,7 +290,17 @@ int main(int argc, char **argv) {
   process_running.test_and_set();
 
   std::atomic<bool> restart_token{false};
-  const auto request_restart = [&] {
+  std::atomic<int32_t> exit_code{0};
+  const auto request_shutdown = [&] (minifi::ShutdownType shutdown_type, std::optional<int32_t> shutdown_exit_code) {
+    if (shutdown_type == minifi::ShutdownType::SHUTDOWN) {
+      restart_token = false;
+      exit_code = shutdown_exit_code.value_or(0);
+      flow_controller_running.clear();
+      flow_controller_running.notify_all();
+      logger->log_info("Initiating shutdown...");
+      return;
+    }
+
     if (!restart_token.exchange(true)) {
       // only trigger if a restart is not already in progress (the flag was unset before the exchange)
       flow_controller_running.clear();
@@ -408,7 +418,7 @@ int main(int argc, char **argv) {
     auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration, asset_manager.get(), bulletin_store.get());
     const auto controller = std::make_unique<minifi::FlowController>(
         prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo,
-        std::move(metrics_publisher_store), filesystem, request_restart, asset_manager.get(), bulletin_store.get());
+        std::move(metrics_publisher_store), filesystem, request_shutdown, asset_manager.get(), bulletin_store.get());
 
     const bool disk_space_watchdog_enable = configure->get(minifi::Configure::minifi_disk_space_watchdog_enable)
         | utils::andThen(utils::string::toBool)
@@ -505,5 +515,5 @@ int main(int argc, char **argv) {
   process_running.clear();
   process_running.notify_all();
   logger->log_info("MiNiFi exit");
-  return 0;
+  return exit_code;
 }

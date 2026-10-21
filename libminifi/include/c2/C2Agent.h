@@ -43,6 +43,8 @@
 #include "utils/file/FileSystem.h"
 #include "C2Utils.h"
 #include "utils/file/AssetManager.h"
+#include "C2ConnectionWatchdog.h"
+#include "RequestShutdown.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -62,7 +64,7 @@ class C2Agent : public state::UpdateController {
   C2Agent(std::shared_ptr<Configure> configuration,
           std::weak_ptr<state::response::NodeReporter> node_reporter,
           std::shared_ptr<utils::file::FileSystem> filesystem,
-          std::function<void()> request_restart,
+          minifi::RequestShutdownCallback request_shutdown,
           utils::file::AssetManager* asset_manager);
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
@@ -235,12 +237,14 @@ class C2Agent : public state::UpdateController {
   const uint64_t C2RESPONSE_POLL_MS = 100;
 
   std::atomic<bool> restart_needed_ = false;
-  std::function<void()> request_restart_;
+  minifi::RequestShutdownCallback request_shutdown_;
 
   // time point the last time we performed a heartbeat.
   std::chrono::steady_clock::time_point last_run_;
 
   utils::file::AssetManager* asset_manager_;
+  std::optional<std::chrono::milliseconds> c2_connection_timeout_;
+  std::optional<C2ConnectionWatchdog> connection_watchdog_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

@@ -16,12 +16,15 @@
 #
 
 import humanfriendly
-from behave import given, step, then
+from behave import given, step, then, when
 from containers.diag_slave_container import DiagSlave
 from containers.syslog_container import SyslogContainer
 from containers.tcp_client_container import TcpClientContainer
 from minifi_behave.containers.minifi_protocol import set_up_ssl_properties
-from minifi_behave.core.helpers import wait_for_condition
+from minifi_behave.core.helpers import (
+    log_due_to_failure,
+    wait_for_condition,
+)
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.steps import (
     checking_steps,  # noqa: F401
@@ -124,6 +127,24 @@ def setup_minifi_c2_server_with_ssl(context: MinifiTestContext):
 def start_minifi_c2_server(context: MinifiTestContext):
     context.containers["minifi-c2-server"] = MinifiC2Server(context)
     assert context.containers["minifi-c2-server"].deploy(context)
+
+
+@when("the MiNiFi C2 server is stopped")
+def stop_minifi_c2_server(context: MinifiTestContext):
+    context.containers["minifi-c2-server"].stop()
+
+
+@then("MiNiFi exits with exit code {exit_code:d} in less than {duration}")
+def verify_minifi_exit_code(context: MinifiTestContext, exit_code: int, duration: str):
+    duration_seconds = humanfriendly.parse_timespan(duration)
+    minifi_container = context.get_or_create_default_minifi_container()
+    assert wait_for_condition(
+        condition=lambda: minifi_container.exited,
+        timeout_seconds=duration_seconds,
+        bail_condition=lambda: False,
+        context=context,
+    )
+    assert minifi_container.exit_code == exit_code or log_due_to_failure(context)
 
 
 @then('the MiNiFi C2 server logs contain the following message: "{log_message}" in less than {duration}')
