@@ -15,11 +15,12 @@
 import logging
 import platform
 
+from containers.atlas_server_container import AtlasServerContainer
+from minifi_behave.core.hooks import common_after_scenario, common_before_scenario
+
 import docker
 
-from containers.atlas_server_container import AtlasServerContainer
-from minifi_behave.core.hooks import common_before_scenario
-from minifi_behave.core.hooks import common_after_scenario
+logger = logging.getLogger(__name__)
 
 # Atlas is heavy (~90s cold start), so instead of one container per scenario we boot ONE
 # shared Atlas in before_all and reuse it for the whole (single, merged) atlas feature file,
@@ -38,14 +39,15 @@ def before_all(context):
 
     try:
         docker_client.networks.get(ATLAS_NETWORK_NAME).remove()
-        logging.warning(f"Removed stale network '{ATLAS_NETWORK_NAME}'.")
+        logger.warning(f"Removed stale network '{ATLAS_NETWORK_NAME}'.")
     except docker.errors.NotFound:
         pass
 
     context.atlas_network = docker_client.networks.create(ATLAS_NETWORK_NAME)
     context.atlas = AtlasServerContainer(context.atlas_network)
-    assert context.atlas.deploy(None) or context.atlas.log_app_output(), \
+    assert context.atlas.deploy(None) or context.atlas.log_app_output(), (
         "Shared Atlas server did not become available - see extensions/atlas/tests/features/README.md."
+    )
 
 
 def after_all(context):
@@ -55,7 +57,7 @@ def after_all(context):
         try:
             context.atlas_network.remove()
         except docker.errors.APIError as exc:
-            logging.warning(f"Could not remove '{ATLAS_NETWORK_NAME}': {exc}")
+            logger.warning(f"Could not remove '{ATLAS_NETWORK_NAME}': {exc}")
 
 
 def before_feature(context, feature):

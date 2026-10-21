@@ -39,11 +39,12 @@ import urllib.parse
 
 import requests
 from docker.models.networks import Network
-from requests.auth import HTTPBasicAuth
-
 from minifi_behave.containers.container_linux import LinuxContainer
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
+from requests.auth import HTTPBasicAuth
+
+logger = logging.getLogger(__name__)
 
 
 class AtlasServerContainer(LinuxContainer):
@@ -89,7 +90,8 @@ class AtlasServerContainer(LinuxContainer):
             condition=self.is_active,
             timeout_seconds=AtlasServerContainer.COLD_START_TIMEOUT_SECONDS,
             bail_condition=lambda: self.exited,
-            context=context)
+            context=context,
+        )
 
     def _published_rest_port(self, context: MinifiTestContext | None) -> int:
         """Return the host port Docker assigned to the container's REST port (21000).
@@ -109,11 +111,13 @@ class AtlasServerContainer(LinuxContainer):
                 port = int(bindings[0]["HostPort"])
             return port is not None
 
-        if not wait_for_condition(condition=_resolved, timeout_seconds=30,
-                                  bail_condition=lambda: self.exited, context=context):
+        if not wait_for_condition(
+            condition=_resolved, timeout_seconds=30, bail_condition=lambda: self.exited, context=context
+        ):
             raise RuntimeError(
                 f"Atlas container '{self.container_name}' never published a host port for "
-                f"{AtlasServerContainer.REST_PORT}/tcp; ports={self.container.ports}")
+                f"{AtlasServerContainer.REST_PORT}/tcp; ports={self.container.ports}"
+            )
         return port
 
     # --- Addressing ------------------------------------------------------------------------------
@@ -142,11 +146,14 @@ class AtlasServerContainer(LinuxContainer):
     def search_entities(self, type_name: str, limit: int = 200) -> list[dict]:
         """Return the raw basic-search hits (each is a summary, NOT the full entity)."""
         try:
-            response = requests.get(f"{self._base_url}/api/atlas/v2/search/basic",
-                                    params={"typeName": type_name, "excludeDeletedEntities": "true", "limit": limit},
-                                    auth=self._auth, timeout=AtlasServerContainer.REST_TIMEOUT_SECONDS)
+            response = requests.get(
+                f"{self._base_url}/api/atlas/v2/search/basic",
+                params={"typeName": type_name, "excludeDeletedEntities": "true", "limit": limit},
+                auth=self._auth,
+                timeout=AtlasServerContainer.REST_TIMEOUT_SECONDS,
+            )
         except requests.RequestException as exc:
-            logging.warning(f"Atlas basic-search request failed: {exc}")
+            logger.warning(f"Atlas basic-search request failed: {exc}")
             return []
         if response.status_code != 200:
             return []
@@ -165,14 +172,17 @@ class AtlasServerContainer(LinuxContainer):
         if not guids:
             return
         for start in range(0, len(guids), 50):
-            chunk = guids[start:start + 50]
+            chunk = guids[start : start + 50]
             try:
-                requests.delete(f"{self._base_url}/api/atlas/v2/entity/bulk",
-                                params=[("guid", guid) for guid in chunk],
-                                auth=self._auth, timeout=AtlasServerContainer.REST_TIMEOUT_SECONDS)
+                requests.delete(
+                    f"{self._base_url}/api/atlas/v2/entity/bulk",
+                    params=[("guid", guid) for guid in chunk],
+                    auth=self._auth,
+                    timeout=AtlasServerContainer.REST_TIMEOUT_SECONDS,
+                )
             except requests.RequestException as exc:
-                logging.warning(f"Atlas bulk-delete request failed: {exc}")
-        logging.info(f"Cleared {len(guids)} Atlas entities before the next scenario.")
+                logger.warning(f"Atlas bulk-delete request failed: {exc}")
+        logger.info(f"Cleared {len(guids)} Atlas entities before the next scenario.")
 
     def _all_entity_guids(self) -> list[str]:
         """Page basic-search over `Referenceable` (includes subtypes) and return every guid."""
@@ -180,13 +190,19 @@ class AtlasServerContainer(LinuxContainer):
         offset, page = 0, 200
         while True:
             try:
-                response = requests.get(f"{self._base_url}/api/atlas/v2/search/basic",
-                                        params={"typeName": "Referenceable",
-                                                "excludeDeletedEntities": "true",
-                                                "limit": page, "offset": offset},
-                                        auth=self._auth, timeout=AtlasServerContainer.REST_TIMEOUT_SECONDS)
+                response = requests.get(
+                    f"{self._base_url}/api/atlas/v2/search/basic",
+                    params={
+                        "typeName": "Referenceable",
+                        "excludeDeletedEntities": "true",
+                        "limit": page,
+                        "offset": offset,
+                    },
+                    auth=self._auth,
+                    timeout=AtlasServerContainer.REST_TIMEOUT_SECONDS,
+                )
             except requests.RequestException as exc:
-                logging.warning(f"Atlas search during clear failed: {exc}")
+                logger.warning(f"Atlas search during clear failed: {exc}")
                 break
             if response.status_code != 200:
                 break
@@ -206,17 +222,21 @@ class AtlasServerContainer(LinuxContainer):
 
     def get_entity(self, guid: str) -> dict | None:
         try:
-            response = requests.get(f"{self._base_url}/api/atlas/v2/entity/guid/{urllib.parse.quote(guid, safe='')}",
-                                    auth=self._auth, timeout=AtlasServerContainer.REST_TIMEOUT_SECONDS)
+            response = requests.get(
+                f"{self._base_url}/api/atlas/v2/entity/guid/{urllib.parse.quote(guid, safe='')}",
+                auth=self._auth,
+                timeout=AtlasServerContainer.REST_TIMEOUT_SECONDS,
+            )
         except requests.RequestException as exc:
-            logging.warning(f"Atlas get-entity request failed: {exc}")
+            logger.warning(f"Atlas get-entity request failed: {exc}")
             return None
         if response.status_code != 200:
             return None
         return response.json().get("entity")
 
-    def wait_for_entity(self, type_name: str, qualified_name: str, timeout_seconds: float,
-                        context: MinifiTestContext | None = None) -> dict | None:
+    def wait_for_entity(
+        self, type_name: str, qualified_name: str, timeout_seconds: float, context: MinifiTestContext | None = None
+    ) -> dict | None:
         """Poll find_entity_by_qn until it returns non-None or the timeout elapses.
 
         Returns the entity on success, None on timeout. Passing `context` lets the underlying
@@ -231,6 +251,7 @@ class AtlasServerContainer(LinuxContainer):
             found = self.find_entity_by_qn(type_name, qualified_name)
             return found is not None
 
-        wait_for_condition(condition=_found, timeout_seconds=timeout_seconds,
-                           bail_condition=lambda: False, context=context)
+        wait_for_condition(
+            condition=_found, timeout_seconds=timeout_seconds, bail_condition=lambda: False, context=context
+        )
         return found

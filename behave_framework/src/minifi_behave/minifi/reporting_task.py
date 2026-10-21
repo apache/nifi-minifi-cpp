@@ -19,8 +19,9 @@ import uuid
 
 
 class ReportingTask:
-    def __init__(self, class_name: str, name: str, scheduling_strategy: str = "TIMER_DRIVEN",
-                 scheduling_period: str = "1 sec"):
+    def __init__(
+        self, class_name: str, name: str, scheduling_strategy: str = "TIMER_DRIVEN", scheduling_period: str = "1 sec"
+    ):
         self.class_name = class_name
         self.id: str = str(uuid.uuid4())
         self.name = name
@@ -40,10 +41,10 @@ class ReportingTask:
 
     def to_yaml_dict(self) -> dict:
         return {
-            'name': self.name,
-            'id': self.id,
-            'class': self.class_name,
-            'scheduling strategy': self.scheduling_strategy,
-            'scheduling period': self.scheduling_period,
-            'Properties': self.properties,
+            "name": self.name,
+            "id": self.id,
+            "class": self.class_name,
+            "scheduling strategy": self.scheduling_strategy,
+            "scheduling period": self.scheduling_period,
+            "Properties": self.properties,
         }

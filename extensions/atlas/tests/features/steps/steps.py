@@ -17,17 +17,18 @@ import importlib.util
 import sys
 from pathlib import Path
 
-from behave import given, then  # noqa: F401 - `step` is unused here but the shared step modules use it
-
-# Register shared step modules. Same convention every extension uses.
-from minifi_behave.steps import checking_steps        # noqa: F401
-from minifi_behave.steps import configuration_steps   # noqa: F401
-from minifi_behave.steps import core_steps            # noqa: F401
-from minifi_behave.steps import flow_building_steps   # noqa: F401
+from behave import given, then
+from containers.atlas_server_container import AtlasServerContainer
 from minifi_behave.core.helpers import wait_for_condition
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
-from containers.atlas_server_container import AtlasServerContainer
+# Register shared step modules. Same convention every extension uses.
+from minifi_behave.steps import (
+    checking_steps,  # noqa: F401
+    configuration_steps,  # noqa: F401
+    core_steps,  # noqa: F401
+    flow_building_steps,  # noqa: F401
+)
 
 
 def _load_module_from_path(name: str, path: Path):
@@ -49,16 +50,20 @@ def _load_module_from_path(name: str, path: Path):
 # lets that module's `from containers.kafka_server_container import KafkaServer` resolve.
 _KAFKA_FEATURES = Path(__file__).resolve().parent.parent.parent.parent.parent / "kafka" / "tests" / "features"
 if _KAFKA_FEATURES.is_dir():
-    _load_module_from_path("containers.kafka_server_container",
-                           _KAFKA_FEATURES / "containers" / "kafka_server_container.py")
-    _load_module_from_path("_kafka_steps",  # side-effect: registers @step decorators
-                           _KAFKA_FEATURES / "steps" / "steps.py")
+    _load_module_from_path(
+        "containers.kafka_server_container", _KAFKA_FEATURES / "containers" / "kafka_server_container.py"
+    )
+    _load_module_from_path(
+        "_kafka_steps",  # side-effect: registers @step decorators
+        _KAFKA_FEATURES / "steps" / "steps.py",
+    )
 
 
 def _atlas(context: MinifiTestContext) -> AtlasServerContainer:
     atlas = getattr(context, "atlas", None)
-    if not isinstance(atlas, AtlasServerContainer):
-        raise AssertionError("Shared Atlas server was not set up in before_all (see environment.py).")
+    assert isinstance(atlas, AtlasServerContainer), (
+        "Shared Atlas server was not set up in before_all (see environment.py)."
+    )
     return atlas
 
 
@@ -69,10 +74,12 @@ def _atlas(context: MinifiTestContext) -> AtlasServerContainer:
 def atlas_server_is_available(context: MinifiTestContext):
     # The single shared Atlas is booted once in before_all and connected to this scenario's
     # network in before_scenario, so this step only asserts it is up (no per-scenario deploy).
-    assert _atlas(context).is_active(), "Shared Atlas server is not reachable - see extensions/atlas/tests/features/README.md."
+    assert _atlas(context).is_active(), (
+        "Shared Atlas server is not reachable - see extensions/atlas/tests/features/README.md."
+    )
 
 
-@given("the \"{reporting_task_name}\" reporting task is configured for the Atlas server")
+@given('the "{reporting_task_name}" reporting task is configured for the Atlas server')
 def configure_atlas_reporting_task(context: MinifiTestContext, reporting_task_name: str):
     """Sugar step that fills in the Atlas RT properties for the current scenario.
 
@@ -95,14 +102,20 @@ def configure_atlas_reporting_task(context: MinifiTestContext, reporting_task_na
 # --- Assertions -----------------------------------------------------------------------------------
 
 
-@then("a \"{type_name}\" entity with qualified name \"{qualified_name}\" exists in Atlas within {timeout_seconds:d} seconds")
+@then(
+    'a "{type_name}" entity with qualified name "{qualified_name}" exists in Atlas within {timeout_seconds:d} seconds'
+)
 def entity_exists(context: MinifiTestContext, type_name: str, qualified_name: str, timeout_seconds: int):
     atlas = _atlas(context)
     entity = atlas.wait_for_entity(type_name, qualified_name, float(timeout_seconds), context=context)
-    assert entity is not None, f"No {type_name} with qualifiedName '{qualified_name}' appeared within {timeout_seconds}s."
+    assert entity is not None, (
+        f"No {type_name} with qualifiedName '{qualified_name}' appeared within {timeout_seconds}s."
+    )
 
 
-@then("a \"{type_name}\" entity with qualified name ending in \"{qn_suffix}\" exists in Atlas within {timeout_seconds:d} seconds")
+@then(
+    'a "{type_name}" entity with qualified name ending in "{qn_suffix}" exists in Atlas within {timeout_seconds:d} seconds'
+)
 def entity_with_qn_suffix_exists(context: MinifiTestContext, type_name: str, qn_suffix: str, timeout_seconds: int):
     """Existence check when the full qualifiedName isn't predictable (e.g. contains an auto-generated UUID)."""
     atlas = _atlas(context)
@@ -113,18 +126,25 @@ def entity_with_qn_suffix_exists(context: MinifiTestContext, type_name: str, qn_
                 return True
         return False
 
-    ok = wait_for_condition(condition=_found, timeout_seconds=float(timeout_seconds),
-                            bail_condition=lambda: False, context=context)
+    ok = wait_for_condition(
+        condition=_found, timeout_seconds=float(timeout_seconds), bail_condition=lambda: False, context=context
+    )
     assert ok, f"No {type_name} with qualifiedName ending in '{qn_suffix}' appeared within {timeout_seconds}s."
 
 
-@then("the \"{type_name}\" entity with qualified name \"{qualified_name}\" has attribute \"{attr_name}\" equal to \"{attr_value}\"")
-def entity_attribute_equals(context: MinifiTestContext, type_name: str, qualified_name: str, attr_name: str, attr_value: str):
+@then(
+    'the "{type_name}" entity with qualified name "{qualified_name}" has attribute "{attr_name}" equal to "{attr_value}"'
+)
+def entity_attribute_equals(
+    context: MinifiTestContext, type_name: str, qualified_name: str, attr_name: str, attr_value: str
+):
     atlas = _atlas(context)
     entity = atlas.find_entity_by_qn(type_name, qualified_name)
     assert entity is not None, f"No {type_name} with qualifiedName '{qualified_name}' present in Atlas."
     actual = entity.get("attributes", {}).get(attr_name)
-    assert str(actual) == attr_value, f"Attribute '{attr_name}' on {type_name}('{qualified_name}'): expected '{attr_value}', got '{actual}'."
+    assert str(actual) == attr_value, (
+        f"Attribute '{attr_name}' on {type_name}('{qualified_name}'): expected '{attr_value}', got '{actual}'."
+    )
 
 
 def _find_entity_by_attr(atlas: AtlasServerContainer, type_name: str, attr_name: str, attr_value: str) -> dict | None:
@@ -145,13 +165,21 @@ def _find_entity_by_attr(atlas: AtlasServerContainer, type_name: str, attr_name:
     return None
 
 
-@then("a \"{type_name}\" entity with attribute \"{attr_name}\" equal to \"{attr_value}\" exists in Atlas within {timeout_seconds:d} seconds")
-def entity_with_attribute_exists(context: MinifiTestContext, type_name: str, attr_name: str, attr_value: str, timeout_seconds: int):
+@then(
+    'a "{type_name}" entity with attribute "{attr_name}" equal to "{attr_value}" exists in Atlas within {timeout_seconds:d} seconds'
+)
+def entity_with_attribute_exists(
+    context: MinifiTestContext, type_name: str, attr_name: str, attr_value: str, timeout_seconds: int
+):
     """Existence check for entities whose qualifiedName isn't predictable (topology entities),
     matched on a stable attribute value instead."""
     atlas = _atlas(context)
-    ok = wait_for_condition(condition=lambda: _find_entity_by_attr(atlas, type_name, attr_name, attr_value) is not None,
-                            timeout_seconds=float(timeout_seconds), bail_condition=lambda: False, context=context)
+    ok = wait_for_condition(
+        condition=lambda: _find_entity_by_attr(atlas, type_name, attr_name, attr_value) is not None,
+        timeout_seconds=float(timeout_seconds),
+        bail_condition=lambda: False,
+        context=context,
+    )
     assert ok, f"No {type_name} with attribute '{attr_name}'='{attr_value}' appeared within {timeout_seconds}s."
 
 
@@ -164,28 +192,41 @@ def _entity_ref_list_contains(refs, ref_type: str, ref_qn: str) -> bool:
     return False
 
 
-@then("the \"{type_name}\" entity with qualified name \"{qualified_name}\" has an input of type \"{ref_type}\" with qualified name \"{ref_qn}\"")
+@then(
+    'the "{type_name}" entity with qualified name "{qualified_name}" has an input of type "{ref_type}" with qualified name "{ref_qn}"'
+)
 def entity_has_input(context: MinifiTestContext, type_name: str, qualified_name: str, ref_type: str, ref_qn: str):
     atlas = _atlas(context)
     entity = atlas.find_entity_by_qn(type_name, qualified_name)
     assert entity is not None, f"No {type_name} with qualifiedName '{qualified_name}' present in Atlas."
     inputs = entity.get("attributes", {}).get("inputs")
     assert _entity_ref_list_contains(inputs, ref_type, ref_qn), (
-        f"{type_name}('{qualified_name}').inputs does not contain a {ref_type}('{ref_qn}'). Actual: {inputs}")
+        f"{type_name}('{qualified_name}').inputs does not contain a {ref_type}('{ref_qn}'). Actual: {inputs}"
+    )
 
 
-@then("the \"{type_name}\" entity with qualified name \"{qualified_name}\" has an output of type \"{ref_type}\" with qualified name \"{ref_qn}\"")
+@then(
+    'the "{type_name}" entity with qualified name "{qualified_name}" has an output of type "{ref_type}" with qualified name "{ref_qn}"'
+)
 def entity_has_output(context: MinifiTestContext, type_name: str, qualified_name: str, ref_type: str, ref_qn: str):
     atlas = _atlas(context)
     entity = atlas.find_entity_by_qn(type_name, qualified_name)
     assert entity is not None, f"No {type_name} with qualifiedName '{qualified_name}' present in Atlas."
     outputs = entity.get("attributes", {}).get("outputs")
     assert _entity_ref_list_contains(outputs, ref_type, ref_qn), (
-        f"{type_name}('{qualified_name}').outputs does not contain a {ref_type}('{ref_qn}'). Actual: {outputs}")
+        f"{type_name}('{qualified_name}').outputs does not contain a {ref_type}('{ref_qn}'). Actual: {outputs}"
+    )
 
 
-def _wait_for_ref_on_named_entity(context: MinifiTestContext, type_name: str, name: str,
-                                  ref_list_attr: str, ref_type: str, ref_qn: str, timeout_seconds: int):
+def _wait_for_ref_on_named_entity(
+    context: MinifiTestContext,
+    type_name: str,
+    name: str,
+    ref_list_attr: str,
+    ref_type: str,
+    ref_qn: str,
+    timeout_seconds: int,
+):
     """Poll until the entity of `type_name` named `name` carries a `ref_list_attr` reference to
     `ref_type`('ref_qn'). Used for lineage edges on nifi_flow_path, whose qualifiedName embeds a
     UUID (so we find it by name) and whose inputs/outputs are filled on a later reporting cycle
@@ -201,24 +242,39 @@ def _wait_for_ref_on_named_entity(context: MinifiTestContext, type_name: str, na
         last[0] = refs
         return _entity_ref_list_contains(refs, ref_type, ref_qn)
 
-    ok = wait_for_condition(condition=_found, timeout_seconds=float(timeout_seconds),
-                            bail_condition=lambda: False, context=context)
-    assert ok, (f"{type_name} named '{name}' did not gain a {ref_list_attr} {ref_type}('{ref_qn}') "
-                f"within {timeout_seconds}s. Last seen {ref_list_attr}: {last[0]}")
+    ok = wait_for_condition(
+        condition=_found, timeout_seconds=float(timeout_seconds), bail_condition=lambda: False, context=context
+    )
+    assert ok, (
+        f"{type_name} named '{name}' did not gain a {ref_list_attr} {ref_type}('{ref_qn}') "
+        f"within {timeout_seconds}s. Last seen {ref_list_attr}: {last[0]}"
+    )
 
 
-@then("the \"{type_name}\" entity named \"{name}\" has an input of type \"{ref_type}\" with qualified name \"{ref_qn}\" within {timeout_seconds:d} seconds")
-def entity_named_has_input(context: MinifiTestContext, type_name: str, name: str, ref_type: str, ref_qn: str, timeout_seconds: int):
+@then(
+    'the "{type_name}" entity named "{name}" has an input of type "{ref_type}" with qualified name "{ref_qn}" within {timeout_seconds:d} seconds'
+)
+def entity_named_has_input(
+    context: MinifiTestContext, type_name: str, name: str, ref_type: str, ref_qn: str, timeout_seconds: int
+):
     _wait_for_ref_on_named_entity(context, type_name, name, "inputs", ref_type, ref_qn, timeout_seconds)
 
 
-@then("the \"{type_name}\" entity named \"{name}\" has an output of type \"{ref_type}\" with qualified name \"{ref_qn}\" within {timeout_seconds:d} seconds")
-def entity_named_has_output(context: MinifiTestContext, type_name: str, name: str, ref_type: str, ref_qn: str, timeout_seconds: int):
+@then(
+    'the "{type_name}" entity named "{name}" has an output of type "{ref_type}" with qualified name "{ref_qn}" within {timeout_seconds:d} seconds'
+)
+def entity_named_has_output(
+    context: MinifiTestContext, type_name: str, name: str, ref_type: str, ref_qn: str, timeout_seconds: int
+):
     _wait_for_ref_on_named_entity(context, type_name, name, "outputs", ref_type, ref_qn, timeout_seconds)
 
 
-@then("a \"{type_name}\" entity for the RemoteProcessGroup \"{rpg_name}\" input port \"{port_name}\" exists in Atlas in namespace \"{namespace}\" within {timeout_seconds:d} seconds")
-def s2s_input_port_entity_exists(context: MinifiTestContext, type_name: str, rpg_name: str, port_name: str, namespace: str, timeout_seconds: int):
+@then(
+    'a "{type_name}" entity for the RemoteProcessGroup "{rpg_name}" input port "{port_name}" exists in Atlas in namespace "{namespace}" within {timeout_seconds:d} seconds'
+)
+def s2s_input_port_entity_exists(
+    context: MinifiTestContext, type_name: str, rpg_name: str, port_name: str, namespace: str, timeout_seconds: int
+):
     """Assert the Site-to-Site port entity is keyed on the remote port's UUID (the RPG port's
     id, which the receiving instance shares) rather than the volatile transit URI. We resolve
     that id straight from the flow definition so we can spell the exact qualifiedName
@@ -230,4 +286,5 @@ def s2s_input_port_entity_exists(context: MinifiTestContext, type_name: str, rpg
     entity = atlas.wait_for_entity(type_name, qualified_name, float(timeout_seconds), context=context)
     assert entity is not None, (
         f"No {type_name} with qualifiedName '{qualified_name}' (RemoteProcessGroup '{rpg_name}' "
-        f"input port '{port_name}') appeared within {timeout_seconds}s.")
+        f"input port '{port_name}') appeared within {timeout_seconds}s."
+    )

@@ -1,4 +1,7 @@
 line-length = 120
+# Keep in sync with behave_framework/pyproject.toml's requires-python. Without this, ruff infers the
+# target from the ambient interpreter, so results differ between a dev machine and CI.
+target-version = "py310"
 builtins = ["log", "REL_SUCCESS", "REL_FAILURE", "REL_ORIGINAL", "raw_input"]
 
 extend-exclude = [
