@@ -40,7 +40,7 @@ int ssl_enable(void* /*ssl_context*/, void* /*user_data*/);
 class HTTPIntegrationBase : public IntegrationBase {
  public:
   explicit HTTPIntegrationBase(const std::optional<std::filesystem::path>& test_file_location = {}, const std::optional<std::filesystem::path>& home_path = {},
-    std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS))
+    std::chrono::milliseconds waitTime = DefaultWaitTime)
       : IntegrationBase(test_file_location, home_path, waitTime),
         server(nullptr) {
   }
@@ -103,7 +103,7 @@ class VerifyC2Describe : public VerifyC2Base {
   }
 
   void runAssertions() override {
-    REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] { return verified_.load(); }));
+    REQUIRE(utils::verifyEventHappenedInPollTime(wait_time_, [&] { return verified_.load(); }));
   }
 
  protected:
@@ -113,7 +113,7 @@ class VerifyC2Describe : public VerifyC2Base {
 class VerifyC2Update : public HTTPIntegrationBase {
  public:
   explicit VerifyC2Update(const std::filesystem::path& test_file_location, const std::optional<std::filesystem::path>& home_path = {},
-    std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS))
+    std::chrono::milliseconds waitTime = DefaultWaitTime)
       : HTTPIntegrationBase(test_file_location, home_path, waitTime) {
   }
 
@@ -136,7 +136,7 @@ class VerifyC2Update : public HTTPIntegrationBase {
   }
 
   void runAssertions() override {
-    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "Starting to reload Flow Controller with flow control name MiNiFi Flow, version"));
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(10s, "Starting to reload Flow Controller with flow control name MiNiFi Flow, version"));
   }
 };
 
@@ -167,7 +167,7 @@ class VerifyFlowFetched : public HTTPIntegrationBase {
   }
 
   void runAssertions() override {
-    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "Successfully fetched valid flow configuration"));
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(10s, "Successfully fetched valid flow configuration"));
   }
 };
 
@@ -184,7 +184,7 @@ class VerifyC2FailedUpdate : public VerifyC2Update {
   }
 
   void runAssertions() override {
-    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds(10), "Invalid configuration payload", "update failed"));
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(10s, "Invalid configuration payload", "update failed"));
   }
 
   void cleanup() override {

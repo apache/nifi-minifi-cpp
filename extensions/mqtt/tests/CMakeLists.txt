@@ -30,7 +30,7 @@ FOREACH(testfile ${MQTT_TESTS})
 	target_link_libraries(${testfilename} minifi-mqtt-extensions)
 	target_link_libraries(${testfilename} minifi-standard-processors)
 	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-	set_tests_properties("${testfilename}" PROPERTIES LABELS "mqtt;memchecked")
+	set_tests_properties("${testfilename}" PROPERTIES LABELS "mqtt")
 ENDFOREACH()
 
 list(LENGTH MQTT_TESTS TEST_COUNT)

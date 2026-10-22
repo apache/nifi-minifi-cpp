@@ -95,12 +95,21 @@ class ManualClock : public minifi::utils::timeutils::SteadyClock {
   std::chrono::milliseconds time_{0};
 };
 
+inline constexpr int VALGRIND_TIMEOUT_MULTIPLIER = 50;
+
+bool runningUnderValgrind();
+
+template <class Rep, class Period>
+std::chrono::duration<Rep, Period> timeout(std::chrono::duration<Rep, Period> duration) {
+  return runningUnderValgrind() ? duration * VALGRIND_TIMEOUT_MULTIPLIER : duration;
+}
+
 template <class Rep, class Period, typename Fun>
 bool verifyEventHappenedInPollTime(
     const std::chrono::duration<Rep, Period>& wait_duration,
     Fun&& check,
-    std::chrono::microseconds check_interval = std::chrono::milliseconds(100)) {
-  std::chrono::steady_clock::time_point wait_end = std::chrono::steady_clock::now() + wait_duration;
+    std::chrono::microseconds check_interval = 100ms) {
+  std::chrono::steady_clock::time_point wait_end = std::chrono::steady_clock::now() + timeout(wait_duration);
   do {
     if (std::forward<Fun>(check)()) {
       return true;

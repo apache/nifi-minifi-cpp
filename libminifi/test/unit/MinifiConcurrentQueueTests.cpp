@@ -136,7 +136,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
       constexpr std::size_t max_read_attempts = 300;
       for (std::size_t attempt_num = 0; results.size() < 3 && attempt_num < max_read_attempts; ++attempt_num) {
         std::string s;
-        if (queue.dequeueWaitFor(s, std::chrono::milliseconds(1))) {
+        if (queue.dequeueWaitFor(s, minifi::test::utils::timeout(1ms))) {
           results.push_back(s);
         }
       }
@@ -240,11 +240,14 @@ TEST_CASE("TestConcurrentQueue: test simple producer and consumer", "[ProducerCo
         producer = MinifiConcurrentQueueTestProducersConsumers::getSimpleProducerThread(queue);
         consumer = MinifiConcurrentQueueTestProducersConsumers::getSimpleConsumeConsumerThread(queue, results);
     }
-    /* In this testcase the consumer thread puts back all items to the queue to consume again
-    * Even in this case the ones inserted later by the producer should be consumed */
-    SECTION("with readd") {
-      producer = MinifiConcurrentQueueTestProducersConsumers::getSimpleProducerThread(queue);
-      consumer = MinifiConcurrentQueueTestProducersConsumers::getSpinningReaddingDequeueConsumerThread(queue, results);
+    // In this testcase the consumer thread puts back all items to the queue to consume again
+    // Even in this case the ones inserted later by the producer should be consumed
+    // The spinning-readding consumer doesn't work well under Valgrind, so we skip it.
+    if (!minifi::test::utils::runningUnderValgrind()) {
+      SECTION("with readd") {
+        producer = MinifiConcurrentQueueTestProducersConsumers::getSimpleProducerThread(queue);
+        consumer = MinifiConcurrentQueueTestProducersConsumers::getSpinningReaddingDequeueConsumerThread(queue, results);
+      }
     }
     producer.join();
     consumer.join();
@@ -302,6 +305,10 @@ TEST_CASE("TestConcurrentQueue: test untimed waiting consumers", "[ProducerConsu
 }
 
 TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerConsumer]") {
+  if (minifi::test::utils::runningUnderValgrind()) {
+    SKIP("The spinning-readding consumer doesn't work well under Valgrind's serialized scheduler");
+  }
+
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::vector<std::string> results;
 
@@ -342,6 +349,10 @@ TEST_CASE("TestConcurrentQueue: test waiting consumers with blocked producer", "
 }
 
 TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
+  if (minifi::test::utils::runningUnderValgrind()) {
+    SKIP("High-load busy-spin test is too slow under Valgrind's serialized scheduler");
+  }
+
   std::random_device dev;
   std::mt19937 rng(dev());
   std::uniform_int_distribution<std::mt19937::result_type> dist(1, std::numeric_limits<int>::max());

@@ -49,7 +49,7 @@ TEST_CASE("A flow file can be moved into the FlowFileQueue", "[FlowFileQueue][po
   utils::FlowFileQueue queue;
 
   auto penalized_flow_file = std::make_shared<core::FlowFileImpl>();
-  penalized_flow_file->penalize(std::chrono::milliseconds{100});
+  penalized_flow_file->penalize(minifi::test::utils::timeout(100ms));
   queue.push(std::move(penalized_flow_file));
 
   queue.push(std::make_shared<core::FlowFileImpl>());
@@ -81,7 +81,7 @@ TEST_CASE("Cannot add flow files in the past preempting others", "[FlowFileQueue
   const auto flow_file_1 = std::make_shared<core::FlowFileImpl>();
   queue.push(flow_file_1);
   const auto flow_file_2 = std::make_shared<core::FlowFileImpl>();
-  flow_file_2->penalize(std::chrono::seconds{-10});
+  flow_file_2->penalize(-10s);
   queue.push(flow_file_2);
 
   REQUIRE(queue.isWorkAvailable());
@@ -107,33 +107,33 @@ class PenaltyHasExpired {
 TEST_CASE("Penalized flow files are popped from the FlowFileQueue in the order their penalties expire", "[FlowFileQueue][pop]") {
   utils::FlowFileQueue queue;
   const auto flow_file_1 = std::make_shared<core::FlowFileImpl>();
-  flow_file_1->penalize(std::chrono::milliseconds{70});
+  flow_file_1->penalize(minifi::test::utils::timeout(70ms));
   queue.push(flow_file_1);
   const auto flow_file_2 = std::make_shared<core::FlowFileImpl>();
-  flow_file_2->penalize(std::chrono::milliseconds{50});
+  flow_file_2->penalize(minifi::test::utils::timeout(50ms));
   queue.push(flow_file_2);
   const auto flow_file_3 = std::make_shared<core::FlowFileImpl>();
-  flow_file_3->penalize(std::chrono::milliseconds{80});
+  flow_file_3->penalize(minifi::test::utils::timeout(80ms));
   queue.push(flow_file_3);
   const auto flow_file_4 = std::make_shared<core::FlowFileImpl>();
-  flow_file_4->penalize(std::chrono::milliseconds{60});
+  flow_file_4->penalize(minifi::test::utils::timeout(60ms));
   queue.push(flow_file_4);
 
   REQUIRE_FALSE(queue.isWorkAvailable());
 
-  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_2}, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(1s, PenaltyHasExpired{flow_file_2}, minifi::test::utils::timeout(10ms)));
   REQUIRE(queue.isWorkAvailable());
   REQUIRE(queue.pop() == flow_file_2);
 
-  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_4}, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(1s, PenaltyHasExpired{flow_file_4}, minifi::test::utils::timeout(10ms)));
   REQUIRE(queue.isWorkAvailable());
   REQUIRE(queue.pop() == flow_file_4);
 
-  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_1}, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(1s, PenaltyHasExpired{flow_file_1}, minifi::test::utils::timeout(10ms)));
   REQUIRE(queue.isWorkAvailable());
   REQUIRE(queue.pop() == flow_file_1);
 
-  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{flow_file_3}, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(1s, PenaltyHasExpired{flow_file_3}, minifi::test::utils::timeout(10ms)));
   REQUIRE(queue.isWorkAvailable());
   REQUIRE(queue.pop() == flow_file_3);
 
@@ -143,7 +143,7 @@ TEST_CASE("Penalized flow files are popped from the FlowFileQueue in the order t
 TEST_CASE("If a penalized then a non-penalized flow file is added to the FlowFileQueue, pop() returns the correct one", "[FlowFileQueue][pop]") {
   utils::FlowFileQueue queue;
   const auto penalized_flow_file = std::make_shared<core::FlowFileImpl>();
-  penalized_flow_file->penalize(std::chrono::milliseconds{10});
+  penalized_flow_file->penalize(minifi::test::utils::timeout(10ms));
   queue.push(penalized_flow_file);
   const auto flow_file = std::make_shared<core::FlowFileImpl>();
   queue.push(flow_file);
@@ -155,7 +155,7 @@ TEST_CASE("If a penalized then a non-penalized flow file is added to the FlowFil
   }
 
   SECTION("Wait until the penalty expires, then pop") {
-    REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, PenaltyHasExpired{penalized_flow_file}, std::chrono::milliseconds{10}));
+    REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(1s, PenaltyHasExpired{penalized_flow_file}, minifi::test::utils::timeout(10ms)));
 
     REQUIRE(queue.isWorkAvailable());
     REQUIRE(queue.pop() == flow_file);
@@ -168,7 +168,7 @@ TEST_CASE("If a penalized then a non-penalized flow file is added to the FlowFil
 TEST_CASE("Force pop on FlowFileQueue returns the flow files, whether penalized or not", "[FlowFileQueue][forcePop]") {
   utils::FlowFileQueue queue;
   const auto penalized_flow_file = std::make_shared<core::FlowFileImpl>();
-  penalized_flow_file->penalize(std::chrono::milliseconds{10});
+  penalized_flow_file->penalize(minifi::test::utils::timeout(10ms));
   queue.push(penalized_flow_file);
   const auto flow_file = std::make_shared<core::FlowFileImpl>();
   queue.push(flow_file);

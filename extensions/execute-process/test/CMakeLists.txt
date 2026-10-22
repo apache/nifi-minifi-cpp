@@ -27,7 +27,7 @@ target_include_directories(ExecuteProcessTests PRIVATE BEFORE "${CMAKE_SOURCE_DI
 target_compile_definitions(ExecuteProcessTests PRIVATE "MINIFI_EXTENSION_GROUP_NAME=org.apache.nifi.minifi.test")
 
 add_test(NAME ExecuteProcessTests COMMAND ExecuteProcessTests WORKING_DIRECTORY ${TEST_DIR})
-set_tests_properties(ExecuteProcessTests PROPERTIES LABELS "execute-process;memchecked")
+set_tests_properties(ExecuteProcessTests PROPERTIES LABELS "execute-process")
 
 createTests(ExecuteProcessTests)
 

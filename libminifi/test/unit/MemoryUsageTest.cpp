@@ -26,9 +26,14 @@
 #include "minifi-cpp/utils/gsl.h"
 #include "utils/OsUtils.h"
 #include "unit/TestBase.h"
+#include "unit/TestUtils.h"
 #include "unit/Catch.h"
 
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
+  if (minifi::test::utils::runningUnderValgrind()) {
+    SKIP("Memory usage is much higher when running under Valgrind");
+  }
+
   constexpr bool cout_enabled = true;
 
   std::vector<uint8_t> large_vector(30'000'000);

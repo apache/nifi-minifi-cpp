@@ -17,8 +17,6 @@
  */
 #pragma once
 
-#define DEFAULT_WAITTIME_MSECS 10000
-
 #include <memory>
 #include <optional>
 #include <string>
@@ -32,6 +30,7 @@
 #include "utils/file/FileUtils.h"
 #include "core/BulletinStore.h"
 #include "unit/TestBase.h"
+#include "unit/TestUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -46,8 +45,10 @@ struct FlowConfigPath {
 
 class IntegrationBase {
  public:
+  static constexpr auto DefaultWaitTime = 10s;
+
   explicit IntegrationBase(const std::optional<std::filesystem::path>& test_file_location = {}, const std::optional<std::filesystem::path>& home_path = {},
-      std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS));
+      std::chrono::milliseconds waitTime = DefaultWaitTime);
   IntegrationBase(const IntegrationBase&) = delete;
   IntegrationBase(IntegrationBase&& other) noexcept
       : logger_properties_{std::move(other.logger_properties_)},

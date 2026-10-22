@@ -25,6 +25,7 @@
 #endif
 
 #include "minifi-cpp/utils/gsl.h"
+#include "utils/Environment.h"
 
 #ifdef WIN32
 namespace {
@@ -62,6 +63,14 @@ void setAclOnFileOrDirectory(std::string file_name, DWORD perms, ACCESS_MODE per
 #endif
 
 namespace org::apache::nifi::minifi::test::utils {
+
+bool runningUnderValgrind() {
+  static const bool result = [] {
+    const auto ld_preload = minifi::utils::Environment::getEnvironmentVariable("LD_PRELOAD");
+    return ld_preload && (ld_preload->contains("vgpreload") || ld_preload->contains("valgrind"));
+  }();
+  return result;
+}
 
 std::filesystem::path putFileToDir(const std::filesystem::path& dir_path, const std::filesystem::path& file_name, const std::string& content) {
   auto file_path = dir_path/file_name;
@@ -162,7 +171,7 @@ bool countLogOccurrencesUntil(const std::string& pattern,
                               const std::chrono::milliseconds max_duration,
                               const std::chrono::milliseconds wait_time) {
   auto start_time = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() < start_time + max_duration) {
+  while (std::chrono::steady_clock::now() < start_time + timeout(max_duration)) {
     if (LogTestController::getInstance().countOccurrences(pattern) == occurrences)
       return true;
     std::this_thread::sleep_for(wait_time);

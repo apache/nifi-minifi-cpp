@@ -53,7 +53,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
   }
 
   void runAssertions() override {
-    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(wait_time_,
         "Import offset 0",
         "Outputting success and response"));
   }

@@ -28,7 +28,9 @@
 #include "asio/steady_timer.hpp"
 #include "asio/this_coro.hpp"
 #include "asio/use_awaitable.hpp"
-#include "asio/experimental/awaitable_operators.hpp"
+#include "asio/co_spawn.hpp"
+#include "asio/deferred.hpp"
+#include "asio/experimental/parallel_group.hpp"
 #include "asio/as_tuple.hpp"
 
 namespace org::apache::nifi::minifi::utils::net {
@@ -57,13 +59,19 @@ inline asio::awaitable<void> async_wait(std::chrono::steady_clock::duration dura
 template<class... Types>
 asio::awaitable<std::tuple<std::error_code, Types...>> asyncOperationWithTimeout(asio::awaitable<std::tuple<std::error_code, Types...>>&& async_operation,
     std::chrono::steady_clock::duration timeout_duration) {
-  using asio::experimental::awaitable_operators::operator||;
-  auto operation_result = co_await(std::move(async_operation) || async_wait(timeout_duration));  // NOLINT
-  if (operation_result.index() == 1) {
+  auto executor = co_await asio::this_coro::executor;  // NOLINT(clang-analyzer-core.CallAndMessage)
+  std::tuple<std::array<std::size_t, 2>, std::exception_ptr, std::tuple<std::error_code, Types...>, std::exception_ptr> parallel_group_result{
+      co_await asio::experimental::make_parallel_group(  // NOLINT(clang-analyzer-core.CallAndMessage)
+          asio::co_spawn(executor, std::move(async_operation), asio::deferred),
+          asio::co_spawn(executor, async_wait(timeout_duration), asio::deferred))
+      .async_wait(asio::experimental::wait_for_one_success(), asio::use_awaitable)
+  };
+  auto index_of_operation_which_finished_first = std::get<0>(parallel_group_result)[0];  // 0 = async_operation, 1 = async_wait(timeout_duration)
+  if (index_of_operation_which_finished_first != 0) {
     std::tuple<std::error_code, Types...> result;
     std::get<0>(result) = asio::error::timed_out;
     co_return result;
   }
-  co_return std::get<0>(operation_result);
+  co_return std::move(std::get<2>(parallel_group_result));
 }
 }  // namespace org::apache::nifi::minifi::utils::net
