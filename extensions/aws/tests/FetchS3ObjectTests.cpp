@@ -124,6 +124,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test default properties", "[awsS3Co
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expirationTimeRuleId value:" + S3_EXPIRATION_TIME_RULE_ID));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION_1));
+  checkNoS3ErrorAttributes();
   REQUIRE(get_content(output_dir / INPUT_FILENAME) == S3_CONTENT);
   REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetVersionId().empty());
   REQUIRE(!mock_s3_request_sender_ptr->get_object_request.VersionIdHasBeenSet());
@@ -158,6 +159,20 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test non-default client configurati
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
+}
+
+TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test failure case", "[awsS3FetchFailure]") {
+  auto log_failure = plan->addProcessor(
+    "LogAttribute",
+    "LogFailure",
+    core::Relationship("failure", "d"));
+  plan->addConnection(s3_processor, core::Relationship("failure", "d"), log_failure);
+  log_failure->setAutoTerminatedRelationships(std::array{core::Relationship("success", "d")});
+  setRequiredProperties();
+  mock_s3_request_sender_ptr->setGetObjectResult(false);
+  test_controller.runSession(plan, true);
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to fetch S3 object"));
+  checkS3ErrorAttributes("NoSuchKey", "The specified key does not exist", false, 404);
 }
 
 }  // namespace

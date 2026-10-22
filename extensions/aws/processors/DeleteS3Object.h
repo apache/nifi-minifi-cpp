@@ -57,6 +57,17 @@ class DeleteS3Object : public S3Processor {  // NOLINT(cppcoreguidelines-special
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles are routed to failure relationship"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
+  EXTENSIONAPI static constexpr auto S3Exception = core::OutputAttributeDefinition<>{
+      S3_EXCEPTION, {Failure}, "Exception name of the S3 request failure"};
+  EXTENSIONAPI static constexpr auto S3ErrorMessage = core::OutputAttributeDefinition<>{
+      S3_ERROR_MESSAGE, {Failure}, "Error message of the S3 request failure"};
+  EXTENSIONAPI static constexpr auto S3ErrorRetryable = core::OutputAttributeDefinition<>{
+      S3_ERROR_RETRYABLE, {Failure}, "Is the S3 request error retryable"};
+  EXTENSIONAPI static constexpr auto S3StatusCode = core::OutputAttributeDefinition<>{
+      S3_STATUS_CODE, {Failure}, "HTTP code of the S3 request failure. -1 indicates no HTTP request was made."};
+  EXTENSIONAPI static constexpr auto OutputAttributes =
+      std::to_array<core::OutputAttributeReference>({S3Exception, S3ErrorMessage, S3ErrorRetryable, S3StatusCode});
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;

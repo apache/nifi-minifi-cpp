@@ -84,11 +84,13 @@ void DeleteS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessi
     return;
   }
 
-  if (s3_wrapper_->deleteObject(*params)) {
+  auto result = s3_wrapper_->deleteObject(*params);
+  if (result) {
     logger_->log_debug("Successfully deleted S3 object '{}' from bucket '{}'", params->object_key, *bucket);
     session.transfer(flow_file, Success);
   } else {
     logger_->log_error("Failed to delete S3 object '{}' from bucket '{}'", params->object_key, *bucket);
+    setFailureFlowFileAttributes(session, *flow_file, result.error());
     session.transfer(flow_file, Failure);
   }
 }
