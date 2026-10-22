@@ -22,10 +22,7 @@
 namespace org::apache::nifi::minifi::core::extension {
 
 static uint32_t agent_api_version{MINIFI_API_VERSION};
-// Deliberately not MINIFI_API_VERSION: the floor only moves when a version bump
-// is actually breaking. Additive bumps (new functions appended to minifi-api.h)
-// leave older extensions working, so they must keep loading.
-static uint32_t min_supported_api_version{2};
+static uint32_t min_supported_api_version{MINIFI_API_VERSION};
 
 uint32_t getAgentApiVersion() {
   return agent_api_version;

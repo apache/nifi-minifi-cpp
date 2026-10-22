@@ -16,7 +16,6 @@
  */
 #include "ExtractorDispatcher.h"
 
-#include "extractors/KafkaTopicExtractor.h"
 #include "extractors/FilePathExtractor.h"
 #include "extractors/SiteToSitePortExtractor.h"
 
@@ -27,7 +26,6 @@ ExtractorDispatcher::ExtractorDispatcher() {
   // (componentType-matched) extractors first, then the URI-matched ones. Order
   // matters only when both a componentType and a URI regex would fire — but the
   // dispatch walks by-componentType FIRST regardless.
-  extractors_.push_back(std::make_unique<extractors::KafkaTopicExtractor>());
   extractors_.push_back(std::make_unique<extractors::SiteToSitePortExtractor>());
   extractors_.push_back(std::make_unique<extractors::FilePathExtractor>());
 }

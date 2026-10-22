@@ -44,39 +44,6 @@ std::unique_ptr<TestProvenanceEvent> make(provenance::ProvenanceEventRecord::Pro
 
 }  // namespace
 
-TEST_CASE("Kafka extractor: ConsumeKafka RECEIVE → input kafka_topic", "[atlas][extractor][kafka]") {
-  ExtractorDispatcher dispatcher;
-  auto event = make(provenance::ProvenanceEventRecord::RECEIVE, "ConsumeKafka", "kafka://broker1:9092/orders");
-
-  const auto refs = dispatcher.dispatch(*event);
-  REQUIRE(refs.inputs.size() == 1);
-  REQUIRE(refs.outputs.empty());
-  REQUIRE(refs.inputs[0].system == "kafka");
-  REQUIRE(refs.inputs[0].identifier == "orders");
-  REQUIRE(refs.inputs[0].host == "broker1");
-}
-
-TEST_CASE("Kafka extractor: PublishKafka SEND → output kafka_topic", "[atlas][extractor][kafka]") {
-  ExtractorDispatcher dispatcher;
-  auto event = make(provenance::ProvenanceEventRecord::SEND, "PublishKafka", "kafka://broker1:9092/events");
-
-  const auto refs = dispatcher.dispatch(*event);
-  REQUIRE(refs.outputs.size() == 1);
-  REQUIRE(refs.inputs.empty());
-  REQUIRE(refs.outputs[0].identifier == "events");
-}
-
-TEST_CASE("Kafka extractor: kafka.topic attribute takes precedence over transit URI parsing", "[atlas][extractor][kafka]") {
-  ExtractorDispatcher dispatcher;
-  TestProvenanceEvent event{provenance::ProvenanceEventRecord::RECEIVE, "ConsumeKafka"};
-  event.setTransitUri("kafka://old-broker:9092/wrong-topic-in-uri");
-  event.addAttribute("kafka.topic", "orders");
-
-  const auto refs = dispatcher.dispatch(event);
-  REQUIRE(refs.inputs.size() == 1);
-  REQUIRE(refs.inputs[0].identifier == "orders");
-}
-
 TEST_CASE("FilePath extractor: file:///path → fs_path", "[atlas][extractor][file]") {
   ExtractorDispatcher dispatcher;
   auto event = make(provenance::ProvenanceEventRecord::FETCH, "FetchFile", "file:///data/input/foo.csv");

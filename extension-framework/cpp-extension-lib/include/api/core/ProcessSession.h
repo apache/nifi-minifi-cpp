@@ -55,10 +55,6 @@ class ProcessSession {
   [[nodiscard]] virtual std::string getFlowFileId(const FlowFile& ff) const = 0;
   [[nodiscard]] virtual uint64_t getFlowFileSize(const FlowFile& ff) const = 0;
 
-  virtual void provenanceSend(FlowFile& ff, std::string_view transit_uri, std::string_view detail) = 0;
-  virtual void provenanceReceive(FlowFile& ff, std::string_view transit_uri,
-      std::string_view source_system_flow_file_identifier, std::string_view detail) = 0;
-
   void writeBuffer(FlowFile& flow_file, std::span<const char> buffer);
   void writeBuffer(FlowFile& flow_file, std::span<const std::byte> buffer);
   [[nodiscard]] std::vector<std::byte> readBuffer(FlowFile& flow_file);
@@ -82,10 +78,6 @@ class CffiProcessSession : public ProcessSession {
   [[nodiscard]] std::map<std::string, std::string> getAttributes(const FlowFile& ff) const override;
   [[nodiscard]] std::string getFlowFileId(const FlowFile& ff) const override;
   [[nodiscard]] uint64_t getFlowFileSize(const FlowFile& ff) const override;
-
-  void provenanceSend(FlowFile& ff, std::string_view transit_uri, std::string_view detail) override;
-  void provenanceReceive(FlowFile& ff, std::string_view transit_uri,
-      std::string_view source_system_flow_file_identifier, std::string_view detail) override;
 
  private:
   minifi_process_session* impl_;

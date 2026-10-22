@@ -69,10 +69,6 @@ class MockProcessSession : public api::core::ProcessSession {
   [[nodiscard]] std::string getFlowFileId(const api::core::FlowFile& ff) const override;
   [[nodiscard]] uint64_t getFlowFileSize(const api::core::FlowFile& ff) const override;
 
-  void provenanceSend(api::core::FlowFile& ff, std::string_view transit_uri, std::string_view detail) override;
-  void provenanceReceive(api::core::FlowFile& ff, std::string_view transit_uri,
-      std::string_view source_system_flow_file_identifier, std::string_view detail) override;
-
   void addInputFlowFile(std::unique_ptr<minifi_flow_file> flow_file);
 
   struct RecordedProvenanceEvent {

@@ -26,8 +26,6 @@ EXPORTS
     minifi_process_session_set_flow_file_attribute
     minifi_process_session_transfer
     minifi_process_session_write
-    minifi_process_session_provenance_send
-    minifi_process_session_provenance_receive
     minifi_register_controller_service
     minifi_register_extension
     minifi_register_processor

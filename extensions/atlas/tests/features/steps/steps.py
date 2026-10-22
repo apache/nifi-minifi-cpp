@@ -43,22 +43,6 @@ def _load_module_from_path(name: str, path: Path):
     return module
 
 
-# The kafka feature (kafka-topic-extractor.feature) uses steps + a container class defined under
-# extensions/kafka/tests/features. Behave only auto-loads the current feature dir, so we import
-# them here by absolute path. The `containers.kafka_server_container` alias mirrors what
-# extensions/kafka/tests/features/steps/steps.py itself imports - registering under that alias
-# lets that module's `from containers.kafka_server_container import KafkaServer` resolve.
-_KAFKA_FEATURES = Path(__file__).resolve().parent.parent.parent.parent.parent / "kafka" / "tests" / "features"
-if _KAFKA_FEATURES.is_dir():
-    _load_module_from_path(
-        "containers.kafka_server_container", _KAFKA_FEATURES / "containers" / "kafka_server_container.py"
-    )
-    _load_module_from_path(
-        "_kafka_steps",  # side-effect: registers @step decorators
-        _KAFKA_FEATURES / "steps" / "steps.py",
-    )
-
-
 def _atlas(context: MinifiTestContext) -> AtlasServerContainer:
     atlas = getattr(context, "atlas", None)
     assert isinstance(atlas, AtlasServerContainer), (
