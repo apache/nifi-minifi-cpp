@@ -21,7 +21,7 @@ pub mod c_ffi;
 pub mod mock;
 pub mod test_utils;
 
-pub use api::errors::{MinifiError, ProcessError, RouteError, RouteErrorExt};
+pub use api::errors::{MinifiError, RouteError, TransformError, TransformErrorExt};
 
 pub use api::component_definition_traits::{
     ComponentIdentifier, ControllerServiceDefinition, ProcessorDefinition,

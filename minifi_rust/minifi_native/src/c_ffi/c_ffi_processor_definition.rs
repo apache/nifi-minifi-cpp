@@ -27,36 +27,25 @@ use crate::c_ffi::CffiLogger;
 use crate::c_ffi::c_ffi_output_attribute::COutputAttributes;
 use crate::c_ffi::c_ffi_property::CProperties;
 use crate::{
-    ComponentIdentifier, LogLevel, MultiThreaded, OutputAttribute, Processor, ProcessorDefinition,
-    PropertyDefinition, Schedule, SingleThreaded,
+    ComponentIdentifier, LogLevel, MinifiError, MultiThreaded, OutputAttribute, Processor,
+    ProcessorDefinition, PropertyDefinition, Schedule, SingleThreaded,
 };
-use crate::{OnTriggerResult, ProcessError, Relationship};
+use crate::{OnTriggerResult, Relationship};
 use minifi_native_sys::*;
 
 fn process_error_to_status<P: RawProcessor>(
     processor: &P,
-    result: Result<OnTriggerResult, ProcessError>,
+    result: Result<OnTriggerResult, MinifiError>,
 ) -> minifi_status {
     match result {
         Ok(OnTriggerResult::Ok) => minifi_status_MINIFI_STATUS_SUCCESS,
         Ok(OnTriggerResult::Yield) => minifi_status_MINIFI_STATUS_PROCESSOR_YIELD,
-        Err(ProcessError::Fatal(err)) => {
+        Err(err) => {
             processor.log(
                 LogLevel::Error,
                 format_args!("Error during trigger {}", err),
             );
             err.to_status()
-        }
-        Err(ProcessError::Route(route)) => {
-            processor.log(
-                LogLevel::Warn,
-                format_args!(
-                    "Cannot route to '{}' at the top level (no current flow file); \
-                     failing the trigger: {}",
-                    route.relationship, route.source
-                ),
-            );
-            minifi_status_MINIFI_STATUS_UNKNOWN_ERROR
         }
     }
 }
