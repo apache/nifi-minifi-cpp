@@ -213,8 +213,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-2022-sccache-
       - name: Set up Python
-        run: choco install -y python sccache && refreshenv
-        shell: cmd
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Set up sccache
+        uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba  # v0.0.11
       - name: Install sqliteodbc driver
         run: |
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
