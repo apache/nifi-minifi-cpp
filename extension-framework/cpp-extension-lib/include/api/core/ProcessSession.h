@@ -19,6 +19,7 @@
 
 #include <map>
 #include <span>
+#include <string_view>
 
 #include "FlowFile.h"
 #include "minifi-api.h"

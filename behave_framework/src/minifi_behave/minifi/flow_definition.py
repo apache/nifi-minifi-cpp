@@ -26,8 +26,6 @@ from .parameter_context import ParameterContext
 from .processor import Processor
 from .remote_process_group import RemoteProcessGroup
 from .reporting_task import ReportingTask
-from .input_port import InputPort
-from .output_port import OutputPort
 
 
 class FlowDefinition(ABC):

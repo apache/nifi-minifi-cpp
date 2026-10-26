@@ -52,7 +52,7 @@ void ReportingTask::restore(const std::shared_ptr<FlowFile>&) {
 }
 
 [[nodiscard]] bool ReportingTask::supportsDynamicProperties() const {
-  return false;
+  return impl_->supportsDynamicProperties();
 }
 
 [[nodiscard]] bool ReportingTask::supportsDynamicRelationships() const {

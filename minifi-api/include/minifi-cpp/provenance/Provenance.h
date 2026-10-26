@@ -168,7 +168,7 @@ class ProvenanceEventRecord : public virtual core::SerializableComponent {
   virtual std::vector<utils::Identifier> getLineageIdentifiers() const = 0;
   virtual std::string getDetails() const = 0;
   virtual void setDetails(const std::string& details) = 0;
-  virtual std::string getTransitUri() = 0;
+  virtual std::string getTransitUri() const = 0;
   virtual void setTransitUri(const std::string& uri) = 0;
   virtual std::string getSourceSystemFlowFileIdentifier() const = 0;
   virtual void setSourceSystemFlowFileIdentifier(const std::string& identifier) = 0;

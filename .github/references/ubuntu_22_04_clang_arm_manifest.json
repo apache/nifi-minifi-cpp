@@ -426,6 +426,120 @@
 {
     "bundles": {
         "componentManifest": {
+            "reportingTasks": [
+                {
+                    "propertyDescriptors": {
+                        "AWS S3 Model Version": {
+                            "name": "AWS S3 Model Version",
+                            "description": "Which Atlas S3 entity model to emit. v2 uses aws_s3_v2_directory; v1 uses aws_s3_pseudo_dir.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "v2",
+                            "allowableValues": [
+                                {
+                                    "value": "v1",
+                                    "displayName": "v1"
+                                },
+                                {
+                                    "value": "v2",
+                                    "displayName": "v2"
+                                }
+                            ]
+                        },
+                        "Atlas Password": {
+                            "name": "Atlas Password",
+                            "description": "Password for Atlas HTTP Basic authentication.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "true",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Atlas URLs": {
+                            "name": "Atlas URLs",
+                            "description": "Comma-separated list of Atlas REST endpoints, e.g. http://atlas:21000",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Atlas Username": {
+                            "name": "Atlas Username",
+                            "description": "Username for Atlas HTTP Basic authentication.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Default Metadata Namespace": {
+                            "name": "Default Metadata Namespace",
+                            "description": "Atlas metadata namespace used when no hostnamePattern.* rule matches. This is the '@cluster' suffix in every qualifiedName.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Filesystem Path Level": {
+                            "name": "Filesystem Path Level",
+                            "description": "Whether to emit one fs_path entity per file, or per containing directory.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "DIRECTORY",
+                            "allowableValues": [
+                                {
+                                    "value": "FILE",
+                                    "displayName": "FILE"
+                                },
+                                {
+                                    "value": "DIRECTORY",
+                                    "displayName": "DIRECTORY"
+                                }
+                            ]
+                        },
+                        "NiFi URL for Atlas": {
+                            "name": "NiFi URL for Atlas",
+                            "description": "How this MiNiFi agent identifies itself to Atlas (used as minifi_flow.url).",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Provenance Batch Size": {
+                            "name": "Provenance Batch Size",
+                            "description": "Maximum number of provenance events to consume per trigger.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "1000"
+                        },
+                        "SSL Context Service": {
+                            "name": "SSL Context Service",
+                            "description": "Controller service used for HTTPS Atlas endpoints.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "typeDescription": "Report flow data set level lineage to Apache Atlas.",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "true",
+                    "type": "org.apache.nifi.minifi.extensions.atlas.ReportLineageToAtlas"
+                }
+            ]
+        },
+        "group": "org.apache.nifi.minifi",
+        "artifact": "minifi-atlas",
+        "version": "1.0.0"
+    }
+},
+{
+    "bundles": {
+        "componentManifest": {
             "processors": [
                 {
                     "propertyDescriptors": {
@@ -11942,6 +12056,49 @@
                     "supportsDynamicRelationships": "false",
                     "supportsDynamicProperties": "false",
                     "type": "org.apache.nifi.minifi.controllers.UpdatePolicyControllerService"
+                }
+            ],
+            "reportingTasks": [
+                {
+                    "propertyDescriptors": {
+                        "Destination URL": {
+                            "name": "Destination URL",
+                            "description": "The URL of the destination NiFi instance in the format of http(s)://host:port/nifi. This is used to initiate the Site-to-Site connection.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Idle Timeout": {
+                            "name": "Idle Timeout",
+                            "description": "Max idle time for remote service",
+                            "validator": "TIME_PERIOD_VALIDATOR",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "15 s"
+                        },
+                        "Port UUID": {
+                            "name": "Port UUID",
+                            "description": "Specifies remote NiFi Port UUID.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "SSL Context Service": {
+                            "name": "SSL Context Service",
+                            "description": "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "typeDescription": "Publishes Provenance events using the Site To Site protocol.",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "org.apache.nifi.minifi.core.reporting.SiteToSiteProvenanceReportingTask"
                 }
             ]
         },

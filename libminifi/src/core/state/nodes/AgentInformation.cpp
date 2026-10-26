@@ -189,6 +189,7 @@ std::vector<SerializedResponseNode> serializeComponentManifest(const Components&
   resp.name = "componentManifest";
   serializeClassDescription(components.getProcessors(), "processors", resp, components.getBundleCoordinate());
   serializeClassDescription(components.getControllerServices(), "controllerServices", resp, components.getBundleCoordinate());
+  serializeClassDescription(components.getReportingTasks(), "reportingTasks", resp, components.getBundleCoordinate());
   serialized.push_back(resp);
   return serialized;
 }

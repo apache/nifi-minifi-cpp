@@ -33,6 +33,7 @@
 #include "utils/ConfigurationUtils.h"
 #include "utils/file/FileReaderCallback.h"
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 
 using namespace std::literals::chrono_literals;
@@ -105,6 +106,14 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem
 
   try {
     session.write(flow_file, utils::FileReaderCallback{file_path, buffer_size_});
+    // No source-system identifier: that parameter is the *upstream* system's flow file id,
+    // and a file on local disk has none. Passing our own UUID would surface as a constant
+    // `remoteIdentifier` on every event.
+    const auto transit_uri = utils::file::pathToUri(file_path);
+    if (!transit_uri) {
+      logger_->log_warn("Failed to convert path '{}' to URI: {}", file_path, transit_uri.error());
+    }
+    session.getProvenanceReporter()->receive(*flow_file, transit_uri.value_or(""), "", "Read file", 0ms);
     session.transfer(flow_file, Success);
     if (!request_.keepSourceFile) {
       std::error_code remove_error;

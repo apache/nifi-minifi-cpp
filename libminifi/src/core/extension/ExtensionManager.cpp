@@ -75,6 +75,7 @@ ExtensionManager::ExtensionManager(const std::shared_ptr<Configure>& config): lo
       if (!extension->initialize(config)) {
         logger_->log_error("Failed to initialize extension '{}' at '{}'", library->name, library->getFullPath());
       } else {
+        logger_->log_info("Initialized extension '{}' at '{}'", library->name, library->getFullPath());
         extensions_.push_back(std::move(extension));
       }
     }

@@ -404,7 +404,7 @@ TEST_CASE("Test receiving multiple flow files through site to site", "[S2S]") {
   for (size_t i = 0; i < 2; ++i) {
     auto flow_file = outgoing_connection->poll(expired);
     auto attributes = flow_file->getAttributes();
-    REQUIRE(attributes.size() == 3);
+    REQUIRE(attributes.size() == 4);
     CHECK(attributes["attribute_key"] == "attribute_value");
     CHECK(attributes.contains("filename"));
     CHECK(attributes["flow.id"] == "test");

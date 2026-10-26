@@ -19,6 +19,7 @@
  */
 #include <vector>
 #include <map>
+#include <algorithm>
 #include <chrono>
 #include <future>
 #include <thread>
@@ -29,6 +30,8 @@
 #include "FlowController.h"
 #include "core/state/ProcessorController.h"
 #include "core/ProcessGroup.h"
+#include "core/reporting/ReportingTask.h"
+#include "Connection.h"
 #include "core/Core.h"
 #include "SchedulingAgent.h"
 #include "core/controller/ForwardingControllerServiceProvider.h"
@@ -291,6 +294,11 @@ void FlowController::load(bool reload) {
   conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
   conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
 
+  // Make the current flow topology available to reporting tasks via their ProcessContext.
+  timer_scheduler_->setFlowTopologyProvider(this);
+  event_scheduler_->setFlowTopologyProvider(this);
+  cron_scheduler_->setFlowTopologyProvider(this);
+
   logger_->log_info("Loaded controller service provider");
 
   /*
@@ -455,6 +463,72 @@ gsl::not_null<std::unique_ptr<state::ProcessorController>> FlowController::creat
     gsl_Assert(false);
   };
   return gsl::make_not_null(std::make_unique<state::ProcessorController>(processor, scheduler()));
+}
+
+core::reporting::FlowTopology FlowController::getFlowTopology() const {
+  core::reporting::FlowTopology topology;
+  const core::ProcessGroup* root = root_wrapper_.getRoot();
+  if (!root) {
+    return topology;
+  }
+  topology.root_group_uuid = root->getUUID();
+  topology.root_group_name = root->getName();
+
+  // Flatten processors from every nested process group into one list.
+  //
+  // Ports are reported as ordinary processors. They are process-group boundary nodes, and
+  // at runtime a Port is a ForwardingNode — the same pass-through as a Funnel, which is
+  // already reported this way. MiNiFi has no site-to-site server, so unlike NiFi's ports
+  // these are never an external interface; singling them out would only break an
+  // otherwise continuous path in two.
+  std::vector<core::Processor*> processors;
+  root->getAllProcessors(processors);
+  for (auto* proc : processors) {
+    if (!proc) {
+      continue;
+    }
+    // Reporting tasks are wrapped in a core::Processor and added to the root group like
+    // any other (StructuredConfiguration::parseReportingTasks), but they are not part of
+    // the dataflow: they have no connections and consume no flow files. Reporting them as
+    // processors would describe the observer as part of what it observes.
+    if (dynamic_cast<core::reporting::ReportingTask*>(&proc->getImpl())) {
+      continue;
+    }
+    topology.processors.push_back({.uuid = proc->getUUID(), .name = proc->getName(), .type = proc->getProcessorType()});
+  }
+
+  // ProcessGroup::getConnections registers every Connection twice (by UUID and by name);
+  // key the intermediate map by UUID string, iterate values, and skip duplicate pointers.
+  std::map<std::string, Connection*> connections;
+  const_cast<core::ProcessGroup*>(root)->getConnections(connections);
+  std::set<Connection*> seen;
+  for (const auto& [_, conn] : connections) {
+    if (!conn || !seen.insert(conn).second) {
+      continue;
+    }
+    core::reporting::FlowTopology::Connection entry{
+        .uuid = conn->getUUID(),
+        .name = conn->getName(),
+        .source_uuid = conn->getSourceUUID(),
+        .destination_uuid = conn->getDestinationUUID(),
+        .relationships = {}};
+    for (const auto& rel : conn->getRelationships()) {
+      entry.relationships.push_back(rel.getName());
+    }
+    topology.connections.push_back(std::move(entry));
+  }
+
+  // getAllProcessors / getConnections give no order guarantee, and the order can differ
+  // between two snapshots of an unchanged flow. Sort so FlowTopology::operator== reflects
+  // the flow's structure rather than iteration order — callers rely on equality to decide
+  // whether the flow actually changed.
+  const auto by_uuid = [](const auto& lhs, const auto& rhs) { return lhs.uuid < rhs.uuid; };
+  std::ranges::sort(topology.processors, by_uuid);
+  std::ranges::sort(topology.connections, by_uuid);
+  for (auto& conn : topology.connections) {
+    std::ranges::sort(conn.relationships);
+  }
+  return topology;
 }
 
 uint64_t FlowController::getUptime() {

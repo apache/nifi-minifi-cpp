@@ -71,11 +71,22 @@ class MockProcessSession : public api::core::ProcessSession {
 
   void addInputFlowFile(std::unique_ptr<minifi_flow_file> flow_file);
 
+  struct RecordedProvenanceEvent {
+    enum class Kind { Send, Receive } kind;
+    std::string flow_file_id;
+    std::string transit_uri;
+    std::string source_system_flow_file_identifier;  // empty for Send
+    std::string detail;
+  };
+
+  [[nodiscard]] const std::vector<RecordedProvenanceEvent>& getProvenanceEvents() const { return provenance_events_; }
+
  private:
   std::vector<std::unique_ptr<minifi_flow_file>> input_flow_files_;
   using RelationshipName = std::string;
   std::map<RelationshipName, std::vector<std::unique_ptr<minifi_flow_file>>> transferred_flow_files_;
   std::vector<std::unique_ptr<minifi_flow_file>> removed_flow_files_;
+  std::vector<RecordedProvenanceEvent> provenance_events_;
 };
 
 }  // namespace org::apache::nifi::minifi::mock

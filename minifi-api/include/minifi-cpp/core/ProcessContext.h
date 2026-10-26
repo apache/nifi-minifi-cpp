@@ -75,9 +75,6 @@ class ProcessContext : public reporting::ReportingTaskContext, public virtual co
   virtual std::expected<std::string, std::error_code> getDynamicProperty(std::string_view name, const FlowFile* flow_file = nullptr) const = 0;
   virtual std::expected<void, std::error_code> setDynamicProperty(std::string name, std::string value) = 0;
 
-  virtual std::expected<std::string, std::error_code> getRawDynamicProperty(std::string_view name) const = 0;
-
-  virtual std::vector<std::string> getDynamicPropertyKeys() const = 0;
   virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile* flow_file = nullptr) const = 0;
 
   [[nodiscard]] virtual std::expected<std::vector<std::string>, std::error_code> getAllPropertyValues(std::string_view name) const = 0;

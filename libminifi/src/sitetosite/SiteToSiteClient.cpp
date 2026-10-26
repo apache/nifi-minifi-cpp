@@ -19,6 +19,7 @@
 
 #include <map>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <ranges>
 
@@ -29,6 +30,14 @@
 #include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
+
+namespace {
+// The remote port's UUID, stamped onto the flow file so it surfaces in the SEND/RECEIVE
+// provenance event. Atlas lineage reporting keys the remote nifi_input_port/nifi_output_port
+// entity on this id so it merges with the entity the receiving instance advertises for the
+// same port. Matches NiFi's SiteToSiteAttributes.S2S_PORT_ID.
+constexpr std::string_view S2S_PORT_ID_ATTRIBUTE = "s2s.port.id";
+}  // namespace
 
 std::optional<SiteToSiteResponse> SiteToSiteClient::readResponse(const std::shared_ptr<Transaction>& /*transaction*/) {
   uint8_t result_byte = 0;
@@ -152,6 +161,7 @@ bool SiteToSiteClient::transferFlowFiles(core::ProcessContext& context, core::Pr
       auto end_time = std::chrono::steady_clock::now();
       std::string transit_uri = peer_->getURL() + "/" + flow->getUUIDStr();
       std::string details = "urn:nifi:" + flow->getUUIDStr() + "Remote Host=" + peer_->getHostName();
+      flow->setAttribute(S2S_PORT_ID_ATTRIBUTE, getPortId().to_string());
       session.getProvenanceReporter()->send(*flow, transit_uri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
       session.remove(flow);
 
@@ -724,6 +734,7 @@ std::pair<uint64_t, uint64_t> SiteToSiteClient::readFlowFiles(const std::shared_
     auto end_time = std::chrono::steady_clock::now();
     std::string transitUri = peer_->getURL() + "/" + source_identifier;
     std::string details = "urn:nifi:" + source_identifier + "Remote Host=" + peer_->getHostName();
+    flow_file->setAttribute(S2S_PORT_ID_ATTRIBUTE, getPortId().to_string());
     session.getProvenanceReporter()->receive(*flow_file, transitUri, source_identifier, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
     session.transfer(flow_file, relation);
 

@@ -84,4 +84,5 @@ uint64_t MockProcessSession::getFlowFileSize(const api::core::FlowFile& ff) cons
 void MockProcessSession::addInputFlowFile(std::unique_ptr<minifi_flow_file> flow_file) {
   input_flow_files_.push_back(std::move(flow_file));
 }
+
 }  // namespace org::apache::nifi::minifi::mock

@@ -86,6 +86,15 @@ void ClassDescriptionRegistry::createClassDescription(const BundleCoordinate& bu
         .api_implementations = detail::toVector(Class::ImplementsApis),
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties
     }, Type);
+  } else if constexpr (Type == ResourceType::ReportingTask) {
+    components.addClassDescription(ClassDescription{
+        .type_ = Type,
+        .short_name_ = std::move(class_name),
+        .full_name_ = detail::classNameWithDots<Class>(),
+        .description_ = Class::Description,
+        .class_properties_ = detail::toVector(Class::Properties),
+        .supports_dynamic_properties_ = Class::SupportsDynamicProperties
+    }, Type);
   } else if constexpr (Type == ResourceType::InternalResource) {
     components.addClassDescription(ClassDescription{
         .type_ = Type,
