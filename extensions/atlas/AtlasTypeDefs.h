@@ -52,7 +52,7 @@
 namespace org::apache::nifi::minifi::extensions::atlas {
 
 // MiNiFi's own types. serviceType groups them in the Atlas UI navigation.
-constexpr std::string_view kMiNiFiTypeDefsPayload = R"({
+constexpr std::string_view MINIFI_TYPEDEFS_PAYLOAD = R"({
   "entityDefs": [
     {
       "name": "minifi_component",
@@ -95,7 +95,7 @@ constexpr std::string_view kMiNiFiTypeDefsPayload = R"({
 
 // Mirror of NiFi's bundle, from nifi-atlas-reporting-task NiFiTypes.java (NiFi 1.28.0).
 // Do not "improve" these definitions — they must match what NiFi registers.
-constexpr std::string_view kNiFiTypeDefsPayload = R"({
+constexpr std::string_view NIFI_TYPEDEFS_PAYLOAD = R"({
   "entityDefs": [
     {
       "name": "nifi_component",
@@ -162,10 +162,10 @@ constexpr std::string_view kNiFiTypeDefsPayload = R"({
 // Type names in each bundle, in dependency order (supertypes before subtypes) so a
 // partial registration still yields a usable subset. Used to diff against Atlas and
 // POST only what is missing.
-constexpr std::array<std::string_view, 4> kMiNiFiTypeNames{
+constexpr std::array<std::string_view, 4> MINIFI_TYPE_NAMES{
     "minifi_component", "minifi_flow", "minifi_flow_path", "minifi_queue"};
 
-constexpr std::array<std::string_view, 7> kNiFiTypeNames{
+constexpr std::array<std::string_view, 7> NIFI_TYPE_NAMES{
     "nifi_component", "nifi_flow", "nifi_flow_path", "nifi_data", "nifi_queue", "nifi_input_port", "nifi_output_port"};
 
 }  // namespace org::apache::nifi::minifi::extensions::atlas

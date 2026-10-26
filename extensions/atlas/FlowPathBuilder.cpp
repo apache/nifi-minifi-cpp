@@ -37,11 +37,11 @@ std::string qualifiedName(std::string_view id, std::string_view namespace_name) 
 // The remote ports on the far side of a site-to-site transfer are the exception — those
 // keep NiFi's type names so the entities merge with the receiving NiFi's, and they are
 // produced by the extractors (see atlasTypeFor), not here.
-constexpr const char* kMiNiFiFlow = "minifi_flow";
-constexpr const char* kMiNiFiFlowPath = "minifi_flow_path";
-constexpr const char* kMiNiFiQueue = "minifi_queue";
+constexpr const char* MINIFI_FLOW = "minifi_flow";
+constexpr const char* MINIFI_FLOWPATH = "minifi_flow_path";
+constexpr const char* MINIFI_QUEUE = "minifi_queue";
 // Back-reference attribute declared by minifi_component.
-constexpr const char* kMiNiFiFlowAttr = "minifiFlow";
+constexpr const char* MINIFI_FLOWATTR = "minifiFlow";
 
 }  // namespace
 
@@ -175,20 +175,20 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     const auto queue_qn = qualifiedName(dst, ns);
     if (queue_qnames.insert(queue_qn).second) {
       AtlasEntity q;
-      q.type_name = kMiNiFiQueue;
+      q.type_name = MINIFI_QUEUE;
       q.qualified_name = queue_qn;
       q.string_attributes["name"] = "queue to " + std::string{conn.name.empty() ? proc_by_uuid.at(dst)->name : conn.name};
       queue_entities.push_back(std::move(q));
     }
-    path_outputs[src_path_it->second.flow_path_qualified_name].emplace(kMiNiFiQueue, queue_qn);
-    path_inputs[dst_path_it->second.flow_path_qualified_name].emplace(kMiNiFiQueue, queue_qn);
+    path_outputs[src_path_it->second.flow_path_qualified_name].emplace(MINIFI_QUEUE, queue_qn);
+    path_inputs[dst_path_it->second.flow_path_qualified_name].emplace(MINIFI_QUEUE, queue_qn);
   }
 
   const auto flow_url_str = std::string{flow_url};
 
   // Emit minifi_flow.
   AtlasEntity flow;
-  flow.type_name = kMiNiFiFlow;
+  flow.type_name = MINIFI_FLOW;
   flow.qualified_name = qualifiedName(topology.root_group_uuid.to_string().view(), ns);
   flow.string_attributes["name"] = topology.root_group_name.empty() ? "MiNiFi Flow" : topology.root_group_name;
   if (!flow_url.empty()) {
@@ -198,7 +198,7 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   std::unordered_set<AtlasEntity::Reference> flow_paths_refs;
   flow_paths_refs.reserve(paths.size());
   for (const auto& bp : paths) {
-    flow_paths_refs.emplace(kMiNiFiFlowPath, bp.qualified_name);
+    flow_paths_refs.emplace(MINIFI_FLOWPATH, bp.qualified_name);
   }
   if (!flow_paths_refs.empty()) {
     flow.ref_list_attributes.emplace("flowPaths", std::move(flow_paths_refs));
@@ -207,7 +207,7 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
     std::unordered_set<AtlasEntity::Reference> queue_refs;
     queue_refs.reserve(queue_entities.size());
     for (const auto& q : queue_entities) {
-      queue_refs.emplace(kMiNiFiQueue, q.qualified_name);
+      queue_refs.emplace(MINIFI_QUEUE, q.qualified_name);
     }
     flow.ref_list_attributes.emplace("queues", std::move(queue_refs));
   }
@@ -217,10 +217,10 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
   // inputs/outputs collected above. The minifiFlow back-reference lets Atlas render
   // path ownership.
   const auto root_group_uuid_str = std::string{topology.root_group_uuid.to_string().view()};
-  AtlasEntity::Reference flow_ref{kMiNiFiFlow, qualifiedName(root_group_uuid_str, ns)};
+  AtlasEntity::Reference flow_ref{MINIFI_FLOW, qualifiedName(root_group_uuid_str, ns)};
   for (auto& bp : paths) {
     AtlasEntity path_entity;
-    path_entity.type_name = kMiNiFiFlowPath;
+    path_entity.type_name = MINIFI_FLOWPATH;
     path_entity.qualified_name = bp.qualified_name;
     std::string name;
     for (const auto& proc_uuid : bp.processor_uuids) {
@@ -229,7 +229,7 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
       name += proc->name;
     }
     path_entity.string_attributes["name"] = std::move(name);
-    path_entity.ref_attributes.emplace(kMiNiFiFlowAttr, flow_ref);
+    path_entity.ref_attributes.emplace(MINIFI_FLOWATTR, flow_ref);
     // Atlas rejects the bulk POST with a 404 if minifi_flow_path.url is missing (the type
     // declares it mandatory). NiFi's shape is `<flow_url>?processGroupId=<root>&componentIds=<head>`;
     // we mirror that. flow_url is passed in unconditionally by ReportLineageToAtlas, so we don't
@@ -251,7 +251,7 @@ FlowPathBuilder::Result FlowPathBuilder::build(const Topology& topology, std::st
 
   // Emit queue entities.
   for (auto& q : queue_entities) {
-    q.ref_attributes.emplace(kMiNiFiFlowAttr, flow_ref);
+    q.ref_attributes.emplace(MINIFI_FLOWATTR, flow_ref);
     result.entities.push_back(std::move(q));
   }
 

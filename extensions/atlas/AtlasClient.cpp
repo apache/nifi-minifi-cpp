@@ -245,10 +245,10 @@ std::expected<std::optional<std::string>, std::string> AtlasClient::getEntityNam
 std::expected<void, std::string> AtlasClient::registerTypeDefs() {
   // Registered as two independent calls: a conflict or failure in one bundle must not
   // prevent the other from being created.
-  if (auto result = registerMissingTypeDefs(kMiNiFiTypeDefsPayload, kMiNiFiTypeNames); !result) {
+  if (auto result = registerMissingTypeDefs(MINIFI_TYPEDEFS_PAYLOAD, MINIFI_TYPE_NAMES); !result) {
     return std::unexpected{"minifi typedefs: " + result.error()};
   }
-  if (auto result = registerMissingTypeDefs(kNiFiTypeDefsPayload, kNiFiTypeNames); !result) {
+  if (auto result = registerMissingTypeDefs(NIFI_TYPEDEFS_PAYLOAD, NIFI_TYPE_NAMES); !result) {
     return std::unexpected{"nifi typedefs: " + result.error()};
   }
   return {};
