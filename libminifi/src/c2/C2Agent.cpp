@@ -43,6 +43,7 @@
 #include "minifi-cpp/io/ArchiveStream.h"
 #include "io/StreamPipe.h"
 #include "utils/Id.h"
+#include "c2/C2ExitCodes.h"
 #include "c2/C2Utils.h"
 #include "c2/protocols/RESTSender.h"
 #include "rapidjson/error/en.h"
@@ -128,9 +129,7 @@ void C2Agent::start() {
   if (controller_running_) {
     return;
   }
-  if (c2_connection_timeout_) {
-    connection_watchdog_.emplace(*c2_connection_timeout_, request_shutdown_);
-  }
+  last_successful_heartbeat_ = std::chrono::steady_clock::now();
   task_ids_.clear();
   for (const auto& function : functions_) {
     utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
@@ -148,14 +147,10 @@ void C2Agent::stop() {
     return;
   }
   controller_running_ = false;
-  if (connection_watchdog_) {
-    connection_watchdog_->stop();
-  }
   for (const auto& id : task_ids_) {
     thread_pool_.stopTasks(id.to_string());
   }
   thread_pool_.shutdown();
-  connection_watchdog_.reset();
   logger_->log_info("C2 agent stopped");
 }
 
@@ -271,8 +266,8 @@ void C2Agent::performHeartBeat() {
   }
   C2Payload response = protocol_->consumePayload(payload);
 
-  if (connection_watchdog_ && response.getStatus().getState() != state::UpdateState::READ_ERROR) {
-    connection_watchdog_->heartBeatHappened();
+  if (response.getStatus().getState() != state::UpdateState::READ_ERROR) {
+    last_successful_heartbeat_ = std::chrono::steady_clock::now();
   }
 
   enqueue_c2_server_response(std::move(response));
@@ -985,7 +980,6 @@ utils::TaskRescheduleInfo C2Agent::produce() {
 
     if (restart_needed_ && requests.empty()) {
       configuration_->commitChanges();
-      connection_watchdog_.reset();
       request_shutdown_(minifi::ShutdownType::RESTART, std::nullopt);
       return utils::TaskRescheduleInfo::Done();
     }
@@ -998,6 +992,12 @@ utils::TaskRescheduleInfo C2Agent::produce() {
     }
     catch (...) {
       logger_->log_error("Unknown exception occurred while performing heartbeat, type: {}", getCurrentExceptionTypeName());
+    }
+
+    if (c2_connection_timeout_ && controller_running_ && std::chrono::steady_clock::now() - last_successful_heartbeat_ > *c2_connection_timeout_) {
+      logger_->log_error("C2 connection timeout exceeded, shutting down...");
+      request_shutdown_(minifi::ShutdownType::SHUTDOWN, C2_CONNECTION_TIMEOUT_EXIT_CODE);
+      return utils::TaskRescheduleInfo::Done();
     }
   }
 

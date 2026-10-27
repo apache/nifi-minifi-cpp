@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <functional>
 #include <future>
 #include <map>
@@ -43,7 +44,6 @@
 #include "utils/file/FileSystem.h"
 #include "C2Utils.h"
 #include "utils/file/AssetManager.h"
-#include "C2ConnectionWatchdog.h"
 #include "RequestShutdown.h"
 
 namespace org::apache::nifi::minifi::c2 {
@@ -244,7 +244,7 @@ class C2Agent : public state::UpdateController {
 
   utils::file::AssetManager* asset_manager_;
   std::optional<std::chrono::milliseconds> c2_connection_timeout_;
-  std::optional<C2ConnectionWatchdog> connection_watchdog_;
+  std::chrono::steady_clock::time_point last_successful_heartbeat_{};
 };
 
 }  // namespace org::apache::nifi::minifi::c2

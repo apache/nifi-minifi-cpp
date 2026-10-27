@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <atomic>
 #include <memory>
 #include <optional>
 #include <string>
-#include <utility>
 
-#include "C2ShutdownRecorder.h"
 #include "c2/C2Agent.h"
 #include "c2/C2ExitCodes.h"
 #include "properties/Configure.h"
@@ -32,20 +31,20 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-class C2AgentWatchdogConfigurationTestFixture {
+class C2AgentConnectionTimeoutTestFixture {
  public:
-  C2AgentWatchdogConfigurationTestFixture() {
+  C2AgentConnectionTimeoutTestFixture() {
     LogTestController::getInstance().reset();
     LogTestController::getInstance().setTrace<c2::C2Agent>();
     configuration_->set(Configuration::nifi_c2_agent_heartbeat_period, "100 ms");
   }
 
-  C2AgentWatchdogConfigurationTestFixture(C2AgentWatchdogConfigurationTestFixture&&) = delete;
-  C2AgentWatchdogConfigurationTestFixture(const C2AgentWatchdogConfigurationTestFixture&) = delete;
-  C2AgentWatchdogConfigurationTestFixture& operator=(C2AgentWatchdogConfigurationTestFixture&&) = delete;
-  C2AgentWatchdogConfigurationTestFixture& operator=(const C2AgentWatchdogConfigurationTestFixture&) = delete;
+  C2AgentConnectionTimeoutTestFixture(C2AgentConnectionTimeoutTestFixture&&) = delete;
+  C2AgentConnectionTimeoutTestFixture(const C2AgentConnectionTimeoutTestFixture&) = delete;
+  C2AgentConnectionTimeoutTestFixture& operator=(C2AgentConnectionTimeoutTestFixture&&) = delete;
+  C2AgentConnectionTimeoutTestFixture& operator=(const C2AgentConnectionTimeoutTestFixture&) = delete;
 
-  ~C2AgentWatchdogConfigurationTestFixture() {
+  ~C2AgentConnectionTimeoutTestFixture() {
     if (agent_) {
       agent_->stop();
     }
@@ -56,7 +55,11 @@ class C2AgentWatchdogConfigurationTestFixture {
     agent_ = std::make_unique<c2::C2Agent>(configuration_,
         std::weak_ptr<state::response::NodeReporter>{},
         std::make_shared<minifi::utils::file::FileSystem>(),
-        recorder_.callback(),
+        [this](ShutdownType shutdown_type, std::optional<int32_t> exit_code) {
+          last_shutdown_type_ = shutdown_type;
+          last_exit_code_ = exit_code.value_or(0);
+          ++shutdown_request_count_;
+        },
         nullptr);
     agent_->initialize(nullptr, nullptr, nullptr);
     agent_->start();
@@ -64,60 +67,61 @@ class C2AgentWatchdogConfigurationTestFixture {
 
  protected:
   std::shared_ptr<Configure> configuration_ = std::make_shared<ConfigureImpl>();
-  C2ShutdownRecorder recorder_;
+  std::atomic<int> shutdown_request_count_{0};
+  std::atomic<ShutdownType> last_shutdown_type_{ShutdownType::RESTART};
+  std::atomic<int32_t> last_exit_code_{0};
   std::unique_ptr<c2::C2Agent> agent_;
 };
 
-TEST_CASE_METHOD(C2AgentWatchdogConfigurationTestFixture, "No shutdown is requested when the C2 connection timeout is not set", "[c2agentwatchdog]") {
+TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "No shutdown is requested when the C2 connection timeout is not set", "[c2connectiontimeout]") {
   startAgent();
   REQUIRE(LogTestController::getInstance().contains("Performing heartbeat", 1s));
   std::this_thread::sleep_for(1s);
-  REQUIRE(recorder_.count() == 0);
+  REQUIRE(shutdown_request_count_ == 0);
 }
 
-TEST_CASE_METHOD(C2AgentWatchdogConfigurationTestFixture, "C2 connection timeout of 0 disables the watchdog", "[c2agentwatchdog]") {
+TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "C2 connection timeout of 0 disables the C2 connection timeout", "[c2connectiontimeout]") {
   configuration_->set(Configuration::nifi_c2_connection_timeout, "0 sec");
   startAgent();
   REQUIRE(LogTestController::getInstance().contains("Performing heartbeat", 1s));
   std::this_thread::sleep_for(1s);
-  REQUIRE(recorder_.count() == 0);
+  REQUIRE(shutdown_request_count_ == 0);
   REQUIRE_FALSE(LogTestController::getInstance().contains("Failed to parse C2 configuration parameter", 0ms));
 }
 
-TEST_CASE_METHOD(C2AgentWatchdogConfigurationTestFixture, "Invalid C2 connection timeout disables the watchdog", "[c2agentwatchdog]") {
+TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "Invalid C2 connection timeout disables the C2 connection timeout", "[c2connectiontimeout]") {
   configuration_->set(Configuration::nifi_c2_connection_timeout, "abc");
   startAgent();
   REQUIRE(LogTestController::getInstance().contains("Failed to parse C2 configuration parameter 'nifi.c2.connection.timeout': 'abc'", 1s));
   std::this_thread::sleep_for(1s);
-  REQUIRE(recorder_.count() == 0);
+  REQUIRE(shutdown_request_count_ == 0);
 }
 
-TEST_CASE_METHOD(C2AgentWatchdogConfigurationTestFixture, "C2 connection timeout shorter than the heartbeat period is increased",
-    "[c2agentwatchdog]") {
+TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "C2 connection timeout shorter than the heartbeat period is increased",
+    "[c2connectiontimeout]") {
   configuration_->set(Configuration::nifi_c2_connection_timeout, "50 ms");
   startAgent();
   REQUIRE(LogTestController::getInstance().contains("C2 connection timeout is less than the heartbeat period", 1s));
   REQUIRE(LogTestController::getInstance().contains("Using 200ms as the C2 connection timeout", 1s));
 }
 
-TEST_CASE_METHOD(C2AgentWatchdogConfigurationTestFixture, "Failed heartbeats do not prevent the C2 connection timeout", "[c2agentwatchdog]") {
+TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "Failed heartbeats do not prevent the C2 connection timeout", "[c2connectiontimeout]") {
   configuration_->set(Configuration::nifi_c2_connection_timeout, "300 ms");
   startAgent();
-  REQUIRE(utils::verifyEventHappenedInPollTime(3s, [&] { return recorder_.count() > 0; }, 10ms));
+  REQUIRE(utils::verifyEventHappenedInPollTime(3s, [&] { return shutdown_request_count_ > 0; }, 10ms));
   REQUIRE(LogTestController::getInstance().contains("Performing heartbeat", 0ms));
-  REQUIRE(recorder_.count() == 1);
-  const auto [shutdown_type, exit_code] = recorder_.firstCall();
-  CHECK(shutdown_type == ShutdownType::SHUTDOWN);
-  REQUIRE(exit_code.has_value());
-  CHECK(*exit_code == c2::C2_CONNECTION_TIMEOUT_EXIT_CODE);
+  std::this_thread::sleep_for(500ms);
+  REQUIRE(shutdown_request_count_ == 1);
+  CHECK(last_shutdown_type_ == ShutdownType::SHUTDOWN);
+  CHECK(last_exit_code_ == c2::C2_CONNECTION_TIMEOUT_EXIT_CODE);
 }
 
-TEST_CASE_METHOD(C2AgentWatchdogConfigurationTestFixture, "Stopping the C2 agent stops the watchdog", "[c2agentwatchdog]") {
+TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "Stopping the C2 agent stops the C2 connection timeout check", "[c2connectiontimeout]") {
   configuration_->set(Configuration::nifi_c2_connection_timeout, "300 ms");
   startAgent();
   agent_->stop();
   std::this_thread::sleep_for(600ms);
-  REQUIRE(recorder_.count() == 0);
+  REQUIRE(shutdown_request_count_ == 0);
 }
 
 }  // namespace org::apache::nifi::minifi::test
