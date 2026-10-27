@@ -21,6 +21,7 @@ from pathlib import Path
 
 from behave.model import Scenario
 from behave.runner import Context
+from minifi_behave.containers.deployment import get_deployment_for_image
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.ssl_utils import make_self_signed_cert
@@ -127,14 +128,14 @@ def file_is_present_in_image(image: str, file_path: str, is_windows: bool) -> bo
 def add_extension_to_minifi_container(extension_name: str, possible_paths: list[str], context: MinifiTestContext):
     new_container_name = f"apacheminificpp:{extension_name}"
     is_windows = os.name == "nt"
+    base_img = get_minifi_container_image()
     if is_windows:
         lib_filename = f"{extension_name}.dll"
         container_extension_dir = "C:/Program Files/ApacheNiFiMiNiFi/nifi-minifi-cpp/extensions"
     else:
         lib_filename = f"lib{extension_name}.so"
-        container_extension_dir = "/opt/minifi/minifi-current/extensions"
+        container_extension_dir = get_deployment_for_image(base_img).extension_dir
 
-    base_img = get_minifi_container_image()
     container_lib_path = f"{container_extension_dir}/{lib_filename}"
 
     if file_is_present_in_image(base_img, container_lib_path, is_windows):
@@ -148,7 +149,10 @@ def add_extension_to_minifi_container(extension_name: str, possible_paths: list[
             host_path = os.path.join(path, lib_filename)
             break
 
-    assert host_path is not None, f"Could not find {lib_filename} in {[p for p in possible_paths]}"
+    assert host_path is not None, (
+        f"Could not find {lib_filename} in {base_img}:{container_extension_dir}, "
+        f"nor on the host in {[p for p in possible_paths]}"
+    )
 
     with open(host_path, "rb") as f:
         lib_content = f.read()
@@ -172,4 +176,8 @@ RUN chmod 755 {container_lib_path}
     )
 
     builder.build()
+
+    assert file_is_present_in_image(new_container_name, container_lib_path, is_windows), (
+        f"'{container_lib_path}' is missing from '{new_container_name}' after the build"
+    )
     return new_container_name

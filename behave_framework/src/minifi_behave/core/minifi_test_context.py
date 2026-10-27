@@ -26,8 +26,6 @@ from docker.models.networks import Network
 from minifi_behave.containers.container_protocol import ContainerProtocol
 from minifi_behave.containers.minifi_protocol import MinifiProtocol
 
-import docker
-
 DEFAULT_MINIFI_CONTAINER_NAME = "minifi-primary"
 
 
@@ -48,27 +46,16 @@ class MinifiTestContext(Context):
     def get_or_create_minifi_container(self, container_name: str) -> MinifiContainer:
         if container_name not in self.containers:
             if os.name == "nt":
-                from minifi_behave.containers.minifi_win_container import (
-                    MinifiWindowsContainer,
-                )
+                from minifi_behave.containers.minifi_win_container import MinifiWindowsContainer
 
                 minifi_container = MinifiWindowsContainer(container_name, self)
-            elif "MINIFI_INSTALLATION_TYPE=FHS" in str(
-                docker.from_env().images.get(self.minifi_container_image).history()
-            ):
-                from minifi_behave.containers.minifi_linux_container import (
-                    FHSDeployment,
-                    MinifiLinuxContainer,
-                )
-
-                minifi_container = MinifiLinuxContainer(container_name, self, FHSDeployment())
             else:
-                from minifi_behave.containers.minifi_linux_container import (
-                    MinifiLinuxContainer,
-                    NormalDeployment,
-                )
+                from minifi_behave.containers.minifi_linux_container import MinifiLinuxContainer
+                from minifi_behave.containers.deployment import get_deployment_for_image
 
-                minifi_container = MinifiLinuxContainer(container_name, self, NormalDeployment())
+                minifi_container = MinifiLinuxContainer(
+                    container_name, self, get_deployment_for_image(self.minifi_container_image)
+                )
             self.containers[container_name] = minifi_container
         return self.containers[container_name]
 
