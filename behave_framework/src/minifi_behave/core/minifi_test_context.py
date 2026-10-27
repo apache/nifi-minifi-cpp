@@ -50,8 +50,8 @@ class MinifiTestContext(Context):
 
                 minifi_container = MinifiWindowsContainer(container_name, self)
             else:
-                from minifi_behave.containers.minifi_linux_container import MinifiLinuxContainer
                 from minifi_behave.containers.deployment import get_deployment_for_image
+                from minifi_behave.containers.minifi_linux_container import MinifiLinuxContainer
 
                 minifi_container = MinifiLinuxContainer(
                     container_name, self, get_deployment_for_image(self.minifi_container_image)
