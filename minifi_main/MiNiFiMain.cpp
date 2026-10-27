@@ -43,6 +43,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
 #include <vector>
 
 #include "AgentDocs.h"
@@ -291,8 +292,15 @@ int main(int argc, char **argv) {
 
   std::atomic<bool> restart_token{false};
   std::atomic<int32_t> exit_code{0};
+  std::mutex shutdown_request_mutex;
+  bool shutdown_requested = false;
   const auto request_shutdown = [&] (minifi::ShutdownType shutdown_type, std::optional<int32_t> shutdown_exit_code) {
+    std::lock_guard<std::mutex> lock(shutdown_request_mutex);
+    if (shutdown_requested) {
+      return;
+    }
     if (shutdown_type == minifi::ShutdownType::SHUTDOWN) {
+      shutdown_requested = true;
       restart_token = false;
       exit_code = shutdown_exit_code.value_or(0);
       flow_controller_running.clear();

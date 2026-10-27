@@ -38,8 +38,9 @@ C2ConnectionWatchdog::C2ConnectionWatchdog(std::chrono::milliseconds connection_
     std::mutex sleep_mutex;
     std::unique_lock<std::mutex> sleep_lock(sleep_mutex);
     while (!st.stop_requested()) {
+      const auto now = std::chrono::steady_clock::now();
       const auto deadline = last_heartbeat_.load() + connection_timeout_;
-      if (std::chrono::steady_clock::now() >= deadline) {
+      if (now >= deadline) {
         logger_->log_error("C2 connection timeout exceeded, shutting down...");
         request_shutdown_(minifi::ShutdownType::SHUTDOWN, C2_CONNECTION_TIMEOUT_EXIT_CODE);
         break;

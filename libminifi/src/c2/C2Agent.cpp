@@ -148,6 +148,9 @@ void C2Agent::stop() {
     return;
   }
   controller_running_ = false;
+  if (connection_watchdog_) {
+    connection_watchdog_->stop();
+  }
   for (const auto& id : task_ids_) {
     thread_pool_.stopTasks(id.to_string());
   }

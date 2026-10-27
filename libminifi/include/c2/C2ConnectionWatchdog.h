@@ -35,6 +35,10 @@ class C2ConnectionWatchdog {
     last_heartbeat_ = std::chrono::steady_clock::now();
   }
 
+  void stop() {
+    watchdog_thread_.request_stop();
+  }
+
  private:
   std::chrono::milliseconds connection_timeout_;
   std::atomic<std::chrono::steady_clock::time_point> last_heartbeat_ = std::chrono::steady_clock::now();

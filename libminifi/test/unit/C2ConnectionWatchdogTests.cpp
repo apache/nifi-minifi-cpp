@@ -100,4 +100,14 @@ TEST_CASE("No shutdown is requested after the watchdog is destroyed", "[c2watchd
   REQUIRE(recorder.count() == 0);
 }
 
+TEST_CASE("No shutdown is requested after the watchdog is stopped", "[c2watchdog]") {
+  LogTestController::getInstance().reset();
+  C2ShutdownRecorder recorder;
+  c2::C2ConnectionWatchdog watchdog(200ms, recorder.callback());
+  watchdog.stop();
+  std::this_thread::sleep_for(500ms);
+  watchdog.heartBeatHappened();
+  REQUIRE(recorder.count() == 0);
+}
+
 }  // namespace org::apache::nifi::minifi::test
