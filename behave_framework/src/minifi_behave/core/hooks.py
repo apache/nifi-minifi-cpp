@@ -112,6 +112,18 @@ def common_after_scenario(context: MinifiTestContext, scenario: Scenario):
         context.network.remove()
 
 
+def file_is_present_in_image(image: str, file_path: str, is_windows: bool) -> bool:
+    if is_windows:
+        command = ["cmd", "/c", f'if exist "{file_path}" (exit 0) else (exit 1)']
+    else:
+        command = ["test", "-f", file_path]
+    try:
+        docker.from_env().containers.run(image=image, command=command, remove=True, detach=False)
+        return True
+    except docker.errors.ContainerError:
+        return False
+
+
 def add_extension_to_minifi_container(extension_name: str, possible_paths: list[str], context: MinifiTestContext):
     new_container_name = f"apacheminificpp:{extension_name}"
     is_windows = os.name == "nt"
@@ -120,7 +132,15 @@ def add_extension_to_minifi_container(extension_name: str, possible_paths: list[
         container_extension_dir = "C:/Program Files/ApacheNiFiMiNiFi/nifi-minifi-cpp/extensions"
     else:
         lib_filename = f"lib{extension_name}.so"
-        container_extension_dir = "/opt/minifi/minifi-current/extensions/"
+        container_extension_dir = "/opt/minifi/minifi-current/extensions"
+
+    base_img = get_minifi_container_image()
+    container_lib_path = f"{container_extension_dir}/{lib_filename}"
+
+    if file_is_present_in_image(base_img, container_lib_path, is_windows):
+        logger.info(f"'{lib_filename}' is already present in '{base_img}', tagging it as '{new_container_name}'")
+        docker.from_env().images.get(base_img).tag("apacheminificpp", tag=extension_name)
+        return new_container_name
 
     host_path = None
     for path in possible_paths:
@@ -133,8 +153,6 @@ def add_extension_to_minifi_container(extension_name: str, possible_paths: list[
     with open(host_path, "rb") as f:
         lib_content = f.read()
 
-    base_img = get_minifi_container_image()
-
     if is_windows:
         dockerfile = f"""
 FROM {base_img}
@@ -143,8 +161,8 @@ COPY ["{lib_filename}", "{container_extension_dir}/{lib_filename}"]
     else:
         dockerfile = f"""
 FROM {base_img}
-COPY --chown=minificpp:minificpp {lib_filename} {container_extension_dir}
-RUN chmod 755 {container_extension_dir}{lib_filename}
+COPY --chown=minificpp:minificpp {lib_filename} {container_extension_dir}/
+RUN chmod 755 {container_lib_path}
 """
 
     builder = DockerImageBuilder(

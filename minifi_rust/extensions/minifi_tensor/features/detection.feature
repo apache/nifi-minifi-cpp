@@ -74,6 +74,7 @@ Feature: Face detection with UltraFace Single Shot MultiBox Detector (SSD)
     And the Minifi logs do not contain errors
 
   # Based on https://github.com/sonos/tract/blob/main/examples/face_detection_yolov8onnx_example/src/main.rs
+  @MINIFI_EXTENSION_TENSOR
   Scenario: Grace Hopper image yields at least one face detection (DetectObject)
     Given a host resource file "grace_hopper.jpg" is copied to the "/tmp/input/grace_hopper.jpg" path in the MiNiFi container
     And a host resource file "version-RFB-320.onnx" is copied to the "/tmp/models/ultraface.onnx" path in the MiNiFi container
