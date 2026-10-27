@@ -137,11 +137,7 @@ def add_extension_to_minifi_container(extension_name: str, possible_paths: list[
         container_extension_dir = get_deployment_for_image(base_img).extension_dir
 
     container_lib_path = f"{container_extension_dir}/{lib_filename}"
-
-    if file_is_present_in_image(base_img, container_lib_path, is_windows):
-        logger.info(f"'{lib_filename}' is already present in '{base_img}', tagging it as '{new_container_name}'")
-        docker.from_env().images.get(base_img).tag("apacheminificpp", tag=extension_name)
-        return new_container_name
+    is_present_in_image = file_is_present_in_image(base_img, container_lib_path, is_windows)
 
     host_path = None
     for path in possible_paths:
@@ -149,10 +145,22 @@ def add_extension_to_minifi_container(extension_name: str, possible_paths: list[
             host_path = os.path.join(path, lib_filename)
             break
 
-    assert host_path is not None, (
+    assert host_path is not None or is_present_in_image, (
         f"Could not find {lib_filename} in {base_img}:{container_extension_dir}, "
         f"nor on the host in {[p for p in possible_paths]}"
     )
+
+    # A locally built extension takes precedence: it may enable cargo features which the
+    # packaged one does not, eg. the low-level processors of minifi_tensor
+    if host_path is None:
+        logger.info(f"'{lib_filename}' is already present in '{base_img}', tagging it as '{new_container_name}'")
+        docker.from_env().images.get(base_img).tag("apacheminificpp", tag=extension_name)
+        return new_container_name
+
+    if is_present_in_image:
+        logger.warning(f"Overriding the '{lib_filename}' in '{base_img}' with the locally built '{host_path}'")
+    else:
+        logger.info(f"Adding the locally built '{host_path}' to '{base_img}' as '{new_container_name}'")
 
     with open(host_path, "rb") as f:
         lib_content = f.read()
