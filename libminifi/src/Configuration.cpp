@@ -97,6 +97,8 @@ const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyVal
   {Configuration::nifi_c2_rest_request_encoding, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
   {Configuration::nifi_c2_rest_heartbeat_minimize_updates, gsl::make_not_null(&core::StandardPropertyValidators::BOOLEAN_VALIDATOR)},
   {Configuration::nifi_c2_flow_info_processor_bulletin_limit, gsl::make_not_null(&core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)},
+  {Configuration::nifi_c2_asset_download_timeout, gsl::make_not_null(&core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)},
+  {Configuration::nifi_c2_connection_timeout, gsl::make_not_null(&core::StandardPropertyValidators::TIME_PERIOD_VALIDATOR)},
   {Configuration::nifi_state_storage_local, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
   {Configuration::nifi_state_storage_local_old, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},
   {Configuration::nifi_state_storage_local_class_name, gsl::make_not_null(&core::StandardPropertyValidators::ALWAYS_VALID_VALIDATOR)},

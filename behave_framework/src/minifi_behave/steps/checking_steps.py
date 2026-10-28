@@ -131,6 +131,13 @@ def verify_minifi_logs_do_not_contain_warnings(context: MinifiTestContext):
     )
 
 
+@then("the logs of the exited Minifi container contain the following message: '{message}'")
+@then('the logs of the exited Minifi container contain the following message: "{message}"')
+def verify_exited_minifi_container_logs_contain_message(context: MinifiTestContext, message: str):
+    assert context.containers[DEFAULT_MINIFI_CONTAINER_NAME].exited or log_due_to_failure(context)
+    assert message in context.containers[DEFAULT_MINIFI_CONTAINER_NAME].get_logs() or log_due_to_failure(context)
+
+
 @then("the logs of the '{container}' container contain the following message: '{message}' in less than {duration}")
 @then('the logs of the "{container}" container contain the following message: "{message}" in less than {duration}')
 def verify_container_logs_contain_message(context: MinifiTestContext, container: str, message: str, duration: str):

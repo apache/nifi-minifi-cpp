@@ -43,6 +43,7 @@
 #include "minifi-cpp/io/ArchiveStream.h"
 #include "io/StreamPipe.h"
 #include "utils/Id.h"
+#include "c2/C2ExitCodes.h"
 #include "c2/C2Utils.h"
 #include "c2/protocols/RESTSender.h"
 #include "rapidjson/error/en.h"
@@ -52,10 +53,29 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::c2 {
 
+namespace {
+std::optional<std::chrono::milliseconds> parseTimeoutPeriod(const std::shared_ptr<Configure>& configuration, const std::string& config_param,
+    const std::shared_ptr<core::logging::Logger>& logger) {
+  return configuration->get(config_param) | utils::andThen([&](const auto& timeout_str) -> std::optional<std::chrono::milliseconds> {
+    auto duration = parsing::parseDuration<std::chrono::milliseconds>(timeout_str) | utils::toOptional();
+    if (!duration) {
+      logger->log_error("Failed to parse C2 configuration parameter '{}': '{}'", config_param, timeout_str);
+    }
+    if (duration && *duration <= 0ms) {
+      if (*duration < 0ms) {
+        logger->log_warn("Negative value for C2 configuration parameter '{}': '{}', ignoring it", config_param, timeout_str);
+      }
+      return std::nullopt;
+    }
+    return duration;
+  });
+}
+}  // namespace
+
 C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
                  std::weak_ptr<state::response::NodeReporter> node_reporter,
                  std::shared_ptr<utils::file::FileSystem> filesystem,
-                 std::function<void()> request_restart,
+                 minifi::RequestShutdownCallback request_shutdown,
                  utils::file::AssetManager* asset_manager)
     : heart_beat_period_(3s),
       max_c2_responses(5),
@@ -63,7 +83,7 @@ C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
       node_reporter_(std::move(node_reporter)),
       filesystem_(std::move(filesystem)),
       thread_pool_(2, "C2 threadpool"),
-      request_restart_(std::move(request_restart)),
+      request_shutdown_(std::move(request_shutdown)),
       last_run_(std::chrono::steady_clock::now()),
       asset_manager_(asset_manager) {
   if (!configuration_->getAgentClass()) {
@@ -109,6 +129,7 @@ void C2Agent::start() {
   if (controller_running_) {
     return;
   }
+  last_successful_heartbeat_ = std::chrono::steady_clock::now();
   task_ids_.clear();
   for (const auto& function : functions_) {
     utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
@@ -179,6 +200,17 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
   logger_->log_debug("Using {} as the heartbeat period", heart_beat_period_);
 
+  c2_connection_timeout_ = parseTimeoutPeriod(configuration_, std::string{Configuration::nifi_c2_connection_timeout}, logger_);
+  if (c2_connection_timeout_ && *c2_connection_timeout_ <= heart_beat_period_) {
+    logger_->log_warn(
+        "C2 connection timeout is less than the heartbeat period: c2 connection timeout={}, heartbeat period={}. Adjusting it to be twice the "
+        "heartbeat period",
+        *c2_connection_timeout_,
+        heart_beat_period_);
+    c2_connection_timeout_ = heart_beat_period_ * 2;
+    logger_->log_debug("Using {} as the C2 connection timeout", *c2_connection_timeout_);
+  }
+
   std::string heartbeat_reporters;
   if (configure->get(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
     std::vector<std::string> reporters = utils::string::splitAndTrim(heartbeat_reporters, ",");
@@ -233,6 +265,10 @@ void C2Agent::performHeartBeat() {
     payload.addPayload(std::move(child_metric_payload));
   }
   C2Payload response = protocol_->consumePayload(payload);
+
+  if (response.getStatus().getState() != state::UpdateState::READ_ERROR) {
+    last_successful_heartbeat_ = std::chrono::steady_clock::now();
+  }
 
   enqueue_c2_server_response(std::move(response));
 
@@ -944,7 +980,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
 
     if (restart_needed_ && requests.empty()) {
       configuration_->commitChanges();
-      request_restart_();
+      request_shutdown_(minifi::ShutdownType::RESTART, std::nullopt);
       return utils::TaskRescheduleInfo::Done();
     }
 
@@ -956,6 +992,12 @@ utils::TaskRescheduleInfo C2Agent::produce() {
     }
     catch (...) {
       logger_->log_error("Unknown exception occurred while performing heartbeat, type: {}", getCurrentExceptionTypeName());
+    }
+
+    if (c2_connection_timeout_ && controller_running_ && std::chrono::steady_clock::now() - last_successful_heartbeat_ > *c2_connection_timeout_) {
+      logger_->log_error("C2 connection timeout exceeded, shutting down...");
+      request_shutdown_(minifi::ShutdownType::SHUTDOWN, C2_CONNECTION_TIMEOUT_EXIT_CODE);
+      return utils::TaskRescheduleInfo::Done();
     }
   }
 

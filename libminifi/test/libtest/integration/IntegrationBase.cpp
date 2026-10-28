@@ -129,7 +129,13 @@ void IntegrationBase::run() {
     std::shared_ptr<core::ProcessGroup> pg(flow_config->getRoot());
     queryRootProcessGroup(pg);
 
-    const auto request_restart = [&, this] {
+    const auto request_shutdown = [&, this] (ShutdownType shutdown_type, std::optional<int32_t> exit_code) {
+      if (shutdown_type == ShutdownType::SHUTDOWN) {
+        last_shutdown_exit_code_ = exit_code.value_or(0);
+        ++shutdown_requested_count_;
+        running = false;
+        return;
+      }
       ++restart_requested_count_;
       running = true;
     };
@@ -138,7 +144,7 @@ void IntegrationBase::run() {
     asset_manager_ = std::make_unique<minifi::utils::file::AssetManager>(*configuration);
     auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, flow_config, asset_manager_.get(), bulletin_store_.get());
     flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration,
-      std::move(flow_config), content_repo, std::move(metrics_publisher_store), filesystem, request_restart, asset_manager_.get());
+      std::move(flow_config), content_repo, std::move(metrics_publisher_store), filesystem, request_shutdown, asset_manager_.get());
     flowController_->load();
     updateProperties(*flowController_);
     flowController_->start();

@@ -121,6 +121,8 @@ nifi.c2.full.heartbeat=false
 # nifi.c2.root.class.definitions.metrics.metrics.processorMetrics.name=ProcessorMetric
 # nifi.c2.root.class.definitions.metrics.metrics.processorMetrics.classes=GetFileMetrics
 
+# nifi.c2.connection.timeout=30 min
+
 ## Specify multiple heartbeat handlers.
 ## HeartbeatLogger logs the heartbeats on TRACE for debugging.
 #nifi.c2.agent.heartbeat.reporter.classes=HeartbeatLogger

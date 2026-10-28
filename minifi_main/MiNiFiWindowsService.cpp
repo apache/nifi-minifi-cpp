@@ -26,6 +26,7 @@
 #include <tuple>
 
 #include "MainHelper.h"
+#include "c2/C2ExitCodes.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -176,6 +177,8 @@ void RunAsServiceIfNeeded() {
           return;
         }
 
+        DWORD serviceSpecificExitCode = 0;
+
         do {
           Log()->log_debug("Start exe path {}", filePath);
 
@@ -194,6 +197,11 @@ void RunAsServiceIfNeeded() {
           Log()->log_info("{} started", filePath);
 
           auto res = WaitForSingleObject(processInformation.hProcess, INFINITE);
+          DWORD exeExitCode = 0;
+          const bool exeExitCodeRetrieved = GetExitCodeProcess(processInformation.hProcess, &exeExitCode);
+          if (!exeExitCodeRetrieved) {
+            Log()->log_error("!GetExitCodeProcess lastError {:#x}", GetLastError());
+          }
           CloseHandle(processInformation.hProcess);
           CloseHandle(processInformation.hThread);
 
@@ -201,6 +209,12 @@ void RunAsServiceIfNeeded() {
             Log()->log_error("!WaitForSingleObject hProcess lastError {:#x}", GetLastError());
           } else if (WAIT_OBJECT_0 != res) {
             Log()->log_error("!WaitForSingleObject hProcess return {}", res);
+          }
+
+          if (exeExitCodeRetrieved && exeExitCode == static_cast<DWORD>(minifi::c2::C2_CONNECTION_TIMEOUT_EXIT_CODE)) {
+            Log()->log_info("Exe exited with exit code {} due to C2 connection timeout, exe won't be restarted", exeExitCode);
+            serviceSpecificExitCode = exeExitCode;
+            break;
           }
 
           Log()->log_info("Sleep {} sec before restarting exe", WAIT_TIME_EXE_RESTART/1000);
@@ -220,7 +234,8 @@ void RunAsServiceIfNeeded() {
 
         s_serviceStatus.dwControlsAccepted = 0;
         s_serviceStatus.dwCurrentState = SERVICE_STOPPED;
-        s_serviceStatus.dwWin32ExitCode = 0;
+        s_serviceStatus.dwWin32ExitCode = serviceSpecificExitCode == 0 ? 0 : ERROR_SERVICE_SPECIFIC_ERROR;
+        s_serviceStatus.dwServiceSpecificExitCode = serviceSpecificExitCode;
 
         if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
           Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError {:#x}", GetLastError());
