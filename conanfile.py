@@ -95,7 +95,7 @@ shared_sources = (
 
 class MiNiFiCppMain(ConanFile):
     name = "minifi-cpp"
-    version = "1.0.0"
+    version = "1.1.0"
     license = "Apache-2.0"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"

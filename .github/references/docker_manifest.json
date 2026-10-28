@@ -420,7 +420,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-archive-extensions",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -2468,7 +2468,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-aws",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -3535,7 +3535,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-azure",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -3570,7 +3570,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-bustache-extensions",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -3700,7 +3700,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-civet-extensions",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -4005,7 +4005,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-couchbase",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -4141,7 +4141,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-elasticsearch",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -4210,7 +4210,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-execute-process",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -4709,7 +4709,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-gcp",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -4975,7 +4975,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-grafana-loki",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -5644,7 +5644,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-kafka",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -5726,7 +5726,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-kubernetes-extensions",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -5896,7 +5896,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-llamacpp",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -6499,7 +6499,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-mqtt-extensions",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -6890,7 +6890,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-opc-extensions",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -6982,7 +6982,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-procfs",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -7027,7 +7027,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-rocksdb-repos",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -7105,7 +7105,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-script-extension",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -7986,7 +7986,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-sftp",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -8195,7 +8195,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-splunk",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -8408,7 +8408,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-sql",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -8572,7 +8572,7 @@
         },
         "group": "org.apache.nifi.minifi.testing",
         "artifact": "minifi-stable-api-testing",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -11720,7 +11720,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-standard-processors",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -11947,7 +11947,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-system",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -12052,7 +12052,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-systemd",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {
@@ -12101,7 +12101,7 @@
         },
         "group": "org.apache.nifi.minifi",
         "artifact": "minifi-test-processors",
-        "version": "1.0.0"
+        "version": "1.1.0"
     }
 },
 {

@@ -76,6 +76,7 @@ Feature: Image classification with MobileNetV2
     And the Minifi logs do not contain errors
 
   # Based on https://github.com/sonos/tract/tree/main/examples/onnx-mobilenet-v2
+  @MINIFI_EXTENSION_TENSOR
   Scenario: Grace Hopper image is classified using MobileNetV2 ONNX and imagenet labels (ClassifyImage)
     Given a host resource file "grace_hopper.jpg" is copied to the "/tmp/input/grace_hopper.jpg" path in the MiNiFi container
     And a host resource file "mobilenetv2-7.onnx" is copied to the "/tmp/models/mobilenetv2-7.onnx" path in the MiNiFi container
@@ -127,6 +128,7 @@ Feature: Image classification with MobileNetV2
     And at least one file in "/tmp/output" content match the following regex: "\"class_name\":\"(military uniform|bulletproof vest|suit|Windsor tie)\"" in less than 30 seconds
     And the Minifi logs do not contain errors
 
+  @MINIFI_EXTENSION_TENSOR
   Scenario: ClassifyImage shouldn't schedule with invalid TractModelService
     Given a TractModelService controller service named "MobileNet" is set up and the "Model File Path" property set to "/tmp/models/invalid.onnx"
 

@@ -21,6 +21,7 @@ from pathlib import Path
 
 from behave.model import Scenario
 from behave.runner import Context
+from minifi_behave.containers.deployment import get_deployment_for_image
 from minifi_behave.containers.docker_image_builder import DockerImageBuilder
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 from minifi_behave.core.ssl_utils import make_self_signed_cert
@@ -112,15 +113,31 @@ def common_after_scenario(context: MinifiTestContext, scenario: Scenario):
         context.network.remove()
 
 
+def file_is_present_in_image(image: str, file_path: str, is_windows: bool) -> bool:
+    if is_windows:
+        command = ["cmd", "/c", f'if exist "{file_path}" (exit 0) else (exit 1)']
+    else:
+        command = ["test", "-f", file_path]
+    try:
+        docker.from_env().containers.run(image=image, command=command, remove=True, detach=False)
+        return True
+    except docker.errors.ContainerError:
+        return False
+
+
 def add_extension_to_minifi_container(extension_name: str, possible_paths: list[str], context: MinifiTestContext):
     new_container_name = f"apacheminificpp:{extension_name}"
     is_windows = os.name == "nt"
+    base_img = get_minifi_container_image()
     if is_windows:
         lib_filename = f"{extension_name}.dll"
         container_extension_dir = "C:/Program Files/ApacheNiFiMiNiFi/nifi-minifi-cpp/extensions"
     else:
         lib_filename = f"lib{extension_name}.so"
-        container_extension_dir = "/opt/minifi/minifi-current/extensions/"
+        container_extension_dir = get_deployment_for_image(base_img).extension_dir
+
+    container_lib_path = f"{container_extension_dir}/{lib_filename}"
+    is_present_in_image = file_is_present_in_image(base_img, container_lib_path, is_windows)
 
     host_path = None
     for path in possible_paths:
@@ -128,12 +145,25 @@ def add_extension_to_minifi_container(extension_name: str, possible_paths: list[
             host_path = os.path.join(path, lib_filename)
             break
 
-    assert host_path is not None, f"Could not find {lib_filename} in {[p for p in possible_paths]}"
+    assert host_path is not None or is_present_in_image, (
+        f"Could not find {lib_filename} in {base_img}:{container_extension_dir}, "
+        f"nor on the host in {[p for p in possible_paths]}"
+    )
+
+    # A locally built extension takes precedence: it may enable cargo features which the
+    # packaged one does not, eg. the low-level processors of minifi_tensor
+    if host_path is None:
+        logger.info(f"'{lib_filename}' is already present in '{base_img}', tagging it as '{new_container_name}'")
+        docker.from_env().images.get(base_img).tag("apacheminificpp", tag=extension_name)
+        return new_container_name
+
+    if is_present_in_image:
+        logger.warning(f"Overriding the '{lib_filename}' in '{base_img}' with the locally built '{host_path}'")
+    else:
+        logger.info(f"Adding the locally built '{host_path}' to '{base_img}' as '{new_container_name}'")
 
     with open(host_path, "rb") as f:
         lib_content = f.read()
-
-    base_img = get_minifi_container_image()
 
     if is_windows:
         dockerfile = f"""
@@ -143,8 +173,8 @@ COPY ["{lib_filename}", "{container_extension_dir}/{lib_filename}"]
     else:
         dockerfile = f"""
 FROM {base_img}
-COPY --chown=minificpp:minificpp {lib_filename} {container_extension_dir}
-RUN chmod 755 {container_extension_dir}{lib_filename}
+COPY --chown=minificpp:minificpp {lib_filename} {container_extension_dir}/
+RUN chmod 755 {container_lib_path}
 """
 
     builder = DockerImageBuilder(
@@ -154,4 +184,8 @@ RUN chmod 755 {container_extension_dir}{lib_filename}
     )
 
     builder.build()
+
+    assert file_is_present_in_image(new_container_name, container_lib_path, is_windows), (
+        f"'{container_lib_path}' is missing from '{new_container_name}' after the build"
+    )
     return new_container_name

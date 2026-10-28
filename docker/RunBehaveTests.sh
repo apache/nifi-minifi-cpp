@@ -179,6 +179,6 @@ echo "${BEHAVE_OPTS[@]}"
 FEATURE_FILES=()
 while IFS= read -r -d '' file; do
     FEATURE_FILES+=("$file")
-done < <(find "${docker_dir}/../extensions" -type f -name '*.feature' -print0)
+done < <(find "${docker_dir}/../extensions" "${docker_dir}/../minifi_rust/extensions" -type f -name '*.feature' -print0)
 
 behavex "${BEHAVE_OPTS[@]}" "${FEATURE_FILES[@]}"

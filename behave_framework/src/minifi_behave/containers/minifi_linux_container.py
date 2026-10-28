@@ -19,6 +19,10 @@ import logging
 import os
 from pathlib import Path
 
+from minifi_behave.containers.deployment import (
+    FHSDeployment,
+    NormalDeployment,
+)
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.helpers import wait_for_condition
@@ -43,24 +47,6 @@ CA_CERT_PATHS = [
     "/etc/ssl/certs/ca-certificates.crt",
     "/etc/pki/tls/certs/ca-bundle.crt",
 ]
-
-
-class NormalDeployment:
-    def __init__(self):
-        self.conf_path = "/opt/minifi/minifi-current/conf"
-        self.bin_path = "/opt/minifi/minifi-current/bin"
-        self.extension_pattern = "../extensions/*"
-        self.minifi_python_path = "/opt/minifi/minifi-current/minifi-python"
-        self.minifi_python_examples_path = "/opt/minifi/minifi-current/minifi-python-examples"
-
-
-class FHSDeployment:
-    def __init__(self):
-        self.conf_path = "/etc/nifi-minifi-cpp/"
-        self.bin_path = "/usr/bin"
-        self.extension_pattern = "/usr/lib64/nifi-minifi-cpp/extensions/*"
-        self.minifi_python_path = "/var/lib/nifi-minifi-cpp/minifi-python"
-        self.minifi_python_examples_path = "/usr/share/doc/nifi-minifi-cpp/pythonprocessor-examples"
 
 
 class MinifiLinuxContainer(LinuxContainer, MinifiProtocol):

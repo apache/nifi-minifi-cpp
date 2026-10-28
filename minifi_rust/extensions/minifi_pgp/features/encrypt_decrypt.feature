@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@MINIFI_EXTENSION_PGP
 @SUPPORTS_WINDOWS
 Feature: Test PGP extension's encryption and decryption capabilities
 
