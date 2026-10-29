@@ -26,6 +26,7 @@ Feature: Basic scenarios
     And a PutFileRs processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GenerateFlowFileRs processor is connected to the PutFileRs
     And PutFileRs's success relationship is auto-terminated
+    And PutFileRs's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
@@ -76,6 +77,7 @@ Feature: Basic scenarios
     And a PutFileRs processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the LoremIpsumCSUser processor is connected to the PutFileRs
     And PutFileRs's success relationship is auto-terminated
+    And PutFileRs's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
 

@@ -17,7 +17,8 @@
                     "Script File": "../../examples/scripts/python/reverse_flow_file_content.py"
                 },
                 "autoTerminatedRelationships": [
-                    "failure"
+                    "failure",
+                    "original"
                 ]
             },
             {

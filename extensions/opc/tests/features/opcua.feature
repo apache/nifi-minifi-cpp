@@ -15,7 +15,7 @@ Feature: Putting and fetching data to OPC UA server
     And PutOPCProcessor is EVENT_DRIVEN in the "create-opc-ua-node" flow
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
-    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
+
     And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node" flow
     And these processor properties are set in the "create-opc-ua-node" flow
       | processor name    | property name               | property value                                    |
@@ -37,6 +37,11 @@ Feature: Putting and fetching data to OPC UA server
 
     And in the "create-opc-ua-node" flow the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And in the "fetch-opc-ua-node" flow the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
+    And PutOPCProcessor's success relationship is auto-terminated in the "create-opc-ua-node" flow
+    And PutOPCProcessor's failure relationship is auto-terminated in the "create-opc-ua-node" flow
+    And FetchOPCProcessor's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
 
     And an OPC UA server is set up
 
@@ -60,10 +65,9 @@ Feature: Putting and fetching data to OPC UA server
     And a directory at "/tmp/input" has a file with the content "<Initial Value>" in the "update-opc-ua-node" flow
     And a PutOPCProcessor processor in the "update-opc-ua-node" flow
     And PutOPCProcessor is EVENT_DRIVEN in the "update-opc-ua-node" flow
-    And PutOPCProcessor's success relationship is auto-terminated in the "update-opc-ua-node" flow
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
-    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
+
     And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node" flow
     And these processor properties are set in the "update-opc-ua-node" flow
       | processor name    | property name               | property value                                    |
@@ -85,6 +89,11 @@ Feature: Putting and fetching data to OPC UA server
 
     And in the "update-opc-ua-node" flow the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And in the "fetch-opc-ua-node" flow the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
+    And PutOPCProcessor's success relationship is auto-terminated in the "update-opc-ua-node" flow
+    And PutOPCProcessor's failure relationship is auto-terminated in the "update-opc-ua-node" flow
+    And FetchOPCProcessor's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
 
     And an OPC UA server is set up
 
@@ -113,7 +122,6 @@ Feature: Putting and fetching data to OPC UA server
     And PutOPCProcessor is EVENT_DRIVEN in the "create-opc-ua-node" flow
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
-    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
     And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node" flow
     And the OPC UA server certificate files are placed in the "/tmp/resources/opcua/" directory in the MiNiFi container "create-opc-ua-node"
     And the OPC UA server certificate files are placed in the "/tmp/resources/opcua/" directory in the MiNiFi container "fetch-opc-ua-node"
@@ -145,6 +153,11 @@ Feature: Putting and fetching data to OPC UA server
 
     And in the "create-opc-ua-node" flow the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And in the "fetch-opc-ua-node" flow the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
+    And PutOPCProcessor's success relationship is auto-terminated in the "create-opc-ua-node" flow
+    And PutOPCProcessor's failure relationship is auto-terminated in the "create-opc-ua-node" flow
+    And FetchOPCProcessor's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
 
     And an OPC UA server is set up
 
@@ -160,7 +173,6 @@ Feature: Putting and fetching data to OPC UA server
     And PutOPCProcessor is EVENT_DRIVEN in the "create-opc-ua-node" flow
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
-    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
     And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node" flow
     And these processor properties are set in the "create-opc-ua-node" flow
       | processor name    | property name               | property value                                    |
@@ -186,6 +198,11 @@ Feature: Putting and fetching data to OPC UA server
 
     And in the "create-opc-ua-node" flow the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And in the "fetch-opc-ua-node" flow the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
+    And PutOPCProcessor's success relationship is auto-terminated in the "create-opc-ua-node" flow
+    And PutOPCProcessor's failure relationship is auto-terminated in the "create-opc-ua-node" flow
+    And FetchOPCProcessor's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
 
     And an OPC UA server is set up with access control
 
@@ -201,7 +218,6 @@ Feature: Putting and fetching data to OPC UA server
     And PutOPCProcessor is EVENT_DRIVEN in the "create-opc-ua-node" flow
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
-    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
     And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node" flow
     And the OPC UA server certificate files are placed in the "/tmp/resources/opcua/" directory in the MiNiFi container "create-opc-ua-node"
     And the OPC UA server certificate files are placed in the "/tmp/resources/opcua/" directory in the MiNiFi container "fetch-opc-ua-node"
@@ -237,6 +253,11 @@ Feature: Putting and fetching data to OPC UA server
 
     And in the "create-opc-ua-node" flow the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And in the "fetch-opc-ua-node" flow the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
+    And PutOPCProcessor's success relationship is auto-terminated in the "create-opc-ua-node" flow
+    And PutOPCProcessor's failure relationship is auto-terminated in the "create-opc-ua-node" flow
+    And FetchOPCProcessor's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node" flow
+    And PutFile's failure relationship is auto-terminated in the "fetch-opc-ua-node" flow
 
     And an OPC UA server is set up
 

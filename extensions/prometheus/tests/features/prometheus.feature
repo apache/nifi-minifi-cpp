@@ -12,6 +12,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And Prometheus is enabled in MiNiFi
     And a Prometheus server is set up
     When all instances start up
@@ -33,6 +34,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And Prometheus with SSL is enabled in MiNiFi
     And a Prometheus server is set up with SSL
     When all instances start up

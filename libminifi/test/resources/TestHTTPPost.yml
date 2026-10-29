@@ -44,6 +44,7 @@ Processors:
          - no retry
          - failure
          - response
+         - success
       Properties:
           HTTP Method: POST
           Content-type: text/html

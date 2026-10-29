@@ -3,12 +3,12 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 #include "Funnel.h"
-#include "minifi-cpp/core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi {
 
-void Funnel::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  context.addAutoTerminatedRelationship(Success);
+void Funnel::initialize() {
+  ForwardingNode::initialize();
+  addAutoTerminatedRelationship(Success);
 }
 
 }  // namespace org::apache::nifi::minifi

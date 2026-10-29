@@ -12,6 +12,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And PutFile is EVENT_DRIVEN in the "server" flow
     And in the "server" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "server" flow
+    And PutFile's failure relationship is auto-terminated in the "server" flow
 
     And a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
@@ -23,6 +24,8 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "server" container at least one file with the content "Lorem ipsum dolor sit amet" is placed in the "/tmp/output" directory in less than 10 seconds
@@ -33,6 +36,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "server" flow
     And in the "server" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "server" flow
+    And PutFile's failure relationship is auto-terminated in the "server" flow
 
     And a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
@@ -44,6 +48,8 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "server" container no files are placed in the "/tmp/output" directory in 10s of running time
@@ -57,6 +63,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And PutFile is EVENT_DRIVEN in the "server" flow
     And in the "server" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "server" flow
+    And PutFile's failure relationship is auto-terminated in the "server" flow
 
     And a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
@@ -69,6 +76,8 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "server" container at least one file with the content "ut labore et dolore magna aliqua" is placed in the "/tmp/output" directory in less than 10s
@@ -79,6 +88,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "server" flow
     And in the "server" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "server" flow
+    And PutFile's failure relationship is auto-terminated in the "server" flow
 
     And a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
@@ -91,6 +101,8 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "server" container at least one file with the content "Ut enim ad minim veniam" is placed in the "/tmp/output" directory in less than 10s
@@ -104,6 +116,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And PutFile is EVENT_DRIVEN in the "server" flow
     And in the "server" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "server" flow
+    And PutFile's failure relationship is auto-terminated in the "server" flow
 
     And a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
@@ -116,6 +129,8 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "server" container at least one file with the content "quis nostrud exercitation ullamco laboris nisi" is placed in the "/tmp/output" directory in less than 10s
@@ -126,6 +141,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "server" flow
     And in the "server" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "server" flow
+    And PutFile's failure relationship is auto-terminated in the "server" flow
 
     And a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
@@ -137,6 +153,8 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "server" container no files are placed in the "/tmp/output" directory in 10s of running time
@@ -150,6 +168,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And PutFile is EVENT_DRIVEN in the "server" flow
     And in the "server" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "server" flow
+    And PutFile's failure relationship is auto-terminated in the "server" flow
 
     And a GenerateFlowFile processor with the "Data Format" property set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
@@ -161,6 +180,8 @@ Feature: Transfer data from and to MiNiFi using HTTPS
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "server" container no files are placed in the "/tmp/output" directory in 10s of running time

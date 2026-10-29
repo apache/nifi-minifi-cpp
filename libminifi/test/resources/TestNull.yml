@@ -16,6 +16,10 @@ Processors:
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:
+        - failure
+        - no retry
+        - response
+        - retry
       Properties:
           HTTP Method: GET
           Remote URL: http://localhost:10015/geturl
@@ -29,7 +33,7 @@ Processors:
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:
-        - response
+        - success
       Properties:
         Log Level: info
         Log Payload: true
@@ -57,4 +61,3 @@ Connections:
       flowfile expiration: 60 sec
 
 Remote Processing Groups:
-
