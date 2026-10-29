@@ -84,6 +84,8 @@ class ProcessorImpl : public virtual ProcessorApi {
   void setSupportedProperties(std::span<const PropertyReference> properties);
   void setSupportedProperties(std::span<const Property> properties);
 
+  void addAutoTerminatedRelationship(const RelationshipDefinition& relationship);
+
   virtual void initialize() {}
 
   void onTrigger(ProcessContext&, ProcessSession&) override {}

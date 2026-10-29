@@ -28,6 +28,9 @@ Feature: Changing flowfile contents using the ReplaceText processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GenerateFlowFile processor is connected to the ReplaceText
     And the "success" relationship of the ReplaceText processor is connected to the PutFile
+    And ReplaceText's failure relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     When the MiNiFi instance starts up
     Then a single file with the content "<output>" is placed in the "/tmp/output" directory in less than 10 seconds
 
@@ -50,6 +53,9 @@ Feature: Changing flowfile contents using the ReplaceText processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the ReplaceText
     And the "success" relationship of the ReplaceText processor is connected to the PutFile
+    And ReplaceText's failure relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     When the MiNiFi instance starts up
     Then a single file with the content "<output>" is placed in the "/tmp/output" directory in less than 10 seconds
 

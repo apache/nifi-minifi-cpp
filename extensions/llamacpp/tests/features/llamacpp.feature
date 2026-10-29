@@ -24,6 +24,8 @@ Feature: Run language model inference using LlamaCpp processor
     And a LogAttribute processor with the "Log Payload" property set to "true"
     And the "success" relationship of the GenerateFlowFile processor is connected to the RunLlamaCppInference
     And the "success" relationship of the RunLlamaCppInference processor is connected to the LogAttribute
+    And RunLlamaCppInference's failure relationship is auto-terminated
+    And LogAttribute's success relationship is auto-terminated
 
     When all instances start up
     Then the Minifi logs contain the following message: "banana" in less than 60 seconds
@@ -38,7 +40,9 @@ Feature: Run language model inference using LlamaCpp processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the RunLlamaCppInference
     And the "success" relationship of the RunLlamaCppInference processor is connected to the PutFile
+    And RunLlamaCppInference's failure relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     Then a single file with the content "minifi" is placed in the "/tmp/output" directory in less than 600 seconds
-

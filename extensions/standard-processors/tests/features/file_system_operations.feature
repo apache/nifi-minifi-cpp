@@ -26,6 +26,7 @@ Feature: File system operations are handled by the GetFile, PutFile, ListFile an
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     When the MiNiFi instance starts up
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 10 seconds
 
@@ -70,6 +71,10 @@ Feature: File system operations are handled by the GetFile, PutFile, ListFile an
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ListFile processor is connected to the FetchFile
     And the "success" relationship of the FetchFile processor is connected to the PutFile
+    And FetchFile's failure relationship is auto-terminated
+    And FetchFile's not.found relationship is auto-terminated
+    And FetchFile's permission.denied relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     When the MiNiFi instance starts up
     Then files with contents "Test message" and "Another test message" are placed in the "/tmp/output" directory in less than 10 seconds

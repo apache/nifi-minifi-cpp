@@ -93,3 +93,39 @@ TEST_CASE("Adaptive configuration logs json parse errors") {
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "[error] Configuration file is not valid json: Invalid encoding in string. (38)"));
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "[error] Configuration file is not valid yaml: yaml-cpp: error at line 3, column 27: end of map flow not found"));
 }
+
+TEST_CASE("Adaptive configuration rejects JSON flow with unterminated relationships") {
+  ConfigurationTestController controller;
+
+  const char* json_config = R"(
+    {
+      "Flow Controller": {"name": "root"},
+      "Processors": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "class": "GenerateFlowFile",
+          "name": "GenerateFlowFile"
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "class": "LogAttribute",
+          "name": "LogAttribute"
+        }
+      ],
+      "Connections": [
+        {
+          "id": "00000000-0000-0000-0000-000000000005",
+          "name": "GenerateFlowFileToLogAttribute",
+          "source id": "00000000-0000-0000-0000-000000000001",
+          "source relationship names": ["success"],
+          "destination id": "00000000-0000-0000-0000-000000000002"
+        }
+      ]
+    }
+  )";
+
+  core::flow::AdaptiveConfiguration config{controller.getContext()};
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(json_config),
+      "General Operation: The following component-relationship pairs are not terminated by any connection: [(LogAttribute, success)]");
+}

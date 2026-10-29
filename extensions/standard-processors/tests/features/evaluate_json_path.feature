@@ -25,8 +25,11 @@ Feature: Writing JSON path query result to attribute or flow file using Evaluate
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the EvaluateJsonPath
     And the "matched" relationship of the EvaluateJsonPath processor is connected to the PutFile
+    And EvaluateJsonPath's failure relationship is auto-terminated
+    And EvaluateJsonPath's unmatched relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
     And PutFile's failure relationship is auto-terminated
+
     When the MiNiFi instance starts up
     Then a file with the JSON content "["The Great Gatsby","1984"]" is placed in the "/tmp/output" directory in less than 10 seconds
 
@@ -46,8 +49,11 @@ Feature: Writing JSON path query result to attribute or flow file using Evaluate
     And the "success" relationship of the GetFile processor is connected to the EvaluateJsonPath
     And the "matched" relationship of the EvaluateJsonPath processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And EvaluateJsonPath's failure relationship is auto-terminated
+    And EvaluateJsonPath's unmatched relationship is auto-terminated
     And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
+
     When the MiNiFi instance starts up
     Then a file with the JSON content "{"title": "1984", "author": null}" is placed in the "/tmp/output" directory in less than 10 seconds
     And the Minifi logs contain the following message: "key:title value:1984" in less than 10 seconds

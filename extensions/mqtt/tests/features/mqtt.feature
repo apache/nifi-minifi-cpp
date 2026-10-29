@@ -28,7 +28,9 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And the "success" relationship of the PublishMQTT processor is connected to the PutFile
+    And PublishMQTT's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -52,6 +54,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "success" relationship of the PublishMQTT processor is connected to the PutFile
     And the "failure" relationship of the PublishMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
     Then no files are placed in the "/tmp/output" directory in 30 seconds of running time
@@ -70,7 +73,9 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And the "success" relationship of the PublishMQTT processor is connected to the PutFile
+    And PublishMQTT's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
     Then no files are placed in the "/tmp/output" directory in 10 seconds of running time
@@ -91,6 +96,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "MQTT Version" property of the PublishMQTT processor is set to "<version>"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated
+    And PublishMQTT's failure relationship is auto-terminated
 
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the ConsumeMQTT processor is set to "<version>"
@@ -101,6 +107,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
     And LogAttribute's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -132,6 +139,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "MQTT Version" property of the PublishMQTT processor is set to "<version>"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated
+    And PublishMQTT's failure relationship is auto-terminated
 
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
     And the "Topic" property of the ConsumeMQTT processor is set to "<topic wildcard pattern>"
@@ -140,6 +148,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -166,6 +175,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Quality of Service" property of the PublishMQTT processor is set to "1" in the "publisher-client" flow
     And in the "publisher-client" flow the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated in the "publisher-client" flow
+    And PublishMQTT's failure relationship is auto-terminated in the "publisher-client" flow
 
     # consuming MQTT client
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance in the "consumer-client" flow
@@ -177,6 +187,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN in the "consumer-client" flow
     And in the "consumer-client" flow the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "consumer-client" flow
+    And PutFile's failure relationship is auto-terminated in the "consumer-client" flow
 
     And an MQTT broker is started
 
@@ -205,6 +216,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Topic" property of the PublishMQTT processor is set to "<topic>"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated
+    And PublishMQTT's failure relationship is auto-terminated
 
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the ConsumeMQTT processor is set to "<version>"
@@ -213,6 +225,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -239,6 +252,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Quality of Service" property of the PublishMQTT processor is set to "0"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated
+    And PublishMQTT's failure relationship is auto-terminated
 
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the ConsumeMQTT processor is set to "<version>"
@@ -247,6 +261,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -271,6 +286,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Quality of Service" property of the PublishMQTT processor is set to "1"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated
+    And PublishMQTT's failure relationship is auto-terminated
 
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the ConsumeMQTT processor is set to "<version>"
@@ -279,6 +295,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -305,6 +322,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Quality of Service" property of the PublishMQTT processor is set to "2"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated
+    And PublishMQTT's failure relationship is auto-terminated
 
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the ConsumeMQTT processor is set to "<version>"
@@ -313,6 +331,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -346,6 +365,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Retain" property of the PublishMQTT processor is set to "true" in the "publisher-client" flow
     And in the "publisher-client" flow the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated in the "publisher-client" flow
+    And PublishMQTT's failure relationship is auto-terminated in the "publisher-client" flow
 
     # consuming MQTT client
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance in the "consumer-client" flow
@@ -354,6 +374,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN in the "consumer-client" flow
     And in the "consumer-client" flow the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "consumer-client" flow
+    And PutFile's failure relationship is auto-terminated in the "consumer-client" flow
 
     And an MQTT broker is started
 
@@ -381,6 +402,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Last Will Message" property of the PublishMQTT processor is set to "last_will_message" in the "publisher-client" flow
     And in the "publisher-client" flow the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated in the "publisher-client" flow
+    And PublishMQTT's failure relationship is auto-terminated in the "publisher-client" flow
 
     # consuming MQTT client set to consume last will topic
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance in the "consumer-client" flow
@@ -390,6 +412,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN in the "consumer-client" flow
     And in the "consumer-client" flow the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "consumer-client" flow
+    And PutFile's failure relationship is auto-terminated in the "consumer-client" flow
 
     And an MQTT broker is started
 
@@ -409,6 +432,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     Given a ConsumeMQTT processor set up to communicate with an MQTT broker instance
     And the "MQTT Version" property of the ConsumeMQTT processor is set to "<version>"
     And the "Keep Alive Interval" property of the ConsumeMQTT processor is set to "1 sec"
+    And ConsumeMQTT's success relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -431,6 +455,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Quality of Service" property of the PublishMQTT processor is set to "1" in the "publisher-client" flow
     And in the "publisher-client" flow the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated in the "publisher-client" flow
+    And PublishMQTT's failure relationship is auto-terminated in the "publisher-client" flow
 
     # consuming MQTT client
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance in the "consumer-client" flow
@@ -442,6 +467,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN in the "consumer-client" flow
     And in the "consumer-client" flow the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "consumer-client" flow
+    And PutFile's failure relationship is auto-terminated in the "consumer-client" flow
 
     And an MQTT broker is started
 
@@ -474,7 +500,9 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "MQTT Version" property of the PublishMQTT processor is set to "5.0" in the "publisher-client" flow
     And in the "publisher-client" flow the "success" relationship of the GetFile processor is connected to the UpdateAttribute
     And in the "publisher-client" flow the "success" relationship of the UpdateAttribute processor is connected to the PublishMQTT
+    And UpdateAttribute's failure relationship is auto-terminated in the "publisher-client" flow
     And PublishMQTT's success relationship is auto-terminated in the "publisher-client" flow
+    And PublishMQTT's failure relationship is auto-terminated in the "publisher-client" flow
 
     # consuming MQTT client: ConsumeMQTT -> RouteOnAttribute (my_attr1) -> RouteOnAttribute (my_attr2) -> PutFile
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance in the "consumer-client" flow
@@ -490,7 +518,12 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And in the "consumer-client" flow the "success" relationship of the ConsumeMQTT processor is connected to the RouteAttr1
     And in the "consumer-client" flow the "matched_my_attr1" relationship of the RouteAttr1 processor is connected to the RouteAttr2
     And in the "consumer-client" flow the "matched_my_attr2" relationship of the RouteAttr2 processor is connected to the PutFile
+    And RouteAttr1's failure relationship is auto-terminated in the "consumer-client" flow
+    And RouteAttr1's unmatched relationship is auto-terminated in the "consumer-client" flow
+    And RouteAttr2's failure relationship is auto-terminated in the "consumer-client" flow
+    And RouteAttr2's unmatched relationship is auto-terminated in the "consumer-client" flow
     And PutFile's success relationship is auto-terminated in the "consumer-client" flow
+    And PutFile's failure relationship is auto-terminated in the "consumer-client" flow
 
     And an MQTT broker is started
 
@@ -510,6 +543,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Content Type" property of the PublishMQTT processor is set to "text/plain" in the "publisher-client" flow
     And in the "publisher-client" flow the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated in the "publisher-client" flow
+    And PublishMQTT's failure relationship is auto-terminated in the "publisher-client" flow
 
     # consuming MQTT client: ConsumeMQTT (Attribute From Content Type: content_type) -> RouteOnAttribute (content_type = text/plain) -> PutFile
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance in the "consumer-client" flow
@@ -522,7 +556,10 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN in the "consumer-client" flow
     And in the "consumer-client" flow the "success" relationship of the ConsumeMQTT processor is connected to the RouteOnAttribute
     And in the "consumer-client" flow the "matched_content_type" relationship of the RouteOnAttribute processor is connected to the PutFile
+    And RouteOnAttribute's failure relationship is auto-terminated in the "consumer-client" flow
+    And RouteOnAttribute's unmatched relationship is auto-terminated in the "consumer-client" flow
     And PutFile's success relationship is auto-terminated in the "consumer-client" flow
+    And PutFile's failure relationship is auto-terminated in the "consumer-client" flow
 
     And an MQTT broker is started
 
@@ -544,6 +581,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "Last Will Content Type" property of the PublishMQTT processor is set to "text/plain" in the "publisher-client" flow
     And in the "publisher-client" flow the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And PublishMQTT's success relationship is auto-terminated in the "publisher-client" flow
+    And PublishMQTT's failure relationship is auto-terminated in the "publisher-client" flow
 
     # consuming MQTT client: ConsumeMQTT (Attribute From Content Type: content_type, Topic: last_will_topic) -> RouteOnAttribute (content_type = text/plain) -> PutFile
     And a ConsumeMQTT processor set up to communicate with an MQTT broker instance in the "consumer-client" flow
@@ -557,7 +595,10 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And PutFile is EVENT_DRIVEN in the "consumer-client" flow
     And in the "consumer-client" flow the "success" relationship of the ConsumeMQTT processor is connected to the RouteOnAttribute
     And in the "consumer-client" flow the "matched_content_type" relationship of the RouteOnAttribute processor is connected to the PutFile
+    And RouteOnAttribute's failure relationship is auto-terminated in the "consumer-client" flow
+    And RouteOnAttribute's unmatched relationship is auto-terminated in the "consumer-client" flow
     And PutFile's success relationship is auto-terminated in the "consumer-client" flow
+    And PutFile's failure relationship is auto-terminated in the "consumer-client" flow
 
     And an MQTT broker is started
 
@@ -583,6 +624,8 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
+    And LogAttribute's success relationship is auto-terminated
 
     And an MQTT broker is started
 
@@ -613,7 +656,10 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
     And the "success" relationship of the PublishMQTT processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the PutFile
+    And PublishMQTT's failure relationship is auto-terminated
+    And UpdateAttribute's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an MQTT broker is started
 

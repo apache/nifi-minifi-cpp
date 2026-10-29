@@ -110,6 +110,10 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     transmitting_ = val;
   }
 
+  [[nodiscard]] sitetosite::TransferDirection getDirection() const {
+    return direction_;
+  }
+
   void setInterface(const std::string& ifc) {
     local_network_interface_ = ifc;
   }

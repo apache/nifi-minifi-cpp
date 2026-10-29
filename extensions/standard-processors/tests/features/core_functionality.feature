@@ -30,6 +30,7 @@ Feature: Core flow functionalities
     And the "success" relationship of the Generate2 processor is connected to the Funnel1
     And the Funnel with the name "Funnel1" is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -45,12 +46,14 @@ Feature: Core flow functionalities
 
   Scenario: The default configuration uses RocksDB for both the flow file and content repositories
     Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
+    And GenerateFlowFile's success relationship is auto-terminated
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "Using plaintext FlowFileRepository" in less than 5 seconds
     And the Minifi logs contain the following message: "Using plaintext DatabaseContentRepository" in less than 1 second
 
   Scenario: Agent does not crash when using provenance repositories
     Given a GenerateFlowFile processor with the name "generateFlowFile"
+    And generateFlowFile's success relationship is auto-terminated
     And MiNiFi configuration "nifi.provenance.repository.class.name" is set to "VolatileProvenanceRepository"
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "MiNiFi started" in less than 40 seconds
@@ -89,6 +92,8 @@ Feature: Core flow functionalities
     And the "success" relationship of the GetFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And UpdateAttribute's failure relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
 
     When all instances start up
@@ -109,7 +114,8 @@ Feature: Core flow functionalities
     And the "success" relationship of the GenerateFlowFile processor is connected to the ConvertRecord
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the ConvertRecord processor is connected to the PutFile
+    And ConvertRecord's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     When the MiNiFi instance starts up
     Then at least one file with the content "[{"numbers":[1,2]}]" is placed in the "/tmp/output" directory in less than 10 seconds
-

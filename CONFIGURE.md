@@ -142,6 +142,7 @@ Remote Processing Groups:
 Besides YAML configuration format, MiNiFi C++ also supports JSON configuration. To see different uses cases in both formats, please refer to the [examples page](examples/README.md) for flow config examples.
 
 **NOTE:** Make sure to specify id for each component (Processor, Connection, Controller, RPG etc.) to make sure that Apache MiNiFi C++ can reload the state after a process restart. The id should be unique in the flow configuration.
+**NOTE:** Make sure to terminate all outgoing connections of processors, ports, funnels, either by connecting them to another component or auto-terminating them, otherwise the flow validation fails on startup.
 
 ### Parameter Contexts
 

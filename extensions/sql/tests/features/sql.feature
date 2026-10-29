@@ -26,6 +26,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the PutSQL
     And an ODBCService is setup up for PutSQL with the name "ODBCService"
+    And UpdateAttribute's failure relationship is auto-terminated
     And PutSQL's success relationship is auto-terminated
     And PutSQL's failure relationship is auto-terminated
     And a PostgreSQL server is set up
@@ -42,6 +43,10 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the ExecuteSQL
     And the "success" relationship of the ExecuteSQL processor is connected to the PutFile
+    And ExecuteSQL's failure relationship is auto-terminated
+    And UpdateAttribute's failure relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And an ODBCService is setup up for ExecuteSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
@@ -58,6 +63,10 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the ExecuteSQL
     And the "success" relationship of the ExecuteSQL processor is connected to the PutFile
+    And ExecuteSQL's failure relationship is auto-terminated
+    And UpdateAttribute's failure relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And an ODBCService is setup up for ExecuteSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
@@ -70,6 +79,8 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "Output Format" property of the QueryDatabaseTable processor is set to "JSON"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the QueryDatabaseTable processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
@@ -83,6 +94,8 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "Output Format" property of the QueryDatabaseTable processor is set to "JSON"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the QueryDatabaseTable processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up

@@ -45,7 +45,7 @@ Processors:
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:
-        - response
+        - success
       Properties:
         Log Level: info
         Log Payload: true

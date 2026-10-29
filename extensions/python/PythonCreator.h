@@ -52,6 +52,7 @@ class DummyProcessorDescriptor : public core::ProcessorDescriptor {
   void setSupportedRelationships(std::span<const core::RelationshipDefinition> /*relationships*/) override {}
   void setSupportedProperties(std::span<const core::PropertyReference> /*properties*/) override {}
   void setSupportedProperties(std::span<const core::Property> /*properties*/) override {}
+  void addAutoTerminatedRelationship(const core::RelationshipDefinition& /*relationship*/) override {}
 };
 
 class DummyLogger : public core::logging::AdvancedLogger {

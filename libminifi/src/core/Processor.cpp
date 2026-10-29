@@ -364,6 +364,10 @@ class ProcessorDescriptorImpl : public ProcessorDescriptor {
     impl_->setSupportedProperties(properties);
   }
 
+  void addAutoTerminatedRelationship(const RelationshipDefinition& relationship) override {
+    impl_->addAutoTerminatedRelationship(relationship);
+  }
+
  private:
   Processor* impl_;
 };

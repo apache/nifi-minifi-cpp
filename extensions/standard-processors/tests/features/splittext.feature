@@ -27,6 +27,9 @@ Feature: Split input text line-by-line using SplitText
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the SplitText
     And the "splits" relationship of the SplitText processor is connected to the PutFile
+    And SplitText's failure relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
+
     When the MiNiFi instance starts up
     Then files with contents "[HEADER]header line 1\n[HEADER]header line 2\nDATA LINE 1,[HEADER]header line 1\n[HEADER]header line 2\nDATA LINE 2,[HEADER]header line 1\n[HEADER]header line 2" are placed in the "/tmp/output" directory in less than 15 seconds
 
@@ -41,5 +44,8 @@ Feature: Split input text line-by-line using SplitText
     And the "splits" relationship of the SplitText processor is connected to the PutFile
     And SplitText's original relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
+    And SplitText's failure relationship is auto-terminated
+
     When the MiNiFi instance starts up
     Then files with contents "[HEADER]header line 1\n[HEADER]header line 2\nA BIT LONGER DATA LINE 1,[HEADER]header line 1\n[HEADER]header line 2\nDATA 2\nDATA 3" are placed in the "/tmp/output" directory in less than 15 seconds

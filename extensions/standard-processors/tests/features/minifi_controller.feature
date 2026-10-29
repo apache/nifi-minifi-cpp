@@ -21,6 +21,7 @@ Feature: MiNiFi Controller functionalities
     Given a GenerateFlowFile processor
     And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
+    And GenerateFlowFile's success relationship is auto-terminated
     When all instances start up
     And MiNiFi config is updated through MiNiFi controller
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -30,6 +31,7 @@ Feature: MiNiFi Controller functionalities
     Given a GenerateFlowFile processor
     And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
+    And GenerateFlowFile's success relationship is auto-terminated
     When all instances start up
     And the GenerateFlowFile component is stopped through MiNiFi controller
     Then the GenerateFlowFile component is not running
@@ -39,6 +41,7 @@ Feature: MiNiFi Controller functionalities
     Given a GenerateFlowFile processor
     And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
+    And GenerateFlowFile's success relationship is auto-terminated
     When all instances start up
     And the FlowController component is stopped through MiNiFi controller
     Then the GenerateFlowFile component is not running
@@ -48,6 +51,7 @@ Feature: MiNiFi Controller functionalities
     Given a GenerateFlowFile processor
     And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
+    And GenerateFlowFile's success relationship is auto-terminated
     When all instances start up
     And the FlowController component is stopped through MiNiFi controller
     And the FlowController component is started through MiNiFi controller
@@ -58,6 +62,7 @@ Feature: MiNiFi Controller functionalities
     Given a GenerateFlowFile processor
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And the "success" relationship of the GenerateFlowFile processor is connected to the LogAttribute
+    And LogAttribute's success relationship is auto-terminated
     And controller socket properties are set up
     When all instances start up
     And MiNiFi config is updated through MiNiFi controller
@@ -69,6 +74,7 @@ Feature: MiNiFi Controller functionalities
     Given a GenerateFlowFile processor
     And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
+    And GenerateFlowFile's success relationship is auto-terminated
     When all instances start up
     Then manifest can be retrieved through MiNiFi controller
 
@@ -76,5 +82,6 @@ Feature: MiNiFi Controller functionalities
     Given a GenerateFlowFile processor
     And a directory at "/tmp/input" has a file with the content "test"
     And controller socket properties are set up
+    And GenerateFlowFile's success relationship is auto-terminated
     When all instances start up
     Then debug bundle can be retrieved through MiNiFi controller

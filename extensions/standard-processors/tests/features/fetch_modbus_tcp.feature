@@ -39,7 +39,9 @@ Feature: Minifi C++ can act as a modbus tcp master
     And the "foo" property of the FetchModbusTcp processor is set to "holding-register:52"
     And the "bar" property of the FetchModbusTcp processor is set to "405678:REAL"
     And the "baz" property of the FetchModbusTcp processor is set to "4x4444:CHAR[6]"
+    And FetchModbusTcp's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
     Then at least one file with the JSON content "{"foo":123,"bar":1.75,"baz":["M", "i", "N", "i", "F", "i"]}" is placed in the "/tmp/output" directory in less than 10 seconds

@@ -444,14 +444,11 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
       processor->setRunDurationNano(std::chrono::nanoseconds(*run_duration_nanos));
     }
 
-    std::vector<core::Relationship> autoTerminatedRelationships;
     for (auto &&relString : procCfg.autoTerminatedRelationships) {
       core::Relationship relationship(relString, "");
       logger_->log_debug("parseProcessorNode: autoTerminatedRelationship  => [{}]", relString);
-      autoTerminatedRelationships.push_back(relationship);
+      processor->addAutoTerminatedRelationship(relationship);
     }
-
-    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
     parentGroup->addProcessor(std::move(processor));
   }
@@ -1002,6 +999,7 @@ void StructuredConfiguration::parseFunnels(const Node& node, core::ProcessGroup*
     });
 
     auto funnel = std::make_unique<core::Processor>("Funnel", name, uuid.value(), std::make_unique<minifi::Funnel>(name, uuid.value()));
+    funnel->initialize();
     logger_->log_debug("Created funnel with UUID {} and name {}", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);
@@ -1030,6 +1028,7 @@ void StructuredConfiguration::parsePorts(const flow::Node& node, core::ProcessGr
     });
 
     auto port = std::make_unique<Port>(name, uuid.value(), std::make_unique<PortImpl>(name, uuid.value(), port_type));
+    port->initialize();
     logger_->log_debug("Created port UUID {} and name {}", id, name);
     port->setScheduledState(core::RUNNING);
     port->setSchedulingStrategy(core::EVENT_DRIVEN);

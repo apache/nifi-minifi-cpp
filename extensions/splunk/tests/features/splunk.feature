@@ -43,6 +43,10 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And the "undetermined" relationship of the QuerySplunkIndexingStatus processor is connected to the QuerySplunkIndexingStatus
     And the "acknowledged" relationship of the QuerySplunkIndexingStatus processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutSplunkHTTP's failure relationship is auto-terminated
+    And QuerySplunkIndexingStatus's failure relationship is auto-terminated
+    And QuerySplunkIndexingStatus's unacknowledged relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
     Then a single file with the content "foobar" is placed in the "/tmp/output" directory in less than 20 seconds
@@ -76,6 +80,11 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And the "undetermined" relationship of the QuerySplunkIndexingStatus processor is connected to the QuerySplunkIndexingStatus
     And the "acknowledged" relationship of the QuerySplunkIndexingStatus processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
+    And PutSplunkHTTP's failure relationship is auto-terminated
+    And QuerySplunkIndexingStatus's failure relationship is auto-terminated
+    And QuerySplunkIndexingStatus's unacknowledged relationship is auto-terminated
+
     And SSL is enabled for the Splunk HEC and the SSL context service is set up for PutSplunkHTTP and QuerySplunkIndexingStatus
 
     When the MiNiFi instance starts up

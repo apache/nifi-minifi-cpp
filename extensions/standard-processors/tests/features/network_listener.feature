@@ -24,6 +24,7 @@ Feature: Minifi C++ can act as a network listener
     And a TCP client is set up to send a test TCP message to minifi
     And the "success" relationship of the ListenTCP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     Then at least one file with the content "test_tcp_message" is placed in the "/tmp/output" directory in less than 20 seconds

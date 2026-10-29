@@ -202,4 +202,10 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Stateful execution", "[execu
   testsStatefulProcessor();
 }
 
+TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Original relationship is auto-terminated on initialization", "[executePythonProcessorOriginal]") {
+  auto* processor = addExecutePythonProcessorToPlan("passthrough_processor_transfering_to_success.py", false);
+  REQUIRE(processor);
+  CHECK(processor->isAutoTerminated(minifi::extensions::python::processors::ExecutePythonProcessor::Original));
+}
+
 }  // namespace

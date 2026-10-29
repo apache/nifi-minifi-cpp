@@ -81,7 +81,7 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
       "yieldDuration": "4 sec",
       "bulletinLevel": "ERROR",
       "runDurationMillis": 12,
-      "autoTerminatedRelationships": ["one", "two"],
+      "autoTerminatedRelationships": ["one", "two", "success"],
       "properties": {
         "File Size": "#{file_size}",
         "Batch Size": "#{batch_size}",
@@ -1822,7 +1822,7 @@ TEST_CASE("Output port can also be used in RPG") {
       "name": "PutFile",
       "type": "org.apache.nifi.processors.standard.PutFile",
       "schedulingStrategy": "Event_DRIVEN",
-      "autoTerminatedRelationships": ["success"],
+      "autoTerminatedRelationships": ["success", "failure"],
       "properties": {}
     }],
     "connections": [{
@@ -1870,6 +1870,343 @@ TEST_CASE("Output port can also be used in RPG") {
   CHECK(port.get().getBatchCount().value() == 3);
   CHECK(port.get().getBatchDuration().value() == std::chrono::seconds(5));
   CHECK(port.get().getTimeout().value() == std::chrono::seconds(19));
+}
+
+namespace {
+std::string unterminatedRelationshipsError(std::string_view processor_relationship_pairs) {
+  return fmt::format("General Operation: The following component-relationship pairs are not terminated by any connection: {}",
+      processor_relationship_pairs);
+}
+}  // namespace
+
+TEST_CASE("NiFi flow json with all relationships terminated is loaded", "[RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "GenerateFlowFile",
+      "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "10 sec"
+    }, {
+      "identifier": "00000000-0000-0000-0000-000000000002",
+      "name": "LogAttribute",
+      "type": "org.apache.nifi.processors.standard.LogAttribute",
+      "schedulingStrategy": "EVENT_DRIVEN",
+      "autoTerminatedRelationships": ["success"]
+    }],
+    "funnels": [{
+      "identifier": "00000000-0000-0000-0000-000000000003",
+      "name": "MyFunnel"
+    }],
+    "connections": [{
+      "identifier": "00000000-0000-0000-0000-000000000011",
+      "name": "GenerateFlowFileToFunnel",
+      "source": {"id": "00000000-0000-0000-0000-000000000001"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000003"},
+      "selectedRelationships": ["success"]
+    }, {
+      "identifier": "00000000-0000-0000-0000-000000000012",
+      "name": "FunnelToChildInputPort",
+      "source": {"id": "00000000-0000-0000-0000-000000000003"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000005"},
+      "selectedRelationships": [""]
+    }, {
+      "identifier": "00000000-0000-0000-0000-000000000013",
+      "name": "ChildOutputPortToLogAttribute",
+      "source": {"id": "00000000-0000-0000-0000-000000000006"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000002"},
+      "selectedRelationships": [""]
+    }, {
+      "identifier": "00000000-0000-0000-0000-000000000014",
+      "name": "RPGOutputPortToLogAttribute",
+      "source": {"id": "00000000-0000-0000-0000-000000000008"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000002"},
+      "selectedRelationships": []
+    }, {
+      "identifier": "00000000-0000-0000-0000-000000000015",
+      "name": "GenerateFlowFileToRPGInputPort",
+      "source": {"id": "00000000-0000-0000-0000-000000000001"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000009"},
+      "selectedRelationships": ["success"]
+    }],
+    "processGroups": [{
+      "identifier": "00000000-0000-0000-0000-000000000004",
+      "name": "Child Process Group",
+      "processors": [{
+        "identifier": "00000000-0000-0000-0000-000000000007",
+        "name": "UpdateAttribute",
+        "type": "org.apache.nifi.processors.attributes.UpdateAttribute",
+        "schedulingStrategy": "EVENT_DRIVEN",
+        "autoTerminatedRelationships": ["failure"]
+      }],
+      "inputPorts": [{
+        "identifier": "00000000-0000-0000-0000-000000000005",
+        "name": "in"
+      }],
+      "outputPorts": [{
+        "identifier": "00000000-0000-0000-0000-000000000006",
+        "name": "out"
+      }],
+      "connections": [{
+        "identifier": "00000000-0000-0000-0000-000000000016",
+        "name": "InputPortToUpdateAttribute",
+        "source": {"id": "00000000-0000-0000-0000-000000000005"},
+        "destination": {"id": "00000000-0000-0000-0000-000000000007"},
+        "selectedRelationships": [""]
+      }, {
+        "identifier": "00000000-0000-0000-0000-000000000017",
+        "name": "UpdateAttributeToOutputPort",
+        "source": {"id": "00000000-0000-0000-0000-000000000007"},
+        "destination": {"id": "00000000-0000-0000-0000-000000000006"},
+        "selectedRelationships": ["success"]
+      }]
+    }],
+    "remoteProcessGroups": [{
+      "name": "NiFi Flow",
+      "targetUri": "https://localhost:8090/nifi",
+      "inputPorts": [{
+        "identifier": "00000000-0000-0000-0000-000000000009",
+        "name": "AmazingInputPort",
+        "targetId": "00000000-0000-0000-0000-000000000019"
+      }],
+      "outputPorts": [{
+        "identifier": "00000000-0000-0000-0000-000000000008",
+        "name": "AmazingOutputPort",
+        "targetId": "00000000-0000-0000-0000-000000000018"
+      }]
+    }]
+  }
+})";
+
+  std::unique_ptr<core::ProcessGroup> flow;
+  REQUIRE_NOTHROW(flow = config.getRootFromPayload(CONFIG_JSON));
+  REQUIRE(flow);
+
+  // connections from funnels and ports with an empty ("" or []) relationship list use the default relationship of the source
+  std::map<std::string, minifi::Connection*> connections;
+  flow->getConnections(connections);
+  CHECK(connections.at("FunnelToChildInputPort")->getRelationships() == (std::set<core::Relationship>{{"success", ""}}));
+  CHECK(connections.at("ChildOutputPortToLogAttribute")->getRelationships() == (std::set<core::Relationship>{{"success", ""}}));
+  CHECK(connections.at("InputPortToUpdateAttribute")->getRelationships() == (std::set<core::Relationship>{{"success", ""}}));
+  CHECK(connections.at("RPGOutputPortToLogAttribute")->getRelationships() == (std::set<core::Relationship>{{"undefined", ""}}));
+}
+
+TEST_CASE("NiFi flow json with a processor relationship which is neither connected nor auto-terminated is rejected", "[RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "PutFile",
+      "type": "org.apache.nifi.processors.standard.PutFile",
+      "schedulingStrategy": "EVENT_DRIVEN",
+      "autoTerminatedRelationships": ["failure"]
+    }, {
+      "identifier": "00000000-0000-0000-0000-000000000002",
+      "name": "GenerateFlowFile",
+      "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "10 sec"
+    }],
+    "connections": [{
+      "identifier": "00000000-0000-0000-0000-000000000003",
+      "name": "GenerateFlowFileToPutFile",
+      "source": {"id": "00000000-0000-0000-0000-000000000002"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000001"},
+      "selectedRelationships": ["success"]
+    }]
+  }
+})";
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(PutFile, success)]"));
+}
+
+TEST_CASE("NiFi flow json connection with an empty relationship name does not terminate a processor relationship", "[RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "GenerateFlowFile",
+      "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "10 sec"
+    }, {
+      "identifier": "00000000-0000-0000-0000-000000000002",
+      "name": "LogAttribute",
+      "type": "org.apache.nifi.processors.standard.LogAttribute",
+      "schedulingStrategy": "EVENT_DRIVEN",
+      "autoTerminatedRelationships": ["success"]
+    }],
+    "connections": [{
+      "identifier": "00000000-0000-0000-0000-000000000003",
+      "name": "GenerateFlowFileToLogAttribute",
+      "source": {"id": "00000000-0000-0000-0000-000000000001"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000002"},
+      "selectedRelationships": [""]
+    }]
+  }
+})";
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(GenerateFlowFile, success)]"));
+}
+
+TEST_CASE("NiFi flow json with a funnel without outgoing connection is accepted, the funnel is used as a terminator", "[RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "GenerateFlowFile",
+      "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "10 sec"
+    }],
+    "funnels": [{
+      "identifier": "00000000-0000-0000-0000-000000000002",
+      "name": "MyFunnel"
+    }],
+    "connections": [{
+      "identifier": "00000000-0000-0000-0000-000000000003",
+      "name": "GenerateFlowFileToFunnel",
+      "source": {"id": "00000000-0000-0000-0000-000000000001"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000002"},
+      "selectedRelationships": ["success"]
+    }]
+  }
+})";
+
+  std::unique_ptr<core::ProcessGroup> flow;
+  REQUIRE_NOTHROW(flow = config.getRootFromPayload(CONFIG_JSON));
+  REQUIRE(flow);
+}
+
+TEST_CASE("NiFi flow json with a remote process group output port without outgoing connection is rejected", "[RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [],
+    "connections": [],
+    "remoteProcessGroups": [{
+      "name": "NiFi Flow",
+      "targetUri": "https://localhost:8090/nifi",
+      "outputPorts": [{
+        "identifier": "00000000-0000-0000-0000-000000000001",
+        "name": "AmazingOutputPort",
+        "targetId": "00000000-0000-0000-0000-000000000002"
+      }]
+    }]
+  }
+})";
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(AmazingOutputPort, undefined)]"));
+}
+
+TEST_CASE("NiFi flow json with a process group output port without outgoing connection is rejected", "[RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [],
+    "connections": [],
+    "processGroups": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "Child Process Group",
+      "processors": [{
+        "identifier": "00000000-0000-0000-0000-000000000002",
+        "name": "GenerateFlowFile",
+        "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+        "schedulingStrategy": "TIMER_DRIVEN",
+        "schedulingPeriod": "10 sec"
+      }],
+      "outputPorts": [{
+        "identifier": "00000000-0000-0000-0000-000000000003",
+        "name": "out"
+      }],
+      "connections": [{
+        "identifier": "00000000-0000-0000-0000-000000000004",
+        "name": "GenerateFlowFileToOutputPort",
+        "source": {"id": "00000000-0000-0000-0000-000000000002"},
+        "destination": {"id": "00000000-0000-0000-0000-000000000003"},
+        "selectedRelationships": ["success"]
+      }]
+    }]
+  }
+})";
+
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(out, success)]"));
+}
+
+TEST_CASE("NiFi flow json connection with both empty and named relationships only uses the named relationships", "[RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration config(test_controller.getContext());
+
+  static const std::string CONFIG_JSON =
+      R"(
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [{
+      "identifier": "00000000-0000-0000-0000-000000000001",
+      "name": "GenerateFlowFile",
+      "type": "org.apache.nifi.processors.standard.GenerateFlowFile",
+      "schedulingStrategy": "TIMER_DRIVEN",
+      "schedulingPeriod": "10 sec"
+    }, {
+      "identifier": "00000000-0000-0000-0000-000000000002",
+      "name": "LogAttribute",
+      "type": "org.apache.nifi.processors.standard.LogAttribute",
+      "schedulingStrategy": "EVENT_DRIVEN",
+      "autoTerminatedRelationships": ["success"]
+    }],
+    "connections": [{
+      "identifier": "00000000-0000-0000-0000-000000000003",
+      "name": "GenerateFlowFileToLogAttribute",
+      "source": {"id": "00000000-0000-0000-0000-000000000001"},
+      "destination": {"id": "00000000-0000-0000-0000-000000000002"},
+      "selectedRelationships": ["", "success"]
+    }]
+  }
+})";
+
+  std::unique_ptr<core::ProcessGroup> flow;
+  REQUIRE_NOTHROW(flow = config.getRootFromPayload(CONFIG_JSON));
+  REQUIRE(flow);
+
+  std::map<std::string, minifi::Connection*> connections;
+  flow->getConnections(connections);
+  CHECK(connections.at("GenerateFlowFileToLogAttribute")->getRelationships() == (std::set<core::Relationship>{{"success", ""}}));
 }
 
 }  // namespace org::apache::nifi::minifi::test
