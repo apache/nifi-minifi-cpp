@@ -68,16 +68,6 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         install(FILES ${OPENSSL_LIBRARIES_LIST} DESTINATION bin COMPONENT bin)
     endif()
 
-    # Set build options
-    set(OPENSSL_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-            "-DCMAKE_INSTALL_PREFIX=${OPENSSL_BIN_DIR}"
-            "-DCMAKE_POLICY_DEFAULT_CMP0063=NEW"
-            # avoid polluting the global namespace, otherwise could interfere with the system openssl (e.g. python script extension using numpy)
-            "-DCMAKE_C_VISIBILITY_PRESET=hidden"
-            "-DCMAKE_CXX_VISIBILITY_PRESET=hidden"
-            "-DCMAKE_VISIBILITY_INLINES_HIDDEN=ON"
-            )
-
     set(OPENSSL_VERSION "3.6.5" CACHE STRING "" FORCE)
 
     if (WIN32)

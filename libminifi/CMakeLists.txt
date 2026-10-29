@@ -92,6 +92,13 @@ endif()
 if (UNIX AND (CMAKE_SYSTEM_PROCESSOR MATCHES "armv7"))
     target_link_libraries(core-minifi "-latomic")
 endif()
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # core-minifi exports the symbols of its statically linked dependencies (e.g. OpenSSL), which extensions rely on.
+    # Tagging them with a minifi specific version prevents libraries loaded later (e.g. python's _hashlib referencing
+    # EVP_*@OPENSSL_3.0.0) from binding to these copies instead of their own dependencies (e.g. the system libcrypto).
+    target_link_options(core-minifi PRIVATE "LINKER:--version-script=${CMAKE_CURRENT_SOURCE_DIR}/core-minifi.map")
+    set_property(TARGET core-minifi APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/core-minifi.map")
+endif()
 
 SET(LIBMINIFI minifi-api minifi-extension-framework $<LINK_ONLY:core-minifi> PARENT_SCOPE)
 
