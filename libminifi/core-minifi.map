@@ -14,6 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/*
+ * core-minifi exports the symbols of its statically linked dependencies (e.g. OpenSSL), which extensions rely on.
+ * Tagging them with a minifi specific version prevents libraries loaded later (e.g. python's _hashlib referencing
+ * EVP_*@OPENSSL_3.0.0) from binding to these copies instead of their own dependencies (e.g. the system libcrypto).
+ */
 MINIFI_CORE {
   global: *;
 };
