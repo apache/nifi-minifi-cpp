@@ -19,7 +19,7 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMakeToolchain, CMake, CMakeDeps, cmake_layout
-from conan.tools.files import get, copy, rmdir, replace_in_file
+from conan.tools.files import get, copy, rmdir, replace_in_file, export_conandata_patches, apply_conandata_patches
 from conan.tools.scm import Version
 import glob
 import os
@@ -50,8 +50,12 @@ class AzureSDKForCppConan(ConanFile):
         "transport_curl": True
     }
 
+    def export_sources(self):
+        export_conandata_patches(self)
+
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
+        apply_conandata_patches(self)
         for cmake_file in glob.glob(os.path.join(self.source_folder, "sdk", "identity", "azure-identity", "**", "CMakeLists.txt"), recursive=True):
             replace_in_file(self, cmake_file,
                             "set(CMAKE_CXX_STANDARD 14)",
