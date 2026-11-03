@@ -120,8 +120,14 @@ void AwsProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessio
 
   auto proxy = getProxy(context);
   if (proxy.proxy_type != minifi::controllers::ProxyType::DIRECT) {
-    if (minifi::utils::string::startsWith(proxy.proxy_host, "https://")) {
+    static constexpr std::string_view HTTPS_PREFIX = "https://";
+    if (minifi::utils::string::startsWith(proxy.proxy_host, HTTPS_PREFIX, false)) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "HTTPS proxy is not supported");
+    }
+    // the AWS CRT client expects a plain host name without a scheme
+    static constexpr std::string_view HTTP_PREFIX = "http://";
+    if (minifi::utils::string::startsWith(proxy.proxy_host, HTTP_PREFIX, false)) {
+      proxy.proxy_host.erase(0, HTTP_PREFIX.size());
     }
     client_config_.proxyScheme = Aws::Http::Scheme::HTTP;
     client_config_.proxyHost = proxy.proxy_host;

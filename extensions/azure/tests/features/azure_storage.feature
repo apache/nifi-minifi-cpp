@@ -109,7 +109,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     Then the Minifi logs contain the following message: "key:azure.blobname value:test_2" in less than 60 seconds
     And the Minifi logs do not contain the following message: "key:azure.blobname value:other_test" after 0 seconds
 
-  Scenario Outline: A MiNiFi instance can upload data to Azure blob storage through a proxy
+  Scenario: A MiNiFi instance can upload data to Azure blob storage through a proxy
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "#test_data$123$#" is present in "/tmp/input"
     And a PutAzureBlobStorage processor set up to communicate with an Azure blob storage

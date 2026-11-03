@@ -150,6 +150,10 @@ add_custom_target(
     docker-verify-modular
     COMMAND ${CMAKE_SOURCE_DIR}/docker/RunBehaveTests.sh ${PROJECT_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} --parallel_processes=${DOCKER_VERIFY_THREADS})
 
+add_custom_target(
+    docker-verify-modular-dry-run
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DryRunBehaveTests.sh --tags_to_run=${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} ${CMAKE_SOURCE_DIR}/extensions ${CMAKE_SOURCE_DIR}/minifi_rust/extensions)
+
 function(CREATE_DOCKER_TARGET_FROM_ROCKY_PACKAGE BASE_IMAGE TAG_PREFIX INSTALL_PACKAGE_CMD)
     add_custom_target(
             ${TAG_PREFIX}_from_rocky_package

@@ -19,6 +19,7 @@
 #include "S3TestsFixture.h"
 #include "processors/PutS3Object.h"
 #include "unit/TestUtils.h"
+#include "catch2/generators/catch_generators.hpp"
 
 namespace {
 
@@ -210,9 +211,21 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") 
   checkProxySettings();
 }
 
-TEST_CASE_METHOD(PutS3ObjectTestsFixture, "HTTPS proxy is not supported", "[awsS3Proxy]") {
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "HTTP scheme is stripped from the proxy host", "[awsS3Proxy]") {
+  const auto proxy_host = GENERATE("host", "http://host", "HTTP://host");
   setRequiredProperties();
-  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Host", "https://host"));
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Host", proxy_host));
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Port", "1234"));
+  test_controller.runSession(plan);
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().proxyScheme == Aws::Http::Scheme::HTTP);
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "host");
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 1234);
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "HTTPS proxy is not supported", "[awsS3Proxy]") {
+  const auto proxy_host = GENERATE("https://host", "HTTPS://host");
+  setRequiredProperties();
+  REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Host", proxy_host));
   REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Port", "1234"));
   REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Username", "username"));
   REQUIRE(this->plan->setProperty(this->s3_processor, "Proxy Password", "password"));
