@@ -92,7 +92,11 @@ struct LifecycleRequest {
   int32_t exit_code = 0;
 };
 
-static_assert(std::atomic<LifecycleRequest>::is_always_lock_free);
+// Ensure that LifecycleRequest can be safely used with atomic operations in signal handlers
+// Extending LifecycleRequest in the future may break the lock-free guarantee
+static_assert(std::atomic<LifecycleRequest>::is_always_lock_free,
+    "lifecycle_request is modified from signal handlers (see sigHandler), where only lock-free atomic operations are safe. "
+    "A non-lock-free std::atomic falls back to hidden mutex or a lock, which can deadlock if a signal interrupts a thread holding it.");
 static std::atomic<LifecycleRequest> lifecycle_request;
 
 bool requestLifecycleChange(minifi::ShutdownType shutdown_type, int32_t exit_code) {
