@@ -31,6 +31,7 @@ Processors:
       run duration nanos: 0
       bulletin level: ERROR
       auto-terminated relationships list:
+        - partial
       Properties:
           Endpoint List: localhost:8776
           Message Delimiter: \r
@@ -47,7 +48,7 @@ Processors:
       bulletin level: ERROR
       run duration nanos: 0
       auto-terminated relationships list:
-        - response
+        - success
       Properties:
         Log Level: info
         Log Payload: true

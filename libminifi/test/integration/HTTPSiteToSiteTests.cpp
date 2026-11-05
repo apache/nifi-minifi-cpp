@@ -87,8 +87,6 @@ struct test_profile {
 };
 
 void run_variance(const std::filesystem::path& test_file_location, const std::string& url, const struct test_profile &profile) {
-  SiteToSiteTestHarness harness(test_file_location);
-
   std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";
   std::string out_port = "471deef6-2a6e-4a7d-912a-81cc17e3a203";
 
@@ -99,16 +97,10 @@ void run_variance(const std::filesystem::path& test_file_location, const std::st
 
   std::string transaction_id = transaction_response->getTransactionId();
 
-  harness.setKeyDir("");
-
   std::string controller_loc = url + "/controller";
 
   std::string basesitetosite = url + "/site-to-site";
   auto base = std::make_unique<SiteToSiteBaseResponder>(basesitetosite);
-
-  harness.setUrl(basesitetosite, base.get());
-
-  harness.setUrl(controller_loc, responder.get());
 
   std::string transaction_url = url + "/data-transfer/input-ports/" + in_port + "/transactions";
   std::string action_url = url + "/site-to-site/input-ports/" + in_port + "/transactions";
@@ -116,13 +108,9 @@ void run_variance(const std::filesystem::path& test_file_location, const std::st
   std::string transaction_output_url = url + "/data-transfer/output-ports/" + out_port + "/transactions";
   std::string action_output_url = url + "/site-to-site/output-ports/" + out_port + "/transactions";
 
-  harness.setUrl(transaction_url, transaction_response.get());
-
   std::string peer_url = url + "/site-to-site/peers";
 
   auto peer_response = std::make_unique<PeerResponder>(url);
-
-  harness.setUrl(peer_url, peer_response.get());
 
   std::string flow_url = action_url + "/" + transaction_id + "/flow-files";
 
@@ -135,23 +123,31 @@ void run_variance(const std::filesystem::path& test_file_location, const std::st
   std::string transaction_output_id = transaction_response_output->getTransactionId();
   transaction_response_output->setFeed(producedFlows);
 
-  harness.setUrl(transaction_output_url, transaction_response_output.get());
-
   std::string flow_output_url = action_output_url + "/" + transaction_output_id + "/flow-files";
 
   auto flowOutputResponder = std::make_unique<FlowFileResponder>(false, profile.flow_url_broken, profile.invalid_checksum);
   flowOutputResponder->setFlowUrl(flow_output_url);
   flowOutputResponder->setFeed(producedFlows);
 
-  harness.setUrl(flow_url, flowResponder.get());
-  harness.setUrl(flow_output_url, flowOutputResponder.get());
-
   std::string delete_url = transaction_url + "/" + transaction_id;
   auto deleteResponse = std::make_unique<DeleteTransactionResponder>(delete_url, "201 OK", 12);
-  harness.setUrl(delete_url, deleteResponse.get());
 
   std::string delete_output_url = transaction_output_url + "/" + transaction_output_id;
   auto deleteOutputResponse = std::make_unique<DeleteTransactionResponder>(delete_output_url, "201 OK", producedFlows);
+
+  // the harness has to be destroyed before the responders, because its test server accesses the handlers on shutdown
+  SiteToSiteTestHarness harness(test_file_location);
+
+  harness.setKeyDir("");
+
+  harness.setUrl(basesitetosite, base.get());
+  harness.setUrl(controller_loc, responder.get());
+  harness.setUrl(transaction_url, transaction_response.get());
+  harness.setUrl(peer_url, peer_response.get());
+  harness.setUrl(transaction_output_url, transaction_response_output.get());
+  harness.setUrl(flow_url, flowResponder.get());
+  harness.setUrl(flow_output_url, flowOutputResponder.get());
+  harness.setUrl(delete_url, deleteResponse.get());
   harness.setUrl(delete_output_url, deleteOutputResponse.get());
 
   harness.run();

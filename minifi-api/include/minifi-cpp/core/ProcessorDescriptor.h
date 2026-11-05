@@ -29,6 +29,7 @@ class ProcessorDescriptor {
   virtual void setSupportedRelationships(std::span<const RelationshipDefinition> relationships) = 0;
   virtual void setSupportedProperties(std::span<const PropertyReference> properties) = 0;
   virtual void setSupportedProperties(std::span<const Property> properties) = 0;
+  virtual void addAutoTerminatedRelationship(const RelationshipDefinition& relationship) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

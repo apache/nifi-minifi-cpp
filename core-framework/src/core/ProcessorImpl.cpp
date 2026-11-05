@@ -84,6 +84,11 @@ void ProcessorImpl::setSupportedRelationships(std::span<const RelationshipDefini
   descriptor_->setSupportedRelationships(relationships);
 }
 
+void ProcessorImpl::addAutoTerminatedRelationship(const RelationshipDefinition& relationship) {
+  gsl_Expects(descriptor_);
+  descriptor_->addAutoTerminatedRelationship(relationship);
+}
+
 void ProcessorImpl::setSupportedProperties(std::span<const PropertyReference> properties) {
   gsl_Expects(descriptor_);
   descriptor_->setSupportedProperties(properties);

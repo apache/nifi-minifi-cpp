@@ -57,7 +57,12 @@ Feature: Test PGP extension's encryption and decryption capabilities
       | DecryptBob        | failure           | BobFailure        |
 
     And AliceSuccess's success relationship is auto-terminated
+    And AliceSuccess's failure relationship is auto-terminated
     And BobFailure's success relationship is auto-terminated
+    And BobFailure's failure relationship is auto-terminated
+    And EncryptContentPGP's failure relationship is auto-terminated
+    And DecryptAlice's failure relationship is auto-terminated
+    And DecryptBob's success relationship is auto-terminated
 
     And a directory at "/tmp/input" has a file "test_file.log" with the content "test content"
 

@@ -41,12 +41,12 @@ void ExecutePythonProcessor::initialize() {
   // only include supported properties that are defined in the python processor
   setSupportedProperties(std::span(python_properties_));
   setSupportedRelationships(Relationships);
+  addAutoTerminatedRelationship(Original);
   logger_->log_debug("Processor has been initialized.");
 }
 
 void ExecutePythonProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*sessionFactory*/) {
   gsl_Expects(python_script_engine_);
-  context.addAutoTerminatedRelationship(Original);
   reloadScriptFile();
   python_script_engine_->eval(script_to_exec_);
   python_script_engine_->onSchedule(context);

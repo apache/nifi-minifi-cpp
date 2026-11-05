@@ -48,6 +48,7 @@ Processors:
     yield period: 100 ms
     run duration nanos: 0
     auto-terminated relationships list:
+      - banana
     Properties:
       AppleProbability: 100
       BananaProbability: 0
@@ -61,6 +62,7 @@ Processors:
     yield period: 100 ms
     run duration nanos: 0
     auto-terminated relationships list:
+      - banana
     Properties:
       AppleProbability: 100
       BananaProbability: 0

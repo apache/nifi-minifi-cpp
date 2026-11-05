@@ -145,6 +145,10 @@ TEST_CASE("Processor can communicate with child process group's input port", "[Y
     .With({
       Group("Child1")
       .With({InputPort{"00000000-0000-0000-0000-000000000002", "Port1"}})
+      .With({Proc{"00000000-0000-0000-0000-000000000003", "Child1_Proc1"}})
+      .With({Conn{"Child1_Conn1",
+                  InputPort{"00000000-0000-0000-0000-000000000002", "Port1"},
+                  Proc{"00000000-0000-0000-0000-000000000003", "Child1_Proc1"}}})
     });
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
@@ -179,6 +183,10 @@ TEST_CASE("Child process groups can communicate through ports", "[YamlProcessGro
       .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"}}),
       Group("Child2")
       .With({InputPort{"00000000-0000-0000-0000-000000000003", "Port2"}})
+      .With({Proc{"00000000-0000-0000-0000-000000000004", "Child2_Proc1"}})
+      .With({Conn{"Child2_Conn1",
+                  InputPort{"00000000-0000-0000-0000-000000000003", "Port2"},
+                  Proc{"00000000-0000-0000-0000-000000000004", "Child2_Proc1"}}})
     });
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
@@ -190,17 +198,25 @@ TEST_CASE("Processor cannot communicate with child's nested process group", "[Ya
   Proc Proc1{"00000000-0000-0000-0000-000000000001", "Proc1"};
   OutputPort Port1{"00000000-0000-0000-0000-000000000002", "Port1"};
   InputPort Port2{"00000000-0000-0000-0000-000000000003", "Port2", ConnectionFailure::UNRESOLVED_DESTINATION};
+  Proc Child2_Proc1{"00000000-0000-0000-0000-000000000004", "Child2_Proc1"};
 
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 Proc1,
-                Port2}})
+                Port2},
+           Conn{"Conn2",
+                Port1,
+                Proc1}})
     .With({Proc1})
     .With({
       Group("Child1")
       .With({Port1})
       .With({Group("Child2")
-            .With({Port2})})
+            .With({Port2})
+            .With({Child2_Proc1})
+            .With({Conn{"Child2_Conn1",
+                        InputPort{Port2.id, Port2.name},
+                        Child2_Proc1}})})
     });
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
@@ -210,11 +226,18 @@ TEST_CASE("Processor cannot communicate with child's nested process group", "[Ya
 
 TEST_CASE("Input port can be a connection's source and the output port can be a destination inside the process group", "[YamlProcessGroupParser7]") {
   auto pattern = Group("root")
-    .With({Conn{"Conn1",
-                InputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
-                OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}}})
-    .With({InputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
-    .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}});
+    .With({Conn{"Conn2",
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"},
+                Proc{"00000000-0000-0000-0000-000000000003", "Proc1"}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000003", "Proc1"}})
+    .With({
+      Group("Child1")
+      .With({Conn{"Conn1",
+                  InputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
+                  OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}}})
+      .With({InputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
+      .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}})
+    });
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
 
@@ -225,7 +248,10 @@ TEST_CASE("Input port cannot be a connection's destination inside the process gr
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 Proc{"00000000-0000-0000-0000-000000000002", "Proc1"},
-                InputPort{"00000000-0000-0000-0000-000000000001", "Port1", ConnectionFailure::INPUT_CANNOT_BE_DESTINATION}}})
+                InputPort{"00000000-0000-0000-0000-000000000001", "Port1", ConnectionFailure::INPUT_CANNOT_BE_DESTINATION}},
+           Conn{"Conn2",
+                InputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
+                Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}}})
     .With({InputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
     .With({Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}});
 
@@ -235,12 +261,20 @@ TEST_CASE("Input port cannot be a connection's destination inside the process gr
 }
 
 TEST_CASE("Output port cannot be a connection's source inside the process group", "[YamlProcessGroupParser]") {
+  // the output port is in a child process group, because the output port can only have an outgoing connection in the parent process group
   auto pattern = Group("root")
-    .With({Conn{"Conn1",
-                OutputPort{"00000000-0000-0000-0000-000000000001", "Port1", ConnectionFailure::OUTPUT_CANNOT_BE_SOURCE},
-                Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}}})
-    .With({OutputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
-    .With({Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}});
+    .With({Conn{"Conn2",
+                OutputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
+                Proc{"00000000-0000-0000-0000-000000000003", "Proc2"}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000003", "Proc2"}})
+    .With({
+      Group("Child1")
+      .With({Conn{"Conn1",
+                  OutputPort{"00000000-0000-0000-0000-000000000001", "Port1", ConnectionFailure::OUTPUT_CANNOT_BE_SOURCE},
+                  Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}}})
+      .With({OutputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
+      .With({Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}})
+    });
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
 
@@ -249,15 +283,22 @@ TEST_CASE("Output port cannot be a connection's source inside the process group"
 
 TEST_CASE("Input port can be a connection's source and the output port can be a destination inside the process group through processor", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
-    .With({Conn{"Conn1",
-                InputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
-                Proc{"00000000-0000-0000-0000-000000000003", "Proc1"}},
-           Conn{"Conn2",
-                Proc{"00000000-0000-0000-0000-000000000003", "Proc1"},
-                OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}}})
-    .With({Proc{"00000000-0000-0000-0000-000000000003", "Proc1"}})
-    .With({InputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
-    .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}});
+    .With({Conn{"Conn3",
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"},
+                Proc{"00000000-0000-0000-0000-000000000004", "Proc2"}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000004", "Proc2"}})
+    .With({
+      Group("Child1")
+      .With({Conn{"Conn1",
+                  InputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
+                  Proc{"00000000-0000-0000-0000-000000000003", "Proc1"}},
+             Conn{"Conn2",
+                  Proc{"00000000-0000-0000-0000-000000000003", "Proc1"},
+                  OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}}})
+      .With({Proc{"00000000-0000-0000-0000-000000000003", "Proc1"}})
+      .With({InputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
+      .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}})
+    });
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
 
@@ -268,7 +309,10 @@ TEST_CASE("Processor cannot set connection's destination to child process group'
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 Proc{"00000000-0000-0000-0000-000000000001", "Proc1"},
-                OutputPort{"00000000-0000-0000-0000-000000000002", "Port1", ConnectionFailure::OUTPUT_CANNOT_BE_DESTINATION}}})
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port1", ConnectionFailure::OUTPUT_CANNOT_BE_DESTINATION}},
+           Conn{"Conn2",
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"},
+                Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}}})
     .With({Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}})
     .With({
       Group("Child1")
@@ -289,6 +333,10 @@ TEST_CASE("Processor cannot set connection's source to child process group's inp
     .With({
       Group("Child1")
       .With({InputPort{"00000000-0000-0000-0000-000000000002", "Port1"}})
+      .With({Proc{"00000000-0000-0000-0000-000000000003", "Child1_Proc1"}})
+      .With({Conn{"Child1_Conn1",
+                  InputPort{"00000000-0000-0000-0000-000000000002", "Port1"},
+                  Proc{"00000000-0000-0000-0000-000000000003", "Child1_Proc1"}}})
     });
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));

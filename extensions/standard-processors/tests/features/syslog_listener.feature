@@ -27,7 +27,10 @@ Feature: Minifi C++ can act as a syslog listener
     And the "Replacement Value" property of the ReplaceText processor is set to "${syslog.timestamp}	${syslog.priority}	${reverseDnsLookup(${syslog.sender}, 100)}	${syslog.msg}"
     And the "success" relationship of the ListenSyslog processor is connected to the ReplaceText
     And the "success" relationship of the ReplaceText processor is connected to the PutFile
+    And ListenSyslog's invalid relationship is auto-terminated
+    And ReplaceText's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
     Then at least one file in "/tmp/output" content match the following regex: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.*13.*sample_log$" in less than 10 seconds
@@ -39,7 +42,9 @@ Feature: Minifi C++ can act as a syslog listener
     And the "Parse Messages" property of the ListenSyslog processor is set to "true"
     And a Syslog client with TCP protocol is setup to send logs to minifi
     And the "success" relationship of the ListenSyslog processor is connected to the PutFile
+    And ListenSyslog's invalid relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
     Then at least 1 file is placed in the "/tmp/output" directory in less than 10 seconds

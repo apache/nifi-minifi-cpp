@@ -29,6 +29,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And the Kafka server is started
     And the topic "ConsumeKafkaTest" is initialized on the kafka broker
@@ -62,7 +63,10 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
     And the "success" relationship of the LogAttribute processor is connected to the RouteOnAttribute
     And the "success" relationship of the RouteOnAttribute processor is connected to the PutFile
+    And RouteOnAttribute's failure relationship is auto-terminated
+    And RouteOnAttribute's unmatched relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic with key "consume_kafka_test_key"
@@ -85,6 +89,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     And the publisher performs a <transaction type> transaction publishing to the "ConsumeKafkaTest" topic these messages: <messages sent>
@@ -116,7 +121,10 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
     And the "success" relationship of the LogAttribute processor is connected to the RouteOnAttribute
     And the "success" relationship of the RouteOnAttribute processor is connected to the PutFile
+    And RouteOnAttribute's failure relationship is auto-terminated
+    And RouteOnAttribute's unmatched relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic with headers "<message headers sent>"
@@ -142,6 +150,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
 
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And the Kafka server is started
     And the topic "ConsumeKafkaTest" is initialized on the kafka broker
@@ -167,6 +176,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
     And the "success" relationship of the LogAttribute processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     And 1000 kafka messages are sent to the topic "ConsumeKafkaTest"
@@ -190,6 +200,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And an ssl context service is set up for ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     And a message with content "Through the Looking-Glass" is published to the "ConsumeKafkaTest" topic
@@ -212,6 +223,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And an ssl context service is set up for ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     And a message with content "Through the Looking-Glass" is published to the "ConsumeKafkaTest" topic
@@ -224,6 +236,8 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And ConsumeKafka processor is set up to communicate with that server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And these processor properties are set
       | processor name | property name     | property value                   |
       | ConsumeKafka   | Kafka Brokers     | kafka-server-${scenario_id}:9094 |
@@ -249,6 +263,7 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And the Kafka server is started
     And the topic "ConsumeKafkaTest" is initialized on the kafka broker
@@ -303,7 +318,9 @@ Feature: Receiving data from using Kafka streaming platform using ConsumeKafka
     And the "success" relationship of the Consumed processor is connected to the ConsumeKafka
     And the "committed" relationship of the ConsumeKafka processor is connected to the Committed
     And Consumed's success relationship is auto-terminated
+    And Consumed's failure relationship is auto-terminated
     And Committed's success relationship is auto-terminated
+    And Committed's failure relationship is auto-terminated
 
     And the Kafka server is started
     And the topic "ConsumeKafkaTest" is initialized on the kafka broker

@@ -26,6 +26,8 @@ Feature: MiNiFi can execute Lua scripts
     And the max concurrent tasks attribute of the ExecuteScript processor is set to 3
     And the "success" relationship of the GenerateFlowFile processor is connected to the ExecuteScript
     And ExecuteScript's success relationship is auto-terminated
+    And ExecuteScript's failure relationship is auto-terminated
+    And ExecuteScript's original relationship is auto-terminated
 
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "Sleeping forever" 3 times after 5 seconds

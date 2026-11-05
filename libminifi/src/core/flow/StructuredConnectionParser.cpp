@@ -19,6 +19,7 @@
 #include "core/flow/StructuredConnectionParser.h"
 #include "core/flow/CheckRequiredField.h"
 #include "Funnel.h"
+#include "Port.h"
 #include "RemoteProcessGroupPort.h"
 
 namespace org::apache::nifi::minifi::core::flow {
@@ -47,6 +48,8 @@ void StructuredConnectionParser::addFunnelOrPortRelationshipToConnection(minifi:
     addNewRelationshipToConnection(minifi::Funnel::Success.name, connection);
   } else if (typeid(minifi::RemoteProcessGroupPort) == typeid(impl)) {
     addNewRelationshipToConnection(minifi::RemoteProcessGroupPort::DefaultRelationship.name, connection);
+  } else if (typeid(minifi::PortImpl) == typeid(impl)) {
+    addNewRelationshipToConnection(minifi::PortImpl::Success.name, connection);
   } else {
     logger_->log_error("Component with id {} is neither funnel nor port", srcUUID.to_string());
   }
@@ -58,8 +61,18 @@ void StructuredConnectionParser::configureConnectionSourceRelationships(minifi::
     addNewRelationshipToConnection(connectionNode_[schema_.source_relationship].getString().value(), connection);
   } else if (auto relList = connectionNode_[schema_.source_relationship_list]) {
     if (relList.isSequence() && !relList.empty()) {
+      // NiFi serializes the anonymous relationship of funnels and ports as an empty string: "selectedRelationships": [""]
+      bool has_named_relationship = false;
       for (const auto &rel : relList) {
-        addNewRelationshipToConnection(rel.getString().value(), connection);
+        const auto relationship_name = rel.getString().value();
+        if (relationship_name.empty()) {
+          continue;
+        }
+        addNewRelationshipToConnection(relationship_name, connection);
+        has_named_relationship = true;
+      }
+      if (!has_named_relationship) {
+        addFunnelOrPortRelationshipToConnection(connection);
       }
     } else if (!relList.isSequence() && !relList.getString().value().empty()) {
       addNewRelationshipToConnection(relList.getString().value(), connection);

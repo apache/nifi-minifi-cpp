@@ -23,11 +23,13 @@
 #include <string>
 #include <map>
 #include <set>
+#include <utility>
 #include <chrono>
 #include <thread>
 #include "core/Processor.h"
 #include "core/state/ProcessorController.h"
 #include "core/state/UpdateController.h"
+#include "RemoteProcessGroupPort.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -349,7 +351,7 @@ void ProcessGroup::updatePropertyValue(const std::string& processorName, const s
   }
 }
 
-void ProcessGroup::getConnections(std::map<std::string, Connection*>& connectionMap) {
+void ProcessGroup::getConnections(std::map<std::string, Connection*>& connectionMap) const {
   for (auto& connection : connections_) {
     connectionMap[connection->getUUIDStr()] = connection.get();
     connectionMap[connection->getName()] = connection.get();
@@ -359,7 +361,7 @@ void ProcessGroup::getConnections(std::map<std::string, Connection*>& connection
   }
 }
 
-void ProcessGroup::getConnections(std::map<std::string, Connectable*>& connectionMap) {
+void ProcessGroup::getConnections(std::map<std::string, Connectable*>& connectionMap) const {
   for (auto& connection : connections_) {
     connectionMap[connection->getUUIDStr()] = connection.get();
     connectionMap[connection->getName()] = connection.get();
@@ -494,10 +496,52 @@ std::size_t ProcessGroup::getTotalFlowFileCount() const {
   return sum;
 }
 
+void ProcessGroup::verifyRelationshipTerminations() const {
+  std::map<std::string, Connection*> connections;
+  getConnections(connections);
+  std::set<std::pair<const Connectable*, std::string>> terminated_relationships;
+  for (const auto& [_, connection] : connections) {
+    for (const auto& relationship : connection->getRelationships()) {
+      terminated_relationships.emplace(connection->getSource(), relationship.getName());
+    }
+  }
+
+  std::vector<Processor*> processors;
+  getAllProcessors(processors);
+
+  std::vector<std::pair<std::string, std::string>> unterminated_relationships;
+  for (auto* processor : processors) {
+    // RPG input ports (SEND direction) only send their incoming flow files to the remote instance and never transfer to a local relationship,
+    // while RPG output ports (RECEIVE direction) transfer the received flow files to their relationship, so those are still verified
+    if (auto port = dynamic_cast<minifi::RemoteProcessGroupPort*>(&processor->getImpl());
+        port && port->getDirection() == sitetosite::TransferDirection::SEND) {
+      continue;
+    }
+    for (const auto& relationship : processor->getSupportedRelationships()) {
+      if (processor->isAutoTerminated(relationship)) {
+        continue;
+      }
+      if (!terminated_relationships.contains({processor, relationship.getName()})) {
+        unterminated_relationships.emplace_back(processor->getName(), relationship.getName());
+      }
+    }
+  }
+
+  if (!unterminated_relationships.empty()) {
+    std::string message = "The following component-relationship pairs are not terminated by any connection: [";
+    for (const auto& [processor, relationship] : unterminated_relationships) {
+      message.append(fmt::format("({}, {})", processor, relationship));
+    }
+    message += "]";
+    throw Exception(ExceptionType::GENERAL_EXCEPTION, message);
+  }
+}
+
 void ProcessGroup::verify() const {
   for (const auto& processor : processors_) {
     processor->validateAnnotations();
   }
+  verifyRelationshipTerminations();
 }
 
 void ProcessGroup::setParameterContext(ParameterContext* parameter_context) {

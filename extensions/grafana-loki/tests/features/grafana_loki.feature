@@ -25,6 +25,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     And the "Stream Labels" property of the PushGrafanaLokiREST processor is set to "job=minifi,id=docker-test"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiREST
     And PushGrafanaLokiREST's success relationship is auto-terminated
+    And PushGrafanaLokiREST's failure relationship is auto-terminated
 
     When all instances start up
     Then "log line 1;log line 2;log line 3" lines are published to the Grafana Loki server in less than 60 seconds
@@ -39,6 +40,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     And the "Tenant ID" property of the PushGrafanaLokiREST processor is set to "mytenant"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiREST
     And PushGrafanaLokiREST's success relationship is auto-terminated
+    And PushGrafanaLokiREST's failure relationship is auto-terminated
 
     When all instances start up
     Then "log line 1;log line 2;log line 3" lines are published to the "mytenant" tenant on the Grafana Loki server in less than 60 seconds
@@ -54,6 +56,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     And the "SSL Context Service" property of the PushGrafanaLokiREST processor is set to "SSLContextService"
     And an ssl context service is set up
     And PushGrafanaLokiREST's success relationship is auto-terminated
+    And PushGrafanaLokiREST's failure relationship is auto-terminated
 
     When all instances start up
     Then "log line 1;log line 2;log line 3" lines are published using SSL to the Grafana Loki server in less than 60 seconds
@@ -70,6 +73,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     And the "Password" property of the PushGrafanaLokiREST processor is set to "password"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiREST
     And PushGrafanaLokiREST's success relationship is auto-terminated
+    And PushGrafanaLokiREST's failure relationship is auto-terminated
 
     When all instances start up
     Then "log line 1;log line 2;log line 3" lines are published to the Grafana Loki server in less than 60 seconds
@@ -83,6 +87,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     And the "Stream Labels" property of the PushGrafanaLokiGrpc processor is set to "job=minifi,id=docker-test"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiGrpc
     And PushGrafanaLokiGrpc's success relationship is auto-terminated
+    And PushGrafanaLokiGrpc's failure relationship is auto-terminated
 
     When all instances start up
     Then "log line 1;log line 2;log line 3" lines are published to the Grafana Loki server in less than 60 seconds
@@ -97,6 +102,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     And the "Tenant ID" property of the PushGrafanaLokiGrpc processor is set to "mytenant"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiGrpc
     And PushGrafanaLokiGrpc's success relationship is auto-terminated
+    And PushGrafanaLokiGrpc's failure relationship is auto-terminated
 
     When all instances start up
     Then "log line 1;log line 2;log line 3" lines are published to the "mytenant" tenant on the Grafana Loki server in less than 60 seconds
@@ -111,6 +117,7 @@ Feature: MiNiFi can publish logs to Grafana Loki server
     And the "SSL Context Service" property of the PushGrafanaLokiGrpc processor is set to "SSLContextService"
     And the "success" relationship of the TailFile processor is connected to the PushGrafanaLokiGrpc
     And PushGrafanaLokiGrpc's success relationship is auto-terminated
+    And PushGrafanaLokiGrpc's failure relationship is auto-terminated
     And an ssl context service is set up
 
     When all instances start up

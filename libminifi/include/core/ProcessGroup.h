@@ -189,9 +189,9 @@ class ProcessGroup : public CoreComponentImpl {
 
   void updatePropertyValue(const std::string& processorName, const std::string& propertyName, const std::string& propertyValue);
 
-  void getConnections(std::map<std::string, Connection*>& connectionMap);
+  void getConnections(std::map<std::string, Connection*>& connectionMap) const;
 
-  void getConnections(std::map<std::string, Connectable*>& connectionMap);
+  void getConnections(std::map<std::string, Connectable*>& connectionMap) const;
 
   void getFlowFileContainers(std::map<std::string, Connectable*>& containers) const;
 
@@ -232,6 +232,7 @@ class ProcessGroup : public CoreComponentImpl {
  private:
   static Port* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid);
   std::string buildGroupPath() const;
+  void verifyRelationshipTerminations() const;
 
   mutable std::recursive_mutex mutex_;
   std::shared_ptr<logging::Logger> logger_;

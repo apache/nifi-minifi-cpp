@@ -49,7 +49,9 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the UpdateAttribute processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
     And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
+    And UpdateAttribute's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -80,7 +82,9 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "failure" relationship of the PublishKafka processor is connected to the PutFile
+    And PublishKafka's success relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
     Then a single file with the content "no broker" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -111,6 +115,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
     And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -141,6 +146,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
     And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -174,6 +180,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
     And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -205,6 +212,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
     And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -233,6 +241,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
     And the "failure" relationship of the PublishKafka processor is connected to the PublishKafka
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
     Then a single file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds

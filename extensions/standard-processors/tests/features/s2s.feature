@@ -173,6 +173,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And PutFile is EVENT_DRIVEN
     And the output port "from_nifi" is connected to the PutFile processor
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And a NiFi container is set up
     And a directory at "/tmp/input" has a file with the content "test" in the "nifi" flow
@@ -193,6 +194,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And PutFile is EVENT_DRIVEN
     And the output port "from_nifi" is connected to the PutFile processor
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And a NiFi container is set up
     And a directory at "/tmp/input" has a file with the content "test" in the "nifi" flow
@@ -215,6 +217,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And the output port "from_nifi" is connected to the PutFile processor
     And SSL properties are set in MiNiFi
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And a NiFi container is set up with SSL enabled
     And a directory at "/tmp/input" has a file with the content "test" in the "nifi" flow
@@ -236,6 +239,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And the output port "from_nifi" is connected to the PutFile processor
     And SSL properties are set in MiNiFi
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And a NiFi container is set up with SSL enabled
     And a directory at "/tmp/input" has a file with the content "test" in the "nifi" flow
@@ -277,6 +281,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And PutFile is EVENT_DRIVEN
     And the output port "from_nifi" is connected to the PutFile processor
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And a NiFi container is set up
     And a directory at "/tmp/input" has a file with the content "test" in the "nifi" flow
@@ -297,6 +302,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And PutFile is EVENT_DRIVEN
     And the output port "from_nifi" is connected to the PutFile processor
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And a NiFi container is set up
     And a directory at "/tmp/input" has a file with the content "test" in the "nifi" flow

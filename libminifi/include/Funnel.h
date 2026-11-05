@@ -32,7 +32,7 @@ class Funnel final : public ForwardingNode {
   MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override;
+  void initialize() override;
 };
 
 }  // namespace org::apache::nifi::minifi

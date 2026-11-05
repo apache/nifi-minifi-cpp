@@ -32,6 +32,7 @@
 #include "unit/TestControllerWithFlow.h"
 #include "unit/EmptyFlow.h"
 #include "unit/TestUtils.h"
+#include "catch2/matchers/catch_matchers_string.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -261,6 +262,8 @@ Processors:
   class: GenerateFlowFile
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 10 sec
+  auto-terminated relationships list:
+    - success
 Connections: []
 Remote Processing Groups: []
 Controller Services: []
@@ -283,4 +286,120 @@ Controller Services: []
 
   REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Destroying FlowController"));
   REQUIRE(LogTestController::getInstance().countOccurrences("Destroying scheduling agent") == 3);
+}
+
+TEST_CASE("Flow update with unterminated relationships is rejected and the current flow is kept", "[TestFlow6]") {
+  TestControllerWithFlow controller(R"(
+Flow Controller:
+  name: Banana Bread
+Processors:
+- name: GenFF
+  id: 00000000-0000-0000-0000-000000000001
+  class: GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+  auto-terminated relationships list:
+    - success
+Connections: []
+Remote Processing Groups: []
+Controller Services: []
+)");
+
+  controller.startFlow();
+
+  const auto result = controller.controller_->applyConfiguration("/flows/1", R"(
+Flow Controller:
+  name: Unterminated Flow
+Processors:
+- name: UnterminatedGenFF
+  id: 00000000-0000-0000-0000-000000000002
+  class: GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+Connections: []
+Remote Processing Groups: []
+Controller Services: []
+)");
+
+  REQUIRE_FALSE(result.has_value());
+  CHECK_THAT(result.error(), Catch::Matchers::ContainsSubstring("not terminated by any connection: [(UnterminatedGenFF, success)]"));
+  CHECK(controller.controller_->getName() == "Banana Bread");
+  CHECK(controller.root_->findProcessorByName("GenFF"));
+  CHECK_FALSE(controller.root_->findProcessorByName("UnterminatedGenFF"));
+}
+
+TEST_CASE("Flow files are routed through process group ports", "[TestFlow7]") {
+  // the connections from the ports have no relationship set, so they use the default relationship of the port
+  TestControllerWithFlow controller(R"(
+Flow Controller:
+  name: Port Routing Flow
+Processors:
+- name: Generator
+  id: 00000000-0000-0000-0000-000000000001
+  class: org.apache.nifi.processors.standard.TestFlowFileGenerator
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 100 ms
+- name: Sink
+  id: 00000000-0000-0000-0000-000000000002
+  class: org.apache.nifi.processors.standard.TestProcessor
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 100 ms
+  auto-terminated relationships list:
+    - apple
+    - banana
+Connections:
+- name: GeneratorToChildInputPort
+  id: 00000000-0000-0000-0000-000000000003
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+    - success
+  destination id: 00000000-0000-0000-0000-000000000011
+- name: ChildOutputPortToSink
+  id: 00000000-0000-0000-0000-000000000004
+  source id: 00000000-0000-0000-0000-000000000012
+  destination id: 00000000-0000-0000-0000-000000000002
+Process Groups:
+- name: Child
+  id: 00000000-0000-0000-0000-000000000010
+  Processors:
+  - name: Middle
+    id: 00000000-0000-0000-0000-000000000013
+    class: org.apache.nifi.processors.standard.TestProcessor
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 100 ms
+    auto-terminated relationships list:
+      - banana
+  Input Ports:
+  - id: 00000000-0000-0000-0000-000000000011
+    name: in
+  Output Ports:
+  - id: 00000000-0000-0000-0000-000000000012
+    name: out
+  Connections:
+  - name: ChildInputPortToMiddle
+    id: 00000000-0000-0000-0000-000000000014
+    source id: 00000000-0000-0000-0000-000000000011
+    destination id: 00000000-0000-0000-0000-000000000013
+  - name: MiddleToChildOutputPort
+    id: 00000000-0000-0000-0000-000000000015
+    source id: 00000000-0000-0000-0000-000000000013
+    source relationship names:
+      - apple
+    destination id: 00000000-0000-0000-0000-000000000012
+Remote Processing Groups: []
+Controller Services: []
+)");
+
+  TypedProcessorWrapper<minifi::processors::TestProcessor> sink_proc = controller.root_->findProcessorByName("Sink");
+  REQUIRE(sink_proc);
+  // prevent the sink from consuming the flow files, so they stay in its incoming connection
+  sink_proc->yield(10s);
+
+  std::map<std::string, minifi::Connection*> connections;
+  controller.root_->getConnections(connections);
+  auto* const sink_connection = connections.at("ChildOutputPortToSink");
+
+  controller.startFlow();
+
+  CHECK(minifi::test::utils::verifyEventHappenedInPollTime(5s, [&] { return sink_connection->getQueueSize() > 0; }));
 }

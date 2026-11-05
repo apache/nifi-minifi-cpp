@@ -34,6 +34,7 @@ Feature: Sending data to Google Cloud Storage using PutGCSObject
     And the "success" relationship of the PutGCSObject processor is connected to the PutFile
     And the "failure" relationship of the PutGCSObject processor is connected to the PutGCSObject
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -95,7 +96,9 @@ Feature: Sending data to Google Cloud Storage using PutGCSObject
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the ListGCSBucket processor is connected to the FetchGCSObject
     And the "success" relationship of the FetchGCSObject processor is connected to the PutFile
+    And FetchGCSObject's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
@@ -124,6 +127,7 @@ Feature: Sending data to Google Cloud Storage using PutGCSObject
     And a ProxyConfigurationService controller service is set up with <proxy type> proxy configuration
     And the "success" relationship of the ListGCSBucket processor is connected to the FetchGCSObject
     And the "success" relationship of the FetchGCSObject processor is connected to the PutFile
+    And FetchGCSObject's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
     And PutFile's failure relationship is auto-terminated
 
@@ -155,7 +159,10 @@ Feature: Sending data to Google Cloud Storage using PutGCSObject
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the ListGCSBucket processor is connected to the DeleteGCSObject
     And the "success" relationship of the DeleteGCSObject processor is connected to the PutFile
+    And DeleteGCSObject's success relationship is auto-terminated
+    And DeleteGCSObject's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
@@ -184,6 +191,7 @@ Feature: Sending data to Google Cloud Storage using PutGCSObject
     And a ProxyConfigurationService controller service is set up with <proxy type> proxy configuration
     And the "success" relationship of the ListGCSBucket processor is connected to the DeleteGCSObject
     And the "success" relationship of the DeleteGCSObject processor is connected to the PutFile
+    And DeleteGCSObject's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
     And PutFile's failure relationship is auto-terminated
 

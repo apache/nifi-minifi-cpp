@@ -24,6 +24,7 @@
 #include "core/RepositoryFactory.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "TailFile.h"
+#include "Funnel.h"
 #include "unit/TestBase.h"
 #include "unit/Catch.h"
 #include "utils/StringUtils.h"
@@ -33,6 +34,7 @@
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 #include "unit/DummyProcessor.h"
 #include "catch2/generators/catch_generators.hpp"
+#include "catch2/matchers/catch_matchers_string.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -506,6 +508,8 @@ Flow Controller:
 Processors:
 - name: GenerateFlowFile
   class: GenerateFlowFile
+  auto-terminated relationships list:
+  - success
   Properties:
      Dynamic Property: Bad
       )";
@@ -564,6 +568,8 @@ Flow Controller:
 Processors:
 - name: XYZ
   class: GetFile
+  auto-terminated relationships list:
+  - success
   Properties:
     Input Directory: "/"
     Batch Size: 1
@@ -2330,6 +2336,8 @@ Processors:
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 10000 ms
+  auto-terminated relationships list:
+  - success
   Properties:
     File Size: {}
 )", file_size_property_str);
@@ -2357,7 +2365,9 @@ Processors:
   class: org.apache.nifi.processors.standard.PutFile
   max concurrent tasks: 1
   scheduling strategy: EVENT_DRIVEN
-  auto-terminated relationships list: []
+  auto-terminated relationships list:
+  - success
+  - failure
   Properties: []
 
 Connections:
@@ -2395,6 +2405,559 @@ NiFi Properties Overrides: {}
   CHECK(port.get().getBatchCount().value() == 3);
   CHECK(port.get().getBatchDuration().value() == std::chrono::seconds(5));
   CHECK(port.get().getTimeout().value() == std::chrono::seconds(20));
+}
+
+namespace {
+std::string unterminatedRelationshipsError(std::string_view processor_relationship_pairs) {
+  return fmt::format("General Operation: The following component-relationship pairs are not terminated by any connection: {}",
+      processor_relationship_pairs);
+}
+}  // namespace
+
+TEST_CASE("Flow with all relationships terminated by connections or auto-termination is loaded", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000002
+  name: PutFile
+  class: org.apache.nifi.minifi.processors.PutFile
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+- id: 00000000-0000-0000-0000-000000000003
+  name: LogAttribute
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+Connections:
+- id: 00000000-0000-0000-0000-000000000004
+  name: GenerateFlowFile/success/PutFile
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000002
+- id: 00000000-0000-0000-0000-000000000005
+  name: PutFile/failure/LogAttribute
+  source id: 00000000-0000-0000-0000-000000000002
+  source relationship names:
+  - failure
+  destination id: 00000000-0000-0000-0000-000000000003
+)";
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  std::unique_ptr<core::ProcessGroup> root;
+  REQUIRE_NOTHROW(root = yaml_config.getRootFromPayload(CONFIG_YAML));
+  REQUIRE(root);
+}
+
+TEST_CASE("Relationship which is neither connected nor auto-terminated is reported", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+Connections: []
+)";
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(GenerateFlowFile, success)]"));
+}
+
+TEST_CASE("Connection of a different relationship does not terminate a relationship", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000002
+  name: PutFile
+  class: org.apache.nifi.minifi.processors.PutFile
+  scheduling strategy: EVENT_DRIVEN
+- id: 00000000-0000-0000-0000-000000000003
+  name: LogAttribute
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+Connections:
+- id: 00000000-0000-0000-0000-000000000004
+  name: GenerateFlowFile/success/PutFile
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000002
+- id: 00000000-0000-0000-0000-000000000005
+  name: PutFile/success/LogAttribute
+  source id: 00000000-0000-0000-0000-000000000002
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000003
+)";
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(PutFile, failure)]"));
+}
+
+TEST_CASE("Connection from a different processor does not terminate a relationship", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile1
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000002
+  name: GenerateFlowFile2
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000003
+  name: LogAttribute
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+Connections:
+- id: 00000000-0000-0000-0000-000000000004
+  name: GenerateFlowFile1/success/LogAttribute
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000003
+)";
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(GenerateFlowFile2, success)]"));
+}
+
+TEST_CASE("All unterminated relationships of all processors are reported", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile1
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000002
+  name: GenerateFlowFile2
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000003
+  name: PutFile
+  class: org.apache.nifi.minifi.processors.PutFile
+  scheduling strategy: EVENT_DRIVEN
+Connections:
+- id: 00000000-0000-0000-0000-000000000004
+  name: GenerateFlowFile1/success/PutFile
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000003
+)";
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML),
+      Catch::Matchers::ContainsSubstring("The following component-relationship pairs are not terminated by any connection:") &&
+          Catch::Matchers::ContainsSubstring("(PutFile, failure)(PutFile, success)") &&
+          Catch::Matchers::ContainsSubstring("(GenerateFlowFile2, success)") && !Catch::Matchers::ContainsSubstring("GenerateFlowFile1"));
+}
+
+TEST_CASE("Funnel with or without outgoing connection is accepted", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000002
+  name: LogAttribute
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+Funnels:
+- id: 00000000-0000-0000-0000-000000000003
+  name: MyFunnel
+Connections:
+- id: 00000000-0000-0000-0000-000000000004
+  name: GenerateFlowFile/success/MyFunnel
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000003
+)";
+  static const std::string FUNNEL_OUTGOING_CONNECTION_YAML =
+      R"(
+- id: 00000000-0000-0000-0000-000000000005
+  name: MyFunnel//LogAttribute
+  source id: 00000000-0000-0000-0000-000000000003
+  source relationship names: []
+  destination id: 00000000-0000-0000-0000-000000000002
+)";
+
+  std::unique_ptr<core::ProcessGroup> root;
+
+  SECTION("Funnel is connected") {
+    core::YamlConfiguration yaml_config(test_controller.getContext());
+    REQUIRE_NOTHROW(root = yaml_config.getRootFromPayload(CONFIG_YAML + FUNNEL_OUTGOING_CONNECTION_YAML));
+  }
+
+  SECTION("Funnel is not connected, it is used as a terminator") {
+    static const std::string LOG_ATTRIBUTE_INCOMING_CONNECTION_YAML =
+        R"(
+- id: 00000000-0000-0000-0000-000000000005
+  name: GenerateFlowFile/success/LogAttribute
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000002
+)";
+    core::YamlConfiguration yaml_config(test_controller.getContext());
+    REQUIRE_NOTHROW(root = yaml_config.getRootFromPayload(CONFIG_YAML + LOG_ATTRIBUTE_INCOMING_CONNECTION_YAML));
+  }
+
+  REQUIRE(root);
+  auto* funnel = root->findProcessorByName("MyFunnel");
+  REQUIRE(funnel);
+  CHECK(funnel->isAutoTerminated(minifi::Funnel::Success));
+}
+
+class ProcessorWithDefaultAutoTerminatedRelationship : public minifi::core::ProcessorImpl {
+ public:
+  using ProcessorImpl::ProcessorImpl;
+
+  static constexpr const char* Description = "test resource";
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr auto Success = core::RelationshipDefinition{"success", "Success relationship"};
+  static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failure relationship"};
+  static constexpr auto Original = core::RelationshipDefinition{"original", "Auto-terminated by default"};
+  static constexpr auto Relationships = std::array{Success, Failure, Original};
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void initialize() override {
+    setSupportedRelationships(Relationships);
+    addAutoTerminatedRelationship(Original);
+  }
+};
+
+REGISTER_RESOURCE(ProcessorWithDefaultAutoTerminatedRelationship, Processor);
+
+TEST_CASE("Relationships auto-terminated by default by the processor do not need to be terminated in the flow configuration", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: MyProcessor
+  class: ProcessorWithDefaultAutoTerminatedRelationship
+  auto-terminated relationships list:
+  - success
+)";
+
+  SECTION("The default auto-terminated relationship is kept besides the ones in the flow configuration") {
+    std::unique_ptr<core::ProcessGroup> root;
+    REQUIRE_NOTHROW(root = yaml_config.getRootFromPayload(CONFIG_YAML + "  - failure\n"));
+    REQUIRE(root);
+    auto* processor = root->findProcessorByName("MyProcessor");
+    REQUIRE(processor);
+    CHECK(processor->isAutoTerminated(ProcessorWithDefaultAutoTerminatedRelationship::Success));
+    CHECK(processor->isAutoTerminated(ProcessorWithDefaultAutoTerminatedRelationship::Failure));
+    CHECK(processor->isAutoTerminated(ProcessorWithDefaultAutoTerminatedRelationship::Original));
+  }
+
+  SECTION("Other relationships are still verified") {
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(MyProcessor, failure)]"));
+  }
+}
+
+TEST_CASE("Remote process group input ports do not need outgoing connections", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+Connections:
+- id: 00000000-0000-0000-0000-000000000002
+  name: GenerateFlowFile/success/AmazingInputPort
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000004
+Remote Process Groups:
+- id: 00000000-0000-0000-0000-000000000003
+  name: RPG
+  url: http://localhost:8080/nifi
+  transport protocol: RAW
+  Input Ports:
+  - id: 00000000-0000-0000-0000-000000000004
+    name: AmazingInputPort
+    max concurrent tasks: 1
+  Output Ports: []
+)";
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  REQUIRE_NOTHROW(yaml_config.getRootFromPayload(CONFIG_YAML));
+}
+
+TEST_CASE("Remote process group output ports need outgoing connections", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000002
+  name: LogAttribute
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+Remote Process Groups:
+- id: 00000000-0000-0000-0000-000000000003
+  name: RPG
+  url: http://localhost:8080/nifi
+  transport protocol: RAW
+  Input Ports: []
+  Output Ports:
+  - id: 00000000-0000-0000-0000-000000000004
+    name: AmazingOutputPort
+    max concurrent tasks: 1
+Connections:
+)";
+
+  SECTION("Output port is connected") {
+    static const std::string CONNECTIONS_YAML =
+        R"(
+- id: 00000000-0000-0000-0000-000000000005
+  name: AmazingOutputPort/undefined/LogAttribute
+  source id: 00000000-0000-0000-0000-000000000004
+  destination id: 00000000-0000-0000-0000-000000000002
+- id: 00000000-0000-0000-0000-000000000006
+  name: GenerateFlowFile/success/LogAttribute
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000002
+)";
+    core::YamlConfiguration yaml_config(test_controller.getContext());
+    REQUIRE_NOTHROW(yaml_config.getRootFromPayload(CONFIG_YAML + CONNECTIONS_YAML));
+  }
+
+  SECTION("Output port is not connected") {
+    static const std::string CONNECTIONS_YAML =
+        R"(
+- id: 00000000-0000-0000-0000-000000000006
+  name: GenerateFlowFile/success/LogAttribute
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000002
+)";
+    core::YamlConfiguration yaml_config(test_controller.getContext());
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML + CONNECTIONS_YAML),
+        unterminatedRelationshipsError("[(AmazingOutputPort, undefined)]"));
+  }
+}
+
+TEST_CASE("Relationships are verified in nested process groups", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+  static const std::string CONFIG_YAML_BEGIN =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+- id: 00000000-0000-0000-0000-000000000002
+  name: LogAttribute
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+Connections:
+- id: 00000000-0000-0000-0000-000000000003
+  name: GenerateFlowFile/success/in
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000005
+- id: 00000000-0000-0000-0000-000000000004
+  name: out/success/LogAttribute
+  source id: 00000000-0000-0000-0000-000000000006
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000002
+Process Groups:
+- id: 00000000-0000-0000-0000-000000000010
+  name: Child Process Group
+  Processors:
+  - id: 00000000-0000-0000-0000-000000000007
+    name: UpdateAttribute
+    class: org.apache.nifi.minifi.processors.UpdateAttribute
+    scheduling strategy: EVENT_DRIVEN
+    auto-terminated relationships list:
+    - failure
+  Input Ports:
+  - id: 00000000-0000-0000-0000-000000000005
+    name: in
+  Output Ports:
+  - id: 00000000-0000-0000-0000-000000000006
+    name: out
+  Connections:
+  - id: 00000000-0000-0000-0000-000000000008
+    name: in/success/UpdateAttribute
+    source id: 00000000-0000-0000-0000-000000000005
+    source relationship names:
+    - success
+    destination id: 00000000-0000-0000-0000-000000000007
+)";
+
+  SECTION("All relationships are terminated") {
+    static const std::string CONFIG_YAML_END =
+        R"(
+  - id: 00000000-0000-0000-0000-000000000009
+    name: UpdateAttribute/success/out
+    source id: 00000000-0000-0000-0000-000000000007
+    source relationship names:
+    - success
+    destination id: 00000000-0000-0000-0000-000000000006
+)";
+    core::YamlConfiguration yaml_config(test_controller.getContext());
+    REQUIRE_NOTHROW(yaml_config.getRootFromPayload(CONFIG_YAML_BEGIN + CONFIG_YAML_END));
+  }
+
+  SECTION("Relationship of a processor in the child process group is not terminated") {
+    core::YamlConfiguration yaml_config(test_controller.getContext());
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML_BEGIN), unterminatedRelationshipsError("[(UpdateAttribute, success)]"));
+  }
+}
+
+TEST_CASE("Process group port without outgoing connection is reported", "[YamlConfiguration][RelationshipTermination]") {
+  ConfigurationTestController test_controller;
+
+  SECTION("Input port") {
+    static const std::string CONFIG_YAML =
+        R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors:
+- id: 00000000-0000-0000-0000-000000000001
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+Connections:
+- id: 00000000-0000-0000-0000-000000000002
+  name: GenerateFlowFile/success/in
+  source id: 00000000-0000-0000-0000-000000000001
+  source relationship names:
+  - success
+  destination id: 00000000-0000-0000-0000-000000000004
+Process Groups:
+- id: 00000000-0000-0000-0000-000000000003
+  name: Child Process Group
+  Processors: []
+  Input Ports:
+  - id: 00000000-0000-0000-0000-000000000004
+    name: in
+)";
+    core::YamlConfiguration yaml_config(test_controller.getContext());
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(in, success)]"));
+  }
+
+  SECTION("Output port") {
+    static const std::string CONFIG_YAML =
+        R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+Processors: []
+Process Groups:
+- id: 00000000-0000-0000-0000-000000000001
+  name: Child Process Group
+  Processors:
+  - id: 00000000-0000-0000-0000-000000000002
+    name: GenerateFlowFile
+    class: org.apache.nifi.minifi.processors.GenerateFlowFile
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 10 sec
+  Output Ports:
+  - id: 00000000-0000-0000-0000-000000000003
+    name: out
+  Connections:
+  - id: 00000000-0000-0000-0000-000000000004
+    name: GenerateFlowFile/success/out
+    source id: 00000000-0000-0000-0000-000000000002
+    source relationship names:
+    - success
+    destination id: 00000000-0000-0000-0000-000000000003
+)";
+    core::YamlConfiguration yaml_config(test_controller.getContext());
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(out, success)]"));
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::test

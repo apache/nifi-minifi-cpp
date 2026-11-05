@@ -25,6 +25,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And PutFile is EVENT_DRIVEN in the "secondary" flow
     And in the "secondary" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "secondary" flow
+    And PutFile's failure relationship is auto-terminated in the "secondary" flow
 
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
@@ -36,6 +37,8 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "secondary" container at least one file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -46,6 +49,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And PutFile is EVENT_DRIVEN in the "minifi-listen" flow
     And in the "minifi-listen" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "minifi-listen" flow
+    And PutFile's failure relationship is auto-terminated in the "minifi-listen" flow
 
     And the http proxy server is set up
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -64,6 +68,8 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When all instances start up
     Then in the "minifi-listen" container at least one file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -75,6 +81,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And PutFile is EVENT_DRIVEN in the "secondary" flow
     And in the "secondary" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "secondary" flow
+    And PutFile's failure relationship is auto-terminated in the "secondary" flow
 
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
@@ -86,9 +93,12 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "success" relationship of the GetFile processor is connected to the HashContent
     And the "success" relationship of the HashContent processor is connected to the InvokeHTTP
+    And HashContent's failure relationship is auto-terminated
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "secondary" container at least one file with the content "test" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -99,6 +109,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And PutFile is EVENT_DRIVEN in the "secondary" flow
     And in the "secondary" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "secondary" flow
+    And PutFile's failure relationship is auto-terminated in the "secondary" flow
 
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
@@ -111,6 +122,8 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "secondary" container at least one empty file is placed in the "/tmp/output" directory in less than 60 seconds
@@ -132,6 +145,8 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "nifi" container at least one empty file is placed in the "/tmp/output" directory in less than 60 seconds
@@ -142,6 +157,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And PutFile is EVENT_DRIVEN in the "secondary" flow
     And in the "secondary" flow the "success" relationship of the ListenHTTP processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated in the "secondary" flow
+    And PutFile's failure relationship is auto-terminated in the "secondary" flow
 
     And a GenerateFlowFile processor with the "File Size" property set to "10 MB"
     And the scheduling period of the GenerateFlowFile processor is set to "30 sec"
@@ -155,6 +171,8 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
 
     When both instances start up
     Then in the "secondary" container at least one file with minimum size of "1 MB" is placed in the "/tmp/output" directory in less than 60 seconds
@@ -170,6 +188,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And ListenHTTP is EVENT_DRIVEN in the "secondary" flow
     And in the "secondary" flow the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And in the "secondary" flow the "success" relationship of the UpdateAttribute processor is connected to the ListenHTTP
+    And UpdateAttribute's failure relationship is auto-terminated in the "secondary" flow
     And ListenHTTP's success relationship is auto-terminated in the "secondary" flow
 
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${scenario_id}:8080/contentListener&testfile"
@@ -185,6 +204,10 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And InvokeHTTP's success relationship is auto-terminated
     And InvokeHTTP's response relationship is auto-terminated
     And InvokeHTTP's failure relationship is auto-terminated
+    And InvokeHTTP's no retry relationship is auto-terminated
+    And InvokeHTTP's retry relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
 
     When both instances start up
     Then at least one file with minimum size of "10 MB" is placed in the "/tmp/output" directory in less than 60 seconds

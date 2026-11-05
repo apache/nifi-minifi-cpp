@@ -30,7 +30,11 @@ Feature: Splitting JSON content using SplitJson processor
     And the "split" relationship of the SplitJson processor is connected to the PutFile
     And the "original" relationship of the SplitJson processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And SplitJson's failure relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
+
     When the MiNiFi instance starts up
     Then at least one file with the content "["Alice","Bob"]" is placed in the "/tmp/output" directory in less than 10 seconds
     And at least one file with the content "Dave" is placed in the "/tmp/output" directory in less than 1 seconds

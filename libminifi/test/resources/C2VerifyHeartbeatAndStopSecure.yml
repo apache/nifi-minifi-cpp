@@ -30,6 +30,10 @@ Processors:
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:
+        - failure
+        - no retry
+        - response
+        - retry
       Properties:
           HTTP Method: GET
           Remote URL: https://localhost:11015/geturl
@@ -42,8 +46,6 @@ Processors:
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
-      auto-terminated relationships list:
-        - response
       Properties:
         Log Level: info
         Log Payload: true
@@ -64,11 +66,11 @@ Connections:
       source name: LogAttribute
       source id: 2438e3c8-015a-1000-79ca-83af40ec1992
       destination name: LogAttribute
-      destination id: 2438e3c8-015a-1000-79ca-83af40ec1992  
+      destination id: 2438e3c8-015a-1000-79ca-83af40ec1992
       source relationship name: success
       max work queue size: 0
       max work queue data size: 1 MB
       flowfile expiration: 60 sec
 
 Remote Processing Groups:
-    
+

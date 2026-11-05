@@ -25,6 +25,8 @@ Feature: MiNiFi can use python processors in its flows
     And the "success" relationship of the GenerateFlowFile processor is connected to the AddPythonAttribute
     And the "success" relationship of the AddPythonAttribute processor is connected to the LogAttribute
     And AddPythonAttribute's success relationship is auto-terminated
+    And AddPythonAttribute's failure relationship is auto-terminated
+    And LogAttribute's success relationship is auto-terminated
 
     When all instances start up
     Then the Minifi logs contain the following message: "key:Python attribute value:attributevalue" in less than 60 seconds
@@ -36,6 +38,7 @@ Feature: MiNiFi can use python processors in its flows
     And the "Dynamic Property" property of the LogDynamicProperties processor is set to "dynamic value"
     And the "success" relationship of the GenerateFlowFile processor is connected to the LogDynamicProperties
     And LogDynamicProperties's success relationship is auto-terminated
+    And LogDynamicProperties's failure relationship is auto-terminated
 
     When all instances start up
     Then the Minifi logs contain the following message: "Static Property value: static value" in less than 60 seconds
@@ -53,7 +56,9 @@ Feature: MiNiFi can use python processors in its flows
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GenerateFlowFile processor is connected to the MoveContentToJson
     And the "success" relationship of the MoveContentToJson processor is connected to the PutFile
+    And MoveContentToJson's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     Then a single file with the content '{"content": ""}' is placed in the '/tmp/output' directory in less than 60 seconds
@@ -65,6 +70,7 @@ Feature: MiNiFi can use python processors in its flows
     And RemoveFlowFile is EVENT_DRIVEN
     And the "success" relationship of the GenerateFlowFile processor is connected to the RemoveFlowFile
     And RemoveFlowFile's success relationship is auto-terminated
+    And RemoveFlowFile's failure relationship is auto-terminated
 
     When all instances start up
     Then the Minifi logs contain the following message: "Removing flow file with UUID" in less than 30 seconds
@@ -76,7 +82,9 @@ Feature: MiNiFi can use python processors in its flows
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the CountingProcessor processor is connected to the PutFile
+    And CountingProcessor's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
     Then files with at least these contents "1,2,3,4,5" are placed in the "/tmp/output" directory in less than 5 seconds
@@ -101,6 +109,9 @@ Feature: MiNiFi can use python processors in its flows
     And the "success" relationship of the ParseDocument processor is connected to the ChunkDocument
     And the "success" relationship of the ChunkDocument processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And ParseDocument's failure relationship is auto-terminated
+    And ChunkDocument's failure relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
     And the MiNiFi deployment timeout is set to 300 seconds
 
@@ -124,6 +135,9 @@ Feature: MiNiFi can use python processors in its flows
     And LogAttribute is EVENT_DRIVEN
     And the "space" relationship of the CreateFlowFile processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And CreateFlowFile's success relationship is auto-terminated
+    And CreateFlowFile's failure relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
     When the MiNiFi instance starts up
     Then a single file with the content 'Hello World!' is placed in the '/tmp/output' directory in less than 10 seconds
@@ -145,6 +159,10 @@ Feature: MiNiFi can use python processors in its flows
     And the "second" relationship of the RotatingForwarder processor is connected to the PutFile
     And the "third" relationship of the RotatingForwarder processor is connected to the PutFile
     And the "fourth" relationship of the RotatingForwarder processor is connected to the PutFile
+    And RotatingForwarder's success relationship is auto-terminated
+    And RotatingForwarder's failure relationship is auto-terminated
+    And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -161,7 +179,9 @@ Feature: MiNiFi can use python processors in its flows
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the SpecialPropertyTypeChecker
     And the "success" relationship of the SpecialPropertyTypeChecker processor is connected to the PutFile
+    And SpecialPropertyTypeChecker's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -177,7 +197,10 @@ Feature: MiNiFi can use python processors in its flows
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the ProcessContextInterfaceChecker
     And the "myrelationship" relationship of the ProcessContextInterfaceChecker processor is connected to the PutFile
+    And ProcessContextInterfaceChecker's success relationship is auto-terminated
+    And ProcessContextInterfaceChecker's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -196,6 +219,9 @@ Feature: MiNiFi can use python processors in its flows
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the FailureWithAttributes
     And the "failure" relationship of the FailureWithAttributes processor is connected to the LogAttribute
+    And UpdateAttribute's failure relationship is auto-terminated
+    And FailureWithAttributes's success relationship is auto-terminated
+    And FailureWithAttributes's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
 
     When all instances start up
@@ -213,7 +239,9 @@ Feature: MiNiFi can use python processors in its flows
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the RelativeImporterProcessor
     And the "success" relationship of the RelativeImporterProcessor processor is connected to the PutFile
+    And RelativeImporterProcessor's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -223,8 +251,12 @@ Feature: MiNiFi can use python processors in its flows
     Given a org.apache.nifi.minifi.processors.nifi_python_processors.CreateNothing processor with the name "CreateNothing"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And PutFile is EVENT_DRIVEN
+
     And the "success" relationship of the CreateNothing processor is connected to the PutFile
+    And CreateNothing's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
+
     When the MiNiFi instance starts up
     Then no files are placed in the "/tmp/output" directory in 10 seconds of running time
     And the Minifi logs do not contain the following message: "Caught Exception during SchedulingAgent::onTrigger of processor CreateNothing" after 1 seconds
@@ -235,6 +267,8 @@ Feature: MiNiFi can use python processors in its flows
     And FailureWithContent is EVENT_DRIVEN
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the FailureWithContent
+    And FailureWithContent's success relationship is auto-terminated
+    And FailureWithContent's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -246,6 +280,8 @@ Feature: MiNiFi can use python processors in its flows
     And TransferToOriginal is EVENT_DRIVEN
 
     And the "success" relationship of the GenerateFlowFile processor is connected to the TransferToOriginal
+    And TransferToOriginal's success relationship is auto-terminated
+    And TransferToOriginal's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -267,6 +303,7 @@ Feature: MiNiFi can use python processors in its flows
 
     And the "success" relationship of the GetFile processor is connected to the SetRecordField
     And the "success" relationship of the SetRecordField processor is connected to the LogAttribute
+    And SetRecordField's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
 
     When all instances start up
@@ -282,6 +319,7 @@ Feature: MiNiFi can use python processors in its flows
     And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
     And LogAttribute is EVENT_DRIVEN
     And the "success" relationship of the TestStateManager processor is connected to the LogAttribute
+    And TestStateManager's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "key:state_key value:1" in less than 10 seconds
@@ -295,6 +333,7 @@ Feature: MiNiFi can use python processors in its flows
     And the "Dynamic Property" property of the NifiStyleLogDynamicProperties processor is set to "dynamic value"
     And the "success" relationship of the GenerateFlowFile processor is connected to the NifiStyleLogDynamicProperties
     And NifiStyleLogDynamicProperties's success relationship is auto-terminated
+    And NifiStyleLogDynamicProperties's failure relationship is auto-terminated
 
     When all instances start up
     Then the Minifi logs contain the following message: "Static Property value: static value" in less than 10 seconds
@@ -307,11 +346,12 @@ Feature: MiNiFi can use python processors in its flows
     And the "Integer Property" property of the ExpressionLanguagePropertyWithValidator processor is set to "42"
     And the "success" relationship of the GenerateFlowFile processor is connected to the ExpressionLanguagePropertyWithValidator
     And ExpressionLanguagePropertyWithValidator's success relationship is auto-terminated
+    And ExpressionLanguagePropertyWithValidator's failure relationship is auto-terminated
 
     When all instances start up
     Then the Minifi logs contain the following message: "Integer Property value: 42" in less than 10 seconds
 
-  Scenario: MiNiFi C++ rolls back session if expression language cannot be evaluated as integer in NiFi python processors
+  Scenario: MiNiFi C++ transfers to failure if expression language cannot be evaluated as integer in NiFi python processors
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a UpdateAttribute processor with the "my.integer" property set to "invalid"
     And UpdateAttribute is EVENT_DRIVEN
@@ -320,10 +360,12 @@ Feature: MiNiFi can use python processors in its flows
     And the "Integer Property" property of the ExpressionLanguagePropertyWithValidator processor is set to "${my.integer}"
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the ExpressionLanguagePropertyWithValidator
+    And UpdateAttribute's failure relationship is auto-terminated
     And ExpressionLanguagePropertyWithValidator's success relationship is auto-terminated
+    And ExpressionLanguagePropertyWithValidator's failure relationship is auto-terminated
 
     When all instances start up
-    Then the Minifi logs contain the following message: "ProcessSession rollback for ExpressionLanguagePropertyWithValidator" in less than 10 seconds
+    Then the Minifi logs contain the following message: "from ExpressionLanguagePropertyWithValidator to relationship failure" in less than 10 seconds
 
   Scenario: MiNiFi C++ can use evaluate expression language expressions correctly using the NiFi python API
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
@@ -341,7 +383,10 @@ Feature: MiNiFi can use python processors in its flows
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the EvaluateExpressionLanguageChecker
     And the "success" relationship of the EvaluateExpressionLanguageChecker processor is connected to the PutFile
+    And UpdateAttribute's failure relationship is auto-terminated
+    And EvaluateExpressionLanguageChecker's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When all instances start up
 
@@ -359,6 +404,7 @@ Feature: MiNiFi can use python processors in its flows
     And the max concurrent tasks attribute of the SleepForever processor is set to <Max concurrent tasks>
     And the scheduling period of the SleepForever processor is set to "100 milliseconds"
     And SleepForever's success relationship is auto-terminated
+    And SleepForever's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
@@ -374,6 +420,7 @@ Feature: MiNiFi can use python processors in its flows
     And the max concurrent tasks attribute of the SingleThreadedSleepForever processor is set to 5
     And the scheduling period of the SingleThreadedSleepForever processor is set to "100 milliseconds"
     And SingleThreadedSleepForever's success relationship is auto-terminated
+    And SingleThreadedSleepForever's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
@@ -384,6 +431,7 @@ Feature: MiNiFi can use python processors in its flows
     And the max concurrent tasks attribute of the MinifiSleepForever processor is set to <Max concurrent tasks>
     And the scheduling period of the MinifiSleepForever processor is set to "100 milliseconds"
     And MinifiSleepForever's success relationship is auto-terminated
+    And MinifiSleepForever's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
 
@@ -399,6 +447,7 @@ Feature: MiNiFi can use python processors in its flows
     And the max concurrent tasks attribute of the SingleThreadedMinifiSleepForever processor is set to 5
     And the scheduling period of the SingleThreadedMinifiSleepForever processor is set to "100 milliseconds"
     And SingleThreadedMinifiSleepForever's success relationship is auto-terminated
+    And SingleThreadedMinifiSleepForever's failure relationship is auto-terminated
 
     When the MiNiFi instance starts up
 

@@ -22,6 +22,7 @@ Feature: Testing streaming reads and writes
     And a PutFileRs processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFileRs processor is connected to the AsciifyGerman
     And the "success" relationship of the AsciifyGerman processor is connected to the PutFileRs
+    And AsciifyGerman's failure relationship is auto-terminated
     And PutFileRs's success relationship is auto-terminated
     And PutFileRs's failure relationship is auto-terminated
     And a directory at "/tmp/input" has a file "german.txt" with the content "Üben von Xylophon und Querflöte ist ja zweckmäßig."
@@ -38,6 +39,7 @@ Feature: Testing streaming reads and writes
     And a PutFileRs processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFileRs processor is connected to the AsciifyGerman
     And the "failure" relationship of the AsciifyGerman processor is connected to the PutFileRs
+    And AsciifyGerman's success relationship is auto-terminated
     And PutFileRs's success relationship is auto-terminated
     And PutFileRs's failure relationship is auto-terminated
     And a directory at "/tmp/input" has a file "french.txt" with the content "Voix ambiguë d'un cœur qui, au zéphyr, préfère les jattes de kiwis."

@@ -38,6 +38,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS Kinesis server
     And the "success" relationship of the PutKinesisStream processor is connected to the PutFile
     And the "failure" relationship of the PutKinesisStream processor is connected to the PutKinesisStream
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     When both instances start up
 

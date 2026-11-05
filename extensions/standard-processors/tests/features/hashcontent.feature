@@ -29,6 +29,7 @@ Feature: Hash value is added to Flowfiles by HashContent processor
     And LogAttribute is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the HashContent
     And the "success" relationship of the HashContent processor is connected to the LogAttribute
+    And HashContent's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "key:hash value:<hash_value>" in less than 10 seconds
@@ -50,7 +51,9 @@ Feature: Hash value is added to Flowfiles by HashContent processor
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the HashContent
     And the "failure" relationship of the HashContent processor is connected to the PutFile
+    And HashContent's success relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     When the MiNiFi instance starts up
     Then at least one empty file is placed in the "/tmp/output" directory in less than 10 seconds
 
@@ -65,6 +68,7 @@ Feature: Hash value is added to Flowfiles by HashContent processor
     And LogAttribute is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the HashContent
     And the "success" relationship of the HashContent processor is connected to the LogAttribute
+    And HashContent's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "key:hash value:1F3870BE274F6C49B3E31A0C6728957F" in less than 10 seconds
