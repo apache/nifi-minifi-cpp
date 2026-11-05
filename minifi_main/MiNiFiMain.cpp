@@ -52,6 +52,7 @@
 #include "Fips.h"
 #include "FlowController.h"
 #include "MainHelper.h"
+#include "RequestShutdown.h"
 #include "ResourceClaim.h"
 #include "agent/JsonSchema.h"
 #include "minifi-cpp/agent/agent_version.h"
@@ -80,6 +81,41 @@ namespace utils = minifi::utils;
 static std::atomic_flag flow_controller_running;
 static std::atomic_flag process_running;
 
+enum class LifecycleState : int32_t {
+  RUNNING,
+  RESTART_REQUESTED,
+  SHUTDOWN_REQUESTED
+};
+
+struct LifecycleRequest {
+  LifecycleState state = LifecycleState::RUNNING;
+  int32_t exit_code = 0;
+};
+
+static_assert(std::atomic<LifecycleRequest>::is_always_lock_free);
+static std::atomic<LifecycleRequest> lifecycle_request;
+
+bool requestLifecycleChange(minifi::ShutdownType shutdown_type, int32_t exit_code) {
+  auto current_request = lifecycle_request.load();
+  while (true) {
+    if (current_request.state == LifecycleState::SHUTDOWN_REQUESTED) {
+      return false;
+    }
+    if (shutdown_type == minifi::ShutdownType::RESTART && current_request.state == LifecycleState::RESTART_REQUESTED) {
+      return false;
+    }
+    const auto desired = shutdown_type == minifi::ShutdownType::SHUTDOWN
+        ? LifecycleRequest{.state = LifecycleState::SHUTDOWN_REQUESTED, .exit_code = exit_code}
+        : LifecycleRequest{.state = LifecycleState::RESTART_REQUESTED, .exit_code = 0};
+    if (lifecycle_request.compare_exchange_weak(current_request, desired)) {
+      break;
+    }
+  }
+  flow_controller_running.clear();
+  flow_controller_running.notify_all();
+  return true;
+}
+
 /**
  * Removed the stop command from the signal handler so that we could trigger
  * unload after we exit the semaphore controlled critical section in main.
@@ -94,8 +130,7 @@ static std::atomic_flag process_running;
 BOOL WINAPI consoleSignalHandler(DWORD signal) {
   if (!process_running.test()) { exit(0); return TRUE; }
   if (signal == CTRL_C_EVENT || signal == CTRL_BREAK_EVENT) {
-    flow_controller_running.clear();
-    flow_controller_running.notify_all();
+    requestLifecycleChange(minifi::ShutdownType::SHUTDOWN, 0);
     process_running.wait(true);
     return TRUE;
   }
@@ -103,15 +138,13 @@ BOOL WINAPI consoleSignalHandler(DWORD signal) {
 }
 
 void SignalExitProcess() {
-  flow_controller_running.clear();
-  flow_controller_running.notify_all();
+  requestLifecycleChange(minifi::ShutdownType::SHUTDOWN, 0);
 }
 #endif
 
 void sigHandler(int signal) {
   if (signal == SIGINT || signal == SIGTERM) {
-    flow_controller_running.clear();
-    flow_controller_running.notify_all();
+    requestLifecycleChange(minifi::ShutdownType::SHUTDOWN, 0);
   }
 }
 
@@ -176,6 +209,8 @@ void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, c
 }
 
 int main(int argc, char **argv) {
+  flow_controller_running.test_and_set();
+
   argparse::ArgumentParser argument_parser("Apache MiNiFi C++", minifi::AgentBuild::VERSION);
   argument_parser.add_argument("-p", "--property")
     .append()
@@ -290,36 +325,18 @@ int main(int argc, char **argv) {
 
   process_running.test_and_set();
 
-  std::atomic<bool> restart_token{false};
-  std::atomic<int32_t> exit_code{0};
-  std::mutex shutdown_request_mutex;
-  bool shutdown_requested = false;
   const auto request_shutdown = [&] (minifi::ShutdownType shutdown_type, std::optional<int32_t> shutdown_exit_code) {
-    std::lock_guard<std::mutex> lock(shutdown_request_mutex);
-    if (shutdown_requested) {
+    if (!requestLifecycleChange(shutdown_type, shutdown_exit_code.value_or(0))) {
       return;
     }
     if (shutdown_type == minifi::ShutdownType::SHUTDOWN) {
-      shutdown_requested = true;
-      restart_token = false;
-      exit_code = shutdown_exit_code.value_or(0);
-      flow_controller_running.clear();
-      flow_controller_running.notify_all();
       logger->log_info("Initiating shutdown...");
-      return;
-    }
-
-    if (!restart_token.exchange(true)) {
-      // only trigger if a restart is not already in progress (the flag was unset before the exchange)
-      flow_controller_running.clear();
-      flow_controller_running.notify_all();
+    } else {
       logger->log_info("Initiating restart...");
     }
   };
 
   do {
-    flow_controller_running.test_and_set();
-
     std::string prov_repo_class = "provenancerepository";
     std::string flow_repo_class = "flowfilerepository";
     std::string nifi_configuration_class_name = "adaptiveconfiguration";
@@ -513,15 +530,17 @@ int main(int argc, char **argv) {
     flow_repo = nullptr;
     prov_repo = nullptr;
   } while ([&] {
-    const auto restart_token_temp = restart_token.exchange(false);
-    if (restart_token_temp) {
-      logger->log_info("Restarting MiNiFi");
+    flow_controller_running.test_and_set();
+    auto expected = LifecycleRequest{.state = LifecycleState::RESTART_REQUESTED, .exit_code = 0};
+    if (!lifecycle_request.compare_exchange_strong(expected, LifecycleRequest{})) {
+      return false;
     }
-    return restart_token_temp;
+    logger->log_info("Restarting MiNiFi");
+    return true;
   }());
 
   process_running.clear();
   process_running.notify_all();
   logger->log_info("MiNiFi exit");
-  return exit_code;
+  return lifecycle_request.load().exit_code;
 }

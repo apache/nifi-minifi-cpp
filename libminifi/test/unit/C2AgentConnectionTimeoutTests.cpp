@@ -97,11 +97,11 @@ TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "Invalid C2 connection tim
   REQUIRE(shutdown_request_count_ == 0);
 }
 
-TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "C2 connection timeout shorter than the heartbeat period is increased",
+TEST_CASE_METHOD(C2AgentConnectionTimeoutTestFixture, "C2 connection timeout shorter than twice the heartbeat period is increased",
     "[c2connectiontimeout]") {
-  configuration_->set(Configuration::nifi_c2_connection_timeout, "50 ms");
+  configuration_->set(Configuration::nifi_c2_connection_timeout, "150 ms");
   startAgent();
-  REQUIRE(LogTestController::getInstance().contains("C2 connection timeout is less than the heartbeat period", 1s));
+  REQUIRE(LogTestController::getInstance().contains("C2 connection timeout is less than twice the heartbeat period", 1s));
   REQUIRE(LogTestController::getInstance().contains("Using 200ms as the C2 connection timeout", 1s));
 }
 
