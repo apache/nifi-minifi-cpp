@@ -201,7 +201,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   logger_->log_debug("Using {} as the heartbeat period", heart_beat_period_);
 
   c2_connection_timeout_ = parseTimeoutPeriod(configuration_, std::string{Configuration::nifi_c2_connection_timeout}, logger_);
-  if (c2_connection_timeout_ && *c2_connection_timeout_ <= 2 * heart_beat_period_) {
+  if (c2_connection_timeout_ && *c2_connection_timeout_ < 2 * heart_beat_period_) {
     logger_->log_warn(
         "C2 connection timeout is less than twice the heartbeat period: C2 connection timeout={}, heartbeat period={}. Adjusting it to be twice the "
         "heartbeat period",
