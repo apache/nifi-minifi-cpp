@@ -39,9 +39,7 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
   };
 
   if (nullptr != monitor_) {
-    monitor_->executeOnComponent("FlowController", [&serialized](StateController& component) {
-      serialized.push_back({.name = "runStatus", .value = (component.isRunning() ? "RUNNING" : "STOPPED")});
-    });
+    serialized.push_back({.name = "runStatus", .value = (monitor_->isRunning() ? "RUNNING" : "STOPPED")});
   }
 
   SerializedResponseNode uri;
@@ -132,10 +130,8 @@ std::vector<SerializedResponseNode> FlowInformation::serialize() {
 std::vector<PublishedMetric> FlowInformation::calculateMetrics() {
   std::vector<PublishedMetric> metrics = connection_store_.calculateConnectionMetrics("FlowInformation");
   if (nullptr != monitor_) {
-    monitor_->executeOnComponent("FlowController", [&metrics](StateController& component) {
-      metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0),
-        {{"component_uuid", component.getComponentUUID().to_string()}, {"component_name", component.getComponentName()}, {"metric_class", "FlowInformation"}}});
-    });
+    metrics.push_back({"is_running", (monitor_->isRunning() ? 1.0 : 0.0),
+      {{"component_uuid", monitor_->getComponentUUID().to_string()}, {"component_name", monitor_->getComponentName()}, {"metric_class", "FlowInformation"}}});
   }
 
   for (const auto& processor : processors_) {

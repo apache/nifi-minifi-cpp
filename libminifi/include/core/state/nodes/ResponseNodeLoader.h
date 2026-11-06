@@ -57,6 +57,7 @@ class ResponseNodeLoaderImpl : public ResponseNodeLoader {
   std::vector<SharedResponseNode> getComponentMetricsNodes(const std::string& metrics_class) const;
   std::expected<SharedResponseNode, std::string> getSystemMetricsNode(const std::string& clazz);
   std::vector<SharedResponseNode> getResponseNodes(const std::string& clazz);
+  void initializeSystemMetricsNode(const SharedResponseNode& response_node) const;
   void initializeRepositoryMetrics(const SharedResponseNode& response_node) const;
   void initializeQueueMetrics(const SharedResponseNode& response_node) const;
   void initializeAgentIdentifier(const SharedResponseNode& response_node) const;
@@ -71,11 +72,9 @@ class ResponseNodeLoaderImpl : public ResponseNodeLoader {
   mutable std::mutex root_mutex_;
   mutable std::mutex component_metrics_mutex_;
   mutable std::mutex system_metrics_mutex_;
-  mutable std::mutex initialization_mutex_;
   core::ProcessGroup* root_{};
   std::unordered_map<std::string, std::vector<SharedResponseNode>> component_metrics_;
   std::unordered_map<std::string, SharedResponseNode> system_metrics_;
-  std::unordered_set<std::string> initialized_metrics_;
   std::shared_ptr<Configure> configuration_;
   std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources_;
   std::shared_ptr<core::FlowConfiguration> flow_configuration_;

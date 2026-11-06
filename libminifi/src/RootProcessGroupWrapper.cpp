@@ -25,24 +25,19 @@ void RootProcessGroupWrapper::updatePropertyValue(const std::string& processor_n
 }
 
 std::string RootProcessGroupWrapper::getName() const {
-  if (root_ != nullptr) {
-    return root_->getName();
-  }
-  return "";
+  return component_cache_.getIdentity().name;
 }
 
 utils::Identifier RootProcessGroupWrapper::getComponentUUID() const {
-  if (!root_) {
-    return {};
-  }
-  return root_->getUUID();
+  return component_cache_.getIdentity().uuid;
 }
 
 std::string RootProcessGroupWrapper::getVersion() const {
-  if (root_ != nullptr) {
-    return std::to_string(root_->getVersion());
-  }
-  return "0";
+  return component_cache_.getIdentity().version;
+}
+
+std::vector<state::ComponentState> RootProcessGroupWrapper::getProcessorStates() const {
+  return component_cache_.getProcessorStates();
 }
 
 void RootProcessGroupWrapper::setNewRoot(std::unique_ptr<core::ProcessGroup> new_root) {
@@ -55,9 +50,11 @@ void RootProcessGroupWrapper::setNewRoot(std::unique_ptr<core::ProcessGroup> new
   if (controller_socket_protocol_) {
     controller_socket_protocol_->setRoot(nullptr);
   }
+  component_cache_.setRoot(nullptr);
   backup_root_ = std::move(root_);
   root_ = std::move(new_root);
   processor_to_controller_.clear();
+  component_cache_.setRoot(root_.get());
   if (metrics_publisher_store_) { metrics_publisher_store_->loadMetricNodes(root_.get()); }
   if (controller_socket_protocol_) {
     controller_socket_protocol_->setRoot(root_.get());
@@ -66,9 +63,17 @@ void RootProcessGroupWrapper::setNewRoot(std::unique_ptr<core::ProcessGroup> new
 
 void RootProcessGroupWrapper::restoreBackup() {
   if (metrics_publisher_store_) { metrics_publisher_store_->clearMetricNodes(); }
+  if (controller_socket_protocol_) {
+    controller_socket_protocol_->setRoot(nullptr);
+  }
+  component_cache_.setRoot(nullptr);
   root_ = std::move(backup_root_);
   processor_to_controller_.clear();
+  component_cache_.setRoot(root_.get());
   if (metrics_publisher_store_) { metrics_publisher_store_->loadMetricNodes(root_.get()); }
+  if (controller_socket_protocol_) {
+    controller_socket_protocol_->setRoot(root_.get());
+  }
 }
 
 void RootProcessGroupWrapper::clearBackup() {
@@ -140,27 +145,6 @@ void RootProcessGroupWrapper::clearConnection(const std::string &connection) {
   }
 }
 
-std::optional<std::vector<state::StateController*>> RootProcessGroupWrapper::getAllProcessorControllers(
-    const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
-  if (!root_) {
-    return std::nullopt;
-  }
-  std::vector<state::StateController*> controllerVec;
-  std::vector<core::Processor*> processorVec;
-  root_->getAllProcessors(processorVec);
-
-  for (const auto& processor : processorVec) {
-    // reference to the existing or newly created controller
-    auto& controller = processor_to_controller_[processor->getUUID()];
-    if (!controller) {
-      controller = controllerFactory(*processor);
-    }
-    controllerVec.push_back(controller.get());
-  }
-
-  return controllerVec;
-}
-
 state::StateController* RootProcessGroupWrapper::getProcessorController(const std::string& id_or_name,
     const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
   if (!root_) {
@@ -170,7 +154,8 @@ state::StateController* RootProcessGroupWrapper::getProcessorController(const st
   return utils::Identifier::parse(id_or_name)
     | utils::andThen([this](utils::Identifier id) { return utils::optional_from_ptr(root_->findProcessorById(id)); })
     | utils::orElse([this, &id_or_name] { return utils::optional_from_ptr(root_->findProcessorByName(id_or_name)); })
-    | utils::transform([this, &controllerFactory](gsl::not_null<core::Processor*> proc) -> gsl::not_null<state::ProcessorController*> {
+    | utils::transform([this, &controllerFactory](core::Processor* proc) -> gsl::not_null<state::ProcessorController*> {
+      gsl_Expects(proc != nullptr);
       return utils::optional_from_ptr(processor_to_controller_[proc->getUUID()].get())
           | utils::valueOrElse([this, proc, &controllerFactory] {
             return gsl::make_not_null((processor_to_controller_[proc->getUUID()] = controllerFactory(*proc)).get());

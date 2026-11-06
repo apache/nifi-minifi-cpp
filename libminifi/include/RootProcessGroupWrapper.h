@@ -32,6 +32,8 @@
 #include "minifi-cpp/utils/gsl.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "c2/ControllerSocketProtocol.h"
+#include "core/state/UpdateController.h"
+#include "core/state/ComponentStateCache.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -46,12 +48,15 @@ class RootProcessGroupWrapper {
     if (metrics_publisher_store_) {
       metrics_publisher_store_->clearMetricNodes();
     }
+    component_cache_.setRoot(nullptr);
   }
 
   void updatePropertyValue(const std::string& processor_name, const std::string& property_name, const std::string& property_value);
   std::string getName() const;
   utils::Identifier getComponentUUID() const;
   std::string getVersion() const;
+
+  std::vector<state::ComponentState> getProcessorStates() const;
   const core::ProcessGroup* getRoot() const { return root_.get(); }
   void setNewRoot(std::unique_ptr<core::ProcessGroup> new_root);
   void restoreBackup();
@@ -74,9 +79,6 @@ class RootProcessGroupWrapper {
   state::StateController* getProcessorController(const std::string& id_or_name,
       const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory);
 
-  std::optional<std::vector<state::StateController*>> getAllProcessorControllers(
-          const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory);
-
   void setControllerSocketProtocol(c2::ControllerSocketProtocol* controller_socket_protocol) {
     controller_socket_protocol_ = controller_socket_protocol;
   }
@@ -91,6 +93,8 @@ class RootProcessGroupWrapper {
   std::unordered_map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
   std::chrono::milliseconds shutdown_check_interval_{1000};
   c2::ControllerSocketProtocol* controller_socket_protocol_{};
+  state::ComponentStateCache component_cache_;
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RootProcessGroupWrapper>::getLogger();
 };
 

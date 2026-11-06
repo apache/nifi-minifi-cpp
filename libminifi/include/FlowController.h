@@ -106,7 +106,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   }
 
   void executeOnComponent(const std::string& id_or_name, std::function<void(state::StateController&)> func) override;
-  void executeOnAllComponents(std::function<void(state::StateController&)> func) override;
+  std::vector<state::ComponentState> getComponentStates() const override;
 
   int16_t clearConnection(const std::string &connection) override;
 
@@ -167,7 +167,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::unique_ptr<core::ProcessGroup> loadInitialFlow();
 
   void loadFlowRepo();
-  std::vector<state::StateController*> getAllComponents();
   state::StateController* getComponent(const std::string& id_or_name);
   gsl::not_null<std::unique_ptr<state::ProcessorController>> createController(core::Processor& processor);
 

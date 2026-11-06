@@ -271,17 +271,14 @@ void ControllerSocketProtocol::writeQueueSizesResponse(io::BaseStream &stream) {
 }
 
 void ControllerSocketProtocol::writeComponentsResponse(io::BaseStream &stream) {
-  std::vector<std::pair<std::string, bool>> components;
-  update_sink_.executeOnAllComponents([&components](state::StateController& component) {
-    components.emplace_back(component.getComponentName(), component.isRunning());
-  });
+  const auto components = update_sink_.getComponentStates();
   io::BufferStream resp;
   auto op = static_cast<uint8_t>(Operation::describe);
   resp.write(&op, 1);
   resp.write(gsl::narrow<uint16_t>(components.size()));
-  for (const auto& [name, is_running] : components) {
-    resp.write(name);
-    resp.write(is_running ? "true" : "false");
+  for (const auto& component : components) {
+    resp.write(component.name);
+    resp.write(component.running ? "true" : "false");
   }
 
   stream.write(resp.getBuffer());
