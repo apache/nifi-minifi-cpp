@@ -46,6 +46,7 @@
 #include "minifi-cpp/core/state/nodes/MetricsBase.h"
 #include "core/state/UpdateController.h"
 #include "c2/C2Agent.h"
+#include "RequestShutdown.h"
 #include "CronDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "properties/Configure.h"
@@ -69,7 +70,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
                  std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store = nullptr,
-                 std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(), std::function<void()> request_restart = []{},
+                 std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(),
+                 RequestShutdownCallback request_shutdown = [](ShutdownType, std::optional<int32_t>){},
                  utils::file::AssetManager* asset_manager = {}, core::BulletinStore* bulletin_store = {});
 
   ~FlowController() override;

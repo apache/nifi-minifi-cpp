@@ -330,6 +330,19 @@ class LinuxContainer(ContainerProtocol):
         except Exception:
             return False
 
+    @property
+    def exit_code(self) -> int:
+        if not self.container:
+            return -1
+        try:
+            self.container.reload()
+            return self.container.attrs["State"].get("ExitCode", -1)
+        except docker.errors.NotFound:
+            self.container = None
+            return -1
+        except Exception:
+            return -1
+
     def get_number_of_files(self, directory_path: str) -> int:
         if not self.container:
             logger.warning("Container not running")

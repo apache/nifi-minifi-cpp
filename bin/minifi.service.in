@@ -12,6 +12,7 @@ RestartSec=3
 KillSignal=SIGTERM
 TimeoutStopSec=20
 RestartForceExitStatus=3
+RestartPreventExitStatus=90
 
 [Install]
 WantedBy=multi-user.target

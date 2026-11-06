@@ -60,6 +60,8 @@ class IntegrationBase {
         key_dir{std::move(other.key_dir)},
         state_dir{std::move(other.state_dir)},
         restart_requested_count_{other.restart_requested_count_.load()},
+        shutdown_requested_count_{other.shutdown_requested_count_.load()},
+        last_shutdown_exit_code_{other.last_shutdown_exit_code_.load()},
         home_path_{std::move(other.home_path_)},
         flow_config_path_{std::move(other.flow_config_path_)}
   {}
@@ -75,6 +77,8 @@ class IntegrationBase {
     key_dir = std::move(other.key_dir);
     state_dir = std::move(other.state_dir);
     restart_requested_count_ = other.restart_requested_count_.load();
+    shutdown_requested_count_ = other.shutdown_requested_count_.load();
+    last_shutdown_exit_code_ = other.last_shutdown_exit_code_.load();
     home_path_ = std::move(other.home_path_);
     flow_config_path_ = std::move(other.flow_config_path_);
     return *this;
@@ -142,6 +146,8 @@ class IntegrationBase {
   std::filesystem::path key_dir;
   std::filesystem::path state_dir;
   std::atomic<int> restart_requested_count_{0};
+  std::atomic<int> shutdown_requested_count_{0};
+  std::atomic<int32_t> last_shutdown_exit_code_{0};
   std::optional<std::filesystem::path> home_path_;
   FlowConfigPath flow_config_path_;
 };

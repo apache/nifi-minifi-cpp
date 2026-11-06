@@ -55,3 +55,23 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
     Then the MiNiFi C2 server logs contain the following message: "acknowledged with a state of FULLY_APPLIED(DONE)" in less than 30 seconds
     And a single file with the content "test" is placed in the "/tmp/output" directory in less than 10 seconds
     And the Minifi logs do not contain the following message: "Failed to parse json response: The document is empty. at 0" after 0 seconds
+
+  Scenario: MiNiFi shuts down when the connection to the MiNiFi C2 server is lost
+    Given a GenerateFlowFile processor
+    And C2 is enabled in MiNiFi
+    And MiNiFi configuration "nifi.c2.connection.timeout" is set to "10 sec"
+    And a MiNiFi C2 server is started
+    When the MiNiFi instance starts up
+    Then the MiNiFi C2 server logs contain the following message: "acknowledged with a state of FULLY_APPLIED(DONE)" in less than 30 seconds
+    And the Minifi logs do not contain the following message: "C2 connection timeout exceeded, shutting down..." after 15 seconds
+    When the MiNiFi C2 server is stopped
+    Then MiNiFi exits with exit code 90 in less than 60 seconds
+    And the logs of the exited Minifi container contain the following message: "C2 connection timeout exceeded, shutting down..."
+
+  Scenario: MiNiFi shuts down when the connection to the MiNiFi C2 server is not available
+    Given a GenerateFlowFile processor
+    And C2 is enabled in MiNiFi
+    And MiNiFi configuration "nifi.c2.connection.timeout" is set to "10 sec"
+    When the MiNiFi instance starts up
+    Then MiNiFi exits with exit code 90 in less than 60 seconds
+    And the logs of the exited Minifi container contain the following message: "C2 connection timeout exceeded, shutting down..."
