@@ -71,6 +71,8 @@ add_custom_target(shellcheck
     COMMAND ${CMAKE_SOURCE_DIR}/run_shellcheck.sh ${CMAKE_SOURCE_DIR})
 endif(NOT WIN32)
 
+include(ApacheRAT)
+
 if (MINIFI_STATIC_ANALYSIS_ONLY)
     return()
 endif()

@@ -1,0 +1,48 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+**/*.patch
+**/__init__.py
+**/*.asc
+extensions/procfs/tests/mockprocfs_t0/624372/stat
+extensions/procfs/tests/mockprocfs_t0/diskstats
+extensions/procfs/tests/mockprocfs_t0/meminfo
+extensions/procfs/tests/mockprocfs_t0/net/dev
+extensions/procfs/tests/mockprocfs_t0/stat
+extensions/procfs/tests/mockprocfs_t1/624372/stat
+extensions/procfs/tests/mockprocfs_t1/diskstats
+extensions/procfs/tests/mockprocfs_t1/meminfo
+extensions/procfs/tests/mockprocfs_t1/net/dev
+extensions/procfs/tests/mockprocfs_t1/stat
+extensions/sftp/tests/resources/known_hosts
+extensions/sftp/tests/resources/known_hosts_mismatch
+extensions/standard-processors/tests/minifi-tmpfile.txt
+libminifi/test/resources/TestTailFile.txt
+libminifi/test/resources/certs/alice_encryption_pass
+libminifi/test/resources/cn.ckey.pem
+libminifi/test/resources/cn.crt.pem
+libminifi/test/resources/cn.pass
+libminifi/test/resources/encrypted.cn.pass
+libminifi/test/resources/encrypted.key.pem
+packaging/rpm/expected-rpm-contents.in
+cmake/FindBash.cmake
+cmake/FindMessageCompiler.cmake
+cmake/FindPatch.cmake
+extensions/kubernetes/tests/features/resources/metrics-server.dependencies.yml
+libminifi/test/asset/.state
+libminifi/test/resources/decrypted.config.json.reformatted
+libminifi/test/resources/decrypted.config.yml.reformatted
+thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
