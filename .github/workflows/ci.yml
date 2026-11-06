@@ -676,7 +676,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 5
   linters:
-    name: "C++ lint + Shellcheck + Ruff + Cargo fmt check + Clippy check"
+    name: "Static analysis"
     if: >-
       github.event_name != 'push' ||
       github.repository != 'apache/nifi-minifi-cpp' ||
@@ -690,15 +690,20 @@ jobs:
       - id: install_deps
         run: pipx install ruff
 
+      - id: cmake
+        run: mkdir build && cd build && cmake -DMINIFI_STATIC_ANALYSIS_ONLY=ON ..
+
       - id: cpp_lint
         name: C++ linter
         continue-on-error: true
-        run: python3 thirdparty/google-styleguide/run_linter.py -q -i controller/ core-framework/ encrypt-config/ extension-framework/ extensions/ libminifi/ minifi-api/ minifi_main/
+        run: make linter
+        working-directory: build
 
       - id: shellcheck
         name: Shellcheck
         continue-on-error: true
-        run: ./run_shellcheck.sh .
+        run: make shellcheck
+        working-directory: build
 
       - id: python_check
         name: Python check

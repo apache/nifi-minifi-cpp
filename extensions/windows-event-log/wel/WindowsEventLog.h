@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "core/Core.h"
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "core/ProcessorImpl.h"
 #include "core/ProcessSession.h"
 #include "utils/OsUtils.h"

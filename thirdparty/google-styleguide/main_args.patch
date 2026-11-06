@@ -1,0 +1,26 @@
+diff --git a/cpplint.py b/cpplint.py
+index 7abd2ba..60ced35 100755
+--- a/cpplint.py
++++ b/cpplint.py
+@@ -7347,10 +7347,6 @@ def FlagCxxHeaders(filename, clean_lines, linenum, error):
+             f"<{include.group(1)}> is an unapproved C++11 header.",
+         )
+ 
+-    # filesystem is the only unapproved C++17 header
+-    if include and include.group(1) == "filesystem":
+-        error(filename, linenum, "build/c++17", 5, "<filesystem> is an unapproved C++17 header.")
+-
+ 
+ def ProcessFileData(filename, file_extension, lines, error, extra_check_functions=None):
+     """Performs lint checks and reports any errors to the given error function.
+@@ -7856,8 +7852,8 @@ def _IsParentOrSame(parent, child):
+     return child == os.path.join(prefix, child_suffix)
+ 
+ 
+-def main():
+-    filenames = ParseArguments(sys.argv[1:])
++def main(args):
++    filenames = ParseArguments(args)
+     backup_err = sys.stderr
+     try:
+         # Change stderr to write with replacement characters so we don't die

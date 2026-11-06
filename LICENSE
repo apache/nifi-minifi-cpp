@@ -204,7 +204,6 @@
 APACHE NIFI - MINIFI C++ SUBCOMPONENTS:
 
 The Apache NiFi - MiNiFi C++ project contains subcomponents licensed under the Apache License, Version 2.0:
-This product bundles 'Simple-Windows-Posix-Semaphore' which is available under an ALv2 license
 This project bundles 'RocksDB' which is available under an ALv2 license
 This project bundles 'AWS SDK for C++' which is available under an ALv2 license
 This project bundles 'C++ Client Libraries for Google Cloud Services' which is available under an ALv2 license

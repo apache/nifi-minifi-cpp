@@ -26,6 +26,8 @@ die()
 }
 
 _positionals=()
+_arg_minifi_version=
+_arg_tags_to_run=
 _arg_image_tag_prefix=
 _arg_tags_to_exclude=
 _arg_parallel_processes=3

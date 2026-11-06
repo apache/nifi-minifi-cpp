@@ -43,7 +43,7 @@
 #include "wel/WindowsEventLog.h"
 #include "wel/EventPath.h"
 #include "minifi-cpp/FlowFileRecord.h"
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "pugixml.hpp"
 #include "utils/Enum.h"
 #include "minifi-cpp/utils/Export.h"

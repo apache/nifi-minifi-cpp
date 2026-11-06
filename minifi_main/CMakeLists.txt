@@ -58,11 +58,6 @@ if(CUSTOM_MALLOC_LIB)
     target_link_libraries(minifiexe ${CUSTOM_MALLOC_LIB})
 endif()
 
-if (WIN32)
-    include_directories(SYSTEM "../thirdparty/Simple-Windows-Posix-Semaphore")
-    target_link_libraries(minifiexe semaphore)
-endif()
-
 get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 include(GetArgparse)
 target_link_libraries(minifiexe spdlog libsodium::libsodium gsl-lite::gsl-lite argparse::argparse core-minifi)

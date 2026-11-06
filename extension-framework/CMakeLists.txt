@@ -15,7 +15,7 @@ add_minifi_library(minifi-extension-framework STATIC ${SOURCES})
 target_include_directories(minifi-extension-framework PUBLIC include)
 target_link_libraries(minifi-extension-framework PUBLIC minifi-api)
 
-list(APPEND CORE_LIBRARIES ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite::gsl-lite range-v3::range-v3 asio::asio magic_enum::magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON)
+list(APPEND CORE_LIBRARIES ZLIB::ZLIB concurrentqueue::concurrentqueue rapidjson spdlog Threads::Threads gsl-lite::gsl-lite range-v3::range-v3 asio::asio magic_enum::magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl)
 if(NOT WIN32)
     list(APPEND CORE_LIBRARIES OSSP::libuuid++)
 endif()

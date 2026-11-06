@@ -28,7 +28,7 @@
 #include <condition_variable>
 
 #include "minifi-cpp/core/logging/Logger.h"
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "utils/MinifiConcurrentQueue.h"
 
 namespace org::apache::nifi::minifi::utils {

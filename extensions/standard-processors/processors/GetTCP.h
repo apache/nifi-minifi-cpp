@@ -33,7 +33,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/PropertyValidator.h"
 #include "core/Core.h"
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"

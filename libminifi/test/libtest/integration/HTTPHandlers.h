@@ -31,7 +31,7 @@
 #include "ServerAwareHandler.h"
 #include "c2/C2Payload.h"
 #include "civetweb.h"
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "minifi-cpp/properties/Configure.h"
 #include "properties/Configure.h"
 #include "rapidjson/document.h"

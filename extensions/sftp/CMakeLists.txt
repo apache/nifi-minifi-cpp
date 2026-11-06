@@ -32,6 +32,6 @@ add_minifi_library(minifi-sftp SHARED ${SOURCES})
 set_target_properties(minifi-sftp PROPERTIES HAS_CUSTOM_INITIALIZER TRUE)
 
 target_link_libraries(minifi-sftp ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-sftp Libssh2::libssh2 RapidJSON)
+target_link_libraries(minifi-sftp Libssh2::libssh2 rapidjson)
 
 register_extension(minifi-sftp "SFTP EXTENSIONS" SFTP "This enables SFTP support" "extensions/sftp/tests")

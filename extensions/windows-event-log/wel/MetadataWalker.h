@@ -37,7 +37,7 @@
 #include "minifi-cpp/FlowFileRecord.h"
 #include "WindowsEventLog.h"
 
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "pugixml.hpp"
 #include "utils/RegexUtils.h"
 
