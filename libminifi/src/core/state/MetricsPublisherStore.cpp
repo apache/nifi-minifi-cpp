@@ -59,10 +59,11 @@ void MetricsPublisherStore::loadMetricNodes(core::ProcessGroup* root) {
 }
 
 void MetricsPublisherStore::clearMetricNodes() {
+  response_node_loader_->clearConfigRoot();
+  // clearConfigRoot() must be before the clearMetricNodes() calls, otherwise a reader could create and cache a system metrics node bound to the old root
   for (const auto& [name, publisher]: metrics_publishers_) {
     publisher->clearMetricNodes();
   }
-  response_node_loader_->clearConfigRoot();
 }
 
 std::weak_ptr<state::MetricsPublisher> MetricsPublisherStore::getMetricsPublisher(const std::string& name) const {

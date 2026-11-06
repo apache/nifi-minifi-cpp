@@ -404,14 +404,12 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
-  if (updating_.isUpdating()) {
-    return;
-  }
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  for (auto* component: getAllComponents()) {
-    func(*component);
-  }
+std::vector<state::ComponentState> FlowController::getComponentStates() const {
+  // Deliberately does not lock mutex_: this is called from metrics threads while a metrics publisher's mutex
+  // is held, and locking mutex_ here would invert the lock order against the flow update path.
+  auto states = root_wrapper_.getProcessorStates();
+  states.push_back({.name = getComponentName(), .uuid = root_wrapper_.getComponentUUID(), .running = isRunning()});
+  return states;
 }
 
 void FlowController::executeOnComponent(const std::string &id_or_name, std::function<void(state::StateController&)> func) {
@@ -424,15 +422,6 @@ void FlowController::executeOnComponent(const std::string &id_or_name, std::func
   } else {
     logger_->log_error("Could not get execute requested callback for component \"{}\", because component was not found", id_or_name);
   }
-}
-
-std::vector<state::StateController*> FlowController::getAllComponents() {
-  if (auto components = root_wrapper_.getAllProcessorControllers([this](core::Processor& p) { return createController(p); })) {
-    components->push_back(this);
-    return *components;
-  }
-
-  return {this};
 }
 
 state::StateController* FlowController::getComponent(const std::string& id_or_name) {

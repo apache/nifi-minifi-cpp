@@ -219,6 +219,8 @@ std::expected<void, std::string> FlowStatusBuilder::addInstanceStatus(rapidjson:
     bulletins = bulletin_store_->getBulletins(std::chrono::minutes(5));
   }
 
+  std::lock_guard<std::mutex> guard(root_mutex_);
+
   if (options.contains(FlowStatusQueryOption::health)) {
     instance_status.AddMember("instanceHealth", rapidjson::Value(rapidjson::kObjectType), allocator);
     uint64_t queued_count = 0;

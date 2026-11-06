@@ -60,26 +60,19 @@ class StatefulIntegrationTest : public IntegrationBase {
      * second is the controller itself.
      * Added here some assertions to make it clear. In case any of these fail without changing the corresponding yml file,
      * that most probably means a breaking change. */
-    size_t controllerVecIdx = 0;
+    const auto components = fc.getComponentStates();
+    REQUIRE(components.size() == 2);
+    REQUIRE(components[0].name == "statefulProcessor");
+    REQUIRE(components[1].name == "FlowController");
 
-    fc.executeOnAllComponents([this, &controllerVecIdx](minifi::state::StateController& component){
-      if (controllerVecIdx == 1) {
-        REQUIRE(component.getComponentName() == "FlowController");
-      } else if (controllerVecIdx == 0) {
-        REQUIRE(component.getComponentName() == "statefulProcessor");
-        // set hooks
-        const auto processController = dynamic_cast<ProcessorController*>(&component);
-        REQUIRE(processController != nullptr);
-        stateful_processor_ = &processController->getProcessor();
-        REQUIRE(stateful_processor_);
-        stateful_processor_.get().setHooks(on_schedule_hook_, on_trigger_hooks_);
-      }
-
-      ++controllerVecIdx;
+    fc.executeOnComponent("statefulProcessor", [this](minifi::state::StateController& component){
+      // set hooks
+      const auto processController = dynamic_cast<ProcessorController*>(&component);
+      REQUIRE(processController != nullptr);
+      stateful_processor_ = &processController->getProcessor();
+      stateful_processor_.get().setHooks(on_schedule_hook_, on_trigger_hooks_);
     });
-
-    // check controller vector size
-    REQUIRE(controllerVecIdx == 2);
+    REQUIRE(stateful_processor_);
   }
 
   void runAssertions() override {
