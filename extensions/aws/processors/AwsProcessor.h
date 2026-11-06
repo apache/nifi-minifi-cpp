@@ -130,7 +130,7 @@ class AwsProcessor : public core::ProcessorImpl {  // NOLINT(cppcoreguidelines-s
       .withValidator(core::StandardPropertyValidators::NON_BLANK_VALIDATOR)
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
-      .withDescription("Proxy host name or IP. Use https:// prefix for HTTPS proxy. DEPRECATED, please use Proxy Configuration Service instead.")
+      .withDescription("Proxy host name or IP. DEPRECATED, please use Proxy Configuration Service instead.")
       .build();
   EXTENSIONAPI static constexpr auto ProxyPort = core::PropertyDefinitionBuilder<>::createProperty("Proxy Port")
       .withDescription("The port number of the proxy host. DEPRECATED, please use Proxy Configuration Service instead.")

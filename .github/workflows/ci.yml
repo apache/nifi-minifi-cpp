@@ -575,6 +575,10 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - id: dry_run
+        name: Behave dry run
+        working-directory: ./build
+        run: make docker-verify-modular-dry-run
       - id: test
         name: Docker Verify
         working-directory: ./build
@@ -622,6 +626,10 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-virtualenv
+      - id: dry_run
+        name: Behave dry run
+        working-directory: ./build
+        run: ../docker/DryRunBehaveTests.sh ../minifi_rust
       - id: test
         name: Docker Verify
         working-directory: ./minifi_rust

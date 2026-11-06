@@ -17,7 +17,7 @@ import logging
 import os
 from pathlib import Path
 
-from elastic_base_container import ElasticBaseContainer
+from containers.elastic_base_container import ElasticBaseContainer
 from minifi_behave.containers.file import File
 from minifi_behave.containers.host_file import HostFile
 from minifi_behave.core.minifi_test_context import MinifiTestContext
