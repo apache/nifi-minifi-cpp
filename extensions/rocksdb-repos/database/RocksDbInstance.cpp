@@ -180,6 +180,12 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
       logger_->log_error("Couldn't query database '{}' for options: '{}'", db_name_, latest_option_status.ToString());
       return std::nullopt;
     }
+    if (mode_ == RocksDbMode::ReadWrite) {
+      // The column families are taken from the persisted options, but we create them on demand
+      // (see getOrCreateColumnFamily), so one that the options mention while the database itself
+      // does not have it yet must not fail the open of the whole database.
+      db_options_.create_missing_column_families = true;
+    }
     std::vector<rocksdb::ColumnFamilyHandle*> column_handles;
     switch (mode_) {
       case RocksDbMode::ReadWrite:

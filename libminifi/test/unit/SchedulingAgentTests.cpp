@@ -78,7 +78,7 @@ class SchedulingAgentTestFixture {
   }
 
  protected:
-  std::shared_ptr<core::Repository> test_repo_ = std::make_shared<TestThreadedRepository>();
+  std::shared_ptr<provenance::ProvenanceRepository> test_repo_ = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::ContentRepository> content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
 
   TestController test_controller_;

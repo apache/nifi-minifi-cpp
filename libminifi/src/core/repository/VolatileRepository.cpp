@@ -78,7 +78,7 @@ bool VolatileRepository::Put(const std::string& key, const uint8_t *buf, size_t 
   return true;
 }
 
-bool VolatileRepository::MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>>& data) {
+bool VolatileRepository::MultiPut(const EntryStreams& data) {
   for (const auto& item : data) {
     if (!Put(item.first, reinterpret_cast<const uint8_t*>(item.second->getBuffer().data()), item.second->size())) {
       return false;

@@ -52,7 +52,7 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
   using org::apache::nifi::minifi::test::utils::verifyEventHappenedInPollTime;
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::ConfigureImpl>();
 
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
+  auto test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
   const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestControllerServices.yml";
