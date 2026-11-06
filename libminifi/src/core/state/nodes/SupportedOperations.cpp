@@ -89,9 +89,9 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
     case minifi::c2::Operation::stop: {
       addProperty(properties, "c2");
       if (monitor_) {
-        monitor_->executeOnAllComponents([&properties](StateController& component){
-          addProperty(properties, component.getComponentUUID().to_string());
-        });
+        for (const auto& component : monitor_->getComponentStates()) {
+          addProperty(properties, component.uuid.to_string());
+        }
       }
       break;
     }

@@ -44,10 +44,6 @@ ResponseNodeLoaderImpl::ResponseNodeLoaderImpl(std::shared_ptr<Configure> config
 
 void ResponseNodeLoaderImpl::clearConfigRoot() {
   {
-    std::lock_guard<std::mutex> guard(initialization_mutex_);
-    initialized_metrics_.clear();
-  }
-  {
     std::lock_guard<std::mutex> guard(system_metrics_mutex_);
     system_metrics_.clear();
   }
@@ -110,8 +106,24 @@ std::expected<SharedResponseNode, std::string> ResponseNodeLoaderImpl::getSystem
   if (!response_node) {
     return std::unexpected{"Instantiated class '" + clazz + "' is not a ResponseNode!"};
   }
-  system_metrics_.emplace(clazz, gsl::make_not_null(response_node));
+  // Initialize before publishing to the cache, and while still holding system_metrics_mutex_, so that no
+  // other thread can ever get hold of a node whose dependencies have not been injected yet.
+  auto new_node = gsl::make_not_null(std::move(response_node));
+  initializeSystemMetricsNode(new_node);
+  system_metrics_.emplace(clazz, new_node);
   return system_metrics_.at(clazz);
+}
+
+void ResponseNodeLoaderImpl::initializeSystemMetricsNode(const SharedResponseNode& response_node) const {
+  initializeRepositoryMetrics(response_node);
+  initializeQueueMetrics(response_node);
+  initializeAgentIdentifier(response_node);
+  initializeAgentMonitor(response_node);
+  initializeAgentNode(response_node);
+  initializeAgentStatus(response_node);
+  initializeConfigurationChecksums(response_node);
+  initializeFlowInformation(response_node);
+  initializeAssetInformation(response_node);
 }
 
 std::vector<SharedResponseNode> ResponseNodeLoaderImpl::getResponseNodes(const std::string& clazz) {
@@ -246,28 +258,8 @@ void ResponseNodeLoaderImpl::initializeFlowInformation(const SharedResponseNode&
 
 std::vector<SharedResponseNode> ResponseNodeLoaderImpl::loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) {
   auto response_nodes = getResponseNodes(clazz);
-  if (response_nodes.empty()) {
-    if (root) {
-      logger_->log_error("No metric defined for {}", clazz);
-    }
-    return {};
-  }
-
-  std::lock_guard<std::mutex> guard(initialization_mutex_);
-  for (const auto& response_node : response_nodes) {
-    if (initialized_metrics_.contains(response_node->getName())) {
-      continue;
-    }
-    initializeRepositoryMetrics(response_node);
-    initializeQueueMetrics(response_node);
-    initializeAgentIdentifier(response_node);
-    initializeAgentMonitor(response_node);
-    initializeAgentNode(response_node);
-    initializeAgentStatus(response_node);
-    initializeConfigurationChecksums(response_node);
-    initializeFlowInformation(response_node);
-    initializeAssetInformation(response_node);
-    initialized_metrics_.insert(response_node->getName());
+  if (response_nodes.empty() && root) {
+    logger_->log_error("No metric defined for {}", clazz);
   }
   return response_nodes;
 }

@@ -84,25 +84,19 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
      * second is the controller itself.
      * Added here some assertions to make it clear. In case any of these fail without changing the corresponding yml file,
      * that most probably means a breaking change. */
-    size_t controllerVecIdx = 0;
+    const auto components = fc.getComponentStates();
+    REQUIRE(components.size() == 2);
+    REQUIRE(components[0].name == "kamikaze");
+    REQUIRE(components[1].name == "FlowController");
 
-    fc.executeOnAllComponents([&controllerVecIdx](minifi::state::StateController& component){
-      if (controllerVecIdx == 1) {
-        REQUIRE(component.getComponentName() == "FlowController");
-      } else if (controllerVecIdx == 0) {
-        REQUIRE(component.getComponentName() == "kamikaze");
-
-        auto process_controller = dynamic_cast<minifi::state::ProcessorController*>(&component);
-        REQUIRE(process_controller != nullptr);
-
-        process_controller->getProcessor().setSchedulingStrategy(minifi::core::SchedulingStrategy::EVENT_DRIVEN);
-      }
-
-      ++controllerVecIdx;
+    bool processor_found = false;
+    fc.executeOnComponent("kamikaze", [&processor_found](minifi::state::StateController& component){
+      auto process_controller = dynamic_cast<minifi::state::ProcessorController*>(&component);
+      REQUIRE(process_controller != nullptr);
+      process_controller->getProcessor().setSchedulingStrategy(minifi::core::SchedulingStrategy::EVENT_DRIVEN);
+      processor_found = true;
     });
-
-    // check controller vector size
-    REQUIRE(controllerVecIdx == 2);
+    REQUIRE(processor_found);
   }
 
   void runAssertions() override {
