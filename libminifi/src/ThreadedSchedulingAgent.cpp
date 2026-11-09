@@ -72,7 +72,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
   }
 
   auto state_storage = core::ProcessContextImpl::getStateStorage(logger_, controller_service_provider_, configure_);
-  auto process_context = std::make_shared<core::ProcessContextImpl>(*processor, controller_service_provider_, state_storage, repo_, flow_repo_, configure_, content_repo_);
+  auto process_context = std::make_shared<core::ProcessContextImpl>(*processor, controller_service_provider_, state_storage, provenance_repo_, flow_repo_, configure_, content_repo_);
 
   auto session_factory = std::make_shared<core::ProcessSessionFactoryImpl>(process_context);
 
@@ -81,7 +81,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
   ThreadedSchedulingAgent *agent = this;
   for (uint8_t i = 0; i < processor->getMaxConcurrentTasks(); i++) {
     processor->incrementActiveTasks();
-    auto thread_process_context = std::make_shared<core::ProcessContextImpl>(*processor, controller_service_provider_, state_storage, repo_, flow_repo_, configure_, content_repo_);
+    auto thread_process_context = std::make_shared<core::ProcessContextImpl>(*processor, controller_service_provider_, state_storage, provenance_repo_, flow_repo_, configure_, content_repo_);
     auto thread_session_factory = std::make_shared<core::ProcessSessionFactoryImpl>(thread_process_context);
     std::function<utils::TaskRescheduleInfo()> f_ex = [agent, processor, thread_process_context, thread_session_factory] () {
       return agent->run(processor, thread_process_context, thread_session_factory);

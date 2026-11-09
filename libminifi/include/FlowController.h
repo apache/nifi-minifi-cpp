@@ -67,7 +67,7 @@ class ProcessorController;
 
 class FlowController : public core::controller::ForwardingControllerServiceProvider,  public state::StateMonitor {
  public:
-  FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
+  FlowController(std::shared_ptr<provenance::ProvenanceRepository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
                  std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store = nullptr,
                  std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(),
@@ -76,7 +76,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   ~FlowController() override;
 
-  virtual std::shared_ptr<core::Repository> getProvenanceRepository() {
+  virtual std::shared_ptr<provenance::ProvenanceRepository> getProvenanceRepository() {
     return this->provenance_repo_;
   }
 
@@ -189,7 +189,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   // Thread pool for schedulers
   utils::ThreadPool thread_pool_;
   std::shared_ptr<Configure> configuration_;
-  std::shared_ptr<core::Repository> provenance_repo_;
+  std::shared_ptr<provenance::ProvenanceRepository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::shared_ptr<core::FlowConfiguration> flow_configuration_;
