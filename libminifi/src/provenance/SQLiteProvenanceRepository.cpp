@@ -400,8 +400,4 @@ class SQLiteProvenanceRepository : public core::ThreadedRepositoryImpl, public P
 
 REGISTER_RESOURCE_AS(SQLiteProvenanceRepository, InternalResource, ("SQLiteProvenanceRepository", "sqliteprovenancerepository"));
 
-void f() {
-  SQLiteProvenanceRepository x;
-}
-
 }  // namespace org::apache::nifi::minifi::provenance
