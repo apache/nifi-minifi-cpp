@@ -21,9 +21,11 @@
 #include <sqlite3.h>
 
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "core/ThreadedRepository.h"
@@ -60,10 +62,10 @@ class SQLiteProvenanceRepository : public core::ThreadedRepositoryImpl, public P
     friend class SQLiteProvenanceRepository;
    public:
     explicit EventCursor(uint64_t event_id, std::string key): event_id_(event_id), key_(std::move(key)) {}
-    explicit EventCursor(const std::string& cursor_str) {
+    explicit EventCursor(std::string_view cursor_str) {
       io::BufferStream stream{utils::string::from_hex(cursor_str)};
       stream.read(event_id_);
-      stream.read(key_);
+      stream.read(key_, io::LengthPrefixSize::_16BIT, std::numeric_limits<uint16_t>::max());
     }
     [[nodiscard]]
     std::string toString() const override {
@@ -225,11 +227,11 @@ class SQLiteProvenanceRepository : public core::ThreadedRepositoryImpl, public P
     return {};
   }
 
-  std::unique_ptr<Cursor> cursorFromString(std::optional<std::string> cursor_str) override {
-    if (cursor_str.has_value()) {
-      return std::make_unique<EventCursor>(cursor_str.value());
+  std::unique_ptr<Cursor> cursorFromString(std::string_view cursor_str) override {
+    if (cursor_str.empty()) {
+      return std::make_unique<EventCursor>(0, "");
     }
-    return std::make_unique<EventCursor>(0, "");
+    return std::make_unique<EventCursor>(cursor_str);
   }
 
   std::expected<std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>>, std::string> getEvents(size_t max_size, Cursor* cursor) override {
@@ -397,5 +399,9 @@ class SQLiteProvenanceRepository : public core::ThreadedRepositoryImpl, public P
 };
 
 REGISTER_RESOURCE_AS(SQLiteProvenanceRepository, InternalResource, ("SQLiteProvenanceRepository", "sqliteprovenancerepository"));
+
+void f() {
+  SQLiteProvenanceRepository x;
+}
 
 }  // namespace org::apache::nifi::minifi::provenance
