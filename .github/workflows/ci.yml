@@ -690,7 +690,9 @@ jobs:
       - id: install_deps
         run: |
           pipx install ruff && \
-          wget https://archive.apache.org/dist/creadur/apache-rat-0.18/apache-rat-0.18-bin.tar.gz -O ~/apache-rat-0.18-bin.tar.gz && tar -xzf ~/apache-rat-0.18-bin.tar.gz -C ~/
+          wget https://archive.apache.org/dist/creadur/apache-rat-0.18/apache-rat-0.18-bin.tar.gz -O ~/apache-rat-0.18-bin.tar.gz && \
+          echo "315b16536526838237c42b5e6b613d29adc77e25a6e44a866b2b7f8b162e03d3629d49c9faea86ceb864a36b2c42838b8ce43d6f2db544e961f2259e242748f4  $HOME/apache-rat-0.18-bin.tar.gz" | sha512sum -c - && \
+          tar -xzf ~/apache-rat-0.18-bin.tar.gz -C ~/
 
       - id: cmake
         run: mkdir build && cd build && cmake -DMINIFI_STATIC_ANALYSIS_ONLY=ON -DRAT_JAR=~/apache-rat-0.18/apache-rat-0.18.jar ..
@@ -698,13 +700,13 @@ jobs:
       - id: cpp_lint
         name: C++ linter
         continue-on-error: true
-        run: make linter
+        run: cmake --build . --target linter
         working-directory: build
 
       - id: shellcheck
         name: Shellcheck
         continue-on-error: true
-        run: make shellcheck
+        run: cmake --build . --target shellcheck
         working-directory: build
 
       - id: python_check
@@ -727,8 +729,7 @@ jobs:
       - id: apache_rat_check
         name: Apache RAT check
         continue-on-error: true
-        run: |
-          make rat
+        run: cmake --build . --target rat
         working-directory: build
 
       - name: Check Linter Statuses
