@@ -1,16 +1,7 @@
 <!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
-      http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+  SPDX-License-Identifier: Apache-2.0
+  SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+  SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 -->
 # Bidirectional Site-To-Site Configuration
 
@@ -28,7 +19,7 @@ Before we start setting up our MiNiFi-CPP instance we need to first setup our Ap
 
 First we must [download and install NiFi](https://nifi.apache.org/docs/nifi-docs/html/getting-started.html#downloading-and-installing-nifi) if you haven't done so already.
 
-As you can see from the screenshot below our contrived NiFi workflow example simply accepts data from MiNiFi, logs that data, and also writes that data back to MiNiFi. 
+As you can see from the screenshot below our contrived NiFi workflow example simply accepts data from MiNiFi, logs that data, and also writes that data back to MiNiFi.
 
 ![Apache NiFi Workflow](assets/Apache_NiFi_Workflow.png "Apache NiFi Workflow")
 
@@ -97,11 +88,11 @@ Remote Processing Groups:
 
 ## Conclusion
 
-After starting MiNiFi we can see that the connections going to both ```LogAttribute``` and ```ToMiNiFi``` both contain 24 flowfiles. Since both of the processors are stopped this makes perfect sense and validates that the data is flowing from MiNiFi to NiFi as expected. 
+After starting MiNiFi we can see that the connections going to both ```LogAttribute``` and ```ToMiNiFi``` both contain 24 flowfiles. Since both of the processors are stopped this makes perfect sense and validates that the data is flowing from MiNiFi to NiFi as expected.
 
 ![Apache NiFi Incoming Data](assets/Apache_NiFi_Incoming_Data.png "Apache NiFi Incoming Data")
 
-Now to validate that the flowfiles will flow back to MiNiFi we can start the ```ToMiNiFi``` output port and the connection queue should drain its flowfiles. 
+Now to validate that the flowfiles will flow back to MiNiFi we can start the ```ToMiNiFi``` output port and the connection queue should drain its flowfiles.
 
 ![Apache NiFi Outgoing Data](assets/Apache_NiFi_Outgoing_Data.png "Apache NiFi Outgoing Data")
 
