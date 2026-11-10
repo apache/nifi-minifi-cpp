@@ -30,8 +30,8 @@ endif()
 
 FetchContent_Declare(
         lmdb
-        URL      https://github.com/LMDB/lmdb/archive/refs/tags/LMDB_1.0.1.tar.gz
-        URL_HASH SHA256=7ce1db4b8c13f60e0881f12537340c73fb5e0125dba4daa6649a2314341855db
+        URL      https://github.com/LMDB/lmdb/archive/refs/tags/LMDB_1.0.2.tar.gz
+        URL_HASH SHA256=17e4cb8e80874fccc1ff6f7d5fdb62f029624967d001ff40c47c0fb7a5b42d7d
         PATCH_COMMAND "${PC}"
         SOURCE_SUBDIR "libraries/liblmdb"
         SYSTEM

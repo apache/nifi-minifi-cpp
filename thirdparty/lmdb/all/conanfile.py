@@ -20,7 +20,7 @@ from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
 from conan.tools.files import copy, get, export_conandata_patches, apply_conandata_patches
 import os
 
-required_conan_version = ">=1.46.0"
+required_conan_version = ">=2.4"
 
 
 class lmdbConan(ConanFile):
@@ -41,24 +41,17 @@ class lmdbConan(ConanFile):
         "fPIC": True,
     }
 
+    exports_sources = ["CMakeLists.txt"]
+
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
     def configure(self):
         if self.options.shared:
-            try:
-                del self.options.fPIC
-            except Exception:
-                pass
-        try:
-            del self.settings.compiler.libcxx
-        except Exception:
-            pass
-        try:
-            del self.settings.compiler.cppstd
-        except Exception:
-            pass
+            self.options.rm_safe("fPIC")
+        self.settings.rm_safe("compiler.libcxx")
+        self.settings.rm_safe("compiler.cppstd")
 
     def export_sources(self):
         export_conandata_patches(self)
@@ -67,7 +60,8 @@ class lmdbConan(ConanFile):
         cmake_layout(self, src_folder="src")
 
     def source(self):
-        get(self, **self.conan_data["sources"][self.version], destination=self.source_folder, strip_root=True)
+        get(self, **self.conan_data["sources"][self.version],
+            destination=self.source_folder, strip_root=True)
         apply_conandata_patches(self)
 
     def generate(self):
@@ -90,8 +84,4 @@ class lmdbConan(ConanFile):
         self.cpp_info.libs = ["lmdb"]
 
         if self.settings.os in ["Linux", "FreeBSD"]:
-            self.cpp_info.system_libs = ["pthread"]
-
-        bin_path = os.path.join(self.package_folder, "bin")
-        self.output.info(f"Appending PATH environment variable: {bin_path}")
-        self.env_info.PATH.append(bin_path)
+            self.cpp_info.system_libs = ["pthread", "dl"]
