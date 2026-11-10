@@ -24,6 +24,7 @@ add_custom_target(rat
           --input-exclude-parsed-scm GIT
           --input-exclude-file "${CMAKE_SOURCE_DIR}/.rat-excludes"
           --output-style unapproved-licenses
+          --input-include-std HIDDEN_DIR
           -- "${CMAKE_SOURCE_DIR}"
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   COMMENT "Running Apache RAT license check"

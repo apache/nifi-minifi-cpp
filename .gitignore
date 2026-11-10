@@ -82,7 +82,7 @@ output
 .vs/VSWorkspaceState.json
 .vs/slnx.sqlite
 /.ccls-cache
-/.vscode
+.vscode/**
 .ccache
 *profraw
 CMakePresets.json
