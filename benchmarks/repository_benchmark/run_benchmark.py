@@ -234,12 +234,9 @@ def create_minifi_container(
 
 def wait_for_flow_files_to_be_processed(container, expected_count: int, timeout: float = 300.0) -> None:
     deadline = time.monotonic() + timeout
-    since = parse_docker_timestamp(container.attrs["Created"])
     while True:
-        now = datetime.now(timezone.utc)
-        logs = container.logs(since=since).decode(errors="replace")
-        since = now
-        if f"key:flow_file_count value:{expected_count - 1}" in logs:
+        logs = container.logs().decode(errors="replace")
+        if logs.count("Logging for flow file") >= expected_count:
             break
         container.reload()
         if container.status != "running":
@@ -248,7 +245,7 @@ def wait_for_flow_files_to_be_processed(container, expected_count: int, timeout:
             )
         if time.monotonic() > deadline:
             raise RuntimeError(f"Timed out after {timeout}s waiting for {expected_count} flow files to be processed")
-        time.sleep(0.1)
+        time.sleep(0.5)
 
     # Wait a bit more to see how the repositories behave after all flow files have been processed.
     time.sleep(2)
