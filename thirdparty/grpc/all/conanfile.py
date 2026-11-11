@@ -173,6 +173,7 @@ class GrpcConan(ConanFile):
         tc.cache_variables["gRPC_PROTOBUF_PROVIDER"] = "package"
         tc.cache_variables["gRPC_ABSL_PROVIDER"] = "package"
         tc.cache_variables["gRPC_OPENTELEMETRY_PROVIDER"] = "package"
+        tc.cache_variables["gRPC_USE_SYSTEMD"] = "OFF"
 
         tc.cache_variables["gRPC_BUILD_GRPC_CPP_PLUGIN"] = self.options.cpp_plugin
         tc.cache_variables["gRPC_BUILD_GRPC_CSHARP_PLUGIN"] = self.options.csharp_plugin

@@ -1,10 +1,10 @@
 There seems to be an issue with the c++17 make_openssl_unique implementation in the Azure SDK: https://github.com/Azure/azure-sdk-for-cpp/issues/6697
 
 diff --git a/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp b/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp
-index a52791cea..5734bb76c 100644
+index 3bcd3ae..08a0664 100644
 --- a/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp
 +++ b/sdk/attestation/azure-security-attestation/src/private/crypto/openssl/openssl_helpers.hpp
-@@ -39,19 +39,6 @@ namespace Azure { namespace Security { namespace Attestation { namespace _detail
+@@ -46,19 +46,6 @@ namespace Azure { namespace Security { namespace Attestation { namespace _detail
    using openssl_evp_pkey = openssl_unique_ptr<EVP_PKEY>;
    using openssl_bio = openssl_unique_ptr<BIO>;
  
@@ -24,7 +24,7 @@ index a52791cea..5734bb76c 100644
    template <typename Api, typename... Args>
    auto make_openssl_unique(Api& OpensslApi, Args&&... args)
    {
-@@ -62,7 +49,6 @@ namespace Azure { namespace Security { namespace Attestation { namespace _detail
+@@ -69,7 +56,6 @@ namespace Azure { namespace Security { namespace Attestation { namespace _detail
                                                      // what OpensslApi returned
      return openssl_unique_ptr<T>{raw};
    }
