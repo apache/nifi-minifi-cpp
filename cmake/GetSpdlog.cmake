@@ -15,11 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if (WIN32)
-    include(GetFmt_11_0_2)
-else()
-    include(GetFmt)
-endif()
+include(GetFmt)
 
 if(MINIFI_SPDLOG_SOURCE STREQUAL "CONAN")
     message("Using Conan to install spdlog")
