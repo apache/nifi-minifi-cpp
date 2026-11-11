@@ -35,7 +35,7 @@ class TraceableResource {
   /**
    * Since SerializableComponents represent a runnable object, we should return traces
    */
-  virtual BackTrace getTraces() = 0;
+  virtual utils::trace_resolver::BackTrace getTraces() = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core

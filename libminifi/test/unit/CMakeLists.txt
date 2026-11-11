@@ -37,4 +37,11 @@ FOREACH(testfile ${UNIT_TESTS})
 ENDFOREACH()
 message("-- Finished building ${UNIT_TEST_COUNT} unit test file(s)...")
 
+if (NOT WIN32)
+    set_target_properties(BackTraceTests PROPERTIES ENABLE_EXPORTS ON)
+    if (APPLE)
+        target_link_options(BackTraceTests PRIVATE -rdynamic)
+    endif()
+endif()
+
 add_subdirectory(performance)

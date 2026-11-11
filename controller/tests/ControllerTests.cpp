@@ -21,6 +21,7 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
+#include "fmt/format.h"
 #include "range/v3/algorithm/find.hpp"
 
 #include "unit/TestBase.h"
@@ -36,6 +37,7 @@
 #include "core/state/nodes/ResponseNodeLoader.h"
 
 using namespace std::literals::chrono_literals;
+using BackTrace = utils::trace_resolver::BackTrace;
 
 namespace org::apache::nifi::minifi::test {
 
@@ -79,15 +81,13 @@ class TestStateController : public minifi::state::StateController {
   std::atomic<bool> is_running;
 };
 
-class TestBackTrace : public BackTrace {
- public:
-  using BackTrace::BackTrace;
-  void addTraceLines(uint32_t line_count) {
-    for (uint32_t i = 1; i <= line_count; ++i) {
-      addLine("bt line " + std::to_string(i) + " for " + getName());
-    }
+namespace {
+void addTraceLines(BackTrace& back_trace, uint32_t line_count) {
+  for (uint32_t i = 1; i <= line_count; ++i) {
+    back_trace.trace.push_back(fmt::format("bt line {} for {}", i, back_trace.name));
   }
-};
+}
+}  // namespace
 
 class TestUpdateSink : public minifi::state::StateMonitor {
  public:
@@ -138,11 +138,11 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   }
   std::vector<BackTrace> getTraces() override {
     std::vector<BackTrace> traces;
-    TestBackTrace trace1("trace1");
-    trace1.addTraceLines(2);
+    BackTrace trace1{.name = std::string{"trace1"}, .trace = {}};
+    addTraceLines(trace1, 2);
     traces.push_back(trace1);
-    TestBackTrace trace2("trace2");
-    trace2.addTraceLines(3);
+    BackTrace trace2{.name = std::string{"trace2"}, .trace = {}};
+    addTraceLines(trace2, 3);
     traces.push_back(trace2);
     return traces;
   }

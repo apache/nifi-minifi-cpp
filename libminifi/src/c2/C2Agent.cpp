@@ -571,18 +571,18 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
     }
     case DescribeOperand::jstack: {
       if (update_sink_->isRunning()) {
-        const std::vector<BackTrace> traces = update_sink_->getTraces();
+        const std::vector<utils::trace_resolver::BackTrace> traces = update_sink_->getTraces();
         for (const auto &trace : traces) {
-          for (const auto & line : trace.getTraces()) {
-            logger_->log_trace("{} -- {}", trace.getName(), line);
+          for (const auto & line : trace.trace) {
+            logger_->log_trace("{} -- {}", trace.name, line);
           }
         }
         auto keys = configuration_->getConfiguredKeys();
         C2Payload response(Operation::acknowledge, resp.ident, true);
         for (const auto &trace : traces) {
           C2Payload options(Operation::acknowledge, resp.ident, true);
-          options.setLabel(trace.getName());
-          for (const auto &line : trace.getTraces()) {
+          options.setLabel(trace.name);
+          for (const auto &line : trace.trace) {
             C2ContentResponse option(Operation::acknowledge);
             option.name = line;
             option.operation_arguments[line] = C2Value{line};
