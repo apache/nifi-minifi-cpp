@@ -190,7 +190,7 @@ class CompressDecompressionTestController : public TestController {
   CompressDecompressionTestController(const CompressDecompressionTestController&) = delete;
   CompressDecompressionTestController& operator=(CompressDecompressionTestController&&) = delete;
   CompressDecompressionTestController& operator=(const CompressDecompressionTestController&) = delete;
-  virtual ~CompressDecompressionTestController();
+  ~CompressDecompressionTestController() override;
 
   std::shared_ptr<core::Processor> processor;
   std::shared_ptr<core::ProcessSession> helper_session;

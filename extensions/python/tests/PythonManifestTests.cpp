@@ -181,7 +181,7 @@ class MyPyProc5(FlowFileTransform):
     return gsl::make_not_null(python_bundle);
   };
 
-  auto getProcessorNode = [&] (gsl::not_null<const SerializedResponseNode*> bundle) {
+  auto getProcessorNode = [&] (const gsl::not_null<const SerializedResponseNode*>& bundle) {
     auto& processors = getNode(getNode(bundle->children, "componentManifest").children, "processors");
     REQUIRE(processors.children.size() == 1);
     auto& only_child = processors.children[0];

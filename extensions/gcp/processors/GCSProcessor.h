@@ -11,7 +11,20 @@
 #include "api/core/ProcessorImpl.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "google/cloud/credentials.h"
+// google-cloud-cpp uses absl::visit, which is deprecated in newer abseil versions
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include "google/cloud/storage/client.h"
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 #include "google/cloud/storage/retry_policy.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/PropertyValidator.h"

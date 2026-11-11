@@ -31,7 +31,7 @@ class DeleteGCSObjectMocked : public DeleteGCSObject {
         mock_client_(std::move(mock_client)) {}
 
  protected:
-  gcs::Client getClient() const override { return gcs::testing::UndecoratedClientFromMock(mock_client_); }
+  [[nodiscard]] gcs::Client getClient() const override { return gcs::testing::UndecoratedClientFromMock(mock_client_); }
   std::shared_ptr<gcs::testing::MockClient> mock_client_;
 };
 }  // namespace

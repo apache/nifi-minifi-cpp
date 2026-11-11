@@ -35,9 +35,9 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const Configura
       return std::make_unique<core::FlowConfiguration>(ctx);
     } else if (class_name_lc == "yamlconfiguration") {
       // only load if the class is defined.
-      return std::unique_ptr<core::FlowConfiguration>(instantiate<core::YamlConfiguration>(ctx));
+      return std::make_unique<core::YamlConfiguration>(ctx);
     } else if (class_name_lc == "adaptiveconfiguration") {
-      return std::unique_ptr<core::flow::AdaptiveConfiguration>(instantiate<core::flow::AdaptiveConfiguration>(ctx));
+      return std::make_unique<core::flow::AdaptiveConfiguration>(ctx);
     } else {
       if (fail_safe) {
         return std::make_unique<core::FlowConfiguration>(ctx);

@@ -192,7 +192,7 @@ class MergeTestController : public TestController {
   MergeTestController& operator=(MergeTestController&&) = delete;
   MergeTestController& operator=(const MergeTestController&) = delete;
 
-  ~MergeTestController() {
+  ~MergeTestController() override {
     LogTestController::getInstance().reset();
   }
 

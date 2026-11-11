@@ -3,6 +3,7 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 #include <memory>
+#include <utility>
 
 #include "controllers/keyvalue/KeyValueStateManager.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
@@ -13,7 +14,7 @@ KeyValueStateManager::KeyValueStateManager(
         const utils::Identifier& id,
         gsl::not_null<KeyValueStateStorage*> storage)
     : StateManagerImpl(id),
-      storage_(storage),
+      storage_(std::move(storage)),
       transaction_in_progress_(false),
       change_type_(ChangeType::NONE) {
   std::string serialized;

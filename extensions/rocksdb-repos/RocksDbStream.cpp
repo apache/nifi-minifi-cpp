@@ -19,7 +19,7 @@ RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::R
     : BaseStreamImpl(),
       path_(std::move(path)),
       write_enable_(write_enable),
-      db_(db),
+      db_(std::move(db)),
       exists_([this, verify_checksums] {
         auto opendb = db_->open();
         rocksdb::ReadOptions options;

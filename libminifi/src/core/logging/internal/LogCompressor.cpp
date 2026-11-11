@@ -8,7 +8,7 @@
 namespace org::apache::nifi::minifi::core::logging::internal {
 
 LogCompressor::LogCompressor(gsl::not_null<OutputStream *> output, std::shared_ptr<logging::Logger> logger)
-    : ZlibCompressStream(output, io::ZlibCompressionFormat::GZIP, Z_DEFAULT_COMPRESSION, std::move(logger)) {}
+    : ZlibCompressStream(std::move(output), io::ZlibCompressionFormat::GZIP, Z_DEFAULT_COMPRESSION, std::move(logger)) {}
 
 LogCompressor::FlushResult LogCompressor::flush() {
   if (write(nullptr, 0, Z_SYNC_FLUSH) == 0) {

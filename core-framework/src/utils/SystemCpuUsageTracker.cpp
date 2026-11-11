@@ -30,7 +30,7 @@ void SystemCpuUsageTracker::queryCpuTimes() {
   previous_total_user_low_ = total_user_low_;
   previous_total_sys_ = total_sys_;
   previous_total_idle_ = total_idle_;
-  gsl::owner<FILE*> file = fopen("/proc/stat", "r");
+  gsl::owner<FILE*> file = fopen("/proc/stat", "r");  // NOLINT(cppcoreguidelines-owning-memory): gsl_lite::owner is not recognized by the check
   if (!file) { return; }
   if (fscanf(file, "cpu %lu %lu %lu %lu", &total_user_, &total_user_low_, &total_sys_, &total_idle_) != 4) {  // NOLINT(cert-err34-c)
     total_user_ = previous_total_user_;

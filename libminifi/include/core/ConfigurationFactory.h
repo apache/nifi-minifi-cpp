@@ -14,11 +14,6 @@
 
 namespace org::apache::nifi::minifi::core {
 
-template<typename T>
-T* instantiate(ConfigurationContext ctx) {
-  return new T(std::move(ctx));
-}
-
 /**
  * Configuration factory is used to create a new FlowConfiguration
  * object.
