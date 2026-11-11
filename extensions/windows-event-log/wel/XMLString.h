@@ -33,7 +33,7 @@
 #include "minifi-cpp/FlowFileRecord.h"
 #include "utils/OsUtils.h"
 
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "pugixml.hpp"
 
 

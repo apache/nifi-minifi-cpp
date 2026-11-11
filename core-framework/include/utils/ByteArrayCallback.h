@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/io/InputStream.h"
 #include "minifi-cpp/io/StreamCallback.h"

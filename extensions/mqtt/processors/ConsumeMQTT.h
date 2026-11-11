@@ -30,7 +30,7 @@
 #include "core/ProcessSession.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/logging/LoggerFactory.h"
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"
 #include "minifi-cpp/utils/gsl.h"

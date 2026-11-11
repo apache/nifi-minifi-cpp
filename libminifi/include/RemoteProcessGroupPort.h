@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "core/ClassLoader.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorImpl.h"

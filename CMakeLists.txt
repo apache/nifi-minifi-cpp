@@ -55,6 +55,26 @@ if (DOCKER_BUILD_ONLY)
     return()
 endif()
 
+# Find bash executable
+find_package(Bash REQUIRED)
+
+# Find patch executable
+find_package(Patch REQUIRED)
+
+include(CppLint)
+add_custom_target(linter COMMAND
+        python3 ${CPPLINT_DIR}/run_linter.py -q -i ${CMAKE_SOURCE_DIR}/controller/ ${CMAKE_SOURCE_DIR}/core-framework/ ${CMAKE_SOURCE_DIR}/encrypt-config/ ${CMAKE_SOURCE_DIR}/extension-framework/ ${CMAKE_SOURCE_DIR}/extensions/ ${CMAKE_SOURCE_DIR}/libminifi/ ${CMAKE_SOURCE_DIR}/minifi-api/ ${CMAKE_SOURCE_DIR}/minifi_main/)
+set_target_properties(linter PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+
+if(NOT WIN32)
+add_custom_target(shellcheck
+    COMMAND ${CMAKE_SOURCE_DIR}/run_shellcheck.sh ${CMAKE_SOURCE_DIR})
+endif(NOT WIN32)
+
+if (MINIFI_STATIC_ANALYSIS_ONLY)
+    return()
+endif()
+
 # Generate the build identifier if one is not provided
 if (NOT BUILD_IDENTIFIER)
     string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
@@ -188,12 +208,6 @@ function(append_third_party_passthrough_args OUTPUT EXTERNALPROJECT_CMAKE_ARGS)
     set(${OUTPUT} ${EXTERNALPROJECT_CMAKE_ARGS} PARENT_SCOPE)
 endfunction()
 
-# Find bash executable
-find_package(Bash REQUIRED)
-
-# Find patch executable
-find_package(Patch REQUIRED)
-
 # Setup passthrough args used by third parties
 if (WIN32)
     set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
@@ -261,11 +275,6 @@ if (ENABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
 endif()
 
-# Simple-Windows-Posix-Semaphore
-if (WIN32)
-     add_subdirectory("thirdparty/Simple-Windows-Posix-Semaphore")
-endif()
-
 # ossp-uuid
 if(NOT WIN32)
     include(GetOSSPUUID)
@@ -295,13 +304,10 @@ include(GetSpdlog)
 include(GetYamlCpp)
 
 # concurrentqueue
-add_library(concurrentqueue INTERFACE)
-target_include_directories(concurrentqueue SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/concurrentqueue")
+include(GetConcurrentQueue)
 
 # RapidJSON
-add_library(RapidJSON INTERFACE)
-target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-48fbd8cd202ca54031fe799db2ad44ffa8e77c13/include")
-target_compile_definitions(RapidJSON INTERFACE RAPIDJSON_HAS_STDSTRING)
+include(GetRapidJSON)
 
 # gsl-lite
 include(GetGslLite)
@@ -839,15 +845,6 @@ if (NOT SKIP_TESTS)
 endif()
 
 include(BuildDocs)
-
-add_custom_target(linter COMMAND
-        python3 ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i ${CMAKE_SOURCE_DIR}/controller/ ${CMAKE_SOURCE_DIR}/core-framework/ ${CMAKE_SOURCE_DIR}/encrypt-config/ ${CMAKE_SOURCE_DIR}/extension-framework/ ${CMAKE_SOURCE_DIR}/extensions/ ${CMAKE_SOURCE_DIR}/libminifi/ ${CMAKE_SOURCE_DIR}/minifi-api/ ${CMAKE_SOURCE_DIR}/minifi_main/)
-set_target_properties(linter PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
-
-if(NOT WIN32)
-add_custom_target(shellcheck
-    COMMAND ${CMAKE_SOURCE_DIR}/run_shellcheck.sh ${CMAKE_SOURCE_DIR})
-endif(NOT WIN32)
 
 feature_summary(WHAT ALL FILENAME ${CMAKE_BINARY_DIR}/all.log)
 

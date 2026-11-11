@@ -30,7 +30,7 @@
 #include "core/Core.h"
 #include "core/logging/LoggerFactory.h"
 #include "minifi-cpp/Connection.h"
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "database/RocksDatabase.h"
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "utils/crypto/EncryptionProvider.h"

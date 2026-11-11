@@ -267,7 +267,7 @@ std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::parseSit
     return std::nullopt;
   }
 
-  rapidjson::Value controllerValue = itr->value.GetObject();
+  const rapidjson::Value& controllerValue = itr->value;
   rapidjson::Value::ConstMemberIterator end_itr = controllerValue.MemberEnd();
   rapidjson::Value::ConstMemberIterator port_itr = controllerValue.FindMember("remoteSiteListeningPort");
   rapidjson::Value::ConstMemberIterator secure_itr = controllerValue.FindMember("siteToSiteSecure");

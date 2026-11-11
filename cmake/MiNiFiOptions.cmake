@@ -53,6 +53,7 @@ add_minifi_option(DOCKER_SKIP_TESTS "Skip building tests in docker image targets
 add_minifi_option(DOCKER_CREATE_RPM "Create an RPM package in the rocky docker build target." ON)
 add_minifi_option(DOCKER_PUSH "Push created images to the specified tags" OFF)
 
+add_minifi_option(MINIFI_STATIC_ANALYSIS_ONLY "Disables all targets except the static analysis targets." OFF)
 add_minifi_option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 add_minifi_option(USE_SHARED_LIBS "Builds using shared libraries" ON)
 add_minifi_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT USE_SHARED_LIBS" OFF)
@@ -198,6 +199,8 @@ add_minifi_multi_option(MINIFI_AWS_SDK_CPP_SOURCE "Retrieves AWS SDK for C++ fro
 add_minifi_multi_option(MINIFI_IODBC_SOURCE "Retrieves iODBC from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 add_minifi_multi_option(MINIFI_SOCI_SOURCE "Retrieves SOCI from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 add_minifi_multi_option(MINIFI_LMDB_SOURCE "Retrieves LMDB from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
+add_minifi_multi_option(MINIFI_RAPIDJSON_SOURCE "Retrieves RapidJSON from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
+add_minifi_multi_option(MINIFI_CONCURRENTQUEUE_SOURCE "Retrieves concurrentqueue from provided source" "BUILD;CONAN" "${MINIFI_DEFAULT_DEPENDENCY_SOURCE}")
 
 # Docker options
 

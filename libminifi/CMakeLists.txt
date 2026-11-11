@@ -81,7 +81,7 @@ else()
     set_target_properties(core-minifi PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endif()
 
-list(APPEND LIBMINIFI_LIBRARIES minifi-core-framework yaml-cpp::yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog::spdlog Threads::Threads gsl-lite::gsl-lite libsodium::libsodium range-v3::range-v3 asio::asio magic_enum::magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl RapidJSON fmt::fmt)
+list(APPEND LIBMINIFI_LIBRARIES minifi-core-framework yaml-cpp::yaml-cpp ZLIB::ZLIB concurrentqueue::concurrentqueue rapidjson spdlog::spdlog Threads::Threads gsl-lite::gsl-lite libsodium::libsodium range-v3::range-v3 asio::asio magic_enum::magic_enum OpenSSL::Crypto OpenSSL::SSL CURL::libcurl fmt::fmt)
 if(NOT WIN32)
     list(APPEND LIBMINIFI_LIBRARIES OSSP::libuuid++)
 endif()

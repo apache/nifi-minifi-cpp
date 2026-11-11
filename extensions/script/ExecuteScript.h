@@ -24,7 +24,7 @@
 #include <utility>
 #include <optional>
 
-#include "concurrentqueue.h"
+#include "moodycamel/concurrentqueue.h"
 #include "core/ProcessorImpl.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
