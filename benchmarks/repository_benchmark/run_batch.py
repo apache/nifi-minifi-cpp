@@ -17,7 +17,7 @@
 import argparse
 import copy
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import humanfriendly
 import run_benchmark
@@ -41,7 +41,7 @@ def parse_combo(value: str) -> tuple[str, str]:
 
 
 def run_combo(args: argparse.Namespace, flowfile: str, content: str, output_dir: str, rep: int) -> str:
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     name = f"{timestamp}_{flowfile}_{content}_{args.input_file_generation_type}_run{rep:03d}.json"
     output_path = os.path.join(output_dir, name)
     combo_args = copy.copy(args)
