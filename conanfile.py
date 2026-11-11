@@ -214,7 +214,7 @@ class MiNiFiCppMain(ConanFile):
         if self.options.enable_all or self.options.enable_sql:
             self.requires("soci/4.1.4@minifi/develop")
         if self.options.enable_all or self.options.minifi_lmdb:
-            self.requires("lmdb/1.0.1@minifi/develop")
+            self.requires("lmdb/1.0.2@minifi/develop")
 
         if self.options.custom_malloc == "jemalloc":
             self.requires("jemalloc/5.3.1")
