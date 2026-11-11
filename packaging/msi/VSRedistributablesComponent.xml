@@ -1,3 +1,9 @@
+<!--
+  SPDX-License-Identifier: Apache-2.0
+  SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+  SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+-->
+
 <Component Id="VSRedistributableFiles" Guid="7923f16d-785a-41cb-aa74-17e0fa5f1314">
   <File Id="MiNiFiExe_concrt140" Name="concrt140.dll" KeyPath="no" Source="redist\concrt140.dll"/>
   <File Id="MiNiFiExe_msvcp140" Name="msvcp140.dll" KeyPath="no" Source="redist\msvcp140.dll"/>

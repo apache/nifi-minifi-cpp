@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+# SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+
 [workspace]
 resolver = "3"
 members = ["minifi_native_sys", "minifi_native", "minifi_native_macros", "minifi_rs_behave", "extensions/*"]

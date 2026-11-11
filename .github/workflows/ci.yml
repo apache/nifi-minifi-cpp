@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+# SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+
 name: "MiNiFi-CPP CI"
 on:
   push:
@@ -696,21 +700,25 @@ jobs:
         uses: actions/checkout@v6
 
       - id: install_deps
-        run: pipx install ruff
+        run: |
+          pipx install ruff && \
+          wget https://archive.apache.org/dist/creadur/apache-rat-0.18/apache-rat-0.18-bin.tar.gz -O ~/apache-rat-0.18-bin.tar.gz && \
+          echo "315b16536526838237c42b5e6b613d29adc77e25a6e44a866b2b7f8b162e03d3629d49c9faea86ceb864a36b2c42838b8ce43d6f2db544e961f2259e242748f4  $HOME/apache-rat-0.18-bin.tar.gz" | sha512sum -c - && \
+          tar -xzf ~/apache-rat-0.18-bin.tar.gz -C ~/
 
       - id: cmake
-        run: mkdir build && cd build && cmake -DMINIFI_STATIC_ANALYSIS_ONLY=ON ..
+        run: mkdir build && cd build && cmake -DMINIFI_STATIC_ANALYSIS_ONLY=ON -DRAT_JAR=~/apache-rat-0.18/apache-rat-0.18.jar ..
 
       - id: cpp_lint
         name: C++ linter
         continue-on-error: true
-        run: make linter
+        run: cmake --build . --target linter
         working-directory: build
 
       - id: shellcheck
         name: Shellcheck
         continue-on-error: true
-        run: make shellcheck
+        run: cmake --build . --target shellcheck
         working-directory: build
 
       - id: python_check
@@ -730,8 +738,14 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
         working-directory: minifi_rust
 
+      - id: apache_rat_check
+        name: Apache RAT check
+        continue-on-error: true
+        run: cmake --build . --target rat
+        working-directory: build
+
       - name: Check Linter Statuses
-        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.python_check.outcome == 'failure' || steps.cargo_fmt_check.outcome == 'failure' || steps.clippy_check.outcome == 'failure'
+        if: steps.cpp_lint.outcome == 'failure' || steps.shellcheck.outcome == 'failure' || steps.python_check.outcome == 'failure' || steps.cargo_fmt_check.outcome == 'failure' || steps.clippy_check.outcome == 'failure' || steps.apache_rat_check.outcome == 'failure'
         run: |
           echo "One or more linters failed. Failing the workflow."
           exit 1

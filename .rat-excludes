@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+# SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+
+**/*.patch
+**/__init__.py
+**/*.asc
+extensions/procfs/tests/mockprocfs_t0/624372/stat
+extensions/procfs/tests/mockprocfs_t0/diskstats
+extensions/procfs/tests/mockprocfs_t0/meminfo
+extensions/procfs/tests/mockprocfs_t0/net/dev
+extensions/procfs/tests/mockprocfs_t0/stat
+extensions/procfs/tests/mockprocfs_t1/624372/stat
+extensions/procfs/tests/mockprocfs_t1/diskstats
+extensions/procfs/tests/mockprocfs_t1/meminfo
+extensions/procfs/tests/mockprocfs_t1/net/dev
+extensions/procfs/tests/mockprocfs_t1/stat
+extensions/sftp/tests/resources/known_hosts
+extensions/sftp/tests/resources/known_hosts_mismatch
+extensions/standard-processors/tests/minifi-tmpfile.txt
+libminifi/test/resources/TestTailFile.txt
+libminifi/test/resources/certs/alice_encryption_pass
+libminifi/test/resources/cn.ckey.pem
+libminifi/test/resources/cn.crt.pem
+libminifi/test/resources/cn.pass
+libminifi/test/resources/encrypted.cn.pass
+libminifi/test/resources/encrypted.key.pem
+packaging/rpm/expected-rpm-contents.in
+cmake/FindBash.cmake
+cmake/FindMessageCompiler.cmake
+cmake/FindPatch.cmake
+extensions/kubernetes/tests/features/resources/metrics-server.dependencies.yml
+libminifi/test/asset/.state
+libminifi/test/resources/decrypted.config.json.reformatted
+libminifi/test/resources/decrypted.config.yml.reformatted
+thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml

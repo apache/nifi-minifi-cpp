@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+# SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+
 add_library(minifi-api-common INTERFACE)
 target_include_directories(minifi-api-common INTERFACE common/include)
 target_link_libraries(minifi-api-common INTERFACE gsl-lite::gsl-lite)

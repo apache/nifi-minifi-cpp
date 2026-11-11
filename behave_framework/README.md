@@ -1,3 +1,9 @@
+<!--
+  SPDX-License-Identifier: Apache-2.0
+  SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+  SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+-->
+
 # MiNiFi Behave Framework
 
 This is a test framework designed to aid in the Behavior-Driven Development (BDD) integration testing of Apache NiFi MiNiFi C++.
@@ -61,7 +67,7 @@ Make sure your virtual environment is activated, then run:
 
 ```bash
 # Run all tests
-behavex 
+behavex
 
 # Run a specific feature file
 behavex extensions/standard-processors/tests/features/file_system_operations.feature

@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+# SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+
 sources:
   "1.3.16":
     url: "https://github.com/eclipse/paho.mqtt.c/archive/v1.3.16.tar.gz"
