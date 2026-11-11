@@ -24,7 +24,7 @@ import string
 import tempfile
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 import humanfriendly
@@ -178,7 +178,7 @@ def wait_for_minifi_to_start(container, timeout: float = 30.0) -> None:
         if container.status != "running":
             time.sleep(0.5)
             continue
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         logs = container.logs(since=since).decode(errors="replace")
         since = now
         if "MiNiFi started" in logs:
@@ -314,7 +314,7 @@ def run_threads(samples: list[dict], args: argparse.Namespace) -> tuple[float, i
 def parse_timestamp(log_line: str) -> datetime | None:
     match = LOG_TIMESTAMP_RE.search(log_line)
     if match:
-        return datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=timezone.utc)
+        return datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=UTC)
     return None
 
 
@@ -366,7 +366,7 @@ def write_results(samples: list[dict], throughput: float, flow_files_processed: 
     output_path = args.output
     if output_path is None:
         os.makedirs(RESULTS_DIR, exist_ok=True)
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         name = (
             f"{timestamp}_{args.flowfile_repository}_{args.content_repository}_{args.input_file_generation_type}.json"
         )
