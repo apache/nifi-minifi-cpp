@@ -25,5 +25,9 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(sqlite3)
 
-add_library(sqlite3 STATIC ${sqlite3_SOURCE_DIR}/sqlite3.c)
-target_include_directories(sqlite3 PUBLIC ${sqlite3_SOURCE_DIR})
+if (NOT TARGET sqlite3)
+    add_library(sqlite3 STATIC ${sqlite3_SOURCE_DIR}/sqlite3.c)
+    # linked into shared extension libraries
+    set_target_properties(sqlite3 PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_include_directories(sqlite3 SYSTEM PUBLIC ${sqlite3_SOURCE_DIR})
+endif()

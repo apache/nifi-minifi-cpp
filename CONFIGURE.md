@@ -636,7 +636,7 @@ During startup, MiNiFi checks if the flowfiles and their respective content are 
 This can slow down startup if there is a significant number of flowfiles. This health check can be disabled by setting `nifi.flowfile.repository.check.health` to `false`
 
 
-The Provenance Repository can be configured with the `nifi.provenance.repository.class.name` property. If not specified, it uses the `ProvenanceRepository` class by default, which persists the provenance events in a RocksDB database. Alternatively it can be configured to use a `VolatileProvenanceRepository` that keeps the state in memory (so the state gets lost upon restart), or the `NoOpRepository` to not keep track of the provenance events. By default we do not keep track of the provenance data, so `NoOpRepository` is the value specified in the default minifi.properties file.
+The Provenance Repository can be configured with the `nifi.provenance.repository.class.name` property. If not specified, it uses the `ProvenanceRepository` class by default, which persists the provenance events in a RocksDB database. Alternatively it can be configured to use a `VolatileProvenanceRepository` that keeps the state in memory (so the state gets lost upon restart), or the `NoOpRepository` to not keep track of the provenance events. Another option is using `SQLiteProvenanceRepository` to persist the provenance events in an SQLite database, this requires the SQLite extension (`MINIFI_SQLITE`) and is currently experimental. By default we do not keep track of the provenance data, so `NoOpRepository` is the value specified in the default minifi.properties file.
 
     # in minifi.properties
     nifi.flowfile.repository.class.name=NoOpRepository
