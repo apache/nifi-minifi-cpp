@@ -15,15 +15,16 @@
 
 import logging
 
-from minifi_behave.containers.minifi_container import MinifiContainer
+from minifi_behave.containers.deployment import NormalDeployment
+from minifi_behave.containers.minifi_linux_container import MinifiLinuxContainer
 from minifi_behave.core.minifi_test_context import MinifiTestContext
 
 logger = logging.getLogger(__name__)
 
 
-class MinifiAsPodInKubernetesCluster(MinifiContainer):
+class MinifiAsPodInKubernetesCluster(MinifiLinuxContainer):
     def __init__(self, container_name: str, test_context: MinifiTestContext):
-        super().__init__(container_name, test_context)
+        super().__init__(container_name, test_context, NormalDeployment())
         self.container = test_context.kubernetes_proxy
 
     def deploy(self, context: MinifiTestContext | None) -> bool:

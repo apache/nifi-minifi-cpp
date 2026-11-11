@@ -144,7 +144,7 @@ class S3TestsFixture {
 
   void checkProxySettings() {
     REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyScheme == Aws::Http::Scheme::HTTP);
-    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "http://host");
+    REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost == "host");
     REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPort == 1234);
     REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName == "username");
     REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword == "password");
