@@ -52,6 +52,10 @@ FetchContent_Declare(couchbase-cxx-client
 )
 FetchContent_MakeAvailable(couchbase-cxx-client)
 
+if (WIN32)
+    target_compile_definitions(couchbase_cxx_client_static_intermediate PRIVATE _SILENCE_CXX20_OLD_SHARED_PTR_ATOMIC_SUPPORT_DEPRECATION_WARNING)
+endif()
+
 if (NOT TARGET couchbase_cxx_client::couchbase_cxx_client)
     add_library(couchbase_cxx_client::couchbase_cxx_client ALIAS couchbase_cxx_client_static_intermediate)
 endif()
