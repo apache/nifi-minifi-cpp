@@ -243,10 +243,10 @@ std::vector<PublishedMetric> AgentStatus::calculateMetrics() {
   }
 
   if (nullptr != monitor_) {
-    monitor_->executeOnAllComponents([this, &metrics](StateController& component){
-      metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0),
-        {{"component_uuid", component.getComponentUUID().to_string()}, {"component_name", component.getComponentName()}, {"metric_class", getName()}}});
-    });
+    for (const auto& component : monitor_->getComponentStates()) {
+      metrics.push_back({"is_running", (component.running ? 1.0 : 0.0),
+        {{"component_uuid", component.uuid.to_string()}, {"component_name", component.name}, {"metric_class", getName()}}});
+    }
   }
 
   metrics.push_back({"agent_memory_usage_bytes", static_cast<double>(utils::OsUtils::getCurrentProcessPhysicalMemoryUsage()), {{"metric_class", getName()}}});
@@ -285,17 +285,16 @@ SerializedResponseNode AgentStatus::serializeComponents() const {
   components_node.collapsible = false;
   components_node.name = "components";
   if (monitor_ != nullptr) {
-    monitor_->executeOnAllComponents([&components_node](StateController& component){
-      SerializedResponseNode component_node {
-        .name = component.getComponentName(),
+    for (const auto& component : monitor_->getComponentStates()) {
+      components_node.children.push_back(SerializedResponseNode{
+        .name = component.name,
         .collapsible = false,
         .children = {
-          {.name = "running", .value = component.isRunning()},
-          {.name = "uuid", .value = std::string{component.getComponentUUID().to_string()}},
+          {.name = "running", .value = component.running},
+          {.name = "uuid", .value = std::string{component.uuid.to_string()}},
         }
-      };
-      components_node.children.push_back(component_node);
-    });
+      });
+    }
   }
   return components_node;
 }

@@ -102,8 +102,8 @@ class TestUpdateSink : public minifi::state::StateMonitor {
     func(*controller);
   }
 
-  void executeOnAllComponents(std::function<void(minifi::state::StateController&)> func) override {
-    func(*controller);
+  std::vector<minifi::state::ComponentState> getComponentStates() const override {
+    return {{.name = controller->getComponentName(), .uuid = controller->getComponentUUID(), .running = controller->isRunning()}};
   }
 
   std::string getComponentName() const override {

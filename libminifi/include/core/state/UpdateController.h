@@ -26,6 +26,7 @@
 #include "utils/BackTrace.h"
 #include "minifi-cpp/io/InputStream.h"
 #include "utils/expected.h"
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::state {
 
@@ -116,61 +117,39 @@ class StateController : public Pausable {
   [[nodiscard]] virtual std::string getComponentName() const = 0;
 
   [[nodiscard]] virtual utils::Identifier getComponentUUID() const = 0;
-  /**
-   * Start the client
-   */
+
   virtual int16_t start() = 0;
-  /**
-   * Stop the client
-   */
+
   virtual int16_t stop() = 0;
 
   virtual bool isRunning() const = 0;
 };
 
-/**
- * Justification and Purpose: Update sink is an abstract class with most functions being purely virtual.
- * This is meant to reflect the operational sink for the state of the client. Functions, below, represent
- * a small and tight interface for operations that can be performed from external controllers.
- *
- */
+struct ComponentState {
+  std::string name;
+  utils::Identifier uuid;
+  bool running = false;
+};
+
 class StateMonitor : public StateController {
  public:
   ~StateMonitor() override = default;
 
-  // Execute callback func on the component. Thread safe, locking mutex_, preventing concurrent flow update
   virtual void executeOnComponent(const std::string &id_or_name, std::function<void(state::StateController&)> func) = 0;
 
-  // Execute callback func on the all components. Thread safe, locking mutex_, preventing concurrent flow update
-  virtual void executeOnAllComponents(std::function<void(state::StateController&)> func) = 0;
+  virtual std::vector<ComponentState> getComponentStates() const = 0;
 
-  /**
-   * Drain repositories
-   */
   virtual int16_t drainRepositories() = 0;
 
-  /**
-   * Clear connection for the agent.
-   */
   virtual int16_t clearConnection(const std::string &connection) = 0;
 
   virtual std::vector<std::string> getSupportedConfigurationFormats() const = 0;
 
-  /**
-   * Apply an update with the provided string.
-   */
   virtual std::expected<void, std::string> applyUpdate(const std::string & source, const std::string &configuration,
-                                                          bool persist = false, const std::optional<std::string>& flow_id = std::nullopt) = 0;
-  /**
-   * Returns uptime for this module.
-   * @return uptime for the current state monitor.
-   */
+      bool persist = false, const std::optional<std::string>& flow_id = std::nullopt) = 0;
+
   virtual uint64_t getUptime() = 0;
 
-  /**
-   * Returns a vector of backtraces
-   * @return backtraces from the state monitor.
-   */
   virtual std::vector<BackTrace> getTraces() = 0;
 
   virtual std::map<std::string, std::unique_ptr<io::InputStream>> getDebugInfo() = 0;
