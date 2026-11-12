@@ -51,6 +51,9 @@ def transient_flow_with_logondestructionprocessor(context: MinifiTestContext):
 
 
 @given(
+    'an {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"'
+)
+@given(
     'a {processor_type} processor with the name "{processor_name}" and the "{property_name}" property set to "{property_value}"'
 )
 @given(
@@ -139,6 +142,7 @@ def processor_in_minifi_flow(context: MinifiTestContext, processor_type: str, mi
     context.get_or_create_minifi_container(minifi_container_name).flow_definition.add_processor(processor)
 
 
+@given("an {processor_type} processor in the NiFi flow")
 @given("a {processor_type} processor in the NiFi flow")
 @given("an {processor_type} processor in the NiFi flow")
 def processor_in_nifi_flow(context: MinifiTestContext, processor_type: str):
