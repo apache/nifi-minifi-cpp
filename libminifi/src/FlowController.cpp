@@ -452,18 +452,15 @@ uint64_t FlowController::getUptime() {
   return time_since;
 }
 
-std::vector<BackTrace> FlowController::getTraces() {
-  std::vector<BackTrace> traces{thread_pool_.getTraces()};
+std::vector<utils::trace_resolver::BackTrace> FlowController::getTraces() {
+  std::vector<utils::trace_resolver::BackTrace> traces{thread_pool_.getTraces()};
   if (auto provenance_repo = std::dynamic_pointer_cast<core::ThreadedRepository>(provenance_repo_)) {
-    auto prov_repo_trace = provenance_repo->getTraces();
-    traces.emplace_back(std::move(prov_repo_trace));
+    traces.push_back(provenance_repo->getTraces());
   }
   if (auto flow_file_repo = std::dynamic_pointer_cast<core::ThreadedRepository>(flow_file_repo_)) {
-    auto flow_repo_trace = flow_file_repo->getTraces();
-    traces.emplace_back(std::move(flow_repo_trace));
+    traces.push_back(flow_file_repo->getTraces());
   }
-  auto my_traces = TraceResolver::getResolver().getBackTrace("main");
-  traces.emplace_back(std::move(my_traces));
+  traces.push_back(utils::trace_resolver::getBackTrace("main"));
   return traces;
 }
 

@@ -13,58 +13,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "utils/BackTrace.h"
-
-#ifdef HAS_EXECINFO
-#include <cxxabi.h>
-#include <execinfo.h>
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+
+#include "utils/BackTrace.h"
+
+#ifndef HAS_EXECINFO
+namespace org::apache::nifi::minifi::utils::trace_resolver {
+BackTrace getBackTrace(std::string_view thread_name, std::thread::native_handle_type) {
+  return BackTrace{.name = std::string{thread_name}, .trace = {}};
+}
+BackTrace getBackTrace(std::string_view thread_name) {
+  return BackTrace{.name = std::string{thread_name}, .trace = {}};
+}
+}  // namespace org::apache::nifi::minifi::utils::trace_resolver
+#else
+
+#include <cxxabi.h>
 #include <dlfcn.h>
+#include <execinfo.h>
+#include <pthread.h>
 #ifdef __linux__
 #include <link.h>
 #endif
+
+#include <array>
+#include <atomic>
+#include <cerrno>
+#include <chrono>
+#include <csignal>
+#include <cstdint>
 #include <cstring>
-#include <iostream>
-#include <utility>
 #include <memory>
+#include <mutex>
+#include <optional>
+#include <utility>
 
+#include "core/logging/LoggerFactory.h"
+#include "fmt/format.h"
+#include "fmt/ranges.h"
+#include "minifi-cpp/utils/gsl.h"
 #include "utils/Deleters.h"
-#endif
 
-#include "utils/OptionalUtils.h"
+using namespace std::literals::chrono_literals;
 
-#ifdef HAS_EXECINFO
 namespace {
-  using std::optional;
-  /**
-   * Demangles a symbol name using the cxx abi.
-   * @param symbol_name the mangled name of the symbol
-   * @return the demangled name on success, empty string on failure
-   */
-  optional<std::string> demangle_symbol(const char* symbol_name) {
-    int status = 0;
-    std::unique_ptr<char, org::apache::nifi::minifi::utils::FreeDeleter> demangled(abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status));
-    if (status == 0) {
-      std::string demangled_name = demangled.get();
-      return { demangled_name };
-    } else {
-      return {};
-    }
+std::optional<std::string> demangle_symbol(const char* symbol_name) {
+  int status = 0;
+  std::unique_ptr<char, org::apache::nifi::minifi::utils::FreeDeleter> demangled(abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status));
+  if (status == 0) {
+    std::string demangled_name = demangled.get();
+    return { demangled_name };
+  } else {
+    return {};
   }
-}  // namespace
-#endif
+}
 
-void pull_trace([[maybe_unused]] uint8_t frames_to_skip /* = 1 */) {
-#ifdef HAS_EXECINFO
-  void* stack_buffer[TRACE_BUFFER_SIZE + 1];  // NOLINT(cppcoreguidelines-avoid-c-arrays)
+constexpr size_t TRACE_BUFFER_SIZE = 128;
 
-  /* Get the backtrace of the current thread */
-  int trace_size = backtrace(stack_buffer, TRACE_BUFFER_SIZE);
+struct Capture {
+  pthread_t target{};
+  std::array<void*, TRACE_BUFFER_SIZE> stack_buffer{};
+  int trace_size{0};
+  std::atomic<bool> done{false};
+};
 
-  /* We can skip the signal handler, call to pull_trace, and the first entry for backtrace_symbols */
-  for (int i = frames_to_skip; i < trace_size; i++) {
+std::vector<std::string> resolveRawTrace(const Capture& capture, const uint8_t frames_to_skip) {
+  std::vector<std::string> trace;
+
+  // Skip the innermost frame(s) common to all stack traces
+  for (int i = frames_to_skip; i < capture.trace_size; i++) {
     const char* file_name = "???";
     uintptr_t symbol_offset = 0;
 
@@ -72,13 +91,13 @@ void pull_trace([[maybe_unused]] uint8_t frames_to_skip /* = 1 */) {
     Dl_info dl_info{};
 #ifdef __linux__
     struct link_map* l_map = nullptr;
-    int res = dladdr1(stack_buffer[i], &dl_info, reinterpret_cast<void**>(&l_map), RTLD_DL_LINKMAP);
+    int res = dladdr1(capture.stack_buffer[i], &dl_info, reinterpret_cast<void**>(&l_map), RTLD_DL_LINKMAP);
 #else  // __linux__
-    int res = dladdr(stack_buffer[i], &dl_info);
+    int res = dladdr(capture.stack_buffer[i], &dl_info);
 #endif  // __linux__
     if (res == 0 || dl_info.dli_fname == nullptr || dl_info.dli_fname[0] == '\0') {
       /* We could not determine symbolic information for this address*/
-      TraceResolver::getResolver().addTraceLine(file_name, nullptr, symbol_offset);
+      trace.emplace_back(file_name);
       continue;
     }
 
@@ -94,7 +113,7 @@ void pull_trace([[maybe_unused]] uint8_t frames_to_skip /* = 1 */) {
     }
 
     const std::string symbol_name = dl_info.dli_sname
-        ? demangle_symbol(dl_info.dli_sname).value_or(file_name)
+        ? demangle_symbol(dl_info.dli_sname).value_or(dl_info.dli_sname)
         : file_name;
 
     /* Determine our offset */
@@ -115,50 +134,102 @@ void pull_trace([[maybe_unused]] uint8_t frames_to_skip /* = 1 */) {
 #endif  // __linux__
       base_address = reinterpret_cast<uintptr_t>(dl_info.dli_fbase);
     }
-    symbol_offset = reinterpret_cast<uintptr_t>(stack_buffer[i]) - base_address;
+    symbol_offset = reinterpret_cast<uintptr_t>(capture.stack_buffer[i]) - base_address;
 
-    TraceResolver::getResolver().addTraceLine(file_name, symbol_name.c_str(), symbol_offset);
+    trace.push_back(fmt::format("{} @ {} + {}", file_name, symbol_name, symbol_offset));
   }
-#endif  // HAS_EXECINFO
+
+  return trace;
 }
 
-BackTrace TraceResolver::getBackTrace(std::string thread_name, [[maybe_unused]] std::thread::native_handle_type thread_handle) {
-  // lock so that we only perform one backtrace at a time.
-#ifdef HAS_EXECINFO
-  std::lock_guard<std::mutex> lock(mutex_);
-  trace_ = BackTrace(std::move(thread_name));
+std::atomic<Capture*> in_flight_capture{nullptr};
 
-  if (0 == thread_handle || pthread_equal(pthread_self(), thread_handle)) {
-    pull_trace();
-  } else {
-    emplace_handler();
-    std::unique_lock<std::mutex> ulock(trace_mutex_);
-    if (pthread_kill(thread_handle, SIGUSR2) != 0) {
-      return std::move(trace_);
-    }
-    pull_traces_ = false;
-    trace_condition_.wait(ulock, [this] { return pull_traces_; });
-  }
-#else
-  // even if tracing is disabled, include thread name into the trace object
-  trace_ = BackTrace(std::move(thread_name));
-#endif
-  return std::move(trace_);
-}
-#ifdef HAS_EXECINFO
 void handler(int /*signr*/, siginfo_t* /*info*/, void* /*secret*/) {
-  std::unique_lock<std::mutex> lock(TraceResolver::getResolver().lock());
-  pull_trace();
-  TraceResolver::getResolver().notifyPullTracesDone(lock);
+  const int saved_errno = errno;
+  Capture* capture = in_flight_capture.load(std::memory_order_acquire);
+  if (capture != nullptr && pthread_equal(pthread_self(), capture->target)
+      && in_flight_capture.compare_exchange_strong(capture, nullptr, std::memory_order_acq_rel)) {
+    capture->trace_size = backtrace(capture->stack_buffer.data(), static_cast<int>(capture->stack_buffer.size()));
+    capture->done.store(true, std::memory_order_release);
+  }
+  errno = saved_errno;
 }
-#endif
 
 void emplace_handler() {
-#ifdef HAS_EXECINFO
   struct sigaction sa{};
   sigfillset(&sa.sa_mask);
-  sa.sa_flags = SA_SIGINFO;
+  sa.sa_flags = SA_SIGINFO | SA_RESTART;
   sa.sa_sigaction = handler;
   sigaction(SIGUSR2, &sa, nullptr);
-#endif
 }
+
+bool wait_for_capture_done(const Capture& capture, const std::chrono::milliseconds timeout) {
+  const auto deadline = std::chrono::steady_clock::now() + timeout;
+  while (!capture.done.load(std::memory_order_acquire)) {
+    if (std::chrono::steady_clock::now() >= deadline) { return false; }
+    std::this_thread::sleep_for(100us);
+  }
+  return true;
+}
+}  // namespace
+
+namespace org::apache::nifi::minifi::utils::trace_resolver {
+
+BackTrace getBackTrace(std::string_view thread_name, std::thread::native_handle_type thread_handle) {
+  static std::mutex mutex;
+  std::scoped_lock guard(mutex);
+
+  static const auto logger = core::logging::LoggerFactory<BackTrace>::getLogger();
+  logger->log_trace("getting BackTrace for thread '{}'", thread_name);
+
+  if (0 == thread_handle || pthread_equal(pthread_self(), thread_handle)) {
+    Capture capture;
+    capture.trace_size = backtrace(capture.stack_buffer.data(), static_cast<int>(capture.stack_buffer.size()));
+    auto trace = resolveRawTrace(capture, 1);
+    logger->log_debug("returning BackTrace for thread '{}' (current thread): {}", thread_name, trace);
+    return BackTrace{.name = std::string{thread_name}, .trace = std::move(trace)};
+  }
+
+  [[maybe_unused]] static const bool warm_up_backtrace = [] {
+    // Warm up backtrace()/libgcc here, where we are allowed to allocate, so that its one-time lazy dlopen never runs inside the signal handler.
+    std::array<void*, 1> buffer{};
+    backtrace(buffer.data(), static_cast<int>(buffer.size()));
+    return true;
+  }();
+
+  [[maybe_unused]] static const bool signal_handler_installed = [] {
+    emplace_handler();
+    return true;
+  }();
+
+  auto capture = std::make_unique<Capture>();
+  capture->target = thread_handle;
+
+  in_flight_capture.store(capture.get(), std::memory_order_release);
+  const auto zero_out_in_flight_capture = gsl::finally([&] {
+    in_flight_capture.store(nullptr, std::memory_order_release);
+  });
+
+  if (pthread_kill(thread_handle, SIGUSR2) != 0) {
+    logger->log_debug("SIGUSR2 failed, returning empty BackTrace for thread '{}'", thread_name);
+    return BackTrace{.name = std::string{thread_name}, .trace = {}};
+  }
+
+  if (!wait_for_capture_done(*capture, 1s)) {
+    logger->log_warn("timed out waiting for the stack trace of thread '{}', returning an empty BackTrace", thread_name);
+    std::ignore = capture.release();  // leaked intentionally, so capture won't be deleted while handler() may still be running
+    return BackTrace{.name = std::string{thread_name}, .trace = {}};
+  }
+
+  auto trace = resolveRawTrace(*capture, 1);
+  logger->log_debug("returning BackTrace for thread '{}': {}", thread_name, trace);
+  return BackTrace{.name = std::string{thread_name}, .trace = std::move(trace)};
+}
+
+BackTrace getBackTrace(std::string_view thread_name) {
+  return getBackTrace(thread_name, pthread_self());
+}
+
+}  // namespace org::apache::nifi::minifi::utils::trace_resolver
+
+#endif  // HAS_EXECINFO

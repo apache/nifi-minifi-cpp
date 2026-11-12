@@ -142,7 +142,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   uint64_t getUptime() override;
 
-  std::vector<BackTrace> getTraces() override;
+  std::vector<utils::trace_resolver::BackTrace> getTraces() override;
 
   std::map<std::string, std::unique_ptr<io::InputStream>> getDebugInfo() override;
 

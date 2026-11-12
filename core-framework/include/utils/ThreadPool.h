@@ -187,8 +187,8 @@ class ThreadPool {
     return running_.load();
   }
 
-  std::vector<BackTrace> getTraces() {
-    std::vector<BackTrace> traces;
+  std::vector<utils::trace_resolver::BackTrace> getTraces() {
+    std::vector<utils::trace_resolver::BackTrace> traces;
     std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
     std::unique_lock<std::mutex> wlock(worker_queue_mutex_);
     // while we may be checking if running, we don't want to
@@ -197,7 +197,7 @@ class ThreadPool {
     if (running_) {
       for (const auto &worker : thread_queue_) {
         if (worker->is_running_)
-          traces.emplace_back(TraceResolver::getResolver().getBackTrace(worker->name_, worker->thread_.native_handle()));
+          traces.emplace_back(utils::trace_resolver::getBackTrace(worker->name_, worker->thread_.native_handle()));
       }
     }
     return traces;

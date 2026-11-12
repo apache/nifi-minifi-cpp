@@ -337,8 +337,8 @@ std::string ControllerSocketProtocol::getJstack() {
   std::stringstream result;
   const auto traces = update_sink_.getTraces();
   for (const auto& trace : traces) {
-    for (const auto& line : trace.getTraces()) {
-      result << trace.getName() << " -- " << line << "\n";
+    for (const auto& line : trace.trace) {
+      result << trace.name << " -- " << line << "\n";
     }
   }
   return result.str();

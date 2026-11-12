@@ -150,7 +150,7 @@ class StateMonitor : public StateController {
 
   virtual uint64_t getUptime() = 0;
 
-  virtual std::vector<BackTrace> getTraces() = 0;
+  virtual std::vector<utils::trace_resolver::BackTrace> getTraces() = 0;
 
   virtual std::map<std::string, std::unique_ptr<io::InputStream>> getDebugInfo() = 0;
 
