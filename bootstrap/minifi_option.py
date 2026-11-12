@@ -65,7 +65,7 @@ class MinifiOptions:
             self.use_conan.value = cache_values["USE_CONAN"].value
         if "CMAKE_BUILD_TYPE" in cache_values:
             self.build_type.value = cache_values["CMAKE_BUILD_TYPE"].value
-        minifi_prefixed_extension_options = ["MINIFI_RUST", "MINIFI_LMDB"]
+        minifi_prefixed_extension_options = ["MINIFI_RUST", "MINIFI_LMDB", "MINIFI_SQLITE"]
         self.bool_options = {
             name: cache_value
             for name, cache_value in cache_values.items()

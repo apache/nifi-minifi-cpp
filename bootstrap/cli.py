@@ -88,6 +88,7 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
             "ENABLE_AWS",
             "ENABLE_SQL",
             "MINIFI_LMDB",
+            "MINIFI_SQLITE",
             "PORTABLE",
             "SKIP_TESTS",
         ],

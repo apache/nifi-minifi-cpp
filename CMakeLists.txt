@@ -766,6 +766,7 @@ set(EXTENSIONS_ENABLED_BY_DEFAULT (
     minifi-smb
     minifi-splunk
     minifi-sql
+    minifi-sqlite
     minifi-standard-processors
     minifi-wel
     minifi_pgp
