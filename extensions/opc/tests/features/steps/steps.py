@@ -48,6 +48,13 @@ def setup_opcua_server_with_access_control(context: MinifiTestContext):
     )
 
 
+@step("an OPC UA server is set up with historical data support")
+def setup_opcua_server_with_historical_data(context: MinifiTestContext):
+    context.containers["opcua-server-historical"] = OPCUAServerContainer(
+        context, command=["/opt/open62541/examples/tutorial_server_historicaldata"]
+    )
+
+
 @then('the OPC UA server logs contain the following message: "{log_message}" in less than {duration}')
 def verify_opcua_server_logs_contain_message(context, log_message, duration):
     timeout_seconds = humanfriendly.parse_timespan(duration)
