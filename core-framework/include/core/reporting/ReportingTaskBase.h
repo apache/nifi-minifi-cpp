@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -61,6 +62,10 @@ class ReportingTaskBase : public ReportingTaskApi {
   ~ReportingTaskBase() noexcept override = default;
 
   void onUnSchedule() override {}
+
+  void forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) override {
+    callback(logger_);
+  }
 
  protected:
   std::string name_;
