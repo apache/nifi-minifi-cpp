@@ -20,6 +20,7 @@
 #include "unit/Catch.h"
 #include "unit/ConfigurationTestController.h"
 #include "catch2/generators/catch_generators.hpp"
+#include "catch2/matchers/catch_matchers_string.hpp"
 #include "core/flow/FlowSchema.h"
 #include "core/yaml/YamlFlowSerializer.h"
 #include "core/yaml/YamlNode.h"
@@ -596,6 +597,100 @@ Parameter Context Name: environment-variable-parameter-context
     } else if (name == "SECRET_MINIFI_DATA") {
       CHECK(minifi::utils::crypto::property_encryption::decrypt(value, encryption_provider) == "secret_minifi_data_value");
     }
+  }
+}
+
+TEST_CASE("Reporting tasks are correctly parsed from flow yaml") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_configuration{test_controller.getContext()};
+
+  constexpr std::string_view config_yaml_with_reporting_task = R"(
+Flow Controller:
+  name: MiNiFi Flow
+Processors: []
+Connections: []
+Reporting Tasks:
+  - name: ProvenanceReporter
+    id: 00000000-0000-0000-0000-000000000001
+    class: SiteToSiteProvenanceReportingTask
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 5 sec
+    Properties:
+      Destination URL: http://localhost:8080/nifi
+      Port UUID: 00000000-0000-0000-0000-000000000002
+  - name: CronProvenanceReporter
+    id: 00000000-0000-0000-0000-000000000003
+    class: SiteToSiteProvenanceReportingTask
+    scheduling strategy: CRON_DRIVEN
+    scheduling period: "0 0/5 * * * ?"
+    Properties:
+      Destination URL: http://localhost:8080/nifi
+)";
+
+  const auto process_group = yaml_configuration.getRootFromPayload(std::string{config_yaml_with_reporting_task});
+  REQUIRE(process_group);
+
+  const auto reporting_task_id = minifi::utils::Identifier::parse("00000000-0000-0000-0000-000000000001").value();
+  auto* reporting_task = process_group->findProcessorById(reporting_task_id);
+  REQUIRE(reporting_task != nullptr);
+
+  CHECK(reporting_task->getName() == "ProvenanceReporter");
+  CHECK(reporting_task->getSchedulingStrategy() == core::TIMER_DRIVEN);
+  CHECK(reporting_task->getSchedulingPeriod() == std::chrono::seconds{5});
+  CHECK(reporting_task->getScheduledState() == core::RUNNING);
+
+  const auto destination_url = reporting_task->getProperty("Destination URL");
+  REQUIRE(destination_url.has_value());
+  CHECK(*destination_url == "http://localhost:8080/nifi");
+
+  const auto port_uuid = reporting_task->getProperty("Port UUID");
+  REQUIRE(port_uuid.has_value());
+  CHECK(*port_uuid == "00000000-0000-0000-0000-000000000002");
+
+  const auto cron_reporting_task_id = minifi::utils::Identifier::parse("00000000-0000-0000-0000-000000000003").value();
+  auto* cron_reporting_task = process_group->findProcessorById(cron_reporting_task_id);
+  REQUIRE(cron_reporting_task != nullptr);
+
+  CHECK(cron_reporting_task->getName() == "CronProvenanceReporter");
+  CHECK(cron_reporting_task->getSchedulingStrategy() == core::CRON_DRIVEN);
+  CHECK(cron_reporting_task->getCronPeriod() == "0 0/5 * * * ?");
+}
+
+TEST_CASE("Invalid scheduling of a reporting task is rejected when parsing the flow yaml") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_configuration{test_controller.getContext()};
+
+  const auto make_config = [](std::string_view scheduling) {
+    return fmt::format(R"(
+Flow Controller:
+  name: MiNiFi Flow
+Processors: []
+Connections: []
+Reporting Tasks:
+  - name: ProvenanceReporter
+    id: 00000000-0000-0000-0000-000000000001
+    class: SiteToSiteProvenanceReportingTask
+{}
+    Properties:
+      Destination URL: http://localhost:8080/nifi
+)", scheduling);
+  };
+
+  SECTION("Unknown scheduling strategy") {
+    REQUIRE_THROWS_WITH(yaml_configuration.getRootFromPayload(make_config("    scheduling strategy: EVENT_DRIVEN\n    scheduling period: 5 sec")),
+        "Invalid scheduling strategy 'EVENT_DRIVEN' for reporting task 'ProvenanceReporter', it must be either TIMER_DRIVEN or CRON_DRIVEN");
+  }
+  SECTION("Invalid timer driven scheduling period") {
+    REQUIRE_THROWS_WITH(yaml_configuration.getRootFromPayload(make_config("    scheduling strategy: TIMER_DRIVEN\n    scheduling period: often")),
+        "Invalid scheduling period 'often' for TIMER_DRIVEN reporting task 'ProvenanceReporter'");
+  }
+  SECTION("Missing cron expression") {
+    REQUIRE_THROWS_WITH(yaml_configuration.getRootFromPayload(make_config("    scheduling strategy: CRON_DRIVEN")),
+        "A CRON_DRIVEN reporting task requires a cron expression as scheduling period, reporting task: 'ProvenanceReporter'");
+  }
+  SECTION("Invalid cron expression") {
+    REQUIRE_THROWS_WITH(yaml_configuration.getRootFromPayload(make_config("    scheduling strategy: CRON_DRIVEN\n    scheduling period: 5 sec")),
+        Catch::Matchers::ContainsSubstring("Invalid cron expression '5 sec' for CRON_DRIVEN reporting task 'ProvenanceReporter'"));
   }
 }
 

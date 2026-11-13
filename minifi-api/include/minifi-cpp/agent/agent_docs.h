@@ -38,7 +38,8 @@ enum class ResourceType {
   ControllerService,
   InternalResource,
   DescriptionOnly,
-  ParameterProvider
+  ParameterProvider,
+  ReportingTask
 };
 
 struct ClassDescription {
@@ -89,6 +90,10 @@ class Components {
         parameter_providers_.emplace_back(std::move(component));
         break;
       }
+      case ResourceType::ReportingTask: {
+        reporting_tasks_.emplace_back(std::move(component));
+        break;
+      }
       default: {
         other_components_.emplace_back(std::move(component));
         break;
@@ -105,6 +110,9 @@ class Components {
   const std::vector<ClassDescription>& getParameterProviders() const {
     return parameter_providers_;
   }
+  const std::vector<ClassDescription>& getReportingTasks() const {
+    return reporting_tasks_;
+  }
   const std::vector<ClassDescription>& getOtherComponents() const {
     return other_components_;
   }
@@ -114,7 +122,7 @@ class Components {
   }
 
   [[nodiscard]] bool empty() const noexcept {
-    return processors_.empty() && controller_services_.empty() && parameter_providers_.empty() && other_components_.empty();
+    return processors_.empty() && controller_services_.empty() && parameter_providers_.empty() && reporting_tasks_.empty() && other_components_.empty();
   }
 
   static void sortClassDescription(minifi::ClassDescription& class_description) {
@@ -130,6 +138,7 @@ class Components {
     std::ranges::sort(processors_, {}, lower_case_short_name);
     std::ranges::sort(controller_services_, {}, lower_case_short_name);
     std::ranges::sort(parameter_providers_, {}, lower_case_short_name);
+    std::ranges::sort(reporting_tasks_, {}, lower_case_short_name);
     std::ranges::sort(other_components_, {}, lower_case_short_name);
 
     for (auto& processors : processors_) {
@@ -141,6 +150,9 @@ class Components {
     for (auto& pp : parameter_providers_) {
       sortClassDescription(pp);
     }
+    for (auto& rt : reporting_tasks_) {
+      sortClassDescription(rt);
+    }
     for (auto& oc : other_components_) {
       sortClassDescription(oc);
     }
@@ -150,6 +162,7 @@ class Components {
     std::ranges::copy(components.getProcessors(), std::back_inserter(processors_));
     std::ranges::copy(components.getControllerServices(), std::back_inserter(controller_services_));
     std::ranges::copy(components.getParameterProviders(), std::back_inserter(parameter_providers_));
+    std::ranges::copy(components.getReportingTasks(), std::back_inserter(reporting_tasks_));
     std::ranges::copy(components.getOtherComponents(), std::back_inserter(other_components_));
   }
 
@@ -159,6 +172,7 @@ class Components {
   std::vector<ClassDescription> processors_;
   std::vector<ClassDescription> controller_services_;
   std::vector<ClassDescription> parameter_providers_;
+  std::vector<ClassDescription> reporting_tasks_;
   std::vector<ClassDescription> other_components_;
 };
 

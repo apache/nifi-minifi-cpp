@@ -75,7 +75,7 @@ class SSLContextService : public core::controller::ControllerServiceBase, public
  public:
   using ControllerServiceBase::ControllerServiceBase;
 
-  static std::shared_ptr<SSLContextService> createAndEnable(std::string_view name, const std::shared_ptr<Configure> &configuration);
+  static std::shared_ptr<SSLContextService> createAndEnable(std::string_view name, const Configure& configuration);
 
   static constexpr auto ImplementsApis = std::array{ SSLContextServiceInterface::ProvidesApi };
 

@@ -36,6 +36,7 @@
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
+#include "minifi-cpp/core/reporting/ReportingTaskContext.h"
 #include "minifi-cpp/utils/Export.h"
 #include "sitetosite/SiteToSiteClient.h"
 
@@ -49,12 +50,11 @@ struct RPG {
 
 class RemoteProcessGroupPort : public core::ProcessorImpl {
  public:
-  RemoteProcessGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier& uuid,
+  RemoteProcessGroupPort(std::string_view name, std::string url, const utils::Identifier& uuid,
       sitetosite::TransferDirection direction, std::shared_ptr<core::logging::Logger> logger = nullptr)
       : core::ProcessorImpl({.uuid = uuid,
             .name = std::string{name},
             .logger = logger ? logger : core::logging::LoggerFactory<RemoteProcessGroupPort>::getLogger(uuid)}),
-        configure_(std::move(configure)),
         direction_(direction),
         transmitting_(false),
         protocol_uuid_(uuid),
@@ -94,6 +94,7 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
+  void onSchedule(core::reporting::ReportingTaskContext& context);
   void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
@@ -166,14 +167,16 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     return batch_duration_;
   }
 
+  // the configuration is only used for the duration of the call
+  bool useProtocol(const Configure& configuration, const std::function<bool(sitetosite::SiteToSiteClient& client)>& callback);
+
  protected:
-  std::optional<std::pair<std::string, uint16_t>> refreshRemoteSiteToSiteInfo();
-  void refreshPeerList();
-  std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol();
-  void returnProtocol(core::ProcessContext& context, std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
+  std::optional<std::pair<std::string, uint16_t>> refreshRemoteSiteToSiteInfo(const Configure& configuration);
+  void refreshPeerList(const Configure& configuration);
+  std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol(const Configure& configuration);
+  void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
 
   moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
-  std::shared_ptr<Configure> configure_;
   const sitetosite::TransferDirection direction_;
   std::atomic<bool> transmitting_;
   std::optional<std::chrono::milliseconds> timeout_;
@@ -191,12 +194,13 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
   std::optional<uint64_t> batch_count_;
   std::optional<uint64_t> batch_size_;
   std::optional<std::chrono::milliseconds> batch_duration_;
+  uint64_t max_concurrent_tasks_{1};
 
  private:
   gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const;
-  [[nodiscard]] std::optional<std::string> getRestApiToken(const RPG& nifi) const;
+  [[nodiscard]] std::optional<std::string> getRestApiToken(const RPG& nifi, const Configure& configuration) const;
   std::optional<std::pair<std::string, uint16_t>> parseSiteToSiteDataFromControllerConfig(const RPG& nifi, const std::string& controller) const;
-  std::optional<std::pair<std::string, uint16_t>> tryRefreshSiteToSiteInstance(RPG nifi) const;
+  std::optional<std::pair<std::string, uint16_t>> tryRefreshSiteToSiteInstance(RPG nifi, const Configure& configuration) const;
 
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };

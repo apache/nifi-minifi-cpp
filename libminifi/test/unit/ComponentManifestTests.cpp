@@ -27,6 +27,7 @@
 #include "core/Resource.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "core/ProcessorImpl.h"
+#include "core/reporting/ReportingTaskBase.h"
 #include "range/v3/algorithm/find_if.hpp"
 
 using minifi::state::response::SerializedResponseNode;
@@ -107,6 +108,26 @@ class ExampleProcessor : public core::ProcessorImpl {
 
 REGISTER_RESOURCE(ExampleProcessor, Processor);
 
+class ExampleReportingTask : public core::reporting::ReportingTaskBase {
+ public:
+  using ReportingTaskBase::ReportingTaskBase;
+
+  static constexpr const char* Description = "An example reporting task";
+  static constexpr auto ExampleProperty = core::PropertyDefinitionBuilder<>::createProperty("Example Reporting Property")
+      .withDescription("An example reporting task property")
+      .isRequired(true)
+      .build();
+  static constexpr auto Properties = std::to_array<core::PropertyReference>({ExampleProperty});
+
+  void initialize() override {
+    setSupportedProperties(Properties);
+  }
+  void onSchedule(core::reporting::ReportingTaskContext&) override {}
+  void onTrigger(core::reporting::ReportingTaskContext&) override {}
+};
+
+REGISTER_RESOURCE(ExampleReportingTask, ReportingTask);
+
 }  // namespace test::apple
 
 TEST_CASE("Manifest indicates property type requirement") {
@@ -160,4 +181,26 @@ TEST_CASE("Processors do not get instantiated during manifest creation") {
   minifi::state::response::serializeComponentManifest(system_components);
 
   CHECK_FALSE(LogTestController::getInstance().contains("Processor ExampleProcessor created"));
+}
+
+TEST_CASE("Manifest lists reporting tasks") {
+  const auto system_bundle_id = minifi::BundleCoordinate{.name = "minifi-system", .group_name = "org.apache.nifi.minifi.test", .version = minifi::AgentBuild::VERSION};
+  const auto system_components = minifi::ClassDescriptionRegistry::getClassDescriptions().at(system_bundle_id);
+  auto nodes = minifi::state::response::serializeComponentManifest(system_components);
+  REQUIRE(nodes.size() == 1);
+  REQUIRE(nodes.at(0).name == "componentManifest");
+
+  auto& reporting_tasks = get(nodes.at(0), "reportingTasks").children;
+
+  auto example_task_it = ranges::find_if(reporting_tasks, [&](auto& reporting_task) {
+    return get(reporting_task, "type").value == "test.apple.ExampleReportingTask";
+  });
+  REQUIRE(example_task_it != reporting_tasks.end());
+
+  CHECK(get(*example_task_it, "typeDescription").value == "An example reporting task");
+
+  auto& properties = get(*example_task_it, "propertyDescriptors").children;
+  auto prop_it = ranges::find_if(properties, [&](auto& prop) { return get(prop, "name").value == "Example Reporting Property"; });
+  REQUIRE(prop_it != properties.end());
+  CHECK(get(*prop_it, "required").value.to_string() == "true");
 }

@@ -125,6 +125,28 @@ TEST_CASE("The generated JSON schema matches a valid json flow") {
             "CA Certificate": ""
           }
         }
+      ],
+      "Reporting Tasks": [
+        {
+          "id": "00000000-0000-0000-0000-000000000000",
+          "class": "SiteToSiteProvenanceReportingTask",
+          "name": "Reporter1",
+          "scheduling strategy": "TIMER_DRIVEN",
+          "scheduling period": "1 min",
+          "Properties": {
+            "Destination URL": "http://localhost:8080/nifi",
+            "Port UUID": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        {
+          "class": "SiteToSiteProvenanceReportingTask",
+          "name": "Reporter2",
+          "scheduling strategy": "CRON_DRIVEN",
+          "scheduling period": "0 0/5 * * * ?",
+          "Properties": {
+            "Destination URL": "http://localhost:8080/nifi"
+          }
+        }
       ]
     }
   )"_json;
@@ -227,6 +249,32 @@ TEST_CASE("The JSON schema detects invalid values in the json flow") {
           }
         },
         {"$value": "kenyer", "$err": "unexpected instance type"}
+      ],
+      "Reporting Tasks": [
+        {
+          "class": "SiteToSiteProvenanceReportingTask",
+          "name": "Reporter1",
+          "scheduling strategy": "TIMER_DRIVEN",
+          "scheduling period": "1 min",
+          "Properties": {"$err": "property 'Destination URL' not found", "$value": {}}
+        },
+        {"$err": "property 'scheduling period' not found", "$value": {
+          "class": "SiteToSiteProvenanceReportingTask",
+          "name": "Reporter2",
+          "scheduling strategy": "CRON_DRIVEN",
+          "Properties": {
+            "Destination URL": "http://localhost:8080/nifi"
+          }
+        }},
+        {
+          "class": "SiteToSiteProvenanceReportingTask",
+          "name": "Reporter3",
+          "scheduling strategy": {"$value": "EVENT_DRIVEN", "$err": ""},
+          "scheduling period": "1 min",
+          "Properties": {
+            "Destination URL": "http://localhost:8080/nifi"
+          }
+        }
       ]
     }
   )"_json;

@@ -31,6 +31,7 @@
 #include "utils/Macro.h"
 #include "core/ProcessorFactoryImpl.h"
 #include "core/controller/ControllerServiceFactoryImpl.h"
+#include "core/reporting/ReportingTaskFactoryImpl.h"
 #include "core/ObjectFactory.h"
 #include "minifi-cpp/agent/agent_version.h"
 
@@ -65,18 +66,19 @@ class StaticClassType {
 
     if constexpr (Type == ResourceType::Processor) {
       for (const auto& construction_name : construction_names_) {
-        auto factory = std::unique_ptr<ProcessorFactory>(new ProcessorFactoryImpl<Class>(module_name));
-        getClassLoader().registerClass(construction_name, std::move(factory));
+        getClassLoader().registerClass(construction_name, std::make_unique<ProcessorFactoryImpl<Class>>(module_name));
       }
     } else if constexpr (Type == ResourceType::ControllerService) {
       for (const auto& construction_name : construction_names_) {
-        auto factory = std::unique_ptr<controller::ControllerServiceFactory>(new controller::ControllerServiceFactoryImpl<Class>(module_name));
-        getClassLoader().registerClass(construction_name, std::move(factory));
+        getClassLoader().registerClass(construction_name, std::make_unique<controller::ControllerServiceFactoryImpl<Class>>(module_name));
+      }
+    } else if constexpr (Type == ResourceType::ReportingTask) {
+      for (const auto& construction_name : construction_names_) {
+        getClassLoader().registerClass(construction_name, std::make_unique<reporting::ReportingTaskFactoryImpl<Class>>(module_name));
       }
     } else {
       for (const auto& construction_name : construction_names_) {
-        auto factory = std::unique_ptr<ObjectFactory>(new DefaultObjectFactory<Class>(module_name));
-        getClassLoader().registerClass(construction_name, std::move(factory));
+        getClassLoader().registerClass(construction_name, std::make_unique<DefaultObjectFactory<Class>>(module_name));
       }
     }
 

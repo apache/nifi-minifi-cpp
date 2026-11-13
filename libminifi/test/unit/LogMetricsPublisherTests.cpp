@@ -33,12 +33,16 @@ namespace org::apache::nifi::minifi::test {
 class LogPublisherTestFixture {
  public:
   LogPublisherTestFixture()
-      : configuration_(std::make_shared<ConfigureImpl>()),
-        provenance_repo_(core::createRepository("provenancerepository", "provenancerepository")),
-        flow_file_repo_(core::createRepository("flowfilerepository", "flowfilerepository")),
-        response_node_loader_(std::make_shared<state::response::ResponseNodeLoaderImpl>(configuration_,
-            std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_}, nullptr)),
-        publisher_(std::make_unique<minifi::state::LogMetricsPublisher>("LogMetricsPublisher")) {
+      : configuration_(std::make_shared<ConfigureImpl>()) {
+    configuration_->set(minifi::Configuration::nifi_provenance_repository_directory_default,
+                        (temp_directory_.getPath() / "provenance_repository").string());
+    configuration_->set(minifi::Configuration::nifi_flowfile_repository_directory_default,
+                        (temp_directory_.getPath() / "flowfile_repository").string());
+    provenance_repo_ = core::createRepository("provenancerepository", "provenancerepository");
+    flow_file_repo_ = core::createRepository("flowfilerepository", "flowfilerepository");
+    response_node_loader_ = std::make_shared<state::response::ResponseNodeLoaderImpl>(configuration_,
+        std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_}, nullptr);
+    publisher_ = std::make_unique<minifi::state::LogMetricsPublisher>("LogMetricsPublisher");
     provenance_repo_->initialize(configuration_);
     flow_file_repo_->initialize(configuration_);
   }
@@ -52,8 +56,7 @@ class LogPublisherTestFixture {
     publisher_.reset();  // explicit because LogTestController should outlive the thread in publisher_
     const auto provenance_repo_directory = provenance_repo_->getDirectory();
     const auto flow_file_repo_directory = flow_file_repo_->getDirectory();
-    // the repositories have to be closed before their directories are removed, as the files of an
-    // open database cannot be deleted on every platform
+
     response_node_loader_.reset();
     provenance_repo_.reset();
     flow_file_repo_.reset();

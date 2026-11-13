@@ -53,6 +53,7 @@
 #include "fmt/format.h"
 #include "processors/TailFile.h"
 #include "Connection.h"
+#include "unit/ReportingTaskUtils.h"
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;
@@ -412,8 +413,8 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceReporter>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   auto processor = plan->addProcessor("GetFile", "getfileCreate2");
-  TypedProcessorWrapper<minifi::core::reporting::SiteToSiteProvenanceReportingTask> processorReport = plan->addProcessor(
-      minifi::test::utils::make_custom_processor<minifi::core::reporting::SiteToSiteProvenanceReportingTask>(std::make_shared<minifi::ConfigureImpl>()),
+  TypedProcessorWrapper<minifi::core::reporting::ReportingTask> processorReport = plan->addProcessor(
+      minifi::test::utils::make_reporting_task<minifi::core::reporting::SiteToSiteProvenanceReportingTask>("reporter"),
       "reporter", core::Relationship("success", "description"), false);
 
   auto dir = testController.createTempDirectory();
@@ -464,17 +465,17 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
       throw std::runtime_error("Did not find record");
     }
   }
-  auto taskReport = &processorReport.get();
-  taskReport->setBatchSize(1);
+  auto taskReport = &processorReport.get().getImpl<minifi::core::reporting::SiteToSiteProvenanceReportingTask>();
+  REQUIRE(processorReport->setProperty(minifi::core::reporting::SiteToSiteProvenanceReportingTask::BatchSize.name, "1"));
   processorReport->incrementActiveTasks();
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
   auto recordsReport = repo->getEvents(1, nullptr);
   REQUIRE(recordsReport);
   std::function<void(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession>&)> verifyReporter =
-      [&](const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-        auto json_str = taskReport->getJsonReport(*context, *session, recordsReport.value());
+      [&](const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) {
+        auto json_str = taskReport->getJsonReport(recordsReport.value());
         REQUIRE(recordsReport->size() == 1);
-        REQUIRE(taskReport->getName() == std::string(minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
+        REQUIRE(processorReport->getName() == "reporter");
         REQUIRE(json_str.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
         REQUIRE(recordsReport->at(0)->getEventOrdinal() == 1);
         REQUIRE(json_str.find("\"eventOrdinal\": 1") != std::string::npos);
@@ -508,6 +509,37 @@ class TestProcessorNoContent : public minifi::core::ProcessorImpl {
 
 REGISTER_RESOURCE(TestProcessorNoContent, Processor);
 
+class LoggingReportingTask : public minifi::core::reporting::ReportingTaskBase {
+ public:
+  using ReportingTaskBase::ReportingTaskBase;
+
+  void initialize() override {}
+  void onSchedule(minifi::core::reporting::ReportingTaskContext&) override {}
+  void onTrigger(minifi::core::reporting::ReportingTaskContext&) override {}
+
+  void logError(const std::string& message) {
+    logger_->log_error("{}", message);
+  }
+};
+
+TEST_CASE("The logger callback of a reporting task receives the logs of the reporting task", "[reportingTask]") {
+  LogTestController::getInstance().setTrace<LoggingReportingTask>();
+  auto reporting_task = minifi::test::utils::make_reporting_task<LoggingReportingTask>("logging_reporting_task");
+
+  std::vector<std::pair<core::logging::LOG_LEVEL, std::string>> received_logs;
+  reporting_task->setLoggerCallback([&] (core::logging::LOG_LEVEL level, const std::string& message) {
+    received_logs.emplace_back(level, message);
+  });
+
+  auto& impl = reporting_task->getImpl<minifi::core::reporting::ReportingTask>().getImpl<LoggingReportingTask>();
+  impl.logError("something went wrong");
+
+  REQUIRE(received_logs.size() == 1);
+  CHECK(received_logs[0].first == core::logging::LOG_LEVEL::err);
+  CHECK(received_logs[0].second.find("something went wrong") != std::string::npos);
+  LogTestController::getInstance().reset();
+}
+
 TEST_CASE("TestEmptyContent", "[emptyContent]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
@@ -537,14 +569,12 @@ void testRPGBypass(const std::string &host, const std::string &port, bool has_er
   LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
   LogTestController::getInstance().setTrace<TestPlan>();
 
-  auto configuration = std::make_shared<minifi::ConfigureImpl>();
-
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::dynamic_pointer_cast<TestRepository>(test_repo);
 
-  auto rpg = minifi::test::utils::make_custom_processor<minifi::RemoteProcessGroupPort>("rpg", "http://localhost:8989/nifi", configuration, utils::IdGenerator::getIdGenerator()->generate(),
+  auto rpg = minifi::test::utils::make_custom_processor<minifi::RemoteProcessGroupPort>("rpg", "http://localhost:8989/nifi", utils::IdGenerator::getIdGenerator()->generate(),
       minifi::sitetosite::TransferDirection::SEND);
   rpg->initialize();
   REQUIRE(rpg->setProperty(minifi::RemoteProcessGroupPort::hostName.name, host));

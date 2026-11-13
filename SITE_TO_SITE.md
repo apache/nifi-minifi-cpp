@@ -24,6 +24,8 @@ limitations under the License.
 
 Site-to-Site protocol allows data to be transferred between MiNiFi C++ and NiFi instances. MiNiFi C++ can send or receive data from NiFi using remote process groups. This is useful for scenarios where you want to send data from MiNiFi C++ to NiFi or vice versa. Site-to-Site protocol support raw TCP and HTTP protocols.
 
+The provenance events of the MiNiFi C++ agent can also be sent to NiFi using the Site-to-Site protocol with the [SiteToSiteProvenanceReportingTask](REPORTING_TASKS.md#SiteToSiteProvenanceReportingTask) reporting task, see [Reporting Tasks](CONFIGURE.md#reporting-tasks) for details.
+
 At the moment site-to-site protocol is only supported between MiNiFi C++ and NiFi instances, it cannot be used to transfer data between multiple MiNiFi C++ instances. It is recommended to use processors like InvokeHTTP and ListenHTTP to transfer data between MiNiFi C++ instances.
 
 ## Site-to-Site Configuration

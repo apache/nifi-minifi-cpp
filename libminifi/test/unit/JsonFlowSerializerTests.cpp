@@ -20,6 +20,7 @@
 #include "unit/Catch.h"
 #include "unit/ConfigurationTestController.h"
 #include "catch2/generators/catch_generators.hpp"
+#include "catch2/matchers/catch_matchers_string.hpp"
 #include "core/flow/FlowSchema.h"
 #include "core/json/JsonFlowSerializer.h"
 #include "core/json/JsonNode.h"
@@ -1027,6 +1028,89 @@ TEST_CASE("Parameter provider generated parameter context is reserialized if Rel
     } else if (name == "SECRET_MINIFI_DATA") {
       CHECK(minifi::utils::crypto::property_encryption::decrypt(value, encryption_provider) == "secret_minifi_data_value");
     }
+  }
+}
+
+TEST_CASE("Reporting tasks are correctly parsed from flow json") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
+
+  constexpr std::string_view config_json_with_reporting_task = R"({
+    "reportingTasks": [
+      {
+        "identifier": "00000000-0000-0000-0000-000000000001",
+        "name": "ProvenanceReporter",
+        "type": "SiteToSiteProvenanceReportingTask",
+        "schedulingStrategy": "TIMER_DRIVEN",
+        "schedulingPeriod": "5 sec",
+        "properties": {
+          "Destination URL": "http://localhost:8080/nifi",
+          "Port UUID": "00000000-0000-0000-0000-000000000002"
+        }
+      }
+    ],
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": []
+    }
+  })";
+
+  const auto process_group = json_configuration.getRootFromPayload(std::string{config_json_with_reporting_task});
+  REQUIRE(process_group);
+
+  const auto reporting_task_id = minifi::utils::Identifier::parse("00000000-0000-0000-0000-000000000001").value();
+  auto* reporting_task = process_group->findProcessorById(reporting_task_id);
+  REQUIRE(reporting_task != nullptr);
+
+  CHECK(reporting_task->getName() == "ProvenanceReporter");
+  CHECK(reporting_task->getSchedulingStrategy() == core::TIMER_DRIVEN);
+  CHECK(reporting_task->getSchedulingPeriod() == std::chrono::seconds{5});
+  CHECK(reporting_task->getScheduledState() == core::RUNNING);
+
+  const auto destination_url = reporting_task->getProperty("Destination URL");
+  REQUIRE(destination_url.has_value());
+  CHECK(*destination_url == "http://localhost:8080/nifi");
+
+  const auto port_uuid = reporting_task->getProperty("Port UUID");
+  REQUIRE(port_uuid.has_value());
+  CHECK(*port_uuid == "00000000-0000-0000-0000-000000000002");
+}
+
+TEST_CASE("Invalid scheduling of a reporting task is rejected when parsing the flow json") {
+  ConfigurationTestController test_controller;
+  core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
+
+  const auto make_config = [](std::string_view scheduling) {
+    return fmt::format(R"({{
+    "reportingTasks": [
+      {{
+        "identifier": "00000000-0000-0000-0000-000000000001",
+        "name": "ProvenanceReporter",
+        "type": "SiteToSiteProvenanceReportingTask",
+        {}
+        "properties": {{
+          "Destination URL": "http://localhost:8080/nifi"
+        }}
+      }}
+    ],
+    "rootGroup": {{
+        "name": "MiNiFi Flow",
+        "processors": []
+    }}
+  }})", scheduling);
+  };
+
+  SECTION("Unknown scheduling strategy") {
+    REQUIRE_THROWS_WITH(json_configuration.getRootFromPayload(make_config(R"("schedulingStrategy": "EVENT_DRIVEN", "schedulingPeriod": "5 sec",)")),
+        "Invalid scheduling strategy 'EVENT_DRIVEN' for reporting task 'ProvenanceReporter', it must be either TIMER_DRIVEN or CRON_DRIVEN");
+  }
+  SECTION("Missing cron expression") {
+    REQUIRE_THROWS_WITH(json_configuration.getRootFromPayload(make_config(R"("schedulingStrategy": "CRON_DRIVEN",)")),
+        "A CRON_DRIVEN reporting task requires a cron expression as scheduling period, reporting task: 'ProvenanceReporter'");
+  }
+  SECTION("Invalid cron expression") {
+    REQUIRE_THROWS_WITH(json_configuration.getRootFromPayload(make_config(R"("schedulingStrategy": "CRON_DRIVEN", "schedulingPeriod": "5 sec",)")),
+        Catch::Matchers::ContainsSubstring("Invalid cron expression '5 sec' for CRON_DRIVEN reporting task 'ProvenanceReporter'"));
   }
 }
 
