@@ -466,7 +466,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
     }
   }
   auto taskReport = &processorReport.get().getImpl<minifi::core::reporting::SiteToSiteProvenanceReportingTask>();
-  taskReport->setBatchSize(1);
+  REQUIRE(processorReport->setProperty(minifi::core::reporting::SiteToSiteProvenanceReportingTask::BatchSize.name, "1"));
   processorReport->incrementActiveTasks();
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
   auto recordsReport = repo->getEvents(1, nullptr);

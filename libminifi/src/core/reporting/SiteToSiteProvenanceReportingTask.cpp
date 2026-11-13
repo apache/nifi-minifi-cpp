@@ -40,6 +40,7 @@
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include "utils/ParsingUtils.h"
 #include "utils/TimeUtil.h"
 #include "utils/net/NetworkInterfaceInfo.h"
 #include "core/Resource.h"
@@ -179,6 +180,10 @@ std::string SiteToSiteProvenanceReportingTask::getJsonReport(const std::vector<s
 }
 
 void SiteToSiteProvenanceReportingTask::onSchedule(ReportingTaskContext& context) {
+  batch_size_ = context.getProperty(BatchSize)
+      | utils::andThen(parsing::parseIntegral<uint64_t>)
+      | utils::orThrow(fmt::format("Could not parse the value of property '{}' as uint64_t", BatchSize.name));
+
   auto& port = remote_port_.getImpl<RemoteProcessGroupPort>();
   if (auto url = context.getProperty(DestinationUrl); url && !url->empty()) {
     port.setURL(*url);
@@ -199,7 +204,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(ReportingTaskContext& context)
   }
   auto cursor = getCursor(*state_manager, *repo, *logger_);
   std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> records;
-  if (auto result = repo->getEvents(batch_size_, cursor.get())) {
+  if (auto result = repo->getEvents(gsl::narrow<size_t>(batch_size_), cursor.get())) {
     records = std::move(result.value());
   } else {
     throw minifi::Exception(GENERAL_EXCEPTION, "Failed to retrieve records: " + result.error());

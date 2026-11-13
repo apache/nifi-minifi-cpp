@@ -11947,6 +11947,15 @@
             "reportingTasks": [
                 {
                     "propertyDescriptors": {
+                        "Batch Size": {
+                            "name": "Batch Size",
+                            "description": "The maximum number of provenance events to send to the destination in a single transaction.",
+                            "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "100"
+                        },
                         "Destination URL": {
                             "name": "Destination URL",
                             "description": "The URL of the destination NiFi instance in the format of http(s)://host:port/nifi. This is used to initiate the Site-to-Site connection.",

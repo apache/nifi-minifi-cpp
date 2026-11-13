@@ -599,4 +599,60 @@ Parameter Context Name: environment-variable-parameter-context
   }
 }
 
+TEST_CASE("Reporting tasks are correctly parsed from flow yaml") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_configuration{test_controller.getContext()};
+
+  constexpr std::string_view config_yaml_with_reporting_task = R"(
+Flow Controller:
+  name: MiNiFi Flow
+Processors: []
+Connections: []
+Reporting Tasks:
+  - name: ProvenanceReporter
+    id: 00000000-0000-0000-0000-000000000001
+    class: SiteToSiteProvenanceReportingTask
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 5 sec
+    Properties:
+      Destination URL: http://localhost:8080/nifi
+      Port UUID: 00000000-0000-0000-0000-000000000002
+  - name: CronProvenanceReporter
+    id: 00000000-0000-0000-0000-000000000003
+    class: SiteToSiteProvenanceReportingTask
+    scheduling strategy: CRON_DRIVEN
+    scheduling period: "0 0/5 * * * ?"
+    Properties:
+      Destination URL: http://localhost:8080/nifi
+)";
+
+  const auto process_group = yaml_configuration.getRootFromPayload(std::string{config_yaml_with_reporting_task});
+  REQUIRE(process_group);
+
+  const auto reporting_task_id = minifi::utils::Identifier::parse("00000000-0000-0000-0000-000000000001").value();
+  auto* reporting_task = process_group->findProcessorById(reporting_task_id);
+  REQUIRE(reporting_task != nullptr);
+
+  CHECK(reporting_task->getName() == "ProvenanceReporter");
+  CHECK(reporting_task->getSchedulingStrategy() == core::TIMER_DRIVEN);
+  CHECK(reporting_task->getSchedulingPeriod() == std::chrono::seconds{5});
+  CHECK(reporting_task->getScheduledState() == core::RUNNING);
+
+  const auto destination_url = reporting_task->getProperty("Destination URL");
+  REQUIRE(destination_url.has_value());
+  CHECK(*destination_url == "http://localhost:8080/nifi");
+
+  const auto port_uuid = reporting_task->getProperty("Port UUID");
+  REQUIRE(port_uuid.has_value());
+  CHECK(*port_uuid == "00000000-0000-0000-0000-000000000002");
+
+  const auto cron_reporting_task_id = minifi::utils::Identifier::parse("00000000-0000-0000-0000-000000000003").value();
+  auto* cron_reporting_task = process_group->findProcessorById(cron_reporting_task_id);
+  REQUIRE(cron_reporting_task != nullptr);
+
+  CHECK(cron_reporting_task->getName() == "CronProvenanceReporter");
+  CHECK(cron_reporting_task->getSchedulingStrategy() == core::CRON_DRIVEN);
+  CHECK(cron_reporting_task->getCronPeriod() == "0 0/5 * * * ?");
+}
+
 }  // namespace org::apache::nifi::minifi::test

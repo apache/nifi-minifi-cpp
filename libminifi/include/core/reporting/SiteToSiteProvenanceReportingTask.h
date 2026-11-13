@@ -37,10 +37,7 @@ class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
   explicit SiteToSiteProvenanceReportingTask(ReportingTaskMetadata metadata)
       : ReportingTaskBase{metadata},
         remote_port_{"RemoteProcessGroupPort", metadata.name, metadata.uuid, std::make_unique<RemoteProcessGroupPort>(metadata.name, "",
-        metadata.uuid, sitetosite::TransferDirection::SEND, metadata.logger)}
-  {
-    batch_size_ = 100;
-  }
+        metadata.uuid, sitetosite::TransferDirection::SEND, metadata.logger)} {}
 
   ~SiteToSiteProvenanceReportingTask() override = default;
 
@@ -56,8 +53,17 @@ class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
           .isRequired(true)
           .build();
 
+  MINIFIAPI static constexpr auto BatchSize =
+      core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+          .withDescription("The maximum number of provenance events to send to the destination in a single transaction.")
+          .isRequired(true)
+          .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
+          .withDefaultValue("100")
+          .build();
+
   MINIFIAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       DestinationUrl,
+      BatchSize,
       RemoteProcessGroupPort::SSLContext,
       RemoteProcessGroupPort::portUUID,
       RemoteProcessGroupPort::idleTimeout});
@@ -69,17 +75,10 @@ class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
 
   void initialize() override;
 
-  void setBatchSize(int size) {
-    batch_size_ = size;
-  }
-
-  int getBatchSize() const {
-    return (batch_size_);
-  }
 
  private:
   Processor remote_port_;
-  int batch_size_;
+  uint64_t batch_size_{100};
 };
 
 // SiteToSiteProvenanceReportingTask
