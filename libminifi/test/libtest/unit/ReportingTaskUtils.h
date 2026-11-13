@@ -35,13 +35,4 @@ std::unique_ptr<core::Processor> make_reporting_task(std::string_view name, std:
       std::make_unique<minifi::core::reporting::ReportingTask>(std::move(reporting_task_impl)));
 }
 
-template<typename T, typename ...Args>
-std::unique_ptr<core::Processor> make_custom_reporting_task(Args&&... args) {
-  auto processor_impl = std::make_unique<T>(std::forward<Args>(args)...);
-  auto name = processor_impl->getName();
-  auto uuid = processor_impl->getUUID();
-  return std::make_unique<core::Processor>(minifi::utils::string::partAfterLastOccurrenceOf(core::className<T>(), ':'), name, uuid,
-      std::make_unique<minifi::core::reporting::ReportingTask>(std::move(processor_impl)));
-}
-
 }  // namespace org::apache::nifi::minifi::test::utils
