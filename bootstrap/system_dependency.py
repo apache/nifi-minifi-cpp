@@ -28,6 +28,8 @@ def _create_system_dependencies(minifi_options: MinifiOptions) -> dict[str, set[
         system_dependencies["libtool"] = {"libtool"}
     if minifi_options.is_enabled("ENABLE_PYTHON_SCRIPTING"):
         system_dependencies["python"] = {"python"}
+    if minifi_options.is_enabled("MINIFI_RUST"):
+        system_dependencies["rust_toolchain"] = set()
     if platform.system() == "Windows":
         system_dependencies["wixtoolset"] = {"wixtoolset"}
     return system_dependencies
