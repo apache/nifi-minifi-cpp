@@ -33,6 +33,7 @@
 #include "core/controller/ControllerService.h"
 #include "minifi-cpp/core/ProcessContext.h"
 #include "core/Processor.h"
+#include "core/reporting/ReportingTaskContextAdapter.h"
 #include "minifi-cpp/core/logging/Logger.h"
 #include "http/BaseHTTPClient.h"
 #include "rapidjson/document.h"
@@ -142,7 +143,8 @@ void RemoteProcessGroupPort::onSchedule(core::ProcessContext& context, core::Pro
   } else {
     context.setTriggerWhenEmpty(false);
   }
-  onSchedule(context);
+  core::reporting::ReportingTaskContextAdapter reporting_task_context{context};
+  onSchedule(reporting_task_context);
 }
 
 void RemoteProcessGroupPort::onSchedule(core::reporting::ReportingTaskContext& context) {

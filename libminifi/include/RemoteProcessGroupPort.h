@@ -36,6 +36,7 @@
 #include "minifi-cpp/controllers/SSLContextServiceInterface.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
+#include "minifi-cpp/core/reporting/ReportingTaskContext.h"
 #include "minifi-cpp/utils/Export.h"
 #include "sitetosite/SiteToSiteClient.h"
 

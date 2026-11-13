@@ -17,6 +17,7 @@
  */
 
 #include "core/reporting/ReportingTask.h"
+#include "core/reporting/ReportingTaskContextAdapter.h"
 
 
 namespace org::apache::nifi::minifi::core::reporting {
@@ -69,11 +70,13 @@ bool ReportingTask::isSingleThreaded() const {
 }
 
 void ReportingTask::onTrigger(ProcessContext& context, ProcessSession&) {
-  impl_->onTrigger(context);
+  ReportingTaskContextAdapter reporting_task_context{context};
+  impl_->onTrigger(reporting_task_context);
 }
 
 void ReportingTask::onSchedule(ProcessContext& context, ProcessSessionFactory&) {
-  impl_->onSchedule(context);
+  ReportingTaskContextAdapter reporting_task_context{context};
+  impl_->onSchedule(reporting_task_context);
 }
 
 void ReportingTask::onUnSchedule() {
