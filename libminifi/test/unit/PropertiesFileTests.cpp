@@ -1,19 +1,6 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+// SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 #include <fstream>
 #include <optional>
@@ -90,7 +77,7 @@ TEST_CASE("PropertiesFile creates an empty object from a nonexistent file", "[co
 
 TEST_CASE("PropertiesFile can parse a simple config file", "[constructor]") {
   PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "minifi.properties"}};
-  REQUIRE(test_file.size() == 108);
+  REQUIRE(test_file.size() == 97);
 }
 
 TEST_CASE("PropertiesFile can test whether a key is present", "[hasValue]") {
@@ -102,7 +89,7 @@ TEST_CASE("PropertiesFile can test whether a key is present", "[hasValue]") {
 
 TEST_CASE("PropertiesFile can read empty properties correctly", "[constructor]") {
   PropertiesFile test_file{std::ifstream{std::filesystem::path{TEST_RESOURCES} / "with-additional-sensitive-props.minifi.properties"}};
-  REQUIRE(test_file.size() == 104);
+  REQUIRE(test_file.size() == 93);
 
   auto empty_property = test_file.getValue(Configuration::nifi_security_need_ClientAuth);
   REQUIRE(empty_property);
@@ -143,7 +130,7 @@ TEST_CASE("PropertiesFile can add a new setting after an existing setting", "[in
 
   SECTION("valid key") {
     test_file.insertAfter(Configuration::nifi_rest_api_password, "nifi.rest.api.password.protected", "my-cipher-name");
-    REQUIRE(test_file.size() == 109);
+    REQUIRE(test_file.size() == 98);
     REQUIRE(test_file.getValue("nifi.rest.api.password.protected") == "my-cipher-name");
   }
 
@@ -158,7 +145,7 @@ TEST_CASE("PropertiesFile can add a new setting at the end", "[append]") {
   const std::string KEY = "nifi.bootstrap.sensitive.key";
   const std::string VALUE = "aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab";
   test_file.append(KEY, VALUE);
-  REQUIRE(test_file.size() == 109);
+  REQUIRE(test_file.size() == 98);
   REQUIRE(test_file.getValue(KEY) == std::make_optional(VALUE));
 }
 

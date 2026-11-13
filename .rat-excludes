@@ -34,3 +34,4 @@ libminifi/test/asset/.state
 libminifi/test/resources/decrypted.config.json.reformatted
 libminifi/test/resources/decrypted.config.yml.reformatted
 thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
+.github/PULL_REQUEST_TEMPLATE.md
