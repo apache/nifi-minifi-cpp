@@ -22,6 +22,11 @@
 #include <string_view>
 #include "utils/expected.h"
 #include "minifi-cpp/provenance/ProvenanceRepository.h"
+#include "minifi-cpp/utils/gsl.h"
+
+namespace org::apache::nifi::minifi {
+class Configure;
+}  // namespace org::apache::nifi::minifi
 
 namespace org::apache::nifi::minifi::core::reporting {
 
@@ -55,6 +60,10 @@ class ReportingTaskContext {
   virtual uint8_t getMaxConcurrentTasks() const = 0;
 
   virtual void yield() = 0;
+
+  // The returned configuration is valid during onSchedule and onTrigger.
+  [[nodiscard]]
+  virtual gsl::not_null<Configure*> getConfiguration() const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::reporting

@@ -87,8 +87,8 @@ gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> RemoteProcessGroupP
   return sitetosite::createClient(config);
 }
 
-bool RemoteProcessGroupPort::useProtocol(const std::function<bool(sitetosite::SiteToSiteClient& client)>& callback) {
-  auto protocol = getNextProtocol();
+bool RemoteProcessGroupPort::useProtocol(const Configure& configuration, const std::function<bool(sitetosite::SiteToSiteClient& client)>& callback) {
+  auto protocol = getNextProtocol(configuration);
   if (!protocol) {
     return false;
   }
@@ -96,7 +96,7 @@ bool RemoteProcessGroupPort::useProtocol(const std::function<bool(sitetosite::Si
   return callback(*protocol);
 }
 
-std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::getNextProtocol() {
+std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::getNextProtocol(const Configure& configuration) {
   std::unique_ptr<sitetosite::SiteToSiteClient> next_protocol = nullptr;
   if (!available_protocols_.try_dequeue(next_protocol)) {
     std::lock_guard<std::mutex> lock(peer_mutex_);
@@ -111,7 +111,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessGroupPort::getNextPro
       next_protocol = initializeProtocol(config);
     } else {
       logger_->log_debug("Refreshing the peer list since there are none configured.");
-      refreshPeerList();
+      refreshPeerList(configuration);
     }
   }
   logger_->log_debug("Obtained protocol from available_protocols_");
@@ -157,13 +157,15 @@ void RemoteProcessGroupPort::onSchedule(core::reporting::ReportingTaskContext& c
     context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
   }
 
+  const Configure& configuration = *context.getConfiguration();
+
   std::shared_ptr<core::controller::ControllerServiceHandle> service = context.getControllerService(*context_name, getUUID());
   if (nullptr != service) {
     ssl_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextServiceInterface>(service);
   } else {
     std::string secureStr;
-    if (configure_->get(Configure::nifi_remote_input_secure, secureStr) && utils::string::toBool(secureStr).value_or(false)) {
-      ssl_service_ = controllers::SSLContextService::createAndEnable(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
+    if (configuration.get(Configure::nifi_remote_input_secure, secureStr) && utils::string::toBool(secureStr).value_or(false)) {
+      ssl_service_ = controllers::SSLContextService::createAndEnable(RPG_SSL_CONTEXT_SERVICE_NAME, configuration);
     }
   }
 
@@ -171,7 +173,7 @@ void RemoteProcessGroupPort::onSchedule(core::reporting::ReportingTaskContext& c
 
   std::lock_guard<std::mutex> lock(peer_mutex_);
   if (!nifi_instances_.empty()) {
-    refreshPeerList();
+    refreshPeerList(configuration);
     if (!peers_.empty())
       peer_index_ = 0;
   }
@@ -212,7 +214,7 @@ void RemoteProcessGroupPort::onTrigger(core::ProcessContext& context, core::Proc
 
   try {
     logger_->log_trace("get protocol in on trigger");
-    auto protocol = getNextProtocol();
+    auto protocol = getNextProtocol(*context.getConfiguration());
 
     if (!protocol) {
       logger_->log_info("no protocol, yielding");
@@ -232,15 +234,15 @@ void RemoteProcessGroupPort::onTrigger(core::ProcessContext& context, core::Proc
   }
 }
 
-std::optional<std::string> RemoteProcessGroupPort::getRestApiToken(const RPG& nifi) const {
+std::optional<std::string> RemoteProcessGroupPort::getRestApiToken(const RPG& nifi, const Configure& configuration) const {
   std::string rest_user_name;
-  configure_->get(Configure::nifi_rest_api_user_name, rest_user_name);
+  configuration.get(Configure::nifi_rest_api_user_name, rest_user_name);
   if (rest_user_name.empty()) {
     return std::nullopt;
   }
 
   std::string rest_password;
-  configure_->get(Configure::nifi_rest_api_password, rest_password);
+  configuration.get(Configure::nifi_rest_api_password, rest_password);
 
   std::stringstream login_url;
   login_url << nifi.protocol << nifi.host;
@@ -298,13 +300,13 @@ std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::parseSit
   return std::make_pair(nifi.host, site_to_site_port);
 }
 
-std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::tryRefreshSiteToSiteInstance(RPG nifi) const {  // NOLINT(performance-unnecessary-value-param)
+std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::tryRefreshSiteToSiteInstance(RPG nifi, const Configure& configuration) const {  // NOLINT(performance-unnecessary-value-param)
 #ifdef WIN32
   if ("localhost" == nifi.host) {
     nifi.host = org::apache::nifi::minifi::utils::net::getMyHostName();
   }
 #endif
-  auto token = getRestApiToken(nifi);
+  auto token = getRestApiToken(nifi, configuration);
   if (token && token->empty()) {
     return std::nullopt;
   }
@@ -347,13 +349,13 @@ std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::tryRefre
   return parseSiteToSiteDataFromControllerConfig(nifi, controller);
 }
 
-std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::refreshRemoteSiteToSiteInfo() {
+std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::refreshRemoteSiteToSiteInfo(const Configure& configuration) {
   if (nifi_instances_.empty()) {
     return std::nullopt;
   }
 
   for (const auto& nifi : nifi_instances_) {
-    auto result = tryRefreshSiteToSiteInstance(nifi);
+    auto result = tryRefreshSiteToSiteInstance(nifi, configuration);
     if (result) {
       return result;
     }
@@ -361,8 +363,8 @@ std::optional<std::pair<std::string, uint16_t>> RemoteProcessGroupPort::refreshR
   return std::nullopt;
 }
 
-void RemoteProcessGroupPort::refreshPeerList() {
-  auto connection = refreshRemoteSiteToSiteInfo();
+void RemoteProcessGroupPort::refreshPeerList(const Configure& configuration) {
+  auto connection = refreshRemoteSiteToSiteInfo(configuration);
   if (!connection) {
     logger_->log_warn("No port configured");
     return;

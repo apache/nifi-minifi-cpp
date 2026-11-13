@@ -214,7 +214,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(ReportingTaskContext& context)
     return;
   }
 
-  if (!remote_port_.getImpl<RemoteProcessGroupPort>().useProtocol([&] (auto& protocol) {
+  if (!remote_port_.getImpl<RemoteProcessGroupPort>().useProtocol(*context.getConfiguration(), [&] (auto& protocol) {
     try {
       std::map<std::string, std::string> attributes;
       return protocol.transmitPayload(context, jsonStr, attributes);

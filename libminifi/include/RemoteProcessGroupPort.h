@@ -49,12 +49,11 @@ struct RPG {
 
 class RemoteProcessGroupPort : public core::ProcessorImpl {
  public:
-  RemoteProcessGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier& uuid,
+  RemoteProcessGroupPort(std::string_view name, std::string url, const utils::Identifier& uuid,
       sitetosite::TransferDirection direction, std::shared_ptr<core::logging::Logger> logger = nullptr)
       : core::ProcessorImpl({.uuid = uuid,
             .name = std::string{name},
             .logger = logger ? logger : core::logging::LoggerFactory<RemoteProcessGroupPort>::getLogger(uuid)}),
-        configure_(std::move(configure)),
         direction_(direction),
         transmitting_(false),
         protocol_uuid_(uuid),
@@ -167,16 +166,16 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
     return batch_duration_;
   }
 
-  bool useProtocol(const std::function<bool(sitetosite::SiteToSiteClient& client)>& callback);
+  // the configuration is only used for the duration of the call
+  bool useProtocol(const Configure& configuration, const std::function<bool(sitetosite::SiteToSiteClient& client)>& callback);
 
  protected:
-  std::optional<std::pair<std::string, uint16_t>> refreshRemoteSiteToSiteInfo();
-  void refreshPeerList();
-  std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol();
+  std::optional<std::pair<std::string, uint16_t>> refreshRemoteSiteToSiteInfo(const Configure& configuration);
+  void refreshPeerList(const Configure& configuration);
+  std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol(const Configure& configuration);
   void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
 
   moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
-  std::shared_ptr<Configure> configure_;
   const sitetosite::TransferDirection direction_;
   std::atomic<bool> transmitting_;
   std::optional<std::chrono::milliseconds> timeout_;
@@ -198,9 +197,9 @@ class RemoteProcessGroupPort : public core::ProcessorImpl {
 
  private:
   gsl::not_null<std::unique_ptr<sitetosite::SiteToSiteClient>> initializeProtocol(sitetosite::SiteToSiteClientConfiguration& config) const;
-  [[nodiscard]] std::optional<std::string> getRestApiToken(const RPG& nifi) const;
+  [[nodiscard]] std::optional<std::string> getRestApiToken(const RPG& nifi, const Configure& configuration) const;
   std::optional<std::pair<std::string, uint16_t>> parseSiteToSiteDataFromControllerConfig(const RPG& nifi, const std::string& controller) const;
-  std::optional<std::pair<std::string, uint16_t>> tryRefreshSiteToSiteInstance(RPG nifi) const;
+  std::optional<std::pair<std::string, uint16_t>> tryRefreshSiteToSiteInstance(RPG nifi, const Configure& configuration) const;
 
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };

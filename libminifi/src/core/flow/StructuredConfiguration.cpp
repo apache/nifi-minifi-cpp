@@ -675,7 +675,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   uuid = portId;
 
   auto port_impl = std::make_unique<minifi::RemoteProcessGroupPort>(
-          nameStr, parent->getURL(), this->configuration_, uuid, direction);
+          nameStr, parent->getURL(), uuid, direction);
   auto* port = port_impl.get();
   auto port_wrapper = std::make_unique<core::Processor>("RemoteProcessGroupPort", nameStr, uuid, std::move(port_impl));
   port->setTimeout(std::chrono::milliseconds(parent->getTimeout()));
