@@ -10,7 +10,8 @@ use crate::api::property::{GetControllerService, GetProperty};
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
     GetAttribute, LogLevel, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
-    ProcessError, ProcessSession, Relationship, Schedule, SingleThreaded, impl_with_attributes,
+    ProcessSession, ProcessorDefinition, Relationship, Schedule, SingleThreaded, TransformError,
+    impl_with_attributes,
 };
 
 use minifi_native::{InputStream, trace};
@@ -87,7 +88,20 @@ impl<'a> TransformedFlowFile<'a> {
 
 impl_with_attributes!(TransformedFlowFile<'a>);
 
-pub trait FlowFileTransform {
+pub trait FlowFileTransform: ProcessorDefinition {
+    /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
+    /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
+    ///
+    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// [`crate::TransformErrorExt::rollback_err`].
+    const ERROR_RELATIONSHIP: &'static Relationship;
+
+    /// Forced by the processor wrapper's trigger; implementors should not override it.
+    const ERROR_RELATIONSHIP_DECLARED: () = assert!(
+        crate::api::relationship::is_declared(Self::RELATIONSHIPS, Self::ERROR_RELATIONSHIP),
+        "ERROR_RELATIONSHIP must also be listed in this processor's RELATIONSHIPS"
+    );
+
     fn transform<
         'a,
         Context: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -97,10 +111,23 @@ pub trait FlowFileTransform {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError>;
+    ) -> Result<TransformedFlowFile<'a>, TransformError>;
 }
 
-pub trait MutFlowFileTransform {
+pub trait MutFlowFileTransform: ProcessorDefinition {
+    /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
+    /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
+    ///
+    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// [`crate::TransformErrorExt::rollback_err`].
+    const ERROR_RELATIONSHIP: &'static Relationship;
+
+    /// Forced by the processor wrapper's trigger; implementors should not override it.
+    const ERROR_RELATIONSHIP_DECLARED: () = assert!(
+        crate::api::relationship::is_declared(Self::RELATIONSHIPS, Self::ERROR_RELATIONSHIP),
+        "ERROR_RELATIONSHIP must also be listed in this processor's RELATIONSHIPS"
+    );
+
     fn transform<
         'a,
         Context: GetProperty + GetControllerService + GetAttribute,
@@ -110,7 +137,7 @@ pub trait MutFlowFileTransform {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError>;
+    ) -> Result<TransformedFlowFile<'a>, TransformError>;
 }
 
 pub struct FlowFileTransformProcessorType {}
@@ -119,8 +146,9 @@ fn handle_transform<PC, PS, L, F>(
     context: &mut PC,
     session: &mut PS,
     logger: &L,
+    error_relationship: &Relationship,
     mut transform_fn: F,
-) -> Result<OnTriggerResult, ProcessError>
+) -> Result<OnTriggerResult, MinifiError>
 where
     PC: ProcessContext,
     PS: ProcessSession<FlowFile = PC::FlowFile>,
@@ -128,7 +156,7 @@ where
     F: for<'stream> FnMut(
         &ContextSessionFlowFileBundle<'_, PC, PS>,
         &'stream mut dyn InputStream,
-    ) -> Result<TransformedFlowFile<'stream>, ProcessError>,
+    ) -> Result<TransformedFlowFile<'stream>, TransformError>,
 {
     if let Some(mut flow_file) = session.get() {
         let simple_context = ContextSessionFlowFileBundle::new(context, session, Some(&flow_file));
@@ -136,13 +164,13 @@ where
         let (attrs_to_add, relationship) = session.read_stream(&flow_file, |input_stream| {
             let transformed = match transform_fn(&simple_context, input_stream) {
                 Ok(transform_success) => transform_success,
-                Err(ProcessError::Route(route)) => {
-                    route.log(logger);
-                    TransformedFlowFile::route_without_changes_by_name(route.relationship)
-                }
-                Err(ProcessError::Fatal(e)) => {
-                    return Err(e);
-                }
+                Err(err) => match err.into_route(error_relationship) {
+                    Ok(route) => {
+                        route.log(logger);
+                        TransformedFlowFile::route_without_changes_by_name(route.relationship)
+                    }
+                    Err(minifi_error) => return Err(minifi_error),
+                },
             };
 
             trace!(logger, "{:?}", transformed);
@@ -184,17 +212,23 @@ where
         &self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
+        // Const defaults are lazy; this forces the check.
+        let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref scheduled_impl) = self.scheduled_impl {
-            handle_transform(context, session, &self.logger, |ctx, input| {
-                scheduled_impl.transform(ctx, input, &self.logger)
-            })
+            handle_transform(
+                context,
+                session,
+                &self.logger,
+                Implementation::ERROR_RELATIONSHIP,
+                |ctx, input| scheduled_impl.transform(ctx, input, &self.logger),
+            )
         } else {
-            Err(MinifiError::UnscheduledProcessor.into())
+            Err(MinifiError::UnscheduledProcessor)
         }
     }
 }
@@ -209,17 +243,23 @@ where
         &mut self,
         context: &mut PC,
         session: &mut PS,
-    ) -> Result<OnTriggerResult, ProcessError>
+    ) -> Result<OnTriggerResult, MinifiError>
     where
         PC: ProcessContext,
         PS: ProcessSession<FlowFile = PC::FlowFile>,
     {
+        // Const defaults are lazy; this forces the check.
+        let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
-            handle_transform(context, session, &self.logger, |ctx, input| {
-                scheduled_impl.transform(ctx, input, &self.logger)
-            })
+            handle_transform(
+                context,
+                session,
+                &self.logger,
+                Implementation::ERROR_RELATIONSHIP,
+                |ctx, input| scheduled_impl.transform(ctx, input, &self.logger),
+            )
         } else {
-            Err(MinifiError::UnscheduledProcessor.into())
+            Err(MinifiError::UnscheduledProcessor)
         }
     }
 }
@@ -231,7 +271,13 @@ mod tests {
     use crate::api::raw_processor::MultiThreadedTrigger;
     use crate::{
         GetControllerService, GetId, MockFlowFile, MockLogger, MockProcessContext,
-        MockProcessSession, ProcessError, RouteErrorExt,
+        MockProcessSession, OutputAttribute, ProcessorInputRequirement, PropertyDefinition,
+        TransformError,
+    };
+
+    const FAILURE: Relationship = Relationship {
+        name: "failure",
+        description: "test failure relationship",
     };
 
     struct RouteToFailure;
@@ -240,7 +286,18 @@ mod tests {
             Ok(RouteToFailure)
         }
     }
+    impl ProcessorDefinition for RouteToFailure {
+        const DESCRIPTION: &'static str = "test transform";
+        const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
+        const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
+        const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
+        const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
+        const RELATIONSHIPS: &'static [Relationship] = &[FAILURE];
+        const PROPERTIES: &'static [PropertyDefinition] = &[];
+    }
     impl FlowFileTransform for RouteToFailure {
+        const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
         fn transform<
             'a,
             Context: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -250,22 +307,35 @@ mod tests {
             _context: &Context,
             _input_stream: &'a mut dyn InputStream,
             _logger: &LoggerImpl,
-        ) -> Result<TransformedFlowFile<'a>, ProcessError> {
+        ) -> Result<TransformedFlowFile<'a>, TransformError> {
             let bad: Result<TransformedFlowFile<'a>, std::io::Error> = Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 "bad data",
             ));
-            bad.route_err_to_failure()
+            // Propagated with `?`, so it becomes `Bubbled` and the wrapper routes
+            // it to `ERROR_RELATIONSHIP`.
+            Ok(bad?)
         }
     }
 
-    struct FatalTransform;
-    impl Schedule for FatalTransform {
+    struct RollbackTransform;
+    impl Schedule for RollbackTransform {
         fn schedule<Ctx: GetProperty, L: Logger>(_c: &Ctx, _l: &L) -> Result<Self, MinifiError> {
-            Ok(FatalTransform)
+            Ok(RollbackTransform)
         }
     }
-    impl FlowFileTransform for FatalTransform {
+    impl ProcessorDefinition for RollbackTransform {
+        const DESCRIPTION: &'static str = "test transform";
+        const INPUT_REQUIREMENT: ProcessorInputRequirement = ProcessorInputRequirement::Required;
+        const SUPPORTS_DYNAMIC_PROPERTIES: bool = false;
+        const SUPPORTS_DYNAMIC_RELATIONSHIPS: bool = false;
+        const OUTPUT_ATTRIBUTES: &'static [OutputAttribute] = &[];
+        const RELATIONSHIPS: &'static [Relationship] = &[FAILURE];
+        const PROPERTIES: &'static [PropertyDefinition] = &[];
+    }
+    impl FlowFileTransform for RollbackTransform {
+        const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
         fn transform<
             'a,
             Context: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -275,8 +345,8 @@ mod tests {
             _context: &Context,
             _input_stream: &'a mut dyn InputStream,
             _logger: &LoggerImpl,
-        ) -> Result<TransformedFlowFile<'a>, ProcessError> {
-            Err(ProcessError::Fatal(MinifiError::custom("real error")))
+        ) -> Result<TransformedFlowFile<'a>, TransformError> {
+            Err(TransformError::Rollback(MinifiError::custom("real error")))
         }
     }
 
@@ -313,24 +383,21 @@ mod tests {
     }
 
     #[test]
-    fn fatal_error_propagates_and_transfers_nothing() {
+    fn rollback_error_propagates_and_transfers_nothing() {
         let mut processor: Processor<
-            FatalTransform,
+            RollbackTransform,
             FlowFileTransformProcessorType,
             MultiThreaded,
             MockLogger,
         > = Processor::new(MockLogger::new());
-        processor.scheduled_impl = Some(FatalTransform);
+        processor.scheduled_impl = Some(RollbackTransform);
 
         let mut context = MockProcessContext::new();
         let mut session = seeded_session();
 
         let result = MultiThreadedTrigger::trigger(&processor, &mut context, &mut session);
 
-        assert!(matches!(
-            result,
-            Err(ProcessError::Fatal(MinifiError::CustomError(_)))
-        ));
+        assert!(matches!(result, Err(MinifiError::CustomError(_))));
         assert_eq!(session.num_of_transferred_flow_files(), 0);
     }
 
