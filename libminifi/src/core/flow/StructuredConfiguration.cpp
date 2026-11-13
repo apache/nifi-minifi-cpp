@@ -29,6 +29,7 @@
 #include "core/ReferenceParser.h"
 #include "core/flow/CheckRequiredField.h"
 #include "core/flow/StructuredConnectionParser.h"
+#include "utils/Cron.h"
 #include "utils/TimeUtil.h"
 #include "utils/crypto/property_encryption/PropertyEncryptionUtils.h"
 
@@ -1099,19 +1100,28 @@ void StructuredConfiguration::parseReportingTasks(const Node& reporting_tasks_no
 
     reporting_task->setFlowIdentifier(flow_version_->getFlowIdentifier());
 
-    auto scheduling_strategy = getOptionalField(reporting_task_node, schema_.scheduling_strategy, DEFAULT_SCHEDULING_STRATEGY);
+    const auto scheduling_strategy = getOptionalField(reporting_task_node, schema_.scheduling_strategy, DEFAULT_SCHEDULING_STRATEGY);
     if (scheduling_strategy == "TIMER_DRIVEN") {
       reporting_task->setSchedulingStrategy(core::TIMER_DRIVEN);
-    } else {
-      reporting_task->setSchedulingStrategy(core::CRON_DRIVEN);
-    }
-    auto scheduling_period_str = getOptionalField(reporting_task_node, schema_.scheduling_period, DEFAULT_SCHEDULING_PERIOD_STR);
-    if (scheduling_strategy == "TIMER_DRIVEN") {
-      if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(scheduling_period_str)) {
-        reporting_task->setSchedulingPeriod(*scheduling_period);
+      const auto scheduling_period_str = getOptionalField(reporting_task_node, schema_.scheduling_period, DEFAULT_SCHEDULING_PERIOD_STR);
+      const auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(scheduling_period_str);
+      if (!scheduling_period) {
+        throw std::invalid_argument(fmt::format("Invalid scheduling period '{}' for TIMER_DRIVEN reporting task '{}'", scheduling_period_str, name));
       }
+      reporting_task->setSchedulingPeriod(*scheduling_period);
+    } else if (scheduling_strategy == "CRON_DRIVEN") {
+      reporting_task->setSchedulingStrategy(core::CRON_DRIVEN);
+      checkRequiredField(reporting_task_node, schema_.scheduling_period,
+          fmt::format("A CRON_DRIVEN reporting task requires a cron expression as scheduling period, reporting task: '{}'", name));
+      const auto cron_expression = reporting_task_node[schema_.scheduling_period].getString().value();
+      try {
+        [[maybe_unused]] const utils::Cron validated_cron_expression{cron_expression};
+      } catch (const utils::BadCronExpression& ex) {
+        throw std::invalid_argument(fmt::format("Invalid cron expression '{}' for CRON_DRIVEN reporting task '{}': {}", cron_expression, name, ex.what()));
+      }
+      reporting_task->setCronPeriod(cron_expression);
     } else {
-      reporting_task->setCronPeriod(scheduling_period_str);
+      throw std::invalid_argument(fmt::format("Invalid scheduling strategy '{}' for reporting task '{}', it must be either TIMER_DRIVEN or CRON_DRIVEN", scheduling_strategy, name));
     }
 
     if (auto penalization_node = reporting_task_node[schema_.penalization_period]) {

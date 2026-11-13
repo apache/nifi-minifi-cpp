@@ -396,8 +396,8 @@ The following fields can be set for a reporting task:
 - `name` (required): The name of the reporting task.
 - `id` (YAML) / `identifier` (JSON): The UUID of the reporting task. If not specified, a new UUID is generated.
 - `class` or `type` (YAML) / `type` (JSON) (required): The type of the reporting task, either the short class name (e.g. `SiteToSiteProvenanceReportingTask`) or the fully qualified one.
-- `scheduling strategy` (YAML) / `schedulingStrategy` (JSON): Either `TIMER_DRIVEN` (default) or `CRON_DRIVEN`.
-- `scheduling period` (YAML) / `schedulingPeriod` (JSON): The time period between two executions for `TIMER_DRIVEN` (default: `1 sec`), or the CRON expression for `CRON_DRIVEN` reporting tasks.
+- `scheduling strategy` (YAML) / `schedulingStrategy` (JSON): Either `TIMER_DRIVEN` (default) or `CRON_DRIVEN`, any other value is rejected.
+- `scheduling period` (YAML) / `schedulingPeriod` (JSON): The time period between two executions for `TIMER_DRIVEN` (default: `1 sec`), or the CRON expression for `CRON_DRIVEN` reporting tasks, which is required in this case. An invalid time period or CRON expression is rejected when the flow configuration is loaded.
 - `Properties` (YAML) / `properties` (JSON): The properties of the reporting task.
 
 An example for using a reporting task in a YAML configuration file:

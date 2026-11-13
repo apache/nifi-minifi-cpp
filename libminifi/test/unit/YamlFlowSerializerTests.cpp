@@ -20,6 +20,7 @@
 #include "unit/Catch.h"
 #include "unit/ConfigurationTestController.h"
 #include "catch2/generators/catch_generators.hpp"
+#include "catch2/matchers/catch_matchers_string.hpp"
 #include "core/flow/FlowSchema.h"
 #include "core/yaml/YamlFlowSerializer.h"
 #include "core/yaml/YamlNode.h"
@@ -653,6 +654,44 @@ Reporting Tasks:
   CHECK(cron_reporting_task->getName() == "CronProvenanceReporter");
   CHECK(cron_reporting_task->getSchedulingStrategy() == core::CRON_DRIVEN);
   CHECK(cron_reporting_task->getCronPeriod() == "0 0/5 * * * ?");
+}
+
+TEST_CASE("Invalid scheduling of a reporting task is rejected when parsing the flow yaml") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_configuration{test_controller.getContext()};
+
+  const auto make_config = [](std::string_view scheduling) {
+    return fmt::format(R"(
+Flow Controller:
+  name: MiNiFi Flow
+Processors: []
+Connections: []
+Reporting Tasks:
+  - name: ProvenanceReporter
+    id: 00000000-0000-0000-0000-000000000001
+    class: SiteToSiteProvenanceReportingTask
+{}
+    Properties:
+      Destination URL: http://localhost:8080/nifi
+)", scheduling);
+  };
+
+  SECTION("Unknown scheduling strategy") {
+    REQUIRE_THROWS_WITH(yaml_configuration.getRootFromPayload(make_config("    scheduling strategy: EVENT_DRIVEN\n    scheduling period: 5 sec")),
+        "Invalid scheduling strategy 'EVENT_DRIVEN' for reporting task 'ProvenanceReporter', it must be either TIMER_DRIVEN or CRON_DRIVEN");
+  }
+  SECTION("Invalid timer driven scheduling period") {
+    REQUIRE_THROWS_WITH(yaml_configuration.getRootFromPayload(make_config("    scheduling strategy: TIMER_DRIVEN\n    scheduling period: often")),
+        "Invalid scheduling period 'often' for TIMER_DRIVEN reporting task 'ProvenanceReporter'");
+  }
+  SECTION("Missing cron expression") {
+    REQUIRE_THROWS_WITH(yaml_configuration.getRootFromPayload(make_config("    scheduling strategy: CRON_DRIVEN")),
+        "A CRON_DRIVEN reporting task requires a cron expression as scheduling period, reporting task: 'ProvenanceReporter'");
+  }
+  SECTION("Invalid cron expression") {
+    REQUIRE_THROWS_WITH(yaml_configuration.getRootFromPayload(make_config("    scheduling strategy: CRON_DRIVEN\n    scheduling period: 5 sec")),
+        Catch::Matchers::ContainsSubstring("Invalid cron expression '5 sec' for CRON_DRIVEN reporting task 'ProvenanceReporter'"));
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::test
