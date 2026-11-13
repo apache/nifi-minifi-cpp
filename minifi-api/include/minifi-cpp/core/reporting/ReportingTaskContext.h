@@ -16,12 +16,19 @@
  */
 #pragma once
 
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 #include <system_error>
 #include <string_view>
 #include "utils/expected.h"
+#include "minifi-cpp/core/Property.h"
+#include "minifi-cpp/core/PropertyDefinition.h"
+#include "minifi-cpp/core/StateManager.h"
+#include "minifi-cpp/core/controller/ControllerServiceHandle.h"
 #include "minifi-cpp/provenance/ProvenanceRepository.h"
+#include "minifi-cpp/utils/Id.h"
 #include "minifi-cpp/utils/gsl.h"
 
 namespace org::apache::nifi::minifi {

@@ -31,6 +31,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name                | Default Value | Allowable Values | Description                                                                                                                               |
 |---------------------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
 | **Destination URL** |               |                  | The URL of the destination NiFi instance in the format of http(s)://host:port/nifi. This is used to initiate the Site-to-Site connection. |
+| **Batch Size**      | 100           |                  | The maximum number of provenance events to send to the destination in a single transaction.                                               |
 | SSL Context Service |               |                  | The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.                                   |
 | Port UUID           |               |                  | Specifies remote NiFi Port UUID.                                                                                                          |
 | **Idle Timeout**    | 15 s          |                  | Max idle time for remote service                                                                                                          |

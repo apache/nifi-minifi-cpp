@@ -42,7 +42,7 @@ class ReportingTaskFactoryImpl : public ReportingTaskFactory {
   }
 
   std::unique_ptr<ReportingTaskApi> create(ReportingTaskMetadata metadata) override {
-    return std::make_unique<T>(metadata);
+    return std::make_unique<T>(std::move(metadata));
   }
 
   std::string getClassName() const override {
