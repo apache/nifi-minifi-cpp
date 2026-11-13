@@ -92,8 +92,8 @@ std::shared_ptr<ProcessorMetricsExtension> ReportingTask::getMetricsExtension() 
   return nullptr;
 }
 
-void ReportingTask::forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>&) {
-  // pass
+void ReportingTask::forEachLogger(const std::function<void(std::shared_ptr<logging::Logger>)>& callback) {
+  impl_->forEachLogger(callback);
 }
 
 }  // namespace org::apache::nifi::minifi::core::reporting

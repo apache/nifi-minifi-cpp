@@ -509,6 +509,37 @@ class TestProcessorNoContent : public minifi::core::ProcessorImpl {
 
 REGISTER_RESOURCE(TestProcessorNoContent, Processor);
 
+class LoggingReportingTask : public minifi::core::reporting::ReportingTaskBase {
+ public:
+  using ReportingTaskBase::ReportingTaskBase;
+
+  void initialize() override {}
+  void onSchedule(minifi::core::reporting::ReportingTaskContext&) override {}
+  void onTrigger(minifi::core::reporting::ReportingTaskContext&) override {}
+
+  void logError(const std::string& message) {
+    logger_->log_error("{}", message);
+  }
+};
+
+TEST_CASE("The logger callback of a reporting task receives the logs of the reporting task", "[reportingTask]") {
+  LogTestController::getInstance().setTrace<LoggingReportingTask>();
+  auto reporting_task = minifi::test::utils::make_reporting_task<LoggingReportingTask>("logging_reporting_task");
+
+  std::vector<std::pair<core::logging::LOG_LEVEL, std::string>> received_logs;
+  reporting_task->setLoggerCallback([&] (core::logging::LOG_LEVEL level, const std::string& message) {
+    received_logs.emplace_back(level, message);
+  });
+
+  auto& impl = reporting_task->getImpl<minifi::core::reporting::ReportingTask>().getImpl<LoggingReportingTask>();
+  impl.logError("something went wrong");
+
+  REQUIRE(received_logs.size() == 1);
+  CHECK(received_logs[0].first == core::logging::LOG_LEVEL::err);
+  CHECK(received_logs[0].second.find("something went wrong") != std::string::npos);
+  LogTestController::getInstance().reset();
+}
+
 TEST_CASE("TestEmptyContent", "[emptyContent]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
