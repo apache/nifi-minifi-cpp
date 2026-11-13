@@ -102,6 +102,14 @@ void ClassDescriptionRegistry::createClassDescription(const BundleCoordinate& bu
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::Properties)
     }, Type);
+  } else if constexpr (Type == ResourceType::ReportingTask) {
+    components.addClassDescription(ClassDescription{
+        .type_ = Type,
+        .short_name_ = std::move(class_name),
+        .full_name_ = detail::classNameWithDots<Class>(),
+        .description_ = Class::Description,
+        .class_properties_ = detail::toVector(Class::Properties)
+    }, Type);
   } else if constexpr (Type == ResourceType::DescriptionOnly) {
     components.addClassDescription(ClassDescription{
         .type_ = Type,

@@ -182,6 +182,12 @@ void writeParameterProvider(std::ostream& os, const std::string_view name, const
   writeProperties(os, documentation);
 }
 
+void writeReportingTask(std::ostream& os, const std::string_view name, const minifi::ClassDescription& documentation) {
+  writeName(os, name);
+  writeDescription(os, documentation);
+  writeProperties(os, documentation);
+}
+
 class MonolithDocumentation {
  public:
   explicit MonolithDocumentation() {
@@ -195,11 +201,13 @@ class MonolithDocumentation {
     std::ofstream controllers_md(docs_dir / "CONTROLLERS.md");
     std::ofstream processors_md(docs_dir / "PROCESSORS.md");
     std::ofstream parameter_providers_md(docs_dir / "PARAMETER_PROVIDERS.md");
-    gsl_Assert(controllers_md && processors_md && parameter_providers_md);
+    std::ofstream reporting_tasks_md(docs_dir / "REPORTING_TASKS.md");
+    gsl_Assert(controllers_md && processors_md && parameter_providers_md && reporting_tasks_md);
 
     writeControllers(controllers_md);
     writeProcessors(processors_md);
     writeParameterProviders(parameter_providers_md);
+    writeReportingTasks(reporting_tasks_md);
   }
 
  private:
@@ -213,6 +221,9 @@ class MonolithDocumentation {
     for (const auto& parameter_provider_description : components.getParameterProviders()) {
       parameter_providers.emplace_back(extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
     }
+    for (const auto& reporting_task_description : components.getReportingTasks()) {
+      reporting_tasks.emplace_back(extractClassName(reporting_task_description.full_name_), reporting_task_description);
+    }
   }
 
   void sort() {
@@ -220,6 +231,7 @@ class MonolithDocumentation {
     std::ranges::sort(controller_services, std::less(), lower_case_first);
     std::ranges::sort(processors, std::less(), lower_case_first);
     std::ranges::sort(parameter_providers, std::less(), lower_case_first);
+    std::ranges::sort(reporting_tasks, std::less(), lower_case_first);
   }
 
   void writeControllers(std::ostream& os) {
@@ -243,9 +255,17 @@ class MonolithDocumentation {
     }
   }
 
+  void writeReportingTasks(std::ostream& os) {
+    writeHeader(os, reporting_tasks);
+    for (const auto& [name, documentation] : reporting_tasks) {
+      writeReportingTask(os, name, documentation);
+    }
+  }
+
   std::vector<std::pair<std::string, minifi::ClassDescription>> controller_services;
   std::vector<std::pair<std::string, minifi::ClassDescription>> processors;
   std::vector<std::pair<std::string, minifi::ClassDescription>> parameter_providers;
+  std::vector<std::pair<std::string, minifi::ClassDescription>> reporting_tasks;
 };
 
 class ModularDocumentation {
@@ -274,6 +294,7 @@ class ModularDocumentation {
     writeComponentParts(os, components.getProcessors(), "Processors");
     writeComponentParts(os, components.getControllerServices(), "Controller Services");
     writeComponentParts(os, components.getParameterProviders(), "Parameter Providers");
+    writeComponentParts(os, components.getReportingTasks(), "Reporting Tasks");
   }
 
   static void writeModule(const std::filesystem::path& docs_dir, const std::string_view module_name, const minifi::Components& components) {
@@ -295,6 +316,10 @@ class ModularDocumentation {
 
     for (const auto& parameter_provider_description : components.getParameterProviders()) {
       writeParameterProvider(os, extractClassName(parameter_provider_description.full_name_), parameter_provider_description);
+    }
+
+    for (const auto& reporting_task_description : components.getReportingTasks()) {
+      writeReportingTask(os, extractClassName(reporting_task_description.full_name_), reporting_task_description);
     }
   }
 };

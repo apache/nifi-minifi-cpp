@@ -110,6 +110,10 @@ The next table outlines CMAKE flags that correspond with MiNiFi extensions. Exte
 
 Communicating with Apache NiFi can be done using the Site-to-Site protocol. More information on configuring it in MiNiFi C++ can be found in the [Site-to-Site documentation](SITE_TO_SITE.md).
 
+### Reporting Tasks
+
+Reporting tasks run periodically in the background, independently of the dataflow, to report information about the agent, e.g. the [SiteToSiteProvenanceReportingTask](REPORTING_TASKS.md#SiteToSiteProvenanceReportingTask) sends the provenance events of the agent to a NiFi instance using the Site-to-Site protocol. Reporting tasks are defined in the `Reporting Tasks` (YAML) or `reportingTasks` (JSON) section of the flow configuration, see [Reporting Tasks](CONFIGURE.md#reporting-tasks) for details. The list of available reporting tasks can be found in the [Reporting Tasks documentation](REPORTING_TASKS.md).
+
 ## Caveats
 * We follow semver with regards to API compatibility, but no ABI compatibility is provided. See [semver's website](https://semver.org/) for more information
 * Build and usage currently only supports Windows, Linux and macOS environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.

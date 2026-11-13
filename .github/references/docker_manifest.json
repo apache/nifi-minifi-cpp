@@ -11943,6 +11943,49 @@
                     "supportsDynamicProperties": "false",
                     "type": "org.apache.nifi.minifi.controllers.UpdatePolicyControllerService"
                 }
+            ],
+            "reportingTasks": [
+                {
+                    "propertyDescriptors": {
+                        "Destination URL": {
+                            "name": "Destination URL",
+                            "description": "The URL of the destination NiFi instance in the format of http(s)://host:port/nifi. This is used to initiate the Site-to-Site connection.",
+                            "validator": "VALID",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "Idle Timeout": {
+                            "name": "Idle Timeout",
+                            "description": "Max idle time for remote service",
+                            "validator": "TIME_PERIOD_VALIDATOR",
+                            "required": "true",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE",
+                            "defaultValue": "15 s"
+                        },
+                        "Port UUID": {
+                            "name": "Port UUID",
+                            "description": "Specifies remote NiFi Port UUID.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        },
+                        "SSL Context Service": {
+                            "name": "SSL Context Service",
+                            "description": "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.",
+                            "validator": "VALID",
+                            "required": "false",
+                            "sensitive": "false",
+                            "expressionLanguageScope": "NONE"
+                        }
+                    },
+                    "typeDescription": "Publishes Provenance events using the Site To Site protocol. The events are read from the agent's provenance repository and are sent in JSON format to the remote input port of a NiFi instance.",
+                    "supportsDynamicRelationships": "false",
+                    "supportsDynamicProperties": "false",
+                    "type": "org.apache.nifi.minifi.core.reporting.SiteToSiteProvenanceReportingTask"
+                }
             ]
         },
         "group": "org.apache.nifi.minifi",

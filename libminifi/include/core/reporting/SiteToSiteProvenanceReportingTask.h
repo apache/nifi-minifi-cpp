@@ -46,6 +46,9 @@ class SiteToSiteProvenanceReportingTask : public ReportingTaskBase {
 
   static const char *ProvenanceAppStr;
 
+  MINIFIAPI static constexpr const char* Description = "Publishes Provenance events using the Site To Site protocol. "
+      "The events are read from the agent's provenance repository and are sent in JSON format to the remote input port of a NiFi instance.";
+
   MINIFIAPI static constexpr auto DestinationUrl =
       core::PropertyDefinitionBuilder<>::createProperty("Destination URL")
           .withDescription("The URL of the destination NiFi instance in the format of http(s)://host:port/nifi. "

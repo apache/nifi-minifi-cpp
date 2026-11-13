@@ -82,6 +82,7 @@ shared_sources = (
     "OPS.md",
     "PARAMETER_PROVIDERS.md",
     "PROCESSORS.md",
+    "REPORTING_TASKS.md",
     "SITE_TO_SITE.md",
     "ThirdParties.md",
     "Windows.md",

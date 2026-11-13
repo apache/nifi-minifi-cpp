@@ -21,6 +21,7 @@
 - [Configuring](#configuring)
   - [Parameter Contexts](#parameter-contexts)
   - [Parameter Providers](#parameter-providers)
+  - [Reporting Tasks](#reporting-tasks)
   - [Configuring flow configuration format](#configuring-flow-configuration-format)
   - [Scheduling strategies](#scheduling-strategies)
   - [Configuring encryption for flow configuration](#configuring-encryption-for-flow-configuration)
@@ -53,7 +54,6 @@
   - [Configuring Repository Cleanup](#configuring-repository-cleanup)
     - [Caveats](#caveats)
   - [Configuring provenance repository storage](#configuring-provenance-repository-storage)
-  - [Provenance Reporter](#provenance-reporter)
   - [REST API access](#rest-api-access)
   - [UID generation](#uid-generation)
   - [Asset directory](#asset-directory)
@@ -386,6 +386,68 @@ After the parameter contexts are generated successfully, the parameter contexts 
 ```
 
 To see the full list of available parameter providers and their properties, please refer to the [Parameter Providers documentation](PARAMETER_PROVIDERS.md).
+
+### Reporting Tasks
+
+Reporting tasks are components that run periodically in the background to report information about the agent itself, e.g. to send the provenance events collected by the agent to a NiFi instance. Unlike processors, reporting tasks do not have incoming or outgoing connections, they cannot be placed inside process groups, and they are defined at the top level of the flow configuration.
+
+The following fields can be set for a reporting task:
+
+- `name` (required): The name of the reporting task.
+- `id` (YAML) / `identifier` (JSON): The UUID of the reporting task. If not specified, a new UUID is generated.
+- `class` or `type` (YAML) / `type` (JSON) (required): The type of the reporting task, either the short class name (e.g. `SiteToSiteProvenanceReportingTask`) or the fully qualified one.
+- `scheduling strategy` (YAML) / `schedulingStrategy` (JSON): Either `TIMER_DRIVEN` (default) or `CRON_DRIVEN`.
+- `scheduling period` (YAML) / `schedulingPeriod` (JSON): The time period between two executions for `TIMER_DRIVEN` (default: `1 sec`), or the CRON expression for `CRON_DRIVEN` reporting tasks.
+- `Properties` (YAML) / `properties` (JSON): The properties of the reporting task.
+
+An example for using a reporting task in a YAML configuration file:
+
+```yaml
+Flow Controller:
+  name: MiNiFi Flow
+Processors: []
+Connections: []
+Reporting Tasks:
+  - name: ProvenanceReporter
+    id: 9ae8a4ae-0f7a-4b1c-9d2c-3e7a1d1e4b10
+    class: SiteToSiteProvenanceReportingTask
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 5 sec
+    Properties:
+      Destination URL: http://localhost:8080/nifi
+      Port UUID: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+```
+
+The same reporting task in a JSON configuration file:
+
+```json
+{
+    "reportingTasks": [
+        {
+            "identifier": "9ae8a4ae-0f7a-4b1c-9d2c-3e7a1d1e4b10",
+            "name": "ProvenanceReporter",
+            "type": "SiteToSiteProvenanceReportingTask",
+            "schedulingStrategy": "TIMER_DRIVEN",
+            "schedulingPeriod": "5 sec",
+            "properties": {
+                "Destination URL": "http://localhost:8080/nifi",
+                "Port UUID": "471deef6-2a6e-4a7d-912a-81cc17e3a204"
+            }
+        }
+    ],
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": []
+    }
+}
+```
+
+The `SiteToSiteProvenanceReportingTask` in the example above sends the provenance events of the agent in JSON format to the input port with the given UUID of the NiFi instance at the `Destination URL`. Note that the default `minifi.properties` file configures the `NoOpRepository` as the provenance repository, which does not store any provenance events, so a persistent or volatile provenance repository has to be configured for this reporting task to have any events to send (see [Configuring Repositories](#configuring-repositories)), e.g.:
+
+    # in minifi.properties
+    nifi.provenance.repository.class.name=ProvenanceRepository
+
+To see the full list of available reporting tasks and their properties, please refer to the [Reporting Tasks documentation](REPORTING_TASKS.md).
 
 ### Configuring flow configuration format
 
@@ -826,16 +888,6 @@ Provenance repository size buffer size and TTL can be configured when used with 
     #in minifi.properties
     nifi.provenance.repository.max.storage.size=16 MB
     nifi.provenance.repository.max.storage.time=30 days
-
-### Provenance Reporter
-
-    Add Provenance Reporting to config.yml
-    Provenance Reporting:
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
-      url: http://localhost:8080/nifi
-      port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
-      batch size: 100
 
 ### REST API access
 

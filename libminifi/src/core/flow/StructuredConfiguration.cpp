@@ -1138,7 +1138,7 @@ void StructuredConfiguration::parseReportingTasks(const Node& reporting_tasks_no
       }
     }
 
-    if (Node properties_node = reporting_task_node[schema_.processor_properties]) {
+    if (Node properties_node = reporting_task_node[schema_.reporting_task_properties]) {
       parsePropertiesNode(properties_node, *reporting_task, name, nullptr);
     }
 

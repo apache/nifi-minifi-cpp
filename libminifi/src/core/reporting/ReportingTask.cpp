@@ -74,7 +74,6 @@ void ReportingTask::onTrigger(ProcessContext& context, ProcessSession&) {
 
 void ReportingTask::onSchedule(ProcessContext& context, ProcessSessionFactory&) {
   impl_->onSchedule(context);
-  context.setTriggerWhenEmpty(true);
 }
 
 void ReportingTask::onUnSchedule() {

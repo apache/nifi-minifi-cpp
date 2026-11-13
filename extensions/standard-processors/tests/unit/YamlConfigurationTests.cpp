@@ -132,20 +132,6 @@ Remote Processing Groups:
             comments:
             max concurrent tasks: 1
             use compression: false
-
-Provenance Reporting:
-    comment:
-    scheduling strategy: TIMER_DRIVEN
-    scheduling period: 30 sec
-    host: localhost
-    port name: provenance
-    port: 8090
-    port uuid: 2f389b8d-83f2-48d3-b465-048f28a1cb56
-    url: https://localhost:8090/
-    originating url: http://${hostname(true)}:8081/nifi
-    use compression: true
-    timeout: 30 secs
-    batch size: 1000;
         )";
 
     std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(CONFIG_YAML_WITHOUT_IDS);
@@ -215,7 +201,6 @@ Processors:
         Retry Attribute: ""
 Connections: []
 Remote Processing Groups: []
-Provenance Reporting:
       )";
 
     REQUIRE_THROWS_WITH(yamlConfig.getRootFromPayload(CONFIG_YAML_EMPTY_RETRY_ATTRIBUTE), "Unable to parse configuration file for component named 'RetryFlowFile' because ValidationFailed");

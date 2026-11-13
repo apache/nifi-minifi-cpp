@@ -23,5 +23,4 @@ constexpr const char* empty_flow = R"(Flow Controller:
 Processors: []
 Connections: []
 Remote Processing Groups: []
-Provenance Reporting: ~
 )";

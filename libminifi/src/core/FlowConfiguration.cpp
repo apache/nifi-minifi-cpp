@@ -38,8 +38,7 @@ void createDefaultFlowConfigFile(const std::filesystem::path& path) {
       "  name: MiNiFi Flow\n"
       "Processors: []\n"
       "Connections: []\n"
-      "Remote Processing Groups: []\n"
-      "Provenance Reporting:\n";
+      "Remote Processing Groups: []\n";
 }
 }  // namespace
 
