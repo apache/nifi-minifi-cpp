@@ -87,11 +87,11 @@ class FetchOPCHistory final : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto StartTimestamp =
       core::PropertyDefinitionBuilder<>::createProperty("Start timestamp")
           .withDescription(
-              "Timestamp after which the events should be returned. If not specified entries are returned from the beginning of the history.")
+              "Timestamp after which the events should be returned in RFC 3339 format. If not specified entries are returned from the beginning of the history.")
           .build();
   EXTENSIONAPI static constexpr auto EndTimestamp =
       core::PropertyDefinitionBuilder<>::createProperty("End timestamp")
-          .withDescription("Timestamp before which the events should be returned. If not specified entries are returned until the current time.")
+          .withDescription("Timestamp before which the events should be returned in RFC 3339 format. If not specified entries are returned until the current time.")
           .build();
   EXTENSIONAPI static constexpr auto BatchSize =
       core::PropertyDefinitionBuilder<>::createProperty("Batch size")

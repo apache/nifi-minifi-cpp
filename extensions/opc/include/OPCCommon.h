@@ -121,8 +121,8 @@ class Client {
 
   template<typename T>
   UA_StatusCode add_node(const UA_NodeId parent_node_id, const UA_NodeId target_node_id, const UA_UInt32 ref_type_id, std::string_view browse_name, T value, UA_NodeId *received_node_id);
-  UA_StatusCode readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, UA_DateTime start_time, UA_DateTime end_time,
-    void *callback_context);
+  UA_StatusCode readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, void* callback_context,
+      UA_DateTime start_time, UA_DateTime end_time);
 
   static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                                               const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,

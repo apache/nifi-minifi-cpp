@@ -297,9 +297,7 @@ def verify_files_with_contents_in_directory(context: MinifiTestContext, director
     )
 
 
-@then(
-    'in the "{container_name}" container files with at least these contents "{contents}" are placed in the "{directory}" directory in less than {timeout}'
-)
+@then('in the "{container_name}" container files containing "{contents}" appear in "{directory}" in {timeout}')
 def verify_files_with_at_least_contents_in_directory_in_container(
     context: MinifiTestContext, container_name: str, directory: str, timeout: str, contents: str
 ):
@@ -317,14 +315,12 @@ def verify_files_with_at_least_contents_in_directory_in_container(
     )
 
 
-@then(
-    'files with at least these contents "{contents}" are placed in the "{directory}" directory in less than {timeout}'
-)
+@then('files containing "{contents}" appear in "{directory}" in {timeout}')
 def verify_files_with_at_least_contents_in_directory(
     context: MinifiTestContext, directory: str, timeout: str, contents: str
 ):
     context.execute_steps(
-        f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container files with at least these contents "{contents}" are placed in the "{directory}" directory in less than {timeout}'
+        f'then in the "{DEFAULT_MINIFI_CONTAINER_NAME}" container files containing "{contents}" appear in "{directory}" in {timeout}'
     )
 
 

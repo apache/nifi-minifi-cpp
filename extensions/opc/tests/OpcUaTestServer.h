@@ -8,7 +8,6 @@
 #include <open62541/server_config_default.h>
 
 #include <algorithm>
-#include <cinttypes>
 #include <cstring>
 #include <mutex>
 #include <optional>
@@ -216,18 +215,10 @@ class OpcUaTestServer {
     } else if (id.identifierType == UA_NODEIDTYPE_NUMERIC) {
       return std::to_string(id.identifier.numeric);
     } else if (id.identifierType == UA_NODEIDTYPE_GUID) {
-      char guid_str[37];
-      snprintf(guid_str,
-          sizeof(guid_str),
-          "%08x-%04x-%04x-%04x-%012" PRIx64,
-          id.identifier.guid.data1,
-          id.identifier.guid.data2,
-          id.identifier.guid.data3,
-          (id.identifier.guid.data4[0] << 8) | id.identifier.guid.data4[1],
-          (gsl::narrow<uint64_t>(id.identifier.guid.data4[2]) << 40) | (gsl::narrow<uint64_t>(id.identifier.guid.data4[3]) << 32) |
-              (gsl::narrow<uint64_t>(id.identifier.guid.data4[4]) << 24) | (gsl::narrow<uint64_t>(id.identifier.guid.data4[5]) << 16) |
-              (gsl::narrow<uint64_t>(id.identifier.guid.data4[6]) << 8) | gsl::narrow<uint64_t>(id.identifier.guid.data4[7]));
-      return std::string(guid_str);
+      std::string guid_str(36, '\0');
+      UA_String output{guid_str.size(), reinterpret_cast<UA_Byte*>(guid_str.data())};
+      UA_Guid_print(&id.identifier.guid, &output);
+      return guid_str;
     }
     return {};
   }

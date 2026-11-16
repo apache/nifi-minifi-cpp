@@ -576,8 +576,8 @@ std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type) {
   return std::nullopt;
 }
 
-UA_StatusCode Client::readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, UA_DateTime start_time, UA_DateTime end_time,
-    void* callback_context) {
+UA_StatusCode Client::readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, void* callback_context,
+    UA_DateTime start_time, UA_DateTime end_time) {
   if (history_type == HistoryReadTypeOption::Audit) {
     return UA_Client_HistoryRead_modified(client_, &node_id, callback, start_time, end_time, UA_STRING_NULL, false, 0, UA_TIMESTAMPSTORETURN_SOURCE, callback_context);
   }

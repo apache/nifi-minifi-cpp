@@ -68,7 +68,7 @@ Feature: MiNiFi can use python processors in its flows
     And PutFile's success relationship is auto-terminated
 
     When all instances start up
-    Then files with at least these contents "1,2,3,4,5" are placed in the "/tmp/output" directory in less than 5 seconds
+    Then files containing "1,2,3,4,5" appear in "/tmp/output" in 5 seconds
 
   @USE_NIFI_PYTHON_PROCESSORS_WITH_LANGCHAIN
   Scenario Outline: MiNiFi C++ can use native NiFi python processors

@@ -288,7 +288,7 @@ Feature: Putting and fetching data to OPC UA server
     And an OPC UA server is set up with historical data support
 
     When all instances start up
-    Then in the "fetch-opc-ua-node-history" container files with at least these contents "0,1,2,3,4" are placed in the "/tmp/output" directory in less than 30 seconds
+    Then in the "fetch-opc-ua-node-history" container files containing "0,1,2,3,4" appear in "/tmp/output" in 30 seconds
     And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:Namespace index value:1" in less than 10 seconds
     And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:NodeID value:myUintValue" in less than 10 seconds
     And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:Sourcetimestamp value:" in less than 10 seconds

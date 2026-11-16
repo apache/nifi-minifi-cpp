@@ -6534,7 +6534,7 @@
                         },
                         "End timestamp": {
                             "name": "End timestamp",
-                            "description": "Timestamp before which the events should be returned. If not specified entries are returned until the current time.",
+                            "description": "Timestamp before which the events should be returned in RFC 3339 format. If not specified entries are returned until the current time.",
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",
@@ -6649,7 +6649,7 @@
                         },
                         "Start timestamp": {
                             "name": "Start timestamp",
-                            "description": "Timestamp after which the events should be returned. If not specified entries are returned from the beginning of the history.",
+                            "description": "Timestamp after which the events should be returned in RFC 3339 format. If not specified entries are returned from the beginning of the history.",
                             "validator": "VALID",
                             "required": "false",
                             "sensitive": "false",

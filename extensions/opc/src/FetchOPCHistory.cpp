@@ -73,10 +73,10 @@ std::string entryFingerprint(const HistoryEntry& entry, bool has_modification_in
   // duplicated (value, source timestamp) pair represents no change in the history, so losing one to deduplication is harmless.
   // For audit (modification) history the modification time and update type distinguish otherwise-identical entries, so they
   // are included to make the fingerprint more unique and reduce the chance of dropping a distinct modification.
-  std::string raw = ":" + entry.value;
+  std::string raw = fmt::format(":{}", entry.value);
   if (has_modification_info) {
     const auto update_type = entry.modification_info ? updateTypeToString(entry.modification_info->updateType) : "";
-    raw = std::to_string(entry.modificationTime()) + ":" + update_type + raw;
+    raw = fmt::format("{}:{}{}", entry.modificationTime(), update_type, raw);
   }
   return utils::string::to_hex(raw);
 }
@@ -399,9 +399,9 @@ void FetchOPCHistory::onTrigger(core::ProcessContext& context, core::ProcessSess
   auto retval = connection_->readHistory(history_type_,
       node_,
       &historyReadCallback,
+      static_cast<void*>(&history_context),
       calculateStartTime(fetched_state, start_timestamp_),
-      calculateEndTime(end_timestamp_),
-      static_cast<void*>(&history_context));
+      calculateEndTime(end_timestamp_));
 
   if (!state_manager->set(state_map)) {
     logger_->log_warn("Failed to persist FetchOPCHistory state, entries may be re-fetched on the next trigger");
