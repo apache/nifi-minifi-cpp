@@ -30,8 +30,7 @@ class ThreadedRepositoryImpl : public core::RepositoryImpl, public virtual core:
   // Starts repository monitor thread
   bool start() override {
     // if Stopped, turn to Starting, otherwise return
-    RunningState expected{RunningState::Stopped};
-    if (!running_state_.compare_exchange_strong(expected, RunningState::Starting)) {
+    if (!changeRunningState(RunningState::Stopped, RunningState::Starting)) {
       return false;
     }
     if (purge_period_ <= std::chrono::milliseconds(0)) {
@@ -41,7 +40,10 @@ class ThreadedRepositoryImpl : public core::RepositoryImpl, public virtual core:
 
     // must set Running state before calling run(), as run() might check state
     running_state_.store(RunningState::Running);
-    getThread() = std::thread(&ThreadedRepositoryImpl::run, this);
+    getThread() = std::thread([this] {
+      run();
+      changeRunningState(RunningState::Running, RunningState::RunFinished);
+    });
 
     logger_->log_debug("{} ThreadedRepository monitor thread start", name_);
     return true;
@@ -49,9 +51,9 @@ class ThreadedRepositoryImpl : public core::RepositoryImpl, public virtual core:
 
   // Stops repository monitor thread
   bool stop() override {
-    // if RUNNING, turn to STOPPING, otherwise return
-    RunningState expected{RunningState::Running};
-    if (!running_state_.compare_exchange_strong(expected, RunningState::Stopping)) {
+    // if Running or RunFinished, turn to Stopping, otherwise return
+    if (!(changeRunningState(RunningState::Running, RunningState::Stopping)
+        || changeRunningState(RunningState::RunFinished, RunningState::Stopping))) {
       return false;
     }
     if (getThread().joinable()) {
@@ -63,14 +65,13 @@ class ThreadedRepositoryImpl : public core::RepositoryImpl, public virtual core:
   }
 
   bool isRunning() const override {
-    return running_state_.load() == RunningState::Running;
+    const auto running_state = running_state_.load();
+    return running_state == RunningState::Running || running_state == RunningState::RunFinished;
   }
 
   utils::trace_resolver::BackTrace getTraces() override {
-    // If the thread is joinable then it is finished, we cannot interrupt and collect its stack traces
-    // It can occur with an empty run() implementation like the NoOpThreadedRepository where the stack trace is unavailable
-    if (getThread().joinable()) {
-      return {};
+    if (!getThread().joinable() || running_state_.load() != RunningState::Running) {
+      return {.name = getName(), .trace = {}};
     }
     return utils::trace_resolver::getBackTrace(getName(), getThread().native_handle());
   }
@@ -89,9 +90,14 @@ class ThreadedRepositoryImpl : public core::RepositoryImpl, public virtual core:
   enum class RunningState : uint8_t {
     Starting,
     Running,
+    RunFinished,
     Stopping,
     Stopped
   };
+
+  bool changeRunningState(RunningState old_state, RunningState new_state) {
+    return running_state_.compare_exchange_strong(old_state, new_state);
+  }
 
   std::atomic<RunningState> running_state_{RunningState::Stopped};
   std::shared_ptr<logging::Logger> logger_ {logging::LoggerFactory<ThreadedRepository>::getLogger()};
