@@ -232,6 +232,7 @@ where
 mod tests {
     use super::*;
     use crate::api::RawProcessor;
+    use crate::api::errors::TransformErrorExt;
     use crate::{
         MockFlowFile, MockLogger, MockProcessContext, MockProcessSession, OutputAttribute,
         ProcessorInputRequirement, PropertyDefinition,
@@ -272,7 +273,7 @@ mod tests {
             output_stream: &mut dyn OutputStream,
             _logger: &LoggerImpl,
         ) -> Result<TransformStreamResult, TransformError> {
-            output_stream.write_all(b"PARTIAL")?;
+            output_stream.write_all(b"PARTIAL").rollback_err()?;
             Err(MinifiError::custom("boom"))?
         }
     }

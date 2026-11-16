@@ -7,10 +7,7 @@
 use crate::processors::put_file::relationships::{FAILURE, SUCCESS};
 use crate::processors::put_file::unix_permissions::PutFileUnixPermissions;
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
-use minifi_native::{
-    FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, Relationship, Schedule, TransformError, TransformedFlowFile, trace, warn,
-};
+use minifi_native::{trace, warn, FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger, MinifiError, Relationship, Schedule, TransformError, TransformErrorExt, TransformedFlowFile};
 use std::path::{Path, PathBuf};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 use walkdir::WalkDir;
@@ -85,7 +82,7 @@ impl PutFileRs {
         input_stream: &mut dyn InputStream,
         logger: &L,
         destination: &Path,
-    ) -> Result<(), MinifiError>
+    ) -> Result<(), TransformError>
     where
         L: Logger,
     {
@@ -96,7 +93,11 @@ impl PutFileRs {
             }
         }
         let mut file = std::fs::File::create(destination)?;
-        std::io::copy(input_stream, &mut file)?;
+        // rollback since we want to retry if the disk is full
+        // not sure if we want to do this in the long term,
+        // but we wanted to test the rollback_err aswell
+        // and this is not production code (only playground)
+        std::io::copy(input_stream, &mut file).rollback_err()?;
         match self.unix_permissions.set_file_permissions(destination) {
             Ok(_) => {}
             Err(err) => {
