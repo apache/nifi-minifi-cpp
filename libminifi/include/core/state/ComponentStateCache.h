@@ -40,11 +40,13 @@ struct RootIdentity {
 
 // Thread-safe snapshot of a root process group's identity and processor list, guarded by a leaf mutex: it is never
 // held while any other minifi mutex is taken, so metrics threads can read it without inverting the lock order.
-struct ComponentStateCache {
+class ComponentStateCache {
+ public:
   void setRoot(core::ProcessGroup* root);
   RootIdentity getIdentity() const;
   std::vector<ComponentState> getProcessorStates() const;
 
+ private:
   mutable std::shared_mutex mutex;
   std::vector<core::Processor*> processors;
   RootIdentity identity;
