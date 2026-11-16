@@ -45,7 +45,8 @@ void ResponseNodeLoaderImpl::clearConfigRoot() {
 
 void ResponseNodeLoaderImpl::setNewConfigRoot(core::ProcessGroup* root) {
   {
-    std::lock_guard<std::mutex> guard(root_mutex_);
+    std::scoped_lock guard(system_metrics_mutex_, root_mutex_);
+    system_metrics_.clear();
     root_ = root;
   }
   initializeComponentMetrics();
