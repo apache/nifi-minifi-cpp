@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "unit/Catch.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "unit/ReadFromFlowFileTestProcessor.h"
@@ -27,29 +29,39 @@ class ResponseNodeLoaderTestFixture {
       response_node_loader_(configuration_, {prov_repo_, ff_repository_, content_repo_}, nullptr) {
     ff_repository_->initialize(configuration_);
     content_repo_->initialize(configuration_);
-    auto uuid1 = addProcessor<minifi::processors::WriteToFlowFileTestProcessor>("WriteToFlowFileTestProcessor1");
-    auto uuid2 = addProcessor<minifi::processors::WriteToFlowFileTestProcessor>("WriteToFlowFileTestProcessor1");
-    addConnection("Connection", "success", uuid1, uuid2);
-    auto uuid3 = addProcessor<minifi::processors::ReadFromFlowFileTestProcessor>("ReadFromFlowFileTestProcessor");
-    addConnection("Connection", "success", uuid2, uuid3);
+    auto uuid1 = addProcessor<minifi::processors::WriteToFlowFileTestProcessor>(*root_, "WriteToFlowFileTestProcessor1");
+    auto uuid2 = addProcessor<minifi::processors::WriteToFlowFileTestProcessor>(*root_, "WriteToFlowFileTestProcessor1");
+    addConnection(*root_, "Connection", "success", uuid1, uuid2);
+    auto uuid3 = addProcessor<minifi::processors::ReadFromFlowFileTestProcessor>(*root_, "ReadFromFlowFileTestProcessor");
+    addConnection(*root_, "Connection", "success", uuid2, uuid3);
     response_node_loader_.setNewConfigRoot(root_.get());
   }
 
  protected:
   template<typename T> requires std::is_base_of_v<minifi::core::ProcessorImpl, T>
-  minifi::utils::Identifier addProcessor(const std::string& name) {
+  minifi::utils::Identifier addProcessor(minifi::core::ProcessGroup& root, const std::string& name) {
     auto processor = minifi::test::utils::make_processor<T>(name);
     auto uuid = processor->getUUID();
-    root_->addProcessor(std::move(processor));
+    root.addProcessor(std::move(processor));
     return uuid;
   }
 
-  void addConnection(const std::string& connection_name, const std::string& relationship_name, const minifi::utils::Identifier& src_uuid, const minifi::utils::Identifier& dst_uuid) {
+  void addConnection(minifi::core::ProcessGroup& root, const std::string& connection_name, const std::string& relationship_name,
+      const minifi::utils::Identifier& src_uuid, const minifi::utils::Identifier& dst_uuid) {
     auto connection = std::make_unique<minifi::ConnectionImpl>(ff_repository_, content_repo_, connection_name);
     connection->addRelationship({relationship_name, "d"});
     connection->setDestinationUUID(src_uuid);
     connection->setSourceUUID(dst_uuid);
-    root_->addConnection(std::move(connection));
+    root.addConnection(std::move(connection));
+  }
+
+  static std::vector<std::string> getConnectionNames(const minifi::state::response::SharedResponseNode& queue_metrics_node) {
+    std::vector<std::string> names;
+    for (const auto& serialized_node : queue_metrics_node->serialize()) {
+      names.push_back(serialized_node.name);
+    }
+    std::ranges::sort(names);
+    return names;
   }
 
   std::unique_ptr<minifi::core::ProcessGroup> root_;
@@ -74,6 +86,22 @@ TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load system metrics node", "[re
   auto nodes = response_node_loader_.loadResponseNodes("QueueMetrics", nullptr);
   REQUIRE(nodes.size() == 1);
   REQUIRE(nodes[0]->getName() == "QueueMetrics");
+}
+
+TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Cached system metrics nodes are not reused after a new config root is set", "[responseNodeLoaderTest]") {
+  auto nodes = response_node_loader_.loadResponseNodes("QueueMetrics", nullptr);
+  REQUIRE(nodes.size() == 1);
+  CHECK(getConnectionNames(nodes[0]) == std::vector<std::string>{"Connection", "Connection"});
+
+  auto new_root = std::make_unique<minifi::core::ProcessGroup>(minifi::core::ProcessGroupType::ROOT_PROCESS_GROUP, "new root");
+  auto uuid1 = addProcessor<minifi::processors::WriteToFlowFileTestProcessor>(*new_root, "WriteToFlowFileTestProcessor");
+  auto uuid2 = addProcessor<minifi::processors::ReadFromFlowFileTestProcessor>(*new_root, "ReadFromFlowFileTestProcessor");
+  addConnection(*new_root, "NewConnection", "success", uuid1, uuid2);
+  response_node_loader_.setNewConfigRoot(new_root.get());
+
+  auto new_nodes = response_node_loader_.loadResponseNodes("QueueMetrics", nullptr);
+  REQUIRE(new_nodes.size() == 1);
+  CHECK(getConnectionNames(new_nodes[0]) == std::vector<std::string>{"NewConnection"});
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load processor metrics node part of the flow config", "[responseNodeLoaderTest]") {
