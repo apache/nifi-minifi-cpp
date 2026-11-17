@@ -4,7 +4,6 @@
 
 use super::*;
 use crate::processors::get_file::relationships::SUCCESS;
-use filetime::FileTime;
 use minifi_native::{MockLogger, MockProcessContext, MockProcessSession};
 use tempfile::TempDir;
 
@@ -52,8 +51,11 @@ fn simple_get_file_test() {
 fn make_file(temp_dir: &TempDir, file_name: &str, size: usize, age: Duration) {
     let path = temp_dir.path().join(file_name);
     std::fs::write(&path, "a".repeat(size)).unwrap();
-    let file_time = FileTime::from_system_time(SystemTime::now() - age);
-    filetime::set_file_mtime(path, file_time).expect("Cannot set file time");
+    let file_time = SystemTime::now() - age;
+    let times = std::fs::FileTimes::new()
+        .set_accessed(file_time)
+        .set_modified(file_time);
+    std::fs::set_times(&path, times).expect("Cannot set file times");
 }
 
 fn create_test_directory() -> TempDir {
