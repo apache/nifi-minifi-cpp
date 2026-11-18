@@ -6568,12 +6568,11 @@
                         },
                         "Minimum severity": {
                             "name": "Minimum severity",
-                            "description": "Specifies the minimum severity of events to fetch. 0 disables the severity filter.",
+                            "description": "Specifies the minimum severity of events to fetch. If not set or set to zero, no severity filter is applied.",
                             "validator": "NON_NEGATIVE_INTEGER_VALIDATOR",
-                            "required": "true",
+                            "required": "false",
                             "sensitive": "false",
-                            "expressionLanguageScope": "NONE",
-                            "defaultValue": "0"
+                            "expressionLanguageScope": "NONE"
                         },
                         "Namespace index": {
                             "name": "Namespace index",

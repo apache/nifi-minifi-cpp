@@ -149,8 +149,8 @@ class Client {
   uint64_t getDroppedEventCountSinceLastCall();
 
   static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
-                                              const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
-                                              const std::vector<std::vector<char>>& trust_buffers, std::optional<size_t> max_event_queue_size);
+      const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer, const std::vector<std::vector<char>>& trust_buffers,
+      std::optional<size_t> max_event_queue_size = std::nullopt);
 
  private:
   Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
