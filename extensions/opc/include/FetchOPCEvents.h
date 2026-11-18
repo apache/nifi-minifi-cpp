@@ -87,10 +87,8 @@ class FetchOPCEvents final : public BaseOPCProcessor {
           .build();
   EXTENSIONAPI static constexpr auto MinimumSeverity =
       core::PropertyDefinitionBuilder<>::createProperty("Minimum severity")
-          .withDescription("Specifies the minimum severity of events to fetch. 0 disables the severity filter.")
+          .withDescription("Specifies the minimum severity of events to fetch. If not set or set to zero, no severity filter is applied.")
           .withValidator(core::StandardPropertyValidators::UNSIGNED_INTEGER_VALIDATOR)
-          .withDefaultValue("0")
-          .isRequired(true)
           .build();
   EXTENSIONAPI static constexpr auto EventFilterExpression =
       core::PropertyDefinitionBuilder<>::createProperty("Event filter expression")

@@ -62,7 +62,7 @@ void FetchOPCEvents::onSchedule(core::ProcessContext& context, core::ProcessSess
   }
 
   const auto max_queue_size = utils::parseOptionalU64Property(context, MaxQueueSize);
-  max_event_queue_size_ = max_queue_size && *max_queue_size > 0
+  const auto max_event_queue_size = max_queue_size && *max_queue_size > 0
       ? std::optional<size_t>(gsl::narrow<size_t>(*max_queue_size))
       : std::nullopt;
 
@@ -81,7 +81,7 @@ void FetchOPCEvents::onSchedule(core::ProcessContext& context, core::ProcessSess
   const auto batch_size = utils::parseOptionalU64Property(context, BatchSize);
   batch_size_ = batch_size && *batch_size > 0 ? batch_size : std::nullopt;
 
-  connection_ = opc::Client::createClient(logger_, application_uri_, cert_buffer_, key_buffer_, trust_buffers_, max_event_queue_size_);
+  connection_ = opc::Client::createClient(logger_, application_uri_, cert_buffer_, key_buffer_, trust_buffers_, max_event_queue_size);
   if (!connection_) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create the OPC UA client");
   }
