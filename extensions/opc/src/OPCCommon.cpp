@@ -129,7 +129,8 @@ std::optional<NodeId> findReferenceByBrowseName(UA_BrowseResult& result, std::st
   std::swap(continuation_point, result.continuationPoint);
   for (size_t i = 0; i < result.referencesSize; ++i) {
     const auto& ref = result.references[i];
-    if (std::string_view(reinterpret_cast<const char*>(ref.browseName.name.data), ref.browseName.name.length) == browse_name) {
+    const UA_String& ref_name = ref.browseName.name;
+    if (std::string_view(reinterpret_cast<const char*>(ref_name.data), ref_name.length) == browse_name) {
       return NodeId::copyOf(ref.nodeId.nodeId);
     }
   }
@@ -542,6 +543,7 @@ std::expected<NodeId, UA_StatusCode> Client::findObjectChildByName(const UA_Node
     UA_UInt32 ref_type_id) {
   UA_BrowseRequest browse_request;
   UA_BrowseRequest_init(&browse_request);
+  const auto request_guard = gsl::finally([&browse_request]() { UA_BrowseRequest_clear(&browse_request); });
   browse_request.nodesToBrowse = UA_BrowseDescription_new();
   browse_request.nodesToBrowseSize = 1;
   UA_NodeId_copy(&parent_node_id, &browse_request.nodesToBrowse[0].nodeId);
@@ -552,10 +554,7 @@ std::expected<NodeId, UA_StatusCode> Client::findObjectChildByName(const UA_Node
   browse_request.nodesToBrowse[0].resultMask = UA_BROWSERESULTMASK_BROWSENAME;
 
   UA_BrowseResponse browse_response = UA_Client_Service_browse(client_, browse_request);
-  const auto guard = gsl::finally([&browse_request, &browse_response]() {
-    UA_BrowseRequest_clear(&browse_request);
-    UA_BrowseResponse_clear(&browse_response);
-  });
+  const auto response_guard = gsl::finally([&browse_response]() { UA_BrowseResponse_clear(&browse_response); });
 
   if (const auto status = singleBrowseResultStatus(browse_response); status != UA_STATUSCODE_GOOD) {
     return std::unexpected{status};

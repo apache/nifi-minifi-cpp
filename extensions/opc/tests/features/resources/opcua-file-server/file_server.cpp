@@ -258,7 +258,8 @@ UA_StatusCode createFileMethod(UA_Server* server, const UA_NodeId*, void*, const
   if (std::filesystem::exists(path, error)) {
     return UA_STATUSCODE_BADBROWSENAMEDUPLICATED;
   }
-  if (!std::ofstream(path, std::ios::binary)) {
+  // create empty file
+  if (!std::ofstream{path, std::ios::binary}) {
     return UA_STATUSCODE_BADINTERNALERROR;
   }
 
@@ -310,6 +311,8 @@ UA_StatusCode setupAddressSpace(UA_Server* server, const std::filesystem::path& 
       UA_QUALIFIEDNAME(1, mutableChars("Files")),
       UA_NODEID_NUMERIC(0, UA_NS0ID_FILEDIRECTORYTYPE),
       attr,
+      // The node context parameter is a non-const void*, but the context is only ever read back as a const path in createFileMethod,
+      // and open62541 just stores the pointer without dereferencing it, so the data directory is never modified
       const_cast<std::filesystem::path*>(&data_dir),
       nullptr);
   if (status != UA_STATUSCODE_GOOD) {
