@@ -629,7 +629,7 @@ def set_drop_empty_flag_for_connection(context: MinifiTestContext, destination: 
     context.get_or_create_default_minifi_container().flow_definition.set_drop_empty_for_destination(destination)
 
 
-@given("a SiteToSiteProvenanceReportingTask reporting task with the name \"{name}\"")
+@given('a SiteToSiteProvenanceReportingTask reporting task with the name "{name}"')
 def add_site_to_site_provenance_reporting_task(context: MinifiTestContext, name: str):
     flow_definition = context.get_or_create_default_minifi_container().flow_definition
     port_id = str(uuid.uuid4())
@@ -639,7 +639,9 @@ def add_site_to_site_provenance_reporting_task(context: MinifiTestContext, name:
     flow_definition.add_reporting_task(reporting_task)
 
 
-@given("a NiFi flow is receiving data on an input port named \"{nifi_port_name}\" from the reporting task named \"{reporting_task_name}\"")
+@given(
+    'a NiFi flow is receiving data on an input port named "{nifi_port_name}" from the reporting task named "{reporting_task_name}"'
+)
 def nifi_receive_from_reporting_task(context: MinifiTestContext, nifi_port_name: str, reporting_task_name: str):
     flow_definition = context.get_or_create_default_minifi_container().flow_definition
     reporting_task = flow_definition.get_reporting_task(reporting_task_name)
