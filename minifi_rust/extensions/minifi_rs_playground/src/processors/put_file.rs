@@ -7,7 +7,11 @@
 use crate::processors::put_file::relationships::{FAILURE, SUCCESS};
 use crate::processors::put_file::unix_permissions::PutFileUnixPermissions;
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
-use minifi_native::{trace, warn, FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger, MinifiError, Relationship, Schedule, TransformError, TransformErrorExt, TransformedFlowFile};
+use minifi_native::{
+    FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
+    MinifiError, Relationship, Schedule, TransformError, TransformErrorExt, TransformedFlowFile,
+    trace, warn,
+};
 use std::path::{Path, PathBuf};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 use walkdir::WalkDir;
