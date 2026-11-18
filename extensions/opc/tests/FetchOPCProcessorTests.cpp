@@ -101,8 +101,8 @@ TEST_CASE("Test path reference types also match their subtypes", "[fetchopcproce
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
   auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
-  CHECK(flow_file->getAttribute("Browsename") == "ORDERED1");
-  CHECK(flow_file->getAttribute("Full path") == "OrderedParent/ORDERED1");
+  CHECK(flow_file->getAttribute("browse.name") == "ORDERED1");
+  CHECK(flow_file->getAttribute("full.path") == "OrderedParent/ORDERED1");
   CHECK(controller.plan->getContent(flow_file) == "5");
 }
 
@@ -163,7 +163,7 @@ TEST_CASE("Test Datasize attribute of variable-length values", "[fetchopcprocess
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
   auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
-  CHECK(flow_file->getAttribute("Datasize") == expected_datasize);
+  CHECK(flow_file->getAttribute("data.size") == expected_datasize);
   CHECK(controller.plan->getContent(flow_file) == "hello world");
 }
 
