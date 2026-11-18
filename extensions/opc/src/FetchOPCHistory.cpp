@@ -129,26 +129,26 @@ std::vector<HistoryEntry> selectNewEntries(std::vector<HistoryEntry> entries, co
 
 void addModificationInfo(core::Record& record, const UA_ModificationInfo& modification_info) {
   if (modification_info.userName.length > 0) {
-    record.emplace("ModificationUsername", core::RecordField(uaStringToString(modification_info.userName)));
+    record.emplace("modification.username", core::RecordField(uaStringToString(modification_info.userName)));
   }
-  record.emplace("ModificationTime", core::RecordField(opc::OPCDateTime2String(modification_info.modificationTime)));
-  record.emplace("ModificationUpdateType", core::RecordField(updateTypeToString(modification_info.updateType)));
+  record.emplace("modification.time", core::RecordField(opc::OPCDateTime2String(modification_info.modificationTime)));
+  record.emplace("modification.update.type", core::RecordField(updateTypeToString(modification_info.updateType)));
 }
 
 void addModificationInfo(core::FlowFile& flow_file, const UA_ModificationInfo& modification_info) {
   if (modification_info.userName.length > 0) {
-    flow_file.addAttribute("ModificationUsername", uaStringToString(modification_info.userName));
+    flow_file.addAttribute("modification.username", uaStringToString(modification_info.userName));
   }
-  flow_file.addAttribute("ModificationTime", opc::OPCDateTime2String(modification_info.modificationTime));
-  flow_file.addAttribute("ModificationUpdateType", updateTypeToString(modification_info.updateType));
+  flow_file.addAttribute("modification.time", opc::OPCDateTime2String(modification_info.modificationTime));
+  flow_file.addAttribute("modification.update.type", updateTypeToString(modification_info.updateType));
 }
 
 core::Record toRecord(const std::string& node_id, const int32_t namespace_index, const HistoryEntry& entry) {
   core::Record record;
-  record.emplace("Value", core::RecordField(entry.value));
-  record.emplace("NodeID", core::RecordField(node_id));
-  record.emplace("Namespace index", core::RecordField(std::to_string(namespace_index)));
-  record.emplace("Sourcetimestamp", core::RecordField(opc::OPCDateTime2String(entry.source_timestamp)));
+  record.emplace("value", core::RecordField(entry.value));
+  record.emplace("node.id", core::RecordField(node_id));
+  record.emplace("namespace.index", core::RecordField(std::to_string(namespace_index)));
+  record.emplace("source.timestamp", core::RecordField(opc::OPCDateTime2String(entry.source_timestamp)));
   if (entry.modification_info) {
     addModificationInfo(record, *entry.modification_info);
   }
@@ -174,9 +174,9 @@ void writeAsFlowFiles(FetchOPCHistoryContext& context, const std::vector<History
       output_stream->write(reinterpret_cast<const uint8_t*>(entry.value.data()), entry.value.size());
       return io::IoResult::from(entry.value.size());
     });
-    flow_file->addAttribute("NodeID", context.node_id);
-    flow_file->addAttribute("Namespace index", std::to_string(context.namespace_index));
-    flow_file->addAttribute("Sourcetimestamp", opc::OPCDateTime2String(entry.source_timestamp));
+    flow_file->addAttribute("node.id", context.node_id);
+    flow_file->addAttribute("namespace.index", std::to_string(context.namespace_index));
+    flow_file->addAttribute("source.timestamp", opc::OPCDateTime2String(entry.source_timestamp));
     if (entry.modification_info) {
       addModificationInfo(*flow_file, *entry.modification_info);
     }

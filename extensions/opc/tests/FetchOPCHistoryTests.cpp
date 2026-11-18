@@ -38,21 +38,21 @@ class FetchOPCHistoryTestController {
   void checkFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& content, const std::string& node_id,
       const std::string& source_timestamp) {
     CHECK(controller_.plan->getContent(flow_file) == content);
-    CHECK(flow_file->getAttribute("NodeID") == node_id);
-    CHECK(flow_file->getAttribute("Namespace index") == std::to_string(server_.getNamespaceIndex()));
-    CHECK(flow_file->getAttribute("Sourcetimestamp") == source_timestamp);
+    CHECK(flow_file->getAttribute(processors::FetchOPCHistory::NodeIDAttr.name) == node_id);
+    CHECK(flow_file->getAttribute(processors::FetchOPCHistory::NamespaceIndexAttr.name) == std::to_string(server_.getNamespaceIndex()));
+    CHECK(flow_file->getAttribute(processors::FetchOPCHistory::SourcetimestampAttr.name) == source_timestamp);
   }
 
   static void checkModificationAttributes(const std::shared_ptr<core::FlowFile>& flow_file, bool present, const std::string& username = "",
       const std::string& update_type = "", const std::string& modification_time = "") {
     if (present) {
-      CHECK(flow_file->getAttribute("ModificationUsername") == username);
-      CHECK(flow_file->getAttribute("ModificationUpdateType") == update_type);
-      CHECK(flow_file->getAttribute("ModificationTime") == modification_time);
+      CHECK(flow_file->getAttribute("modification.username") == username);
+      CHECK(flow_file->getAttribute("modification.update.type") == update_type);
+      CHECK(flow_file->getAttribute("modification.time") == modification_time);
     } else {
-      CHECK(flow_file->getAttribute("ModificationUsername") == std::nullopt);
-      CHECK(flow_file->getAttribute("ModificationUpdateType") == std::nullopt);
-      CHECK(flow_file->getAttribute("ModificationTime") == std::nullopt);
+      CHECK(flow_file->getAttribute("modification.username") == std::nullopt);
+      CHECK(flow_file->getAttribute("modification.update.type") == std::nullopt);
+      CHECK(flow_file->getAttribute("modification.time") == std::nullopt);
     }
   }
 
@@ -274,15 +274,15 @@ TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test RecordSetWriter with JSON 
 
   std::string expected_json_content;
   SECTION("Fetch full history") {
-    expected_json_content = R"({"Value":"1","Sourcetimestamp":"2024-06-15T10:30:00.000Z","NodeID":"INT1","Namespace index":")" +
+    expected_json_content = R"({"value":"1","source.timestamp":"2024-06-15T10:30:00.000Z","node.id":"INT1","namespace.index":")" +
         std::to_string(server_.getNamespaceIndex()) +
         "\","
-        R"("ModificationUsername":"test_user","ModificationUpdateType":"Replace","ModificationTime":"2024-06-15T10:30:00.000Z"})";
+        R"("modification.username":"test_user","modification.update.type":"Replace","modification.time":"2024-06-15T10:30:00.000Z"})";
     REQUIRE(processor_->setProperty(processors::FetchOPCHistory::HistoryReadType.name, "Audit"));
   }
 
   SECTION("Fetch raw history") {
-    expected_json_content = R"({"Value":"1","Sourcetimestamp":"2024-06-15T10:30:00.000Z","NodeID":"INT1","Namespace index":")" +
+    expected_json_content = R"({"value":"1","source.timestamp":"2024-06-15T10:30:00.000Z","node.id":"INT1","namespace.index":")" +
         std::to_string(server_.getNamespaceIndex()) + "\"}";
   }
 
@@ -298,29 +298,29 @@ TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test RecordSetWriter with JSON 
 
   std::string expected_json_content;
   SECTION("Fetch full history") {
-    expected_json_content = R"([{"Value":"2","Sourcetimestamp":"2021-03-15T11:30:00.000Z","NodeID":"INT2","Namespace index":")" +
+    expected_json_content = R"([{"value":"2","source.timestamp":"2021-03-15T11:30:00.000Z","node.id":"INT2","namespace.index":")" +
         std::to_string(server_.getNamespaceIndex()) +
         "\","
-        R"("ModificationUsername":"admin_user","ModificationUpdateType":"Insert","ModificationTime":"2021-03-15T11:30:00.000Z"}, )"
-        R"({"Value":"3","Sourcetimestamp":"2025-11-11T11:30:00.000Z","NodeID":"INT2","Namespace index":")" +
+        R"("modification.username":"admin_user","modification.update.type":"Insert","modification.time":"2021-03-15T11:30:00.000Z"}, )"
+        R"({"value":"3","source.timestamp":"2025-11-11T11:30:00.000Z","node.id":"INT2","namespace.index":")" +
         std::to_string(server_.getNamespaceIndex()) +
         "\","
-        R"("ModificationUsername":"admin_user","ModificationUpdateType":"Update","ModificationTime":"2025-11-11T11:30:00.000Z"}, )"
-        R"({"Value":"4","Sourcetimestamp":"2026-03-11T11:30:00.000Z","NodeID":"INT2","Namespace index":")" +
+        R"("modification.username":"admin_user","modification.update.type":"Update","modification.time":"2025-11-11T11:30:00.000Z"}, )"
+        R"({"value":"4","source.timestamp":"2026-03-11T11:30:00.000Z","node.id":"INT2","namespace.index":")" +
         std::to_string(server_.getNamespaceIndex()) +
         "\","
-        R"("ModificationUsername":"test_user","ModificationUpdateType":"Replace","ModificationTime":"2026-03-11T11:30:00.000Z"}])";
+        R"("modification.username":"test_user","modification.update.type":"Replace","modification.time":"2026-03-11T11:30:00.000Z"}])";
     REQUIRE(processor_->setProperty(processors::FetchOPCHistory::HistoryReadType.name, "Audit"));
   }
 
   SECTION("Fetch raw history") {
-    expected_json_content = R"([{"Value":"2","Sourcetimestamp":"2021-03-15T11:30:00.000Z","NodeID":"INT2","Namespace index":")" +
+    expected_json_content = R"([{"value":"2","source.timestamp":"2021-03-15T11:30:00.000Z","node.id":"INT2","namespace.index":")" +
         std::to_string(server_.getNamespaceIndex()) +
         "\"},"
-        R"({"Value":"3","Sourcetimestamp":"2025-11-11T11:30:00.000Z","NodeID":"INT2","Namespace index":")" +
+        R"({"value":"3","source.timestamp":"2025-11-11T11:30:00.000Z","node.id":"INT2","namespace.index":")" +
         std::to_string(server_.getNamespaceIndex()) +
         "\"},"
-        R"({"Value":"4","Sourcetimestamp":"2026-03-11T11:30:00.000Z","NodeID":"INT2","Namespace index":")" +
+        R"({"value":"4","source.timestamp":"2026-03-11T11:30:00.000Z","node.id":"INT2","namespace.index":")" +
         std::to_string(server_.getNamespaceIndex()) + "\"}]";
   }
 
@@ -360,7 +360,7 @@ TEST_CASE_METHOD(FetchOPCHistoryTestController, "Test byte string value is base6
 
   const auto results = controller_.trigger();
   verifyResults(results,
-      R"({"Value":"AA+g/w==","Sourcetimestamp":"2023-01-01T00:00:00.000Z","NodeID":"INT3","Namespace index":")" +
+      R"({"value":"AA+g/w==","source.timestamp":"2023-01-01T00:00:00.000Z","node.id":"INT3","namespace.index":")" +
           std::to_string(server_.getNamespaceIndex()) + "\"}");
 }
 

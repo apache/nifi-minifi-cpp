@@ -289,9 +289,9 @@ Feature: Putting and fetching data to OPC UA server
 
     When all instances start up
     Then in the "fetch-opc-ua-node-history" container files containing "0,1,2,3,4" appear in "/tmp/output" in 30 seconds
-    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:Namespace index value:1" in less than 10 seconds
-    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:NodeID value:myUintValue" in less than 10 seconds
-    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:Sourcetimestamp value:" in less than 10 seconds
+    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:namespace.index value:1" in less than 10 seconds
+    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:node.id value:myUintValue" in less than 10 seconds
+    And the logs of the "fetch-opc-ua-node-history" container contain the following message: "key:source.timestamp value:" in less than 10 seconds
 
   Scenario: Update and fetch historical data from an OPC UA node in JSON format
     Given a JsonRecordSetWriter controller service is set up in the "fetch-opc-ua-node-history" flow
@@ -337,4 +337,4 @@ Feature: Putting and fetching data to OPC UA server
     And an OPC UA server is set up with historical data support
 
     When all instances start up
-    Then in the 'fetch-opc-ua-node-history' container at least one file in '/tmp/output' content match the following regex: '\[\{"Sourcetimestamp":".+","NodeID":"myUintValue","Namespace index":"1","Value":"0"\},\{"Sourcetimestamp":".+","NodeID":"myUintValue","Namespace index":"1","Value":"1"\},\{"Sourcetimestamp":".+","NodeID":"myUintValue","Namespace index":"1","Value":"2"\}\]' in less than 30 seconds
+    Then in the 'fetch-opc-ua-node-history' container at least one file in '/tmp/output' content match the following regex: '\[\{"source.timestamp":".+","namespace.index":"1","node.id":"myUintValue","value":"0"\},\{"source.timestamp":".+","namespace.index":"1","node.id":"myUintValue","value":"1"\},\{"source.timestamp":".+","namespace.index":"1","node.id":"myUintValue","value":"2"\}\]' in less than 30 seconds

@@ -1127,14 +1127,14 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute              | Relationship | Description                                                                             |
-|------------------------|--------------|-----------------------------------------------------------------------------------------|
-| NodeID                 | success      | ID of the node.                                                                         |
-| Namespace index        | success      | Namespace index of the node.                                                            |
-| Sourcetimestamp        | success      | The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'. |
-| ModificationUsername   | success      | Username of the user who modified the node.                                             |
-| ModificationTime       | success      | Timestamp of when the node was modified.                                                |
-| ModificationUpdateType | success      | Type of modification performed on the node.                                             |
+| Attribute                | Relationship | Description                                                                             |
+|--------------------------|--------------|-----------------------------------------------------------------------------------------|
+| node.id                  | success      | ID of the node.                                                                         |
+| namespace.index          | success      | Namespace index of the node.                                                            |
+| source.timestamp         | success      | The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'. |
+| modification.username    | success      | Username of the user who modified the node.                                             |
+| modification.time        | success      | Timestamp of when the node was modified.                                                |
+| modification.update.type | success      | Type of modification performed on the node.                                             |
 
 
 ## FetchOPCProcessor
@@ -1172,15 +1172,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute       | Relationship | Description                                                                             |
-|-----------------|--------------|-----------------------------------------------------------------------------------------|
-| NodeID          | success      | ID of the node.                                                                         |
-| NodeID type     | success      | Type of the node ID.                                                                    |
-| Browsename      | success      | The browse name of the node.                                                            |
-| Full path       | success      | The full path of the node.                                                              |
-| Sourcetimestamp | success      | The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'. |
-| Typename        | success      | The type name of the node data.                                                         |
-| Datasize        | success      | The size of the node data.                                                              |
+| Attribute        | Relationship | Description                                                                             |
+|------------------|--------------|-----------------------------------------------------------------------------------------|
+| node.id          | success      | ID of the node.                                                                         |
+| node.id.type     | success      | Type of the node ID.                                                                    |
+| browse.name      | success      | The browse name of the node.                                                            |
+| full.path        | success      | The full path of the node.                                                              |
+| source.timestamp | success      | The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'. |
+| type.name        | success      | The type name of the node data.                                                         |
+| data.size        | success      | The size of the node data.                                                              |
 
 
 ## FetchS3Object

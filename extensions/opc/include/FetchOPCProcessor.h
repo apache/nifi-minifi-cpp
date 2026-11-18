@@ -101,16 +101,16 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Retrieved OPC-UA nodes where value cannot be extracted (only if enabled)"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
-  EXTENSIONAPI static constexpr auto NodeIDAttr = core::OutputAttributeDefinition<>{"NodeID", { Success }, "ID of the node."};
-  EXTENSIONAPI static constexpr auto NodeIDTypeAttr = core::OutputAttributeDefinition<>{"NodeID type", { Success }, "Type of the node ID."};
-  EXTENSIONAPI static constexpr auto BrowsenameAttr = core::OutputAttributeDefinition<>{"Browsename", { Success }, "The browse name of the node."};
-  EXTENSIONAPI static constexpr auto FullPathAttr = core::OutputAttributeDefinition<>{"Full path", { Success }, "The full path of the node."};
-  EXTENSIONAPI static constexpr auto SourcetimestampAttr = core::OutputAttributeDefinition<>{"Sourcetimestamp", { Success },
+  EXTENSIONAPI static constexpr auto NodeIDAttr = core::OutputAttributeDefinition<>{"node.id", { Success }, "ID of the node."};
+  EXTENSIONAPI static constexpr auto NodeIDTypeAttr = core::OutputAttributeDefinition<>{"node.id.type", { Success }, "Type of the node ID."};
+  EXTENSIONAPI static constexpr auto BrowsenameAttr = core::OutputAttributeDefinition<>{"browse.name", { Success }, "The browse name of the node."};
+  EXTENSIONAPI static constexpr auto FullPathAttr = core::OutputAttributeDefinition<>{"full.path", { Success }, "The full path of the node."};
+  EXTENSIONAPI static constexpr auto SourceTimestampAttr = core::OutputAttributeDefinition<>{"source.timestamp", { Success },
     "The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'."};
-  EXTENSIONAPI static constexpr auto TypenameAttr = core::OutputAttributeDefinition<>{"Typename", { Success }, "The type name of the node data."};
-  EXTENSIONAPI static constexpr auto DatasizeAttr = core::OutputAttributeDefinition<>{"Datasize", { Success }, "The size of the node data."};
+  EXTENSIONAPI static constexpr auto TypenameAttr = core::OutputAttributeDefinition<>{"type.name", { Success }, "The type name of the node data."};
+  EXTENSIONAPI static constexpr auto DatasizeAttr = core::OutputAttributeDefinition<>{"data.size", { Success }, "The size of the node data."};
 
-  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 7> {NodeIDAttr, NodeIDTypeAttr, BrowsenameAttr, FullPathAttr, SourcetimestampAttr,
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 7> {NodeIDAttr, NodeIDTypeAttr, BrowsenameAttr, FullPathAttr, SourceTimestampAttr,
     TypenameAttr, DatasizeAttr};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

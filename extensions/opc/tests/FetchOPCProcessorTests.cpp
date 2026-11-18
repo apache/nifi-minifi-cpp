@@ -25,24 +25,24 @@ TEST_CASE("Test fetching using path node id", "[fetchopcprocessor]") {
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 4);
   for (size_t i = 0; i < 3; i++) {
     auto flow_file = results.at(processors::FetchOPCProcessor::Success)[i];
-    CHECK(flow_file->getAttribute("Browsename") == "INT" + std::to_string(i + 1));
-    CHECK(flow_file->getAttribute("Datasize") == "4");
-    CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT" + std::to_string(i + 1));
-    CHECK(flow_file->getAttribute("NodeID"));
-    CHECK(flow_file->getAttribute("NodeID type") == "string");
-    CHECK(flow_file->getAttribute("Typename") == "Int32");
-    CHECK(flow_file->getAttribute("Sourcetimestamp"));
+    CHECK(flow_file->getAttribute("browse.name") == "INT" + std::to_string(i + 1));
+    CHECK(flow_file->getAttribute("data.size") == "4");
+    CHECK(flow_file->getAttribute("full.path") == "Simulator/Default/Device1/INT" + std::to_string(i + 1));
+    CHECK(flow_file->getAttribute("node.id"));
+    CHECK(flow_file->getAttribute("node.id.type") == "string");
+    CHECK(flow_file->getAttribute("type.name") == "Int32");
+    CHECK(flow_file->getAttribute("source.timestamp"));
     CHECK(controller.plan->getContent(flow_file) == std::to_string(i + 1));
   }
 
   auto flow_file = results.at(processors::FetchOPCProcessor::Success)[3];
-  CHECK(flow_file->getAttribute("Browsename") == "INT4");
-  CHECK(flow_file->getAttribute("Datasize") == "4");
-  CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT3/INT4");
-  CHECK(flow_file->getAttribute("NodeID"));
-  CHECK(flow_file->getAttribute("NodeID type") == "string");
-  CHECK(flow_file->getAttribute("Typename") == "Int32");
-  CHECK(flow_file->getAttribute("Sourcetimestamp"));
+  CHECK(flow_file->getAttribute("browse.name") == "INT4");
+  CHECK(flow_file->getAttribute("data.size") == "4");
+  CHECK(flow_file->getAttribute("full.path") == "Simulator/Default/Device1/INT3/INT4");
+  CHECK(flow_file->getAttribute("node.id"));
+  CHECK(flow_file->getAttribute("node.id.type") == "string");
+  CHECK(flow_file->getAttribute("type.name") == "Int32");
+  CHECK(flow_file->getAttribute("source.timestamp"));
   CHECK(controller.plan->getContent(flow_file) == "4");
 }
 
@@ -61,22 +61,22 @@ TEST_CASE("Test fetching using custom reference type id path", "[fetchopcprocess
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 2);
   auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
-  CHECK(flow_file->getAttribute("Browsename") == "INT3");
-  CHECK(flow_file->getAttribute("Datasize") == "4");
-  CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT3");
-  CHECK(flow_file->getAttribute("NodeID"));
-  CHECK(flow_file->getAttribute("NodeID type") == "string");
-  CHECK(flow_file->getAttribute("Typename") == "Int32");
-  CHECK(flow_file->getAttribute("Sourcetimestamp"));
+  CHECK(flow_file->getAttribute("browse.name") == "INT3");
+  CHECK(flow_file->getAttribute("data.size") == "4");
+  CHECK(flow_file->getAttribute("full.path") == "Simulator/Default/Device1/INT3");
+  CHECK(flow_file->getAttribute("node.id"));
+  CHECK(flow_file->getAttribute("node.id.type") == "string");
+  CHECK(flow_file->getAttribute("type.name") == "Int32");
+  CHECK(flow_file->getAttribute("source.timestamp"));
   CHECK(controller.plan->getContent(flow_file) == "3");
   flow_file = results.at(processors::FetchOPCProcessor::Success)[1];
-  CHECK(flow_file->getAttribute("Browsename") == "INT4");
-  CHECK(flow_file->getAttribute("Datasize") == "4");
-  CHECK(flow_file->getAttribute("Full path") == "Simulator/Default/Device1/INT3/INT4");
-  CHECK(flow_file->getAttribute("NodeID"));
-  CHECK(flow_file->getAttribute("NodeID type") == "string");
-  CHECK(flow_file->getAttribute("Typename") == "Int32");
-  CHECK(flow_file->getAttribute("Sourcetimestamp"));
+  CHECK(flow_file->getAttribute("browse.name") == "INT4");
+  CHECK(flow_file->getAttribute("data.size") == "4");
+  CHECK(flow_file->getAttribute("full.path") == "Simulator/Default/Device1/INT3/INT4");
+  CHECK(flow_file->getAttribute("node.id"));
+  CHECK(flow_file->getAttribute("node.id.type") == "string");
+  CHECK(flow_file->getAttribute("type.name") == "Int32");
+  CHECK(flow_file->getAttribute("source.timestamp"));
   CHECK(controller.plan->getContent(flow_file) == "4");
 }
 
@@ -94,13 +94,13 @@ TEST_CASE("Test fetching using string node id", "[fetchopcprocessor]") {
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
   auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
-  CHECK(flow_file->getAttribute("Browsename") == "StringNode");
-  CHECK(flow_file->getAttribute("Datasize") == "4");
-  CHECK(flow_file->getAttribute("Full path") == "/StringNode");
-  CHECK(flow_file->getAttribute("NodeID") == "the.answer.node");
-  CHECK(flow_file->getAttribute("NodeID type") == "string");
-  CHECK(flow_file->getAttribute("Typename") == "Int32");
-  CHECK(flow_file->getAttribute("Sourcetimestamp"));
+  CHECK(flow_file->getAttribute("browse.name") == "StringNode");
+  CHECK(flow_file->getAttribute("data.size") == "4");
+  CHECK(flow_file->getAttribute("full.path") == "/StringNode");
+  CHECK(flow_file->getAttribute("node.id") == "the.answer.node");
+  CHECK(flow_file->getAttribute("node.id.type") == "string");
+  CHECK(flow_file->getAttribute("type.name") == "Int32");
+  CHECK(flow_file->getAttribute("source.timestamp"));
   CHECK(controller.plan->getContent(flow_file) == "42");
 }
 
@@ -233,7 +233,7 @@ TEST_CASE("Test fetch for nodes with changed timestamps with lazy mode", "[fetch
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
   auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
-  CHECK(flow_file->getAttribute("Browsename") == "INT3");
+  CHECK(flow_file->getAttribute("browse.name") == "INT3");
 }
 
 TEST_CASE("Test no fetch result using lazy new value mode when no values are changed", "[fetchopcprocessor]") {
@@ -281,7 +281,7 @@ TEST_CASE("Test fetching new values using lazy new value mode", "[fetchopcproces
   REQUIRE(results.at(processors::FetchOPCProcessor::Failure).empty());
   REQUIRE(results.at(processors::FetchOPCProcessor::Success).size() == 1);
   auto flow_file = results.at(processors::FetchOPCProcessor::Success)[0];
-  CHECK(flow_file->getAttribute("Browsename") == "INT2");
+  CHECK(flow_file->getAttribute("browse.name") == "INT2");
 }
 
 }  // namespace org::apache::nifi::minifi::test

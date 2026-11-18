@@ -107,16 +107,16 @@ void FetchOPCProcessor::writeFlowFileUsingLazyModeWithTimestamp(const opc::NodeD
     ++variables_found;
   };
 
-  auto full_path_it = nodedata.attributes.find("Full path");
+  auto full_path_it = nodedata.attributes.find("full.path");
   if (full_path_it == nodedata.attributes.end()) {
-    logger_->log_error("Node data does not contain 'Full path' attribute, cannot read state for node");
+    logger_->log_error("Node data does not contain 'full.path' attribute, cannot read state for node");
     writeDataToFlowFile();
     return;
   }
 
-  auto source_timestamp_it = nodedata.attributes.find("Sourcetimestamp");
+  auto source_timestamp_it = nodedata.attributes.find("source.timestamp");
   if (source_timestamp_it == nodedata.attributes.end()) {
-    logger_->log_error("Node data does not contain 'Sourcetimestamp' attribute, cannot read state for node");
+    logger_->log_error("Node data does not contain 'source.timestamp' attribute, cannot read state for node");
     writeDataToFlowFile();
     return;
   }
@@ -141,9 +141,9 @@ void FetchOPCProcessor::writeFlowFileUsingLazyModeWithNewValue(const opc::NodeDa
     ++variables_found;
   };
 
-  auto full_path_it = nodedata.attributes.find("Full path");
+  auto full_path_it = nodedata.attributes.find("full.path");
   if (full_path_it == nodedata.attributes.end()) {
-    logger_->log_error("Node data does not contain 'Full path' attribute, cannot read state for node");
+    logger_->log_error("Node data does not contain 'full.path' attribute, cannot read state for node");
     writeDataToFlowFile();
     return;
   }
@@ -199,7 +199,7 @@ void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opc_node, core::Pr
       session.writeBuffer(flow_file, opc::nodeValue2String(opc_node));
     } catch (const std::exception& e) {
       std::string browsename;
-      flow_file->getAttribute("Browsename", browsename);
+      flow_file->getAttribute("browse.name", browsename);
       logger_->log_info("Failed to extract data of OPC node {}: {}", browsename, e.what());
       session.transfer(flow_file, Failure);
       return;

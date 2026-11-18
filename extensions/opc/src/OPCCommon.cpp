@@ -214,24 +214,24 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
       std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.string.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
                             ref->nodeId.nodeId.identifier.string.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["NodeID"] = nodeidstr;
-      nodedata.attributes["NodeID type"] = "string";
+      nodedata.attributes["node.id"] = nodeidstr;
+      nodedata.attributes["node.id.type"] = "string";
     } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_BYTESTRING) {
       std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.byteString.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
         ref->nodeId.nodeId.identifier.byteString.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["NodeID"] = nodeidstr;
-      nodedata.attributes["NodeID type"] = "bytestring";
+      nodedata.attributes["node.id"] = nodeidstr;
+      nodedata.attributes["node.id.type"] = "bytestring";
     } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC) {
-      nodedata.attributes["NodeID"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["NodeID type"] = "numeric";
+      nodedata.attributes["node.id"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+      nodedata.attributes["node.id.type"] = "numeric";
     }
-    nodedata.attributes["Browsename"] = browsename;
+    nodedata.attributes["browse.name"] = browsename;
 
     auto splitted_base_path = utils::string::splitAndTrimRemovingEmpty(base_path, "/");
     if (!splitted_base_path.empty() && splitted_base_path.back() == browsename) {
-      nodedata.attributes["Full path"] = base_path;
+      nodedata.attributes["full.path"] = base_path;
     } else {
-      nodedata.attributes["Full path"] = base_path + "/" + browsename;
+      nodedata.attributes["full.path"] = base_path + "/" + browsename;
     }
     nodedata.data_type_id = static_cast<UA_DataTypeKind>(UA_DATATYPEKINDS);
     UA_Variant* var = UA_Variant_new();
@@ -251,16 +251,16 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       UA_ReadResponse response = UA_Client_Service_read(client_, request);
       UA_DataValue *dv = response.results;
       auto source_timestamp = OPCDateTime2String(dv->sourceTimestamp);
-      nodedata.attributes["Sourcetimestamp"] = source_timestamp;
+      nodedata.attributes["source.timestamp"] = source_timestamp;
       UA_ReadResponse_clear(&response);
 
       nodedata.data_type_id = static_cast<UA_DataTypeKind>(var->type->typeKind);
       nodedata.addVariant(var);
       if (var->type->typeName) {
-        nodedata.attributes["Typename"] = std::string(var->type->typeName);
+        nodedata.attributes["type.name"] = std::string(var->type->typeName);
       }
       if (var->type->memSize) {
-        nodedata.attributes["Datasize"] = std::to_string(var->type->memSize);
+        nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
         nodedata.data = std::vector<uint8_t>(var->type->memSize);
         memcpy(nodedata.data.data(), var->data, var->type->memSize);
       }
@@ -491,10 +491,13 @@ std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_enc
     throw OPCException(GENERAL_EXCEPTION, "Cannot convert an array variant to string");
   }
   switch (variant.type->typeKind) {
-    case UA_DATATYPEKIND_STRING:
-    case UA_DATATYPEKIND_LOCALIZEDTEXT: {
+    case UA_DATATYPEKIND_STRING: {
       const auto *value = static_cast<const UA_String *>(variant.data);
       return {reinterpret_cast<const char *>(value->data), value->length};
+    }
+    case UA_DATATYPEKIND_LOCALIZEDTEXT: {
+      const auto* value = static_cast<const UA_LocalizedText *>(variant.data);
+      return {reinterpret_cast<const char *>(value->text.data), value->text.length};
     }
     case UA_DATATYPEKIND_BYTESTRING: {
       const auto* value = static_cast<const UA_ByteString *>(variant.data);

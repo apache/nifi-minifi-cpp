@@ -105,17 +105,17 @@ class FetchOPCHistory final : public BaseOPCProcessor {
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully retrieved OPC-UA node history entries"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
-  EXTENSIONAPI static constexpr auto NodeIDAttr = core::OutputAttributeDefinition<>{"NodeID", {Success}, "ID of the node."};
+  EXTENSIONAPI static constexpr auto NodeIDAttr = core::OutputAttributeDefinition<>{"node.id", {Success}, "ID of the node."};
   EXTENSIONAPI static constexpr auto NamespaceIndexAttr = core::OutputAttributeDefinition<>{
-      "Namespace index", {Success}, "Namespace index of the node."};
+      "namespace.index", {Success}, "Namespace index of the node."};
   EXTENSIONAPI static constexpr auto SourcetimestampAttr = core::OutputAttributeDefinition<>{
-      "Sourcetimestamp", {Success}, "The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'."};
+      "source.timestamp", {Success}, "The timestamp of when the node was created in the server as 'YYYY-MM-DDTHH:MM:SS.sssZ'."};
   EXTENSIONAPI static constexpr auto ModificationUsernameAttr = core::OutputAttributeDefinition<>{
-      "ModificationUsername", {Success}, "Username of the user who modified the node."};
+      "modification.username", {Success}, "Username of the user who modified the node."};
   EXTENSIONAPI static constexpr auto ModificationTimeAttr = core::OutputAttributeDefinition<>{
-      "ModificationTime", {Success}, "Timestamp of when the node was modified."};
+      "modification.time", {Success}, "Timestamp of when the node was modified."};
   EXTENSIONAPI static constexpr auto ModificationUpdateTypeAttr = core::OutputAttributeDefinition<>{
-      "ModificationUpdateType", {Success}, "Type of modification performed on the node."};
+      "modification.update.type", {Success}, "Type of modification performed on the node."};
 
   EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 6>{
       NodeIDAttr, NamespaceIndexAttr, SourcetimestampAttr, ModificationUsernameAttr, ModificationTimeAttr, ModificationUpdateTypeAttr};
