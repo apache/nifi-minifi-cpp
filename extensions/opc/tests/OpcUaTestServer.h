@@ -41,6 +41,11 @@ class OpcUaTestServer {
 
     auto config = UA_Server_getConfig(server_);
     UA_ServerConfig_setMinimal(config, port, nullptr);
+
+    UA_Array_delete(config->serverUrls, config->serverUrlsSize, &UA_TYPES[UA_TYPES_STRING]);
+    config->serverUrls = UA_String_new();
+    *config->serverUrls = UA_STRING_ALLOC(("opc.tcp://127.0.0.1:" + std::to_string(port)).c_str());
+    config->serverUrlsSize = 1;
     config->logging->log = [](void* log_context, UA_LogLevel level, UA_LogCategory /*category*/, const char* msg, va_list args) {
       char buffer[1024];
       mp_vsnprintf(buffer, sizeof(buffer), msg, args);
