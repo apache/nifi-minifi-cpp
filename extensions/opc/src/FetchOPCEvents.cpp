@@ -106,28 +106,14 @@ void FetchOPCEvents::runEventLoop() {
         continue;
       }
 
-      if (id_type_ == opc::OPCNodeIDType::Path && !path_node_id_resolved_) {
-        std::vector<opc::NodeId> translated_node_ids;
-        if (auto sc = connection_
-                ->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids, namespace_idx_, path_reference_types_, logger_);
-            sc != UA_STATUSCODE_GOOD) {
-          logger_->log_error("Failed to translate path '{}' to a node id: {}", node_id_, UA_StatusCode_name(sc));
-          retry();
-          continue;
-        }
-        if (translated_node_ids.size() != 1) {
-          logger_->log_error("Path '{}' resolved to {} node ids; exactly one is required to subscribe to events",
-              node_id_,
-              translated_node_ids.size());
-          retry();
-          continue;
-        }
-        node_ = std::move(translated_node_ids[0]);
-        path_node_id_resolved_ = true;
+      const auto* node = resolveNodeId();
+      if (!node) {
+        retry();
+        continue;
       }
 
       if (!connection_->hasEventSubscription()) {
-        if (auto sc = connection_->subscribeToEvents(node_, event_filter_); sc != UA_STATUSCODE_GOOD) {
+        if (auto sc = connection_->subscribeToEvents(*node, event_filter_); sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to subscribe to the events of node '{}': {}", node_id_, UA_StatusCode_name(sc));
           retry();
           continue;
