@@ -389,7 +389,7 @@ TEST_CASE_METHOD(FetchOPCEventsTestController, "A path that resolves to multiple
   REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&]() {
     controller_.trigger();
     return LogTestController::getInstance().getLogs().find(
-        "Path 'Simulator/Default/AmbiguousParent/Ambiguous' resolved to 2 node ids; exactly one is required to subscribe to events") != std::string::npos;
+        "Path 'Simulator/Default/AmbiguousParent/Ambiguous' resolved to 2 node ids; exactly one node is required") != std::string::npos;
   }, 100ms));
 }
 
