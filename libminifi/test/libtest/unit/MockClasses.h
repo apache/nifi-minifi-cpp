@@ -3,7 +3,9 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 #pragma once
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 
@@ -14,13 +16,16 @@
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
-#include "Catch.h"
+#include "minifi-cpp/utils/gsl.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
 std::mutex control_mutex;
+std::atomic<bool> controller_service_action_is_correct{false};
+std::atomic<bool> controller_service_action_failed{false};
 std::atomic<bool> subprocess_controller_service_found_correctly{false};
 std::atomic<bool> subprocess_controller_service_not_found_correctly{false};
+std::atomic<bool> subprocess_controller_service_lookup_failed{false};
 
 class MockControllerService : public minifi::core::controller::ControllerServiceBase, public core::controller::ControllerServiceHandle {
  public:
@@ -95,20 +100,22 @@ class MockProcessor : public minifi::core::ProcessorImpl {
     if (!IsNullOrEmpty(linked_service)) {
       std::shared_ptr<minifi::core::controller::ControllerServiceHandle> service = context.getControllerService(linked_service, getUUID());
       std::lock_guard<std::mutex> lock(control_mutex);
-      REQUIRE(nullptr != service);
-      REQUIRE("pushitrealgood" == std::dynamic_pointer_cast<MockControllerService>(service)->doSomething());
-      // verify we have access to the controller service
-      // and verify that we can execute it.
+      // verify we have access to the controller service and we can execute it
+      if (service && "pushitrealgood" == std::dynamic_pointer_cast<MockControllerService>(service)->doSomething()) {
+        controller_service_action_is_correct = true;
+      } else {
+        controller_service_action_failed = true;
+      }
     }
 
     bool in_sub_process_group = context.getProperty("InSubProcessGroup") | minifi::utils::andThen(minifi::parsing::parseBool) | minifi::utils::orThrow("");
     auto sub_service = context.getControllerService("SubMockController", getUUID());
-    if (in_sub_process_group) {
-      REQUIRE(nullptr != sub_service);
+    if (sub_service && in_sub_process_group) {
       subprocess_controller_service_found_correctly = true;
-    } else {
-      REQUIRE(nullptr == sub_service);
+    } else if (!sub_service && !in_sub_process_group) {
       subprocess_controller_service_not_found_correctly = true;
+    } else {
+      subprocess_controller_service_lookup_failed = true;
     }
     session.transfer(flow_file, Success);
   }

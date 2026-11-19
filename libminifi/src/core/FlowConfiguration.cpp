@@ -166,8 +166,8 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::createSimpleProcessGroup(
   return std::make_unique<core::ProcessGroup>(core::SIMPLE_PROCESS_GROUP, name, uuid, version);
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(const std::string &name, const utils::Identifier &uuid) {
-  return std::make_unique<core::ProcessGroup>(core::REMOTE_PROCESS_GROUP, name, uuid);
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(const std::string &name, const utils::Identifier &uuid, const ProcessGroup& parent) {
+  return std::make_unique<core::ProcessGroup>(core::REMOTE_PROCESS_GROUP, name, uuid, parent);
 }
 
 std::unique_ptr<minifi::Connection> FlowConfiguration::createConnection(const std::string& name, const utils::Identifier& uuid) const {

@@ -374,10 +374,13 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
 
   auto connection = std::make_shared<minifi::ConnectionImpl>(nullptr, nullptr, "Connection");
   std::map<std::string, core::Connectable*> connectionMap{{connection->getUUIDStr(), connection.get()}};
+
+  std::atomic<bool> on_flush_was_successful{true};
+
   // initialize repository
   {
-    std::mutex flush_counter_mutex;
-    int flush_counter{0};
+    std::atomic<bool> repository_started{false};
+    std::atomic<bool> already_run{false};
     std::atomic<bool> stop{false};
 
     const auto ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
@@ -390,21 +393,25 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     }};
 
     ff_repository->onFlush_ = [&] {
-      {
-        std::lock_guard lock(flush_counter_mutex);
-        if (++flush_counter != 1) {
-          return;
-        }
-      }
+      // flush() is also called synchronously from initialize_repository() on the main thread, before start()
+      if (!repository_started.load()) { return; }
+      // the monitor thread flushes repeatedly: run only on the first of those
+      if (already_run.exchange(true)) { return; }
 
       for (int keyIdx = 0; keyIdx < 100; ++keyIdx) {
         auto file = std::make_shared<minifi::FlowFileRecordImpl>();
         file->setConnection(connection.get());
         // Serialize is sync
-        REQUIRE(file->Persist(ff_repository));
+        if (!file->Persist(ff_repository)) {
+          on_flush_was_successful = false;
+          break;
+        }
         if (keyIdx % 2 == 0) {
           // delete every second flowFile
-          REQUIRE(ff_repository->Delete(file->getUUIDStr()));
+          if (!ff_repository->Delete(file->getUUIDStr())) {
+            on_flush_was_successful = false;
+            break;
+          }
         }
       }
       stop = true;
@@ -416,6 +423,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     REQUIRE(ff_repository->initialize(config));
     ff_repository->loadComponent(content_repo);
     ff_repository->start();
+    repository_started = true;
 
     if (shutdown.joinable()) {
       shutdown.join();
@@ -424,6 +432,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
 
   // check if the deleted flowfiles are indeed deleted
   {
+    REQUIRE(on_flush_was_successful);
     const auto ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
     ff_repository->setConnectionMap(connectionMap);
     REQUIRE(ff_repository->initialize(config));

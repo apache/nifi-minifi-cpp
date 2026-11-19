@@ -36,8 +36,8 @@ class SchedulingAgent {
  public:
   SchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<provenance::ProvenanceRepository> provenance_repo,
                   std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration, utils::ThreadPool& thread_pool)
-      : admin_yield_duration_(),
-        bored_yield_duration_(0),
+      : admin_yield_duration_(std::chrono::milliseconds(0)),
+        bored_yield_duration_(std::chrono::milliseconds(0)),
         configure_(configuration),
         content_repo_(content_repo),
         thread_pool_(thread_pool),
@@ -96,13 +96,13 @@ class SchedulingAgent {
   SchedulingAgent(const SchedulingAgent &parent) = delete;
   SchedulingAgent &operator=(const SchedulingAgent &parent) = delete;
 
-  std::chrono::milliseconds getAdminYieldDuration() const { return admin_yield_duration_; }
+  std::chrono::milliseconds getAdminYieldDuration() const { return admin_yield_duration_.load(); }
 
  protected:
   std::mutex mutex_;
   std::atomic<bool> running_;
-  std::chrono::milliseconds admin_yield_duration_;
-  std::chrono::milliseconds bored_yield_duration_;
+  std::atomic<std::chrono::milliseconds> admin_yield_duration_;
+  std::atomic<std::chrono::milliseconds> bored_yield_duration_;
 
   std::shared_ptr<Configure> configure_;
 

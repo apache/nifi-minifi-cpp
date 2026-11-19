@@ -432,7 +432,8 @@ gsl::not_null<std::unique_ptr<state::ProcessorController>> FlowController::creat
 
 uint64_t FlowController::getUptime() {
   auto now = std::chrono::steady_clock::now();
-  auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
+  auto start_time = start_time_.load();
+  auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time).count();
   return time_since;
 }
 

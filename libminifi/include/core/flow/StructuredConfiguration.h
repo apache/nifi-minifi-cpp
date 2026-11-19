@@ -117,7 +117,7 @@ class StructuredConfiguration : public FlowConfiguration {
    * @param parent        the root node of flow configuration to which
    *                      to add the process groups that are parsed
    */
-  void parseRemoteProcessGroup(const Node& rpg_node_seq, core::ProcessGroup* parent);
+  void parseRemoteProcessGroup(const Node& rpg_node_seq, core::ProcessGroup* parent_group);
 
   /**
    * A helper function to parse the Properties Node for a processor.
