@@ -4,6 +4,7 @@
 
 #include "agent/JsonSchema.h"
 
+#include <algorithm>
 #include <ranges>
 #include <string>
 #include <unordered_map>
@@ -105,7 +106,8 @@ void writeProperties(const PropertyContainer& props, bool supports_dynamic, std:
   out << "}";  // "Properties"
 }
 
-static std::string buildSchema(const std::unordered_map<std::string, std::string>& relationships, const std::string& processors, const std::string& controller_services) {
+static std::string buildSchema(const std::unordered_map<std::string, std::string>& relationships, const std::string& processors, const std::string& controller_services,
+    const std::string& reporting_tasks) {
   std::stringstream all_rels;
   for (const auto& [name, rels] : relationships) {
     all_rels << "\"relationships-" << escape(name) << "\": " << rels << ", ";
@@ -246,6 +248,27 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
         "id": {"$ref": "#/definitions/uuid"}
       }
     }, )" + controller_services + R"(]},
+    "reporting_task": {"allOf": [{
+      "type": "object",
+      "required": ["name", "class"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "id": {"$ref": "#/definitions/uuid"},
+        "class": {"type": "string"},
+        "penalization period": {"$ref": "#/definitions/time"},
+        "yield period": {"$ref": "#/definitions/time"},
+        "bulletin level": {"type": "string"},
+        "run duration nanos": {"type": "integer"},
+        "Properties": {},
+        "scheduling strategy": {"enum": ["TIMER_DRIVEN", "CRON_DRIVEN"], "default": "TIMER_DRIVEN"},
+        "scheduling period": {}
+      }}, {
+        "if": {"required": ["scheduling strategy"], "properties": {"scheduling strategy": {"const": "CRON_DRIVEN"}}},
+        "then": {"required": ["scheduling period"], "properties": {"scheduling period": {"$ref": "#/definitions/cron_pattern"}}},
+        "else": {"properties": {"scheduling period": {"$ref": "#/definitions/time"}}}
+      })" + (!reporting_tasks.empty() ? ", " : "") + reporting_tasks + R"(]
+    },
     "processor": {"allOf": [{
       "type": "object",
       "required": ["name", "id", "class", "scheduling strategy"],
@@ -360,6 +383,10 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
             "version": {"type": "integer"}
           }
         },
+        "Reporting Tasks": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/reporting_task"}
+        },
         )" + process_group_properties + R"(
       }
     }
@@ -428,6 +455,32 @@ std::string generateJsonSchema() {
     controller_services.push_back(std::move(schema).str());
   };
 
+  std::vector<std::string> reporting_tasks;
+  auto putReportingTask = [&] (const ClassDescription& reporting_task) {
+    std::stringstream schema;
+    schema
+        << "{"
+        << R"("if": {"properties": {"class": {"const": ")" << escape(reporting_task.short_name_) << "\"}}},"
+        << R"("then": {)";
+
+    const bool has_mandatory_property = std::ranges::any_of(reporting_task.class_properties_, [] (const auto& prop) {
+      return prop.getRequired() && !prop.getDefaultValue().has_value();
+    });
+    if (has_mandatory_property) {
+      schema << R"("required": ["Properties"],)";
+    }
+
+    schema << R"("properties": {)";
+
+    writeProperties(reporting_task.class_properties_, reporting_task.supports_dynamic_properties_, schema);
+
+    schema << "}";  // "properties"
+    schema << "}";  // "then"
+    schema << "}";  // if-block
+
+    reporting_tasks.push_back(std::move(schema).str());
+  };
+
   for (const auto& [bundle_id, components]: ClassDescriptionRegistry::getClassDescriptions()) {
     for (const auto& proc : components.getProcessors()) {
       putProcSchema(proc);
@@ -435,9 +488,13 @@ std::string generateJsonSchema() {
     for (const auto& service : components.getControllerServices()) {
       putControllerService(service);
     }
+    for (const auto& reporting_task : components.getReportingTasks()) {
+      putReportingTask(reporting_task);
+    }
   }
 
-  return buildSchema(relationships, utils::string::join(", ", proc_schemas), utils::string::join(", ", controller_services));
+  return buildSchema(relationships, utils::string::join(", ", proc_schemas), utils::string::join(", ", controller_services),
+      utils::string::join(", ", reporting_tasks));
 }
 
 }  // namespace org::apache::nifi::minifi::docs

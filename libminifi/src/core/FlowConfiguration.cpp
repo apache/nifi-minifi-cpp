@@ -24,8 +24,7 @@ void createDefaultFlowConfigFile(const std::filesystem::path& path) {
       "  name: MiNiFi Flow\n"
       "Processors: []\n"
       "Connections: []\n"
-      "Remote Processing Groups: []\n"
-      "Provenance Reporting:\n";
+      "Remote Processing Groups: []\n";
 }
 }  // namespace
 
@@ -83,15 +82,6 @@ std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::s
     logger_->log_error("No Processor defined for {}", fullclass);
     return nullptr;
   }
-  return processor;
-}
-
-std::unique_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask() {
-  auto impl = std::make_unique<core::reporting::SiteToSiteProvenanceReportingTask>(this->configuration_);
-  auto uuid = impl->getUUID();
-  auto name = impl->getName();
-  auto processor = std::make_unique<core::Processor>("SiteToSiteProvenanceReportingTask", name, uuid, std::move(impl));
-  processor->initialize();
   return processor;
 }
 
