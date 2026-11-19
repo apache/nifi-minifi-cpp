@@ -19,4 +19,6 @@ local-repo = []
 
 [build-dependencies]
 bindgen = "0.72.0"
+
+[target.'cfg(windows)'.build-dependencies]
 cc = "1.2.41"
