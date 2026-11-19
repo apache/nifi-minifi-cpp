@@ -9,7 +9,8 @@ use crate::processors::put_file::unix_permissions::PutFileUnixPermissions;
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
     FlowFileTransform, GetAttribute, GetControllerService, GetId, GetProperty, InputStream, Logger,
-    MinifiError, ProcessError, RouteErrorExt, Schedule, TransformedFlowFile, trace, warn,
+    MinifiError, Relationship, Schedule, TransformError, TransformErrorExt, TransformedFlowFile,
+    trace, warn,
 };
 use std::path::{Path, PathBuf};
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
@@ -85,7 +86,7 @@ impl PutFileRs {
         input_stream: &mut dyn InputStream,
         logger: &L,
         destination: &Path,
-    ) -> Result<(), MinifiError>
+    ) -> Result<(), TransformError>
     where
         L: Logger,
     {
@@ -96,7 +97,11 @@ impl PutFileRs {
             }
         }
         let mut file = std::fs::File::create(destination)?;
-        std::io::copy(input_stream, &mut file)?;
+        // rollback since we want to retry if the disk is full
+        // not sure if we want to do this in the long term,
+        // but we wanted to test the rollback_err aswell
+        // and this is not production code (only playground)
+        std::io::copy(input_stream, &mut file).rollback_err()?;
         match self.unix_permissions.set_file_permissions(destination) {
             Ok(_) => {}
             Err(err) => {
@@ -149,6 +154,8 @@ impl Schedule for PutFileRs {
 }
 
 impl FlowFileTransform for PutFileRs {
+    const ERROR_RELATIONSHIP: &'static Relationship = &FAILURE;
+
     fn transform<
         'a,
         Context: GetProperty + GetControllerService + GetAttribute + GetId,
@@ -158,10 +165,10 @@ impl FlowFileTransform for PutFileRs {
         context: &Context,
         input_stream: &'a mut dyn InputStream,
         logger: &LoggerImpl,
-    ) -> Result<TransformedFlowFile<'a>, ProcessError> {
+    ) -> Result<TransformedFlowFile<'a>, TransformError> {
         trace!(logger, "on_trigger: {:?}", self);
 
-        let destination_path = Self::get_destination_path(context).route_err_to_failure()?;
+        let destination_path = Self::get_destination_path(context)?;
 
         if self.directory_is_full(&destination_path) {
             warn!(logger, "Directory is full");
