@@ -3,6 +3,8 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 use glob::glob;
+// Only needed for its `links` metadata (DEP_MINIFI_BEHAVE_PATH in build.rs).
+use minifi_native_sys as _;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus};

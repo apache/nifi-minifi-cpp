@@ -153,11 +153,7 @@ impl GetFileRs {
                 .is_some_and(|f| f.starts_with('.'))
         }
 
-        if self.ignore_hidden_files && is_hidden(dir_entry.path().to_path_buf()) {
-            return Ok(false);
-        }
-
-        Ok(true)
+        Ok(!self.ignore_hidden_files || !is_hidden(dir_entry.path().to_path_buf()))
     }
 
     fn get_single_file<PS: ProcessSession, L: Logger>(
