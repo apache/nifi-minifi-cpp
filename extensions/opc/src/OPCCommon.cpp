@@ -236,16 +236,7 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       nodedata.attributes["node.id"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
       nodedata.attributes["node.id.type"] = "numeric";
     } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_GUID) {
-      const auto& guid = ref->nodeId.nodeId.identifier.guid;  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      std::array<char, 37> guid_str_array{};
-      auto res = snprintf(guid_str_array.data(), guid_str_array.size(), "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-                          guid.data1, guid.data2, guid.data3, guid.data4[0], guid.data4[1], guid.data4[2],
-                          guid.data4[3], guid.data4[4], guid.data4[5], guid.data4[6], guid.data4[7]);
-      if (res < 0) {
-        nodedata.attributes["node.id"] = "";
-      } else {
-        nodedata.attributes["node.id"] = std::string(guid_str_array.data());
-      }
+      nodedata.attributes["node.id"] = printToString(UA_Guid_print, ref->nodeId.nodeId.identifier.guid, "GUID");  // NOLINT(cppcoreguidelines-pro-type-union-access)
       nodedata.attributes["node.id.type"] = "guid";
     }
     nodedata.attributes["namespace.index"] = std::to_string(ref->nodeId.nodeId.namespaceIndex);
@@ -369,7 +360,7 @@ bool Client::exists(UA_NodeId node_id) {
   return retval;
 }
 
-UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, int32_t namespace_index,
+UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, UA_UInt16 namespace_index,
     const std::vector<UA_UInt32>& path_reference_types, const std::shared_ptr<core::logging::Logger>& logger) {
   logger->log_trace("Trying to find node ids for {}", path.c_str());
 

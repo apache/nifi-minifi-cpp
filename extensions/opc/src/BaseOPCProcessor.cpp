@@ -94,9 +94,8 @@ bool BaseOPCProcessor::reconnect() {
   }
   logger_->log_debug("Successfully connected.");
 
-  // A new or re-established connection may be to a restarted server that can reassign node ids,
-  // so if path is used to identify node id, the cached node id should be invalidated
-  path_node_id_resolved_ = false;
+  // A new or re-established connection may be to a restarted server that can reassign node ids
+  resolved_path_node_ids_.reset();
   return true;
 }
 
@@ -123,11 +122,40 @@ void BaseOPCProcessor::parseNode(core::ProcessContext& context, const core::Prop
     case opc::OPCNodeIDType::Path:
       path_reference_types_.clear();
       readPathReferenceTypes(context, path_reference_types_property, node_id_);
-      path_node_id_resolved_ = false;
+      resolved_path_node_ids_.reset();
       break;
     default:
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type_)));
   }
+}
+
+const std::vector<opc::NodeId>* BaseOPCProcessor::resolvePathNodeIds() {
+  if (!resolved_path_node_ids_) {
+    std::vector<opc::NodeId> translated_node_ids;
+    auto sc = connection_->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids, namespace_idx_, path_reference_types_, logger_);
+    if (sc != UA_STATUSCODE_GOOD) {
+      logger_->log_error("Failed to translate path '{}' to a node id: {}", node_id_, UA_StatusCode_name(sc));
+      return nullptr;
+    }
+    resolved_path_node_ids_ = std::move(translated_node_ids);
+  }
+  return &*resolved_path_node_ids_;
+}
+
+const opc::NodeId* BaseOPCProcessor::resolveNodeId() {
+  if (id_type_ != opc::OPCNodeIDType::Path) {
+    return &node_;
+  }
+  const auto* node_ids = resolvePathNodeIds();
+  if (!node_ids) {
+    return nullptr;
+  }
+  if (node_ids->size() != 1) {
+    logger_->log_error("Path '{}' resolved to {} node ids; exactly one node is required", node_id_, node_ids->size());
+    resolved_path_node_ids_.reset();  // retry the translation on the next call, the server's address space may change
+    return nullptr;
+  }
+  return &node_ids->front();
 }
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -333,21 +333,10 @@ void FetchOPCHistory::onTrigger(core::ProcessContext& context, core::ProcessSess
     return;
   }
 
-  if (id_type_ == opc::OPCNodeIDType::Path && !path_node_id_resolved_) {
-    std::vector<opc::NodeId> translated_node_ids;
-    auto sc = connection_->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids, namespace_idx_, path_reference_types_, logger_);
-    if (sc != UA_STATUSCODE_GOOD) {
-      logger_->log_error("Failed to translate path '{}' to a node id: {}", node_id_, UA_StatusCode_name(sc));
-      context.yield();
-      return;
-    }
-    if (translated_node_ids.size() != 1) {
-      logger_->log_error("Path '{}' resolved to {} node ids; exactly one is required to fetch history", node_id_, translated_node_ids.size());
-      context.yield();
-      return;
-    }
-    node_ = std::move(translated_node_ids[0]);
-    path_node_id_resolved_ = true;
+  const auto* node = resolveNodeId();
+  if (!node) {
+    context.yield();
+    return;
   }
 
   auto* state_manager = context.getStateManager();
@@ -361,7 +350,7 @@ void FetchOPCHistory::onTrigger(core::ProcessContext& context, core::ProcessSess
       history_context{session, record_set_writer_, state_map, entries_transferred, batch_size_, node_id_, namespace_idx_, fetched_state, logger_};
 
   auto retval = connection_->readHistory(history_type_,
-      node_,
+      *node,
       &historyReadCallback,
       static_cast<void*>(&history_context),
       calculateStartTime(fetched_state, start_timestamp_),

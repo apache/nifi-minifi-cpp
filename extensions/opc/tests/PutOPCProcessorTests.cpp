@@ -657,7 +657,7 @@ TEST_CASE("Test multiple nodes are returned for path", "[putopcprocessor]") {
   const auto results = controller.trigger(std::to_string(expected_node.data));
   REQUIRE(results.at(processors::PutOPCProcessor::Success).empty());
   REQUIRE(results.at(processors::PutOPCProcessor::Failure).empty());
-  REQUIRE(LogTestController::getInstance().contains("exactly one target node is required for put"));
+  REQUIRE(LogTestController::getInstance().contains("resolved to 2 node ids; exactly one node is required"));
 }
 
 TEST_CASE("Test updating an existing node using path target node id", "[putopcprocessor]") {

@@ -114,7 +114,7 @@ class Client {
   UA_ReferenceDescription * getNodeReference(UA_NodeId node_id);
   void traverse(UA_NodeId node_id, const std::function<NodeFoundCallBackFunc>& cb, const std::string& base_path = "", uint64_t max_depth = 0, bool fetch_root = true);
   bool exists(UA_NodeId node_id);
-  UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, int32_t namespace_index,
+  UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, UA_UInt16 namespace_index,
     const std::vector<UA_UInt32>& path_reference_types, const std::shared_ptr<core::logging::Logger>& logger);
 
   template<typename T>

@@ -26,8 +26,6 @@ void FetchOPCProcessor::initialize() {
 void FetchOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) {
   logger_->log_trace("FetchOPCProcessor::onSchedule");
 
-  translated_node_ids_.clear();  // Path might has changed during restart
-
   BaseOPCProcessor::onSchedule(context, factory);
 
   node_id_ = utils::parseProperty(context, NodeID);
@@ -62,17 +60,13 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
   if (id_type_ != opc::OPCNodeIDType::Path) {
     connection_->traverse(node_, found_cb, "", max_depth_);
   } else {
-    if (!path_node_id_resolved_) {
-      translated_node_ids_.clear();
-      auto sc = connection_->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids_, namespace_idx_, path_reference_types_, logger_);
-      if (sc != UA_STATUSCODE_GOOD) {
-        logger_->log_error("Failed to translate {} to node id, no flow files will be generated ({})", node_id_.c_str(), UA_StatusCode_name(sc));
-        context.yield();
-        return;
-      }
-      path_node_id_resolved_ = true;
+    const auto* node_ids = resolvePathNodeIds();
+    if (!node_ids) {
+      logger_->log_error("No flow files will be generated as path '{}' could not be translated to node ids", node_id_);
+      context.yield();
+      return;
     }
-    for (auto& node_id : translated_node_ids_) {
+    for (const auto& node_id : *node_ids) {
       connection_->traverse(node_id, found_cb, node_id_, max_depth_);
     }
   }

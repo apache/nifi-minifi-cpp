@@ -144,7 +144,6 @@ class FetchOPCProcessor final : public BaseOPCProcessor {
 
   uint64_t max_depth_ = 0;
   LazyModeOptions lazy_mode_ = LazyModeOptions::Off;
-  std::vector<opc::NodeId> translated_node_ids_;  // Only used when user provides path; cached translation, re-resolved on (re)connect (see path_node_id_resolved_)
 };
 
 }  // namespace org::apache::nifi::minifi::processors
