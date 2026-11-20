@@ -42,6 +42,7 @@ struct FetchOPCHistoryContext {
   const int32_t namespace_index;
   const std::optional<FetchedState> fetched_state;
   std::shared_ptr<core::logging::Logger> logger;
+  bool callback_failed = false;
 };
 
 class FetchOPCHistory final : public BaseOPCProcessor {

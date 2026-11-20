@@ -210,27 +210,35 @@ UA_Boolean historyReadCallback(UA_Client* /*client*/, const UA_NodeId* /*node_id
     void* ctx) {
   auto* opc_history_context = static_cast<FetchOPCHistoryContext*>(ctx);
 
-  const auto binary_encoding = opc_history_context->record_set_writer ? opc::BinaryEncoding::Base64 : opc::BinaryEncoding::Raw;
-  auto batch = extractHistoryBatch(data, binary_encoding, opc_history_context->logger);
-  if (batch && !batch->entries.empty()) {
-    const std::optional<size_t> remaining = opc_history_context->batch_size != 0
-        ? std::optional<size_t>(opc_history_context->batch_size - opc_history_context->entries_transferred)
-        : std::nullopt;
-    auto new_entries = selectNewEntries(std::move(batch->entries), opc_history_context->fetched_state, batch->has_modification_info, remaining);
+  try {
+    const auto binary_encoding = opc_history_context->record_set_writer ? opc::BinaryEncoding::Base64 : opc::BinaryEncoding::Raw;
+    auto batch = extractHistoryBatch(data, binary_encoding, opc_history_context->logger);
+    if (batch && !batch->entries.empty()) {
+      const std::optional<size_t> remaining = opc_history_context->batch_size != 0
+          ? std::optional<size_t>(opc_history_context->batch_size - opc_history_context->entries_transferred)
+          : std::nullopt;
+      auto new_entries = selectNewEntries(std::move(batch->entries), opc_history_context->fetched_state, batch->has_modification_info, remaining);
 
-    if (!new_entries.empty()) {
-      if (opc_history_context->record_set_writer) {
-        writeAsRecordSet(*opc_history_context, new_entries);
-      } else {
-        writeAsFlowFiles(*opc_history_context, new_entries);
+      if (!new_entries.empty()) {
+        if (opc_history_context->record_set_writer) {
+          writeAsRecordSet(*opc_history_context, new_entries);
+        } else {
+          writeAsFlowFiles(*opc_history_context, new_entries);
+        }
+        updateState(opc_history_context->state_map, new_entries, batch->has_modification_info);
       }
-      updateState(opc_history_context->state_map, new_entries, batch->has_modification_info);
     }
-  }
 
-  const bool batch_limit_reached = opc_history_context->batch_size != 0 &&
-      opc_history_context->entries_transferred >= opc_history_context->batch_size;
-  return more_data_available && !batch_limit_reached;
+    const bool batch_limit_reached = opc_history_context->batch_size != 0 &&
+        opc_history_context->entries_transferred >= opc_history_context->batch_size;
+    return more_data_available && !batch_limit_reached;
+  } catch (const std::exception& ex) {
+    opc_history_context->logger->log_error("Failed to process the OPC UA history read result: {}", ex.what());
+  } catch (...) {
+    opc_history_context->logger->log_error("Failed to process the OPC UA history read result, exception type: {}", getCurrentExceptionTypeName());
+  }
+  opc_history_context->callback_failed = true;
+  return false;
 }
 
 UA_DateTime toUaDateTime(std::chrono::system_clock::time_point tp) {
@@ -362,6 +370,8 @@ void FetchOPCHistory::onTrigger(core::ProcessContext& context, core::ProcessSess
 
   if (retval != UA_STATUSCODE_GOOD) {
     logger_->log_error("Failed to read OPC UA node history, status code: {}", UA_StatusCode_name(retval));
+    context.yield();
+  } else if (history_context.callback_failed) {
     context.yield();
   }
 }

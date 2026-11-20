@@ -615,10 +615,13 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
 }
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {
-  std::array<char, 1024> buffer{};
-  (void)mp_vsnprintf(buffer.data(), buffer.size(), msg, args);
-  auto loggerPtr = reinterpret_cast<core::logging::Logger*>(context);
-  loggerPtr->log_string(MapOPCLogLevel(level), buffer.data());
+  try {
+    std::array<char, 1024> buffer{};
+    (void)mp_vsnprintf(buffer.data(), buffer.size(), msg, args);
+    auto loggerPtr = reinterpret_cast<core::logging::Logger*>(context);
+    loggerPtr->log_string(MapOPCLogLevel(level), buffer.data());
+  } catch (...) {
+  }
 }
 
 std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type) {
@@ -769,43 +772,67 @@ void Client::eventNotificationCallback(UA_Client* /*client*/, UA_UInt32 /*sub_id
     const UA_KeyValueMap event_fields) {
   auto* client = static_cast<Client*>(mon_context);
 
-  Event event;
-  for (size_t i = 0; i < event_fields.mapSize; ++i) {
-    const UA_KeyValuePair& field = event_fields.map[i];
-    std::string name{reinterpret_cast<const char*>(field.key.name.data), field.key.name.length};
-    if (name.starts_with('/')) {
-      name.erase(0, 1);
+  try {
+    Event event;
+    for (size_t i = 0; i < event_fields.mapSize; ++i) {
+      const UA_KeyValuePair& field = event_fields.map[i];
+      std::string name{reinterpret_cast<const char*>(field.key.name.data), field.key.name.length};
+      if (name.starts_with('/')) {
+        name.erase(0, 1);
+      }
+      if (UA_Variant_isEmpty(&field.value)) {
+        continue;
+      }
+      try {
+        event.fields[name] = variantToString(field.value, BinaryEncoding::Base64);
+      } catch (const std::exception& ex) {
+        client->logger_->log_warn("Failed to convert event field '{}' to string, skipping field: {}", name, ex.what());
+      }
     }
-    if (UA_Variant_isEmpty(&field.value)) {
-      continue;
-    }
-    try {
-      event.fields[name] = variantToString(field.value, BinaryEncoding::Base64);
-    } catch (const std::exception& ex) {
-      client->logger_->log_warn("Failed to convert event field '{}' to string, skipping field: {}", name, ex.what());
-    }
+    client->pushEvent(std::move(event));
+  } catch (const std::exception& ex) {
+    client->logger_->log_error("Failed to process an OPC UA event notification: {}", ex.what());
+  } catch (...) {
+    client->logger_->log_error("Failed to process an OPC UA event notification, exception type: {}", getCurrentExceptionTypeName());
   }
-  client->pushEvent(std::move(event));
 }
 
 void Client::subscriptionStatusChangeCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context, UA_StatusChangeNotification* notification) {
   auto* client = static_cast<Client*>(sub_context);
-  client->logger_->log_warn("The OPC UA server reported the event subscription {} as {}, a new subscription will be created", sub_id,
-      UA_StatusCode_name(notification->status));
-  client->markSubscriptionDead();
+  try {
+    client->markSubscriptionDead();
+    client->logger_->log_warn("The OPC UA server reported the event subscription {} as {}, a new subscription will be created", sub_id,
+        UA_StatusCode_name(notification->status));
+  } catch (const std::exception& ex) {
+    client->logger_->log_error("Failed to process the OPC UA subscription status change: {}", ex.what());
+  } catch (...) {
+    client->logger_->log_error("Failed to process the OPC UA subscription status change, exception type: {}", getCurrentExceptionTypeName());
+  }
 }
 
 void Client::subscriptionDeleteCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context) {
   auto* client = static_cast<Client*>(sub_context);
-  client->logger_->log_debug("The OPC UA event subscription {} was deleted", sub_id);
-  // The subscription is already gone from the client, so there is nothing left to delete before resubscribing.
-  client->subscription_.reset();
+  try {
+    // The subscription is already gone from the client, so there is nothing left to delete before resubscribing.
+    client->subscription_.reset();
+    client->logger_->log_debug("The OPC UA event subscription {} was deleted", sub_id);
+  } catch (const std::exception& ex) {
+    client->logger_->log_error("Failed to process the OPC UA subscription deletion: {}", ex.what());
+  } catch (...) {
+    client->logger_->log_error("Failed to process the OPC UA subscription deletion, exception type: {}", getCurrentExceptionTypeName());
+  }
 }
 
 void Client::subscriptionInactivityCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context) {
   auto* client = static_cast<Client*>(sub_context);
-  client->logger_->log_warn("The OPC UA event subscription {} stopped delivering notifications, a new subscription will be created", sub_id);
-  client->markSubscriptionDead();
+  try {
+    client->markSubscriptionDead();
+    client->logger_->log_warn("The OPC UA event subscription {} stopped delivering notifications, a new subscription will be created", sub_id);
+  } catch (const std::exception& ex) {
+    client->logger_->log_error("Failed to process the OPC UA subscription inactivity: {}", ex.what());
+  } catch (...) {
+    client->logger_->log_error("Failed to process the OPC UA subscription inactivity, exception type: {}", getCurrentExceptionTypeName());
+  }
 }
 
 void Client::pushEvent(Event&& event) {
