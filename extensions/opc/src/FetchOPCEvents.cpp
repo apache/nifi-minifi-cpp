@@ -66,17 +66,26 @@ void FetchOPCEvents::onSchedule(core::ProcessContext& context, core::ProcessSess
       ? std::optional<size_t>(gsl::narrow<size_t>(*max_queue_size))
       : std::nullopt;
 
+  opc::EventFilter event_filter_options;
   const auto minimum_severity = utils::parseOptionalU64Property(context, MinimumSeverity);
-  event_filter_.minimum_severity = minimum_severity && *minimum_severity > 0 ? minimum_severity : std::nullopt;
+  event_filter_options.minimum_severity = minimum_severity && *minimum_severity > 0 ? minimum_severity : std::nullopt;
 
-  event_filter_.event_type_node_id = utils::parseProperty(context, EventTypeNodeId);
-  event_filter_.filter_expression = context.getProperty(EventFilterExpression).value_or("");
+  event_filter_options.event_type_node_id = utils::parseProperty(context, EventTypeNodeId);
+  event_filter_options.filter_expression = context.getProperty(EventFilterExpression).value_or("");
 
-  event_filter_.select_fields = utils::string::splitAndTrimRemovingEmpty(utils::parseProperty(context, SelectFields), ",");
-  if (event_filter_.select_fields.empty() && event_filter_.filter_expression.empty()) {
+  event_filter_options.select_fields = utils::string::splitAndTrimRemovingEmpty(utils::parseProperty(context, SelectFields), ",");
+  if (event_filter_options.select_fields.empty() && event_filter_options.filter_expression.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION,
         fmt::format("At least one field must be set in '{}', otherwise the events would carry no data", SelectFields.name));
   }
+
+  const auto event_filter_expression = opc::buildEventFilterExpression(event_filter_options);
+  logger_->log_debug("Using the event filter '{}'", event_filter_expression);
+  auto event_filter = opc::parseEventFilter(event_filter_expression);
+  if (!event_filter) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, event_filter.error());
+  }
+  event_filter_ = std::move(*event_filter);
 
   const auto batch_size = utils::parseOptionalU64Property(context, BatchSize);
   batch_size_ = batch_size && *batch_size > 0 ? batch_size : std::nullopt;
@@ -113,7 +122,7 @@ void FetchOPCEvents::runEventLoop() {
       }
 
       if (!connection_->hasEventSubscription()) {
-        if (auto sc = connection_->subscribeToEvents(*node, event_filter_); sc != UA_STATUSCODE_GOOD) {
+        if (auto sc = connection_->subscribeToEvents(*node, *event_filter_); sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to subscribe to the events of node '{}': {}", node_id_, UA_StatusCode_name(sc));
           retry();
           continue;

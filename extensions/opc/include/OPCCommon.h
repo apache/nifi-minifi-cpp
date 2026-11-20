@@ -116,6 +116,13 @@ struct EventFilter {
 
 std::string buildEventFilterExpression(const EventFilter& options);
 
+struct EventFilterDeleter {
+  void operator()(UA_EventFilter* filter) const noexcept { UA_EventFilter_delete(filter); }
+};
+using EventFilterPtr = std::unique_ptr<UA_EventFilter, EventFilterDeleter>;
+
+std::expected<EventFilterPtr, std::string> parseEventFilter(const std::string& expression);
+
 struct NodeData;
 
 class Client;
@@ -142,7 +149,7 @@ class Client {
   UA_StatusCode readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, void* callback_context,
       UA_DateTime start_time, UA_DateTime end_time);
 
-  UA_StatusCode subscribeToEvents(const UA_NodeId& node_id, const EventFilter& event_filter);
+  UA_StatusCode subscribeToEvents(const UA_NodeId& node_id, const UA_EventFilter& event_filter);
   [[nodiscard]] bool hasEventSubscription() const noexcept { return subscription_ && subscription_->alive; }
   UA_StatusCode processSubscriptionNotifications(UA_UInt32 timeout_milliseconds);
   std::vector<Event> drainEvents();

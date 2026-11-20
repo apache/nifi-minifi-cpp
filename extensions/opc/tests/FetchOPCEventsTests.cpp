@@ -290,15 +290,13 @@ TEST_CASE_METHOD(FetchOPCEventsTestController, "The event filter expression over
   verifyResults(result, {R"([{"Message":"loud enough","Severity":"500"}])"});
 }
 
-TEST_CASE_METHOD(FetchOPCEventsTestController, "An unparsable event filter expression is reported", "[fetchopcevents]") {
+TEST_CASE_METHOD(FetchOPCEventsTestController, "An unparsable event filter expression is rejected", "[fetchopcevents]") {
   server_.start();
   setupProcessor("String", "EventSource");
   REQUIRE(processor_->setProperty(processors::FetchOPCEvents::EventFilterExpression.name, "PICK /Message WHENEVER /Severity"));
 
-  REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&]() {
-    controller_.trigger();
-    return LogTestController::getInstance().getLogs().find("Failed to parse the event filter 'PICK /Message WHENEVER /Severity'") != std::string::npos;
-  }, 100ms));
+  REQUIRE_THROWS_WITH(controller_.trigger(),
+      "Process Schedule Operation: Failed to parse the event filter 'PICK /Message WHENEVER /Severity': BadInternalError");
 }
 
 TEST_CASE_METHOD(FetchOPCEventsTestController, "Selecting no fields at all is rejected", "[fetchopcevents]") {
