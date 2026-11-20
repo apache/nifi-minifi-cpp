@@ -26,22 +26,16 @@ void FetchOPCProcessor::initialize() {
 void FetchOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) {
   logger_->log_trace("FetchOPCProcessor::onSchedule");
 
-  translated_node_ids_.clear();  // Path might has changed during restart
-
   BaseOPCProcessor::onSchedule(context, factory);
 
   node_id_ = utils::parseProperty(context, NodeID);
+  id_type_ = utils::parseEnumProperty<opc::OPCNodeIDType>(context, NodeIDType);
+  namespace_idx_ = gsl::narrow<UA_UInt16>(utils::parseU64Property(context, NameSpaceIndex));
+  parseNode(context, PathReferenceTypes);
+
   max_depth_ = utils::parseU64Property(context, MaxDepth);
 
-  parseIdType(context, NodeIDType);
-
-  namespace_idx_ = gsl::narrow<int32_t>(utils::parseI64Property(context, NameSpaceIndex));
-
   lazy_mode_ = utils::parseEnumProperty<LazyModeOptions>(context, Lazy);
-
-  if (id_type_ == opc::OPCNodeIDType::Path) {
-    readPathReferenceTypes(context, node_id_);
-  }
 }
 
 void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
@@ -64,28 +58,15 @@ void FetchOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSe
   };
 
   if (id_type_ != opc::OPCNodeIDType::Path) {
-    const auto namespace_index = gsl::narrow_cast<UA_UInt16>(namespace_idx_);
-    opc::NodeId my_id;
-    if (id_type_ == opc::OPCNodeIDType::Int) {
-      my_id = opc::NodeId{UA_NODEID_NUMERIC(namespace_index, std::stoi(node_id_))};
-    } else if (id_type_ == opc::OPCNodeIDType::String) {
-      my_id = opc::NodeId{UA_NODEID_STRING_ALLOC(namespace_index, node_id_.c_str())};
-    } else {
-      logger_->log_error("Unhandled id type: '{}'. No flowfiles are generated.", magic_enum::enum_underlying(id_type_));
+    connection_->traverse(node_, found_cb, "", max_depth_);
+  } else {
+    const auto* node_ids = resolvePathNodeIds();
+    if (!node_ids) {
+      logger_->log_error("No flow files will be generated as path '{}' could not be translated to node ids", node_id_);
       context.yield();
       return;
     }
-    connection_->traverse(my_id, found_cb, "", max_depth_);
-  } else {
-    if (translated_node_ids_.empty()) {
-      auto sc = connection_->translateBrowsePathsToNodeIdsRequest(node_id_, translated_node_ids_, namespace_idx_, path_reference_types_, logger_);
-      if (sc != UA_STATUSCODE_GOOD) {
-        logger_->log_error("Failed to translate {} to node id, no flow files will be generated ({})", node_id_.c_str(), UA_StatusCode_name(sc));
-        context.yield();
-        return;
-      }
-    }
-    for (auto& node_id : translated_node_ids_) {
+    for (const auto& node_id : *node_ids) {
       connection_->traverse(node_id, found_cb, node_id_, max_depth_);
     }
   }
@@ -194,16 +175,14 @@ void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opc_node, core::Pr
   for (const auto& attr : opc_node.attributes) {
     flow_file->setAttribute(attr.first, attr.second);
   }
-  if (!opc_node.data.empty()) {
-    try {
-      session.writeBuffer(flow_file, opc::nodeValue2String(opc_node));
-    } catch (const std::exception& e) {
-      std::string browsename;
-      flow_file->getAttribute("browse.name", browsename);
-      logger_->log_info("Failed to extract data of OPC node {}: {}", browsename, e.what());
-      session.transfer(flow_file, Failure);
-      return;
-    }
+  try {
+    session.writeBuffer(flow_file, opc::nodeValue2String(opc_node));
+  } catch (const std::exception& e) {
+    std::string browsename;
+    flow_file->getAttribute("browse.name", browsename);
+    logger_->log_info("Failed to extract data of OPC node {}: {}", browsename, e.what());
+    session.transfer(flow_file, Failure);
+    return;
   }
   session.transfer(flow_file, Success);
 }

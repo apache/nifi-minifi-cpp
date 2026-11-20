@@ -4,6 +4,7 @@
 
 #include "OPCCommon.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <memory>
 #include <vector>
@@ -74,6 +75,16 @@ void add_value_to_variant(UA_Variant *variant, float value) {
 void add_value_to_variant(UA_Variant *variant, double value) {
   UA_Double ua_value = value;
   UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_DOUBLE]);
+}
+
+template<typename T>
+std::string printToString(UA_StatusCode (*print_func)(const T*, UA_String*), const T& data, std::string_view type_name) {
+  UA_String printed = UA_STRING_NULL;
+  if (print_func(&data, &printed) != UA_STATUSCODE_GOOD) {
+    throw OPCException(GENERAL_EXCEPTION, utils::string::join_pack("Failed to convert a ", type_name, " to string"));
+  }
+  const auto guard = gsl::finally([&printed]() { UA_String_clear(&printed); });
+  return {reinterpret_cast<const char*>(printed.data), printed.length};
 }
 
 core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
@@ -224,7 +235,11 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC) {
       nodedata.attributes["node.id"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
       nodedata.attributes["node.id.type"] = "numeric";
+    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_GUID) {
+      nodedata.attributes["node.id"] = printToString(UA_Guid_print, ref->nodeId.nodeId.identifier.guid, "GUID");  // NOLINT(cppcoreguidelines-pro-type-union-access)
+      nodedata.attributes["node.id.type"] = "guid";
     }
+    nodedata.attributes["namespace.index"] = std::to_string(ref->nodeId.nodeId.namespaceIndex);
     nodedata.attributes["browse.name"] = browsename;
 
     auto splitted_base_path = utils::string::splitAndTrimRemovingEmpty(base_path, "/");
@@ -233,7 +248,6 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     } else {
       nodedata.attributes["full.path"] = base_path + "/" + browsename;
     }
-    nodedata.data_type_id = static_cast<UA_DataTypeKind>(UA_DATATYPEKINDS);
     UA_Variant* var = UA_Variant_new();
     if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != nullptr && var->data != nullptr) {
       // Because the timestamps are eliminated in readValueAttribute for simplification
@@ -254,15 +268,16 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       nodedata.attributes["source.timestamp"] = source_timestamp;
       UA_ReadResponse_clear(&response);
 
-      nodedata.data_type_id = static_cast<UA_DataTypeKind>(var->type->typeKind);
       nodedata.addVariant(var);
       if (var->type->typeName) {
         nodedata.attributes["type.name"] = std::string(var->type->typeName);
       }
-      if (var->type->memSize) {
-        nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
-        nodedata.data = std::vector<uint8_t>(var->type->memSize);
-        memcpy(nodedata.data.data(), var->data, var->type->memSize);
+      if (UA_Variant_isScalar(var)) {
+        if (var->type->pointerFree) {
+          nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
+        } else if (var->type->typeKind == UA_DATATYPEKIND_STRING || var->type->typeKind == UA_DATATYPEKIND_BYTESTRING || var->type->typeKind == UA_DATATYPEKIND_XMLELEMENT) {
+          nodedata.attributes["data.size"] = std::to_string(static_cast<const UA_String*>(var->data)->length);
+        }
       }
       return nodedata;
     }
@@ -345,7 +360,7 @@ bool Client::exists(UA_NodeId node_id) {
   return retval;
 }
 
-UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, int32_t namespace_index,
+UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, UA_UInt16 namespace_index,
     const std::vector<UA_UInt32>& path_reference_types, const std::shared_ptr<core::logging::Logger>& logger) {
   logger->log_trace("Trying to find node ids for {}", path.c_str());
 
@@ -360,6 +375,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   browse_path.relativePath.elementsSize = tokens.size();
 
   std::vector<UA_UInt32> ids;
+  // OPC UA Part 5 8.2.4: only Organizes references are used to relate Objects to the Objects folder
   ids.push_back(UA_NS0ID_ORGANIZES);
   for (size_t i = 0; i < tokens.size() - 1; ++i) {
     if (!path_reference_types.empty()) {
@@ -372,6 +388,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   for (size_t i = 0; i < tokens.size(); ++i) {
     UA_RelativePathElement *elem = &browse_path.relativePath.elements[i];
     elem->referenceTypeId = UA_NODEID_NUMERIC(0, ids[i]);
+    elem->includeSubtypes = true;
     elem->targetName = UA_QUALIFIEDNAME_ALLOC(namespace_index, tokens[i].c_str());
   }
 
@@ -491,8 +508,9 @@ std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_enc
     throw OPCException(GENERAL_EXCEPTION, "Cannot convert an array variant to string");
   }
   switch (variant.type->typeKind) {
-    case UA_DATATYPEKIND_STRING: {
-      const auto *value = static_cast<const UA_String *>(variant.data);
+    case UA_DATATYPEKIND_STRING:
+    case UA_DATATYPEKIND_XMLELEMENT: {
+      const auto* value = static_cast<const UA_String *>(variant.data);
       return {reinterpret_cast<const char *>(value->data), value->length};
     }
     case UA_DATATYPEKIND_LOCALIZEDTEXT: {
@@ -537,6 +555,16 @@ std::string variantToString(const UA_Variant& variant, BinaryEncoding binary_enc
       throw OPCException(GENERAL_EXCEPTION, "Double is non-standard on this system, OPC data cannot be extracted!");
     case UA_DATATYPEKIND_DATETIME:
       return opc::OPCDateTime2String(*static_cast<const UA_DateTime *>(variant.data));
+    case UA_DATATYPEKIND_NODEID:
+      return printToString(UA_NodeId_print, *static_cast<const UA_NodeId *>(variant.data), "node id");
+    case UA_DATATYPEKIND_EXPANDEDNODEID:
+      return printToString(UA_ExpandedNodeId_print, *static_cast<const UA_ExpandedNodeId *>(variant.data), "expanded node id");
+    case UA_DATATYPEKIND_GUID:
+      return printToString(UA_Guid_print, *static_cast<const UA_Guid *>(variant.data), "GUID");
+    case UA_DATATYPEKIND_QUALIFIEDNAME:
+      return printToString(UA_QualifiedName_print, *static_cast<const UA_QualifiedName *>(variant.data), "qualified name");
+    case UA_DATATYPEKIND_STATUSCODE:
+      return UA_StatusCode_name(*static_cast<const UA_StatusCode *>(variant.data));
     default:
       throw OPCException(GENERAL_EXCEPTION, "Data type is not supported: " + std::string(variant.type->typeName));
   }
@@ -579,12 +607,54 @@ std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type) {
   return std::nullopt;
 }
 
-UA_StatusCode Client::readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback, void* callback_context,
-    UA_DateTime start_time, UA_DateTime end_time) {
+std::expected<std::vector<UA_UInt32>, std::string> parsePathReferenceTypes(const std::string& reference_types, const std::string& path) {
+  std::vector<UA_UInt32> result;
+  if (reference_types.empty()) {
+    return result;
+  }
+  auto reference_type_names = utils::string::splitAndTrimRemovingEmpty(reference_types, "/");
+  if (reference_type_names.size() + 1 != utils::string::splitAndTrimRemovingEmpty(path, "/").size()) {
+    return std::unexpected{"Path reference types must be provided for each node pair in the path!"};
+  }
+  for (const auto& reference_type : reference_type_names) {
+    if (auto ua_ref_type = mapOpcReferenceType(reference_type)) {
+      result.push_back(*ua_ref_type);
+    } else {
+      return std::unexpected{fmt::format("Unsupported path reference type: '{}'.", reference_type)};
+    }
+  }
+  return result;
+}
+
+UA_StatusCode Client::readHistory(HistoryReadTypeOption history_type, const UA_NodeId& node_id, const HistoryCallback callback,
+    void* callback_context, UA_DateTime start_time, UA_DateTime end_time) {
   if (history_type == HistoryReadTypeOption::Audit) {
     return UA_Client_HistoryRead_modified(client_, &node_id, callback, start_time, end_time, UA_STRING_NULL, false, 0, UA_TIMESTAMPSTORETURN_SOURCE, callback_context);
   }
   return UA_Client_HistoryRead_raw(client_, &node_id, callback, start_time, end_time, UA_STRING_NULL, false, 0, UA_TIMESTAMPSTORETURN_SOURCE, callback_context);
+}
+
+std::expected<opc::NodeId, std::string> buildNodeId(opc::OPCNodeIDType id_type, UA_UInt16 namespace_idx, const std::string& node_id) {
+  switch (id_type) {
+    case opc::OPCNodeIDType::String:
+      return opc::NodeId{UA_NODEID_STRING_ALLOC(namespace_idx, node_id.c_str())};
+    case opc::OPCNodeIDType::Int:
+      try {
+        return opc::NodeId{UA_NODEID_NUMERIC(namespace_idx, gsl::narrow<UA_UInt32>(std::stoul(node_id)))};
+      } catch(const std::exception&) {
+        auto error_msg = utils::string::join_pack(node_id, " cannot be used as an int type node ID");
+        return std::unexpected{error_msg};
+      }
+    case opc::OPCNodeIDType::Guid: {
+      UA_Guid guid;
+      if (UA_Guid_parse(&guid, UA_STRING(const_cast<char*>(node_id.c_str()))) != UA_STATUSCODE_GOOD) {
+        return std::unexpected{fmt::format("{} cannot be used as a GUID type node ID", node_id)};
+      }
+      return opc::NodeId{UA_NODEID_GUID(namespace_idx, guid)};
+    }
+    default:
+      return std::unexpected{fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type))};
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::opc

@@ -11,6 +11,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <expected>
 #include <string_view>
 #include <utility>
 #include <optional>
@@ -113,7 +114,7 @@ class Client {
   UA_ReferenceDescription * getNodeReference(UA_NodeId node_id);
   void traverse(UA_NodeId node_id, const std::function<NodeFoundCallBackFunc>& cb, const std::string& base_path = "", uint64_t max_depth = 0, bool fetch_root = true);
   bool exists(UA_NodeId node_id);
-  UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, int32_t namespace_index,
+  UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<NodeId>& found_node_ids, UA_UInt16 namespace_index,
     const std::vector<UA_UInt32>& path_reference_types, const std::shared_ptr<core::logging::Logger>& logger);
 
   template<typename T>
@@ -142,8 +143,6 @@ class Client {
 using ClientPtr = std::unique_ptr<Client>;
 
 struct NodeData {
-  std::vector<uint8_t> data;
-  UA_DataTypeKind data_type_id;
   std::map<std::string, std::string> attributes;
 
   virtual ~NodeData() {
@@ -156,8 +155,7 @@ struct NodeData {
   NodeData& operator= (const NodeData &) = delete;
   NodeData& operator= (NodeData &&) = delete;
 
-  NodeData(NodeData&& rhs) : data(rhs.data), attributes(rhs.attributes) {
-    data_type_id = rhs.data_type_id;
+  NodeData(NodeData&& rhs) : attributes(std::move(rhs.attributes)) {
     this->var_ = rhs.var_;
     rhs.var_ = nullptr;
   }
@@ -188,6 +186,10 @@ std::string OPCDateTime2String(UA_DateTime raw_date);
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args);
 
 std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type);
+
+std::expected<std::vector<UA_UInt32>, std::string> parsePathReferenceTypes(const std::string& reference_types, const std::string& path);
+
+std::expected<opc::NodeId, std::string> buildNodeId(opc::OPCNodeIDType id_type, UA_UInt16 namespace_idx, const std::string& node_id);
 
 }  // namespace org::apache::nifi::minifi::opc
 

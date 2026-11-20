@@ -6,6 +6,7 @@
 
 #include <string>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -45,10 +46,6 @@ class BaseOPCProcessor : public core::ProcessorImpl {
   EXTENSIONAPI static constexpr auto TrustedPath = core::PropertyDefinitionBuilder<>::createProperty("Trusted server certificate path")
       .withDescription("Comma separated list of paths to the DER-encoded trusted server certificates")
       .build();
-  EXTENSIONAPI static constexpr auto PathReferenceTypes = core::PropertyDefinitionBuilder<>::createProperty("Path reference types")
-      .withDescription("Specify the reference types between nodes in the path if Path Node ID type is used. If not provided, all reference types are assumed to be Organizes. "
-                       "The format is 'referenceType1/referenceType2/.../referenceTypeN' and the supported reference types are Organizes, HasComponent, HasProperty, and HasSubtype.")
-      .build();
   EXTENSIONAPI static constexpr auto Properties = std::to_array<core::PropertyReference>({
       OPCServerEndPoint,
       ApplicationURI,
@@ -56,8 +53,7 @@ class BaseOPCProcessor : public core::ProcessorImpl {
       Password,
       CertificatePath,
       KeyPath,
-      TrustedPath,
-      PathReferenceTypes
+      TrustedPath
   });
 
   using ProcessorImpl::ProcessorImpl;
@@ -66,11 +62,16 @@ class BaseOPCProcessor : public core::ProcessorImpl {
 
  protected:
   virtual bool reconnect();
-  void readPathReferenceTypes(core::ProcessContext& context, const std::string& node_id);
-  void parseIdType(core::ProcessContext& context, const core::PropertyReference& prop);
+  void readPathReferenceTypes(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property, const std::string& node_id);
+  void parseNode(core::ProcessContext& context, const core::PropertyReference& path_reference_types_property);
+  const std::vector<opc::NodeId>* resolvePathNodeIds();
+  const opc::NodeId* resolveNodeId();
 
   std::string node_id_;
-  int32_t namespace_idx_ = 0;
+  UA_UInt16 namespace_idx_ = 0;
+  opc::NodeId node_;  // Only used for non-path node id types
+  // Cached translation of the configured path, cleared on (re)connect, as a restarted server may reassign node ids
+  std::optional<std::vector<opc::NodeId>> resolved_path_node_ids_;
   opc::OPCNodeIDType id_type_{};
 
   opc::ClientPtr connection_;
