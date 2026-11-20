@@ -164,7 +164,7 @@ class FetchOPCEvents final : public BaseOPCProcessor {
 
   std::shared_ptr<core::RecordSetWriter> record_set_writer_;
   std::optional<uint64_t> batch_size_;
-  opc::EventFilter event_filter_;
+  opc::EventFilterPtr event_filter_;
   std::mutex connection_mutex_;
   std::unique_ptr<utils::StoppableThread> event_thread_;
   std::chrono::milliseconds retry_interval_ = 1s;

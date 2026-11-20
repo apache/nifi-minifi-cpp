@@ -228,74 +228,92 @@ UA_StatusCode Client::connect(const std::string& url, const std::string& usernam
 }
 
 NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::string& base_path) {
-  if (ref->nodeClass == UA_NODECLASS_VARIABLE) {
-    opc::NodeData nodedata;
-    std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
-
-    if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
-      std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.string.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
-                            ref->nodeId.nodeId.identifier.string.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["node.id"] = nodeidstr;
-      nodedata.attributes["node.id.type"] = "string";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_BYTESTRING) {
-      std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.byteString.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
-        ref->nodeId.nodeId.identifier.byteString.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["node.id"] = nodeidstr;
-      nodedata.attributes["node.id.type"] = "bytestring";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC) {
-      nodedata.attributes["node.id"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["node.id.type"] = "numeric";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_GUID) {
-      nodedata.attributes["node.id"] = printToString(UA_Guid_print, ref->nodeId.nodeId.identifier.guid, "GUID");  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["node.id.type"] = "guid";
-    }
-    nodedata.attributes["namespace.index"] = std::to_string(ref->nodeId.nodeId.namespaceIndex);
-    nodedata.attributes["browse.name"] = browsename;
-
-    auto splitted_base_path = utils::string::splitAndTrimRemovingEmpty(base_path, "/");
-    if (!splitted_base_path.empty() && splitted_base_path.back() == browsename) {
-      nodedata.attributes["full.path"] = base_path;
-    } else {
-      nodedata.attributes["full.path"] = base_path + "/" + browsename;
-    }
-    UA_Variant* var = UA_Variant_new();
-    if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != nullptr && var->data != nullptr) {
-      // Because the timestamps are eliminated in readValueAttribute for simplification
-      // We need to call the inner function UA_Client_Service_read.
-      UA_ReadValueId item;
-      UA_ReadValueId_init(&item);
-      item.nodeId = ref->nodeId.nodeId;
-      item.attributeId = UA_ATTRIBUTEID_VALUE;
-      UA_ReadRequest request;
-      UA_ReadRequest_init(&request);
-      request.nodesToRead = &item;
-      request.nodesToReadSize = 1;
-      // Differ from ua_client_highlevel.c src
-      request.timestampsToReturn = UA_TIMESTAMPSTORETURN_BOTH;
-      UA_ReadResponse response = UA_Client_Service_read(client_, request);
-      UA_DataValue *dv = response.results;
-      auto source_timestamp = OPCDateTime2String(dv->sourceTimestamp);
-      nodedata.attributes["source.timestamp"] = source_timestamp;
-      UA_ReadResponse_clear(&response);
-
-      nodedata.addVariant(var);
-      if (var->type->typeName) {
-        nodedata.attributes["type.name"] = std::string(var->type->typeName);
-      }
-      if (UA_Variant_isScalar(var)) {
-        if (var->type->pointerFree) {
-          nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
-        } else if (var->type->typeKind == UA_DATATYPEKIND_STRING || var->type->typeKind == UA_DATATYPEKIND_BYTESTRING || var->type->typeKind == UA_DATATYPEKIND_XMLELEMENT) {
-          nodedata.attributes["data.size"] = std::to_string(static_cast<const UA_String*>(var->data)->length);
-        }
-      }
-      return nodedata;
-    }
-    UA_Variant_delete(var);
-    throw OPCException(GENERAL_EXCEPTION, "Failed to read value of node: " + browsename);
-  } else {
+  if (ref->nodeClass != UA_NODECLASS_VARIABLE) {
     throw OPCException(GENERAL_EXCEPTION, "Only variable nodes are supported!");
   }
+
+  opc::NodeData nodedata;
+  std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
+
+  if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
+    std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.string.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
+                          ref->nodeId.nodeId.identifier.string.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    nodedata.attributes["node.id"] = nodeidstr;
+    nodedata.attributes["node.id.type"] = "string";
+  } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_BYTESTRING) {
+    std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.byteString.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
+      ref->nodeId.nodeId.identifier.byteString.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    nodedata.attributes["node.id"] = nodeidstr;
+    nodedata.attributes["node.id.type"] = "bytestring";
+  } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC) {
+    nodedata.attributes["node.id"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    nodedata.attributes["node.id.type"] = "numeric";
+  } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_GUID) {
+    nodedata.attributes["node.id"] = printToString(UA_Guid_print, ref->nodeId.nodeId.identifier.guid, "GUID");  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    nodedata.attributes["node.id.type"] = "guid";
+  }
+  nodedata.attributes["namespace.index"] = std::to_string(ref->nodeId.nodeId.namespaceIndex);
+  nodedata.attributes["browse.name"] = browsename;
+
+  auto splitted_base_path = utils::string::splitAndTrimRemovingEmpty(base_path, "/");
+  if (!splitted_base_path.empty() && splitted_base_path.back() == browsename) {
+    nodedata.attributes["full.path"] = base_path;
+  } else {
+    nodedata.attributes["full.path"] = base_path + "/" + browsename;
+  }
+
+  UA_ReadValueId item;
+  UA_ReadValueId_init(&item);
+  item.nodeId = ref->nodeId.nodeId;
+  item.attributeId = UA_ATTRIBUTEID_VALUE;
+  UA_ReadRequest request;
+  UA_ReadRequest_init(&request);
+  request.nodesToRead = &item;
+  request.nodesToReadSize = 1;
+  request.timestampsToReturn = UA_TIMESTAMPSTORETURN_BOTH;
+  UA_ReadResponse response = UA_Client_Service_read(client_, request);
+  const auto response_guard = gsl::finally([&response]() { UA_ReadResponse_clear(&response); });
+
+  const auto read_failed = [&browsename](const std::string& reason) {
+    return OPCException(GENERAL_EXCEPTION, "Failed to read value of node '" + browsename + "': " + reason);
+  };
+  if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD) {
+    throw read_failed(UA_StatusCode_name(response.responseHeader.serviceResult));
+  }
+  if (response.resultsSize != 1 || response.results == nullptr) {
+    throw read_failed("unexpected number of results: " + std::to_string(response.resultsSize));
+  }
+  UA_DataValue& data_value = response.results[0];
+  if (data_value.hasStatus && data_value.status != UA_STATUSCODE_GOOD) {
+    throw read_failed(UA_StatusCode_name(data_value.status));
+  }
+  if (!data_value.hasValue || data_value.value.type == nullptr || data_value.value.data == nullptr) {
+    throw read_failed("no value returned");
+  }
+
+  UA_Variant* var = UA_Variant_new();
+  if (var == nullptr) {
+    throw read_failed("out of memory");
+  }
+  // Move the value out of the response, so that it is not freed by UA_ReadResponse_clear, and hand it over to nodedata immediately
+  *var = data_value.value;
+  UA_Variant_init(&data_value.value);
+  nodedata.addVariant(var);
+
+  if (data_value.hasSourceTimestamp) {
+    nodedata.attributes["source.timestamp"] = OPCDateTime2String(data_value.sourceTimestamp);
+  }
+  if (var->type->typeName) {
+    nodedata.attributes["type.name"] = std::string(var->type->typeName);
+  }
+  if (UA_Variant_isScalar(var)) {
+    if (var->type->pointerFree) {
+      nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
+    } else if (var->type->typeKind == UA_DATATYPEKIND_STRING || var->type->typeKind == UA_DATATYPEKIND_BYTESTRING || var->type->typeKind == UA_DATATYPEKIND_XMLELEMENT) {
+      nodedata.attributes["data.size"] = std::to_string(static_cast<const UA_String*>(var->data)->length);
+    }
+  }
+  return nodedata;
 }
 
 UA_ReferenceDescription * Client::getNodeReference(UA_NodeId node_id) {
@@ -696,7 +714,18 @@ std::string buildEventFilterExpression(const EventFilter& options) {
   return expression;
 }
 
-UA_StatusCode Client::subscribeToEvents(const UA_NodeId& node_id, const EventFilter& event_filter) {
+std::expected<EventFilterPtr, std::string> parseEventFilter(const std::string& expression) {
+  EventFilterPtr filter{UA_EventFilter_new()};
+  if (!filter) {
+    return std::unexpected("Failed to allocate the event filter");
+  }
+  if (auto sc = UA_EventFilter_parse(filter.get(), UA_STRING(const_cast<char*>(expression.c_str())), nullptr); sc != UA_STATUSCODE_GOOD) {
+    return std::unexpected(fmt::format("Failed to parse the event filter '{}': {}", expression, UA_StatusCode_name(sc)));
+  }
+  return filter;
+}
+
+UA_StatusCode Client::subscribeToEvents(const UA_NodeId& node_id, const UA_EventFilter& event_filter) {
   if (subscription_) {
     logger_->log_debug("Deleting the dead OPC UA event subscription {} before resubscribing", subscription_->id);
     UA_Client_Subscriptions_deleteSingle(client_, subscription_->id);
@@ -723,19 +752,7 @@ UA_StatusCode Client::subscribeToEvents(const UA_NodeId& node_id, const EventFil
   item.itemToMonitor.attributeId = UA_ATTRIBUTEID_EVENTNOTIFIER;
   item.monitoringMode = UA_MONITORINGMODE_REPORTING;
 
-  const std::string event_filter_str = buildEventFilterExpression(event_filter);
-  logger_->log_debug("Subscribing with the event filter '{}'", event_filter_str);
-
-  auto* filter = UA_EventFilter_new();
-  if (filter == nullptr) {
-    return UA_STATUSCODE_BADOUTOFMEMORY;
-  }
-  if (auto sc = UA_EventFilter_parse(filter, UA_STRING(const_cast<char*>(event_filter_str.c_str())), nullptr); sc != UA_STATUSCODE_GOOD) {
-    logger_->log_error("Failed to parse the event filter '{}': {}", event_filter_str, UA_StatusCode_name(sc));
-    UA_EventFilter_delete(filter);
-    return sc;
-  }
-  UA_ExtensionObject_setValue(&item.requestedParameters.filter, filter, &UA_TYPES[UA_TYPES_EVENTFILTER]);
+  UA_ExtensionObject_setValueNoDelete(&item.requestedParameters.filter, const_cast<UA_EventFilter*>(&event_filter), &UA_TYPES[UA_TYPES_EVENTFILTER]);
 
   UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createEvent(client_, subscription_id, UA_TIMESTAMPSTORETURN_BOTH, item,
                                                                              this, eventNotificationCallback, nullptr);
@@ -764,7 +781,7 @@ void Client::eventNotificationCallback(UA_Client* /*client*/, UA_UInt32 /*sub_id
     }
     try {
       event.fields[name] = variantToString(field.value, BinaryEncoding::Base64);
-    } catch (const OPCException& ex) {
+    } catch (const std::exception& ex) {
       client->logger_->log_warn("Failed to convert event field '{}' to string, skipping field: {}", name, ex.what());
     }
   }
