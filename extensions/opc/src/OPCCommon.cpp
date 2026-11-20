@@ -4,9 +4,14 @@
 
 #include "OPCCommon.h"
 
+#include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <iterator>
 #include <memory>
+#include <mutex>
+#include <utility>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -21,6 +26,7 @@
 
 #include "open62541/client_highlevel.h"
 #include "open62541/client_config_default.h"
+#include "open62541/client_subscriptions.h"
 
 extern "C" int mp_vsnprintf(char* s, size_t count, const char* format, va_list arg);
 
@@ -112,8 +118,9 @@ core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
 
 Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
-               const std::vector<std::vector<char>>& trust_buffers)
-    : use_encryption_(!cert_buffer.empty()) {
+               const std::vector<std::vector<char>>& trust_buffers, std::optional<size_t> max_event_queue_size)
+    : max_event_queue_size_(max_event_queue_size),
+      use_encryption_(!cert_buffer.empty()) {
   minifi_ua_logger_ = {logFunc, logger.get(), [](UA_Logger*){}};
 
   // Build the config with our logger pre-installed so that open62541 doesn't allocate a default stdout logger (as it would with UA_Client_new).
@@ -165,6 +172,7 @@ Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::
   }
 
   config.allowNonePolicyPassword = true;
+  config.subscriptionInactivityCallback = &Client::subscriptionInactivityCallback;
 
   if (!application_uri.empty()) {
     UA_String_clear(&config.clientDescription.applicationUri);
@@ -207,6 +215,8 @@ bool Client::isConnected() {
 }
 
 UA_StatusCode Client::connect(const std::string& url, const std::string& username, const std::string& password) {
+  markSubscriptionDead();
+
   if (username.empty()) {
     return UA_Client_connect(client_, url.c_str());
   } else {
@@ -218,74 +228,92 @@ UA_StatusCode Client::connect(const std::string& url, const std::string& usernam
 }
 
 NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::string& base_path) {
-  if (ref->nodeClass == UA_NODECLASS_VARIABLE) {
-    opc::NodeData nodedata;
-    std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
-
-    if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
-      std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.string.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
-                            ref->nodeId.nodeId.identifier.string.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["node.id"] = nodeidstr;
-      nodedata.attributes["node.id.type"] = "string";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_BYTESTRING) {
-      std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.byteString.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
-        ref->nodeId.nodeId.identifier.byteString.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["node.id"] = nodeidstr;
-      nodedata.attributes["node.id.type"] = "bytestring";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC) {
-      nodedata.attributes["node.id"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["node.id.type"] = "numeric";
-    } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_GUID) {
-      nodedata.attributes["node.id"] = printToString(UA_Guid_print, ref->nodeId.nodeId.identifier.guid, "GUID");  // NOLINT(cppcoreguidelines-pro-type-union-access)
-      nodedata.attributes["node.id.type"] = "guid";
-    }
-    nodedata.attributes["namespace.index"] = std::to_string(ref->nodeId.nodeId.namespaceIndex);
-    nodedata.attributes["browse.name"] = browsename;
-
-    auto splitted_base_path = utils::string::splitAndTrimRemovingEmpty(base_path, "/");
-    if (!splitted_base_path.empty() && splitted_base_path.back() == browsename) {
-      nodedata.attributes["full.path"] = base_path;
-    } else {
-      nodedata.attributes["full.path"] = base_path + "/" + browsename;
-    }
-    UA_Variant* var = UA_Variant_new();
-    if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != nullptr && var->data != nullptr) {
-      // Because the timestamps are eliminated in readValueAttribute for simplification
-      // We need to call the inner function UA_Client_Service_read.
-      UA_ReadValueId item;
-      UA_ReadValueId_init(&item);
-      item.nodeId = ref->nodeId.nodeId;
-      item.attributeId = UA_ATTRIBUTEID_VALUE;
-      UA_ReadRequest request;
-      UA_ReadRequest_init(&request);
-      request.nodesToRead = &item;
-      request.nodesToReadSize = 1;
-      // Differ from ua_client_highlevel.c src
-      request.timestampsToReturn = UA_TIMESTAMPSTORETURN_BOTH;
-      UA_ReadResponse response = UA_Client_Service_read(client_, request);
-      UA_DataValue *dv = response.results;
-      auto source_timestamp = OPCDateTime2String(dv->sourceTimestamp);
-      nodedata.attributes["source.timestamp"] = source_timestamp;
-      UA_ReadResponse_clear(&response);
-
-      nodedata.addVariant(var);
-      if (var->type->typeName) {
-        nodedata.attributes["type.name"] = std::string(var->type->typeName);
-      }
-      if (UA_Variant_isScalar(var)) {
-        if (var->type->pointerFree) {
-          nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
-        } else if (var->type->typeKind == UA_DATATYPEKIND_STRING || var->type->typeKind == UA_DATATYPEKIND_BYTESTRING || var->type->typeKind == UA_DATATYPEKIND_XMLELEMENT) {
-          nodedata.attributes["data.size"] = std::to_string(static_cast<const UA_String*>(var->data)->length);
-        }
-      }
-      return nodedata;
-    }
-    UA_Variant_delete(var);
-    throw OPCException(GENERAL_EXCEPTION, "Failed to read value of node: " + browsename);
-  } else {
+  if (ref->nodeClass != UA_NODECLASS_VARIABLE) {
     throw OPCException(GENERAL_EXCEPTION, "Only variable nodes are supported!");
   }
+
+  opc::NodeData nodedata;
+  std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
+
+  if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
+    std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.string.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
+                          ref->nodeId.nodeId.identifier.string.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    nodedata.attributes["node.id"] = nodeidstr;
+    nodedata.attributes["node.id.type"] = "string";
+  } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_BYTESTRING) {
+    std::string nodeidstr(reinterpret_cast<const char*>(ref->nodeId.nodeId.identifier.byteString.data),  // NOLINT(cppcoreguidelines-pro-type-union-access)
+      ref->nodeId.nodeId.identifier.byteString.length);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    nodedata.attributes["node.id"] = nodeidstr;
+    nodedata.attributes["node.id.type"] = "bytestring";
+  } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_NUMERIC) {
+    nodedata.attributes["node.id"] = std::to_string(ref->nodeId.nodeId.identifier.numeric);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    nodedata.attributes["node.id.type"] = "numeric";
+  } else if (ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_GUID) {
+    nodedata.attributes["node.id"] = printToString(UA_Guid_print, ref->nodeId.nodeId.identifier.guid, "GUID");  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    nodedata.attributes["node.id.type"] = "guid";
+  }
+  nodedata.attributes["namespace.index"] = std::to_string(ref->nodeId.nodeId.namespaceIndex);
+  nodedata.attributes["browse.name"] = browsename;
+
+  auto splitted_base_path = utils::string::splitAndTrimRemovingEmpty(base_path, "/");
+  if (!splitted_base_path.empty() && splitted_base_path.back() == browsename) {
+    nodedata.attributes["full.path"] = base_path;
+  } else {
+    nodedata.attributes["full.path"] = base_path + "/" + browsename;
+  }
+
+  UA_ReadValueId item;
+  UA_ReadValueId_init(&item);
+  item.nodeId = ref->nodeId.nodeId;
+  item.attributeId = UA_ATTRIBUTEID_VALUE;
+  UA_ReadRequest request;
+  UA_ReadRequest_init(&request);
+  request.nodesToRead = &item;
+  request.nodesToReadSize = 1;
+  request.timestampsToReturn = UA_TIMESTAMPSTORETURN_BOTH;
+  UA_ReadResponse response = UA_Client_Service_read(client_, request);
+  const auto response_guard = gsl::finally([&response]() { UA_ReadResponse_clear(&response); });
+
+  const auto read_failed = [&browsename](const std::string& reason) {
+    return OPCException(GENERAL_EXCEPTION, "Failed to read value of node '" + browsename + "': " + reason);
+  };
+  if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD) {
+    throw read_failed(UA_StatusCode_name(response.responseHeader.serviceResult));
+  }
+  if (response.resultsSize != 1 || response.results == nullptr) {
+    throw read_failed("unexpected number of results: " + std::to_string(response.resultsSize));
+  }
+  UA_DataValue& data_value = response.results[0];
+  if (data_value.hasStatus && data_value.status != UA_STATUSCODE_GOOD) {
+    throw read_failed(UA_StatusCode_name(data_value.status));
+  }
+  if (!data_value.hasValue || data_value.value.type == nullptr || data_value.value.data == nullptr) {
+    throw read_failed("no value returned");
+  }
+
+  UA_Variant* var = UA_Variant_new();
+  if (var == nullptr) {
+    throw read_failed("out of memory");
+  }
+  // Move the value out of the response, so that it is not freed by UA_ReadResponse_clear, and hand it over to nodedata immediately
+  *var = data_value.value;
+  UA_Variant_init(&data_value.value);
+  nodedata.addVariant(var);
+
+  if (data_value.hasSourceTimestamp) {
+    nodedata.attributes["source.timestamp"] = OPCDateTime2String(data_value.sourceTimestamp);
+  }
+  if (var->type->typeName) {
+    nodedata.attributes["type.name"] = std::string(var->type->typeName);
+  }
+  if (UA_Variant_isScalar(var)) {
+    if (var->type->pointerFree) {
+      nodedata.attributes["data.size"] = std::to_string(var->type->memSize);
+    } else if (var->type->typeKind == UA_DATATYPEKIND_STRING || var->type->typeKind == UA_DATATYPEKIND_BYTESTRING || var->type->typeKind == UA_DATATYPEKIND_XMLELEMENT) {
+      nodedata.attributes["data.size"] = std::to_string(static_cast<const UA_String*>(var->data)->length);
+    }
+  }
+  return nodedata;
 }
 
 UA_ReferenceDescription * Client::getNodeReference(UA_NodeId node_id) {
@@ -462,9 +490,9 @@ UA_StatusCode Client::update_node(const UA_NodeId node_id, T value) {
 
 std::unique_ptr<Client> Client::createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& application_uri,
                                              const std::vector<char>& cert_buffer, const std::vector<char>& key_buffer,
-                                             const std::vector<std::vector<char>>& trust_buffers) {
+                                             const std::vector<std::vector<char>>& trust_buffers, std::optional<size_t> max_event_queue_size) {
   try {
-    return ClientPtr(new Client(logger, application_uri, cert_buffer, key_buffer, trust_buffers));
+    return ClientPtr(new Client(logger, application_uri, cert_buffer, key_buffer, trust_buffers, max_event_queue_size));
   } catch (const std::exception& exception) {
     logger->log_error("Failed to create client: {}", exception.what());
   }
@@ -587,10 +615,13 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
 }
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {
-  std::array<char, 1024> buffer{};
-  (void)mp_vsnprintf(buffer.data(), buffer.size(), msg, args);
-  auto loggerPtr = reinterpret_cast<core::logging::Logger*>(context);
-  loggerPtr->log_string(MapOPCLogLevel(level), buffer.data());
+  try {
+    std::array<char, 1024> buffer{};
+    (void)mp_vsnprintf(buffer.data(), buffer.size(), msg, args);
+    auto loggerPtr = reinterpret_cast<core::logging::Logger*>(context);
+    loggerPtr->log_string(MapOPCLogLevel(level), buffer.data());
+  } catch (...) {
+  }
 }
 
 std::optional<UA_UInt32> mapOpcReferenceType(const std::string& ref_type) {
@@ -655,6 +686,180 @@ std::expected<opc::NodeId, std::string> buildNodeId(opc::OPCNodeIDType id_type, 
     default:
       return std::unexpected{fmt::format("Unsupported Node ID type: {}", magic_enum::enum_name(id_type))};
   }
+}
+
+std::string buildEventFilterExpression(const EventFilter& options) {
+  if (!options.filter_expression.empty()) {
+    return options.filter_expression;
+  }
+
+  // The browse paths of the select clauses are written with a leading '/', which is not required from the property. A field
+  // that is prefixed with the node id of an event type keeps its own prefix: such a path starts with the node id, not a '/'.
+  gsl_Expects(!options.select_fields.empty());
+  std::string expression = "SELECT ";
+  for (const auto& select_field : options.select_fields) {
+    const bool is_full_path = select_field.starts_with('/') || select_field.contains('=');
+    expression += is_full_path ? select_field : "/" + select_field;
+    expression += ", ";
+  }
+  expression.erase(expression.size() - 2);
+
+  std::vector<std::string> conditions;
+  if (!options.event_type_node_id.empty()) {
+    conditions.push_back("OFTYPE " + options.event_type_node_id);
+  }
+  if (options.minimum_severity) {
+    conditions.push_back("/Severity >= " + std::to_string(*options.minimum_severity));
+  }
+  if (!conditions.empty()) {
+    expression += " WHERE " + utils::string::join(" AND ", conditions);
+  }
+  return expression;
+}
+
+std::expected<EventFilterPtr, std::string> parseEventFilter(const std::string& expression) {
+  EventFilterPtr filter{UA_EventFilter_new()};
+  if (!filter) {
+    return std::unexpected("Failed to allocate the event filter");
+  }
+  if (auto sc = UA_EventFilter_parse(filter.get(), UA_STRING(const_cast<char*>(expression.c_str())), nullptr); sc != UA_STATUSCODE_GOOD) {
+    return std::unexpected(fmt::format("Failed to parse the event filter '{}': {}", expression, UA_StatusCode_name(sc)));
+  }
+  return filter;
+}
+
+UA_StatusCode Client::subscribeToEvents(const UA_NodeId& node_id, const UA_EventFilter& event_filter) {
+  if (subscription_) {
+    logger_->log_debug("Deleting the dead OPC UA event subscription {} before resubscribing", subscription_->id);
+    UA_Client_Subscriptions_deleteSingle(client_, subscription_->id);
+    subscription_.reset();
+  }
+
+  UA_CreateSubscriptionResponse response = UA_Client_Subscriptions_create(client_, UA_CreateSubscriptionRequest_default(), this,
+                                                                          &Client::subscriptionStatusChangeCallback, &Client::subscriptionDeleteCallback);
+  const auto response_guard = gsl::finally([&response]() { UA_CreateSubscriptionResponse_clear(&response); });
+  if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD) {
+    return response.responseHeader.serviceResult;
+  }
+  const auto subscription_id = response.subscriptionId;
+  auto subscription_id_guard = gsl::finally([this, &subscription_id]() {
+    if (!subscription_ || subscription_->id != subscription_id) {
+      UA_Client_Subscriptions_deleteSingle(client_, subscription_id);
+    }
+  });
+
+  UA_MonitoredItemCreateRequest item;
+  UA_MonitoredItemCreateRequest_init(&item);
+  const auto item_guard = gsl::finally([&item]() { UA_MonitoredItemCreateRequest_clear(&item); });
+  UA_NodeId_copy(&node_id, &item.itemToMonitor.nodeId);
+  item.itemToMonitor.attributeId = UA_ATTRIBUTEID_EVENTNOTIFIER;
+  item.monitoringMode = UA_MONITORINGMODE_REPORTING;
+
+  UA_ExtensionObject_setValueNoDelete(&item.requestedParameters.filter, const_cast<UA_EventFilter*>(&event_filter), &UA_TYPES[UA_TYPES_EVENTFILTER]);
+
+  UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createEvent(client_, subscription_id, UA_TIMESTAMPSTORETURN_BOTH, item,
+                                                                             this, eventNotificationCallback, nullptr);
+  const auto result_guard = gsl::finally([&result]() { UA_MonitoredItemCreateResult_clear(&result); });
+  if (result.statusCode != UA_STATUSCODE_GOOD) {
+    return result.statusCode;
+  }
+
+  subscription_ = EventSubscription{.id = subscription_id, .alive = true};
+  return UA_STATUSCODE_GOOD;
+}
+
+void Client::eventNotificationCallback(UA_Client* /*client*/, UA_UInt32 /*sub_id*/, void* /*sub_context*/, UA_UInt32 /*mon_id*/, void* mon_context,
+    const UA_KeyValueMap event_fields) {
+  auto* client = static_cast<Client*>(mon_context);
+
+  try {
+    Event event;
+    for (size_t i = 0; i < event_fields.mapSize; ++i) {
+      const UA_KeyValuePair& field = event_fields.map[i];
+      std::string name{reinterpret_cast<const char*>(field.key.name.data), field.key.name.length};
+      if (name.starts_with('/')) {
+        name.erase(0, 1);
+      }
+      if (UA_Variant_isEmpty(&field.value)) {
+        continue;
+      }
+      try {
+        event.fields[name] = variantToString(field.value, BinaryEncoding::Base64);
+      } catch (const std::exception& ex) {
+        client->logger_->log_warn("Failed to convert event field '{}' to string, skipping field: {}", name, ex.what());
+      }
+    }
+    client->pushEvent(std::move(event));
+  } catch (const std::exception& ex) {
+    client->logger_->log_error("Failed to process an OPC UA event notification: {}", ex.what());
+  } catch (...) {
+    client->logger_->log_error("Failed to process an OPC UA event notification, exception type: {}", getCurrentExceptionTypeName());
+  }
+}
+
+void Client::subscriptionStatusChangeCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context, UA_StatusChangeNotification* notification) {
+  auto* client = static_cast<Client*>(sub_context);
+  try {
+    client->markSubscriptionDead();
+    client->logger_->log_warn("The OPC UA server reported the event subscription {} as {}, a new subscription will be created", sub_id,
+        UA_StatusCode_name(notification->status));
+  } catch (const std::exception& ex) {
+    client->logger_->log_error("Failed to process the OPC UA subscription status change: {}", ex.what());
+  } catch (...) {
+    client->logger_->log_error("Failed to process the OPC UA subscription status change, exception type: {}", getCurrentExceptionTypeName());
+  }
+}
+
+void Client::subscriptionDeleteCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context) {
+  auto* client = static_cast<Client*>(sub_context);
+  try {
+    // The subscription is already gone from the client, so there is nothing left to delete before resubscribing.
+    client->subscription_.reset();
+    client->logger_->log_debug("The OPC UA event subscription {} was deleted", sub_id);
+  } catch (const std::exception& ex) {
+    client->logger_->log_error("Failed to process the OPC UA subscription deletion: {}", ex.what());
+  } catch (...) {
+    client->logger_->log_error("Failed to process the OPC UA subscription deletion, exception type: {}", getCurrentExceptionTypeName());
+  }
+}
+
+void Client::subscriptionInactivityCallback(UA_Client* /*client*/, UA_UInt32 sub_id, void* sub_context) {
+  auto* client = static_cast<Client*>(sub_context);
+  try {
+    client->markSubscriptionDead();
+    client->logger_->log_warn("The OPC UA event subscription {} stopped delivering notifications, a new subscription will be created", sub_id);
+  } catch (const std::exception& ex) {
+    client->logger_->log_error("Failed to process the OPC UA subscription inactivity: {}", ex.what());
+  } catch (...) {
+    client->logger_->log_error("Failed to process the OPC UA subscription inactivity, exception type: {}", getCurrentExceptionTypeName());
+  }
+}
+
+void Client::pushEvent(Event&& event) {
+  const std::lock_guard<std::mutex> lock(event_queue_mutex_);
+  event_queue_.push_back(std::move(event));
+  while (max_event_queue_size_ && event_queue_.size() > *max_event_queue_size_) {
+    event_queue_.pop_front();
+    ++dropped_event_count_;
+  }
+}
+
+UA_StatusCode Client::processSubscriptionNotifications(UA_UInt32 timeout_milliseconds) {
+  return UA_Client_run_iterate(client_, timeout_milliseconds);
+}
+
+std::vector<Event> Client::drainEvents() {
+  std::deque<Event> events;
+  {
+    const std::lock_guard<std::mutex> lock(event_queue_mutex_);
+    events.swap(event_queue_);
+  }
+  return {std::make_move_iterator(events.begin()), std::make_move_iterator(events.end())};
+}
+
+uint64_t Client::getDroppedEventCountSinceLastCall() {
+  const std::lock_guard<std::mutex> lock(event_queue_mutex_);
+  return std::exchange(dropped_event_count_, 0);
 }
 
 }  // namespace org::apache::nifi::minifi::opc
