@@ -4,6 +4,7 @@
 import os
 import pathlib
 import platform
+import shutil
 import subprocess
 import sys
 from enum import Enum
@@ -31,9 +32,33 @@ def _query_yes_no(question: str, no_confirm: bool) -> bool:
             print("Please respond with 'yes' or 'no' (or 'y' or 'n').")
 
 
+def _is_rust_installed() -> bool:
+    cargo_bin = os.path.expanduser("~/.cargo/bin")
+    search_path = os.environ.get("PATH", "") + os.pathsep + cargo_bin
+    rustc = shutil.which("rustc", path=search_path)
+    cargo = shutil.which("cargo", path=search_path)
+    if not rustc or not cargo:
+        return False
+
+    try:
+        subprocess.run([rustc, "--version"], check=True)
+        subprocess.run([cargo, "--version"], check=True)
+    except (subprocess.CalledProcessError, OSError):
+        return False
+    return True
+
+
 def _run_command_with_confirm(command: str, no_confirm: bool) -> bool:
     if _query_yes_no(f"Running {command}", no_confirm):
         return os.system(command) == 0
+
+
+def _install_rust_on_unix(no_confirm: bool) -> bool:
+    if _is_rust_installed():
+        return True
+    return _run_command_with_confirm(
+        "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y", no_confirm
+    )
 
 
 class PackageManager:
@@ -62,6 +87,19 @@ class PackageManager:
             return True
         return _run_command_with_confirm(f"{install_cmd} {dependencies_str}", self.no_confirm)
 
+    def _install_with_rust_toolchain(
+        self,
+        dependencies: dict[str, set[str]],
+        replace_dict: dict[str, set[str]],
+        install_cmd: str,
+    ) -> bool:
+        if not self._install(dependencies=dependencies, replace_dict=replace_dict, install_cmd=install_cmd):
+            return False
+        return "rust_toolchain" not in dependencies or self._install_rust_toolchain()
+
+    def _install_rust_toolchain(self) -> bool:
+        raise RuntimeError("NotImplementedException")
+
     def _get_installed_packages(self) -> set[str]:
         raise RuntimeError("NotImplementedException")
 
@@ -77,15 +115,20 @@ class PackageManager:
         return result.returncode == 0
 
 
-class BrewPackageManager(PackageManager):
+class UnixPackageManager(PackageManager):
+    def _install_rust_toolchain(self) -> bool:
+        return _install_rust_on_unix(self.no_confirm)
+
+
+class BrewPackageManager(UnixPackageManager):
     def __init__(self, no_confirm):
-        PackageManager.__init__(self, no_confirm)
+        UnixPackageManager.__init__(self, no_confirm)
 
     def install(self, dependencies: dict[str, set[str]]) -> bool:
-        return self._install(
+        return self._install_with_rust_toolchain(
             dependencies=dependencies,
             install_cmd="brew install",
-            replace_dict={"patch": set()},
+            replace_dict={"patch": set(), "rust_toolchain": {"curl", "llvm"}},
         )
 
     def install_compiler(self) -> str:
@@ -104,15 +147,19 @@ class BrewPackageManager(PackageManager):
         return result.returncode == 0
 
 
-class AptPackageManager(PackageManager):
+class AptPackageManager(UnixPackageManager):
     def __init__(self, no_confirm):
-        PackageManager.__init__(self, no_confirm)
+        UnixPackageManager.__init__(self, no_confirm)
 
     def install(self, dependencies: dict[str, set[str]]) -> bool:
-        return self._install(
+        return self._install_with_rust_toolchain(
             dependencies=dependencies,
             install_cmd="sudo apt install -y",
-            replace_dict={"libarchive": {"liblzma-dev"}, "python": {"libpython3-dev"}},
+            replace_dict={
+                "libarchive": {"liblzma-dev"},
+                "python": {"libpython3-dev"},
+                "rust_toolchain": {"curl", "libclang-dev", "clang"},
+            },
         )
 
     def _get_installed_packages(self) -> set[str]:
@@ -126,9 +173,9 @@ class AptPackageManager(PackageManager):
         return ""
 
 
-class DnfPackageManager(PackageManager):
+class DnfPackageManager(UnixPackageManager):
     def __init__(self, no_confirm, needs_epel):
-        PackageManager.__init__(self, no_confirm)
+        UnixPackageManager.__init__(self, no_confirm)
         self.needs_epel = needs_epel
 
     def install(self, dependencies: dict[str, set[str]]) -> bool:
@@ -136,10 +183,15 @@ class DnfPackageManager(PackageManager):
             install_cmd = "sudo dnf --enablerepo=crb install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
         else:
             install_cmd = "sudo dnf install -y"
-        return self._install(
+
+        rust_replacement_set = {"clang", "clang-devel"}
+        if not shutil.which("curl"):
+            rust_replacement_set.add("curl")
+
+        return self._install_with_rust_toolchain(
             dependencies=dependencies,
             install_cmd=install_cmd,
-            replace_dict={"python": {"python3-devel"}},
+            replace_dict={"python": {"python3-devel"}, "rust_toolchain": rust_replacement_set},
         )
 
     def _get_installed_packages(self) -> set[str]:
@@ -153,15 +205,15 @@ class DnfPackageManager(PackageManager):
         return ""
 
 
-class PacmanPackageManager(PackageManager):
+class PacmanPackageManager(UnixPackageManager):
     def __init__(self, no_confirm):
-        PackageManager.__init__(self, no_confirm)
+        UnixPackageManager.__init__(self, no_confirm)
 
     def install(self, dependencies: dict[str, set[str]]) -> bool:
-        return self._install(
+        return self._install_with_rust_toolchain(
             dependencies=dependencies,
             install_cmd="sudo pacman --noconfirm -S",
-            replace_dict={},
+            replace_dict={"rust_toolchain": {"curl", "clang"}},
         )
 
     def _get_installed_packages(self) -> set[str]:
@@ -173,17 +225,18 @@ class PacmanPackageManager(PackageManager):
         return ""
 
 
-class ZypperPackageManager(PackageManager):
+class ZypperPackageManager(UnixPackageManager):
     def __init__(self, no_confirm):
-        PackageManager.__init__(self, no_confirm)
+        UnixPackageManager.__init__(self, no_confirm)
 
     def install(self, dependencies: dict[str, set[str]]) -> bool:
-        return self._install(
+        return self._install_with_rust_toolchain(
             dependencies=dependencies,
             install_cmd="sudo zypper install -y",
             replace_dict={
                 "libarchive": {"libarchive-devel"},
                 "python": {"python3-devel"},
+                "rust_toolchain": {"curl", "clang", "clang-devel"},
             },
         )
 
@@ -212,15 +265,19 @@ class ZypperPackageManager(PackageManager):
         return ""
 
 
-class ApkPackageManager(PackageManager):
+class ApkPackageManager(UnixPackageManager):
     def __init__(self, no_confirm):
-        PackageManager.__init__(self, no_confirm)
+        UnixPackageManager.__init__(self, no_confirm)
 
     def install(self, dependencies: dict[str, set[str]]) -> bool:
-        return self._install(
+        return self._install_with_rust_toolchain(
             dependencies=dependencies,
             install_cmd="sudo apk add --no-cache",
-            replace_dict={"libarchive": {"libarchive-dev"}, "python": {"python3-dev"}},
+            replace_dict={
+                "libarchive": {"libarchive-dev"},
+                "python": {"python3-dev"},
+                "rust_toolchain": {"curl", "clang-dev"},
+            },
         )
 
     def _get_installed_packages(self) -> set[str]:
@@ -264,8 +321,13 @@ def _get_activate_venv_path():
 
 
 def _minifi_setup_env_str(vs_where_location: VsWhereLocation) -> str:
+    # _OLD_VIRTUAL_PATH is cleared after refreshenv, because the bootstrap usually runs in an already activated venv
+    # (see py_bootstrap.bat), so this variable is inherited from there, holding the PATH from before any packages were
+    # installed. If it is set, activate.bat restores PATH from it, discarding the PATH refreshed from the registry
+    # (e.g. the newly installed rustup's cargo bin directory). Clearing it makes activate.bat keep the refreshed PATH.
     return f"""
 call refreshenv
+set _OLD_VIRTUAL_PATH=
 call "{_get_activate_venv_path()}"
 call {_get_vs_dev_cmd(vs_where_location)}
 setlocal EnableDelayedExpansion
@@ -286,7 +348,7 @@ class ChocolateyPackageManager(PackageManager):
         PackageManager.__init__(self, no_confirm)
 
     def install(self, dependencies: dict[str, set[str]]) -> bool:
-        self._install(
+        return self._install_with_rust_toolchain(
             dependencies=dependencies,
             install_cmd="choco install -y",
             replace_dict={
@@ -301,9 +363,13 @@ class ChocolateyPackageManager(PackageManager):
                 "make": set(),
                 "m4": {"gnuwin32-m4"},
                 "perl": {"strawberryperl", "NASM"},
+                "rust_toolchain": {"rustup.install", "llvm"},
             },
         )
-        return True
+
+    def _install_rust_toolchain(self) -> bool:
+        command = "rustup default stable"
+        return not _query_yes_no(f"Running {command}", self.no_confirm) or self.run_cmd(command)
 
     def _get_installed_packages(self) -> set[str]:
         result = subprocess.run(["choco", "list"], text=True, capture_output=True, check=True)
