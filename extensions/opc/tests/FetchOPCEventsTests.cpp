@@ -363,7 +363,7 @@ TEST_CASE_METHOD(FetchOPCEventsTestController, "A path that cannot be resolved t
   REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&]() {
     controller_.trigger();
     return LogTestController::getInstance().getLogs().find(
-        "Failed to translate path 'Simulator/Default/NoSuchNode' to a node id: BadNoDataAvailable") != std::string::npos;
+        "path 'Simulator/Default/NoSuchNode' could not be translated to a node id: BadNoDataAvailable") != std::string::npos;
   }, 100ms));
 }
 
@@ -374,7 +374,7 @@ TEST_CASE_METHOD(FetchOPCEventsTestController, "A path that resolves to multiple
   REQUIRE(utils::verifyEventHappenedInPollTime(10s, [&]() {
     controller_.trigger();
     return LogTestController::getInstance().getLogs().find(
-        "Path 'Simulator/Default/AmbiguousParent/Ambiguous' resolved to 2 node ids; exactly one node is required") != std::string::npos;
+        "path 'Simulator/Default/AmbiguousParent/Ambiguous' resolved to 2 node ids, exactly one is required") != std::string::npos;
   }, 100ms));
 }
 

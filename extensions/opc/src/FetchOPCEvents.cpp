@@ -102,14 +102,15 @@ void FetchOPCEvents::runEventLoop() {
         continue;
       }
 
-      const auto* node = resolveNodeId();
+      const auto node = resolveNodeId();
       if (!node) {
+        logger_->log_error("Failed to resolve the node to subscribe to events of: {}", node.error());
         retry();
         continue;
       }
 
       if (!connection_->hasEventSubscription()) {
-        if (auto sc = connection_->subscribeToEvents(*node, *event_filter_); sc != UA_STATUSCODE_GOOD) {
+        if (auto sc = connection_->subscribeToEvents(**node, *event_filter_); sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to subscribe to the events of node '{}': {}", node_id_, UA_StatusCode_name(sc));
           retry();
           continue;
