@@ -3,7 +3,7 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 #pragma once
 
-#include <aws/core/auth/AWSCredentials.h>
+#include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/crt/io/Bootstrap.h>
 #include <aws/crt/io/EventLoopGroup.h>
 #include <aws/crt/io/HostResolver.h>
@@ -19,8 +19,8 @@ namespace org::apache::nifi::minifi::aws::s3 {
 
 class S3ClientRequestSender : public S3RequestSender {
  public:
-  S3ClientRequestSender(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config,
-      bool use_virtual_addressing = true);
+  S3ClientRequestSender(const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider,
+      const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing = true);
   [[nodiscard]] std::expected<Aws::S3Crt::Model::PutObjectResult, S3Error> sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) override;
   [[nodiscard]] std::expected<void, S3Error> sendDeleteObjectRequest(const Aws::S3Crt::Model::DeleteObjectRequest& request) override;
   [[nodiscard]] std::expected<Aws::S3Crt::Model::GetObjectResult, S3Error> sendGetObjectRequest(const Aws::S3Crt::Model::GetObjectRequest& request) override;

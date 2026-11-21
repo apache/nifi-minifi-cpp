@@ -16,6 +16,7 @@
 #include "minifi-cpp/Exception.h"
 #include "MultipartUploadStateStorage.h"
 #include "S3RequestSender.h"
+#include "aws/core/auth/AWSCredentialsProvider.h"
 #include "aws/s3-crt/model/ObjectCannedACL.h"
 #include "aws/s3-crt/model/ServerSideEncryption.h"
 #include "aws/s3-crt/model/StorageClass.h"
@@ -204,7 +205,7 @@ class S3Wrapper {
  public:
   static constexpr auto BUFFER_SIZE = minifi::utils::configuration::DEFAULT_BUFFER_SIZE;
 
-  S3Wrapper(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing = true);
+  S3Wrapper(const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing = true);
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
   std::expected<PutObjectResult, S3Error> putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size);
