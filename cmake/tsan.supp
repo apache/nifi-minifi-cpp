@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
+# SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+
+# ThreadSanitizer suppressions for MiNiFi C++ test runs.
+#
+# Wired in via TSAN_OPTIONS=suppressions=... in cmake/BuildTests.cmake.
+# Format reference: https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions
+
+# --- libc++ (not instrumented) ---
+# promise<void> and future<void> are implemented in libc++.so, so TSan cannot see the atomic refcount
+# decrements which order the waiting thread's last access to the shared state before the delete in ~promise().
+race:std::__1::promise<void>::~promise
+
+# --- OpenSSL ---
+# CRYPTO_malloc reads/clears the plain int allow_customize without locking; it only goes 1 -> 0
+# on the first allocation and only disables CRYPTO_set_mem_functions, so the race is benign.
+race:allow_customize
+
+# --- open62541 ---
+# UA_Timer_process holds timerMutex while running the timer callbacks, some of which take the server/client
+# service mutex; UA_Timer_add, called with the service mutex held, takes them in the reverse order.
+# We only use each server/client from its own event loop thread, so this cannot deadlock.
+# Fixed upstream in a29a5ba2d9 (master only, not in any 1.5.x release as of 1.5.10); remove after upgrading.
+deadlock:UA_Timer_process

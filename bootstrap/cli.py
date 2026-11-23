@@ -119,8 +119,14 @@ def run_conan_install(minifi_options: MinifiOptions, package_manager: PackageMan
         print("Adding the nifi-conan remote failed")
         return False
 
+    civetweb_defines = "'SOCKET_TIMEOUT_QUANTUM=200'"
+    if platform.system() != "Windows":
+        # use localtime_r/gmtime_r instead of the non-thread-safe localtime/gmtime
+        civetweb_defines += ", 'REENTRANT_TIME'"
+        # access the stop flag atomically instead of as a plain volatile int, which is a data race between mg_stop() and the civetweb threads
+        civetweb_defines += ", 'STOP_FLAG_NEEDS_LOCK'"
     civetweb_conf = (
-        " -c \"civetweb/*:tools.build:defines=['SOCKET_TIMEOUT_QUANTUM=200']\""
+        f' -c "civetweb/*:tools.build:defines=[{civetweb_defines}]"'
         " -c \"civetweb/*:tools.info.package_id:confs=['tools.build:defines']\""
     )
     m4_conf = " -c:b \"m4/*:tools.build:cflags=['-std=gnu17']\""

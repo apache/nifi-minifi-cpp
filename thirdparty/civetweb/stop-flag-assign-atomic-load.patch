@@ -1,0 +1,21 @@
+Backport of the upstream civetweb fix a87a7aaffd "Modify STOP_FLAG_ASSING to make TSAN happy (#1333)":
+https://github.com/civetweb/civetweb/commit/a87a7aaffd
+
+With STOP_FLAG_NEEDS_LOCK, STOP_FLAG_ASSIGN reads the expected value of the compare-and-swap with a plain
+(non-atomic) load, which races with the atomic accesses of the stop flag in the other civetweb threads.
+This is not in any civetweb release yet (latest is v1.16); remove this patch when we upgrade to a release which contains it.
+
+diff --git a/src/civetweb.c b/src/civetweb.c
+--- a/src/civetweb.c
++++ b/src/civetweb.c
+@@ -2312,7 +2312,9 @@ STOP_FLAG_ASSIGN(stop_flag_t *f, stop_flag_t v)
+ {
+ 	stop_flag_t sf;
+ 	do {
+-		sf = mg_atomic_compare_and_swap(f, *f, v);
++		sf = mg_atomic_compare_and_swap(f,
++		                                __atomic_load_n(f, __ATOMIC_SEQ_CST),
++		                                v);
+ 	} while (sf != v);
+ }
+ 

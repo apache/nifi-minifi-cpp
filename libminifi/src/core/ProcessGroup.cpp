@@ -8,10 +8,9 @@
 #include <map>
 #include <set>
 #include <chrono>
-#include <thread>
 #include "core/Processor.h"
 #include "core/state/ProcessorController.h"
-#include "core/state/UpdateController.h"
+#include "utils/StringUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -19,36 +18,29 @@ namespace org::apache::nifi::minifi::core {
 
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
+    : ProcessGroup(type, name, {}) {
+}
+
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid)
-    : ProcessGroup(type, name, uuid, 0, nullptr) {
+    : ProcessGroup(type, name, uuid, 0) {
 }
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version)
-    : ProcessGroup(type, name, uuid, version, nullptr) {
-}
-
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version, ProcessGroup* parent)
     : CoreComponentImpl(name, uuid, id_generator_),
       config_version_(version),
       type_(type),
-      parent_process_group_(parent),
       yield_period_msec_(0ms),
       transmitting_(false),
       transport_protocol_("RAW"),
-      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
+      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
+      group_path_(name) {
   logger_->log_debug("ProcessGroup {} created", name_);
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
-    : CoreComponentImpl(name, {}, id_generator_),
-      config_version_(0),
-      type_(type),
-      parent_process_group_(nullptr),
-      yield_period_msec_(0ms),
-      transmitting_(false),
-      transport_protocol_("RAW"),
-      logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
-  logger_->log_debug("ProcessGroup {} created", name_);
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, const ProcessGroup& parent)
+    : ProcessGroup(type, name, uuid) {
+  group_path_ = utils::string::join_pack(parent.group_path_, " / ", name);
 }
 
 ProcessGroup::~ProcessGroup() {
@@ -75,7 +67,7 @@ std::tuple<Processor*, bool> ProcessGroup::addProcessor(std::unique_ptr<Processo
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   processor->setProcessGroupUUIDStr(getUUIDStr());
   processor->setProcessGroupName(getName());
-  processor->setProcessGroupPath(buildGroupPath());
+  processor->setProcessGroupPath(group_path_);
   const auto [iter, inserted] = processors_.insert(std::move(processor));
   if (inserted) {
     logger_->log_debug("Add processor {} into process group {}", name, name_);
@@ -490,17 +482,6 @@ void ProcessGroup::setParameterContext(ParameterContext* parameter_context) {
 
 ParameterContext* ProcessGroup::getParameterContext() const {
   return parameter_context_;
-}
-
-std::string ProcessGroup::buildGroupPath() const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::string path = name_;
-  auto parent = parent_process_group_;
-  while (parent != nullptr) {
-    path.insert(0, parent->getName() + " / ");
-    parent = parent->getParent();
-  }
-  return path;
 }
 
 }  // namespace org::apache::nifi::minifi::core

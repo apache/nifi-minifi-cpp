@@ -31,7 +31,8 @@ bool SchedulingAgent::processorYields(core::Processor* processor) const {
   // No need to yield, reset yield expiration to 0
   processor->clearYield();
 
-  auto bored_yield_duration = bored_yield_duration_ > 0ms ? bored_yield_duration_ : 10ms;
+  const auto bored_yield_duration_value = bored_yield_duration_.load();
+  auto bored_yield_duration = bored_yield_duration_value > 0ms ? bored_yield_duration_value : 10ms;
 
   if (!hasWorkToDo(processor)) {
     processor->yield(bored_yield_duration);
@@ -75,12 +76,12 @@ std::expected<void, std::exception_ptr> SchedulingAgent::triggerAndCommit(core::
   } catch (const std::exception& exception) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
         processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
-    processor->yield(admin_yield_duration_);
+    processor->yield(admin_yield_duration_.load());
     return std::unexpected{std::current_exception()};
   } catch (...) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}",
         processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
-    processor->yield(admin_yield_duration_);
+    processor->yield(admin_yield_duration_.load());
     return std::unexpected{std::current_exception()};
   }
   return {};
@@ -113,12 +114,12 @@ std::expected<bool, std::exception_ptr> SchedulingAgent::trigger(core::Processor
   } catch (const std::exception& exception) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
         processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
-    processor->yield(admin_yield_duration_);
+    processor->yield(admin_yield_duration_.load());
     return std::unexpected{std::current_exception()};
   } catch (...) {
     logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}",
         processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
-    processor->yield(admin_yield_duration_);
+    processor->yield(admin_yield_duration_.load());
     return std::unexpected{std::current_exception()};
   }
   return true;

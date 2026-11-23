@@ -55,11 +55,17 @@ class ProcessGroup : public CoreComponentImpl {
     IncludeChildren
   };
 
-  ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version, ProcessGroup *parent);
   ProcessGroup(ProcessGroupType type, std::string_view name);
   ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid);
   ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version);
+  ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, const ProcessGroup& parent);
   ~ProcessGroup() override;
+
+  ProcessGroup(const ProcessGroup&) = delete;
+  ProcessGroup& operator=(const ProcessGroup&) = delete;
+  ProcessGroup(ProcessGroup&&) = delete;
+  ProcessGroup& operator=(ProcessGroup&&) = delete;
+
   void setURL(std::string url) {
     url_ = std::move(url);
   }
@@ -126,14 +132,6 @@ class ProcessGroup : public CoreComponentImpl {
                       const std::function<bool(const Processor*)>& filter = nullptr);
 
   bool isRemoteProcessGroup();
-  void setParent(ProcessGroup *parent) {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    parent_process_group_ = parent;
-  }
-  ProcessGroup *getParent() const {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return parent_process_group_;
-  }
   [[maybe_unused]] std::tuple<Processor*, bool> addProcessor(std::unique_ptr<Processor> processor);
   void addPort(std::unique_ptr<Port> port);
   void addProcessGroup(std::unique_ptr<ProcessGroup> child);
@@ -204,7 +202,6 @@ class ProcessGroup : public CoreComponentImpl {
   std::set<Port*> ports_;
   std::set<std::unique_ptr<ProcessGroup>> child_process_groups_;
   std::set<std::unique_ptr<Connection>> connections_;
-  ProcessGroup* parent_process_group_;
   std::atomic<std::chrono::milliseconds> yield_period_msec_;
   std::atomic<uint64_t> timeout_;
   std::string url_;
@@ -217,16 +214,14 @@ class ProcessGroup : public CoreComponentImpl {
 
  private:
   static Port* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid);
-  std::string buildGroupPath() const;
 
   mutable std::recursive_mutex mutex_;
   std::shared_ptr<logging::Logger> logger_;
 
-  ProcessGroup(const ProcessGroup &parent);
-  ProcessGroup &operator=(const ProcessGroup &parent);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::mutex on_schedule_timer_mutex_;
   std::unique_ptr<utils::CallBackTimer> onScheduleTimer_;
+  std::string group_path_;
 };
 }  // namespace core
 }  // namespace org::apache::nifi::minifi

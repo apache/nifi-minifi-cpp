@@ -18,7 +18,7 @@ shared_requires = (
     "libxml2/2.15.3",
     "fmt/12.1.0",
     "spdlog/1.17.0",
-    "catch2/3.15.0",
+    "catch2/3.16.1",
     "zstd/1.5.7",
     "sol2/3.5.0",
     "argparse/3.2",
@@ -225,6 +225,7 @@ class MiNiFiCppMain(ConanFile):
 
     def configure(self):
         self.options["libarchive"].with_openssl = True
+        self.options["catch2"].thread_safe_assertions = True
         self.options["date"].tz_db = "manual" if self.settings.os == "Windows" else "system"
         if self.options.enable_all or self.options.enable_bzip2:
             self.options["libarchive"].with_bzip2 = True

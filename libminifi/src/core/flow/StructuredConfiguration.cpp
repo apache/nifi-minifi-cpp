@@ -445,11 +445,11 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
   }
 }
 
-void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, core::ProcessGroup* parentGroup) {
+void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, core::ProcessGroup* parent_group) {
   utils::Identifier uuid;
   std::string id;
 
-  if (!parentGroup) {
+  if (!parent_group) {
     logger_->log_error("parseRemoteProcessGroup: no parent group exists");
     return;
   }
@@ -469,8 +469,7 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     logger_->log_debug("parseRemoteProcessGroup: url => [{}]", url);
 
     uuid = id;
-    auto group = createRemoteProcessGroup(name, uuid);
-    group->setParent(parentGroup);
+    auto group = createRemoteProcessGroup(name, uuid, *parent_group);
 
     if (currRpgNode[schema_.rpg_yield_period]) {
       auto yieldPeriod = currRpgNode[schema_.rpg_yield_period].getString().value();
@@ -556,7 +555,7 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
         parseRPGPort(currPort, group.get(), sitetosite::TransferDirection::RECEIVE);
       }  // for node
     }
-    parentGroup->addProcessGroup(std::move(group));
+    parent_group->addProcessGroup(std::move(group));
   }
 }
 

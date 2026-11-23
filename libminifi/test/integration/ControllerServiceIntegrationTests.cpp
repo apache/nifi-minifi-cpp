@@ -129,9 +129,12 @@ TEST_CASE("ControllerServiceIntegrationTests", "[controller]") {
 //  }
 //  REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(2), checkCsIdEnabledMatchesDisabledFlag));
 
+  REQUIRE(verifyEventHappenedInPollTime(10s, [&] { return controller_service_action_is_correct.load(); }));
   REQUIRE(verifyEventHappenedInPollTime(10s, [&] { return subprocess_controller_service_not_found_correctly.load(); }));
   REQUIRE(verifyEventHappenedInPollTime(10s, [&] { return subprocess_controller_service_found_correctly.load(); }));
   controller->waitUnload(60s);
+  REQUIRE_FALSE(controller_service_action_failed);
+  REQUIRE_FALSE(subprocess_controller_service_lookup_failed);
 }
 
 }  // namespace org::apache::nifi::minifi::test

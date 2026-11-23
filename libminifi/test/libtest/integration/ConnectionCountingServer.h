@@ -67,9 +67,9 @@ class ConnectionCountingServer {
 
   std::set<minifi::utils::SmallString<utils::Identifier::UUID_STR_LEN>> connections_;
   details::AddIdToUserConnectionData add_id_to_user_connection_data_;
-  CivetServer server_{options, &add_id_to_user_connection_data_};
   details::ReverseBodyPostHandler reverse_body_post_handler_{connections_};
   details::NumberedMethodResponder numbered_method_responder_{connections_};
+  CivetServer server_{options, &add_id_to_user_connection_data_};  // must be declared after the handlers
 };
 
 }  // namespace org::apache::nifi::minifi::test

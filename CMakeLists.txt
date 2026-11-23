@@ -147,23 +147,37 @@ message("THREADS_HAVE_PTHREAD_ARG is ${THREADS_HAVE_PTHREAD_ARG}")
 # an important security feature.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Sanity checks for sanitizers
+if (MINIFI_ADVANCED_ASAN_BUILD AND MINIFI_ADVANCED_TSAN_BUILD)
+    message(FATAL_ERROR "MINIFI_ADVANCED_ASAN_BUILD is incompatible with MINIFI_ADVANCED_TSAN_BUILD. "
+        "You need to run AddressSanitizer and ThreadSanitizer separately.")
+endif()
+
+if (CUSTOM_MALLOC AND (MINIFI_ADVANCED_ASAN_BUILD OR MINIFI_ADVANCED_TSAN_BUILD))
+    message(FATAL_ERROR "Sanitizers are incompatible with CUSTOM_MALLOC (currently '${CUSTOM_MALLOC}').")
+endif()
+
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND (MINIFI_ADVANCED_ASAN_BUILD OR MINIFI_ADVANCED_TSAN_BUILD))
+    message(WARNING "A sanitizer is enabled but CMAKE_BUILD_TYPE is '${CMAKE_BUILD_TYPE}', not Debug; "
+        "a Debug build is recommended for the most accurate sanitizer diagnostics.")
+endif()
+
 # Use ASAN if instructed
 if (MINIFI_ADVANCED_ASAN_BUILD)
-    if (CUSTOM_MALLOC)
-        message(FATAL_ERROR "MINIFI_ADVANCED_ASAN_BUILD is incompatible with CUSTOM_MALLOC "
-            "(currently '${CUSTOM_MALLOC}'): AddressSanitizer supplies its own allocator. "
-            "Disable one of them.")
-    endif()
-    if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-        message(WARNING "MINIFI_ADVANCED_ASAN_BUILD is enabled but CMAKE_BUILD_TYPE is "
-            "'${CMAKE_BUILD_TYPE}', not Debug; a Debug build is recommended for the most "
-            "accurate AddressSanitizer diagnostics.")
-    endif()
     set(ASAN_FLAGS "-g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ASAN_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_FLAGS}")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_FLAGS}")
+endif()
+
+# Use TSAN if instructed
+if (MINIFI_ADVANCED_TSAN_BUILD)
+    set(TSAN_FLAGS "-g -fsanitize=thread -fno-omit-frame-pointer")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TSAN_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TSAN_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${TSAN_FLAGS}")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${TSAN_FLAGS}")
 endif()
 
 if (MINIFI_ADVANCED_CODE_COVERAGE)
