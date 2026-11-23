@@ -2446,7 +2446,7 @@ Processors:
 Connections: []
 )";
   core::YamlConfiguration yaml_config(test_controller.getContext());
-  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(GenerateFlowFile, success)]"));
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(\"GenerateFlowFile\", \"success\")]"));
 }
 
 TEST_CASE("Connection of a different relationship does not terminate a relationship", "[YamlConfiguration][RelationshipTermination]") {
@@ -2487,7 +2487,7 @@ Connections:
   destination id: 00000000-0000-0000-0000-000000000003
 )";
   core::YamlConfiguration yaml_config(test_controller.getContext());
-  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(PutFile, failure)]"));
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(\"PutFile\", \"failure\")]"));
 }
 
 TEST_CASE("Connection from a different processor does not terminate a relationship", "[YamlConfiguration][RelationshipTermination]") {
@@ -2523,7 +2523,7 @@ Connections:
   destination id: 00000000-0000-0000-0000-000000000003
 )";
   core::YamlConfiguration yaml_config(test_controller.getContext());
-  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(GenerateFlowFile2, success)]"));
+  REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(\"GenerateFlowFile2\", \"success\")]"));
 }
 
 TEST_CASE("All unterminated relationships of all processors are reported", "[YamlConfiguration][RelationshipTermination]") {
@@ -2559,8 +2559,8 @@ Connections:
   core::YamlConfiguration yaml_config(test_controller.getContext());
   REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML),
       Catch::Matchers::ContainsSubstring("The following component-relationship pairs are not terminated by any connection:") &&
-          Catch::Matchers::ContainsSubstring("(PutFile, failure)(PutFile, success)") &&
-          Catch::Matchers::ContainsSubstring("(GenerateFlowFile2, success)") && !Catch::Matchers::ContainsSubstring("GenerateFlowFile1"));
+          Catch::Matchers::ContainsSubstring("(\"PutFile\", \"failure\"), (\"PutFile\", \"success\")") &&
+          Catch::Matchers::ContainsSubstring("(\"GenerateFlowFile2\", \"success\")") && !Catch::Matchers::ContainsSubstring("GenerateFlowFile1"));
 }
 
 TEST_CASE("Funnel with or without outgoing connection is accepted", "[YamlConfiguration][RelationshipTermination]") {
@@ -2683,7 +2683,7 @@ Processors:
   }
 
   SECTION("Other relationships are still verified") {
-    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(MyProcessor, failure)]"));
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(\"MyProcessor\", \"failure\")]"));
   }
 }
 
@@ -2784,7 +2784,7 @@ Connections:
 )";
     core::YamlConfiguration yaml_config(test_controller.getContext());
     REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML + CONNECTIONS_YAML),
-        unterminatedRelationshipsError("[(AmazingOutputPort, undefined)]"));
+        unterminatedRelationshipsError("[(\"AmazingOutputPort\", \"undefined\")]"));
   }
 }
 
@@ -2861,7 +2861,7 @@ Process Groups:
 
   SECTION("Relationship of a processor in the child process group is not terminated") {
     core::YamlConfiguration yaml_config(test_controller.getContext());
-    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML_BEGIN), unterminatedRelationshipsError("[(UpdateAttribute, success)]"));
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML_BEGIN), unterminatedRelationshipsError("[(\"UpdateAttribute\", \"success\")]"));
   }
 }
 
@@ -2896,7 +2896,7 @@ Process Groups:
     name: in
 )";
     core::YamlConfiguration yaml_config(test_controller.getContext());
-    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(in, success)]"));
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(\"in\", \"success\")]"));
   }
 
   SECTION("Output port") {
@@ -2927,7 +2927,7 @@ Process Groups:
     destination id: 00000000-0000-0000-0000-000000000003
 )";
     core::YamlConfiguration yaml_config(test_controller.getContext());
-    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(out, success)]"));
+    REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(CONFIG_YAML), unterminatedRelationshipsError("[(\"out\", \"success\")]"));
   }
 }
 

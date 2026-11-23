@@ -1,19 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+
 #include "core/ProcessGroup.h"
-#include <vector>
-#include <memory>
-#include <string>
-#include <map>
-#include <set>
-#include <utility>
+
 #include <chrono>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
+
+#include "RemoteProcessGroupPort.h"
 #include "core/Processor.h"
 #include "core/state/ProcessorController.h"
 #include "core/state/UpdateController.h"
-#include "RemoteProcessGroupPort.h"
+#include "fmt/ranges.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -481,15 +485,6 @@ std::size_t ProcessGroup::getTotalFlowFileCount() const {
 }
 
 void ProcessGroup::verifyRelationshipTerminations() const {
-  std::map<std::string, Connection*> connections;
-  getConnections(connections);
-  std::set<std::pair<const Connectable*, std::string>> terminated_relationships;
-  for (const auto& [_, connection] : connections) {
-    for (const auto& relationship : connection->getRelationships()) {
-      terminated_relationships.emplace(connection->getSource(), relationship.getName());
-    }
-  }
-
   std::vector<Processor*> processors;
   getAllProcessors(processors);
 
@@ -502,22 +497,15 @@ void ProcessGroup::verifyRelationshipTerminations() const {
       continue;
     }
     for (const auto& relationship : processor->getSupportedRelationships()) {
-      if (processor->isAutoTerminated(relationship)) {
-        continue;
-      }
-      if (!terminated_relationships.contains({processor, relationship.getName()})) {
+      if (!processor->isAutoTerminated(relationship) && processor->getOutGoingConnections(relationship.getName()).empty()) {
         unterminated_relationships.emplace_back(processor->getName(), relationship.getName());
       }
     }
   }
 
   if (!unterminated_relationships.empty()) {
-    std::string message = "The following component-relationship pairs are not terminated by any connection: [";
-    for (const auto& [processor, relationship] : unterminated_relationships) {
-      message.append(fmt::format("({}, {})", processor, relationship));
-    }
-    message += "]";
-    throw Exception(ExceptionType::GENERAL_EXCEPTION, message);
+    throw Exception(ExceptionType::GENERAL_EXCEPTION,
+        fmt::format("The following component-relationship pairs are not terminated by any connection: {}", unterminated_relationships));
   }
 }
 

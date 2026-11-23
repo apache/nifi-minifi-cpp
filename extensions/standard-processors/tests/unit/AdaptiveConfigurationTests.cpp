@@ -113,5 +113,5 @@ TEST_CASE("Adaptive configuration rejects JSON flow with unterminated relationsh
   core::flow::AdaptiveConfiguration config{controller.getContext()};
 
   REQUIRE_THROWS_WITH(config.getRootFromPayload(json_config),
-      "General Operation: The following component-relationship pairs are not terminated by any connection: [(LogAttribute, success)]");
+      "General Operation: The following component-relationship pairs are not terminated by any connection: [(\"LogAttribute\", \"success\")]");
 }

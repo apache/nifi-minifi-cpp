@@ -308,7 +308,7 @@ Controller Services: []
 )");
 
   REQUIRE_FALSE(result.has_value());
-  CHECK_THAT(result.error(), Catch::Matchers::ContainsSubstring("not terminated by any connection: [(UnterminatedGenFF, success)]"));
+  CHECK_THAT(result.error(), Catch::Matchers::ContainsSubstring("not terminated by any connection: [(\"UnterminatedGenFF\", \"success\")]"));
   CHECK(controller.controller_->getName() == "Banana Bread");
   CHECK(controller.root_->findProcessorByName("GenFF"));
   CHECK_FALSE(controller.root_->findProcessorByName("UnterminatedGenFF"));

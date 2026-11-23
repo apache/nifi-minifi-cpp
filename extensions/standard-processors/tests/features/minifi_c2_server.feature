@@ -50,6 +50,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
 
   Scenario: MiNiFi shuts down when the connection to the MiNiFi C2 server is lost
     Given a GenerateFlowFile processor
+    And GenerateFlowFile's success relationship is auto-terminated
     And C2 is enabled in MiNiFi
     And MiNiFi configuration "nifi.c2.connection.timeout" is set to "10 sec"
     And a MiNiFi C2 server is started
@@ -62,6 +63,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
 
   Scenario: MiNiFi shuts down when the connection to the MiNiFi C2 server is not available
     Given a GenerateFlowFile processor
+    And GenerateFlowFile's success relationship is auto-terminated
     And C2 is enabled in MiNiFi
     And MiNiFi configuration "nifi.c2.connection.timeout" is set to "10 sec"
     When the MiNiFi instance starts up

@@ -274,10 +274,12 @@ Feature: Putting and fetching data to OPC UA server
     And a PutOPCProcessor processor in the "update-opc-ua-node" flow
     And PutOPCProcessor is EVENT_DRIVEN in the "update-opc-ua-node" flow
     And PutOPCProcessor's success relationship is auto-terminated in the "update-opc-ua-node" flow
+    And PutOPCProcessor's failure relationship is auto-terminated in the "update-opc-ua-node" flow
     And a FetchOPCHistory processor in the "fetch-opc-ua-node-history" flow
     And the scheduling period of the FetchOPCHistory processor is set to "10 sec" in the "fetch-opc-ua-node-history" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node-history" flow
     And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node-history" flow
+    And PutFile's failure relationship is auto-terminated in the "fetch-opc-ua-node-history" flow
     And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node-history" flow
     And a LogAttribute processor in the "fetch-opc-ua-node-history" flow
     And LogAttribute is EVENT_DRIVEN in the "fetch-opc-ua-node-history" flow
@@ -323,10 +325,12 @@ Feature: Putting and fetching data to OPC UA server
     And a PutOPCProcessor processor in the "update-opc-ua-node" flow
     And PutOPCProcessor is EVENT_DRIVEN in the "update-opc-ua-node" flow
     And PutOPCProcessor's success relationship is auto-terminated in the "update-opc-ua-node" flow
+    And PutOPCProcessor's failure relationship is auto-terminated in the "update-opc-ua-node" flow
     And a FetchOPCHistory processor in the "fetch-opc-ua-node-history" flow
     And the scheduling period of the FetchOPCHistory processor is set to "10 sec" in the "fetch-opc-ua-node-history" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node-history" flow
     And PutFile's success relationship is auto-terminated in the "fetch-opc-ua-node-history" flow
+    And PutFile's failure relationship is auto-terminated in the "fetch-opc-ua-node-history" flow
     And PutFile is EVENT_DRIVEN in the "fetch-opc-ua-node-history" flow
     And a LogAttribute processor in the "fetch-opc-ua-node-history" flow
     And LogAttribute is EVENT_DRIVEN in the "fetch-opc-ua-node-history" flow

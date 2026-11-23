@@ -2016,7 +2016,7 @@ TEST_CASE("NiFi flow json with a processor relationship which is neither connect
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(PutFile, success)]"));
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(\"PutFile\", \"success\")]"));
 }
 
 TEST_CASE("NiFi flow json connection with an empty relationship name does not terminate a processor relationship", "[RelationshipTermination]") {
@@ -2051,7 +2051,7 @@ TEST_CASE("NiFi flow json connection with an empty relationship name does not te
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(GenerateFlowFile, success)]"));
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(\"GenerateFlowFile\", \"success\")]"));
 }
 
 TEST_CASE("NiFi flow json with a funnel without outgoing connection is accepted, the funnel is used as a terminator", "[RelationshipTermination]") {
@@ -2112,7 +2112,7 @@ TEST_CASE("NiFi flow json with a remote process group output port without outgoi
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(AmazingOutputPort, undefined)]"));
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(\"AmazingOutputPort\", \"undefined\")]"));
 }
 
 TEST_CASE("NiFi flow json with a process group output port without outgoing connection is rejected", "[RelationshipTermination]") {
@@ -2151,7 +2151,7 @@ TEST_CASE("NiFi flow json with a process group output port without outgoing conn
   }
 })";
 
-  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(out, success)]"));
+  REQUIRE_THROWS_WITH(config.getRootFromPayload(CONFIG_JSON), unterminatedRelationshipsError("[(\"out\", \"success\")]"));
 }
 
 TEST_CASE("NiFi flow json connection with both empty and named relationships only uses the named relationships", "[RelationshipTermination]") {
