@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
+
 #include "core/ProcessGroup.h"
-#include <vector>
-#include <memory>
-#include <string>
-#include <map>
-#include <set>
+
 #include <chrono>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
+
+#include "RemoteProcessGroupPort.h"
 #include "core/Processor.h"
 #include "core/state/ProcessorController.h"
 #include "core/state/UpdateController.h"
+#include "fmt/ranges.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -333,7 +339,7 @@ void ProcessGroup::updatePropertyValue(const std::string& processorName, const s
   }
 }
 
-void ProcessGroup::getConnections(std::map<std::string, Connection*>& connectionMap) {
+void ProcessGroup::getConnections(std::map<std::string, Connection*>& connectionMap) const {
   for (auto& connection : connections_) {
     connectionMap[connection->getUUIDStr()] = connection.get();
     connectionMap[connection->getName()] = connection.get();
@@ -343,7 +349,7 @@ void ProcessGroup::getConnections(std::map<std::string, Connection*>& connection
   }
 }
 
-void ProcessGroup::getConnections(std::map<std::string, Connectable*>& connectionMap) {
+void ProcessGroup::getConnections(std::map<std::string, Connectable*>& connectionMap) const {
   for (auto& connection : connections_) {
     connectionMap[connection->getUUIDStr()] = connection.get();
     connectionMap[connection->getName()] = connection.get();
@@ -478,10 +484,36 @@ std::size_t ProcessGroup::getTotalFlowFileCount() const {
   return sum;
 }
 
+void ProcessGroup::verifyRelationshipTerminations() const {
+  std::vector<Processor*> processors;
+  getAllProcessors(processors);
+
+  std::vector<std::pair<std::string, std::string>> unterminated_relationships;
+  for (auto* processor : processors) {
+    // RPG input ports (SEND direction) only send their incoming flow files to the remote instance and never transfer to a local relationship,
+    // while RPG output ports (RECEIVE direction) transfer the received flow files to their relationship, so those are still verified
+    if (auto port = dynamic_cast<minifi::RemoteProcessGroupPort*>(&processor->getImpl());
+        port && port->getDirection() == sitetosite::TransferDirection::SEND) {
+      continue;
+    }
+    for (const auto& relationship : processor->getSupportedRelationships()) {
+      if (!processor->isAutoTerminated(relationship) && processor->getOutGoingConnections(relationship.getName()).empty()) {
+        unterminated_relationships.emplace_back(processor->getName(), relationship.getName());
+      }
+    }
+  }
+
+  if (!unterminated_relationships.empty()) {
+    throw Exception(ExceptionType::GENERAL_EXCEPTION,
+        fmt::format("The following component-relationship pairs are not terminated by any connection: {}", unterminated_relationships));
+  }
+}
+
 void ProcessGroup::verify() const {
   for (const auto& processor : processors_) {
     processor->validateAnnotations();
   }
+  verifyRelationshipTerminations();
 }
 
 void ProcessGroup::setParameterContext(ParameterContext* parameter_context) {

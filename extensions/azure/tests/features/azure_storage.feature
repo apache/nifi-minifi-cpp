@@ -17,6 +17,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "success" relationship of the PutAzureBlobStorage processor is connected to the PutFile
     And the "failure" relationship of the PutAzureBlobStorage processor is connected to the PutAzureBlobStorage
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
 
     And an Azure storage server is set up
     When the MiNiFi instance starts up
@@ -29,6 +30,8 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And a DeleteAzureBlobStorage processor set up to communicate with an Azure blob storage
     And the "Blob" property of the DeleteAzureBlobStorage processor is set to "test"
     And the "success" relationship of the GenerateFlowFile processor is connected to the DeleteAzureBlobStorage
+    And DeleteAzureBlobStorage's success relationship is auto-terminated
+    And DeleteAzureBlobStorage's failure relationship is auto-terminated
     And an Azure storage server is set up
     And test blob "test" is created on Azure blob storage
 
@@ -43,6 +46,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "Delete Snapshots Option" property of the DeleteAzureBlobStorage processor is set to "Include Snapshots"
     And the "success" relationship of the GenerateFlowFile processor is connected to the DeleteAzureBlobStorage
     And DeleteAzureBlobStorage's success relationship is auto-terminated
+    And DeleteAzureBlobStorage's failure relationship is auto-terminated
     And an Azure storage server is set up
     And test blob "test" is created on Azure blob storage with a snapshot
 
@@ -56,6 +60,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "Delete Snapshots Option" property of the DeleteAzureBlobStorage processor is set to "Delete Snapshots Only"
     And the "success" relationship of the GenerateFlowFile processor is connected to the DeleteAzureBlobStorage
     And DeleteAzureBlobStorage's success relationship is auto-terminated
+    And DeleteAzureBlobStorage's failure relationship is auto-terminated
     And an Azure storage server is set up
     And test blob "test" is created on Azure blob storage with a snapshot
 
@@ -73,7 +78,9 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the FetchAzureBlobStorage
     And the "success" relationship of the FetchAzureBlobStorage processor is connected to the PutFile
+    And FetchAzureBlobStorage's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And an Azure storage server is set up
 
     When the MiNiFi instance starts up
@@ -108,6 +115,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "success" relationship of the PutAzureBlobStorage processor is connected to the PutFile
     And the "failure" relationship of the PutAzureBlobStorage processor is connected to the PutAzureBlobStorage
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And a ProxyConfigurationService controller service is set up with HTTP proxy configuration
 
     And an Azure storage server is set up
@@ -126,6 +134,7 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "Proxy Configuration Service" property of the DeleteAzureBlobStorage processor is set to "ProxyConfigurationService"
     And the "success" relationship of the GenerateFlowFile processor is connected to the DeleteAzureBlobStorage
     And DeleteAzureBlobStorage's success relationship is auto-terminated
+    And DeleteAzureBlobStorage's failure relationship is auto-terminated
     And a ProxyConfigurationService controller service is set up with HTTP proxy configuration
 
     And an Azure storage server is set up
@@ -150,6 +159,8 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "success" relationship of the GetFile processor is connected to the FetchAzureBlobStorage
     And the "success" relationship of the FetchAzureBlobStorage processor is connected to the PutFile
     And PutFile's success relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
+    And FetchAzureBlobStorage's failure relationship is auto-terminated
     And a ProxyConfigurationService controller service is set up with HTTP proxy configuration
 
     And an Azure storage server is set up

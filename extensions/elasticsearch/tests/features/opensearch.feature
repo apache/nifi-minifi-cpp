@@ -22,6 +22,9 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
     And the "success" relationship of the PostElasticsearch processor is connected to the PutFile
+    And PostElasticsearch's error relationship is auto-terminated
+    And PostElasticsearch's failure relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
 
     When the MiNiFi instance starts up
@@ -50,6 +53,9 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
     And the "success" relationship of the PostElasticsearch processor is connected to the PutFile
+    And PostElasticsearch's error relationship is auto-terminated
+    And PostElasticsearch's failure relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
 
     When the MiNiFi instance starts up
@@ -73,6 +79,9 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     And PutFile is EVENT_DRIVEN
     And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
     And the "success" relationship of the PostElasticsearch processor is connected to the PutFile
+    And PostElasticsearch's error relationship is auto-terminated
+    And PostElasticsearch's failure relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And PutFile's success relationship is auto-terminated
 
     When the MiNiFi instance starts up

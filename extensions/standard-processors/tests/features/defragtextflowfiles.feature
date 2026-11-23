@@ -20,7 +20,9 @@ Feature: DefragmentText can defragment fragmented data from TailFile
     And SuccessPut is EVENT_DRIVEN
     And the "success" relationship of the MultiTail processor is connected to the DefragmentText
     And the "success" relationship of the DefragmentText processor is connected to the SuccessPut
+    And DefragmentText's failure relationship is auto-terminated
     And SuccessPut's success relationship is auto-terminated
+    And SuccessPut's failure relationship is auto-terminated
 
     When all instances start up
     Then files with contents "<success_flow_files>" are placed in the "/tmp/output" directory in less than 60 seconds
@@ -47,7 +49,9 @@ Feature: DefragmentText can defragment fragmented data from TailFile
     And the "success" relationship of the TailOne processor is connected to the DefragmentText
     And the "success" relationship of the TailTwo processor is connected to the DefragmentText
     And the "success" relationship of the DefragmentText processor is connected to the SuccessPut
+    And DefragmentText's failure relationship is auto-terminated
     And SuccessPut's success relationship is auto-terminated
+    And SuccessPut's failure relationship is auto-terminated
 
     When all instances start up
     Then files with contents "<success_flow_files>" are placed in the "/tmp/output" directory in less than 60 seconds
@@ -69,7 +73,9 @@ Feature: DefragmentText can defragment fragmented data from TailFile
     And SuccessPut is EVENT_DRIVEN
     And the "success" relationship of the TailFile processor is connected to the DefragmentText
     And the "success" relationship of the DefragmentText processor is connected to the SuccessPut
+    And DefragmentText's failure relationship is auto-terminated
     And SuccessPut's success relationship is auto-terminated
+    And SuccessPut's failure relationship is auto-terminated
 
     When all instances start up
     Then files with contents "<success_flow_files>" are placed in the "/tmp/output" directory in less than 30 seconds

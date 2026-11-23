@@ -11,6 +11,7 @@ Feature: Testing custom and default metrics
     And a PutFileRs processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFileRs processor is connected to the DuplicateStreamText
     And the "success" relationship of the DuplicateStreamText processor is connected to the PutFileRs
+    And DuplicateStreamText's failure relationship is auto-terminated
     And PutFileRs's success relationship is auto-terminated
     And PutFileRs's failure relationship is auto-terminated
     And a directory at "/tmp/input" has a file "hello.txt" with the content "hello"

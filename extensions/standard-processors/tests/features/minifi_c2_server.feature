@@ -7,6 +7,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
 
   Scenario: MiNiFi flow config is updated from MiNiFi C2 server
     Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "/tmp/non-existent"
+    And GetFile1's success relationship is auto-terminated
     And C2 is enabled in MiNiFi
     And a directory at "/tmp/input" has a file with the content "test"
     And a MiNiFi C2 server is set up
@@ -27,6 +28,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
   Scenario: MiNiFi flow config is updated from MiNiFi C2 server through SSL with SSL properties
     Given a directory at "/tmp/input" has a file with the content "test"
     And a GenerateFlowFile processor
+    And GenerateFlowFile's success relationship is auto-terminated
     And ssl properties are set up for MiNiFi C2 server
     And a MiNiFi C2 server is set up with SSL
     When all instances start up
@@ -35,6 +37,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
 
   Scenario: MiNiFi flow config is updated from MiNiFi C2 server with overriden parameter context
     Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "${INPUT_DIR}"
+    And GetFile1's success relationship is auto-terminated
     And parameter context name is set to 'my-context'
     And a non-sensitive parameter in the flow config called 'INPUT_DIR' with the value '/tmp/non-existent' in the parameter context 'my-context'
     And C2 is enabled in MiNiFi
@@ -47,6 +50,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
 
   Scenario: MiNiFi shuts down when the connection to the MiNiFi C2 server is lost
     Given a GenerateFlowFile processor
+    And GenerateFlowFile's success relationship is auto-terminated
     And C2 is enabled in MiNiFi
     And MiNiFi configuration "nifi.c2.connection.timeout" is set to "10 sec"
     And a MiNiFi C2 server is started
@@ -59,6 +63,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
 
   Scenario: MiNiFi shuts down when the connection to the MiNiFi C2 server is not available
     Given a GenerateFlowFile processor
+    And GenerateFlowFile's success relationship is auto-terminated
     And C2 is enabled in MiNiFi
     And MiNiFi configuration "nifi.c2.connection.timeout" is set to "10 sec"
     When the MiNiFi instance starts up

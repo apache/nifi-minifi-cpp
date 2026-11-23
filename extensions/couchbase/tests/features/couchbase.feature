@@ -86,6 +86,10 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And GetCouchbaseKey's failure relationship is auto-terminated
+    And GetCouchbaseKey's retry relationship is auto-terminated
+    And GetCouchbaseKey's original relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
 
     When a Couchbase server is started
@@ -122,6 +126,10 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And GetCouchbaseKey's failure relationship is auto-terminated
+    And GetCouchbaseKey's retry relationship is auto-terminated
+    And GetCouchbaseKey's original relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
 
     When a Couchbase server is started
@@ -159,6 +167,10 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And GetCouchbaseKey's failure relationship is auto-terminated
+    And GetCouchbaseKey's retry relationship is auto-terminated
+    And GetCouchbaseKey's original relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
 
     When a Couchbase server is started
@@ -191,6 +203,9 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the "retry" relationship of the PutCouchbaseKey processor is connected to the PutCouchbaseKey
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And GetCouchbaseKey's failure relationship is auto-terminated
+    And GetCouchbaseKey's success relationship is auto-terminated
+    And GetCouchbaseKey's retry relationship is auto-terminated
+    And GetCouchbaseKey's original relationship is auto-terminated
 
     When a Couchbase server is started
     And the MiNiFi instance starts up
@@ -223,6 +238,10 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And GetCouchbaseKey's failure relationship is auto-terminated
+    And GetCouchbaseKey's retry relationship is auto-terminated
+    And GetCouchbaseKey's original relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
 
     When a Couchbase server is started
@@ -257,6 +276,10 @@ Feature: Executing Couchbase operations from MiNiFi-C++
     And the "success" relationship of the PutCouchbaseKey processor is connected to the GetCouchbaseKey
     And the "success" relationship of the GetCouchbaseKey processor is connected to the PutFile
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
+    And GetCouchbaseKey's failure relationship is auto-terminated
+    And GetCouchbaseKey's retry relationship is auto-terminated
+    And GetCouchbaseKey's original relationship is auto-terminated
+    And PutFile's failure relationship is auto-terminated
     And LogAttribute's success relationship is auto-terminated
 
     When a Couchbase server is started

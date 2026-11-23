@@ -16,6 +16,10 @@ Processors:
       yield period: 1 sec
       run duration nanos: 0
       auto-terminated relationships list:
+        - failure
+        - no retry
+        - response
+        - retry
       Properties:
           HTTP Method: GET
           Remote URL: https://localhost:11015/geturl
@@ -28,8 +32,6 @@ Processors:
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
-      auto-terminated relationships list:
-        - response
       Properties:
         Log Level: info
         Log Payload: true

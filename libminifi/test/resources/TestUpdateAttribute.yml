@@ -25,6 +25,8 @@ Processors:
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
+      auto-terminated relationships list:
+        - failure
       Properties:
         route_condition_attr: true
     - name: roa
@@ -35,6 +37,9 @@ Processors:
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
+      auto-terminated relationships list:
+        - failure
+        - unmatched
       Properties:
         route_matched: ${route_condition_attr}
     - name: up2
@@ -45,6 +50,8 @@ Processors:
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
+      auto-terminated relationships list:
+        - failure
       Properties:
         route_check_attr: good
         variable_attribute: ${nifi.variable.test}
