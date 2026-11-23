@@ -154,6 +154,18 @@ and rebuild.
 
 **NOTE:** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the PATH environment variable as the patch executable in this directory interferes with git's patch executable. Alternatively [scoop](https://scoop.sh/) package manager can also be used to install Strawberry Perl using the command `scoop install perl` that does not pollute the PATH variable. Also on Windows CMake's CPack is used for MSI generation, building WIX files and calling WIX toolset tools to create an MSI. If Chocolatey package manager is used its CPack can conflict with CMake, so make sure that CMake's CPack is found in the %PATH% before that.
 
+#### Rust Extensions
+
+The following are only required when building with `-DMINIFI_RUST=ON` (e.g. for the PGP and Tensor extensions):
+
+* Rust toolchain 1.95 or greater, including `cargo` and `rustc` -- it is recommended to install it using [rustup](https://rustup.rs/)
+* libclang -- required by [bindgen](https://github.com/rust-lang/rust-bindgen) to generate the Rust bindings of the MiNiFi C API
+  * Linux: the libclang development package, e.g. `apt install libclang-dev clang` on Aptitude based distributions or `dnf install clang clang-devel` on rpm-based distributions
+  * macOS: `brew install llvm`
+  * Windows: LLVM, e.g. `choco install llvm`, or the "C++ Clang tools for Windows" component of Visual Studio
+
+The [bootstrap scripts](#bootstrapping) install the Rust toolchain and libclang automatically when the `MINIFI_RUST` option is enabled.
+
 #### Bundled Thirdparty Dependencies
 
 The [NOTICE](NOTICE) file lists all the bundled thirdparty dependencies that are built and linked statically to MiNiFi or one of its extensions. The licenses of these projects can be found in the [LICENSE](LICENSE) file.
