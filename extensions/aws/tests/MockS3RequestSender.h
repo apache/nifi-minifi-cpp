@@ -6,6 +6,7 @@
 
 #include <limits>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <sstream>
@@ -13,6 +14,7 @@
 #include <vector>
 
 #include "s3/S3RequestSender.h"
+#include "aws/core/auth/AWSCredentialsProvider.h"
 #include "aws/core/utils/DateTime.h"
 #include "aws/core/utils/memory/AWSMemory.h"
 
@@ -80,8 +82,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     }
   }
 
-  void setCredentials(const Aws::Auth::AWSCredentials& credentials) {
-    credentials_ = credentials;
+  void setCredentialsProvider(const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider) {
+    credentials_provider_ = credentials_provider;
   }
 
   void setClientConfig(const Aws::Client::ClientConfiguration& client_config) {
@@ -280,7 +282,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   }
 
   Aws::Auth::AWSCredentials getCredentials() const {
-    return credentials_;
+    if (!credentials_provider_) {
+      return {};
+    }
+    return credentials_provider_->GetAWSCredentials();
   }
 
   Aws::Client::ClientConfiguration getClientConfig() const {
@@ -358,7 +363,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   bool get_object_result_ = true;
   bool return_empty_result_ = false;
   bool is_listing_truncated_ = false;
-  Aws::Auth::AWSCredentials credentials_;
+  std::shared_ptr<Aws::Auth::AWSCredentialsProvider> credentials_provider_;
   Aws::Client::ClientConfiguration client_config_;
   bool use_virtual_addressing_ = true;
   uint32_t etag_counter_ = 1;

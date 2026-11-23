@@ -77,6 +77,18 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
   CHECK(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
 }
 
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "The default value of Use Default Credentials does not select the default credential chain", "[awsCredentials]") {
+  // Use Default Credentials is a required property with a "false" default, so it is always set: it must not override
+  // the credentials configured on the processor
+  const minifi::test::utils::ScopedEnvironmentVariable access_key_env{"AWS_ACCESS_KEY_ID", "env_key"};
+  const minifi::test::utils::ScopedEnvironmentVariable secret_key_env{"AWS_SECRET_ACCESS_KEY", "env_secret"};
+  setRequiredProperties();
+
+  test_controller.runSession(plan);
+  CHECK(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
+  CHECK(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
+}
+
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[awsS3Config]") {
   SECTION("Test credentials not set") {
   }
@@ -103,11 +115,24 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test incomplete credentials in creden
   setBucket();
   plan->setProperty(aws_credentials_service, "Secret Key", "secret");
   setCredentialsService();
-  REQUIRE_THROWS_AS(test_controller.runSession(plan), minifi::Exception);
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "AWS Credentials have not been set!"));
+  REQUIRE_THROWS_WITH(test_controller.runSession(plan), "Process Schedule Operation: AWS credentials service is available but no credentials provider could be obtained");
 
   // Test that no invalid credentials file was set from previous properties
   REQUIRE_FALSE(LogTestController::getInstance().contains("load configure file failed", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test credentials service set to a non-existent controller service", "[awsS3Config]") {
+  setBucket();
+  plan->setProperty(s3_processor, minifi::aws::processors::S3Processor::AWSCredentialsProviderService, "NonExistentCredentialsService");
+  REQUIRE_THROWS_WITH(test_controller.runSession(plan),
+      "Process Schedule Operation: Controller service 'AWS Credentials Provider service' = 'NonExistentCredentialsService' not found");
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Processor credentials are not used as a fallback when the credentials service cannot provide credentials", "[awsS3Config]") {
+  setRequiredProperties();
+  plan->setProperty(aws_credentials_service, "Secret Key", "secret");
+  setCredentialsService();
+  REQUIRE_THROWS_WITH(test_controller.runSession(plan), "Process Schedule Operation: AWS credentials service is available but no credentials provider could be obtained");
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsS3ClientConfig]") {

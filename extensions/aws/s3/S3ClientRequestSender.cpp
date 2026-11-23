@@ -5,6 +5,7 @@
 
 #include <aws/s3-crt/S3CrtClient.h>
 #include <mutex>
+#include <utility>
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -19,12 +20,13 @@ S3Error toS3Error(const Aws::S3Crt::S3CrtError& s3_crt_error) {
 }
 }  // namespace
 
-S3ClientRequestSender::S3ClientRequestSender(const Aws::Auth::AWSCredentials& credentials, const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing)
-    : s3_client_(credentials, [&]() {
-          Aws::S3Crt::ClientConfiguration config(client_config);
-          config.useVirtualAddressing = use_virtual_addressing;
-          return config;
-        }()) {
+S3ClientRequestSender::S3ClientRequestSender(const std::shared_ptr<Aws::Auth::AWSCredentialsProvider>& credentials_provider,
+  const Aws::Client::ClientConfiguration& client_config, bool use_virtual_addressing)
+    : s3_client_(credentials_provider, [&]() {
+        Aws::S3Crt::ClientConfiguration config(client_config);
+        config.useVirtualAddressing = use_virtual_addressing;
+        return config;
+      }()) {
 }
 
 std::expected<Aws::S3Crt::Model::PutObjectResult, S3Error> S3ClientRequestSender::sendPutObjectRequest(const Aws::S3Crt::Model::PutObjectRequest& request) {
