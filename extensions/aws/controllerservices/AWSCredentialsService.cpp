@@ -40,7 +40,7 @@ void AWSCredentialsService::onEnable() {
 
   if (const auto credential_configuration_strategy = getProperty(CredentialConfigurationStrategy.name)) {
     if (auto strategy = magic_enum::enum_cast<CredentialConfigurationStrategyOption>(*credential_configuration_strategy, magic_enum::case_insensitive)) {
-      if (settings.credential_configuration_strategy) {
+      if (settings.credential_configuration_strategy && *strategy != CredentialConfigurationStrategyOption::DefaultCredentials) {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Both {0} and {1} properties are set! Only one of them should be set, please prefer using the {0} property",
                                                                 CredentialConfigurationStrategy.name, UseDefaultCredentials.name));
       }
@@ -56,11 +56,25 @@ void AWSCredentialsService::onEnable() {
 }
 
 std::shared_ptr<Aws::Auth::AWSCredentialsProvider> AWSCredentialsService::getAWSCredentialsProvider() {
-  std::lock_guard<std::mutex> lock(credentials_provider_mutex_);
-  if (!credentials_provider_) {
-    credentials_provider_ = createAWSCredentialsProvider(credentials_provider_settings_, *logger_);
+  AWSCredentialsProviderSettings settings;
+  {
+    std::lock_guard<std::mutex> lock(credentials_provider_mutex_);
+    if (credentials_provider_) {
+      return credentials_provider_;
+    }
+    settings = credentials_provider_settings_;
   }
-  return credentials_provider_;
+
+  auto credentials_provider = createAWSCredentialsProvider(settings, *logger_);
+
+  std::lock_guard<std::mutex> lock(credentials_provider_mutex_);
+  if (credentials_provider_) {
+    return credentials_provider_;
+  }
+  if (settings == credentials_provider_settings_) {
+    credentials_provider_ = credentials_provider;
+  }
+  return credentials_provider;
 }
 
 REGISTER_RESOURCE(AWSCredentialsService, ControllerService);

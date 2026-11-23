@@ -66,6 +66,8 @@ struct AWSCredentialsProviderSettings {
   std::string credentials_file{};
   std::string profile_name{};
   std::string sso_profile_name{};
+
+  bool operator==(const AWSCredentialsProviderSettings&) const = default;
 };
 
 [[nodiscard]] std::shared_ptr<Aws::Auth::AWSCredentialsProvider> createAWSCredentialsProvider(const AWSCredentialsProviderSettings& settings,

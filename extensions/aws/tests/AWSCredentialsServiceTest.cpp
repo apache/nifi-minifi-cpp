@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "unit/TestBase.h"
 #include "unit/TestUtils.h"
@@ -139,10 +140,24 @@ TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test Credential Configuratio
 }
 
 TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test the service cannot be enabled when both Use Default Credentials and Credential Configuration Strategy are set", "[credentialsProvider]") {
+  const auto strategy = GENERATE(as<std::string>{}, "From Properties", "Environment Variables", "Anonymous Credentials");
   plan->setProperty(aws_credentials_service, AWSCredentialsService::UseDefaultCredentials, "true");
-  plan->setProperty(aws_credentials_service, AWSCredentialsService::CredentialConfigurationStrategy, "From Properties");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::CredentialConfigurationStrategy, strategy);
   CHECK(!aws_credentials_service->enable());
   CHECK(logContains("Both Credential Configuration Strategy and Use Default Credentials properties are set!"));
+}
+
+TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test Use Default Credentials can be set together with the Default Credentials strategy", "[credentialsProvider]") {
+  const ScopedEnvironmentVariable access_key{"AWS_ACCESS_KEY_ID", "env_key"};
+  const ScopedEnvironmentVariable secret_key{"AWS_SECRET_ACCESS_KEY", "env_secret"};
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::UseDefaultCredentials, "true");
+  plan->setProperty(aws_credentials_service, AWSCredentialsService::CredentialConfigurationStrategy, "Default Credentials");
+  REQUIRE(aws_credentials_service->enable());
+
+  auto credentials_provider = getCredentialsServiceImplementation()->getAWSCredentialsProvider();
+  REQUIRE(credentials_provider != nullptr);
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSAccessKeyId() == "env_key");
+  CHECK(credentials_provider->GetAWSCredentials().GetAWSSecretKey() == "env_secret");
 }
 
 TEST_CASE_METHOD(AWSCredentialsServiceTestFixture, "Test the default value of Use Default Credentials is not treated as a strategy", "[credentialsProvider]") {

@@ -21,7 +21,11 @@ namespace org::apache::nifi::minifi::aws::processors {
 
 std::shared_ptr<Aws::Auth::AWSCredentialsProvider> AwsProcessor::getAWSCredentialsProviderFromControllerService(core::ProcessContext& context) const {
   if (auto service = minifi::utils::parseOptionalControllerService<controllers::AWSCredentialsService>(context, AWSCredentialsProviderService, getUUID())) {
-    return service->getAWSCredentialsProvider();
+    if (auto provider = service->getAWSCredentialsProvider()) {
+      return provider;
+    } else {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "AWS credentials service is available but no credentials provider could be obtained");
+    }
   }
   logger_->log_debug("AWS credentials service could not be found");
   return nullptr;

@@ -263,7 +263,7 @@ TEST_CASE_METHOD(AWSCredentialsProviderFactoryTestFixture, "STS Web Identity str
     "[awsCredentialsProviderFactory]") {
   CHECK(createProvider({.credential_configuration_strategy = aws::CredentialConfigurationStrategyOption::STSAssumeRoleWebIdentityCredentials}) ==
       nullptr);
-  CHECK(LogTestController::getInstance().contains("No AWS credentials were found in STS Assume Role Web Identity."));
+  CHECK(LogTestController::getInstance().contains("No AWS credentials were found in STS Web Identity."));
 }
 
 TEST_CASE_METHOD(AWSCredentialsProviderFactoryTestFixture, "Instance Profile strategy fails when the instance metadata service is unavailable",

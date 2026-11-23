@@ -103,7 +103,7 @@ std::shared_ptr<Aws::Auth::AWSCredentialsProvider> createAWSCredentialsProvider(
         : std::make_shared<Aws::Auth::SSOCredentialsProvider>(settings.sso_profile_name);
     return probeProvider(sso_provider, "SSO", logger);
   } else if (strategy == CredentialConfigurationStrategyOption::STSAssumeRoleWebIdentityCredentials) {
-    return probeProvider(std::make_shared<Aws::Auth::STSAssumeRoleWebIdentityCredentialsProvider>(), "STS Assume Role Web Identity", logger);
+    return probeProvider(std::make_shared<Aws::Auth::STSAssumeRoleWebIdentityCredentialsProvider>(), "STS Web Identity", logger);
   }
 
   logger.log_error("Unsupported Credential Configuration Strategy.");
