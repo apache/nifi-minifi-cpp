@@ -17,6 +17,7 @@ pub(crate) mod provided_interface;
 pub(crate) mod raw_controller_service;
 pub(crate) mod raw_processor;
 pub(crate) mod relationship;
+pub(crate) mod state;
 
 pub use flow_file::{FlowFile, GetId};
 pub use logger::{LogLevel, Logger};
@@ -24,6 +25,7 @@ pub use process_context::ProcessContext;
 pub use process_session::{InputStream, OutputStream, ProcessSession};
 pub use raw_controller_service::RawControllerService;
 pub use raw_processor::{OnTriggerResult, ProcessorInputRequirement, RawProcessor, ThreadingModel};
+pub use state::{Json, ListingState, StateAccess, StateEntries, StateSchema, StateValue};
 
 pub use property::{
     DataSize, NonBlankPath, PropertyConstraints, PropertyType, StandardPropertyValidator,

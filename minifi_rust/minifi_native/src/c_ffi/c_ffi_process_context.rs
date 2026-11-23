@@ -10,8 +10,10 @@ use crate::api::property::PropertySchema;
 use crate::c_ffi::{CffiLogger, StaticStrAsMinifiCStr};
 use crate::{
     ComponentIdentifier, ControllerServiceApi, EnableControllerService, MinifiError, Property,
+    StateAccess,
 };
 use minifi_native_sys::*;
+use std::collections::HashMap;
 use std::ffi::c_void;
 use std::num::NonZeroU32;
 
@@ -197,6 +199,92 @@ impl<'a> ProcessContext for CffiProcessContext<'a> {
                 return Err(MinifiError::StatusError((
                     "report_metrics".into(),
                     NonZeroU32::new_unchecked(err_code),
+                )));
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Accumulates the pairs from `minifi_process_context_get_state`, counting any it could not represent.
+struct CollectedState {
+    entries: HashMap<String, String>,
+    unreadable: usize,
+}
+
+unsafe extern "C" fn collect_state_entry_callback(
+    output: *mut c_void,
+    key: minifi_string_view,
+    value: minifi_string_view,
+) {
+    unsafe {
+        let collected = &mut *(output as *mut CollectedState);
+        if key.data.is_null() || value.data.is_null() {
+            collected.unreadable += 1;
+            return;
+        }
+        let key_slice = std::slice::from_raw_parts(key.data.cast::<u8>(), key.length);
+        let value_slice = std::slice::from_raw_parts(value.data.cast::<u8>(), value.length);
+        match (
+            std::str::from_utf8(key_slice),
+            std::str::from_utf8(value_slice),
+        ) {
+            (Ok(key), Ok(value)) => {
+                collected.entries.insert(key.to_owned(), value.to_owned());
+            }
+            // State often holds paths, which on Linux need not be valid UTF-8. Dropping one silently would erase
+            // it from the store on the next save.
+            _ => collected.unreadable += 1,
+        }
+    }
+}
+
+impl<'a> StateAccess for CffiProcessContext<'a> {
+    fn get_state(&self) -> Result<HashMap<String, String>, MinifiError> {
+        let mut collected = CollectedState {
+            entries: HashMap::new(),
+            unreadable: 0,
+        };
+        unsafe {
+            let status = minifi_process_context_get_state(
+                self.ptr,
+                Some(collect_state_entry_callback),
+                &mut collected as *mut _ as *mut c_void,
+            );
+            if status != minifi_status_MINIFI_STATUS_SUCCESS {
+                return Err(MinifiError::StatusError((
+                    "minifi_process_context_get_state".into(),
+                    NonZeroU32::new_unchecked(status),
+                )));
+            }
+        }
+        if collected.unreadable > 0 {
+            return Err(MinifiError::validation(format!(
+                "{} state entries could not be read as UTF-8; refusing to load a partial state",
+                collected.unreadable
+            )));
+        }
+        Ok(collected.entries)
+    }
+
+    fn set_state(&self, state: &HashMap<String, String>) -> Result<(), MinifiError> {
+        let mut keys: Vec<StringView> = Vec::with_capacity(state.len());
+        let mut values: Vec<StringView> = Vec::with_capacity(state.len());
+        for (key, value) in state {
+            keys.push(StringView::new(key));
+            values.push(StringView::new(value));
+        }
+        unsafe {
+            let status = minifi_process_context_set_state(
+                self.ptr,
+                keys.len(),
+                keys.as_ptr() as *const minifi_string_view,
+                values.as_ptr() as *const minifi_string_view,
+            );
+            if status != minifi_status_MINIFI_STATUS_SUCCESS {
+                return Err(MinifiError::StatusError((
+                    "minifi_process_context_set_state".into(),
+                    NonZeroU32::new_unchecked(status),
                 )));
             }
         }

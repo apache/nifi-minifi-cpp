@@ -680,4 +680,46 @@ minifi_status minifi_process_context_get_proxy_data_from_property(minifi_process
   return MINIFI_STATUS_VALIDATION_FAILED;
 }
 
+// Null outside a session (e.g. on_schedule) or when no state storage is configured. Deliberately does not fall back
+// to createStateManager(), whose result nothing would commit.
+static minifi::core::StateManager* sessionStateManager(minifi::core::ProcessContext* context) {
+  return context->getStateManager();
+}
+
+minifi_status minifi_process_context_get_state(minifi_process_context* process_context,
+    void (*cb)(void* user_ctx, minifi_string_view key, minifi_string_view value), void* user_ctx) {
+  gsl_Assert(process_context);
+  if (!toCpp(process_context)->getProcessor().isSingleThreaded()) {
+    return MINIFI_STATUS_VALIDATION_FAILED;
+  }
+  auto* state_manager = sessionStateManager(toCpp(process_context));
+  if (!state_manager) { return MINIFI_STATUS_UNKNOWN_ERROR; }
+  if (const auto state = state_manager->getEffectiveState()) {
+    for (const auto& [key, value] : *state) {
+      cb(user_ctx, minifiStringView(key), minifiStringView(value));
+    }
+  }
+  return MINIFI_STATUS_SUCCESS;
+}
+
+minifi_status minifi_process_context_set_state(minifi_process_context* process_context,
+    const size_t count, const minifi_string_view* keys, const minifi_string_view* values) {
+  gsl_Assert(process_context);
+  if (!toCpp(process_context)->getProcessor().isSingleThreaded()) {
+    return MINIFI_STATUS_VALIDATION_FAILED;
+  }
+  auto* state_manager = sessionStateManager(toCpp(process_context));
+  if (!state_manager) { return MINIFI_STATUS_UNKNOWN_ERROR; }
+  minifi::core::StateManager::State state;
+  state.reserve(count);
+  for (size_t i = 0; i < count; ++i) {
+    state.emplace(toString(keys[i]), toString(values[i]));
+  }
+  // Storing what is already there would mark the session dirty for nothing; commit() is a no-op while unset.
+  if (const auto current = state_manager->getEffectiveState(); current && *current == state) {
+    return MINIFI_STATUS_SUCCESS;
+  }
+  return state_manager->set(state) ? MINIFI_STATUS_SUCCESS : MINIFI_STATUS_UNKNOWN_ERROR;
+}
+
 }  // extern "C"

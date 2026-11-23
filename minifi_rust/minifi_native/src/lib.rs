@@ -16,7 +16,7 @@ pub use api::component_definition_traits::{
 pub use api::controller_service::{ControllerService, EnableControllerService};
 pub use api::processor_wrappers::complex_processor::{ComplexProcessorType, MutTrigger, Trigger};
 pub use api::processor_wrappers::flow_file_source::{
-    FlowFileSource, FlowFileSourceProcessorType, GeneratedFlowFile,
+    FlowFileSource, FlowFileSourceProcessorType, GeneratedFlowFile, MutFlowFileSource,
 };
 pub use api::processor_wrappers::flow_file_stream_transform::{
     FlowFileStreamTransform, FlowFileStreamTransformProcessorType, MutFlowFileStreamTransform,
@@ -28,9 +28,11 @@ pub use api::processor_wrappers::flow_file_transform::{
 
 pub use api::processor_wrappers::utils::flow_file_content::Content;
 
-pub use api::processor::{Processor, Schedule};
+pub use api::processor::{Processor, Schedule, SingleThreadedStateHooks};
 
-pub use api::raw_processor::{MultiThreaded, SingleThreaded};
+pub use api::raw_processor::{
+    MultiThreaded, SingleThreaded, SingleThreadedStateful, StatePolicy, Stateful, Stateless,
+};
 
 pub use api::logger::{LogLevel, Logger};
 
@@ -46,9 +48,10 @@ pub use api::process_session::IoState;
 pub use api::attribute::{GetAttribute, OutputAttribute};
 
 pub use api::{
-    DataSize, FlowFile, GetId, InputStream, NonBlankPath, OnTriggerResult, OutputStream,
-    ProcessContext, ProcessSession, ProcessorInputRequirement, PropertyConstraints, PropertyType,
-    Relationship, StandardPropertyValidator,
+    DataSize, FlowFile, GetId, InputStream, Json, ListingState, NonBlankPath, OnTriggerResult,
+    OutputStream, ProcessContext, ProcessSession, ProcessorInputRequirement, PropertyConstraints,
+    PropertyType, Relationship, StandardPropertyValidator, StateAccess, StateEntries, StateSchema,
+    StateValue,
 };
 
 pub use minifi_native_macros as macros;

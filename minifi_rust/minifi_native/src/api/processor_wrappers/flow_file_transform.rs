@@ -7,7 +7,7 @@ use crate::api::processor::Processor;
 use crate::api::processor_wrappers::utils::context_session_flowfile_bundle::ContextSessionFlowFileBundle;
 use crate::api::processor_wrappers::utils::flow_file_content::Content;
 use crate::api::property::{GetControllerService, GetProperty};
-use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
+use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger, StatePolicy};
 use crate::{
     GetAttribute, LogLevel, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
     ProcessSession, ProcessorDefinition, Relationship, Schedule, SingleThreaded, TransformError,
@@ -233,9 +233,10 @@ where
     }
 }
 
-impl<Implementation, L> SingleThreadedTrigger
-    for Processor<Implementation, FlowFileTransformProcessorType, SingleThreaded, L>
+impl<Implementation, S, L> SingleThreadedTrigger
+    for Processor<Implementation, FlowFileTransformProcessorType, SingleThreaded<S>, L>
 where
+    S: StatePolicy,
     Implementation: Schedule + MutFlowFileTransform,
     L: Logger,
 {

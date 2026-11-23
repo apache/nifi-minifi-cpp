@@ -3,8 +3,9 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{DeriveInput, ItemTrait, parse_macro_input};
+use syn::{Data, DeriveInput, Fields, ItemTrait, Meta, parse_macro_input};
 
 #[proc_macro_derive(ComponentIdentifier)]
 pub fn derive_component_identifier(input: TokenStream) -> TokenStream {
@@ -27,6 +28,144 @@ pub fn derive_component_identifier(input: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(expanded)
+}
+
+/// Declares how a `SingleThreadedStateful` processor's state maps onto the state store.
+///
+/// `#[persisted]` round-trips a field through one entry keyed by the field name (via `StateValue`);
+/// `#[persisted(flatten)]` hands it the whole map so it can own a group of entries (via `StateEntries`).
+#[proc_macro_derive(StateSchema, attributes(persisted))]
+pub fn derive_state_schema(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match state_schema_impl(&input) {
+        Ok(tokens) => TokenStream::from(tokens),
+        Err(err) => err.to_compile_error().into(),
+    }
+}
+
+enum PersistedKind {
+    Value,
+    Flatten,
+}
+
+fn state_schema_impl(input: &DeriveInput) -> Result<TokenStream2, syn::Error> {
+    let name = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    let fields = match &input.data {
+        Data::Struct(data) => match &data.fields {
+            Fields::Named(named) => &named.named,
+            _ => {
+                return Err(syn::Error::new_spanned(
+                    input,
+                    "`StateSchema` can only be derived for structs with named fields",
+                ));
+            }
+        },
+        _ => {
+            return Err(syn::Error::new_spanned(
+                input,
+                "`StateSchema` can only be derived for structs",
+            ));
+        }
+    };
+
+    let mut persisted = Vec::new();
+    for field in fields {
+        let Some(attr) = field.attrs.iter().find(|a| a.path().is_ident("persisted")) else {
+            continue;
+        };
+        let kind = match &attr.meta {
+            Meta::Path(_) => PersistedKind::Value,
+            Meta::List(list) => {
+                let nested: syn::Ident = list.parse_args()?;
+                if nested == "flatten" {
+                    PersistedKind::Flatten
+                } else {
+                    return Err(syn::Error::new_spanned(
+                        &nested,
+                        "unknown `persisted` option; the only supported one is `flatten`",
+                    ));
+                }
+            }
+            Meta::NameValue(value) => {
+                return Err(syn::Error::new_spanned(
+                    value,
+                    "`persisted` takes no value; write `#[persisted]` or `#[persisted(flatten)]`",
+                ));
+            }
+        };
+        let ident = field
+            .ident
+            .as_ref()
+            .expect("named field has an identifier")
+            .clone();
+        persisted.push((ident, kind));
+    }
+
+    if persisted.is_empty() {
+        return Err(syn::Error::new_spanned(
+            name,
+            "no `#[persisted]` field; register the processor as `SingleThreaded` instead of deriving `StateSchema`",
+        ));
+    }
+
+    let loads = persisted.iter().map(|(ident, kind)| match kind {
+        PersistedKind::Value => {
+            let key = ident.to_string();
+            quote! {
+                if let Some(raw) = state.get(#key) {
+                    self.#ident = ::minifi_native::StateValue::from_state_string(raw).map_err(|err| {
+                        ::minifi_native::MinifiError::validation(format!(
+                            "could not restore persisted state field '{}': {}", #key, err
+                        ))
+                    })?;
+                }
+            }
+        }
+        PersistedKind::Flatten => quote! {
+            ::minifi_native::StateEntries::load_entries(&mut self.#ident, state)?;
+        },
+    });
+
+    let stores = persisted.iter().map(|(ident, kind)| match kind {
+        PersistedKind::Value => {
+            let key = ident.to_string();
+            quote! {
+                state.insert(
+                    ::std::string::String::from(#key),
+                    ::minifi_native::StateValue::to_state_string(&self.#ident).map_err(|err| {
+                        ::minifi_native::MinifiError::validation(format!(
+                            "could not store persisted state field '{}': {}", #key, err
+                        ))
+                    })?,
+                );
+            }
+        }
+        PersistedKind::Flatten => quote! {
+            ::minifi_native::StateEntries::store_entries(&self.#ident, state)?;
+        },
+    });
+
+    Ok(quote! {
+        impl #impl_generics ::minifi_native::StateSchema for #name #ty_generics #where_clause {
+            fn load_from_state(
+                &mut self,
+                state: &::std::collections::HashMap<::std::string::String, ::std::string::String>,
+            ) -> ::core::result::Result<(), ::minifi_native::MinifiError> {
+                #(#loads)*
+                ::core::result::Result::Ok(())
+            }
+
+            fn store_to_state(
+                &self,
+                state: &mut ::std::collections::HashMap<::std::string::String, ::std::string::String>,
+            ) -> ::core::result::Result<(), ::minifi_native::MinifiError> {
+                #(#stores)*
+                ::core::result::Result::Ok(())
+            }
+        }
+    })
 }
 
 #[proc_macro_attribute]

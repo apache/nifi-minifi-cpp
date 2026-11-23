@@ -3,7 +3,7 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 use crate::api::processor_wrappers::utils::flow_file_content::Content;
-use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
+use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger, StatePolicy};
 use crate::{FlowFileAttribute, impl_with_attributes};
 use crate::{
     GetControllerService, GetProperty, Logger, MinifiError, MultiThreaded, OnTriggerResult,
@@ -101,9 +101,10 @@ where
     }
 }
 
-impl<Implementation, L> SingleThreadedTrigger
-    for Processor<Implementation, FlowFileSourceProcessorType, SingleThreaded, L>
+impl<Implementation, S, L> SingleThreadedTrigger
+    for Processor<Implementation, FlowFileSourceProcessorType, SingleThreaded<S>, L>
 where
+    S: StatePolicy,
     Implementation: Schedule + MutFlowFileSource,
     L: Logger,
 {

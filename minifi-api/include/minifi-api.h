@@ -30,7 +30,7 @@ extern "C" {
 #define MINIFI_PROXY_CONFIGURATION_SERVICE_INTERFACE_PROPERTY_TYPE "org.apache.nifi.minifi.controllers.ProxyConfigurationServiceInterface"
 
 enum : uint32_t {
-  MINIFI_API_VERSION = 2
+  MINIFI_API_VERSION = 3
 };
 
 enum minifi_io_status : int64_t {
@@ -287,6 +287,30 @@ struct minifi_proxy_data {
 
 enum minifi_status minifi_process_context_get_proxy_data_from_property(struct minifi_process_context* process_context,
     struct minifi_string_view property_name, void (*cb)(void* user_ctx, const struct minifi_proxy_data* proxy_data), void* user_ctx);
+
+/// Persistent per-processor key/value state, exposed as a whole map.
+///
+/// These operate on the session-scoped state manager and are only valid during an on_trigger call: changes are
+/// committed (or rolled back) atomically together with the process session. Outside a trigger (e.g. on_schedule),
+/// or when no state storage is configured, they return an error status. The state manager itself is never handed
+/// to the caller, so there is nothing to store past the call.
+///
+/// State access is only supported for single-threaded processors; the others are rejected with
+/// MINIFI_STATUS_VALIDATION_FAILED, and the Rust wrapper also rules them out at compile time.
+
+/// Reads the whole state, invoking cb once per stored key/value pair (both borrowed for the call, in unspecified
+/// order). cb is not invoked when there is no stored state.
+///
+/// Reads back a write this session already made, so callers should re-read every trigger rather than cache across
+/// triggers: a cache cannot tell whether the session that wrote it committed or was rolled back.
+enum minifi_status minifi_process_context_get_state(struct minifi_process_context* process_context,
+    void (*cb)(void* user_ctx, struct minifi_string_view key, struct minifi_string_view value), void* user_ctx);
+
+/// Replaces the whole state with the given key/value pairs (parallel arrays of length count). Passing count == 0
+/// stores an empty state, which is not the same as removing the stored entry. A write of what is already stored is
+/// dropped, so re-sending an unchanged state costs no storage write.
+enum minifi_status minifi_process_context_set_state(struct minifi_process_context* process_context,
+    size_t count, const struct minifi_string_view* keys, const struct minifi_string_view* values);
 
 #ifdef __cplusplus
 }  // extern "C"
