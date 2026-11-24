@@ -66,6 +66,8 @@ class FetchOPCEventsTestController {
       expected_document.Parse(expected_contents[i].c_str());
 
       auto array = expected_document.GetArray();
+      REQUIRE(result_document.IsArray());
+      REQUIRE(result_document.Size() == array.Size());
       for (rapidjson::SizeType j = 0; j < array.Size(); ++j) {
         for (const auto& field : array[j].GetObject()) {
           if (field.value == ".*") {

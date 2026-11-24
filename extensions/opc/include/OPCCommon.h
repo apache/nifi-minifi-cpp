@@ -176,7 +176,7 @@ class Client {
     }
   }
 
-  void pushEvent(Event&& event);
+  void flushPendingEvents();
 
   struct EventSubscription {
     UA_UInt32 id = 0;
@@ -187,6 +187,7 @@ class Client {
   std::shared_ptr<core::logging::Logger> logger_;
 
   std::optional<EventSubscription> subscription_;
+  std::vector<Event> pending_events_;  // only accessed from FetchOPCEvents::event_thread_, so no locking is necessary
   std::mutex event_queue_mutex_;
   std::deque<Event> event_queue_;
   std::optional<size_t> max_event_queue_size_;

@@ -789,7 +789,7 @@ void Client::eventNotificationCallback(UA_Client* /*client*/, UA_UInt32 /*sub_id
         client->logger_->log_warn("Failed to convert event field '{}' to string, skipping field: {}", name, ex.what());
       }
     }
-    client->pushEvent(std::move(event));
+    client->pending_events_.push_back(std::move(event));
   } catch (const std::exception& ex) {
     client->logger_->log_error("Failed to process an OPC UA event notification: {}", ex.what());
   } catch (...) {
@@ -835,9 +835,13 @@ void Client::subscriptionInactivityCallback(UA_Client* /*client*/, UA_UInt32 sub
   }
 }
 
-void Client::pushEvent(Event&& event) {
+void Client::flushPendingEvents() {
+  if (pending_events_.empty()) {
+    return;
+  }
   const std::lock_guard<std::mutex> lock(event_queue_mutex_);
-  event_queue_.push_back(std::move(event));
+  std::ranges::move(pending_events_, std::back_inserter(event_queue_));
+  pending_events_.clear();
   while (max_event_queue_size_ && event_queue_.size() > *max_event_queue_size_) {
     event_queue_.pop_front();
     ++dropped_event_count_;
@@ -845,7 +849,9 @@ void Client::pushEvent(Event&& event) {
 }
 
 UA_StatusCode Client::processSubscriptionNotifications(UA_UInt32 timeout_milliseconds) {
-  return UA_Client_run_iterate(client_, timeout_milliseconds);
+  const auto status = UA_Client_run_iterate(client_, timeout_milliseconds);
+  flushPendingEvents();
+  return status;
 }
 
 std::vector<Event> Client::drainEvents() {
