@@ -3,11 +3,11 @@
 # SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 sources:
-  "1.5.4":
-    url: "https://github.com/open62541/open62541/archive/refs/tags/v1.5.4.tar.gz"
-    sha256: "fb5aafc19c67a91368d1f71d9ee4acf0f4b47a0d65c66db4ed738691828779c7"
+  "1.5.10":
+    url: "https://github.com/open62541/open62541/archive/refs/tags/v1.5.10.tar.gz"
+    sha256: "b05e47734e2e39c0b00511ed6dc22e71f1b5bf7864b86280653a5128d171c0ed"
 patches:
-  "1.5.4":
+  "1.5.10":
     - patch_file: "patches/open62541.patch"
       patch_description: "Fix compilation issues with Open62541"
       patch_type: "fix"

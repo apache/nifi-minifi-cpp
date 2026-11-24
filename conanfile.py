@@ -186,7 +186,7 @@ class MiNiFiCppMain(ConanFile):
         if self.options.enable_all or self.options.enable_kafka:
             self.requires("librdkafka/2.14.2")
         if self.options.enable_all or self.options.enable_opc:
-            self.requires("open62541/1.5.4@minifi/develop")
+            self.requires("open62541/1.5.10@minifi/develop")
         if self.options.enable_all or self.options.enable_bustache:
             self.requires("bustache/0.1.0@minifi/develop")
         if self.options.enable_all or self.options.enable_grpc_for_loki:
