@@ -8,22 +8,31 @@
 #include <span>
 
 #include "FlowFile.h"
+#include "PropertyContext.h"
+#include "PublishedMetrics.h"
 #include "minifi-api.h"
 #include "minifi-cpp/core/Relationship.h"
 #include "minifi-cpp/io/StreamCallback.h"
 
 namespace org::apache::nifi::minifi::api::core {
 
-class ProcessSession {
+class TriggerContext : public PropertyContext {
  public:
-  virtual ~ProcessSession() = default;
+  virtual ~TriggerContext() = default;
 
-  ProcessSession() = default;
+  TriggerContext() = default;
 
-  ProcessSession(const ProcessSession&) = delete;
-  ProcessSession(ProcessSession&&) = delete;
-  ProcessSession& operator=(const ProcessSession&) = delete;
-  ProcessSession& operator=(ProcessSession&&) = delete;
+  TriggerContext(const TriggerContext&) = delete;
+  TriggerContext(TriggerContext&&) = delete;
+  TriggerContext& operator=(const TriggerContext&) = delete;
+  TriggerContext& operator=(TriggerContext&&) = delete;
+
+  using PropertyContext::getProperty;
+  using PropertyContext::getDynamicProperties;
+  [[nodiscard]] virtual std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& prop,
+      const FlowFile& flow_file) const = 0;
+  [[nodiscard]] virtual std::map<std::string, std::string> getDynamicProperties(const FlowFile& flow_file) const = 0;
+  [[nodiscard]] virtual std::expected<void, std::error_code> reportMetrics(const PublishedMetrics& metrics) const = 0;
 
   virtual FlowFile create(const FlowFile* parent = nullptr) = 0;
   virtual FlowFile get() = 0;
@@ -46,9 +55,17 @@ class ProcessSession {
   [[nodiscard]] std::vector<std::byte> readBuffer(FlowFile& flow_file);
 };
 
-class CffiProcessSession : public ProcessSession {
+class CffiTriggerContext : public TriggerContext {
  public:
-  explicit CffiProcessSession(minifi_process_session* impl): impl_(impl) {}
+  CffiTriggerContext(minifi_process_context* context, minifi_process_session* impl) : context_(context), impl_(impl) {}
+
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& prop) const override;
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const minifi::core::PropertyReference& prop,
+      const FlowFile& flow_file) const override;
+  [[nodiscard]] std::map<std::string, std::string> getDynamicProperties() const override;
+  [[nodiscard]] std::map<std::string, std::string> getDynamicProperties(const FlowFile& flow_file) const override;
+  [[nodiscard]] std::expected<minifi_controller_service*, std::error_code> getControllerService(const minifi::core::PropertyReference& prop) const override;
+  [[nodiscard]] std::expected<void, std::error_code> reportMetrics(const PublishedMetrics& metrics) const override;
 
   FlowFile create(const FlowFile* parent = nullptr) override;
   FlowFile get() override;
@@ -66,6 +83,7 @@ class CffiProcessSession : public ProcessSession {
   [[nodiscard]] uint64_t getFlowFileSize(const FlowFile& ff) const override;
 
  private:
+  minifi_process_context* context_;
   minifi_process_session* impl_;
 };
 

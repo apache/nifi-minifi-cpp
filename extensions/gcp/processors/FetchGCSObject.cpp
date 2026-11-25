@@ -67,10 +67,10 @@ class FetchFromGCSCallback {
 };
 }  // namespace
 
-minifi_status FetchGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status FetchGCSObject::onScheduleImpl(api::core::ScheduleContext& context) {
   const auto status = GCSProcessor::onScheduleImpl(context);
   if (MINIFI_STATUS_SUCCESS != status) { return status; }
-  if (auto encryption_key = context.getProperty(EncryptionKey, nullptr)) {
+  if (auto encryption_key = context.getProperty(EncryptionKey)) {
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
@@ -81,24 +81,24 @@ minifi_status FetchGCSObject::onScheduleImpl(api::core::ProcessContext& context)
   return MINIFI_STATUS_SUCCESS;
 }
 
-minifi_status FetchGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status FetchGCSObject::onTriggerImpl(api::core::TriggerContext& context) {
   gsl_Expects(gcp_credentials_);
 
-  auto flow_file = session.get();
+  auto flow_file = context.get();
   if (!flow_file) {
     return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
-  auto bucket = api::utils::parseOptionalProperty(context, Bucket, &flow_file);
+  auto bucket = api::utils::parseOptionalProperty(context, Bucket, flow_file);
   if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
-  auto object_name = api::utils::parseOptionalProperty(context, Key, &flow_file);
+  auto object_name = api::utils::parseOptionalProperty(context, Key, flow_file);
   if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
@@ -106,38 +106,38 @@ minifi_status FetchGCSObject::onTriggerImpl(api::core::ProcessContext& context, 
   FetchFromGCSCallback callback(client, *bucket, *object_name);
   callback.setEncryptionKey(encryption_key_);
 
-  if (const auto object_generation_str = api::utils::parseOptionalProperty(context, ObjectGeneration, &flow_file); object_generation_str && !object_generation_str->empty()) {
+  if (const auto object_generation_str = api::utils::parseOptionalProperty(context, ObjectGeneration, flow_file); object_generation_str && !object_generation_str->empty()) {
     if (const auto geni64 = parsing::parseIntegral<int64_t>(*object_generation_str)) {
       gcs::Generation generation = gcs::Generation{*geni64};
       callback.setGeneration(generation);
 
     } else {
       logger_->log_error("Invalid generation: {}", *object_generation_str);
-      session.transfer(std::move(flow_file), Failure);
+      context.transfer(std::move(flow_file), Failure);
       return MINIFI_STATUS_SUCCESS;
     }
   }
 
-  session.write(flow_file, std::ref(callback));
+  context.write(flow_file, std::ref(callback));
   if (!callback.getStatus().ok()) {
-    session.setAttribute(flow_file, GCS_STATUS_MESSAGE, callback.getStatus().message());
-    session.setAttribute(flow_file, GCS_ERROR_REASON, callback.getStatus().error_info().reason());
-    session.setAttribute(flow_file, GCS_ERROR_DOMAIN, callback.getStatus().error_info().domain());
+    context.setAttribute(flow_file, GCS_STATUS_MESSAGE, callback.getStatus().message());
+    context.setAttribute(flow_file, GCS_ERROR_REASON, callback.getStatus().error_info().reason());
+    context.setAttribute(flow_file, GCS_ERROR_DOMAIN, callback.getStatus().error_info().domain());
     logger_->log_error("Failed to fetch from Google Cloud Storage {} {}", callback.getStatus().message(), callback.getStatus().error_info().reason());
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
   if (auto generation = callback.getGeneration()) {
-    session.setAttribute(flow_file, GCS_GENERATION, std::to_string(*generation));
+    context.setAttribute(flow_file, GCS_GENERATION, std::to_string(*generation));
   }
   if (auto meta_generation = callback.getMetaGeneration()) {
-    session.setAttribute(flow_file, GCS_META_GENERATION, std::to_string(*meta_generation));
+    context.setAttribute(flow_file, GCS_META_GENERATION, std::to_string(*meta_generation));
   }
   if (auto storage_class = callback.getStorageClass()) {
-    session.setAttribute(flow_file, GCS_STORAGE_CLASS, *storage_class);
+    context.setAttribute(flow_file, GCS_STORAGE_CLASS, *storage_class);
   }
-  session.transfer(std::move(flow_file), Success);
+  context.transfer(std::move(flow_file), Success);
   return MINIFI_STATUS_SUCCESS;
 }
 

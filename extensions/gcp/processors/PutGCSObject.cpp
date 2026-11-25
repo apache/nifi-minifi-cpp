@@ -7,8 +7,8 @@
 #include <utility>
 
 #include "../GCPAttributes.h"
-#include "api/core/ProcessContext.h"
-#include "api/core/ProcessSession.h"
+#include "api/core/ScheduleContext.h"
+#include "api/core/TriggerContext.h"
 #include "api/core/Resource.h"
 #include "api/utils/ProcessorConfigUtils.h"
 #include "minifi-cpp/io/InputStream.h"
@@ -89,13 +89,13 @@ class UploadToGCSCallback {
 }  // namespace
 
 
-minifi_status PutGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status PutGCSObject::onScheduleImpl(api::core::ScheduleContext& context) {
   const auto status = GCSProcessor::onScheduleImpl(context);
   if (status != minifi_status::MINIFI_STATUS_SUCCESS) {
     return status;
   }
 
-  if (auto encryption_key = context.getProperty(EncryptionKey, nullptr)) {
+  if (auto encryption_key = context.getProperty(EncryptionKey)) {
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
@@ -106,40 +106,40 @@ minifi_status PutGCSObject::onScheduleImpl(api::core::ProcessContext& context) {
   return MINIFI_STATUS_SUCCESS;
 }
 
-minifi_status PutGCSObject::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status PutGCSObject::onTriggerImpl(api::core::TriggerContext& context) {
   gsl_Expects(gcp_credentials_);
 
-  auto flow_file = session.get();
+  auto flow_file = context.get();
   if (!flow_file) {
     return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
-  auto bucket = api::utils::parseOptionalProperty(context, Bucket, &flow_file);
+  auto bucket = api::utils::parseOptionalProperty(context, Bucket, flow_file);
 
   if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
-  auto object_name = api::utils::parseOptionalProperty(context, Key, &flow_file);
+  auto object_name = api::utils::parseOptionalProperty(context, Key, flow_file);
   if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
   gcs::Client client = getClient();
   UploadToGCSCallback callback(client, *bucket, *object_name);
 
-  if (auto crc32_checksum = api::utils::parseOptionalProperty(context, Crc32cChecksum, &flow_file)) {
+  if (auto crc32_checksum = api::utils::parseOptionalProperty(context, Crc32cChecksum, flow_file)) {
     callback.setCrc32CChecksumValue(*crc32_checksum);
   }
 
-  if (auto md5_hash = api::utils::parseOptionalProperty(context, MD5Hash, &flow_file)) {
+  if (auto md5_hash = api::utils::parseOptionalProperty(context, MD5Hash, flow_file)) {
     callback.setHashValue(*md5_hash);
   }
 
-  auto content_type = api::utils::parseOptionalProperty(context, ContentType, &flow_file);
+  auto content_type = api::utils::parseOptionalProperty(context, ContentType, flow_file);
   if (content_type && !content_type->empty())
     callback.setContentType(*content_type);
 
@@ -149,17 +149,17 @@ minifi_status PutGCSObject::onTriggerImpl(api::core::ProcessContext& context, ap
 
   callback.setEncryptionKey(encryption_key_);
 
-  session.read(flow_file, std::ref(callback));
+  context.read(flow_file, std::ref(callback));
   auto& result = callback.getResult();
   if (!result.ok()) {
-    session.setAttribute(flow_file, GCS_STATUS_MESSAGE, result.status().message());
-    session.setAttribute(flow_file, GCS_ERROR_REASON, result.status().error_info().reason());
-    session.setAttribute(flow_file, GCS_ERROR_DOMAIN, result.status().error_info().domain());
+    context.setAttribute(flow_file, GCS_STATUS_MESSAGE, result.status().message());
+    context.setAttribute(flow_file, GCS_ERROR_REASON, result.status().error_info().reason());
+    context.setAttribute(flow_file, GCS_ERROR_DOMAIN, result.status().error_info().domain());
     logger_->log_error("Failed to upload to Google Cloud Storage {} {}", result.status().message(), result.status().error_info().reason());
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
   } else {
-    setAttributesFromObjectMetadata(flow_file, *result, session);
-    session.transfer(std::move(flow_file), Success);
+    setAttributesFromObjectMetadata(flow_file, *result, context);
+    context.transfer(std::move(flow_file), Success);
   }
   return MINIFI_STATUS_SUCCESS;
 }

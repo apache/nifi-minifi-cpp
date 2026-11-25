@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "api/core/ProcessSession.h"
+#include "api/core/TriggerContext.h"
 #include "api/core/Resource.h"
 #include "api/utils/ProcessorConfigUtils.h"
 #include "minifi-cpp/io/InputStream.h"
@@ -147,12 +147,12 @@ class ReadCallback {
   }
 
   static utils::rd_kafka_headers_unique_ptr make_headers(const api::core::FlowFile& flow_file,
-      const api::core::ProcessSession& session,
+      const api::core::TriggerContext& context,
       const std::optional<utils::Regex>& attribute_name_regex) {
     utils::rd_kafka_headers_unique_ptr result{rd_kafka_headers_new(8)};
     if (!result) { throw std::bad_alloc{}; }
 
-    for (const auto& [attribute_key, attribute_value]: session.getAttributes(flow_file)) {
+    for (const auto& [attribute_key, attribute_value]: context.getAttributes(flow_file)) {
       if (attribute_name_regex && utils::regexMatch(attribute_key, *attribute_name_regex)) {
         rd_kafka_header_add(result.get(),
             attribute_key.c_str(),
@@ -217,7 +217,7 @@ class ReadCallback {
 
  public:
   ReadCallback(const uint64_t max_seg_size, std::string key, rd_kafka_topic_t* const rkt, rd_kafka_t* const rk,
-      uint64_t flow_file_size, const api::core::FlowFile& flowFile, const api::core::ProcessSession& session,
+      uint64_t flow_file_size, const api::core::FlowFile& flowFile, const api::core::TriggerContext& context,
       const std::optional<utils::Regex>& attributeNameRegex, std::shared_ptr<PublishKafka::Messages> messages,
       const size_t flow_file_index, const bool fail_empty_flow_files, std::shared_ptr<core::logging::Logger> logger)
       : flow_size_(flow_file_size),
@@ -225,7 +225,7 @@ class ReadCallback {
         key_(std::move(key)),
         rkt_(rkt),
         rk_(rk),
-        hdrs(make_headers(flowFile, session, attributeNameRegex)),
+        hdrs(make_headers(flowFile, context, attributeNameRegex)),
         messages_(std::move(messages)),
         flow_file_index_(flow_file_index),
         fail_empty_flow_files_(fail_empty_flow_files),
@@ -315,7 +315,7 @@ void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage
 }
 }  // namespace
 
-minifi_status PublishKafka::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status PublishKafka::onScheduleImpl(api::core::ScheduleContext& context) {
   interrupted_ = false;
 
   // Try to get a KafkaConnection
@@ -336,7 +336,7 @@ minifi_status PublishKafka::onScheduleImpl(api::core::ProcessContext& context) {
   logger_->log_debug("PublishKafka: Max Flow Segment Size [{}]", max_flow_seg_size_);
 
   // Attributes to Send as Headers
-  attributeNameRegex_ = context.getProperty(AttributeNameRegex, nullptr)
+  attributeNameRegex_ = context.getProperty(AttributeNameRegex)
     | utils::transform([](auto pattern_str) { return utils::Regex{std::move(pattern_str)}; })
     | utils::toOptional();
 
@@ -346,7 +346,7 @@ minifi_status PublishKafka::onScheduleImpl(api::core::ProcessContext& context) {
   conn_ = std::make_unique<KafkaConnection>(key_);
   configureNewConnection(context);
 
-  if (const auto message_key_field = context.getProperty(MessageKeyField, nullptr); message_key_field && !message_key_field->empty()) {
+  if (const auto message_key_field = context.getProperty(MessageKeyField); message_key_field && !message_key_field->empty()) {
     logger_->log_error("The {} property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", MessageKeyField.name);
   }
 
@@ -371,7 +371,7 @@ void PublishKafka::onUnSchedule() {
   conn_.reset();
 }
 
-void PublishKafka::configureNewConnection(api::core::ProcessContext& context) {
+void PublishKafka::configureNewConnection(api::core::ScheduleContext& context) {
   std::array<char, 512U> err_chars{};
   rd_kafka_conf_res_t result = RD_KAFKA_CONF_OK;
   constexpr std::string_view PREFIX_ERROR_MSG = "PublishKafka: configure error result: ";
@@ -399,7 +399,7 @@ void PublishKafka::configureNewConnection(api::core::ProcessContext& context) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
-  if (const auto debug_context = context.getProperty(DebugContexts, nullptr)) {
+  if (const auto debug_context = context.getProperty(DebugContexts)) {
     result = rd_kafka_conf_set(conf.get(), "debug", debug_context->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: debug [{}]", *debug_context);
     if (result != RD_KAFKA_CONF_OK) {
@@ -408,7 +408,7 @@ void PublishKafka::configureNewConnection(api::core::ProcessContext& context) {
     }
   }
 
-  if (const auto max_message_size = context.getProperty(MaxMessageSize, nullptr); max_message_size && !max_message_size->empty()) {
+  if (const auto max_message_size = context.getProperty(MaxMessageSize); max_message_size && !max_message_size->empty()) {
     result = rd_kafka_conf_set(conf.get(), "message.max.bytes", max_message_size->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: message.max.bytes [{}]", *max_message_size);
     if (result != RD_KAFKA_CONF_OK) {
@@ -462,7 +462,7 @@ void PublishKafka::configureNewConnection(api::core::ProcessContext& context) {
     }
   }
 
-  if (const auto compress_codec = context.getProperty(CompressCodec, nullptr); compress_codec && !compress_codec->empty() && *compress_codec != "none") {
+  if (const auto compress_codec = context.getProperty(CompressCodec); compress_codec && !compress_codec->empty() && *compress_codec != "none") {
     result = rd_kafka_conf_set(conf.get(), "compression.codec", compress_codec->c_str(), err_chars.data(), err_chars.size());
     logger_->log_debug("PublishKafka: compression.codec [{}]", *compress_codec);
     if (result != RD_KAFKA_CONF_OK) {
@@ -476,7 +476,7 @@ void PublishKafka::configureNewConnection(api::core::ProcessContext& context) {
   // Add all the dynamic properties as librdkafka configurations
 
   std::optional<std::string> error_during_on_dyn_props = std::nullopt;
-  for (auto [prop_key, prop_value] : context.getDynamicProperties(nullptr)) {
+  for (auto [prop_key, prop_value] : context.getDynamicProperties()) {
     if (prop_value.empty()) {
       logger_->log_warn(
           "PublishKafka Dynamic Property '{}' is empty and therefore will not be configured",
@@ -510,7 +510,7 @@ void PublishKafka::configureNewConnection(api::core::ProcessContext& context) {
   conn_->setConnection(std::move(producer));
 }
 
-bool PublishKafka::createNewTopic(const api::core::ProcessContext& context, const std::string& topic_name,
+bool PublishKafka::createNewTopic(const api::core::TriggerContext& context, const std::string& topic_name,
     const api::core::FlowFile& flow_file) const {
   utils::rd_kafka_topic_conf_unique_ptr topic_conf_{rd_kafka_topic_conf_new()};
   if (topic_conf_ == nullptr) {
@@ -521,7 +521,7 @@ bool PublishKafka::createNewTopic(const api::core::ProcessContext& context, cons
   rd_kafka_conf_res_t result = RD_KAFKA_CONF_OK;
   std::array<char, 512U> err_chars{};
 
-  if (auto delivery_guarantee = api::utils::parseOptionalProperty(context, DeliveryGuarantee, &flow_file)) {
+  if (auto delivery_guarantee = api::utils::parseOptionalProperty(context, DeliveryGuarantee, flow_file)) {
     /*
      * Because of a previous error in this processor, the default value of this property was "DELIVERY_ONE_NODE".
      * As this is not a valid value for "request.required.acks", the following rd_kafka_topic_conf_set call failed,
@@ -581,20 +581,20 @@ bool PublishKafka::createNewTopic(const api::core::ProcessContext& context, cons
   return true;
 }
 
-std::optional<api::utils::net::SslData> PublishKafka::getSslData(api::core::ProcessContext& context) const {
+std::optional<api::utils::net::SslData> PublishKafka::getSslData(api::core::ScheduleContext& context) const {
   if (auto result = context.getSslData(SSLContextService); result && *result) { return *result; }
 
   api::utils::net::SslData ssl_data;
-  if (auto security_ca = context.getProperty(SecurityCA, nullptr)) { ssl_data.ca_loc = *security_ca; }
-  if (auto security_cert = context.getProperty(SecurityCert, nullptr)) { ssl_data.cert_loc = *security_cert; }
-  if (auto security_private_key = context.getProperty(SecurityPrivateKey, nullptr)) { ssl_data.key_loc = *security_private_key; }
-  if (auto security_private_key_pass = context.getProperty(SecurityPrivateKeyPassWord, nullptr)) {
+  if (auto security_ca = context.getProperty(SecurityCA)) { ssl_data.ca_loc = *security_ca; }
+  if (auto security_cert = context.getProperty(SecurityCert)) { ssl_data.cert_loc = *security_cert; }
+  if (auto security_private_key = context.getProperty(SecurityPrivateKey)) { ssl_data.key_loc = *security_private_key; }
+  if (auto security_private_key_pass = context.getProperty(SecurityPrivateKeyPassWord)) {
     ssl_data.key_pw = *security_private_key_pass;
   }
   return ssl_data;
 }
 
-minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status PublishKafka::onTriggerImpl(api::core::TriggerContext& context) {
   // Check whether we have been interrupted
   if (interrupted_) {
     logger_->log_info("The processor has been interrupted, not running onTrigger");
@@ -608,9 +608,9 @@ minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, ap
   uint64_t actual_bytes = 0U;
   std::vector<api::core::FlowFile> flowFiles;
   for (uint64_t i = 0; i < batch_size_; i++) {
-    auto flowFile = session.get();
+    auto flowFile = context.get();
     if (flowFile == nullptr) { break; }
-    actual_bytes += session.getFlowFileSize(flowFile);
+    actual_bytes += context.getFlowFileSize(flowFile);
     flowFiles.emplace_back(std::move(flowFile));
     if (target_batch_payload_size_ != 0U && actual_bytes >= target_batch_payload_size_) { break; }
   }
@@ -636,9 +636,9 @@ minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, ap
     const size_t flow_file_index = messages->addFlowFile();
 
     // Get Topic (FlowFile-dependent EL property)
-    const auto topic = api::utils::parseOptionalProperty(context, Topic, &flow_file);
-    const std::string flow_file_id = session.getFlowFileId(flow_file);
-    const uint64_t flow_file_size = session.getFlowFileSize(flow_file);
+    const auto topic = api::utils::parseOptionalProperty(context, Topic, flow_file);
+    const std::string flow_file_id = context.getFlowFileId(flow_file);
+    const uint64_t flow_file_size = context.getFlowFileSize(flow_file);
     if (topic) {
       logger_->log_debug("PublishKafka: topic for flow file {} is '{}'", flow_file_id, *topic);
     } else {
@@ -659,7 +659,7 @@ minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, ap
       }
     }
 
-    std::string kafkaKey = api::utils::parseOptionalProperty(context, KafkaKey, &flow_file).value_or(flow_file_id);
+    std::string kafkaKey = api::utils::parseOptionalProperty(context, KafkaKey, flow_file).value_or(flow_file_id);
 
     logger_->log_debug("PublishKafka: Message Key [{}]", kafkaKey);
 
@@ -681,16 +681,16 @@ minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, ap
         conn_->getConnection(),
         flow_file_size,
         flow_file,
-        session,
+        context,
         attributeNameRegex_,
         messages,
         flow_file_index,
         failEmptyFlowFiles,
         logger_);
-    session.read(flow_file, std::ref(callback));
+    context.read(flow_file, std::ref(callback));
 
     if (!callback.called_) {
-      // workaround: call callback since ProcessSession doesn't do so for empty flow files without resource claims
+      // workaround: call callback since TriggerContext doesn't do so for empty flow files without resource claims
       callback(nullptr);
     }
 
@@ -736,29 +736,29 @@ minifi_status PublishKafka::onTriggerImpl(api::core::ProcessContext& context, ap
             logger_->log_error(
                 "Waiting for delivery confirmation was interrupted for flow "
                 "file {} segment {}",
-                session.getFlowFileId(flowFiles[index]),
+                context.getFlowFileId(flowFiles[index]),
                 segment_num);
             break;
           case MessageStatus::Error:
             success = false;
             logger_->log_error("Failed to deliver flow file {} segment {}, error: {}",
-                session.getFlowFileId(flowFiles[index]),
+                context.getFlowFileId(flowFiles[index]),
                 segment_num,
                 rd_kafka_err2str(message.err_code));
             break;
           case MessageStatus::Success:
             logger_->log_debug("Successfully delivered flow file {} segment {}",
-                session.getFlowFileId(flowFiles[index]),
+                context.getFlowFileId(flowFiles[index]),
                 segment_num);
             break;
         }
       }
     }
     if (success) {
-      session.transfer(std::move(flowFiles[index]), Success);
+      context.transfer(std::move(flowFiles[index]), Success);
     } else {
-      session.penalize(flowFiles[index]);
-      session.transfer(std::move(flowFiles[index]), Failure);
+      context.penalize(flowFiles[index]);
+      context.transfer(std::move(flowFiles[index]), Failure);
     }
   });
   return MINIFI_STATUS_SUCCESS;

@@ -54,29 +54,29 @@ class PropertyTester : public api::core::ProcessorImpl {
   using ProcessorImpl::ProcessorImpl;
 
  protected:
-  minifi_status onTriggerImpl(api::core::ProcessContext& process_context, api::core::ProcessSession&) override {
+  minifi_status onTriggerImpl(api::core::TriggerContext& context) override {
     {
-      const std::optional<std::string> optional_value_with_default = api::utils::parseOptionalProperty(process_context,
+      const std::optional<std::string> optional_value_with_default = api::utils::parseOptionalProperty(context,
           OptionalPropertyWithDefaultValue);
       logger_->log_critical("OptionalPropertyWithDefaultValue: {}", optional_value_with_default);
     }
     {
-      const std::optional<std::string> optional_value_without_default = api::utils::parseOptionalProperty(process_context,
+      const std::optional<std::string> optional_value_without_default = api::utils::parseOptionalProperty(context,
           OptionalPropertyWithoutDefaultValue);
       logger_->log_critical("OptionalPropertyWithoutDefaultValue: {}", optional_value_without_default);
     }
     {
-      const std::string required_value_with_default = api::utils::parseProperty(process_context, RequiredPropertyWithDefaultValue);
+      const std::string required_value_with_default = api::utils::parseProperty(context, RequiredPropertyWithDefaultValue);
       logger_->log_critical("RequiredPropertyWithDefaultValue: {}", required_value_with_default);
     }
     {
-      const std::string required_value_without_default = api::utils::parseProperty(process_context, RequiredPropertyWithoutDefaultValue);
+      const std::string required_value_without_default = api::utils::parseProperty(context, RequiredPropertyWithoutDefaultValue);
       logger_->log_critical("RequiredPropertyWithoutDefaultValue: {}", required_value_without_default);
     }
 
     return MINIFI_STATUS_SUCCESS;
   }
-  minifi_status onScheduleImpl(api::core::ProcessContext&) override {
+  minifi_status onScheduleImpl(api::core::ScheduleContext&) override {
     return MINIFI_STATUS_SUCCESS;
   }
 };
