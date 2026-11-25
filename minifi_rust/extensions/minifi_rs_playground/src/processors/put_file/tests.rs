@@ -4,16 +4,16 @@
 
 use super::*;
 use crate::processors::put_file::relationships::{FAILURE, SUCCESS};
-use minifi_native::{MockLogger, MockProcessContext};
+use minifi_native::{MockLogger, MockScheduleContext};
 
 #[test]
 fn schedule_succeeds_with_default_values() {
-    assert!(PutFileRs::schedule(&MockProcessContext::new(), &MockLogger::new()).is_ok());
+    assert!(PutFileRs::schedule(&MockScheduleContext::new(), &MockLogger::new()).is_ok());
 }
 
 #[test]
 fn simple_put_file_test() {
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     let temp_dir = tempfile::tempdir().expect("temp dir is required for testing PutFile");
     let put_file_dir = temp_dir.path().join("subdir");
 
@@ -40,7 +40,7 @@ fn simple_put_file_test() {
 
 #[test]
 fn put_file_without_create_dirs() {
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     let temp_dir = tempfile::tempdir().expect("temp dir is required for testing PutFile");
 
     let put_file_dir = temp_dir.path().join("subdir");
@@ -73,7 +73,7 @@ fn put_file_without_create_dirs() {
 
 #[test]
 fn directory_is_full_counts_only_files() {
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     let temp_dir = tempfile::tempdir().expect("temp dir is required for testing PutFile");
 
     context.properties.insert(
@@ -109,7 +109,7 @@ fn directory_is_full_counts_only_files() {
 #[test]
 fn put_file_test_permissions() {
     use std::os::unix::fs::PermissionsExt;
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     let temp_dir = tempfile::tempdir().expect("temp dir is required for testing PutFile");
     let put_file_dir = temp_dir.path().join("subdir");
 

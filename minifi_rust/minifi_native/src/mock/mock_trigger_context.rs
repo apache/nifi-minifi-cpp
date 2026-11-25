@@ -1,12 +1,14 @@
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
-// SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
-
-use crate::api::process_session::IoState;
-use crate::api::{InputStream, ProcessSession};
-use crate::{MinifiError, MockFlowFile};
+use super::mock_configuration::{MockControllerServices, MockPropertyMap, find_controller_service};
+use crate::api::property::PropertySchema;
+use crate::api::trigger_context::IoState;
+use crate::api::{InputStream, RawControllerService, ScheduleContext, TriggerContext};
+use crate::{
+    ComponentIdentifier, ControllerServiceApi, EnableControllerService, GetProperty, MinifiError,
+    MockFlowFile, MockScheduleContext, Property,
+};
 use itertools::Itertools;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::io::Read;
 
 pub struct TransferredFlowFile {
@@ -14,19 +16,72 @@ pub struct TransferredFlowFile {
     pub flow_file: MockFlowFile,
 }
 
-pub struct MockProcessSession {
-    pub input_flow_files: Vec<MockFlowFile>,
+pub struct MockTriggerContext {
+    pub properties: MockPropertyMap,
+    pub controller_services: MockControllerServices,
+    pub input_flow_files: RefCell<Vec<MockFlowFile>>,
     pub transferred_flow_files: RefCell<Vec<TransferredFlowFile>>,
 }
 
-impl ProcessSession for MockProcessSession {
+impl GetProperty for MockTriggerContext {
+    fn get_raw_property<P: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<P>,
+    ) -> Result<Option<String>, MinifiError> {
+        self.properties.get_property(property, None)
+    }
+}
+
+impl ScheduleContext for MockTriggerContext {
+    fn get_raw_controller_service<Cs, P>(
+        &self,
+        property: &Property<P>,
+    ) -> Result<Option<&Cs>, MinifiError>
+    where
+        Cs: RawControllerService + ComponentIdentifier + 'static,
+        P: PropertySchema + ?Sized,
+    {
+        find_controller_service(&self.properties, &self.controller_services, property)
+    }
+
+    fn get_controller_service<Cs>(
+        &self,
+        property: &Property<Cs>,
+    ) -> Result<Option<&Cs>, MinifiError>
+    where
+        Cs: EnableControllerService + ComponentIdentifier + PropertySchema + 'static,
+    {
+        find_controller_service(&self.properties, &self.controller_services, property)
+    }
+
+    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi + PropertySchema>(
+        &self,
+        _property: &Property<Trait>,
+    ) -> Result<Option<Box<&Trait>>, MinifiError> {
+        Ok(None)
+    }
+}
+
+impl TriggerContext for MockTriggerContext {
     type FlowFile = MockFlowFile;
 
-    fn create(&mut self) -> Result<Self::FlowFile, MinifiError> {
+    fn get_raw_flow_file_property<P: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<P>,
+        flow_file: &Self::FlowFile,
+    ) -> Result<Option<String>, MinifiError> {
+        self.properties.get_property(property, Some(flow_file))
+    }
+
+    fn report_metrics(&self, _metrics: Vec<(String, f64)>) -> Result<(), MinifiError> {
+        Ok(())
+    }
+
+    fn create(&self) -> Result<Self::FlowFile, MinifiError> {
         Ok(Self::FlowFile::new())
     }
-    fn get(&mut self) -> Option<Self::FlowFile> {
-        self.input_flow_files.pop()
+    fn get(&self) -> Option<Self::FlowFile> {
+        self.input_flow_files.borrow_mut().pop()
     }
     fn transfer(&self, flow_file: Self::FlowFile, relationship: &str) -> Result<(), MinifiError> {
         self.transferred_flow_files
@@ -38,7 +93,7 @@ impl ProcessSession for MockProcessSession {
         Ok(())
     }
 
-    fn remove(&mut self, _flow_file: Self::FlowFile) -> Result<(), MinifiError> {
+    fn remove(&self, _flow_file: Self::FlowFile) -> Result<(), MinifiError> {
         Ok(())
     }
 
@@ -90,7 +145,7 @@ impl ProcessSession for MockProcessSession {
     fn write_stream<F, R>(&self, flow_file: &Self::FlowFile, callback: F) -> Result<R, MinifiError>
     where
         F: FnOnce(
-            &mut dyn crate::api::process_session::OutputStream,
+            &mut dyn crate::api::trigger_context::OutputStream,
         ) -> Result<(R, IoState), MinifiError>,
     {
         let mut new_content: Vec<u8> = Vec::new();
@@ -120,17 +175,19 @@ impl ProcessSession for MockProcessSession {
     }
 }
 
-impl Default for MockProcessSession {
+impl Default for MockTriggerContext {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MockProcessSession {
+impl MockTriggerContext {
     pub fn new() -> Self {
         Self {
+            properties: MockPropertyMap::new(),
+            controller_services: HashMap::new(),
+            input_flow_files: RefCell::new(Vec::new()),
             transferred_flow_files: RefCell::new(Vec::new()),
-            input_flow_files: Vec::new(),
         }
     }
 
@@ -139,19 +196,29 @@ impl MockProcessSession {
     }
 }
 
+impl From<MockScheduleContext> for MockTriggerContext {
+    fn from(schedule_context: MockScheduleContext) -> Self {
+        Self {
+            properties: schedule_context.properties,
+            controller_services: schedule_context.controller_services,
+            ..Self::new()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::process_session::IoState;
+    use crate::api::trigger_context::IoState;
 
     #[test]
     fn test_write_from_stream_replaces_content() {
-        let session = MockProcessSession::new();
+        let context = MockTriggerContext::new();
         let flow_file = MockFlowFile::new();
         *flow_file.content.borrow_mut() = b"Hello, World!".to_vec();
 
         let source: &[u8] = b"Hi";
-        session
+        context
             .write_from_stream(&flow_file, Box::new(source))
             .expect("write_from_stream should succeed");
 
@@ -160,12 +227,12 @@ mod tests {
 
     #[test]
     fn test_write_stream_replaces_content() {
-        let session = MockProcessSession::new();
+        let context = MockTriggerContext::new();
         let flow_file = MockFlowFile::new();
         // Pre-populate the flow file with longer content
         *flow_file.content.borrow_mut() = b"Hello, World!".to_vec();
 
-        let res: Result<(), MinifiError> = session.write_stream(&flow_file, |stream| {
+        let res: Result<(), MinifiError> = context.write_stream(&flow_file, |stream| {
             stream.write_all(b"Hi")?;
             Ok(((), IoState::Ok))
         });

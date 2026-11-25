@@ -222,7 +222,7 @@ mod tests {
     use crate::test_utils;
     use minifi_native::{
         ComponentIdentifier, EnableControllerService, IoState, MockControllerServiceContext,
-        MockLogger, MockProcessContext, test,
+        MockLogger, MockScheduleContext, test,
     };
     #[test]
     fn test_ids() {
@@ -237,7 +237,7 @@ mod tests {
     #[test]
     fn cannot_schedule_without_password_or_public_key() {
         assert!(
-            EncryptContentPGP::schedule(&MockProcessContext::new(), &MockLogger::new()).is_err()
+            EncryptContentPGP::schedule(&MockScheduleContext::new(), &MockLogger::new()).is_err()
         );
     }
 
@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn encrypts_via_passphrase() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context
             .properties
             .insert(SYMMETRIC_PASSPHRASE.name(), "password");
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn encrypts_ascii_for_alice() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.extend([
             ("Public Key Service", "my_controller_service"),
             ("Public Key Search", "Alice"),
@@ -307,7 +307,7 @@ mod tests {
 
     #[test]
     fn encrypts_binary_for_bob() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.extend([
             ("Public Key Service", "my_controller_service"),
             ("Public Key Search", "Bob"),
@@ -333,7 +333,7 @@ mod tests {
 
     #[test]
     fn cannot_encrypt_for_carol() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.extend([
             ("Public Key Service", "my_controller_service"),
             ("Public Key Search", "Carol"),
@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn configured_public_key_miss_fails_even_with_password() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.extend([
             ("Public Key Service", "my_controller_service"),
             ("Public Key Search", "Carol"),

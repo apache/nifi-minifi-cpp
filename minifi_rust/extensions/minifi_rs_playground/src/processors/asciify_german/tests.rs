@@ -4,22 +4,22 @@
 
 use super::*;
 use crate::processors::asciify_german::relationships::SUCCESS;
-use minifi_native::{IoState, MockLogger, MockProcessContext, test};
+use minifi_native::{IoState, MockLogger, MockScheduleContext, test};
 use std::io::BufReader;
 
 #[test]
 fn schedule_succeeds_with_default_values() {
-    assert!(AsciifyGerman::schedule(&MockProcessContext::new(), &MockLogger::new()).is_ok());
+    assert!(AsciifyGerman::schedule(&MockScheduleContext::new(), &MockLogger::new()).is_ok());
 }
 
 #[test]
 fn simple_test() {
-    let process_context = MockProcessContext::new();
-    let context = MockProcessContext::new();
+    let schedule_context = MockScheduleContext::new();
+    let context = MockScheduleContext::new();
     let logger = MockLogger::new();
 
     let asciify_german =
-        AsciifyGerman::schedule(&process_context, &logger).expect("Should succeed");
+        AsciifyGerman::schedule(&schedule_context, &logger).expect("Should succeed");
     let input_str = "Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.";
     let mut input_stream = BufReader::new(input_str.as_bytes());
     let mut output_vec: Vec<u8> = Vec::new();
@@ -38,12 +38,12 @@ fn simple_test() {
 
 #[test]
 fn simple_failure_test() {
-    let process_context = MockProcessContext::new();
-    let context = MockProcessContext::new();
+    let schedule_context = MockScheduleContext::new();
+    let context = MockScheduleContext::new();
     let logger = MockLogger::new();
 
     let asciify_german =
-        AsciifyGerman::schedule(&process_context, &logger).expect("Should succeed");
+        AsciifyGerman::schedule(&schedule_context, &logger).expect("Should succeed");
     let input_str = "Üldögélő műújságíró";
     let mut input_stream = BufReader::new(input_str.as_bytes());
     let mut output_vec: Vec<u8> = Vec::new();
@@ -59,7 +59,7 @@ fn simple_failure_test() {
 
 #[test]
 fn truncated_umlaut_at_eof_routes_to_failure() {
-    let context = MockProcessContext::new();
+    let context = MockScheduleContext::new();
     let logger = MockLogger::new();
 
     let asciify_german = AsciifyGerman::schedule(&context, &logger).expect("Should succeed");

@@ -4,7 +4,7 @@
 
 use crate::GetControllerService;
 use crate::api::{RawProcessor, ThreadingModel};
-use crate::{GetProperty, LogLevel, Logger, MinifiError, ProcessContext};
+use crate::{GetProperty, LogLevel, Logger, MinifiError, ScheduleContext};
 use std::marker::PhantomData;
 
 pub trait Schedule {
@@ -52,7 +52,7 @@ where
         self.logger.log(log_level, args);
     }
 
-    fn schedule<P: ProcessContext>(&mut self, context: &P) -> Result<(), MinifiError> {
+    fn schedule<P: ScheduleContext>(&mut self, context: &P) -> Result<(), MinifiError> {
         self.scheduled_impl = Some(Impl::schedule(context, &self.logger)?);
         Ok(())
     }

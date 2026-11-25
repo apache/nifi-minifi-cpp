@@ -2,14 +2,14 @@
 // SPDX-FileCopyrightText: See the NOTICE file distributed with this work for additional information regarding copyright ownership
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
-use crate::api::process_session::IoState;
-use crate::api::processor_wrappers::utils::context_session_flowfile_bundle::ContextSessionFlowFileBundle;
+use crate::api::processor_wrappers::utils::flow_file_context::FlowFileContext;
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
+use crate::api::trigger_context::IoState;
 use crate::{FlowFileAttribute, impl_with_attributes};
 use crate::{
     GetAttribute, GetControllerService, GetProperty, InputStream, LogLevel, Logger, MinifiError,
-    MultiThreaded, OnTriggerResult, OutputStream, ProcessContext, ProcessSession, Processor,
-    ProcessorDefinition, Relationship, Schedule, SingleThreaded, TransformError,
+    MultiThreaded, OnTriggerResult, OutputStream, Processor, ProcessorDefinition, Relationship,
+    Schedule, SingleThreaded, TransformError, TriggerContext,
 };
 use minifi_native::GetId;
 
@@ -63,7 +63,7 @@ pub trait FlowFileStreamTransform: ProcessorDefinition {
     /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
     /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
     ///
-    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// To roll the trigger back instead of routing, return [`TransformError::Rollback`] or use
     /// [`crate::TransformErrorExt::rollback_err`].
     const ERROR_RELATIONSHIP: &'static Relationship;
 
@@ -89,7 +89,7 @@ pub trait MutFlowFileStreamTransform: ProcessorDefinition {
     /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
     /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
     ///
-    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// To roll the trigger back instead of routing, return [`TransformError::Rollback`] or use
     /// [`crate::TransformErrorExt::rollback_err`].
     const ERROR_RELATIONSHIP: &'static Relationship;
 
@@ -110,28 +110,26 @@ pub trait MutFlowFileStreamTransform: ProcessorDefinition {
 
 pub struct FlowFileStreamTransformProcessorType {}
 
-fn handle_stream_transform<PC, PS, L, F>(
-    context: &mut PC,
-    session: &mut PS,
+fn handle_stream_transform<TC, L, F>(
+    context: &TC,
     logger: &L,
     error_relationship: &Relationship,
     mut transform_fn: F,
 ) -> Result<OnTriggerResult, MinifiError>
 where
-    PC: ProcessContext,
-    PS: ProcessSession<FlowFile = PC::FlowFile>,
+    TC: TriggerContext,
     L: Logger,
     F: FnMut(
-        &ContextSessionFlowFileBundle<PC, PS>,
+        &FlowFileContext<TC>,
         &mut dyn InputStream,
         &mut dyn OutputStream,
     ) -> Result<TransformStreamResult, TransformError>,
 {
-    if let Some(mut flow_file) = session.get() {
-        let simple_context = ContextSessionFlowFileBundle::new(context, session, Some(&flow_file));
+    if let Some(mut flow_file) = context.get() {
+        let simple_context = FlowFileContext::new(context, Some(&flow_file));
 
-        let (relationship, attrs) = session.read_stream(&flow_file, |input_stream| {
-            session.write_stream(&flow_file, |output_stream| {
+        let (relationship, attrs) = context.read_stream(&flow_file, |input_stream| {
+            context.write_stream(&flow_file, |output_stream| {
                 let transformed = match transform_fn(&simple_context, input_stream, output_stream) {
                     Ok(t) => t,
                     Err(err) => match err.into_route(error_relationship) {
@@ -154,10 +152,10 @@ where
         })?;
 
         for (k, v) in attrs {
-            session.set_attribute(&mut flow_file, &k, &v)?;
+            context.set_attribute(&mut flow_file, &k, &v)?;
         }
 
-        session.transfer(flow_file, relationship.as_ref())?;
+        context.transfer(flow_file, relationship.as_ref())?;
 
         Ok(OnTriggerResult::Ok)
     } else {
@@ -172,21 +170,15 @@ where
     Implementation: Schedule + FlowFileStreamTransform,
     L: Logger,
 {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
-    {
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError> {
         // Const defaults are lazy; this forces the check.
         let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref scheduled_impl) = self.scheduled_impl {
             handle_stream_transform(
                 context,
-                session,
                 &self.logger,
                 Implementation::ERROR_RELATIONSHIP,
                 |ctx, input, output| scheduled_impl.transform(ctx, input, output, &self.logger),
@@ -203,21 +195,15 @@ where
     Implementation: Schedule + MutFlowFileStreamTransform,
     L: Logger,
 {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &mut self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
-    {
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError> {
         // Const defaults are lazy; this forces the check.
         let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
             handle_stream_transform(
                 context,
-                session,
                 &self.logger,
                 Implementation::ERROR_RELATIONSHIP,
                 |ctx, input, output| scheduled_impl.transform(ctx, input, output, &self.logger),
@@ -234,8 +220,8 @@ mod tests {
     use crate::api::RawProcessor;
     use crate::api::errors::TransformErrorExt;
     use crate::{
-        MockFlowFile, MockLogger, MockProcessContext, MockProcessSession, OutputAttribute,
-        ProcessorInputRequirement, PropertyDefinition,
+        MockFlowFile, MockLogger, MockTriggerContext, OutputAttribute, ProcessorInputRequirement,
+        PropertyDefinition,
     };
 
     const TEST_RELATIONSHIP: Relationship = Relationship {
@@ -288,19 +274,19 @@ mod tests {
         > = Processor::new(MockLogger::new());
         processor.scheduled_impl = Some(PartialWriteThenError);
 
-        let mut context = MockProcessContext::new();
-        let mut session = MockProcessSession::new();
-        session
+        let mut context = MockTriggerContext::new();
+        context
             .input_flow_files
+            .borrow_mut()
             .push(MockFlowFile::with_content(b"original"));
 
-        let result = MultiThreadedTrigger::trigger(&processor, &mut context, &mut session);
+        let result = MultiThreadedTrigger::trigger(&processor, &mut context);
         assert_eq!(
             result.expect("should route to failure, not roll back"),
             OnTriggerResult::Ok
         );
 
-        let transferred = session.transferred_flow_files.borrow();
+        let transferred = context.transferred_flow_files.borrow();
         assert_eq!(transferred.len(), 1);
         assert_eq!(transferred[0].relationship, "failure");
         assert_eq!(*transferred[0].flow_file.content.borrow(), b"original");

@@ -136,7 +136,7 @@ mod tests {
     use crate::test_utils::get_test_message;
     use minifi_native::{
         ComponentIdentifier, EnableControllerService, IoState, MockControllerServiceContext,
-        MockLogger, MockProcessContext, test,
+        MockLogger, MockScheduleContext, test,
     };
     #[test]
     fn test_ids() {
@@ -151,13 +151,13 @@ mod tests {
     #[test]
     fn fails_to_schedule_by_default() {
         let decrypt_content =
-            DecryptContentPGP::schedule(&MockProcessContext::new(), &MockLogger::new());
+            DecryptContentPGP::schedule(&MockScheduleContext::new(), &MockLogger::new());
         assert!(decrypt_content.is_err());
     }
 
     #[test]
     fn schedules_with_password() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.insert(
             SYMMETRIC_PASSPHRASE.name(),
             "my_secret_password".to_string(),
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn schedule_fails_with_invalid_controller() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.insert(
             PRIVATE_KEY_SERVICE.name(),
             "invalid_private_key_service".to_string(),
@@ -205,7 +205,7 @@ mod tests {
         symmetric_password: Option<&'static str>,
         expected_result: Result<&[u8], ()>,
     ) {
-        let mut processor_context = MockProcessContext::new();
+        let mut processor_context = MockScheduleContext::new();
         if let Some(private_key) = private_key_data {
             processor_context.controller_services.insert(
                 "my_private_key_service".to_string(),
@@ -321,7 +321,7 @@ mod tests {
         let key_service = PGPPublicKeyService::enable(&key_service_context, &MockLogger::new())
             .expect("should enable");
 
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.extend([
             ("Public Key Service", "my_public_key_service"),
             ("Public Key Search", public_key_search),
@@ -346,7 +346,7 @@ mod tests {
     }
 
     fn decrypt_with(private_key_data: PrivateKeyData, ciphertext: Vec<u8>) -> Vec<u8> {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.controller_services.insert(
             "my_private_key_service".to_string(),
             Box::new(private_key_data.into_controller()),
@@ -402,7 +402,7 @@ mod tests {
             key_filename: "mixed_secret_keyring.gpg",
             passphrase: Some("whiterabbit"),
         };
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.controller_services.insert(
             "my_private_key_service".to_string(),
             Box::new(alice_password_only.into_controller()),
@@ -427,7 +427,7 @@ mod tests {
             passphrase: Some("whiterabbit"),
         };
 
-        let mut processor_context = MockProcessContext::new();
+        let mut processor_context = MockScheduleContext::new();
         processor_context.controller_services.insert(
             "my_private_key_service".to_string(),
             Box::new(alice_private_key.into_controller()),

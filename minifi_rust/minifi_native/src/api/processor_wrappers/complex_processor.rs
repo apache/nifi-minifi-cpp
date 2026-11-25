@@ -4,33 +4,29 @@
 
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
-    ComponentIdentifier, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
-    ProcessSession, Processor, ProcessorDefinition, Schedule, SingleThreaded,
+    ComponentIdentifier, Logger, MinifiError, MultiThreaded, OnTriggerResult, Processor,
+    ProcessorDefinition, Schedule, SingleThreaded, TriggerContext,
 };
 
 pub trait MutTrigger {
-    fn trigger<Ctx, Session, Lggr>(
+    fn trigger<TC, Lggr>(
         &mut self,
-        context: &mut Ctx,
-        session: &mut Session,
+        context: &mut TC,
         logger: &Lggr,
     ) -> Result<OnTriggerResult, MinifiError>
     where
-        Ctx: ProcessContext,
-        Session: ProcessSession<FlowFile = Ctx::FlowFile>,
+        TC: TriggerContext,
         Lggr: Logger;
 }
 
 pub trait Trigger {
-    fn trigger<Context, Session, Lggr>(
+    fn trigger<TC, Lggr>(
         &self,
-        context: &mut Context,
-        session: &mut Session,
+        context: &mut TC,
         logger: &Lggr,
     ) -> Result<OnTriggerResult, MinifiError>
     where
-        Context: ProcessContext,
-        Session: ProcessSession<FlowFile = Context::FlowFile>,
+        TC: TriggerContext,
         Lggr: Logger;
 }
 
@@ -42,17 +38,12 @@ where
     Implementation: Schedule + MutTrigger + ComponentIdentifier + ProcessorDefinition,
     L: Logger,
 {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &mut self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
-    {
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError> {
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
-            scheduled_impl.trigger(context, session, &self.logger)
+            scheduled_impl.trigger(context, &self.logger)
         } else {
             Err(MinifiError::UnscheduledProcessor)
         }
@@ -65,17 +56,12 @@ where
     Implementation: Schedule + Trigger + ComponentIdentifier + ProcessorDefinition,
     L: Logger,
 {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
-    {
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError> {
         if let Some(ref scheduled_impl) = self.scheduled_impl {
-            scheduled_impl.trigger(context, session, &self.logger)
+            scheduled_impl.trigger(context, &self.logger)
         } else {
             Err(MinifiError::UnscheduledProcessor)
         }

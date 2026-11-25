@@ -9,13 +9,13 @@ mod c_ffi_flow_file;
 mod c_ffi_logger;
 mod c_ffi_output_attribute;
 mod c_ffi_primitives;
-mod c_ffi_process_context;
-mod c_ffi_process_session;
 mod c_ffi_processor_definition;
 mod c_ffi_processor_list;
 mod c_ffi_property;
 mod c_ffi_relationship;
+mod c_ffi_schedule_context;
 mod c_ffi_streams;
+mod c_ffi_trigger_context;
 
 pub use c_ffi_controller_service_definition::CffiControllerServiceDefinition;
 pub use c_ffi_controller_service_definition::DynRawControllerServiceDefinition;

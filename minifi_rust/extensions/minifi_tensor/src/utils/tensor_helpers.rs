@@ -141,7 +141,7 @@ pub(crate) fn load_as_image(input_stream: &mut dyn InputStream) -> ImageResult<D
 #[cfg(test)]
 mod tests {
     use super::*;
-    use minifi_native::MockProcessContext;
+    use minifi_native::MockScheduleContext;
     use std::assert_matches;
     use std::io::Cursor;
 
@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn misaligned_attrs_and_content_deserialize_tensors() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         let floats: Vec<f32> = vec![0.0f32; 6];
 
         let bytes: Vec<u8> = floats.into_iter().flat_map(|f| f.to_le_bytes()).collect();
@@ -218,7 +218,7 @@ mod tests {
         // A `tensor.N.bytes` large enough to overflow `cursor + tensor_len` must
         // still be rejected: the wrapped sum used to slip past the bounds check
         // and panic on the slice (aborting the process, since panic = "abort").
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         let bytes: Vec<u8> = vec![0u8; 8];
         let input_stream = Cursor::new(bytes);
 

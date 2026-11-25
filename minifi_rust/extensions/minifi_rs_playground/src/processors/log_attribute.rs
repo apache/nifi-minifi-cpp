@@ -8,8 +8,8 @@ use crate::processors::log_attribute::properties::{FLOW_FILES_TO_LOG, LOG_LEVEL,
 use minifi_native::StandardPropertyValidator::NonBlankValidator;
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, LogLevel, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
-    PropertyConstraints, PropertySchema, PropertyType, Schedule, Trigger, debug, log, trace,
+    GetProperty, LogLevel, Logger, MinifiError, OnTriggerResult, PropertyConstraints,
+    PropertySchema, PropertyType, Schedule, Trigger, TriggerContext, debug, log, trace,
 };
 
 mod properties;
@@ -43,16 +43,16 @@ pub(crate) struct LogAttributeRs {
 }
 
 impl LogAttributeRs {
-    fn generate_log_message<PS>(&self, session: &mut PS, flow_file: &PS::FlowFile) -> String
+    fn generate_log_message<TC>(&self, context: &TC, flow_file: &TC::FlowFile) -> String
     where
-        PS: ProcessSession,
+        TC: TriggerContext,
     {
         let mut log_msg = String::with_capacity(1024);
         log_msg.push_str("Logging for flow file\n");
         log_msg.push_str(self.dash_line.as_str());
 
         log_msg.push_str("\nFlowFile Attributes Map Content");
-        session.for_each_attribute(flow_file, |key, value| {
+        context.for_each_attribute(flow_file, |key, value| {
             if let Some(attributes_to_ignore) = &self.attributes_to_ignore
                 && attributes_to_ignore.iter().any(|ign| ign == key)
             {
@@ -67,7 +67,7 @@ impl LogAttributeRs {
         });
         if self.log_payload {
             log_msg.push_str("\nPayload:\n");
-            if let Some(flow_file_payload) = session.read(flow_file) {
+            if let Some(flow_file_payload) = context.read(flow_file) {
                 if self.hex_encode_payload {
                     log_msg.push_str(&hex::encode(flow_file_payload));
                 } else {
@@ -86,15 +86,9 @@ impl LogAttributeRs {
 }
 
 impl Trigger for LogAttributeRs {
-    fn trigger<PC, PS, L>(
-        &self,
-        _context: &mut PC,
-        session: &mut PS,
-        logger: &L,
-    ) -> Result<OnTriggerResult, MinifiError>
+    fn trigger<TC, L>(&self, context: &mut TC, logger: &L) -> Result<OnTriggerResult, MinifiError>
     where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
+        TC: TriggerContext,
         L: Logger,
     {
         trace!(
@@ -108,10 +102,10 @@ impl Trigger for LogAttributeRs {
         };
         let mut flow_files_processed = 0usize;
         for _ in 0..max_flow_files_to_process {
-            if let Some(flow_file) = session.get() {
-                let log_msg = self.generate_log_message(session, &flow_file);
+            if let Some(flow_file) = context.get() {
+                let log_msg = self.generate_log_message(context, &flow_file);
                 log!(logger, self.log_level, "{}", log_msg);
-                session.transfer(flow_file, relationships::SUCCESS.name)?;
+                context.transfer(flow_file, relationships::SUCCESS.name)?;
                 flow_files_processed += 1;
             } else {
                 break;

@@ -6,8 +6,7 @@
 
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
-    Trigger,
+    GetProperty, Logger, MinifiError, OnTriggerResult, Schedule, Trigger, TriggerContext,
 };
 use rand::RngExt;
 use rand::distr::Alphanumeric;
@@ -129,15 +128,9 @@ impl GenerateFlowFileRs {
 }
 
 impl Trigger for GenerateFlowFileRs {
-    fn trigger<PC, PS, L>(
-        &self,
-        context: &mut PC,
-        session: &mut PS,
-        _logger: &L,
-    ) -> Result<OnTriggerResult, MinifiError>
+    fn trigger<TC, L>(&self, context: &mut TC, _logger: &L) -> Result<OnTriggerResult, MinifiError>
     where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
+        TC: TriggerContext,
     {
         let custom_text_for_batch: Option<String>;
 
@@ -148,7 +141,7 @@ impl Trigger for GenerateFlowFileRs {
             // flow files.
             custom_text_for_batch = Some(
                 context
-                    .get_raw_property(&properties::CUSTOM_TEXT, None)?
+                    .get_raw_property(&properties::CUSTOM_TEXT)?
                     .ok_or_else(|| {
                         MinifiError::custom(
                             "GenerateFlowFile is in CustomText mode but the \"Custom Text\" \
@@ -162,17 +155,17 @@ impl Trigger for GenerateFlowFileRs {
         };
 
         for _ in 0..self.batch_size {
-            let ff = session.create()?;
+            let ff = context.create()?;
             if self.mode != Mode::Empty {
                 if self.is_unique() {
                     let mut unique_data: Vec<u8> = vec![0; self.file_size as usize];
                     Self::generate_data(&mut unique_data, self.is_text());
-                    session.write(&ff, unique_data.as_slice())?;
+                    context.write(&ff, unique_data.as_slice())?;
                 } else {
-                    session.write(&ff, non_unique_data_buffer)?;
+                    context.write(&ff, non_unique_data_buffer)?;
                 }
             }
-            session.transfer(ff, relationships::SUCCESS.name)?;
+            context.transfer(ff, relationships::SUCCESS.name)?;
         }
         Ok(OnTriggerResult::Ok)
     }

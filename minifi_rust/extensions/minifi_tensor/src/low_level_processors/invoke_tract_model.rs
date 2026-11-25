@@ -86,13 +86,13 @@ impl FlowFileTransform for InvokeTractModel {
 mod tests {
     use crate::InvokeTractModel;
     use minifi_native::FlowFileTransform;
-    use minifi_native::{MockLogger, MockProcessContext};
+    use minifi_native::{MockLogger, MockScheduleContext};
     use std::io::Cursor;
 
     #[test]
     fn test_transform_missing_controller_service_throws_error() {
         let processor = InvokeTractModel {};
-        let context = MockProcessContext::new();
+        let context = MockScheduleContext::new();
         let mut stream = Cursor::new(vec![]);
         let logger = MockLogger::new();
 

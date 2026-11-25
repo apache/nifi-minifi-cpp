@@ -6,17 +6,17 @@ use super::*;
 use crate::processors::generate_flow_file::properties::{
     BATCH_SIZE, CUSTOM_TEXT, DATA_FORMAT, UNIQUE_FLOW_FILES,
 };
-use minifi_native::{MockLogger, MockProcessContext, MockProcessSession};
+use minifi_native::{MockLogger, MockScheduleContext, MockTriggerContext};
 
 #[test]
 fn schedule_succeeds_with_default_values() {
-    assert!(GenerateFlowFileRs::schedule(&MockProcessContext::new(), &MockLogger::new()).is_ok());
+    assert!(GenerateFlowFileRs::schedule(&MockScheduleContext::new(), &MockLogger::new()).is_ok());
 }
 
 #[test]
 fn generate_flow_file_empty_test() {
     let logger = MockLogger::new();
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context
         .properties
         .insert(properties::FILE_SIZE.name().to_string(), "0".to_string());
@@ -28,21 +28,19 @@ fn generate_flow_file_empty_test() {
         .insert(DATA_FORMAT.name().to_string(), "Text".to_string());
 
     let processor = GenerateFlowFileRs::schedule(&context, &logger).unwrap();
-    let mut session = MockProcessSession::new();
+    let mut trigger_context = MockTriggerContext::from(context);
     assert_eq!(
-        processor
-            .trigger(&mut context, &mut session, &logger)
-            .unwrap(),
+        processor.trigger(&mut trigger_context, &logger).unwrap(),
         OnTriggerResult::Ok
     );
-    let result_flow_files = session.transferred_flow_files.borrow();
+    let result_flow_files = trigger_context.transferred_flow_files.borrow();
     assert_eq!(result_flow_files.len(), 1);
     assert_eq!(result_flow_files[0].flow_file.content_len(), 0);
 }
 
 #[test]
 fn generate_custom_text() {
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context
         .properties
         .insert(properties::FILE_SIZE.name().to_string(), "0".to_string());
@@ -59,21 +57,21 @@ fn generate_custom_text() {
     let logger = MockLogger::new();
     let processor = GenerateFlowFileRs::schedule(&context, &logger).unwrap();
 
-    let mut session = MockProcessSession::new();
+    let mut trigger_context = MockTriggerContext::from(context);
     assert_eq!(
         processor
-            .trigger(&mut context, &mut session, &logger)
+            .trigger(&mut trigger_context, &logger)
             .expect("Should trigger successfully"),
         OnTriggerResult::Ok
     );
-    let result_flow_files = session.transferred_flow_files.borrow();
+    let result_flow_files = trigger_context.transferred_flow_files.borrow();
     assert_eq!(result_flow_files.len(), 1);
     assert!(result_flow_files[0].flow_file.content_eq("foo bar baz"),);
 }
 
 #[test]
 fn random_bytes_unique() {
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context
         .properties
         .insert(properties::FILE_SIZE.name().to_string(), "40 B".to_string());
@@ -89,14 +87,14 @@ fn random_bytes_unique() {
 
     let logger = MockLogger::new();
     let processor = GenerateFlowFileRs::schedule(&context, &logger).unwrap();
-    let mut session = MockProcessSession::new();
+    let mut trigger_context = MockTriggerContext::from(context);
     assert_eq!(
         processor
-            .trigger(&mut context, &mut session, &logger)
+            .trigger(&mut trigger_context, &logger)
             .expect("Should trigger successfully"),
         OnTriggerResult::Ok
     );
-    let result_flow_files = session.transferred_flow_files.borrow();
+    let result_flow_files = trigger_context.transferred_flow_files.borrow();
     assert_eq!(result_flow_files.len(), 2);
     assert_eq!(result_flow_files[0].flow_file.content_len(), 40);
     assert_eq!(result_flow_files[1].flow_file.content_len(), 40);
@@ -108,7 +106,7 @@ fn random_bytes_unique() {
 
 #[test]
 fn random_bytes_non_unique() {
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context
         .properties
         .insert(properties::FILE_SIZE.name().to_string(), "40 B".to_string());
@@ -124,14 +122,14 @@ fn random_bytes_non_unique() {
 
     let logger = MockLogger::new();
     let processor = GenerateFlowFileRs::schedule(&context, &logger).unwrap();
-    let mut session = MockProcessSession::new();
+    let mut trigger_context = MockTriggerContext::from(context);
     assert_eq!(
         processor
-            .trigger(&mut context, &mut session, &logger)
+            .trigger(&mut trigger_context, &logger)
             .expect("Should trigger successfully"),
         OnTriggerResult::Ok
     );
-    let result_flow_files = session.transferred_flow_files.borrow();
+    let result_flow_files = trigger_context.transferred_flow_files.borrow();
     assert_eq!(result_flow_files.len(), 2);
     assert_eq!(result_flow_files[0].flow_file.content_len(), 40);
     assert_eq!(result_flow_files[1].flow_file.content_len(), 40);

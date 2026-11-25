@@ -12,8 +12,7 @@ use crate::processors::kamikaze_processor::properties::{
 };
 use minifi_native::macros::{ComponentIdentifier, PropertyType};
 use minifi_native::{
-    GetProperty, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession, Schedule,
-    Trigger,
+    GetProperty, Logger, MinifiError, OnTriggerResult, Schedule, Trigger, TriggerContext,
 };
 use strum_macros::{Display, EnumString, IntoStaticStr, VariantNames};
 
@@ -63,15 +62,9 @@ impl Schedule for KamikazeProcessorRs {
 }
 
 impl Trigger for KamikazeProcessorRs {
-    fn trigger<PC, PS, L>(
-        &self,
-        context: &mut PC,
-        _session: &mut PS,
-        _logger: &L,
-    ) -> Result<OnTriggerResult, MinifiError>
+    fn trigger<TC, L>(&self, context: &mut TC, _logger: &L) -> Result<OnTriggerResult, MinifiError>
     where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
+        TC: TriggerContext,
         L: Logger,
     {
         match self.trigger_behaviour {
@@ -83,7 +76,7 @@ impl Trigger for KamikazeProcessorRs {
                 panic!("KamikazeProcessor::trigger panic")
             }
             KamikazeBehaviour::GetNotRegisteredProperty => {
-                let _ = context.get_raw_property(&NOT_REGISTERED_PROPERTY, None)?;
+                let _ = context.get_raw_property(&NOT_REGISTERED_PROPERTY)?;
                 Ok(OnTriggerResult::Ok)
             }
             KamikazeBehaviour::GetInvalidControllerService => {

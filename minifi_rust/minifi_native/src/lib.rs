@@ -41,21 +41,21 @@ pub use api::property::{
 
 pub use api::provided_interface::{ControllerServiceApi, ProvidedInterface};
 
-pub use api::process_session::IoState;
+pub use api::trigger_context::IoState;
 
 pub use api::attribute::{GetAttribute, OutputAttribute};
 
 pub use api::{
     DataSize, FlowFile, GetId, InputStream, NonBlankPath, OnTriggerResult, OutputStream,
-    ProcessContext, ProcessSession, ProcessorInputRequirement, PropertyConstraints, PropertyType,
-    Relationship, StandardPropertyValidator,
+    ProcessorInputRequirement, PropertyConstraints, PropertyType, Relationship, ScheduleContext,
+    StandardPropertyValidator, TriggerContext,
 };
 
 pub use minifi_native_macros as macros;
 pub use minifi_native_sys as sys;
 pub use mock::{
-    MockControllerServiceContext, MockFlowFile, MockLogger, MockProcessContext, MockProcessSession,
-    StdLogger,
+    MockControllerServiceContext, MockFlowFile, MockLogger, MockScheduleContext,
+    MockTriggerContext, StdLogger,
 };
 pub use test_utils as test;
 

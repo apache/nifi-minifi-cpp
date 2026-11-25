@@ -6,8 +6,8 @@ use std::ffi::c_void;
 use std::ptr;
 
 use super::c_ffi_primitives::StaticStrAsMinifiCStr;
-use super::c_ffi_process_context::CffiProcessContext;
-use super::c_ffi_process_session::CffiProcessSession;
+use super::c_ffi_schedule_context::CffiScheduleContext;
+use super::c_ffi_trigger_context::CffiTriggerContext;
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::api::{ProcessorInputRequirement, RawProcessor, ThreadingModel};
 use crate::c_ffi::CffiLogger;
@@ -59,9 +59,8 @@ where
     ) -> minifi_status {
         unsafe {
             let processor = &*(processor_ptr as *const T);
-            let mut context = CffiProcessContext::new(context_ptr);
-            let mut session = CffiProcessSession::new(session_ptr);
-            process_error_to_status(processor, processor.trigger(&mut context, &mut session))
+            let mut context = CffiTriggerContext::new(context_ptr, session_ptr);
+            process_error_to_status(processor, processor.trigger(&mut context))
         }
     }
 }
@@ -77,9 +76,8 @@ where
     ) -> minifi_status {
         unsafe {
             let processor = &mut *(processor_ptr as *mut T);
-            let mut context = CffiProcessContext::new(context_ptr);
-            let mut session = CffiProcessSession::new(session_ptr);
-            let result = processor.trigger(&mut context, &mut session);
+            let mut context = CffiTriggerContext::new(context_ptr, session_ptr);
+            let result = processor.trigger(&mut context);
             process_error_to_status(&*processor, result)
         }
     }
@@ -168,7 +166,7 @@ where
     ) -> minifi_status {
         unsafe {
             let processor = &mut *(processor_ptr as *mut T);
-            let context = CffiProcessContext::new(context_ptr);
+            let context = CffiScheduleContext::new(context_ptr);
             match processor.schedule(&context) {
                 Ok(_) => 0,
                 Err(error_code) => {

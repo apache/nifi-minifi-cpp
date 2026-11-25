@@ -61,7 +61,7 @@ Provides the public, safe, and idiomatic Rust API. This is the crate that develo
 
 #### API Traits
 
-Pure Rust traits (Processor, ProcessSession, Logger, etc.) that define the abstract behavior of the MiNiFi environment.
+Pure Rust traits (Processor, TriggerContext, Logger, etc.) that define the abstract behavior of the MiNiFi environment.
 
 #### Higher level API
 
@@ -80,14 +80,14 @@ transferring to the right relationship, so your code only needs to describe the 
     - Produces zero or more new flowfiles per trigger without consuming an input. Use this for processors that generate
       data (timers, pollers, external fetchers) — return an empty vec to yield when there is nothing to emit.
 - [ComplexProcessor](minifi_native/src/api/processor_wrappers/complex_processor.rs)
-    - Escape hatch that hands you the raw `ProcessContext`, `ProcessSession`, and `Logger` — the same shape as MiNiFi
+    - Escape hatch that hands you the raw `TriggerContext` and `Logger`, the same shape as MiNiFi
       C++'s `onTrigger` or NiFi Java's `Processor#onTrigger`. Use this when your processor doesn't fit the one-in /
       one-out / source molds: batching multiple flowfiles per trigger, custom routing logic, penalizing/rolling back, or
-      anything that requires manual `session.get()` / `session.transfer()` bookkeeping.
+      anything that requires manual `context.get()` / `context.transfer()` bookkeeping.
 
 #### FFI Wrappers
 
-Concrete structs (CffiSession, CffiLogger, etc.) that implement the API traits by calling the unsafe functions from
+Concrete structs (CffiScheduleContext, CffiTriggerContext, CffiLogger, etc.) that implement the API traits by calling the unsafe functions from
 minifi-native-sys.
 
 #### Thread safety

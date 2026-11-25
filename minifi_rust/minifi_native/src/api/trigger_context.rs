@@ -3,7 +3,10 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 use crate::MinifiError;
+use crate::Property;
 use crate::api::flow_file::FlowFile;
+use crate::api::property::{PropertySchema, PropertyValue};
+use crate::api::schedule_context::ScheduleContext;
 pub trait InputStream: std::io::BufRead + Send + std::fmt::Debug {}
 pub trait OutputStream: std::io::Write + Send + std::fmt::Debug {}
 impl<T: std::io::Write + Send + std::fmt::Debug> OutputStream for T {}
@@ -15,13 +18,32 @@ pub enum IoState {
     Cancel,
 }
 
-pub trait ProcessSession {
+pub trait TriggerContext: ScheduleContext {
     type FlowFile: FlowFile;
 
-    fn create(&mut self) -> Result<Self::FlowFile, MinifiError>;
-    fn get(&mut self) -> Option<Self::FlowFile>;
+    fn get_raw_flow_file_property<P: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<P>,
+        flow_file: &Self::FlowFile,
+    ) -> Result<Option<String>, MinifiError>;
+
+    fn get_flow_file_property<P: PropertyValue + ?Sized>(
+        &self,
+        property: &Property<P>,
+        flow_file: &Self::FlowFile,
+    ) -> Result<P::Output, MinifiError> {
+        P::from_raw(
+            self.get_raw_flow_file_property(property, flow_file)?,
+            property.name,
+        )
+    }
+
+    fn report_metrics(&self, metrics: Vec<(String, f64)>) -> Result<(), MinifiError>;
+
+    fn create(&self) -> Result<Self::FlowFile, MinifiError>;
+    fn get(&self) -> Option<Self::FlowFile>;
     fn transfer(&self, flow_file: Self::FlowFile, relationship: &str) -> Result<(), MinifiError>;
-    fn remove(&mut self, flow_file: Self::FlowFile) -> Result<(), MinifiError>;
+    fn remove(&self, flow_file: Self::FlowFile) -> Result<(), MinifiError>;
 
     fn set_attribute(
         &self,

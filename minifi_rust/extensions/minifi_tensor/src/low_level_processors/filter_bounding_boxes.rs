@@ -427,7 +427,7 @@ mod tests {
     /// tensors, one entry per box, NMS already applied by the model.
     #[test]
     fn test_filter_with_separate_class_index_tensor() {
-        use minifi_native::{MockLogger, MockProcessContext};
+        use minifi_native::{MockLogger, MockScheduleContext};
         use tract::__ndarray_interop::TensorInterface;
 
         let scores = Tensor::from_slice::<f32>(&[2], &[0.9, 0.2]).unwrap();
@@ -440,7 +440,7 @@ mod tests {
         let dim = Dimensions::new(100.0, 100.0).unwrap();
         let result = processor
             .filter(
-                &MockProcessContext::new(),
+                &MockScheduleContext::new(),
                 &MockLogger::new(),
                 vec![scores, boxes, classes],
                 dim,
@@ -458,7 +458,7 @@ mod tests {
 
     #[test]
     fn test_resize_mode_changes_coordinate_un_mapping() {
-        use minifi_native::{MockLogger, MockProcessContext};
+        use minifi_native::{MockLogger, MockScheduleContext};
         use tract::__ndarray_interop::TensorInterface;
 
         let run = |mode: ResizeMode| -> BoundingBox {
@@ -469,7 +469,7 @@ mod tests {
 
             let result = class_index_processor()
                 .filter(
-                    &MockProcessContext::new(),
+                    &MockScheduleContext::new(),
                     &MockLogger::new(),
                     vec![scores, boxes, classes],
                     Dimensions::new(200.0, 100.0).unwrap(),
@@ -499,7 +499,7 @@ mod tests {
 
     #[test]
     fn test_letterbox_un_mapping_uses_the_integer_padding_that_was_applied() {
-        use minifi_native::{MockLogger, MockProcessContext};
+        use minifi_native::{MockLogger, MockScheduleContext};
         use tract::__ndarray_interop::TensorInterface;
 
         // SSD300 fed a 1080p frame: scale = 300/1920 = 0.15625, so the scaled
@@ -514,7 +514,7 @@ mod tests {
 
         let result = class_index_processor()
             .filter(
-                &MockProcessContext::new(),
+                &MockScheduleContext::new(),
                 &MockLogger::new(),
                 vec![scores, boxes, classes],
                 Dimensions::new(1920.0, 1080.0).unwrap(),
@@ -540,7 +540,7 @@ mod tests {
 
     #[test]
     fn test_filter_class_index_mode_rejects_mismatched_lengths() {
-        use minifi_native::{MockLogger, MockProcessContext};
+        use minifi_native::{MockLogger, MockScheduleContext};
         use tract::__ndarray_interop::TensorInterface;
 
         // 2 boxes but only 1 score → the parallel-tensor contract is violated.
@@ -551,7 +551,7 @@ mod tests {
 
         let dim = Dimensions::new(100.0, 100.0).unwrap();
         let result = class_index_processor().filter(
-            &MockProcessContext::new(),
+            &MockScheduleContext::new(),
             &MockLogger::new(),
             vec![scores, boxes, classes],
             dim,
