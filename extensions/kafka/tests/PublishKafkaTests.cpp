@@ -7,8 +7,8 @@
 #include <string_view>
 
 #include "MockLogger.h"
-#include "MockProcessContext.h"
-#include "MockProcessSession.h"
+#include "MockScheduleContext.h"
+#include "MockTriggerContext.h"
 #include "MockUtils.h"
 #include "PublishKafka.h"
 #include "catch2/catch_test_macros.hpp"
@@ -18,7 +18,7 @@ namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Batch Size cannot be larger than Queue Max Message", "[PublishKafka]") {
   auto publish_kafka = PublishKafka(mock::getMockMetadata());
-  auto context = mock::MockProcessContext{};
+  auto context = mock::MockScheduleContext{};
   context.properties_.emplace(PublishKafka::ClientName.name, "test_client");
   context.properties_.emplace(PublishKafka::SeedBrokers.name, "test_seedbroker");
   context.properties_.emplace(PublishKafka::QueueBufferMaxMessage.name, "1000");
@@ -31,7 +31,7 @@ TEST_CASE("Batch Size cannot be larger than Queue Max Message", "[PublishKafka]"
 TEST_CASE("Trigger without valid broker", "[PublishKafka]") {
   const auto logger = std::make_shared<mock::MockLogger>();
   auto publish_kafka = PublishKafka(mock::metadataWithLogger(logger));
-  auto context = mock::MockProcessContext{};
+  auto context = mock::MockScheduleContext{};
   context.properties_.emplace(PublishKafka::ClientName.name, "test_client");
   context.properties_.emplace(PublishKafka::SeedBrokers.name, "test_seedbroker");
   context.properties_.emplace(PublishKafka::Topic.name, "test_topic");
@@ -39,9 +39,9 @@ TEST_CASE("Trigger without valid broker", "[PublishKafka]") {
 
 
   REQUIRE_NOTHROW(publish_kafka.onScheduleImpl(context));
-  auto session = mock::MockProcessSession{};
-  session.addInputFlowFile(std::make_unique<minifi_flow_file>("test_input_flow_file"));
-  REQUIRE_NOTHROW(publish_kafka.onTriggerImpl(context, session));
+  auto trigger_context = mock::MockTriggerContext{context};
+  trigger_context.addInputFlowFile(std::make_unique<minifi_flow_file>("test_input_flow_file"));
+  REQUIRE_NOTHROW(publish_kafka.onTriggerImpl(trigger_context));
 
   CHECK_FALSE(logger->logs_.empty());
 }
@@ -56,7 +56,7 @@ bool hasDebugLog(const mock::MockLogger& logger, std::string_view message) {
 TEST_CASE("Security properties are used for SSL connection when no SSL Context Service is set", "[PublishKafka]") {
   const auto logger = std::make_shared<mock::MockLogger>();
   auto publish_kafka = PublishKafka(mock::metadataWithLogger(logger));
-  auto context = mock::MockProcessContext{};
+  auto context = mock::MockScheduleContext{};
   const auto ca_cert_path = (std::filesystem::path(TEST_RESOURCES) / "nifi-cert.pem").string();
   context.properties_.emplace(PublishKafka::ClientName.name, "test_client");
   context.properties_.emplace(PublishKafka::SeedBrokers.name, "test_seedbroker");
@@ -71,7 +71,7 @@ TEST_CASE("Security properties are used for SSL connection when no SSL Context S
 TEST_CASE("System CA certificate locations are probed when no CA certificate is set for SSL connection", "[PublishKafka]") {
   const auto logger = std::make_shared<mock::MockLogger>();
   auto publish_kafka = PublishKafka(mock::metadataWithLogger(logger));
-  auto context = mock::MockProcessContext{};
+  auto context = mock::MockScheduleContext{};
   context.properties_.emplace(PublishKafka::ClientName.name, "test_client");
   context.properties_.emplace(PublishKafka::SeedBrokers.name, "test_seedbroker");
   context.properties_.emplace(PublishKafka::SecurityProtocol.name, "ssl");

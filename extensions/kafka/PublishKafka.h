@@ -16,7 +16,7 @@
 
 #include "KafkaConnection.h"
 #include "KafkaProcessorBase.h"
-#include "api/core/ProcessSession.h"
+#include "api/core/TriggerContext.h"
 #include "minifi-cpp/core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "minifi-cpp/core/RelationshipDefinition.h"
@@ -237,17 +237,17 @@ class PublishKafka final : public KafkaProcessorBase {
   PublishKafka& operator=(PublishKafka&&) = delete;
   ~PublishKafka() override = default;
 
-  minifi_status onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
-  minifi_status onScheduleImpl(api::core::ProcessContext& context) override;
+  minifi_status onTriggerImpl(api::core::TriggerContext& context) override;
+  minifi_status onScheduleImpl(api::core::ScheduleContext& context) override;
   void onUnSchedule() override;
 
   class Messages;
 
  protected:
-  void configureNewConnection(api::core::ProcessContext& context);
+  void configureNewConnection(api::core::ScheduleContext& context);
   bool createNewTopic(
-      const api::core::ProcessContext& context, const std::string& topic_name, const api::core::FlowFile& flow_file) const;
-  std::optional<api::utils::net::SslData> getSslData(api::core::ProcessContext& context) const override;
+      const api::core::TriggerContext& context, const std::string& topic_name, const api::core::FlowFile& flow_file) const;
+  std::optional<api::utils::net::SslData> getSslData(api::core::ScheduleContext& context) const override;
 
  private:
   KafkaConnectionKey key_;

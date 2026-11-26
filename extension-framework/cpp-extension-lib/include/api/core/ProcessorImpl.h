@@ -23,9 +23,9 @@ class Connection;
 
 namespace core {
 
-class ProcessContext;
-class ProcessSession;
-class ProcessSessionFactory;
+class PropertyContext;
+class ScheduleContext;
+class TriggerContext;
 
 class ProcessorImpl {
  public:
@@ -38,9 +38,9 @@ class ProcessorImpl {
 
   virtual ~ProcessorImpl();
 
-  minifi_status onTrigger(ProcessContext&, ProcessSession&);
+  minifi_status onTrigger(TriggerContext&);
 
-  minifi_status onSchedule(ProcessContext&);
+  minifi_status onSchedule(ScheduleContext&);
 
   virtual void onUnSchedule() {}
 
@@ -53,9 +53,9 @@ class ProcessorImpl {
   [[nodiscard]] minifi::utils::SmallString<minifi::utils::Identifier::UUID_STR_LEN> getUUIDStr() const;
 
  protected:
-  virtual minifi_status onTriggerImpl(ProcessContext&, ProcessSession&) {return MINIFI_STATUS_SUCCESS;}
+  virtual minifi_status onTriggerImpl(TriggerContext&) {return MINIFI_STATUS_SUCCESS;}
 
-  virtual minifi_status onScheduleImpl(ProcessContext&) {return MINIFI_STATUS_SUCCESS;}
+  virtual minifi_status onScheduleImpl(ScheduleContext&) {return MINIFI_STATUS_SUCCESS;}
 
   minifi::core::ProcessorMetadata metadata_;
 

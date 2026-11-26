@@ -85,8 +85,8 @@ class KafkaProcessorBase : public api::core::ProcessorImpl {
   ~KafkaProcessorBase() override = default;
 
  protected:
-  virtual std::optional<api::utils::net::SslData> getSslData(api::core::ProcessContext& context) const;
-  void setKafkaAuthenticationParameters(api::core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config);
+  virtual std::optional<api::utils::net::SslData> getSslData(api::core::ScheduleContext& context) const;
+  void setKafkaAuthenticationParameters(api::core::ScheduleContext& context, gsl::not_null<rd_kafka_conf_t*> config);
 
   kafka::SecurityProtocolOption security_protocol_{};
   utils::KafkaOpaque kafka_opaque_;

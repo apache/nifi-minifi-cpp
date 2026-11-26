@@ -26,7 +26,7 @@ struct std::hash<org::apache::nifi::minifi::processors::ConsumeKafka::KafkaMessa
 
 namespace org::apache::nifi::minifi::processors {
 
-minifi_status ConsumeKafka::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status ConsumeKafka::onScheduleImpl(api::core::ScheduleContext& context) {
   using utils::KafkaEncoding;
   namespace utils = api::utils;
   // Required properties
@@ -83,14 +83,14 @@ void ConsumeKafka::createTopicPartitionList() {
   }
 }
 
-void ConsumeKafka::extendConfigFromDynamicProperties(const api::core::ProcessContext& context) const {
-  for (const auto& [key, value] : context.getDynamicProperties(nullptr)) {
+void ConsumeKafka::extendConfigFromDynamicProperties(const api::core::PropertyContext& context) const {
+  for (const auto& [key, value] : context.getDynamicProperties()) {
     logger_->log_trace("{}: {}", key, value);
     utils::setKafkaConfigurationField(*conf_, key, value);
   }
 }
 
-void ConsumeKafka::configureNewConnection(api::core::ProcessContext& context) {
+void ConsumeKafka::configureNewConnection(api::core::ScheduleContext& context) {
   conf_ = {rd_kafka_conf_new(), utils::rd_kafka_conf_deleter()};
   if (conf_ == nullptr) { throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create rd_kafka_conf_t object"); }
   rd_kafka_conf_set_opaque(conf_.get(), &kafka_opaque_);
@@ -232,25 +232,25 @@ std::vector<std::pair<std::string, std::string>> ConsumeKafka::getFlowFilesAttri
   return attributes_from_headers;
 }
 
-void ConsumeKafka::addAttributesToSingleMessageFlowFile(api::core::ProcessSession& session, api::core::FlowFile& flow_file, const rd_kafka_message_t& message) const {
-  session.setAttribute(flow_file, KafkaCountAttribute.name, "1");
+void ConsumeKafka::addAttributesToSingleMessageFlowFile(api::core::TriggerContext& context, api::core::FlowFile& flow_file, const rd_kafka_message_t& message) const {
+  context.setAttribute(flow_file, KafkaCountAttribute.name, "1");
   if (const auto message_key = get_encoded_message_key(message, key_attribute_encoding_)) {
-    session.setAttribute(flow_file, KafkaKeyAttribute.name, *message_key);
+    context.setAttribute(flow_file, KafkaKeyAttribute.name, *message_key);
   }
-  session.setAttribute(flow_file, KafkaOffsetAttribute.name, std::to_string(message.offset));
-  session.setAttribute(flow_file, KafkaPartitionAttribute.name, std::to_string(message.partition));
-  session.setAttribute(flow_file, KafkaTopicAttribute.name, rd_kafka_topic_name(message.rkt));
+  context.setAttribute(flow_file, KafkaOffsetAttribute.name, std::to_string(message.offset));
+  context.setAttribute(flow_file, KafkaPartitionAttribute.name, std::to_string(message.partition));
+  context.setAttribute(flow_file, KafkaTopicAttribute.name, rd_kafka_topic_name(message.rkt));
   if (headers_to_add_as_attributes_) {
-    for (const auto& [attr_key, attr_value]: getFlowFilesAttributesFromMessageHeaders(message)) { session.setAttribute(flow_file, attr_key, attr_value); }
+    for (const auto& [attr_key, attr_value]: getFlowFilesAttributesFromMessageHeaders(message)) { context.setAttribute(flow_file, attr_key, attr_value); }
   }
 }
 
-void ConsumeKafka::addAttributesToMessageBundleFlowFile(api::core::ProcessSession& session, api::core::FlowFile& flow_file, const MessageBundle& message_bundle) const {
+void ConsumeKafka::addAttributesToMessageBundleFlowFile(api::core::TriggerContext& context, api::core::FlowFile& flow_file, const MessageBundle& message_bundle) const {
   gsl_Assert(!headers_to_add_as_attributes_);
-  session.setAttribute(flow_file, KafkaCountAttribute.name, std::to_string(message_bundle.getMessages().size()));
-  session.setAttribute(flow_file, KafkaOffsetAttribute.name, std::to_string(message_bundle.getLargestOffset()));
-  session.setAttribute(flow_file, KafkaPartitionAttribute.name, std::to_string(message_bundle.getMessages().front()->partition));
-  session.setAttribute(flow_file, KafkaTopicAttribute.name, rd_kafka_topic_name(message_bundle.getMessages().front()->rkt));
+  context.setAttribute(flow_file, KafkaCountAttribute.name, std::to_string(message_bundle.getMessages().size()));
+  context.setAttribute(flow_file, KafkaOffsetAttribute.name, std::to_string(message_bundle.getLargestOffset()));
+  context.setAttribute(flow_file, KafkaPartitionAttribute.name, std::to_string(message_bundle.getMessages().front()->partition));
+  context.setAttribute(flow_file, KafkaTopicAttribute.name, rd_kafka_topic_name(message_bundle.getMessages().front()->rkt));
 }
 
 void ConsumeKafka::commitOffsetsFromMessages(const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const {
@@ -271,19 +271,19 @@ void ConsumeKafka::commitOffsetsFromMessages(const std::unordered_map<KafkaMessa
   }
 }
 
-void ConsumeKafka::commitOffsetsFromIncomingFlowFiles(api::core::ProcessSession& session) const {
+void ConsumeKafka::commitOffsetsFromIncomingFlowFiles(api::core::TriggerContext& context) const {
   std::vector<std::pair<api::core::FlowFile, core::Relationship>> flow_files;
-  while (auto ff = session.get()) { flow_files.emplace_back(std::move(ff), Committed); }
+  while (auto ff = context.get()) { flow_files.emplace_back(std::move(ff), Committed); }
   if (flow_files.empty()) { return; }
 
   std::unordered_map<KafkaMessageLocation, int64_t> max_offsets;
   for (auto& [flow_file, relationship]: std::ranges::reverse_view(flow_files)) {
-    auto topic_name = session.getAttribute(flow_file, KafkaTopicAttribute.name)
+    auto topic_name = context.getAttribute(flow_file, KafkaTopicAttribute.name)
         | utils::toExpected(make_error_code(core::AttributeErrorCode::MissingAttribute));
-    const auto offset = session.getAttribute(flow_file, KafkaOffsetAttribute.name)
+    const auto offset = context.getAttribute(flow_file, KafkaOffsetAttribute.name)
         | utils::toExpected(make_error_code(core::AttributeErrorCode::MissingAttribute))
         | utils::andThen(parsing::parseIntegral<int64_t>);
-    const auto partition = session.getAttribute(flow_file, KafkaPartitionAttribute.name)
+    const auto partition = context.getAttribute(flow_file, KafkaPartitionAttribute.name)
         | utils::toExpected(make_error_code(core::AttributeErrorCode::MissingAttribute))
         | utils::andThen(parsing::parseIntegral<int32_t>);
     if (!topic_name || !offset || !partition) {
@@ -323,48 +323,48 @@ void ConsumeKafka::commitOffsetsFromIncomingFlowFiles(api::core::ProcessSession&
       throw Exception(PROCESS_SESSION_EXCEPTION, fmt::format("Committing offset failed: {}: {}", magic_enum::enum_underlying(commit_res), rd_kafka_err2str(commit_res)));
     }
   }
-  for (auto& [ff, relationship]: flow_files) { session.transfer(std::move(ff), relationship); }
+  for (auto& [ff, relationship]: flow_files) { context.transfer(std::move(ff), relationship); }
 }
 
-minifi_status ConsumeKafka::processMessages(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const {
+minifi_status ConsumeKafka::processMessages(api::core::TriggerContext& context, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const {
   for (const auto& msg_bundle: message_bundles | std::views::values) {
     for (const auto& message: msg_bundle.getMessages()) {
       std::string message_content = extractMessage(*message);
-      auto flow_file = session.create();
-      session.writeBuffer(flow_file, message_content);
-      addAttributesToSingleMessageFlowFile(session, flow_file, *message);
-      session.transfer(std::move(flow_file), Success);
+      auto flow_file = context.create();
+      context.writeBuffer(flow_file, message_content);
+      addAttributesToSingleMessageFlowFile(context, flow_file, *message);
+      context.transfer(std::move(flow_file), Success);
     }
   }
   if (commit_policy_ == consume_kafka::CommitPolicyEnum::CommitAfterBatch) { commitOffsetsFromMessages(message_bundles); }
   return MINIFI_STATUS_SUCCESS;
 }
 
-minifi_status ConsumeKafka::processMessageBundles(api::core::ProcessSession& session,
+minifi_status ConsumeKafka::processMessageBundles(api::core::TriggerContext& context,
     const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles, const std::string_view message_demarcator) const {
   for (const auto& msg_bundle: message_bundles | std::views::values) {
-    auto flow_file = session.create();
+    auto flow_file = context.create();
     auto merged_message_content = utils::string::join(message_demarcator, msg_bundle.getMessages(), [](const auto& message) {
       return extractMessage(*message);
     });
-    session.writeBuffer(flow_file, merged_message_content);
-    addAttributesToMessageBundleFlowFile(session, flow_file, msg_bundle);
-    session.transfer(std::move(flow_file), Success);
+    context.writeBuffer(flow_file, merged_message_content);
+    addAttributesToMessageBundleFlowFile(context, flow_file, msg_bundle);
+    context.transfer(std::move(flow_file), Success);
   }
   return MINIFI_STATUS_SUCCESS;
 }
 
-minifi_status ConsumeKafka::onTriggerImpl(api::core::ProcessContext&, api::core::ProcessSession& session) {
-  if (commit_policy_ == consume_kafka::CommitPolicyEnum::CommitFromIncomingFlowFiles) { commitOffsetsFromIncomingFlowFiles(session); }
+minifi_status ConsumeKafka::onTriggerImpl(api::core::TriggerContext& context) {
+  if (commit_policy_ == consume_kafka::CommitPolicyEnum::CommitFromIncomingFlowFiles) { commitOffsetsFromIncomingFlowFiles(context); }
   const auto message_bundles = pollKafkaMessages();
   if (message_bundles.empty()) {
     logger_->log_debug("No new messages");
     return MINIFI_STATUS_PROCESSOR_YIELD;
   }
   if (!message_demarcator_) {
-    return processMessages(session, message_bundles);
+    return processMessages(context, message_bundles);
   }
-  return processMessageBundles(session, message_bundles, *message_demarcator_);
+  return processMessageBundles(context, message_bundles, *message_demarcator_);
 }
 
 }  // namespace org::apache::nifi::minifi::processors

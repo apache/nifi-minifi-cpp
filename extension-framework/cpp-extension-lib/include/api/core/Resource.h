@@ -15,8 +15,8 @@
 
 #include "ControllerServiceContext.h"
 #include "FlowFile.h"
-#include "ProcessContext.h"
-#include "ProcessSession.h"
+#include "ScheduleContext.h"
+#include "TriggerContext.h"
 #include "api/utils/minifi-c-utils.h"
 #include "core/ClassName.h"
 #include "logging/Logger.h"
@@ -94,16 +94,15 @@ void useProcessorClassDefinition(Fn&& fn) {
         delete static_cast<Class*>(self);
       },
       .trigger = [] (void* self, minifi_process_context* context, minifi_process_session* session) -> minifi_status {
-        CffiProcessContext context_wrapper(context);
-        CffiProcessSession session_wrapper(session);
+        CffiTriggerContext context_wrapper(context, session);
         try {
-          return static_cast<Class*>(self)->onTrigger(context_wrapper, session_wrapper);
+          return static_cast<Class*>(self)->onTrigger(context_wrapper);
         } catch (...) {
           return MINIFI_STATUS_UNKNOWN_ERROR;
         }
       },
       .schedule = [] (void* self, minifi_process_context* context) -> minifi_status {
-        CffiProcessContext context_wrapper(context);
+        CffiScheduleContext context_wrapper(context);
         try {
           return static_cast<Class*>(self)->onSchedule(context_wrapper);
         } catch (...) {

@@ -63,7 +63,7 @@ class DeleteGCSObject : public GCSProcessor {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
  protected:
-  minifi_status onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  minifi_status onTriggerImpl(api::core::TriggerContext& context) override;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp

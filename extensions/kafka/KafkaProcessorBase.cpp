@@ -11,11 +11,11 @@ namespace org::apache::nifi::minifi::processors {
 KafkaProcessorBase::KafkaProcessorBase(core::ProcessorMetadata metadata) : ProcessorImpl(std::move(metadata)), kafka_opaque_(*logger_) {
 }
 
-std::optional<api::utils::net::SslData> KafkaProcessorBase::getSslData(api::core::ProcessContext& context) const {
+std::optional<api::utils::net::SslData> KafkaProcessorBase::getSslData(api::core::ScheduleContext& context) const {
   return context.getSslData(SSLContextService).value_or(std::nullopt);
 }
 
-void KafkaProcessorBase::setKafkaAuthenticationParameters(api::core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config) {  // NOLINT(performance-unnecessary-value-param)
+void KafkaProcessorBase::setKafkaAuthenticationParameters(api::core::ScheduleContext& context, gsl::not_null<rd_kafka_conf_t*> config) {  // NOLINT(performance-unnecessary-value-param)
   security_protocol_ = api::utils::parseEnumProperty<kafka::SecurityProtocolOption>(context, SecurityProtocol);
   utils::setKafkaConfigurationField(*config, "security.protocol", std::string{magic_enum::enum_name(security_protocol_)});
   logger_->log_debug("Kafka security.protocol [{}]", magic_enum::enum_name(security_protocol_));
@@ -47,7 +47,7 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(api::core::ProcessCont
   logger_->log_debug("Kafka sasl.mechanism [{}]", magic_enum::enum_name(sasl_mechanism));
 
   auto setKafkaConfigIfNotEmpty = [this, &context, config](const core::PropertyReference& property, const std::string& kafka_config_name, bool log_value = true) {
-    const std::string value = context.getProperty(property, nullptr).value_or("");
+    const std::string value = context.getProperty(property).value_or("");
     if (!value.empty()) {
       utils::setKafkaConfigurationField(*config, kafka_config_name, value);
       if (log_value) {

@@ -18,8 +18,8 @@
 #include "librdkafka/rdkafka.h"
 #include "rdkafka_utils.h"
 #include "utils/ArrayUtils.h"
-#include "api/core/ProcessSession.h"
-#include "api/core/ProcessContext.h"
+#include "api/core/TriggerContext.h"
+#include "api/core/ScheduleContext.h"
 #include "minifi-cpp/core/Annotation.h"
 
 namespace org::apache::nifi::minifi::processors::consume_kafka {
@@ -271,8 +271,8 @@ class ConsumeKafka final : public KafkaProcessorBase {
   ConsumeKafka& operator=(ConsumeKafka&&) = delete;
   ~ConsumeKafka() override = default;
 
-  minifi_status onScheduleImpl(api::core::ProcessContext& context) override;
-  minifi_status onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  minifi_status onScheduleImpl(api::core::ScheduleContext& context) override;
+  minifi_status onTriggerImpl(api::core::TriggerContext& context) override;
 
  private:
   struct KafkaMessageLocation {
@@ -299,21 +299,21 @@ class ConsumeKafka final : public KafkaProcessorBase {
   friend struct ::std::hash<KafkaMessageLocation>;
 
   void createTopicPartitionList();
-  void extendConfigFromDynamicProperties(const api::core::ProcessContext& context) const;
-  void configureNewConnection(api::core::ProcessContext& context);
+  void extendConfigFromDynamicProperties(const api::core::PropertyContext& context) const;
+  void configureNewConnection(api::core::ScheduleContext& context);
   static std::string extractMessage(const rd_kafka_message_t& rkmessage);
   std::unordered_map<KafkaMessageLocation, MessageBundle> pollKafkaMessages();
   std::string resolve_duplicate_headers(const std::vector<std::string>& matching_headers) const;
   std::vector<std::string> get_matching_headers(const rd_kafka_message_t& message, const std::string& header_name) const;
   std::vector<std::pair<std::string, std::string>> getFlowFilesAttributesFromMessageHeaders(const rd_kafka_message_t& message) const;
-  void addAttributesToSingleMessageFlowFile(api::core::ProcessSession& session, api::core::FlowFile& flow_file, const rd_kafka_message_t& message) const;
-  void addAttributesToMessageBundleFlowFile(api::core::ProcessSession& session, api::core::FlowFile& flow_file, const MessageBundle& message_bundle) const;
-  minifi_status processMessages(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const;
-  minifi_status processMessageBundles(api::core::ProcessSession& session, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles,
+  void addAttributesToSingleMessageFlowFile(api::core::TriggerContext& context, api::core::FlowFile& flow_file, const rd_kafka_message_t& message) const;
+  void addAttributesToMessageBundleFlowFile(api::core::TriggerContext& context, api::core::FlowFile& flow_file, const MessageBundle& message_bundle) const;
+  minifi_status processMessages(api::core::TriggerContext& context, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const;
+  minifi_status processMessageBundles(api::core::TriggerContext& context, const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles,
       std::string_view message_demarcator) const;
 
   void commitOffsetsFromMessages(const std::unordered_map<KafkaMessageLocation, MessageBundle>& message_bundles) const;
-  void commitOffsetsFromIncomingFlowFiles(api::core::ProcessSession& session) const;
+  void commitOffsetsFromIncomingFlowFiles(api::core::TriggerContext& context) const;
 
   std::vector<std::string> topic_names_{};
   consume_kafka::TopicNameFormatEnum topic_name_format_ = consume_kafka::TopicNameFormatEnum::Names;

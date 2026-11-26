@@ -6,8 +6,10 @@
 #include <map>
 #include <ranges>
 
+#include "MockProperties.h"
+#include "MockScheduleContext.h"
 #include "MockUtils.h"
-#include "api/core/ProcessSession.h"
+#include "api/core/TriggerContext.h"
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/transform.hpp"
 
@@ -34,13 +36,34 @@ struct minifi_flow_file {
 
 namespace org::apache::nifi::minifi::mock {
 
-class MockProcessSession : public api::core::ProcessSession {
+class MockTriggerContext : public api::core::TriggerContext {
  public:
-  MockProcessSession() = default;
-  MockProcessSession(const MockProcessSession&) = delete;
-  MockProcessSession& operator=(const MockProcessSession&) = delete;
-  MockProcessSession(MockProcessSession&&) = delete;
-  MockProcessSession& operator=(MockProcessSession&&) = delete;
+  MockTriggerContext() = default;
+  explicit MockTriggerContext(const MockScheduleContext& schedule_context) : properties_(schedule_context.properties_) {}
+  MockTriggerContext(const MockTriggerContext&) = delete;
+  MockTriggerContext& operator=(const MockTriggerContext&) = delete;
+  MockTriggerContext(MockTriggerContext&&) = delete;
+  MockTriggerContext& operator=(MockTriggerContext&&) = delete;
+
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const core::PropertyReference& property_reference) const override {
+    return properties_.get(property_reference);
+  }
+  [[nodiscard]] std::expected<std::string, std::error_code> getProperty(const core::PropertyReference& property_reference,
+      const api::core::FlowFile&) const override {
+    return properties_.get(property_reference);
+  }
+  [[nodiscard]] std::map<std::string, std::string> getDynamicProperties() const override { return {}; }
+  [[nodiscard]] std::map<std::string, std::string> getDynamicProperties(const api::core::FlowFile&) const override { return {}; }
+  [[nodiscard]] std::expected<minifi_controller_service*, std::error_code> getControllerService(const core::PropertyReference&) const override {
+    return nullptr;
+  }
+  [[nodiscard]] std::expected<void, std::error_code> reportMetrics(const api::core::PublishedMetrics& metrics) const override {
+    *last_published_metrics_ = metrics;
+    return {};
+  }
+
+  MockProperties properties_;
+  std::unique_ptr<api::core::PublishedMetrics> last_published_metrics_ = std::make_unique<api::core::PublishedMetrics>();
 
   api::core::FlowFile create(const api::core::FlowFile* parent) override;
   api::core::FlowFile get() override;

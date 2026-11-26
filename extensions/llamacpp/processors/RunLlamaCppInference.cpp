@@ -3,8 +3,8 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 #include "RunLlamaCppInference.h"
-#include "api/core/ProcessContext.h"
-#include "api/core/ProcessSession.h"
+#include "api/core/ScheduleContext.h"
+#include "api/core/TriggerContext.h"
 #include "api/core/Resource.h"
 
 #include "rapidjson/document.h"
@@ -15,7 +15,7 @@
 
 namespace org::apache::nifi::minifi::extensions::llamacpp::processors {
 
-minifi_status RunLlamaCppInference::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status RunLlamaCppInference::onScheduleImpl(api::core::ScheduleContext& context) {
   model_path_.clear();
   model_path_ = api::utils::parseProperty(context, ModelPath);
   multimodal_model_path_ = api::utils::parseOptionalProperty(context, MultiModalModelPath);
@@ -56,18 +56,18 @@ void RunLlamaCppInference::increaseTokensOut(uint64_t token_count) {
   metrics_.tokens_out += token_count;
 }
 
-minifi_status RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) {
+minifi_status RunLlamaCppInference::onTriggerImpl(api::core::TriggerContext& context) {
   auto report_metrics = gsl::finally([&](){
     std::ignore = context.reportMetrics(metrics_.calculateMetrics());
   });
-  auto flow_file = session.get();
+  auto flow_file = context.get();
   if (!flow_file) {
     return MINIFI_STATUS_PROCESSOR_YIELD;
   }
 
-  auto prompt = context.getProperty(Prompt, &flow_file).value_or("");
+  auto prompt = context.getProperty(Prompt, flow_file).value_or("");
 
-  auto read_result = session.readBuffer(flow_file);
+  auto read_result = context.readBuffer(flow_file);
   std::vector<std::vector<std::byte>> files;
   std::string input_data_and_prompt;
   if (!read_result.empty()) {
@@ -84,7 +84,7 @@ minifi_status RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& con
 
   if (input_data_and_prompt.empty()) {
     logger_->log_error("Input data and prompt are empty");
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
@@ -100,7 +100,7 @@ minifi_status RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& con
 
   if (!input) {
     logger_->log_error("Inference failed with while applying template");
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
@@ -117,7 +117,7 @@ minifi_status RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& con
 
   if (!generation_result) {
     logger_->log_error("Inference failed with generation error: '{}'", generation_result.error());
-    session.transfer(std::move(flow_file), Failure);
+    context.transfer(std::move(flow_file), Failure);
     return MINIFI_STATUS_SUCCESS;
   }
 
@@ -128,16 +128,16 @@ minifi_status RunLlamaCppInference::onTriggerImpl(api::core::ProcessContext& con
   logger_->log_debug("AI model inference time: {} ms", elapsed_time);
   logger_->log_debug("AI model output: {}", text);
 
-  session.setAttribute(flow_file, LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
-  session.setAttribute(flow_file, LlamaCppTokensPerSecond.name, fmt::format("{:.2f}", generation_result->tokens_per_second));
+  context.setAttribute(flow_file, LlamaCppTimeToFirstToken.name, std::to_string(generation_result->time_to_first_token.count()) + " ms");
+  context.setAttribute(flow_file, LlamaCppTokensPerSecond.name, fmt::format("{:.2f}", generation_result->tokens_per_second));
 
   if (output_attribute_) {
-    session.setAttribute(flow_file, output_attribute_.value(), text);
+    context.setAttribute(flow_file, output_attribute_.value(), text);
   } else {
-    session.writeBuffer(flow_file, text);
+    context.writeBuffer(flow_file, text);
   }
 
-  session.transfer(std::move(flow_file), Success);
+  context.transfer(std::move(flow_file), Success);
 
   return MINIFI_STATUS_SUCCESS;
 }

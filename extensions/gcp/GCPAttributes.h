@@ -7,7 +7,7 @@
 #include <string_view>
 
 #include "api/core/FlowFile.h"
-#include "api/core/ProcessSession.h"
+#include "api/core/TriggerContext.h"
 #include "google/cloud/storage/object_metadata.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
@@ -38,32 +38,32 @@ constexpr std::string_view GCS_SELF_LINK_ATTR = "gcs.self.link";
 constexpr std::string_view GCS_ENCRYPTION_ALGORITHM_ATTR = "gcs.encryption.algorithm";
 constexpr std::string_view GCS_ENCRYPTION_SHA256_ATTR = "gcs.encryption.sha256";
 
-inline void setAttributesFromObjectMetadata(api::core::FlowFile& flow_file, const ::google::cloud::storage::ObjectMetadata& object_metadata, api::core::ProcessSession& session) {
-  session.setAttribute(flow_file, GCS_BUCKET_ATTR, object_metadata.bucket());
-  session.setAttribute(flow_file, GCS_OBJECT_NAME_ATTR, object_metadata.name());
-  session.setAttribute(flow_file, GCS_SIZE_ATTR, std::to_string(object_metadata.size()));
-  session.setAttribute(flow_file, GCS_CRC32C_ATTR, object_metadata.crc32c());
-  session.setAttribute(flow_file, GCS_MD5_ATTR, object_metadata.md5_hash());
-  session.setAttribute(flow_file, GCS_CONTENT_ENCODING_ATTR, object_metadata.content_encoding());
-  session.setAttribute(flow_file, GCS_CONTENT_LANGUAGE_ATTR, object_metadata.content_language());
-  session.setAttribute(flow_file, GCS_CONTENT_DISPOSITION_ATTR, object_metadata.content_disposition());
-  session.setAttribute(flow_file, GCS_CREATE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.time_created().time_since_epoch()).count()));
-  session.setAttribute(flow_file, GCS_UPDATE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.updated().time_since_epoch()).count()));
-  session.setAttribute(flow_file, GCS_DELETE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.time_deleted().time_since_epoch()).count()));
-  session.setAttribute(flow_file, GCS_MEDIA_LINK_ATTR, object_metadata.media_link());
-  session.setAttribute(flow_file, GCS_SELF_LINK_ATTR, object_metadata.self_link());
-  session.setAttribute(flow_file, GCS_ETAG_ATTR, object_metadata.etag());
-  session.setAttribute(flow_file, GCS_GENERATED_ID, object_metadata.id());
-  session.setAttribute(flow_file, GCS_META_GENERATION, std::to_string(object_metadata.metageneration()));
-  session.setAttribute(flow_file, GCS_GENERATION, std::to_string(object_metadata.generation()));
-  session.setAttribute(flow_file, GCS_STORAGE_CLASS, object_metadata.storage_class());
+inline void setAttributesFromObjectMetadata(api::core::FlowFile& flow_file, const ::google::cloud::storage::ObjectMetadata& object_metadata, api::core::TriggerContext& context) {
+  context.setAttribute(flow_file, GCS_BUCKET_ATTR, object_metadata.bucket());
+  context.setAttribute(flow_file, GCS_OBJECT_NAME_ATTR, object_metadata.name());
+  context.setAttribute(flow_file, GCS_SIZE_ATTR, std::to_string(object_metadata.size()));
+  context.setAttribute(flow_file, GCS_CRC32C_ATTR, object_metadata.crc32c());
+  context.setAttribute(flow_file, GCS_MD5_ATTR, object_metadata.md5_hash());
+  context.setAttribute(flow_file, GCS_CONTENT_ENCODING_ATTR, object_metadata.content_encoding());
+  context.setAttribute(flow_file, GCS_CONTENT_LANGUAGE_ATTR, object_metadata.content_language());
+  context.setAttribute(flow_file, GCS_CONTENT_DISPOSITION_ATTR, object_metadata.content_disposition());
+  context.setAttribute(flow_file, GCS_CREATE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.time_created().time_since_epoch()).count()));
+  context.setAttribute(flow_file, GCS_UPDATE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.updated().time_since_epoch()).count()));
+  context.setAttribute(flow_file, GCS_DELETE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.time_deleted().time_since_epoch()).count()));
+  context.setAttribute(flow_file, GCS_MEDIA_LINK_ATTR, object_metadata.media_link());
+  context.setAttribute(flow_file, GCS_SELF_LINK_ATTR, object_metadata.self_link());
+  context.setAttribute(flow_file, GCS_ETAG_ATTR, object_metadata.etag());
+  context.setAttribute(flow_file, GCS_GENERATED_ID, object_metadata.id());
+  context.setAttribute(flow_file, GCS_META_GENERATION, std::to_string(object_metadata.metageneration()));
+  context.setAttribute(flow_file, GCS_GENERATION, std::to_string(object_metadata.generation()));
+  context.setAttribute(flow_file, GCS_STORAGE_CLASS, object_metadata.storage_class());
   if (object_metadata.has_customer_encryption()) {
-    session.setAttribute(flow_file, GCS_ENCRYPTION_ALGORITHM_ATTR, object_metadata.customer_encryption().encryption_algorithm);
-    session.setAttribute(flow_file, GCS_ENCRYPTION_SHA256_ATTR, object_metadata.customer_encryption().key_sha256);
+    context.setAttribute(flow_file, GCS_ENCRYPTION_ALGORITHM_ATTR, object_metadata.customer_encryption().encryption_algorithm);
+    context.setAttribute(flow_file, GCS_ENCRYPTION_SHA256_ATTR, object_metadata.customer_encryption().key_sha256);
   }
   if (object_metadata.has_owner()) {
-    session.setAttribute(flow_file, GCS_OWNER_ENTITY_ATTR, object_metadata.owner().entity);
-    session.setAttribute(flow_file, GCS_OWNER_ENTITY_ID_ATTR, object_metadata.owner().entity_id);
+    context.setAttribute(flow_file, GCS_OWNER_ENTITY_ATTR, object_metadata.owner().entity);
+    context.setAttribute(flow_file, GCS_OWNER_ENTITY_ID_ATTR, object_metadata.owner().entity_id);
   }
 }
 

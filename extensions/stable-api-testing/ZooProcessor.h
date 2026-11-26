@@ -52,8 +52,8 @@ class ZooProcessor : public api::core::ProcessorImpl {
   using ProcessorImpl::ProcessorImpl;
 
  protected:
-  minifi_status onTriggerImpl(api::core::ProcessContext&, api::core::ProcessSession&) override;
-  minifi_status onScheduleImpl(api::core::ProcessContext&) override;
+  minifi_status onTriggerImpl(api::core::TriggerContext&) override;
+  minifi_status onScheduleImpl(api::core::ScheduleContext&) override;
 };
 
 }  // namespace org::apache::nifi::minifi::api_testing

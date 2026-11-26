@@ -11,14 +11,14 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-std::shared_ptr<google::cloud::Credentials> GCSProcessor::getCredentials(const api::core::ProcessContext& context) {
+std::shared_ptr<google::cloud::Credentials> GCSProcessor::getCredentials(const api::core::PropertyContext& context) {
   if (const auto gcp_credentials_controller_service = api::utils::parseOptionalControllerService<GCPCredentialsControllerService>(context, GCPCredentials)) {
     return gcp_credentials_controller_service->getCredentials();
   }
   return nullptr;
 }
 
-minifi_status GCSProcessor::onScheduleImpl(api::core::ProcessContext& context) {
+minifi_status GCSProcessor::onScheduleImpl(api::core::ScheduleContext& context) {
   if (const auto number_of_retries = api::utils::parseOptionalU64Property(context, NumberOfRetries)) {
     retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(gsl::narrow<int>(*number_of_retries));
   }
@@ -29,7 +29,7 @@ minifi_status GCSProcessor::onScheduleImpl(api::core::ProcessContext& context) {
     return MINIFI_STATUS_UNKNOWN_ERROR;
   }
 
-  endpoint_url_ = context.getProperty(EndpointOverrideURL, nullptr) | utils::toOptional();
+  endpoint_url_ = context.getProperty(EndpointOverrideURL) | utils::toOptional();
   if (endpoint_url_)
     logger_->log_debug("Endpoint overwritten: {}", *endpoint_url_);
 

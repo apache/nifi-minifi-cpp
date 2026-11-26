@@ -38,7 +38,7 @@ utils::SmallString<36> ProcessorImpl::getUUIDStr() const {
   return getUUID().to_string();
 }
 
-minifi_status ProcessorImpl::onSchedule(ProcessContext& ctx) {
+minifi_status ProcessorImpl::onSchedule(ScheduleContext& ctx) {
   try {
     return onScheduleImpl(ctx);
   } catch (const std::exception& e) {
@@ -47,9 +47,9 @@ minifi_status ProcessorImpl::onSchedule(ProcessContext& ctx) {
   }
 }
 
-minifi_status ProcessorImpl::onTrigger(ProcessContext& ctx, ProcessSession& session) {
+minifi_status ProcessorImpl::onTrigger(TriggerContext& context) {
   try {
-    return onTriggerImpl(ctx, session);
+    return onTriggerImpl(context);
   } catch (const std::exception& e) {
     logger_->log_error("{}", e.what());
     throw;

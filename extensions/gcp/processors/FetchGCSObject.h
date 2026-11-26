@@ -64,8 +64,8 @@ class FetchGCSObject : public GCSProcessor {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
  protected:
-  minifi_status onScheduleImpl(api::core::ProcessContext& context) override;
-  minifi_status onTriggerImpl(api::core::ProcessContext& context, api::core::ProcessSession& session) override;
+  minifi_status onScheduleImpl(api::core::ScheduleContext& context) override;
+  minifi_status onTriggerImpl(api::core::TriggerContext& context) override;
 
  private:
   google::cloud::storage::EncryptionKey encryption_key_;
