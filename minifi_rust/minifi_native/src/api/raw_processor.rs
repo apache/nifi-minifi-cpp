@@ -3,7 +3,7 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 use crate::api::errors::MinifiError;
-use crate::{LogLevel, Logger, ProcessContext, ProcessSession};
+use crate::{LogLevel, Logger, ScheduleContext, TriggerContext};
 
 pub enum ProcessorInputRequirement {
     Required,
@@ -24,7 +24,7 @@ pub trait RawProcessor: Sized {
 
     fn new(logger: Self::LoggerType) -> Self;
     fn log(&self, log_level: LogLevel, args: std::fmt::Arguments);
-    fn schedule<P: ProcessContext>(&mut self, context: &P) -> Result<(), MinifiError>;
+    fn schedule<P: ScheduleContext>(&mut self, context: &P) -> Result<(), MinifiError>;
     fn unschedule(&mut self);
 }
 
@@ -52,23 +52,13 @@ mod sealed {
 }
 
 pub trait SingleThreadedTrigger: RawProcessor<Threading = SingleThreaded> {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &mut self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>;
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError>;
 }
 
 pub trait MultiThreadedTrigger: RawProcessor<Threading = MultiThreaded> {
-    fn trigger<PC, PS>(
-        &self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>;
+    fn trigger<TC: TriggerContext>(&self, context: &mut TC)
+    -> Result<OnTriggerResult, MinifiError>;
 }

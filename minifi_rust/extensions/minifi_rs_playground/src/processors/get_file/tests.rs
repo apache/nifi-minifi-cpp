@@ -4,13 +4,13 @@
 
 use super::*;
 use crate::processors::get_file::relationships::SUCCESS;
-use minifi_native::{MockLogger, MockProcessContext, MockProcessSession};
+use minifi_native::{MockLogger, MockScheduleContext, MockTriggerContext};
 use tempfile::TempDir;
 
 #[test]
 fn schedule_fails_without_input_dir() {
     assert!(matches!(
-        GetFileRs::schedule(&MockProcessContext::new(), &MockLogger::new())
+        GetFileRs::schedule(&MockScheduleContext::new(), &MockLogger::new())
             .err()
             .unwrap(),
         MinifiError::MissingRequiredProperty(_)
@@ -19,7 +19,7 @@ fn schedule_fails_without_input_dir() {
 
 #[test]
 fn schedule_fails_with_invalid_input_dir() {
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context.properties.insert(
         "Input Directory".to_string(),
         "/invalid_directory".to_string(),
@@ -33,7 +33,7 @@ fn simple_get_file_test() {
     let file_path = temp_dir.path().join("input_file");
     std::fs::write(&file_path, "test").unwrap();
 
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context.properties.insert(
         "Input Directory".to_string(),
         temp_dir.path().to_str().unwrap().to_string(),
@@ -41,11 +41,11 @@ fn simple_get_file_test() {
 
     let get_file = GetFileRs::schedule(&context, &MockLogger::new()).unwrap();
 
-    let mut session = MockProcessSession::new();
+    let mut trigger_context = MockTriggerContext::from(context);
     get_file
-        .trigger(&mut context, &mut session, &MockLogger::new())
+        .trigger(&mut trigger_context, &MockLogger::new())
         .expect("Should succeed");
-    assert_eq!(session.num_of_transferred_flow_files(), 1);
+    assert_eq!(trigger_context.num_of_transferred_flow_files(), 1);
 }
 
 fn make_file(temp_dir: &TempDir, file_name: &str, size: usize, age: Duration) {
@@ -73,7 +73,7 @@ fn create_test_directory() -> TempDir {
 fn complex_dir_without_filters() {
     let test_directory = create_test_directory();
 
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context.properties.insert(
         "Input Directory".to_string(),
         test_directory.path().to_str().unwrap().to_string(),
@@ -82,12 +82,12 @@ fn complex_dir_without_filters() {
         .properties
         .insert("Batch Size".to_string(), "10".to_string());
 
-    let mut session = MockProcessSession::new();
     let get_file = GetFileRs::schedule(&context, &MockLogger::new()).unwrap();
+    let mut trigger_context = MockTriggerContext::from(context);
     get_file
-        .trigger(&mut context, &mut session, &MockLogger::new())
+        .trigger(&mut trigger_context, &MockLogger::new())
         .expect("Should succeed");
-    assert_eq!(session.num_of_transferred_flow_files(), 4);
+    assert_eq!(trigger_context.num_of_transferred_flow_files(), 4);
 }
 
 fn test_complex_dir_with_filter(
@@ -97,7 +97,7 @@ fn test_complex_dir_with_filter(
 ) {
     let test_directory = create_test_directory();
 
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context.properties.insert(
         DIRECTORY.name().to_string(),
         test_directory.path().to_str().unwrap().to_string(),
@@ -110,13 +110,13 @@ fn test_complex_dir_with_filter(
         .properties
         .insert(property_name.to_string(), property_vale.to_string());
 
-    let mut session = MockProcessSession::new();
     let get_file = GetFileRs::schedule(&context, &MockLogger::new()).unwrap();
+    let mut trigger_context = MockTriggerContext::from(context);
     get_file
-        .trigger(&mut context, &mut session, &MockLogger::new())
+        .trigger(&mut trigger_context, &MockLogger::new())
         .expect("Should succeed");
-    assert_eq!(session.num_of_transferred_flow_files(), 2);
-    let transferred_flow_files = session.transferred_flow_files.borrow();
+    assert_eq!(trigger_context.num_of_transferred_flow_files(), 2);
+    let transferred_flow_files = trigger_context.transferred_flow_files.borrow();
     assert!(transferred_flow_files.iter().all(|transfer| {
         transfer.relationship == SUCCESS.name
             && transfer
@@ -153,7 +153,7 @@ fn test_hidden_files_and_batch_size() {
     make_file(&temp_dir, ".two", 10, Duration::from_secs(0));
     make_file(&temp_dir, ".three", 10, Duration::from_secs(0));
 
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     context.properties.insert(
         DIRECTORY.name().to_string(),
         temp_dir.path().to_str().unwrap().to_string(),
@@ -166,10 +166,10 @@ fn test_hidden_files_and_batch_size() {
         .properties
         .insert(IGNORE_HIDDEN_FILES.name().to_string(), "false".to_string());
 
-    let mut session = MockProcessSession::new();
     let get_file = GetFileRs::schedule(&context, &MockLogger::new()).unwrap();
+    let mut trigger_context = MockTriggerContext::from(context);
     get_file
-        .trigger(&mut context, &mut session, &MockLogger::new())
+        .trigger(&mut trigger_context, &MockLogger::new())
         .expect("Should succeed");
-    assert_eq!(session.num_of_transferred_flow_files(), 2);
+    assert_eq!(trigger_context.num_of_transferred_flow_files(), 2);
 }

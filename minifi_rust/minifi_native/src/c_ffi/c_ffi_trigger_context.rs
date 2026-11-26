@@ -3,20 +3,29 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 use super::c_ffi_flow_file::CffiFlowFile;
-use crate::MinifiError;
-use crate::api::process_session::{IoState, OutputStream};
-use crate::api::{InputStream, ProcessSession};
+use super::c_ffi_schedule_context::{self, RawContextAccess};
+use crate::GetProperty;
+use crate::api::property::PropertySchema;
+use crate::api::trigger_context::{IoState, OutputStream};
+use crate::api::{InputStream, ScheduleContext, TriggerContext};
 use crate::c_ffi::c_ffi_primitives::{ConvertMinifiStringView, StringView};
 use crate::c_ffi::c_ffi_streams::{CffiInputStream, CffiOutputStream};
+use crate::{
+    ComponentIdentifier, ControllerServiceApi, EnableControllerService, MinifiError, Property,
+};
 use minifi_native_sys::{
-    minifi_input_stream, minifi_input_stream_read, minifi_input_stream_size,
-    minifi_io_status_MINIFI_IO_CANCEL, minifi_io_status_MINIFI_IO_ERROR, minifi_output_stream,
-    minifi_output_stream_write, minifi_process_session, minifi_process_session_create,
-    minifi_process_session_get, minifi_process_session_get_flow_file_attribute,
+    minifi_controller_service, minifi_input_stream, minifi_input_stream_read,
+    minifi_input_stream_size, minifi_io_status_MINIFI_IO_CANCEL, minifi_io_status_MINIFI_IO_ERROR,
+    minifi_output_stream, minifi_output_stream_write, minifi_process_context,
+    minifi_process_context_get_controller_service_from_property,
+    minifi_process_context_get_property, minifi_process_context_report_metrics,
+    minifi_process_session, minifi_process_session_create, minifi_process_session_get,
+    minifi_process_session_get_flow_file_attribute,
     minifi_process_session_get_flow_file_attributes, minifi_process_session_get_flow_file_id,
     minifi_process_session_read, minifi_process_session_remove,
     minifi_process_session_set_flow_file_attribute, minifi_process_session_transfer,
-    minifi_process_session_write, minifi_status_MINIFI_STATUS_SUCCESS, minifi_string_view,
+    minifi_process_session_write, minifi_status, minifi_status_MINIFI_STATUS_SUCCESS,
+    minifi_string_view,
 };
 use std::ffi::{CString, c_void};
 use std::io::Read;
@@ -56,15 +65,17 @@ unsafe fn write_all_to_output_stream(
     Ok(data.len() as i64)
 }
 
-pub struct CffiProcessSession<'a> {
+pub struct CffiTriggerContext<'a> {
+    context_ptr: *mut minifi_process_context,
     ptr: *mut minifi_process_session,
-    // The lifetime ensures the session cannot outlive the `trigger` call.
+    // The lifetime ensures the trigger context cannot outlive the `trigger` call.
     _lifetime: std::marker::PhantomData<&'a ()>,
 }
 
-impl<'a> CffiProcessSession<'a> {
-    pub fn new(ptr: *mut minifi_process_session) -> Self {
+impl<'a> CffiTriggerContext<'a> {
+    pub fn new(context_ptr: *mut minifi_process_context, ptr: *mut minifi_process_session) -> Self {
         Self {
+            context_ptr,
             ptr,
             _lifetime: std::marker::PhantomData,
         }
@@ -148,10 +159,123 @@ impl<'a> CffiProcessSession<'a> {
     }
 }
 
-impl<'a> ProcessSession for CffiProcessSession<'a> {
-    type FlowFile = CffiFlowFile<'a>; // FlowFile shouldn't outlive the Session
+impl RawContextAccess for CffiTriggerContext<'_> {
+    unsafe fn raw_get_property(
+        &self,
+        property_name: minifi_string_view,
+        cb: Option<unsafe extern "C" fn(*mut c_void, minifi_string_view)>,
+        user_ctx: *mut c_void,
+    ) -> minifi_status {
+        unsafe {
+            minifi_process_context_get_property(
+                self.context_ptr,
+                property_name,
+                std::ptr::null_mut(),
+                cb,
+                user_ctx,
+            )
+        }
+    }
 
-    fn create(&mut self) -> Result<Self::FlowFile, MinifiError> {
+    unsafe fn raw_get_controller_service_from_property(
+        &self,
+        property_name: minifi_string_view,
+        controller_service_type: minifi_string_view,
+        controller_service_out: *mut *mut minifi_controller_service,
+    ) -> minifi_status {
+        unsafe {
+            minifi_process_context_get_controller_service_from_property(
+                self.context_ptr,
+                property_name,
+                controller_service_type,
+                controller_service_out,
+            )
+        }
+    }
+}
+
+impl GetProperty for CffiTriggerContext<'_> {
+    fn get_raw_property<P: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<P>,
+    ) -> Result<Option<String>, MinifiError> {
+        c_ffi_schedule_context::get_raw_property(self, property)
+    }
+}
+
+impl<'a> ScheduleContext for CffiTriggerContext<'a> {
+    fn get_raw_controller_service<Cs, P>(
+        &self,
+        property: &Property<P>,
+    ) -> Result<Option<&'a Cs>, MinifiError>
+    where
+        Cs: ComponentIdentifier + 'static,
+        P: PropertySchema + ?Sized,
+    {
+        c_ffi_schedule_context::get_raw_controller_service(self, property)
+    }
+
+    fn get_controller_service<Cs>(
+        &self,
+        property: &Property<Cs>,
+    ) -> Result<Option<&Cs>, MinifiError>
+    where
+        Cs: EnableControllerService + ComponentIdentifier + PropertySchema + 'static,
+    {
+        c_ffi_schedule_context::get_controller_service(self, property)
+    }
+
+    fn get_controller_service_api<Trait: ?Sized + ControllerServiceApi + PropertySchema>(
+        &self,
+        property: &Property<Trait>,
+    ) -> Result<Option<Box<&Trait>>, MinifiError> {
+        c_ffi_schedule_context::get_controller_service_api(self, property)
+    }
+}
+
+impl<'a> TriggerContext for CffiTriggerContext<'a> {
+    type FlowFile = CffiFlowFile<'a>; // FlowFile shouldn't outlive the trigger context
+
+    fn get_raw_flow_file_property<P: PropertySchema + ?Sized>(
+        &self,
+        property: &Property<P>,
+        flow_file: &Self::FlowFile,
+    ) -> Result<Option<String>, MinifiError> {
+        c_ffi_schedule_context::read_property(property, |name, cb, user_ctx| unsafe {
+            minifi_process_context_get_property(
+                self.context_ptr,
+                name,
+                flow_file.get_ptr(),
+                cb,
+                user_ctx,
+            )
+        })
+    }
+
+    fn report_metrics(&self, metrics: Vec<(String, f64)>) -> Result<(), MinifiError> {
+        let names: Vec<StringView> = metrics
+            .iter()
+            .map(|(name, _)| StringView::new(name))
+            .collect();
+        let values: Vec<f64> = metrics.iter().map(|(_, value)| *value).collect();
+        unsafe {
+            match minifi_process_context_report_metrics(
+                self.context_ptr,
+                names.len(),
+                names.as_ptr() as *const minifi_string_view,
+                values.as_ptr(),
+            ) {
+                #[allow(non_upper_case_globals)]
+                minifi_status_MINIFI_STATUS_SUCCESS => Ok(()),
+                err_code => Err(MinifiError::StatusError((
+                    "minifi_process_context_report_metrics".into(),
+                    NonZeroU32::new_unchecked(err_code), // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
+                ))),
+            }
+        }
+    }
+
+    fn create(&self) -> Result<Self::FlowFile, MinifiError> {
         let ff_ptr = unsafe { minifi_process_session_create(self.ptr, std::ptr::null_mut()) };
         if ff_ptr.is_null() {
             Err(MinifiError::UnknownError)
@@ -160,7 +284,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
         }
     }
 
-    fn get(&mut self) -> Option<Self::FlowFile> {
+    fn get(&self) -> Option<Self::FlowFile> {
         let ff_ptr = unsafe { minifi_process_session_get(self.ptr) };
         if ff_ptr.is_null() {
             None
@@ -190,7 +314,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
         }
     }
 
-    fn remove(&mut self, flow_file: Self::FlowFile) -> Result<(), MinifiError> {
+    fn remove(&self, flow_file: Self::FlowFile) -> Result<(), MinifiError> {
         unsafe {
             match minifi_process_session_remove(self.ptr, flow_file.get_ptr()) {
                 #[allow(non_upper_case_globals)]
@@ -390,7 +514,7 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
             }
         }
 
-        let session_status = unsafe {
+        let write_status = unsafe {
             minifi_process_session_write(
                 self.ptr,
                 flow_file.get_ptr(),
@@ -400,18 +524,18 @@ impl<'a> ProcessSession for CffiProcessSession<'a> {
         };
 
         // If the user closure ran, its outcome (including a deliberate
-        // Ok((_, IoState::Cancel))) always wins over the C session status:
-        // MINIFI_IO_CANCEL from the callback makes the session return
+        // Ok((_, IoState::Cancel))) always wins over the C status:
+        // MINIFI_IO_CANCEL from the callback makes the write return
         // non-success even though from Rust's perspective the write succeeded.
         if let Some(result) = ctx.result.take() {
             return result;
         }
 
-        // Callback never ran — surface the raw C status.
-        if session_status != minifi_status_MINIFI_STATUS_SUCCESS {
+        // Callback never ran, surface the raw C status.
+        if write_status != minifi_status_MINIFI_STATUS_SUCCESS {
             return Err(MinifiError::StatusError((
                 "minifi_process_session_write".into(),
-                unsafe { NonZeroU32::new_unchecked(session_status) }, // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
+                unsafe { NonZeroU32::new_unchecked(write_status) }, // SAFETY we checked against 0 (minifi_status_MINIFI_STATUS_SUCCESS)
             )));
         }
 

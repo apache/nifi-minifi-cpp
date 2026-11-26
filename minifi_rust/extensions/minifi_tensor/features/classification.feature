@@ -135,4 +135,4 @@ Feature: Image classification with MobileNetV2
     When the MiNiFi instance starts up
 
     Then the Minifi logs contain the following message: "(ClassifyImage): Process Schedule Operation: Error while scheduling processor" in less than 3 seconds
-    And the Minifi logs contain the following message: "[error] Error during schedule: minifi_process_context_get_controller_service_from_property::<"minifi_tensor::services::tract_model_service::TractModelService">("Tract model service"), validation failed" in less than 3 seconds
+    And the Minifi logs contain the following message: "[error] Error during schedule: get_controller_service_from_property::<"minifi_tensor::services::tract_model_service::TractModelService">("Tract model service"), validation failed" in less than 3 seconds

@@ -359,7 +359,7 @@ mod tests {
     use super::image_to_tensor_def::{FAILURE, SUCCESS};
     use super::*;
     use image::{ImageFormat, RgbImage};
-    use minifi_native::{MockLogger, MockProcessContext, test};
+    use minifi_native::{MockLogger, MockScheduleContext, test};
     use std::io::Cursor;
 
     fn create_test_image_bytes() -> Vec<u8> {
@@ -402,7 +402,7 @@ mod tests {
     #[test]
     fn test_schedule_rejects_zero_target_dimensions() {
         for (width, height) in [("0", "100"), ("100", "0"), ("0", "0")] {
-            let mut context = MockProcessContext::new();
+            let mut context = MockScheduleContext::new();
             context.properties.insert(TARGET_WIDTH.name(), width);
             context.properties.insert(TARGET_HEIGHT.name(), height);
             context.properties.insert(PIXEL_DIVISOR.name(), "1.0");
@@ -419,7 +419,7 @@ mod tests {
 
     #[test]
     fn test_schedule_accepts_non_zero_target_dimensions() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.insert(TARGET_WIDTH.name(), "224");
         context.properties.insert(TARGET_HEIGHT.name(), "224");
         context.properties.insert(PIXEL_DIVISOR.name(), "1.0");
@@ -431,7 +431,7 @@ mod tests {
     fn test_successful_rgb_chw_transform() {
         let processor = default_processor();
 
-        let context = MockProcessContext::new();
+        let context = MockScheduleContext::new();
         let input_bytes = create_test_image_bytes();
         let mut input_stream = Cursor::new(input_bytes);
 
@@ -478,7 +478,7 @@ mod tests {
             ..default_processor()
         };
 
-        let context = MockProcessContext::new();
+        let context = MockScheduleContext::new();
         let input_bytes = create_test_image_bytes();
         let mut input_stream = Cursor::new(input_bytes);
 
@@ -511,7 +511,7 @@ mod tests {
             ..default_processor()
         };
 
-        let context = MockProcessContext::new();
+        let context = MockScheduleContext::new();
 
         let invalid_bytes = vec![0x00, 0x01, 0x02, 0x03, 0x04];
         let mut input_stream = Cursor::new(invalid_bytes);
@@ -526,7 +526,7 @@ mod tests {
             tensor_shape_format: TensorShapeFormat::Hwc,
             ..default_processor()
         };
-        let context = MockProcessContext::new();
+        let context = MockScheduleContext::new();
         let mut input_stream = Cursor::new(create_test_image_bytes());
         let result = processor
             .transform(&context, &mut input_stream, &MockLogger::new())
@@ -543,7 +543,7 @@ mod tests {
             std_dev: PerChannelF32::TriChannel([255.0, 255.0, 127.5]),
             ..default_processor()
         };
-        let context = MockProcessContext::new();
+        let context = MockScheduleContext::new();
         let mut input_stream = Cursor::new(create_test_image_bytes());
         let result = processor
             .transform(&context, &mut input_stream, &MockLogger::new())
@@ -589,7 +589,7 @@ mod tests {
             letterbox_pad_value: -1.0,
             ..default_processor()
         };
-        let context = MockProcessContext::new();
+        let context = MockScheduleContext::new();
         let mut input_stream = Cursor::new(bytes);
         let result = processor
             .transform(&context, &mut input_stream, &MockLogger::new())
@@ -623,7 +623,7 @@ mod tests {
             pixel_divisor: 255.0,
             ..default_processor()
         };
-        let context = MockProcessContext::new();
+        let context = MockScheduleContext::new();
         let mut input_stream = Cursor::new(create_test_image_bytes());
         let result = processor
             .transform(&context, &mut input_stream, &MockLogger::new())

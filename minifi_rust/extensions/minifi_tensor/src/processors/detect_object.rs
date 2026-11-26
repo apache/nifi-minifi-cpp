@@ -84,11 +84,11 @@ mod tests {
     use crate::low_level_processors::image_to_tensor::{
         PIXEL_DIVISOR, TARGET_HEIGHT, TARGET_WIDTH,
     };
-    use minifi_native::{MockLogger, MockProcessContext};
+    use minifi_native::{MockLogger, MockScheduleContext};
 
     #[test]
     fn test_missing_controller_service_errors() {
-        let mut context = MockProcessContext::new();
+        let mut context = MockScheduleContext::new();
         context.properties.insert(TARGET_HEIGHT.name(), "100");
         context.properties.insert(TARGET_WIDTH.name(), "100");
         context.properties.insert(PIXEL_DIVISOR.name(), "1.0");

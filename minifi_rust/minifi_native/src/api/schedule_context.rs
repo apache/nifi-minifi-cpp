@@ -4,19 +4,10 @@
 
 use crate::api::RawControllerService;
 use crate::api::component_definition_traits::ComponentIdentifier;
-use crate::api::flow_file::FlowFile;
 use crate::api::property::{ControllerServiceValue, GetControllerService, PropertySchema};
 use crate::{ControllerServiceApi, EnableControllerService, GetProperty, MinifiError, Property};
 
-pub trait ProcessContext {
-    type FlowFile: FlowFile;
-
-    fn get_raw_property<P: PropertySchema + ?Sized>(
-        &self,
-        property: &Property<P>,
-        flow_file: Option<&Self::FlowFile>,
-    ) -> Result<Option<String>, MinifiError>;
-
+pub trait ScheduleContext: GetProperty {
     /// Returns the RawControllerService (ControllerService wrapper whose lifetime is managed by the agent)
     fn get_raw_controller_service<RawCs, P>(
         &self,
@@ -39,25 +30,11 @@ pub trait ProcessContext {
         &self,
         property: &Property<Trait>,
     ) -> Result<Option<Box<&Trait>>, MinifiError>;
-
-    fn report_metrics(&self, metrics: Vec<(String, f64)>) -> Result<(), MinifiError>;
-}
-
-impl<S> GetProperty for S
-where
-    S: ProcessContext,
-{
-    fn get_raw_property<P: PropertySchema + ?Sized>(
-        &self,
-        property: &Property<P>,
-    ) -> Result<Option<String>, MinifiError> {
-        self.get_raw_property(property, None)
-    }
 }
 
 impl<S> GetControllerService for S
 where
-    S: ProcessContext,
+    S: ScheduleContext,
 {
     fn get_controller_service<P>(
         &self,
@@ -67,7 +44,7 @@ where
         P: ControllerServiceValue + ?Sized,
     {
         let cs_property = property.with_marker::<P::Cs>();
-        let service = ProcessContext::get_controller_service::<P::Cs>(self, &cs_property)?;
+        let service = ScheduleContext::get_controller_service::<P::Cs>(self, &cs_property)?;
         P::from_service(service, property.name)
     }
 }

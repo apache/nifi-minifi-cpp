@@ -13,8 +13,8 @@ use crate::processors::get_file::properties::{
 };
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, ProcessContext, ProcessSession,
-    Schedule, Trigger, debug, trace, warn,
+    GetProperty, IoState, Logger, MinifiError, OnTriggerResult, Schedule, Trigger, TriggerContext,
+    debug, trace, warn,
 };
 use std::collections::VecDeque;
 use std::error;
@@ -156,29 +156,29 @@ impl GetFileRs {
         Ok(!self.ignore_hidden_files || !is_hidden(dir_entry.path().to_path_buf()))
     }
 
-    fn get_single_file<PS: ProcessSession, L: Logger>(
+    fn get_single_file<TC: TriggerContext, L: Logger>(
         &self,
-        session: &mut PS,
+        context: &TC,
         logger: &L,
         path: &Path,
     ) -> Result<(), MinifiError> {
         trace!(logger, "GetFile process {:?}", path);
-        let mut ff = session
+        let mut ff = context
             .create()
             .expect("Successful FlowFile creation is expected");
 
         if let Some(file_name) = path.file_name().and_then(|f| f.to_str()) {
-            session.set_attribute(&mut ff, FILENAME_OUTPUT_ATTRIBUTE.name, file_name)?;
+            context.set_attribute(&mut ff, FILENAME_OUTPUT_ATTRIBUTE.name, file_name)?;
         } else {
             warn!(logger, "Couldnt get filename of {:?}", path);
         }
-        session.set_attribute(
+        context.set_attribute(
             &mut ff,
             ABSOLUTE_PATH_OUTPUT_ATTRIBUTE.name,
             path.to_string_lossy().trim(),
         )?;
 
-        session.write_stream(&ff, |output_stream| {
+        context.write_stream(&ff, |output_stream| {
             let mut file = File::open(path)?;
             std::io::copy(&mut file, output_stream)?;
             Ok(((), IoState::Ok))
@@ -188,7 +188,7 @@ impl GetFileRs {
         {
             warn!(logger, "Failed to remove source file {:?}", err);
         }
-        session.transfer(ff, relationships::SUCCESS.name)?;
+        context.transfer(ff, relationships::SUCCESS.name)?;
         Ok(())
     }
 
@@ -247,15 +247,9 @@ impl Schedule for GetFileRs {
 }
 
 impl Trigger for GetFileRs {
-    fn trigger<PC, PS, L>(
-        &self,
-        context: &mut PC,
-        session: &mut PS,
-        logger: &L,
-    ) -> Result<OnTriggerResult, MinifiError>
+    fn trigger<TC, L>(&self, context: &mut TC, logger: &L) -> Result<OnTriggerResult, MinifiError>
     where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
+        TC: TriggerContext,
         L: Logger,
     {
         trace!(logger, "on_trigger: {:?}", self);
@@ -285,7 +279,7 @@ impl Trigger for GetFileRs {
             // A single mid-batch failure (deleted, permission flipped,
             // transient I/O) should not orphan the flow files already
             // transferred earlier in the same trigger. Log and continue.
-            if let Err(err) = self.get_single_file(session, logger, &file) {
+            if let Err(err) = self.get_single_file(context, logger, &file) {
                 warn!(logger, "Failed to ingest {:?}: {}", file, err);
             }
         }

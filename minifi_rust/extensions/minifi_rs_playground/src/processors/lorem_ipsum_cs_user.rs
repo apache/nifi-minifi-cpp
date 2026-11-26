@@ -43,7 +43,7 @@ impl Schedule for LoremIpsumCSUser {
 impl FlowFileSource for LoremIpsumCSUser {
     fn generate<'a, Context: GetProperty + GetControllerService, LoggerImpl: Logger>(
         &self,
-        context: &'a mut Context,
+        context: &'a Context,
         logger: &LoggerImpl,
     ) -> Result<Vec<GeneratedFlowFile<'a>>, MinifiError> {
         trace!(logger, "generate call {:?}", self);

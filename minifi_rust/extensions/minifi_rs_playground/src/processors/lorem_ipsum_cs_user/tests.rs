@@ -5,7 +5,7 @@
 use crate::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService;
 use crate::processors::lorem_ipsum_cs_user::LoremIpsumCSUser;
 use minifi_native::{
-    ComponentIdentifier, EnableControllerService, FlowFileSource, MockLogger, MockProcessContext,
+    ComponentIdentifier, EnableControllerService, FlowFileSource, MockLogger, MockScheduleContext,
     Schedule,
 };
 
@@ -21,7 +21,7 @@ fn test_ids() {
 
 #[test]
 fn lorem_ipsum_trigger() {
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     let logger = MockLogger::new();
     let lorem_ipsum_user = LoremIpsumCSUser::schedule(&context, &logger).expect("should schedule");
     let lorem_ipsum_cs = LoremIpsumControllerService::enable(&context, &logger).expect("");
@@ -31,6 +31,6 @@ fn lorem_ipsum_trigger() {
     context
         .properties
         .insert("Lorem Ipsum Controller Service", "service");
-    let res = lorem_ipsum_user.generate(&mut context, &logger).unwrap();
+    let res = lorem_ipsum_user.generate(&context, &logger).unwrap();
     assert_eq!(res.len(), 1);
 }

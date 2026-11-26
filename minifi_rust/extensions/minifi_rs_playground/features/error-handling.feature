@@ -60,7 +60,7 @@ Feature: API error handling and logging
 
     When the MiNiFi instance starts up
 
-    Then the Minifi logs contain the following message: "minifi_process_context_get_property("Kamikaze Processor Property"), not supported property" in less than 10 seconds
+    Then the Minifi logs contain the following message: "get_property("Kamikaze Processor Property"), not supported property" in less than 10 seconds
     And the Minifi logs contain the following message: "Trigger and commit failed for processor KamikazeProcessorRs" in less than 10 seconds
 
   Scenario: Get wrong typed Controller Service
@@ -70,5 +70,5 @@ Feature: API error handling and logging
 
     When the MiNiFi instance starts up
 
-    Then the Minifi logs contain the following message: "Error during trigger minifi_process_context_get_controller_service_from_property::<"minifi_rs_playground::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService">" in less than 10 seconds
+    Then the Minifi logs contain the following message: "Error during trigger get_controller_service_from_property::<"minifi_rs_playground::controller_services::lorem_ipsum_controller_service::LoremIpsumControllerService">" in less than 10 seconds
     And the Minifi logs contain the following message: "Trigger and commit failed for processor LoremIpsumCSUser" in less than 10 seconds

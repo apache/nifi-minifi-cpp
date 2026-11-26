@@ -4,13 +4,13 @@
 
 use crate::api::flow_file::GetId;
 use crate::api::processor::Processor;
-use crate::api::processor_wrappers::utils::context_session_flowfile_bundle::ContextSessionFlowFileBundle;
 use crate::api::processor_wrappers::utils::flow_file_content::Content;
+use crate::api::processor_wrappers::utils::flow_file_context::FlowFileContext;
 use crate::api::property::{GetControllerService, GetProperty};
 use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{
-    GetAttribute, LogLevel, Logger, MinifiError, MultiThreaded, OnTriggerResult, ProcessContext,
-    ProcessSession, ProcessorDefinition, Relationship, Schedule, SingleThreaded, TransformError,
+    GetAttribute, LogLevel, Logger, MinifiError, MultiThreaded, OnTriggerResult,
+    ProcessorDefinition, Relationship, Schedule, SingleThreaded, TransformError, TriggerContext,
     impl_with_attributes,
 };
 
@@ -92,7 +92,7 @@ pub trait FlowFileTransform: ProcessorDefinition {
     /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
     /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
     ///
-    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// To roll the trigger back instead of routing, return [`TransformError::Rollback`] or use
     /// [`crate::TransformErrorExt::rollback_err`].
     const ERROR_RELATIONSHIP: &'static Relationship;
 
@@ -118,7 +118,7 @@ pub trait MutFlowFileTransform: ProcessorDefinition {
     /// Relationship that errors propagated with `?` (i.e. [`TransformError::Bubbled`])
     /// are routed to. Must be one of [`ProcessorDefinition::RELATIONSHIPS`].
     ///
-    /// To roll the session back instead of routing, return [`TransformError::Rollback`] or use
+    /// To roll the trigger back instead of routing, return [`TransformError::Rollback`] or use
     /// [`crate::TransformErrorExt::rollback_err`].
     const ERROR_RELATIONSHIP: &'static Relationship;
 
@@ -142,26 +142,24 @@ pub trait MutFlowFileTransform: ProcessorDefinition {
 
 pub struct FlowFileTransformProcessorType {}
 
-fn handle_transform<PC, PS, L, F>(
-    context: &mut PC,
-    session: &mut PS,
+fn handle_transform<TC, L, F>(
+    context: &TC,
     logger: &L,
     error_relationship: &Relationship,
     mut transform_fn: F,
 ) -> Result<OnTriggerResult, MinifiError>
 where
-    PC: ProcessContext,
-    PS: ProcessSession<FlowFile = PC::FlowFile>,
+    TC: TriggerContext,
     L: Logger,
     F: for<'stream> FnMut(
-        &ContextSessionFlowFileBundle<'_, PC, PS>,
+        &FlowFileContext<'_, TC>,
         &'stream mut dyn InputStream,
     ) -> Result<TransformedFlowFile<'stream>, TransformError>,
 {
-    if let Some(mut flow_file) = session.get() {
-        let simple_context = ContextSessionFlowFileBundle::new(context, session, Some(&flow_file));
+    if let Some(mut flow_file) = context.get() {
+        let simple_context = FlowFileContext::new(context, Some(&flow_file));
 
-        let (attrs_to_add, relationship) = session.read_stream(&flow_file, |input_stream| {
+        let (attrs_to_add, relationship) = context.read_stream(&flow_file, |input_stream| {
             let transformed = match transform_fn(&simple_context, input_stream) {
                 Ok(transform_success) => transform_success,
                 Err(err) => match err.into_route(error_relationship) {
@@ -177,10 +175,10 @@ where
             match transformed.new_content {
                 None => {}
                 Some(Content::Buffer(buffer)) => {
-                    session.write(&flow_file, &buffer)?;
+                    context.write(&flow_file, &buffer)?;
                 }
                 Some(Content::Stream(stream)) => {
-                    session.write_from_stream(&flow_file, stream)?;
+                    context.write_from_stream(&flow_file, stream)?;
                 }
             };
 
@@ -191,10 +189,10 @@ where
         })?;
 
         for (k, v) in attrs_to_add {
-            session.set_attribute(&mut flow_file, &k, &v)?;
+            context.set_attribute(&mut flow_file, &k, &v)?;
         }
 
-        session.transfer(flow_file, relationship.as_ref())?;
+        context.transfer(flow_file, relationship.as_ref())?;
         Ok(OnTriggerResult::Ok)
     } else {
         logger.log(LogLevel::Trace, format_args!("No flowfile to transform"));
@@ -208,21 +206,15 @@ where
     Implementation: Schedule + FlowFileTransform,
     L: Logger,
 {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
-    {
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError> {
         // Const defaults are lazy; this forces the check.
         let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref scheduled_impl) = self.scheduled_impl {
             handle_transform(
                 context,
-                session,
                 &self.logger,
                 Implementation::ERROR_RELATIONSHIP,
                 |ctx, input| scheduled_impl.transform(ctx, input, &self.logger),
@@ -239,21 +231,15 @@ where
     Implementation: Schedule + MutFlowFileTransform,
     L: Logger,
 {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &mut self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
-    {
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError> {
         // Const defaults are lazy; this forces the check.
         let () = Implementation::ERROR_RELATIONSHIP_DECLARED;
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
             handle_transform(
                 context,
-                session,
                 &self.logger,
                 Implementation::ERROR_RELATIONSHIP,
                 |ctx, input| scheduled_impl.transform(ctx, input, &self.logger),
@@ -270,9 +256,8 @@ mod tests {
     use crate::api::RawProcessor;
     use crate::api::raw_processor::MultiThreadedTrigger;
     use crate::{
-        GetControllerService, GetId, MockFlowFile, MockLogger, MockProcessContext,
-        MockProcessSession, OutputAttribute, ProcessorInputRequirement, PropertyDefinition,
-        TransformError,
+        GetControllerService, GetId, MockFlowFile, MockLogger, MockTriggerContext, OutputAttribute,
+        ProcessorInputRequirement, PropertyDefinition, TransformError,
     };
 
     const FAILURE: Relationship = Relationship {
@@ -350,12 +335,13 @@ mod tests {
         }
     }
 
-    fn seeded_session() -> MockProcessSession {
-        let mut session = MockProcessSession::new();
-        session
+    fn seeded_context() -> MockTriggerContext {
+        let context = MockTriggerContext::new();
+        context
             .input_flow_files
+            .borrow_mut()
             .push(MockFlowFile::with_content(b"data"));
-        session
+        context
     }
 
     #[test]
@@ -368,16 +354,15 @@ mod tests {
         > = Processor::new(MockLogger::new());
         processor.scheduled_impl = Some(RouteToFailure);
 
-        let mut context = MockProcessContext::new();
-        let mut session = seeded_session();
+        let mut context = seeded_context();
 
-        let result = MultiThreadedTrigger::trigger(&processor, &mut context, &mut session);
+        let result = MultiThreadedTrigger::trigger(&processor, &mut context);
 
         assert_eq!(
             result.expect("should commit, not roll back"),
             OnTriggerResult::Ok
         );
-        let transferred = session.transferred_flow_files.borrow();
+        let transferred = context.transferred_flow_files.borrow();
         assert_eq!(transferred.len(), 1);
         assert_eq!(transferred[0].relationship, "failure");
     }
@@ -392,13 +377,12 @@ mod tests {
         > = Processor::new(MockLogger::new());
         processor.scheduled_impl = Some(RollbackTransform);
 
-        let mut context = MockProcessContext::new();
-        let mut session = seeded_session();
+        let mut context = seeded_context();
 
-        let result = MultiThreadedTrigger::trigger(&processor, &mut context, &mut session);
+        let result = MultiThreadedTrigger::trigger(&processor, &mut context);
 
         assert!(matches!(result, Err(MinifiError::CustomError(_))));
-        assert_eq!(session.num_of_transferred_flow_files(), 0);
+        assert_eq!(context.num_of_transferred_flow_files(), 0);
     }
 
     const TEST_RELATIONSHIP: Relationship = Relationship {

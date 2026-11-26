@@ -3,7 +3,7 @@
 // SPDX-FileContributor: Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements
 
 use crate::api::property::PropertySchema;
-use crate::mock::mock_process_context::MockPropertyMap;
+use crate::mock::mock_configuration::MockPropertyMap;
 use crate::{GetProperty, MinifiError, Property};
 
 pub struct MockControllerServiceContext {

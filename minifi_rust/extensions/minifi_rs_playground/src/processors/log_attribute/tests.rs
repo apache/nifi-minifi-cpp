@@ -4,7 +4,7 @@
 
 use super::*;
 use minifi_native::{
-    ComponentIdentifier, MockFlowFile, MockLogger, MockProcessContext, MockProcessSession,
+    ComponentIdentifier, MockFlowFile, MockLogger, MockScheduleContext, MockTriggerContext,
 };
 
 #[test]
@@ -18,7 +18,7 @@ fn test_component_id() {
 }
 #[test]
 fn schedule_succeeds_with_default_values() {
-    assert!(LogAttributeRs::schedule(&MockProcessContext::new(), &MockLogger::new()).is_ok());
+    assert!(LogAttributeRs::schedule(&MockScheduleContext::new(), &MockLogger::new()).is_ok());
 }
 
 fn tester(
@@ -28,19 +28,22 @@ fn tester(
     expected_log_msg: String,
 ) {
     let logger = MockLogger::new();
-    let mut context = MockProcessContext::new();
+    let mut context = MockScheduleContext::new();
     for (k, v) in properties {
         context.properties.insert(k.to_string(), v.to_string());
     }
 
     let processor = LogAttributeRs::schedule(&context, &logger).unwrap();
 
-    let mut session = MockProcessSession::new();
+    let mut trigger_context = MockTriggerContext::from(context);
     for flow_file in input_flow_files {
-        session.input_flow_files.push(flow_file);
+        trigger_context
+            .input_flow_files
+            .borrow_mut()
+            .push(flow_file);
     }
     processor
-        .trigger(&mut context, &mut session, &logger)
+        .trigger(&mut trigger_context, &logger)
         .expect("The on_trigger should succeed");
 
     let logs = logger.logs.lock().unwrap();

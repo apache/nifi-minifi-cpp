@@ -6,9 +6,9 @@
 
 use minifi_native::macros::ComponentIdentifier;
 use minifi_native::{
-    GetProperty, Logger, MinifiError, MutTrigger, OnTriggerResult, OutputAttribute, ProcessContext,
-    ProcessSession, ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition,
-    Relationship, Schedule, debug, info, trace,
+    GetProperty, Logger, MinifiError, MutTrigger, OnTriggerResult, OutputAttribute,
+    ProcessorDefinition, ProcessorInputRequirement, PropertyDefinition, Relationship, Schedule,
+    TriggerContext, debug, info, trace,
 };
 
 #[derive(Debug, ComponentIdentifier)]
@@ -33,15 +33,13 @@ impl Schedule for CountActualLogging {
 }
 
 impl MutTrigger for CountActualLogging {
-    fn trigger<PC, PS, L>(
+    fn trigger<TC, L>(
         &mut self,
-        _context: &mut PC,
-        _session: &mut PS,
+        _context: &mut TC,
         logger: &L,
     ) -> Result<OnTriggerResult, MinifiError>
     where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
+        TC: TriggerContext,
         L: Logger,
     {
         trace!(logger, "trace {}", self.get_incremented_log_count());

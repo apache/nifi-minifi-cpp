@@ -51,7 +51,7 @@ pub enum TransformError {
     /// processor wrapper routes it to the transform's declared error
     /// relationship (see `ERROR_RELATIONSHIP` on the transform traits).
     Bubbled(Box<dyn Error + Send + Sync + 'static>),
-    /// The processor asked to roll back the session (see
+    /// The processor asked to roll back the trigger (see
     /// [`TransformErrorExt::rollback_err`]).
     Rollback(MinifiError),
 }
@@ -134,7 +134,7 @@ impl fmt::Display for TransformError {
 /// ```
 ///
 /// Names no error type: this works in any function whose error type converts from `String`.
-/// To roll the session back instead of routing, use [`TransformErrorExt::rollback_err`].
+/// To roll the trigger back instead of routing, use [`TransformErrorExt::rollback_err`].
 #[macro_export]
 macro_rules! route_to_err {
     ($($arg:tt)+) => {

@@ -7,7 +7,7 @@ use crate::api::raw_processor::{MultiThreadedTrigger, SingleThreadedTrigger};
 use crate::{FlowFileAttribute, impl_with_attributes};
 use crate::{
     GetControllerService, GetProperty, Logger, MinifiError, MultiThreaded, OnTriggerResult,
-    ProcessContext, ProcessSession, Processor, Relationship, Schedule, SingleThreaded,
+    Processor, Relationship, Schedule, SingleThreaded, TriggerContext,
 };
 
 pub struct GeneratedFlowFile<'a> {
@@ -35,7 +35,7 @@ impl_with_attributes!(GeneratedFlowFile<'a>);
 pub trait FlowFileSource {
     fn generate<'a, Context: GetProperty + GetControllerService, LoggerImpl: Logger>(
         &self,
-        context: &'a mut Context,
+        context: &'a Context,
         logger: &LoggerImpl,
     ) -> Result<Vec<GeneratedFlowFile<'a>>, MinifiError>;
 }
@@ -43,34 +43,30 @@ pub trait FlowFileSource {
 pub trait MutFlowFileSource {
     fn generate<'a, Context: GetProperty + GetControllerService, LoggerImpl: Logger>(
         &mut self,
-        context: &'a mut Context,
+        context: &'a Context,
         logger: &LoggerImpl,
     ) -> Result<Vec<GeneratedFlowFile<'a>>, MinifiError>;
 }
 
-fn handle_generated_flow_files<PC, PS>(
-    session: &mut PS,
+fn handle_generated_flow_files<TC: TriggerContext>(
+    context: &TC,
     generated_flow_files: Vec<GeneratedFlowFile>,
-) -> Result<OnTriggerResult, MinifiError>
-where
-    PC: ProcessContext,
-    PS: ProcessSession<FlowFile = PC::FlowFile>,
-{
+) -> Result<OnTriggerResult, MinifiError> {
     if generated_flow_files.is_empty() {
         return Ok(OnTriggerResult::Yield);
     }
 
     for new_flow_file_data in generated_flow_files {
-        let mut ff = session.create()?;
+        let mut ff = context.create()?;
         match new_flow_file_data.new_content {
             None => {}
-            Some(Content::Buffer(buffer)) => session.write(&ff, &buffer)?,
-            Some(Content::Stream(stream)) => session.write_from_stream(&ff, stream)?,
+            Some(Content::Buffer(buffer)) => context.write(&ff, &buffer)?,
+            Some(Content::Stream(stream)) => context.write_from_stream(&ff, stream)?,
         }
         for (k, v) in &new_flow_file_data.attributes_to_add {
-            session.set_attribute(&mut ff, k, v)?;
+            context.set_attribute(&mut ff, k, v)?;
         }
-        session.transfer(ff, new_flow_file_data.target_relationship_name.as_ref())?;
+        context.transfer(ff, new_flow_file_data.target_relationship_name.as_ref())?;
     }
     Ok(OnTriggerResult::Ok)
 }
@@ -83,18 +79,13 @@ where
     Implementation: Schedule + FlowFileSource,
     L: Logger,
 {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
-    {
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError> {
         if let Some(ref scheduled_impl) = self.scheduled_impl {
-            let files = scheduled_impl.generate(context, &self.logger)?;
-            handle_generated_flow_files::<PC, PS>(session, files)
+            let files = scheduled_impl.generate(&*context, &self.logger)?;
+            handle_generated_flow_files(context, files)
         } else {
             Err(MinifiError::UnscheduledProcessor)
         }
@@ -107,18 +98,13 @@ where
     Implementation: Schedule + MutFlowFileSource,
     L: Logger,
 {
-    fn trigger<PC, PS>(
+    fn trigger<TC: TriggerContext>(
         &mut self,
-        context: &mut PC,
-        session: &mut PS,
-    ) -> Result<OnTriggerResult, MinifiError>
-    where
-        PC: ProcessContext,
-        PS: ProcessSession<FlowFile = PC::FlowFile>,
-    {
+        context: &mut TC,
+    ) -> Result<OnTriggerResult, MinifiError> {
         if let Some(ref mut scheduled_impl) = self.scheduled_impl {
-            let files = scheduled_impl.generate(context, &self.logger)?;
-            handle_generated_flow_files::<PC, PS>(session, files)
+            let files = scheduled_impl.generate(&*context, &self.logger)?;
+            handle_generated_flow_files(context, files)
         } else {
             Err(MinifiError::UnscheduledProcessor)
         }

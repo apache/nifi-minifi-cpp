@@ -229,7 +229,7 @@ impl FlowFileTransform for ClassifyOutput {
 mod tests {
     use super::classify_output_def::FAILURE;
     use super::*;
-    use minifi_native::{LogLevel, MockLogger, MockProcessContext, test};
+    use minifi_native::{LogLevel, MockLogger, MockScheduleContext, test};
     use std::io::Cursor;
     use std::io::Write;
     use tempfile::NamedTempFile;
@@ -268,8 +268,8 @@ mod tests {
         bytes
     }
 
-    fn context_with_scores(scores: &[f32]) -> MockProcessContext {
-        let mut ctx = MockProcessContext::new();
+    fn context_with_scores(scores: &[f32]) -> MockScheduleContext {
+        let mut ctx = MockScheduleContext::new();
         ctx.attributes.insert("tensors.len".into(), "1".into());
         ctx.attributes
             .insert("tensor.0.bytes".to_string(), (scores.len() * 4).to_string());
@@ -429,7 +429,7 @@ mod tests {
         writeln!(file, "tench").unwrap();
         writeln!(file, "goldfish").unwrap();
         writeln!(file, "great_white_shark").unwrap();
-        let mut mock_context = MockProcessContext::default();
+        let mut mock_context = MockScheduleContext::default();
         mock_context.properties.insert(
             LABELS_FILE_PATH.name().to_string(),
             file.path().to_string_lossy(),
@@ -534,7 +534,7 @@ mod tests {
     #[test]
     fn test_transform_missing_bytes_attribute_routes_to_failure() {
         let processor = make_processor(1, ScoreActivation::Softmax);
-        let context = MockProcessContext::new(); // no tensor.0.bytes
+        let context = MockScheduleContext::new(); // no tensor.0.bytes
         let mut stream = Cursor::new(vec![0u8; 4]);
         let res = processor.transform(&context, &mut stream, &MockLogger::new());
         test::assert_routed_to::<ClassifyOutput>(res, &FAILURE);
